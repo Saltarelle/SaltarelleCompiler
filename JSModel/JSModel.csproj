@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Saltarelle.Compiler.JSModel</RootNamespace>
+    <AssemblyName>Saltarelle.Compiler.JSModel</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Expressions\ArrayLiteralExpression.cs" />
+    <Compile Include="Expressions\BinaryExpression.cs" />
+    <Compile Include="IExpressionVisitor.cs" />
+    <Compile Include="IStatementVisitor.cs" />
+    <Compile Include="RewriterVisitorBase.cs" />
+    <Compile Include="Statements\BlockStatement.cs" />
+    <Compile Include="Statements\BreakStatement.cs" />
+    <Compile Include="Statements\ForStatement.cs" />
+    <Compile Include="Expressions\CommaExpression.cs" />
+    <Compile Include="Statements\ContinueStatement.cs" />
+    <Compile Include="Statements\DoWhileStatement.cs" />
+    <Compile Include="Statements\EmptyStatement.cs" />
+    <Compile Include="Expressions\Expression.cs" />
+    <Compile Include="Statements\ExpressionStatement.cs" />
+    <Compile Include="Statements\ForEachInStatement.cs" />
+    <Compile Include="Expressions\FunctionExpression.cs" />
+    <Compile Include="Expressions\IdentifierExpression.cs" />
+    <Compile Include="Statements\IfStatement.cs" />
+    <Compile Include="Expressions\JsonExpression.cs" />
+    <Compile Include="Expressions\MemberAccessExpression.cs" />
+    <Compile Include="Expressions\InvocationExpression.cs" />
+    <Compile Include="Expressions\NewExpression.cs" />
+    <Compile Include="Statements\ReturnStatement.cs" />
+    <Compile Include="Statements\Statement.cs" />
+    <Compile Include="Statements\SwitchStatement.cs" />
+    <Compile Include="Expressions\ConditionalExpression.cs" />
+    <Compile Include="Statements\ThrowStatement.cs" />
+    <Compile Include="Statements\TryCatchFinallyStatement.cs" />
+    <Compile Include="Expressions\UnaryExpression.cs" />
+    <Compile Include="Expressions\ConstantExpression.cs" />
+    <Compile Include="Statements\VariableDeclarationStatement.cs" />
+    <Compile Include="Statements\WhileStatement.cs" />
+    <Compile Include="Statements\WithStatement.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

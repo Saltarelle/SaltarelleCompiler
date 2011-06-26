@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSModel", "JSModel\JSModel.csproj", "{C84DF308-9EBF-4521-9CA2-5C531F4B245A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saltarelle.Compiler", "Saltarelle.Compiler\Saltarelle.Compiler.csproj", "{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C84DF308-9EBF-4521-9CA2-5C531F4B245A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C84DF308-9EBF-4521-9CA2-5C531F4B245A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C84DF308-9EBF-4521-9CA2-5C531F4B245A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C84DF308-9EBF-4521-9CA2-5C531F4B245A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
