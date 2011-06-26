@@ -8,7 +8,8 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public string StatementLabel { get; private set; }
 
-        public abstract TReturn Accept<TReturn>(IStatementVisitor<TReturn> visitor);
+        [System.Diagnostics.DebuggerStepThrough]
+        public abstract TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data);
 
         protected Statement(string statementLabel) {
             if (statementLabel != null && !statementLabel.IsValidJavaScriptIdentifier()) throw new ArgumentException("statementLabel");

@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSModel", "JSModel\JSModel.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saltarelle.Compiler", "Saltarelle.Compiler\Saltarelle.Compiler.csproj", "{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saltarelle.Compiler.Tests", "Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj", "{4EAA8F82-B663-4DE6-AD09-A5BBE625AF55}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EAA8F82-B663-4DE6-AD09-A5BBE625AF55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EAA8F82-B663-4DE6-AD09-A5BBE625AF55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EAA8F82-B663-4DE6-AD09-A5BBE625AF55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EAA8F82-B663-4DE6-AD09-A5BBE625AF55}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

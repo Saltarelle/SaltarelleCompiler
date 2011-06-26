@@ -18,8 +18,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         }
 
         [System.Diagnostics.DebuggerStepThrough]
-        public override TReturn Accept<TReturn>(IExpressionVisitor<TReturn> visitor) {
-            return visitor.Visit(this);
+        public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
+            return visitor.Visit(this, data);
         }
 
         public override string ToString() {

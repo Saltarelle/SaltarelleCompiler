@@ -45,6 +45,7 @@
     <Compile Include="Expressions\BinaryExpression.cs" />
     <Compile Include="IExpressionVisitor.cs" />
     <Compile Include="IStatementVisitor.cs" />
+    <Compile Include="ExpressionPrecedence.cs" />
     <Compile Include="RewriterVisitorBase.cs" />
     <Compile Include="Statements\BlockStatement.cs" />
     <Compile Include="Statements\BreakStatement.cs" />

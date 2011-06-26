@@ -1,22 +1,23 @@
 ﻿using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel {
-    public interface IStatementVisitor<out TReturn> {
-        TReturn Visit(BlockStatement statement);
-        TReturn Visit(BreakStatement statement);
-        TReturn Visit(ContinueStatement statement);
-        TReturn Visit(DoWhileStatement statement);
-        TReturn Visit(EmptyStatement statement);
-        TReturn Visit(ExpressionStatement statement);
-        TReturn Visit(ForEachInStatement statement);
-        TReturn Visit(ForStatement statement);
-        TReturn Visit(IfStatement statement);
-        TReturn Visit(ReturnStatement statement);
-        TReturn Visit(SwitchStatement statement);
-        TReturn Visit(ThrowStatement statement);
-        TReturn Visit(TryCatchFinallyStatement statement);
-        TReturn Visit(VariableDeclarationStatement statement);
-        TReturn Visit(WhileStatement statement);
-        TReturn Visit(WithStatement statement);
+    public interface IStatementVisitor<out TReturn, in TData> {
+        TReturn Visit(Statement statement, TData data);
+        TReturn Visit(BlockStatement statement, TData data);
+        TReturn Visit(BreakStatement statement, TData data);
+        TReturn Visit(ContinueStatement statement, TData data);
+        TReturn Visit(DoWhileStatement statement, TData data);
+        TReturn Visit(EmptyStatement statement, TData data);
+        TReturn Visit(ExpressionStatement statement, TData data);
+        TReturn Visit(ForEachInStatement statement, TData data);
+        TReturn Visit(ForStatement statement, TData data);
+        TReturn Visit(IfStatement statement, TData data);
+        TReturn Visit(ReturnStatement statement, TData data);
+        TReturn Visit(SwitchStatement statement, TData data);
+        TReturn Visit(ThrowStatement statement, TData data);
+        TReturn Visit(TryCatchFinallyStatement statement, TData data);
+        TReturn Visit(VariableDeclarationStatement statement, TData data);
+        TReturn Visit(WhileStatement statement, TData data);
+        TReturn Visit(WithStatement statement, TData data);
     }
 }
