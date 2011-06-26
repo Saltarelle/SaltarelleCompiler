@@ -55,7 +55,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
                 case ConstantType.Regexp:
                     return "/" + FixStringLiteral(RegexpValue.Pattern, true) + "/" + RegexpValue.Options;
                 case ConstantType.String:
-                    return FixStringLiteral(StringValue, false);
+                    return "'" + FixStringLiteral(StringValue, false) + "'";
                 default:
                     throw new ArgumentException("expression");
             }
@@ -66,7 +66,6 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 			for (int i = 0; i < s.Length; i++) {
 				switch (s[i]) {
 					case '\'': sb.Append("\\\'"); break;
-					case '\"': sb.Append("\\\""); break;
 					case '\\': sb.Append("\\\\"); break;
 					case '\r': sb.Append("\\r"); break;
 					case '\n': sb.Append("\\n"); break;
@@ -88,7 +87,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 
         // Static factory methods.
 
-        public static ConstantExpression Regexp(string pattern, string options) {
+        public static ConstantExpression Regexp(string pattern, string options = null) {
             if (pattern == null) throw new ArgumentNullException("pattern");
             return new ConstantExpression(ConstantType.Regexp, new RegexpData(pattern, options));
         }

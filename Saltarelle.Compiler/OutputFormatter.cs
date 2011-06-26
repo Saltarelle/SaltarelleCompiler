@@ -9,112 +9,150 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler
 {
-    public class OutputFormatter : IExpressionVisitor<object, object>
+    public class OutputFormatter : IExpressionVisitor<object, bool>
     {
         private readonly CodeBuilder _cb = new CodeBuilder();
 
         private OutputFormatter() {
         }
 
-/*        public static string Format(Statement statement) {
-            var fmt = new OutputFormatter();
-            fmt.Visit(statement, null);
-            return fmt._cb.ToString();
-        }
-*/
         public static string Format(Expression expression) {
             var fmt = new OutputFormatter();
-            fmt.Visit(expression, null);
+            fmt.Visit(expression, false);
             return fmt._cb.ToString();
         }
 
-        public object Visit(Expression expression, object data) {
-            return expression.Accept(this, data);
+        public object Visit(Expression expression, bool parenthesized) {
+            if (parenthesized)
+                _cb.Append("(");
+            expression.Accept(this, parenthesized);
+            if (parenthesized)
+                _cb.Append(")");
+            return null;
         }
 
-        public object Visit(ArrayLiteralExpression expression, object data) {
-            _cb.Append("[");
-            for (int i = 0; i < expression.Elements.Count; i++) {
-                if (i != 0)
+        private void VisitExpressionList(IEnumerable<Expression> expressions) {
+            bool first = true;
+            foreach (var x in expressions) {
+                if (!first)
                     _cb.Append(", ");
-                var x = expression.Elements[i];
-                if (x is CommaExpression)
-                    _cb.Append("(");
-                Visit(x, null);
-                if (x is CommaExpression)
-                    _cb.Append(")");
+                Visit(x, x.Precedence >= ExpressionPrecedence.Comma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
+                first = false;
             }
+        }
+
+        public object Visit(ArrayLiteralExpression expression, bool parenthesized) {
+            _cb.Append("[");
+            VisitExpressionList(expression.Elements);
             _cb.Append("]");
             return null;
         }
 
-        public object Visit(BinaryExpression expression, object data) {
+        public object Visit(BinaryExpression expression, bool parenthesized) {
             if (expression.Operator == BinaryOperator.Index) {
-                throw new NotImplementedException();
+                Visit(expression.Left, expression.Left.Precedence > expression.Precedence);
+                _cb.Append("[");
+                Visit(expression.Right, false);
+                _cb.Append("]");
             }
             else {
-                bool parenLeft  = expression.Left.Precedence > expression.Precedence - (expression.IsRightAssociative ? 1 : 0);
-                bool parenRight = expression.Right.Precedence > expression.Precedence - (expression.IsRightAssociative ? 0 : 1);
-                if (parenLeft) _cb.Append("(");
-                Visit(expression.Left, null);
-                if (parenLeft) _cb.Append(")");
+                Visit(expression.Left, expression.Left.Precedence > expression.Precedence - (expression.IsRightAssociative ? 1 : 0));
                 _cb.Append(" ").Append(GetOperatorString(expression.Operator)).Append(" ");
-                if (parenRight) _cb.Append("(");
-                Visit(expression.Right, null);
-                if (parenRight) _cb.Append(")");
+                Visit(expression.Right, expression.Right.Precedence > expression.Precedence - (expression.IsRightAssociative ? 0 : 1));
             }
             return null;
         }
 
-        public object Visit(CommaExpression expression, object data) {
+        public object Visit(CommaExpression expression, bool parenthesized) {
             for (int i = 0; i < expression.Expressions.Count; i++) {
                 if (i > 0)
                     _cb.Append(", ");
-                Visit(expression.Expressions[i], null);
+                Visit(expression.Expressions[i], false);
             }
             return null;
         }
 
-        public object Visit(ConditionalExpression expression, object data) {
-            _cb.Append("(");
-            var parenTest  = (expression.Test.Precedence >= ExpressionPrecedence.Multiply);
-            var parenTrue  = (expression.TruePart.Precedence >= ExpressionPrecedence.Multiply);
-            var parenFalse = (expression.FalsePart.Precedence >= ExpressionPrecedence.Multiply);
+        public object Visit(ConditionalExpression expression, bool parenthesized) {
+            // Always parenthesize conditionals (but beware of double parentheses). Better this than accidentally getting the tricky precedence wrong sometimes.
+            if (!parenthesized)
+                _cb.Append("(");
 
-            throw new NotImplementedException();
+            // Also, be rather liberal when parenthesizing the operands, partly to avoid bugs, partly for readability.
+            Visit(expression.Test, expression.Test.Precedence >= ExpressionPrecedence.Multiply);
+            _cb.Append(" ? ");
+            Visit(expression.TruePart, expression.TruePart.Precedence >= ExpressionPrecedence.Multiply);
+            _cb.Append(" : ");
+            Visit(expression.FalsePart, expression.FalsePart.Precedence >= ExpressionPrecedence.Multiply);
+
+            if (!parenthesized)
+                _cb.Append(")");
+
+            return null;
         }
 
-        public object Visit(ConstantExpression expression, object data) {
+        public object Visit(ConstantExpression expression, bool parenthesized) {
             _cb.Append(expression.Format());
             return null;
         }
 
-        public object Visit(FunctionExpression expression, object data) {
+        public object Visit(FunctionExpression expression, bool parenthesized) {
             throw new NotImplementedException();
         }
 
-        public object Visit(IdentifierExpression expression, object data) {
+        public object Visit(IdentifierExpression expression, bool parenthesized) {
+            _cb.Append(expression.Name);
+            return null;
+        }
+
+        public object Visit(InvocationExpression expression, bool parenthesized) {
+            Visit(expression.Method, expression.Method.Precedence > expression.Precedence || (expression.Method is NewExpression)); // Ugly code to make sure that we put parentheses around "new", eg. "(new X())(1)" rather than "new X()(1)"
+            _cb.Append("(");
+            VisitExpressionList(expression.Arguments);
+            _cb.Append(")");
+            return null;
+        }
+
+        public object Visit(JsonExpression expression, bool parenthesized) {
             throw new NotImplementedException();
         }
 
-        public object Visit(InvocationExpression expression, object data) {
-            throw new NotImplementedException();
+        public object Visit(MemberAccessExpression expression, bool parenthesized) {
+            Visit(expression.Target, (expression.Target.Precedence >= expression.Precedence) && !(expression.Target is MemberAccessExpression)); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
+            _cb.Append(".");
+            _cb.Append(expression.Member);
+            return null;
         }
 
-        public object Visit(JsonExpression expression, object data) {
-            throw new NotImplementedException();
+        public object Visit(NewExpression expression, bool parenthesized) {
+            _cb.Append("new ");
+            Visit(expression.Constructor, expression.Constructor.Precedence >= expression.Precedence);
+            _cb.Append("(");
+            VisitExpressionList(expression.Arguments);
+            _cb.Append(")");
+            return null;
         }
 
-        public object Visit(MemberAccessExpression expression, object data) {
-            throw new NotImplementedException();
-        }
-
-        public object Visit(NewExpression expression, object data) {
-            throw new NotImplementedException();
-        }
-
-        public object Visit(UnaryExpression expression, object data) {
-            throw new NotImplementedException();
+        public object Visit(UnaryExpression expression, bool parenthesized) {
+            string prefix = "", postfix = "";
+            bool alwaysParenthesize = false;
+            switch (expression.Operator) {
+                case UnaryOperator.PrefixPlusPlus:        prefix = "++"; break;
+                case UnaryOperator.PrefixMinusMinus:      prefix = "--"; break;
+                case UnaryOperator.PostfixPlusPlus:       postfix = "++"; break;
+                case UnaryOperator.PostfixMinusMinus:     postfix = "--"; break;
+                case UnaryOperator.LogicalNot:            prefix = "!"; break;
+                case UnaryOperator.BitwiseNot:            prefix = "~"; break;
+                case UnaryOperator.Positive:              prefix = "+"; break;
+                case UnaryOperator.Negate:                prefix = "-"; break;
+                case UnaryOperator.TypeOf:                prefix = "typeof"; alwaysParenthesize = true; break;
+                case UnaryOperator.Void:                  prefix = "void "; alwaysParenthesize = true; break;
+                case UnaryOperator.Delete:                prefix = "delete "; break;
+                default: throw new ArgumentException("expression");
+            }
+            _cb.Append(prefix);
+            Visit(expression.Operand, (expression.Operand.Precedence > expression.Precedence) || alwaysParenthesize);
+            _cb.Append(postfix);
+            return null;
         }
 
         private static string GetOperatorString(BinaryOperator oper) {
@@ -160,181 +198,4 @@ namespace Saltarelle.Compiler
             }
         }
     }
-
-/*        private CodeBuilder _cb = new CodeBuilder();
-
-        private OutputFormatter() {
-        }
-
-        public static string Format(Statement statement) {
-            var fmt = new OutputFormatter();
-            fmt.Visit(statement, null);
-            return fmt._cb.ToString();
-        }
-
-        public static string Format(Expression expression) {
-            var fmt = new OutputFormatter();
-            fmt.Visit(expression, null);
-            return fmt._cb.ToString();
-        }
-
-        #region Overrides of RewriterVisitorBase
-
-        public override IEnumerable<Expression> Visit(ReadOnlyCollection<Expression> expressions, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override IEnumerable<JsonExpression.ValueEntry> Visit(ReadOnlyCollection<JsonExpression.ValueEntry> values, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override JsonExpression.ValueEntry Visit(JsonExpression.ValueEntry value, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(Expression expression, string data) {
-            return base.Visit(expression, data);
-        }
-
-        public override Expression Visit(ArrayLiteralExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(BinaryExpression expression, string data) {
-        }
-
-        public override Expression Visit(CommaExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(ConditionalExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(ConstantExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(FunctionExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(IdentifierExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(InvocationExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(JsonExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(MemberAccessExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(NewExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Expression Visit(UnaryExpression expression, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override IEnumerable<Statement> Visit(ReadOnlyCollection<Statement> statements, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override IEnumerable<SwitchStatement.Clause> Visit(ReadOnlyCollection<SwitchStatement.Clause> clauses, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override IEnumerable<VariableDeclarationStatement.VariableDeclaration> Visit(ReadOnlyCollection<VariableDeclarationStatement.VariableDeclaration> declarations, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override SwitchStatement.Clause Visit(SwitchStatement.Clause clause, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override TryCatchFinallyStatement.CatchClause Visit(TryCatchFinallyStatement.CatchClause clause, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override VariableDeclarationStatement.VariableDeclaration Visit(VariableDeclarationStatement.VariableDeclaration declaration, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(Statement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(BlockStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(BreakStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(ContinueStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(DoWhileStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(EmptyStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(ExpressionStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(ForEachInStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(ForStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(IfStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(ReturnStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(SwitchStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(ThrowStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(TryCatchFinallyStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(VariableDeclarationStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(WhileStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        public override Statement Visit(WithStatement statement, string data) {
-            throw new NotImplementedException();
-        }
-
-        #endregion*/
-//    }
 }

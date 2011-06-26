@@ -13,6 +13,29 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             this.Operand = operand;
         }
 
+        public override int Precedence {
+            get {
+                switch (Operator) {
+                    case UnaryOperator.PrefixPlusPlus:
+                    case UnaryOperator.PrefixMinusMinus:
+                    case UnaryOperator.PostfixPlusPlus:
+                    case UnaryOperator.PostfixMinusMinus:
+                        return ExpressionPrecedence.IncrDecr;
+
+                    case UnaryOperator.LogicalNot:
+                    case UnaryOperator.BitwiseNot:
+                    case UnaryOperator.Positive:
+                    case UnaryOperator.Negate:
+                    case UnaryOperator.TypeOf:
+                    case UnaryOperator.Void:
+                    case UnaryOperator.Delete:
+                        return ExpressionPrecedence.OtherUnary;
+                    default:
+                        throw new InvalidOperationException("Invalid operator");
+                }
+            }
+        }
+
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
             return visitor.Visit(this, data);
@@ -21,7 +44,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 
     public enum UnaryOperator {
         TypeOf,
-        Not,
+        LogicalNot,
         Negate,
         Positive,
         PrefixPlusPlus,
@@ -30,7 +53,6 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         PostfixMinusMinus,
         Delete,
         Void,
-        Inv,
-        Unknown
+        BitwiseNot,
     }
 }
