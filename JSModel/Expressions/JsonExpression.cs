@@ -19,6 +19,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             }
         }
 
+        public override int Precedence { get { return ExpressionPrecedence.Terminal; } }
+
         public ReadOnlyCollection<ValueEntry> Values { get; private set; }
 
         public JsonExpression(IEnumerable<ValueEntry> values) {

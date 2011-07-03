@@ -17,6 +17,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             this.FalsePart = falsePart;
         }
 
+        public override int Precedence { get { return ExpressionPrecedence.Conditional; } }
+
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
             return visitor.Visit(this, data);

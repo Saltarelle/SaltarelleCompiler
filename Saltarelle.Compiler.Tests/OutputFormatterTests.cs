@@ -440,13 +440,112 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
-        public void TestUnaryExpressions() {
-            Assert.Fail("TODO");
+        public void IncrementIsParenthesizedWhenBeingUsedAsInvocationTarget() {
+            Assert.That(OutputFormatter.Format(new InvocationExpression(
+                                                   new UnaryExpression(UnaryOperator.PostfixPlusPlus,
+                                                       new IdentifierExpression("X")
+                                                   ),
+                                                   new[] { ConstantExpression.Number(1) }
+                                               )
+                        ), Is.EqualTo("(X++)(1)"));
         }
 
         [Test]
-        public void TestBinaryExpressions() {
-            Assert.Fail("TODO More tests");
+        public void UnaryOperatorIsNotParenthesizedWhenUsedAsBinaryArgument() {
+            Assert.That(OutputFormatter.Format(new BinaryExpression(BinaryOperator.Multiply,
+                                                   new UnaryExpression(UnaryOperator.Negate,
+                                                       new IdentifierExpression("X")
+                                                   ),
+                                                   ConstantExpression.Number(1)
+                                               )
+                        ), Is.EqualTo("-X * 1"));
+        }
+
+        [Test]
+        public void UnaryOperatorsAreParenthesizedInsideEachother() {
+            // Just to get rid of ambiguities
+            Assert.That(OutputFormatter.Format(new UnaryExpression(UnaryOperator.PostfixPlusPlus,
+                                                   new UnaryExpression(UnaryOperator.LogicalNot,
+                                                       new IdentifierExpression("X")
+                                                   )
+                                               )
+                        ), Is.EqualTo("(!X)++"));
+
+            Assert.That(OutputFormatter.Format(new UnaryExpression(UnaryOperator.LogicalNot,
+                                                   new UnaryExpression(UnaryOperator.PostfixPlusPlus,
+                                                       new IdentifierExpression("X")
+                                                   )
+                                               )
+                        ), Is.EqualTo("!(X++)"));
+        }
+
+        [Test]
+        public void UnaryOperatorsAreCorrectlyOutput() {
+            var operators = new Dictionary<UnaryOperator, string> { { UnaryOperator.TypeOf, "typeof({0})" },
+                                                                    { UnaryOperator.LogicalNot, "!{0}" },
+                                                                    { UnaryOperator.Negate, "-{0}" },
+                                                                    { UnaryOperator.Positive, "+{0}" },
+                                                                    { UnaryOperator.PrefixPlusPlus, "++{0}" },
+                                                                    { UnaryOperator.PrefixMinusMinus, "--{0}" },
+                                                                    { UnaryOperator.PostfixPlusPlus, "{0}++" },
+                                                                    { UnaryOperator.PostfixMinusMinus, "{0}--" },
+                                                                    { UnaryOperator.Delete, "delete {0}" },
+                                                                    { UnaryOperator.Void, "void({0})" },
+                                                                    { UnaryOperator.BitwiseNot, "~{0}" },
+                                                                  };
+
+            foreach (var oper in (UnaryOperator[])Enum.GetValues(typeof(UnaryOperator))) {
+                Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
+                var expr = new UnaryExpression(oper, new IdentifierExpression("a"));
+                Assert.That(OutputFormatter.Format(expr), Is.EqualTo(string.Format(operators[oper], "a")));
+            }
+        }
+
+        [Test]
+        public void BinaryOperatorsAreCorrectlyOutput() {
+            var operators = new Dictionary<BinaryOperator, string> { { BinaryOperator.LogicalAnd, "{0} && {1}" },
+                                                                     { BinaryOperator.LogicalOr, "{0} || {1}" },
+                                                                     { BinaryOperator.NotEqual, "{0} != {1}" },
+                                                                     { BinaryOperator.LesserOrEqual, "{0} <= {1}" },
+                                                                     { BinaryOperator.GreaterOrEqual, "{0} >= {1}" },
+                                                                     { BinaryOperator.Lesser, "{0} < {1}" },
+                                                                     { BinaryOperator.Greater, "{0} > {1}" },
+                                                                     { BinaryOperator.Equal, "{0} == {1}" },
+                                                                     { BinaryOperator.Subtract, "{0} - {1}" },
+                                                                     { BinaryOperator.Add, "{0} + {1}" },
+                                                                     { BinaryOperator.Modulo, "{0} % {1}" },
+                                                                     { BinaryOperator.Divide, "{0} / {1}" },
+                                                                     { BinaryOperator.Multiply, "{0} * {1}" },
+                                                                     { BinaryOperator.BitwiseAnd, "{0} & {1}" },
+                                                                     { BinaryOperator.BitwiseOr, "{0} | {1}" },
+                                                                     { BinaryOperator.BitwiseXor, "{0} ^ {1}" },
+                                                                     { BinaryOperator.Same, "{0} === {1}" },
+                                                                     { BinaryOperator.NotSame, "{0} !== {1}" },
+                                                                     { BinaryOperator.LeftShift, "{0} << {1}" },
+                                                                     { BinaryOperator.RightShiftSigned, "{0} >> {1}" },
+                                                                     { BinaryOperator.RightShiftUnsigned, "{0} >>> {1}" },
+                                                                     { BinaryOperator.InstanceOf, "{0} instanceof {1}" },
+                                                                     { BinaryOperator.In, "{0} in {1}" },
+                                                                     { BinaryOperator.Index, "{0}[{1}]" },
+                                                                     { BinaryOperator.Assign, "{0} = {1}" },
+                                                                     { BinaryOperator.MultiplyAssign, "{0} *= {1}" },
+                                                                     { BinaryOperator.DivideAssign, "{0} /= {1}" },
+                                                                     { BinaryOperator.ModuloAssign, "{0} %= {1}" },
+                                                                     { BinaryOperator.AddAssign, "{0} += {1}" },
+                                                                     { BinaryOperator.SubtractAssign, "{0} -= {1}" },
+                                                                     { BinaryOperator.LeftShiftAssign, "{0} <<= {1}" },
+                                                                     { BinaryOperator.RightShiftAssign, "{0} >>= {1}" },
+                                                                     { BinaryOperator.UnsignedRightShiftAssign, "{0} >>>= {1}" },
+                                                                     { BinaryOperator.BitwiseAndAssign, "{0} &= {1}" },
+                                                                     { BinaryOperator.BitwiseOrAssign, "{0} |= {1}" },
+                                                                     { BinaryOperator.BitwiseXOrAssign, "{0} ^= {1}" },
+                                                                   };
+
+            foreach (var oper in (BinaryOperator[])Enum.GetValues(typeof(BinaryOperator))) {
+                Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
+                var expr = new BinaryExpression(oper, new IdentifierExpression("a"), new IdentifierExpression("b"));
+                Assert.That(OutputFormatter.Format(expr), Is.EqualTo(string.Format(operators[oper], "a", "b")));
+            }
         }
     }
 }

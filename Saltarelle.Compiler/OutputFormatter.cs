@@ -145,12 +145,12 @@ namespace Saltarelle.Compiler
                 case UnaryOperator.Positive:              prefix = "+"; break;
                 case UnaryOperator.Negate:                prefix = "-"; break;
                 case UnaryOperator.TypeOf:                prefix = "typeof"; alwaysParenthesize = true; break;
-                case UnaryOperator.Void:                  prefix = "void "; alwaysParenthesize = true; break;
+                case UnaryOperator.Void:                  prefix = "void"; alwaysParenthesize = true; break;
                 case UnaryOperator.Delete:                prefix = "delete "; break;
                 default: throw new ArgumentException("expression");
             }
             _cb.Append(prefix);
-            Visit(expression.Operand, (expression.Operand.Precedence > expression.Precedence) || alwaysParenthesize);
+            Visit(expression.Operand, (expression.Operand.Precedence >= ExpressionPrecedence.IncrDecr) || alwaysParenthesize);
             _cb.Append(postfix);
             return null;
         }

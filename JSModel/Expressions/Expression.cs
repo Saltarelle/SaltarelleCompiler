@@ -9,6 +9,6 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         /// <summary>
         /// Get precedence of an expression. 0 is highest.
         /// </summary>
-        public virtual int Precedence { get { return 100; } }
+        public abstract int Precedence { get; }
     }
 }

@@ -24,6 +24,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             Name = name;
         }
 
+        public override int Precedence { get { return ExpressionPrecedence.FunctionCall + 1; } }
+
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
             return visitor.Visit(this, data);
