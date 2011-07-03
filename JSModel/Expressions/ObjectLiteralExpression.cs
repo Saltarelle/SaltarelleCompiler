@@ -4,14 +4,13 @@ using System.Collections.ObjectModel;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
     [Serializable]
-    public class JsonExpression : Expression {
+    public class ObjectLiteralExpression : Expression {
         public class ValueEntry {
             public string Name { get; private set; }
             public Expression Value { get; private set; }
 
             public ValueEntry(string name, Expression value) {
                 if (name == null) throw new ArgumentNullException("name");
-                if (!name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");
                 if (value == null) throw new ArgumentNullException("value");
 
                 Name  = name;
@@ -23,9 +22,12 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 
         public ReadOnlyCollection<ValueEntry> Values { get; private set; }
 
-        public JsonExpression(IEnumerable<ValueEntry> values) {
+        public ObjectLiteralExpression(IEnumerable<ValueEntry> values) {
             if (values == null) throw new ArgumentNullException("values");
             Values = values.AsReadOnly();
+        }
+
+        public ObjectLiteralExpression(params ValueEntry[] values) : this((IEnumerable<ValueEntry>)values) {
         }
 
         [System.Diagnostics.DebuggerStepThrough]

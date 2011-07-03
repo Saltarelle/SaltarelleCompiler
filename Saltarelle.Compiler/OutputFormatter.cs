@@ -112,8 +112,24 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(JsonExpression expression, bool parenthesized) {
-            throw new NotImplementedException();
+        public object Visit(ObjectLiteralExpression expression, bool parenthesized) {
+            if (expression.Values.Count == 0) {
+                _cb.Append("{}");
+            }
+            else {
+                _cb.Append("{ ");
+                bool first = true;
+                foreach (var v in expression.Values) {
+                    if (!first)
+                        _cb.Append(", ");
+                    _cb.Append(v.Name.IsValidJavaScriptIdentifier() ? v.Name : ("'" + ConstantExpression.FixStringLiteral(v.Name, false) + "'"))
+                       .Append(": ");
+                    Visit(v.Value, v.Value.Precedence >= ExpressionPrecedence.Comma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
+                    first = false;
+                }
+                _cb.Append(" }");
+            }
+            return null;
         }
 
         public object Visit(MemberAccessExpression expression, bool parenthesized) {

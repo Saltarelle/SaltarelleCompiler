@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.JSModel {
         TReturn Visit(FunctionExpression expression, TData data);
         TReturn Visit(IdentifierExpression expression, TData data);
         TReturn Visit(InvocationExpression expression, TData data);
-        TReturn Visit(JsonExpression expression, TData data);
+        TReturn Visit(ObjectLiteralExpression expression, TData data);
         TReturn Visit(MemberAccessExpression expression, TData data);
         TReturn Visit(NewExpression expression, TData data);
         TReturn Visit(UnaryExpression expression, TData data);

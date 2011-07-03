@@ -480,6 +480,41 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
+        public void EmptyObjectLiteralIsOutputCorrectly() {
+            Assert.That(OutputFormatter.Format(new ObjectLiteralExpression()), Is.EqualTo("{}"));
+        }
+
+        [Test]
+        public void ObjectLiteralWithOneValueIsOutputCorrectly() {
+            Assert.That(OutputFormatter.Format(new ObjectLiteralExpression(new ObjectLiteralExpression.ValueEntry("x", ConstantExpression.Number(1)))), Is.EqualTo("{ x: 1 }"));
+        }
+
+        [Test]
+        public void ObjectLiteralWithThreeValuesIsOutputCorrectly() {
+            Assert.That(OutputFormatter.Format(new ObjectLiteralExpression(new ObjectLiteralExpression.ValueEntry("x", ConstantExpression.Number(1)),
+                                                                           new ObjectLiteralExpression.ValueEntry("y", ConstantExpression.Number(2)),
+                                                                           new ObjectLiteralExpression.ValueEntry("z", ConstantExpression.Number(3)))
+                       ), Is.EqualTo("{ x: 1, y: 2, z: 3 }"));
+        }
+
+        [Test]
+        public void ObjectLiteralWithNumericPropertyWorks() {
+            Assert.That(OutputFormatter.Format(new ObjectLiteralExpression(new ObjectLiteralExpression.ValueEntry("1", ConstantExpression.Number(2)))), Is.EqualTo("{ '1': 2 }"));
+        }
+
+        [Test]
+        public void ObjectLiteralWithInvalidIdentifierPropertyWorks() {
+            Assert.That(OutputFormatter.Format(new ObjectLiteralExpression(new ObjectLiteralExpression.ValueEntry("a\\b", ConstantExpression.Number(1)))), Is.EqualTo("{ 'a\\\\b': 1 }"));
+        }
+
+        [Test]
+        public void CommaExpressionIsParenthesizedInsideObjectLiteral() {
+            Assert.That(OutputFormatter.Format(new ObjectLiteralExpression(new ObjectLiteralExpression.ValueEntry("x", new CommaExpression(ConstantExpression.Number(1), ConstantExpression.Number(2))),
+                                                                           new ObjectLiteralExpression.ValueEntry("y", ConstantExpression.Number(3)))
+                       ), Is.EqualTo("{ x: (1, 2), y: 3 }"));
+        }
+
+        [Test]
         public void UnaryOperatorsAreCorrectlyOutput() {
             var operators = new Dictionary<UnaryOperator, string> { { UnaryOperator.TypeOf, "typeof({0})" },
                                                                     { UnaryOperator.LogicalNot, "!{0}" },

@@ -60,7 +60,7 @@
     <Compile Include="Expressions\FunctionExpression.cs" />
     <Compile Include="Expressions\IdentifierExpression.cs" />
     <Compile Include="Statements\IfStatement.cs" />
-    <Compile Include="Expressions\JsonExpression.cs" />
+    <Compile Include="Expressions\ObjectLiteralExpression.cs" />
     <Compile Include="Expressions\MemberAccessExpression.cs" />
     <Compile Include="Expressions\InvocationExpression.cs" />
     <Compile Include="Expressions\NewExpression.cs" />

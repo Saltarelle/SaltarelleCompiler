@@ -31,13 +31,13 @@ namespace Saltarelle.Compiler.JSModel
             return VisitCollection(expressions, expr => Visit(expr, data));
         }
 
-        public virtual IEnumerable<JsonExpression.ValueEntry> Visit(ReadOnlyCollection<JsonExpression.ValueEntry> values, TData data) {
+        public virtual IEnumerable<ObjectLiteralExpression.ValueEntry> Visit(ReadOnlyCollection<ObjectLiteralExpression.ValueEntry> values, TData data) {
             return VisitCollection(values, v => Visit(v, data));
         }
 
-        public virtual JsonExpression.ValueEntry Visit(JsonExpression.ValueEntry value, TData data) {
+        public virtual ObjectLiteralExpression.ValueEntry Visit(ObjectLiteralExpression.ValueEntry value, TData data) {
             var after = Visit(value.Value, data);
-            return ReferenceEquals(after, value.Value) ? value : new JsonExpression.ValueEntry(value.Name, after);
+            return ReferenceEquals(after, value.Value) ? value : new ObjectLiteralExpression.ValueEntry(value.Name, after);
         }
 
         public virtual Expression Visit(Expression expression, TData data) {
@@ -86,9 +86,9 @@ namespace Saltarelle.Compiler.JSModel
             return ReferenceEquals(method, expression.Method) && ReferenceEquals(arguments, expression.Arguments) ? expression : new InvocationExpression(method, arguments);
         }
 
-        public virtual Expression Visit(JsonExpression expression, TData data) {
+        public virtual Expression Visit(ObjectLiteralExpression expression, TData data) {
             var values = Visit(expression.Values, data);
-            return ReferenceEquals(values, expression.Values) ? expression : new JsonExpression(values);
+            return ReferenceEquals(values, expression.Values) ? expression : new ObjectLiteralExpression(values);
         }
 
         public virtual Expression Visit(MemberAccessExpression expression, TData data) {
