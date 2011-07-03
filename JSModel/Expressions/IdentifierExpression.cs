@@ -5,9 +5,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
     public class IdentifierExpression : Expression {
         public string Name { get; private set; }
 
-        public override int Precedence { get { return ExpressionPrecedence.Terminal; } }
-
-        public IdentifierExpression(string name) {
+        internal IdentifierExpression(string name) : base(ExpressionNodeType.Identifier) {
             if (name == null) throw new ArgumentNullException("name");
             if (!name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");
             Name = name;

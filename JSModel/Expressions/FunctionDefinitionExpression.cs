@@ -5,7 +5,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
     [Serializable]
-    public class FunctionExpression : Expression {
+    public class FunctionDefinitionExpression : Expression {
         public ReadOnlyCollection<string> ParameterNames { get; private set; }
         public BlockStatement Body { get; private set; }
 
@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         /// </summary>
         public string Name { get; private set; }
 
-        public FunctionExpression(IEnumerable<string> parameterNames, Statement body, string name = null) {
+        internal FunctionDefinitionExpression(IEnumerable<string> parameterNames, Statement body, string name = null) : base(ExpressionNodeType.FunctionDefinition) {
             if (parameterNames == null) throw new ArgumentNullException("parameterNames");
             if (body == null) throw new ArgumentNullException("body");
             if (name != null && !name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");
@@ -23,8 +23,6 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             Body = BlockStatement.MakeBlock(body);
             Name = name;
         }
-
-        public override int Precedence { get { return ExpressionPrecedence.FunctionCall + 1; } }
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {

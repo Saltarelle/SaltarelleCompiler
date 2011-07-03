@@ -31,13 +31,13 @@ namespace Saltarelle.Compiler.JSModel
             return VisitCollection(expressions, expr => Visit(expr, data));
         }
 
-        public virtual IEnumerable<ObjectLiteralExpression.ValueEntry> Visit(ReadOnlyCollection<ObjectLiteralExpression.ValueEntry> values, TData data) {
+        public virtual IEnumerable<ObjectLiteralProperty> Visit(ReadOnlyCollection<ObjectLiteralProperty> values, TData data) {
             return VisitCollection(values, v => Visit(v, data));
         }
 
-        public virtual ObjectLiteralExpression.ValueEntry Visit(ObjectLiteralExpression.ValueEntry value, TData data) {
+        public virtual ObjectLiteralProperty Visit(ObjectLiteralProperty value, TData data) {
             var after = Visit(value.Value, data);
-            return ReferenceEquals(after, value.Value) ? value : new ObjectLiteralExpression.ValueEntry(value.Name, after);
+            return ReferenceEquals(after, value.Value) ? value : new ObjectLiteralProperty(value.Name, after);
         }
 
         public virtual Expression Visit(Expression expression, TData data) {
@@ -46,34 +46,34 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual Expression Visit(ArrayLiteralExpression expression, TData data) {
             var after  = Visit(expression.Elements, data);
-            return ReferenceEquals(after, expression.Elements) ? expression : new ArrayLiteralExpression(after);
+            return ReferenceEquals(after, expression.Elements) ? expression : Expression.ArrayLiteral(after);
         }
 
         public virtual Expression Visit(BinaryExpression expression, TData data) {
             var left  = Visit(expression.Left, data);
             var right = Visit(expression.Right, data);
-            return ReferenceEquals(left, expression.Left) && ReferenceEquals(right, expression.Right) ? expression : new BinaryExpression(expression.Operator, left, right);
+            return ReferenceEquals(left, expression.Left) && ReferenceEquals(right, expression.Right) ? expression : Expression.Binary(expression.NodeType, left, right);
         }
 
         public virtual Expression Visit(CommaExpression expression, TData data) {
             var after = Visit(expression.Expressions, data);
-            return ReferenceEquals(after, expression.Expressions) ? expression : new CommaExpression(after);
+            return ReferenceEquals(after, expression.Expressions) ? expression : Expression.Comma(after);
         }
 
         public virtual Expression Visit(ConditionalExpression expression, TData data) {
             var test      = Visit(expression.Test, data);
             var truePart  = Visit(expression.TruePart, data);
             var falsePart = Visit(expression.FalsePart, data);
-            return ReferenceEquals(test, expression.Test) && ReferenceEquals(truePart, expression.TruePart) && ReferenceEquals(falsePart, expression.FalsePart) ? expression : new ConditionalExpression(test, truePart, falsePart);
+            return ReferenceEquals(test, expression.Test) && ReferenceEquals(truePart, expression.TruePart) && ReferenceEquals(falsePart, expression.FalsePart) ? expression : Expression.Conditional(test, truePart, falsePart);
         }
 
         public virtual Expression Visit(ConstantExpression expression, TData data) {
             return expression;
         }
 
-        public virtual Expression Visit(FunctionExpression expression, TData data) {
+        public virtual Expression Visit(FunctionDefinitionExpression expression, TData data) {
             var body = Visit(expression.Body, data);
-            return ReferenceEquals(body, expression.Body) ? expression : new FunctionExpression(expression.ParameterNames, body, expression.Name);
+            return ReferenceEquals(body, expression.Body) ? expression : Expression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
         }
 
         public virtual Expression Visit(IdentifierExpression expression, TData data) {
@@ -83,28 +83,28 @@ namespace Saltarelle.Compiler.JSModel
         public virtual Expression Visit(InvocationExpression expression, TData data) {
             var method    = Visit(expression.Method, data);
             var arguments = Visit(expression.Arguments, data);
-            return ReferenceEquals(method, expression.Method) && ReferenceEquals(arguments, expression.Arguments) ? expression : new InvocationExpression(method, arguments);
+            return ReferenceEquals(method, expression.Method) && ReferenceEquals(arguments, expression.Arguments) ? expression : Expression.Invocation(method, arguments);
         }
 
         public virtual Expression Visit(ObjectLiteralExpression expression, TData data) {
             var values = Visit(expression.Values, data);
-            return ReferenceEquals(values, expression.Values) ? expression : new ObjectLiteralExpression(values);
+            return ReferenceEquals(values, expression.Values) ? expression : Expression.ObjectLiteral(values);
         }
 
         public virtual Expression Visit(MemberAccessExpression expression, TData data) {
             var target = Visit(expression.Target, data);
-            return ReferenceEquals(target, expression.Target) ? expression : new MemberAccessExpression(target, expression.Member);
+            return ReferenceEquals(target, expression.Target) ? expression : Expression.MemberAccess(target, expression.Member);
         }
 
         public virtual Expression Visit(NewExpression expression, TData data) {
             var constructor = Visit(expression.Constructor, data);
             var arguments   = Visit(expression.Arguments, data);
-            return ReferenceEquals(constructor, expression.Constructor) && ReferenceEquals(arguments, expression.Arguments) ? expression : new NewExpression(constructor, arguments);
+            return ReferenceEquals(constructor, expression.Constructor) && ReferenceEquals(arguments, expression.Arguments) ? expression : Expression.New(constructor, arguments);
         }
 
         public virtual Expression Visit(UnaryExpression expression, TData data) {
             var operand = Visit(expression.Operand, data);
-            return ReferenceEquals(operand, expression.Operand) ? expression : new UnaryExpression(expression.Operator, operand);
+            return ReferenceEquals(operand, expression.Operand) ? expression : Expression.Unary(expression.NodeType, operand);
         }
 
         public virtual IEnumerable<Statement> Visit(ReadOnlyCollection<Statement> statements, TData data) {

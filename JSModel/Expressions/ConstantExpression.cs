@@ -10,75 +10,34 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             public string Options { get; private set; }
 
             public RegexpData(string pattern, string options) {
+                if (pattern == null) throw new ArgumentNullException("pattern");
+
                 Pattern = pattern;
                 Options = options;
             }
         }
 
-        public ConstantType Type { get; private set; }
         private readonly object _value;
-
-        public override int Precedence { get { return ExpressionPrecedence.Terminal; } }
-
-        private ConstantExpression(ConstantType type, object value) {
-            Type = type;
-            _value = value;
-        }
 
         public RegexpData RegexpValue {
             get {
-                if (Type != ConstantType.Regexp) throw new InvalidOperationException();
+                if (NodeType != ExpressionNodeType.Regexp) throw new InvalidOperationException();
                 return (RegexpData)_value;
             }
         }
 
         public double NumberValue {
             get {
-                if (Type != ConstantType.Number) throw new InvalidOperationException();
+                if (NodeType != ExpressionNodeType.Number) throw new InvalidOperationException();
                 return (double)_value;
             }
         }
 
         public string StringValue {
             get {
-                if (Type != ConstantType.String) throw new InvalidOperationException();
+                if (NodeType != ExpressionNodeType.String) throw new InvalidOperationException();
                 return (string)_value;
             }
-        }
-
-        public string Format() {
-            switch (Type) {
-                case ConstantType.Null:
-                    return "null";
-                case ConstantType.Number:
-                    return NumberValue.ToString(CultureInfo.InvariantCulture);
-                case ConstantType.Regexp:
-                    return "/" + FixStringLiteral(RegexpValue.Pattern, true) + "/" + RegexpValue.Options;
-                case ConstantType.String:
-                    return "'" + FixStringLiteral(StringValue, false) + "'";
-                default:
-                    throw new ArgumentException("expression");
-            }
-        }
-
-        public static string FixStringLiteral(string s, bool isRegexp) {
-			var sb = new StringBuilder();
-			for (int i = 0; i < s.Length; i++) {
-				switch (s[i]) {
-					case '\b': sb.Append("\\b"); break;
-					case '\f': sb.Append("\\b"); break;
-					case '\n': sb.Append("\\n"); break;
-					case '\0': sb.Append("\\0"); break;
-					case '\r': sb.Append("\\r"); break;
-					case '\t': sb.Append("\\t"); break;
-					case '\v': sb.Append("\\v"); break;
-					case '\'': sb.Append("\\\'"); break;
-					case '\\': sb.Append("\\\\"); break;
-                    case '/':  sb.Append(isRegexp ? "\\/" : "/"); break;
-					default:   sb.Append(s[i]); break;
-				}
-			}
-			return sb.ToString();
         }
 
         [System.Diagnostics.DebuggerStepThrough]
@@ -92,29 +51,25 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 
         // Static factory methods.
 
-        public static ConstantExpression Regexp(string pattern, string options = null) {
-            if (pattern == null) throw new ArgumentNullException("pattern");
-            return new ConstantExpression(ConstantType.Regexp, new RegexpData(pattern, options));
+        internal ConstantExpression(RegexpData regexp) : base(ExpressionNodeType.Regexp) {
+            if (regexp == null) throw new ArgumentNullException("regexp");
+            _value = regexp;
         }
 
-        public static ConstantExpression Number(double value) {
-            return new ConstantExpression(ConstantType.Number, value);
+        internal ConstantExpression(double value) : base(ExpressionNodeType.Number) {
+            _value = value;
         }
 
-        public static ConstantExpression String(string value) {
+        internal ConstantExpression(string value) : base(ExpressionNodeType.String) {
             if (value == null) throw new ArgumentNullException("value");
-            return new ConstantExpression(ConstantType.String, value);
+            _value = value;
         }
 
-        private static readonly ConstantExpression _null = new ConstantExpression(ConstantType.Null, null);
+        private ConstantExpression() : base(ExpressionNodeType.Null) {
+        }
 
-        public static ConstantExpression Null { get { return _null; } }
-    }
+        private static readonly ConstantExpression _null = new ConstantExpression();
 
-    public enum ConstantType {
-        Number,
-        String,
-        Regexp,
-        Null,
+        public static new ConstantExpression Null { get { return _null; } }
     }
 }

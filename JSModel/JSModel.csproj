@@ -40,12 +40,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expressions\ObjectLiteralProperty.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Expressions\ArrayLiteralExpression.cs" />
     <Compile Include="Expressions\BinaryExpression.cs" />
     <Compile Include="IExpressionVisitor.cs" />
     <Compile Include="IStatementVisitor.cs" />
-    <Compile Include="ExpressionPrecedence.cs" />
     <Compile Include="RewriterVisitorBase.cs" />
     <Compile Include="Statements\BlockStatement.cs" />
     <Compile Include="Statements\BreakStatement.cs" />
@@ -57,7 +57,7 @@
     <Compile Include="Expressions\Expression.cs" />
     <Compile Include="Statements\ExpressionStatement.cs" />
     <Compile Include="Statements\ForEachInStatement.cs" />
-    <Compile Include="Expressions\FunctionExpression.cs" />
+    <Compile Include="Expressions\FunctionDefinitionExpression.cs" />
     <Compile Include="Expressions\IdentifierExpression.cs" />
     <Compile Include="Statements\IfStatement.cs" />
     <Compile Include="Expressions\ObjectLiteralExpression.cs" />

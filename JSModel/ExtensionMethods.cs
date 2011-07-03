@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Saltarelle.Compiler.JSModel {
@@ -19,6 +20,26 @@ namespace Saltarelle.Compiler.JSModel {
 
         public static bool IsValidJavaScriptIdentifier(this string s) {
             return _jsIdentifierRegex.IsMatch(s);
+        }
+
+        public static string EscapeJavascriptStringLiteral(this string s, bool isRegexp = false) {
+			var sb = new StringBuilder();
+			for (int i = 0; i < s.Length; i++) {
+				switch (s[i]) {
+					case '\b': sb.Append("\\b"); break;
+					case '\f': sb.Append("\\b"); break;
+					case '\n': sb.Append("\\n"); break;
+					case '\0': sb.Append("\\0"); break;
+					case '\r': sb.Append("\\r"); break;
+					case '\t': sb.Append("\\t"); break;
+					case '\v': sb.Append("\\v"); break;
+					case '\'': sb.Append("\\\'"); break;
+					case '\\': sb.Append("\\\\"); break;
+                    case '/':  sb.Append(isRegexp ? "\\/" : "/"); break;
+					default:   sb.Append(s[i]); break;
+				}
+			}
+			return sb.ToString();
         }
     }
 }

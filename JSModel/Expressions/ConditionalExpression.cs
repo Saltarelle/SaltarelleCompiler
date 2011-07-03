@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         public Expression TruePart { get; private set; }
         public Expression FalsePart { get; private set; }
 
-        public ConditionalExpression(Expression test, Expression truePart, Expression falsePart) {
+        internal ConditionalExpression(Expression test, Expression truePart, Expression falsePart) : base(ExpressionNodeType.Conditional) {
             if (test == null) throw new ArgumentNullException("test");
             if (truePart == null) throw new ArgumentNullException("truePart");
             if (falsePart == null) throw new ArgumentNullException("falsePart");
@@ -16,8 +16,6 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             this.TruePart  = truePart;
             this.FalsePart = falsePart;
         }
-
-        public override int Precedence { get { return ExpressionPrecedence.Conditional; } }
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {

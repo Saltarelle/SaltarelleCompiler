@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.JSModel {
         TReturn Visit(CommaExpression expression, TData data);
         TReturn Visit(ConditionalExpression expression, TData data);
         TReturn Visit(ConstantExpression expression, TData data);
-        TReturn Visit(FunctionExpression expression, TData data);
+        TReturn Visit(FunctionDefinitionExpression expression, TData data);
         TReturn Visit(IdentifierExpression expression, TData data);
         TReturn Visit(InvocationExpression expression, TData data);
         TReturn Visit(ObjectLiteralExpression expression, TData data);

@@ -7,14 +7,9 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
     public class ArrayLiteralExpression : Expression {
         public ReadOnlyCollection<Expression> Elements { get; private set; }
 
-        public override int Precedence { get { return ExpressionPrecedence.Terminal; } }
-
-        public ArrayLiteralExpression(IEnumerable<Expression> elements) {
+        internal ArrayLiteralExpression(IEnumerable<Expression> elements) : base(ExpressionNodeType.ArrayLiteral) {
             if (elements == null) throw new ArgumentNullException("elements");
             Elements = elements.AsReadOnly();
-        }
-
-        public ArrayLiteralExpression(params Expression[] elements) : this((IEnumerable<Expression>)elements) {
         }
 
         [System.Diagnostics.DebuggerStepThrough]

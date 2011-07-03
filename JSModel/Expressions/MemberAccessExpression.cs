@@ -11,9 +11,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         public Expression Target { get; private set; }
         public string Member { get; private set; }
 
-        public override int Precedence { get { return ExpressionPrecedence.MemberOrNew; } }
-
-        public MemberAccessExpression(Expression target, string member) {
+        internal MemberAccessExpression(Expression target, string member) : base(ExpressionNodeType.MemberAccess) {
             if (target == null) throw new ArgumentNullException("target");
             if (member == null) throw new ArgumentNullException("member");
             if (!member.IsValidJavaScriptIdentifier()) throw new ArgumentException("member");

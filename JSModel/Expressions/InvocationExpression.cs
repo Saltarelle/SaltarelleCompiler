@@ -8,14 +8,12 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         public Expression Method { get; private set; }
         public ReadOnlyCollection<Expression> Arguments { get; private set; }
 
-        public InvocationExpression(Expression method, IEnumerable<Expression> arguments) {
+        internal InvocationExpression(Expression method, IEnumerable<Expression> arguments) : base(ExpressionNodeType.Invocation) {
             if (method == null) throw new ArgumentNullException("method");
             if (arguments == null) throw new ArgumentNullException("arguments");
             Method = method;
             Arguments = arguments.AsReadOnly();
         }
-
-        public override int Precedence { get { return ExpressionPrecedence.FunctionCall; } }
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
