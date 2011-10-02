@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Require.cs" />
     <Compile Include="Expressions\ObjectLiteralProperty.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Expressions\ArrayLiteralExpression.cs" />
@@ -76,6 +77,12 @@
     <Compile Include="Statements\WhileStatement.cs" />
     <Compile Include="Statements\WithStatement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeSystem\JsClass.cs" />
+    <Compile Include="TypeSystem\JsEnum.cs" />
+    <Compile Include="TypeSystem\EnumValue.cs" />
+    <Compile Include="TypeSystem\Member.cs" />
+    <Compile Include="TypeSystem\ScopedName.cs" />
+    <Compile Include="TypeSystem\JsType.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
