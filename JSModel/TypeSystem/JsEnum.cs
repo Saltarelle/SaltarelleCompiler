@@ -6,10 +6,16 @@ using System.Text;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
     public class JsEnum : JsType {
-        public ReadOnlyCollection<EnumValue> Values { get; private set; }
+        private IList<EnumValue> _values;
+        public IList<EnumValue> Values { get { return _values; } }
 
-        public JsEnum(ScopedName name, IEnumerable<EnumValue> values) : base(name) {
-            Values = values.AsReadOnly();
+        public JsEnum(ScopedName name) : base(name) {
+            _values = new List<EnumValue>();
+        }
+
+        public override void Freeze() {
+            base.Freeze();
+            _values = _values.AsReadOnly();
         }
     }
 }

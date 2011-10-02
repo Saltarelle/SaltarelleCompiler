@@ -11,5 +11,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             Require.NotNull(name, "name");
             Name = name;
         }
+
+        public virtual void Freeze() {
+        }
     }
 }

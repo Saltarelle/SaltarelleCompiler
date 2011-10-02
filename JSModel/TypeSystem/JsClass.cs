@@ -7,20 +7,30 @@ using Saltarelle.Compiler.JSModel;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
     public class JsClass : JsType {
-        public JsClass ContainingType { get; private set; }
-        public JsClass BaseClass { get; private set; }
-        public ReadOnlyCollection<ScopedName> ImplementedInterfaces { get; private set; }
-        public ReadOnlyCollection<Member> Constructors { get; private set; }
-        public ReadOnlyCollection<Member> InstanceMembers { get; private set; }
-        public ReadOnlyCollection<Member> StaticMembers { get; private set; }
+        private IList<ScopedName> _implementedInterfaces;
+        private IList<Member> _constructors;
+        private IList<Member> _instanceMembers;
+        private IList<Member> _staticMembers;
 
-        public JsClass(ScopedName name, JsClass containingType, JsClass baseType, IEnumerable<ScopedName> implementedInterfaces, IEnumerable<Member> constructors, IEnumerable<Member> instanceMembers, ReadOnlyCollection<Member> staticMembers) : base(name) {
-            ContainingType = containingType;
-            BaseClass = baseType;
-            ImplementedInterfaces = implementedInterfaces.AsReadOnly();
-            Constructors = constructors.AsReadOnly();
-            InstanceMembers = instanceMembers.AsReadOnly();
-            StaticMembers = staticMembers;
+        public JsClass BaseClass { get; private set; }
+        public IList<ScopedName> ImplementedInterfaces { get { return _implementedInterfaces; } }
+        public IList<Member> Constructors { get { return _constructors; } }
+        public IList<Member> InstanceMembers { get { return _instanceMembers; } }
+        public IList<Member> StaticMembers { get { return _staticMembers; } }
+
+        public JsClass(ScopedName name, JsClass baseClass) : base(name) {
+            BaseClass              = baseClass;
+            _implementedInterfaces = new List<ScopedName>();
+            _constructors          = new List<Member>();
+            _instanceMembers       = new List<Member>();
+            _staticMembers         = new List<Member>();
+        }
+
+        public override void Freeze() {
+            _implementedInterfaces = _implementedInterfaces.AsReadOnly();
+            _constructors          = _constructors.AsReadOnly();
+            _instanceMembers       = _instanceMembers.AsReadOnly();
+            _staticMembers         = _instanceMembers.AsReadOnly();
         }
     }
 }
