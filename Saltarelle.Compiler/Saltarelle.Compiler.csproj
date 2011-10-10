@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="CodeBuilder.cs" />
     <Compile Include="CodeConvertVisitor.cs" />
+    <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="ISourceFile.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

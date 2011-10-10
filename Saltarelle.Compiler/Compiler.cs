@@ -5,9 +5,11 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler {
     public interface ICompiler {
@@ -15,13 +17,84 @@ namespace Saltarelle.Compiler {
     }
 
     public class Compiler : DepthFirstAstVisitor<object, object>, ICompiler {
+        private class ResolveAllNavigator : IResolveVisitorNavigator {
+            public ResolveVisitorNavigationMode Scan(AstNode node) {
+                return ResolveVisitorNavigationMode.Resolve;
+            }
+
+            public void Resolved(AstNode node, ResolveResult result) {
+            }
+
+            public void ProcessConversion(Expression expression, ResolveResult result, Conversion conversion, IType targetType) {
+            }
+        }
+
+        private readonly INamingConventionResolver _namingConvention;
         private ITypeResolveContext _typeResolveContext;
         private SimpleProjectContent _project;
-        private Dictionary<ScopedName, JsType> _types;
-        private string _currentNamespace;
-        private JsType _currentType;
+        private Dictionary<ITypeDefinition, JsType> _types;
+        private ResolveVisitor _resolver;
 
-        public Compiler() {
+        public Compiler(INamingConventionResolver namingConvention) {
+            _namingConvention = namingConvention;
+        }
+
+        private ScopedName ConvertName(ITypeDefinition type) {
+            if (type.DeclaringType == null)
+                return ScopedName.Global(!string.IsNullOrEmpty(type.Namespace) ? type.Namespace : null, _namingConvention.GetTypeName(type));
+            else
+                return ScopedName.Nested(ConvertName(type.DeclaringTypeDefinition), _namingConvention.GetTypeName(type));
+        }
+
+        private bool IsTypePublic(ITypeDefinition type) {
+            // A type is public if the type and all its declaring types are public or protected (or protected internal).
+            while (type != null) {
+                bool isPublic = (type.Accessibility == Accessibility.Public || type.Accessibility == Accessibility.Protected || type.Accessibility == Accessibility.ProtectedOrInternal);
+                if (!isPublic)
+                    return false;
+                type = type.DeclaringTypeDefinition;
+            }
+            return true;
+        }
+
+        private JsEnum ConvertEnum(ITypeDefinition type) {
+            return new JsEnum(ConvertName(type), IsTypePublic(type));
+        }
+
+        private JsConstructedType ConvertPotentiallyGenericType(IType type) {
+            if (type is ITypeParameter)
+                return new JsConstructedType(new JsIdentifierExpression(_namingConvention.GetTypeParameterName((ITypeParameter)type)));
+
+            var unconstructed = new JsTypeReferenceExpression(type.GetDefinition());
+            if (type is ParameterizedType)
+                return new JsConstructedType(unconstructed, ((ParameterizedType)type).TypeArguments.Select(ConvertPotentiallyGenericType));
+            else
+                return new JsConstructedType(unconstructed);
+        }
+
+        private JsClass.ClassTypeEnum ConvertClassType(TypeKind typeKind) {
+            switch (typeKind) {
+                case TypeKind.Class:     return JsClass.ClassTypeEnum.Class;
+                case TypeKind.Interface: return JsClass.ClassTypeEnum.Interface;
+                case TypeKind.Struct:    return JsClass.ClassTypeEnum.Struct;
+                default: throw new ArgumentException("classType");
+            }
+        }
+
+        private JsClass ConvertClass(ITypeDefinition type) {
+            var baseTypes    = type.GetAllBaseTypes(_typeResolveContext).ToList();
+            var baseClass    = type.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => t != type && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
+            var interfaces   = baseTypes.Where(t => t != type && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
+            var typeArgNames = type.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
+
+            return new JsClass(ConvertName(type), IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces);
+        }
+
+        private void CreateTypes() {
+        var x = _project.GetAllTypes();
+            foreach (var type in _project.GetAllTypes()) {
+                _types[type] = (type.Kind == TypeKind.Enum ? (JsType)ConvertEnum(type) : (JsType)ConvertClass(type));
+            }
         }
 
         public IEnumerable<JsType> Compile(IEnumerable<ISourceFile> sourceFiles, IEnumerable<ITypeResolveContext> references) {
@@ -39,13 +112,18 @@ namespace Saltarelle.Compiler {
                 _project.UpdateProjectContent(null, f.ParsedFile);
             }
 
-            _typeResolveContext = new CompositeTypeResolveContext(new[] { _project }.Concat(references));
-            _types              = new Dictionary<ScopedName, JsType>();
-            _currentNamespace   = null;
-            _currentType        = null;
+            using (var syncContext = new CompositeTypeResolveContext(new[] { _project }.Concat(references)).Synchronize()) { // docs recommend synchronizing.
+                _typeResolveContext = syncContext;
+                _types              = new Dictionary<ITypeDefinition, JsType>();
 
-            foreach (var f in parsedFiles) {
-                f.CompilationUnit.AcceptVisitor(this);
+                CreateTypes();
+
+                var res = new CSharpResolver(_typeResolveContext);
+                foreach (var f in parsedFiles) {
+                    _resolver = new ResolveVisitor(res, f.ParsedFile, new ResolveAllNavigator());
+                    _resolver.Scan(f.CompilationUnit);
+                    f.CompilationUnit.AcceptVisitor(this);
+                }
             }
 
             foreach (var t in _types.Values)
@@ -55,33 +133,8 @@ namespace Saltarelle.Compiler {
         }
 
         public override object VisitTypeDeclaration(TypeDeclaration typeDeclaration, object data) {
-            var oldType = _currentType;
-            try {
-                ScopedName name = _currentType != null ? ScopedName.Nested(_currentType.Name, typeDeclaration.Name) : ScopedName.Global(_currentNamespace, typeDeclaration.Name);
-                if (_types.TryGetValue(name, out _currentType)) {
-                if ((typeDeclaration.ClassType == ClassType.Enum && !(_currentType is JsEnum)) || (typeDeclaration.ClassType != ClassType.Enum && !(_currentType is JsClass)))
-                    throw new InvalidOperationException("Got type of the wrong kind. Does the code compile?");
-                }
-                else {
-                    _types[name] = _currentType = (typeDeclaration.ClassType == ClassType.Enum ? (JsType)new JsEnum(name) : new JsClass(name, null));
-                }
-
-                return base.VisitTypeDeclaration(typeDeclaration, data);
-            }
-            finally {
-                _currentType = oldType;
-            }
-        }
-
-        public override object VisitNamespaceDeclaration(NamespaceDeclaration namespaceDeclaration, object data) {
-            var oldNamespace = _currentNamespace;
-            try {
-                _currentNamespace = (oldNamespace != null ? oldNamespace + "." : "") + string.Join(".", namespaceDeclaration.Identifiers.Select(i => i.Name));
-                return base.VisitNamespaceDeclaration(namespaceDeclaration, data);
-            }
-            finally {
-                _currentNamespace = oldNamespace;
-            }
+            var tp = _resolver.GetResolveResult(typeDeclaration);
+            return base.VisitTypeDeclaration(typeDeclaration, data);
         }
     }
 }

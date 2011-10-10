@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -40,6 +41,11 @@ namespace Saltarelle.Compiler.JSModel {
 				}
 			}
 			return sb.ToString();
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> seq, Action<T> action) {
+            foreach (var el in seq)
+                action(el);
         }
     }
 }

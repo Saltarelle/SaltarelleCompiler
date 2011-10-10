@@ -2,18 +2,19 @@
 
 namespace Saltarelle.Compiler.JSModel {
     public interface IExpressionVisitor<out TReturn, in TData> {
-        TReturn Visit(Expression expression, TData data);
-        TReturn Visit(ArrayLiteralExpression expression, TData data);
-        TReturn Visit(BinaryExpression expression, TData data);
-        TReturn Visit(CommaExpression expression, TData data);
-        TReturn Visit(ConditionalExpression expression, TData data);
-        TReturn Visit(ConstantExpression expression, TData data);
-        TReturn Visit(FunctionDefinitionExpression expression, TData data);
-        TReturn Visit(IdentifierExpression expression, TData data);
-        TReturn Visit(InvocationExpression expression, TData data);
-        TReturn Visit(ObjectLiteralExpression expression, TData data);
-        TReturn Visit(MemberAccessExpression expression, TData data);
-        TReturn Visit(NewExpression expression, TData data);
-        TReturn Visit(UnaryExpression expression, TData data);
+        TReturn Visit(JsExpression expression, TData data);
+        TReturn Visit(JsArrayLiteralExpression expression, TData data);
+        TReturn Visit(JsBinaryExpression expression, TData data);
+        TReturn Visit(JsCommaExpression expression, TData data);
+        TReturn Visit(JsConditionalExpression expression, TData data);
+        TReturn Visit(JsConstantExpression expression, TData data);
+        TReturn Visit(JsFunctionDefinitionExpression expression, TData data);
+        TReturn Visit(JsIdentifierExpression expression, TData data);
+        TReturn Visit(JsInvocationExpression expression, TData data);
+        TReturn Visit(JsObjectLiteralExpression expression, TData data);
+        TReturn Visit(JsMemberAccessExpression expression, TData data);
+        TReturn Visit(JsNewExpression expression, TData data);
+        TReturn Visit(JsUnaryExpression expression, TData data);
+        TReturn Visit(JsTypeReferenceExpression expression, TData data);
     }
 }

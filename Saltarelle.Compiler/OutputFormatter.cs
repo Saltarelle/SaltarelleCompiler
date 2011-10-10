@@ -17,13 +17,13 @@ namespace Saltarelle.Compiler
         private OutputFormatter() {
         }
 
-        public static string Format(Expression expression) {
+        public static string Format(JsExpression expression) {
             var fmt = new OutputFormatter();
             fmt.Visit(expression, false);
             return fmt._cb.ToString();
         }
 
-        public object Visit(Expression expression, bool parenthesized) {
+        public object Visit(JsExpression expression, bool parenthesized) {
             if (parenthesized)
                 _cb.Append("(");
             expression.Accept(this, parenthesized);
@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        private void VisitExpressionList(IEnumerable<Expression> expressions) {
+        private void VisitExpressionList(IEnumerable<JsExpression> expressions) {
             bool first = true;
             foreach (var x in expressions) {
                 if (!first)
@@ -42,14 +42,14 @@ namespace Saltarelle.Compiler
             }
         }
 
-        public object Visit(ArrayLiteralExpression expression, bool parenthesized) {
+        public object Visit(JsArrayLiteralExpression expression, bool parenthesized) {
             _cb.Append("[");
             VisitExpressionList(expression.Elements);
             _cb.Append("]");
             return null;
         }
 
-        public object Visit(BinaryExpression expression, bool parenthesized) {
+        public object Visit(JsBinaryExpression expression, bool parenthesized) {
             int expressionPrecedence = GetPrecedence(expression.NodeType);
             if (expression.NodeType == ExpressionNodeType.Index) {
                 Visit(expression.Left, GetPrecedence(expression.Left.NodeType) > expressionPrecedence);
@@ -67,7 +67,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(CommaExpression expression, bool parenthesized) {
+        public object Visit(JsCommaExpression expression, bool parenthesized) {
             for (int i = 0; i < expression.Expressions.Count; i++) {
                 if (i > 0)
                     _cb.Append(", ");
@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(ConditionalExpression expression, bool parenthesized) {
+        public object Visit(JsConditionalExpression expression, bool parenthesized) {
             // Always parenthesize conditionals (but beware of double parentheses). Better this than accidentally getting the tricky precedence wrong sometimes.
             if (!parenthesized)
                 _cb.Append("(");
@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(ConstantExpression expression, bool parenthesized) {
+        public object Visit(JsConstantExpression expression, bool parenthesized) {
             switch (expression.NodeType) {
                 case ExpressionNodeType.Null:
                     _cb.Append("null");
@@ -114,7 +114,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(FunctionDefinitionExpression expression, bool parenthesized) {
+        public object Visit(JsFunctionDefinitionExpression expression, bool parenthesized) {
             _cb.Append("function");
             if (expression.Name != null)
                 _cb.Append(" ").Append(expression.Name);
@@ -134,20 +134,20 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(IdentifierExpression expression, bool parenthesized) {
+        public object Visit(JsIdentifierExpression expression, bool parenthesized) {
             _cb.Append(expression.Name);
             return null;
         }
 
-        public object Visit(InvocationExpression expression, bool parenthesized) {
-            Visit(expression.Method, GetPrecedence(expression.Method.NodeType) > GetPrecedence(expression.NodeType) || (expression.Method is NewExpression)); // Ugly code to make sure that we put parentheses around "new", eg. "(new X())(1)" rather than "new X()(1)"
+        public object Visit(JsInvocationExpression expression, bool parenthesized) {
+            Visit(expression.Method, GetPrecedence(expression.Method.NodeType) > GetPrecedence(expression.NodeType) || (expression.Method is JsNewExpression)); // Ugly code to make sure that we put parentheses around "new", eg. "(new X())(1)" rather than "new X()(1)"
             _cb.Append("(");
             VisitExpressionList(expression.Arguments);
             _cb.Append(")");
             return null;
         }
 
-        public object Visit(ObjectLiteralExpression expression, bool parenthesized) {
+        public object Visit(JsObjectLiteralExpression expression, bool parenthesized) {
             if (expression.Values.Count == 0) {
                 _cb.Append("{}");
             }
@@ -167,14 +167,14 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(MemberAccessExpression expression, bool parenthesized) {
+        public object Visit(JsMemberAccessExpression expression, bool parenthesized) {
             Visit(expression.Target, (GetPrecedence(expression.Target.NodeType) >= GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
             _cb.Append(".");
             _cb.Append(expression.Member);
             return null;
         }
 
-        public object Visit(NewExpression expression, bool parenthesized) {
+        public object Visit(JsNewExpression expression, bool parenthesized) {
             _cb.Append("new ");
             Visit(expression.Constructor, GetPrecedence(expression.Constructor.NodeType) >= GetPrecedence(expression.NodeType));
             _cb.Append("(");
@@ -183,7 +183,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(UnaryExpression expression, bool parenthesized) {
+        public object Visit(JsUnaryExpression expression, bool parenthesized) {
             string prefix = "", postfix = "";
             bool alwaysParenthesize = false;
             switch (expression.NodeType) {
@@ -204,6 +204,10 @@ namespace Saltarelle.Compiler
             Visit(expression.Operand, (GetPrecedence(expression.Operand.NodeType) >= PrecedenceIncrDecr) || alwaysParenthesize);
             _cb.Append(postfix);
             return null;
+        }
+
+        public object Visit(JsTypeReferenceExpression expression, bool data) {
+            throw new NotSupportedException("TypeReferenceExpressions should not occur in the output stage");
         }
 
         private static string GetBinaryOperatorString(ExpressionNodeType oper) {

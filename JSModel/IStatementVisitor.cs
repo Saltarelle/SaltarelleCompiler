@@ -2,22 +2,22 @@
 
 namespace Saltarelle.Compiler.JSModel {
     public interface IStatementVisitor<out TReturn, in TData> {
-        TReturn Visit(Statement statement, TData data);
-        TReturn Visit(BlockStatement statement, TData data);
-        TReturn Visit(BreakStatement statement, TData data);
-        TReturn Visit(ContinueStatement statement, TData data);
-        TReturn Visit(DoWhileStatement statement, TData data);
-        TReturn Visit(EmptyStatement statement, TData data);
-        TReturn Visit(ExpressionStatement statement, TData data);
-        TReturn Visit(ForEachInStatement statement, TData data);
-        TReturn Visit(ForStatement statement, TData data);
-        TReturn Visit(IfStatement statement, TData data);
-        TReturn Visit(ReturnStatement statement, TData data);
-        TReturn Visit(SwitchStatement statement, TData data);
-        TReturn Visit(ThrowStatement statement, TData data);
-        TReturn Visit(TryCatchFinallyStatement statement, TData data);
-        TReturn Visit(VariableDeclarationStatement statement, TData data);
-        TReturn Visit(WhileStatement statement, TData data);
-        TReturn Visit(WithStatement statement, TData data);
+        TReturn Visit(JsStatement statement, TData data);
+        TReturn Visit(JsBlockStatement statement, TData data);
+        TReturn Visit(JsBreakStatement statement, TData data);
+        TReturn Visit(JsContinueStatement statement, TData data);
+        TReturn Visit(JsDoWhileStatement statement, TData data);
+        TReturn Visit(JsEmptyStatement statement, TData data);
+        TReturn Visit(JsExpressionStatement statement, TData data);
+        TReturn Visit(JsForEachInStatement statement, TData data);
+        TReturn Visit(JsForStatement statement, TData data);
+        TReturn Visit(JsIfStatement statement, TData data);
+        TReturn Visit(JsReturnStatement statement, TData data);
+        TReturn Visit(JsSwitchStatement statement, TData data);
+        TReturn Visit(JsThrowStatement statement, TData data);
+        TReturn Visit(JsTryCatchFinallyStatement statement, TData data);
+        TReturn Visit(JsVariableDeclarationStatement statement, TData data);
+        TReturn Visit(JsWhileStatement statement, TData data);
+        TReturn Visit(JsWithStatement statement, TData data);
     }
 }

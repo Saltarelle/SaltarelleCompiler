@@ -13,20 +13,20 @@ namespace Saltarelle.Compiler.Tests
     {
         [Test]
         public void LeftToRightAssociativityWorksForExpressionNodeTypes() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Subtract,
-                                                   Expression.Binary(ExpressionNodeType.Subtract,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Subtract,
+                                                   JsExpression.Binary(ExpressionNodeType.Subtract,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3)
+                                                   JsExpression.Number(3)
                                                )
                         ), Is.EqualTo("1 - 2 - 3"));
 
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Subtract,
-                                                   Expression.Number(1),
-                                                   Expression.Binary(ExpressionNodeType.Subtract,
-                                                       Expression.Number(2),
-                                                       Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Subtract,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Binary(ExpressionNodeType.Subtract,
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3)
                                                    )
                                                )
                         ), Is.EqualTo("1 - (2 - 3)"));
@@ -34,59 +34,59 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void RightToLeftAssociativityWorksForExpressionNodeTypes() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Assign,
-                                                   Expression.Number(1),
-                                                   Expression.Binary(ExpressionNodeType.Assign,
-                                                       Expression.Number(2),
-                                                       Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Assign,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Binary(ExpressionNodeType.Assign,
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3)
                                                    )
                                                )
                         ), Is.EqualTo("1 = 2 = 3"));
 
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Assign,
-                                                   Expression.Binary(ExpressionNodeType.Assign,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Assign,
+                                                   JsExpression.Binary(ExpressionNodeType.Assign,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3)
+                                                   JsExpression.Number(3)
                                                )
                         ), Is.EqualTo("(1 = 2) = 3"));
         }
 
         [Test]
         public void MultiplyHasHigherPrecedenceThanAdd() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Add,
-                                                   Expression.Binary(ExpressionNodeType.Multiply,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Add,
+                                                   JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3)
+                                                   JsExpression.Number(3)
                                                )
                         ), Is.EqualTo("1 * 2 + 3"));
 
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Add,
-                                                   Expression.Number(1),
-                                                   Expression.Binary(ExpressionNodeType.Multiply,
-                                                       Expression.Number(2),
-                                                       Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Add,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3)
                                                    )
                                                )
                         ), Is.EqualTo("1 + 2 * 3"));
 
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Multiply,
-                                                   Expression.Binary(ExpressionNodeType.Add,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                   JsExpression.Binary(ExpressionNodeType.Add,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3)
+                                                   JsExpression.Number(3)
                                                )
                         ), Is.EqualTo("(1 + 2) * 3"));
 
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Multiply,
-                                                   Expression.Number(1),
-                                                   Expression.Binary(ExpressionNodeType.Add,
-                                                       Expression.Number(2),
-                                                       Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Binary(ExpressionNodeType.Add,
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3)
                                                    )
                                                )
                         ), Is.EqualTo("1 * (2 + 3)"));
@@ -94,11 +94,11 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void CommaIsParenthesizedAsAssignmentValue() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Assign,
-                                                   Expression.Number(1),
-                                                   Expression.Comma(
-                                                       Expression.Number(2),
-                                                       Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Assign,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3)
                                                    )
                                                )
                         ), Is.EqualTo("1 = (2, 3)"));
@@ -106,14 +106,14 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void CommaIsNotParenthesizedInsideOtherComma() {
-            Assert.That(OutputFormatter.Format(Expression.Comma(
-                                                   Expression.Comma(
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Comma(
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Comma(
-                                                       Expression.Number(3),
-                                                       Expression.Number(4)
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(3),
+                                                       JsExpression.Number(4)
                                                    )
                                                )
                         ), Is.EqualTo("1, 2, 3, 4"));
@@ -121,15 +121,15 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void CommaIsParenthesizedInsideArrayLiteral() {
-            Assert.That(OutputFormatter.Format(Expression.ArrayLiteral(
-                                                   Expression.Comma(
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.ArrayLiteral(
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3),
-                                                   Expression.Comma(
-                                                       Expression.Number(4),
-                                                       Expression.Number(5)
+                                                   JsExpression.Number(3),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(4),
+                                                       JsExpression.Number(5)
                                                    )
                                                )
                         ), Is.EqualTo("[(1, 2), 3, (4, 5)]"));
@@ -137,10 +137,10 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void AssignmentIsNotParenthesizedInsideArrayLiteral() {
-            Assert.That(OutputFormatter.Format(Expression.ArrayLiteral(
-                                                   Expression.Binary(ExpressionNodeType.Assign,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.ArrayLiteral(
+                                                   JsExpression.Binary(ExpressionNodeType.Assign,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    )
                                                )
                         ), Is.EqualTo("[1 = 2]"));
@@ -148,32 +148,32 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void EmptyArrayLiteralWorks() {
-            Assert.That(OutputFormatter.Format(Expression.ArrayLiteral()), Is.EqualTo("[]"));
+            Assert.That(OutputFormatter.Format(JsExpression.ArrayLiteral()), Is.EqualTo("[]"));
         }
 
         [Test]
         public void OneElementArrayLiteralWorks() {
-            Assert.That(OutputFormatter.Format(Expression.ArrayLiteral(Expression.Number(1))), Is.EqualTo("[1]"));
+            Assert.That(OutputFormatter.Format(JsExpression.ArrayLiteral(JsExpression.Number(1))), Is.EqualTo("[1]"));
         }
 
         [Test]
         public void ConditionalIsAlwaysParenthesized() {
-            Assert.That(OutputFormatter.Format(Expression.Conditional(
-                                                   Expression.Number(1),
-                                                   Expression.Number(2),
-                                                   Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Conditional(
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Number(2),
+                                                   JsExpression.Number(3)
                                                )
                         ), Is.EqualTo("(1 ? 2 : 3)"));
         }
 
         [Test]
         public void ConditionalIsNotDoublyParenthesized() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Add,
-                                                   Expression.Number(1),
-                                                   Expression.Conditional(
-                                                       Expression.Number(2),
-                                                       Expression.Number(3),
-                                                       Expression.Number(4)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Add,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Conditional(
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3),
+                                                       JsExpression.Number(4)
                                                    )
                                                )
                         ), Is.EqualTo("1 + (2 ? 3 : 4)"));
@@ -181,18 +181,18 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void MultiplicationInConditionalIsParenthesized() {
-            Assert.That(OutputFormatter.Format(Expression.Conditional(
-                                                   Expression.Binary(ExpressionNodeType.Multiply,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Conditional(
+                                                   JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Binary(ExpressionNodeType.Multiply,
-                                                       Expression.Number(3),
-                                                       Expression.Number(4)
+                                                   JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                       JsExpression.Number(3),
+                                                       JsExpression.Number(4)
                                                    ),
-                                                   Expression.Binary(ExpressionNodeType.Multiply,
-                                                       Expression.Number(5),
-                                                       Expression.Number(6)
+                                                   JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                       JsExpression.Number(5),
+                                                       JsExpression.Number(6)
                                                    )
                                                )
                         ), Is.EqualTo("((1 * 2) ? (3 * 4) : (5 * 6))"));
@@ -200,26 +200,26 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void ExpressionNodeTypeIsNotParenthesizedInsideConditional() {
-            Assert.That(OutputFormatter.Format(Expression.Conditional(
-                                                   Expression.Unary(ExpressionNodeType.Negate, Expression.Number(1)),
-                                                   Expression.Unary(ExpressionNodeType.Negate, Expression.Number(2)),
-                                                   Expression.Unary(ExpressionNodeType.Negate, Expression.Number(3))
+            Assert.That(OutputFormatter.Format(JsExpression.Conditional(
+                                                   JsExpression.Unary(ExpressionNodeType.Negate, JsExpression.Number(1)),
+                                                   JsExpression.Unary(ExpressionNodeType.Negate, JsExpression.Number(2)),
+                                                   JsExpression.Unary(ExpressionNodeType.Negate, JsExpression.Number(3))
                                                )
                         ), Is.EqualTo("(-1 ? -2 : -3)"));
         }
 
         [Test]
         public void CommaIsParenthesizedInsideInvocation() {
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.Identifier("f"),
-                                                   Expression.Comma(
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.Identifier("f"),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3),
-                                                   Expression.Comma(
-                                                       Expression.Number(4),
-                                                       Expression.Number(5)
+                                                   JsExpression.Number(3),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(4),
+                                                       JsExpression.Number(5)
                                                    )
                                                )
                         ), Is.EqualTo("f((1, 2), 3, (4, 5))"));
@@ -227,23 +227,23 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void IndexingWorks() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Index,
-                                                   Expression.Binary(ExpressionNodeType.Index,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Index,
+                                                   JsExpression.Binary(ExpressionNodeType.Index,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3)
+                                                   JsExpression.Number(3)
                                                )
                         ), Is.EqualTo("1[2][3]"));
         }
 
         [Test]
         public void CommaIsNotParenthesizedInsideIndexing() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Index,
-                                                   Expression.Number(1),
-                                                   Expression.Comma(
-                                                       Expression.Number(2),
-                                                       Expression.Number(3)
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Index,
+                                                   JsExpression.Number(1),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(2),
+                                                       JsExpression.Number(3)
                                                    )
                                                )
                         ), Is.EqualTo("1[2, 3]"));
@@ -251,41 +251,41 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void StringLiteralsAreCorrectlyEncoded() {
-            Assert.That(OutputFormatter.Format(Expression.String("x")), Is.EqualTo("'x'"));
-            Assert.That(OutputFormatter.Format(Expression.String("\"")), Is.EqualTo("'\"'"));
-            Assert.That(OutputFormatter.Format(Expression.String("'")), Is.EqualTo("'\\''"));
-            Assert.That(OutputFormatter.Format(Expression.String("\r\n/\\")), Is.EqualTo("'\\r\\n/\\\\'"));
+            Assert.That(OutputFormatter.Format(JsExpression.String("x")), Is.EqualTo("'x'"));
+            Assert.That(OutputFormatter.Format(JsExpression.String("\"")), Is.EqualTo("'\"'"));
+            Assert.That(OutputFormatter.Format(JsExpression.String("'")), Is.EqualTo("'\\''"));
+            Assert.That(OutputFormatter.Format(JsExpression.String("\r\n/\\")), Is.EqualTo("'\\r\\n/\\\\'"));
         }
 
         [Test]
         public void RegularExpressionLiteralsAreCorrectlyEncoded() {
-            Assert.That(OutputFormatter.Format(Expression.Regexp("x")), Is.EqualTo("/x/"));
-            Assert.That(OutputFormatter.Format(Expression.Regexp("\"")), Is.EqualTo("/\"/"));
-            Assert.That(OutputFormatter.Format(Expression.Regexp("/")), Is.EqualTo("/\\//"));
-            Assert.That(OutputFormatter.Format(Expression.Regexp("\r\n/\\")), Is.EqualTo("/\\r\\n\\/\\\\/"));
-            Assert.That(OutputFormatter.Format(Expression.Regexp("x", "g")), Is.EqualTo("/x/g"));
+            Assert.That(OutputFormatter.Format(JsExpression.Regexp("x")), Is.EqualTo("/x/"));
+            Assert.That(OutputFormatter.Format(JsExpression.Regexp("\"")), Is.EqualTo("/\"/"));
+            Assert.That(OutputFormatter.Format(JsExpression.Regexp("/")), Is.EqualTo("/\\//"));
+            Assert.That(OutputFormatter.Format(JsExpression.Regexp("\r\n/\\")), Is.EqualTo("/\\r\\n\\/\\\\/"));
+            Assert.That(OutputFormatter.Format(JsExpression.Regexp("x", "g")), Is.EqualTo("/x/g"));
         }
 
         [Test]
         public void NullLiteralWorks() {
-            Assert.That(OutputFormatter.Format(Expression.Null), Is.EqualTo("null"));
+            Assert.That(OutputFormatter.Format(JsExpression.Null), Is.EqualTo("null"));
         }
 
         [Test]
         public void NumbersAreCorrectlyRepresented() {
-            Assert.That(OutputFormatter.Format(Expression.Number(1)), Is.EqualTo("1"));
-            Assert.That(OutputFormatter.Format(Expression.Number(1.25)), Is.EqualTo("1.25"));
-            Assert.That(OutputFormatter.Format(Expression.Number(double.PositiveInfinity)), Is.EqualTo("Infinity"));
-            Assert.That(OutputFormatter.Format(Expression.Number(double.NegativeInfinity)), Is.EqualTo("-Infinity"));
-            Assert.That(OutputFormatter.Format(Expression.Number(double.NaN)), Is.EqualTo("NaN"));
+            Assert.That(OutputFormatter.Format(JsExpression.Number(1)), Is.EqualTo("1"));
+            Assert.That(OutputFormatter.Format(JsExpression.Number(1.25)), Is.EqualTo("1.25"));
+            Assert.That(OutputFormatter.Format(JsExpression.Number(double.PositiveInfinity)), Is.EqualTo("Infinity"));
+            Assert.That(OutputFormatter.Format(JsExpression.Number(double.NegativeInfinity)), Is.EqualTo("-Infinity"));
+            Assert.That(OutputFormatter.Format(JsExpression.Number(double.NaN)), Is.EqualTo("NaN"));
         }
 
         [Test]
         public void NestedMemberExpressionsAreNotParenthesized() {
-            Assert.That(OutputFormatter.Format(Expression.MemberAccess(
-                                                   Expression.MemberAccess(
-                                                       Expression.MemberAccess(
-                                                           Expression.Number(1),
+            Assert.That(OutputFormatter.Format(JsExpression.MemberAccess(
+                                                   JsExpression.MemberAccess(
+                                                       JsExpression.MemberAccess(
+                                                           JsExpression.Number(1),
                                                            "Member1"
                                                        ),
                                                        "Member2"
@@ -297,10 +297,10 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void InvocationIsParenthesizedWhenUsedAsMemberAccessTarget() {
-            Assert.That(OutputFormatter.Format(Expression.MemberAccess(
-                                                   Expression.Invocation(
-                                                       Expression.Number(1),
-                                                       new[] { Expression.Number(2) }
+            Assert.That(OutputFormatter.Format(JsExpression.MemberAccess(
+                                                   JsExpression.Invocation(
+                                                       JsExpression.Number(1),
+                                                       new[] { JsExpression.Number(2) }
                                                    ),
                                                    "Member"
                                                )
@@ -310,10 +310,10 @@ namespace Saltarelle.Compiler.Tests
         [Test]
         public void NestedNewExpressionsAreParenthesized() {
             // I don't know if this makes sense, but if it does, it should be correct.
-            Assert.That(OutputFormatter.Format(Expression.New(
-                                                   Expression.New(
-                                                       Expression.New(
-                                                           Expression.Number(1)
+            Assert.That(OutputFormatter.Format(JsExpression.New(
+                                                   JsExpression.New(
+                                                       JsExpression.New(
+                                                           JsExpression.Number(1)
                                                        )
                                                    )
                                                )
@@ -323,38 +323,38 @@ namespace Saltarelle.Compiler.Tests
         [Test]
         public void NewExpressionsAndMemberExpressionsAreParenthesizedInsideEachOther() {
             // Other stuff from the department "strange edge cases". Should be parenthesized to cause as little trouble as possible.
-            Assert.That(OutputFormatter.Format(Expression.MemberAccess(
-                                                   Expression.New(
-                                                       Expression.Number(1),
-                                                       new[] { Expression.Number(2) }
+            Assert.That(OutputFormatter.Format(JsExpression.MemberAccess(
+                                                   JsExpression.New(
+                                                       JsExpression.Number(1),
+                                                       new[] { JsExpression.Number(2) }
                                                    ),
                                                    "Member"
                                                )
                         ), Is.EqualTo("(new 1(2)).Member"));
 
             // Other stuff from the department "strange edge cases". Should be parenthesized to cause as little trouble as possible.
-            Assert.That(OutputFormatter.Format(Expression.New(
-                                                   Expression.MemberAccess(
-                                                       Expression.Number(1),
+            Assert.That(OutputFormatter.Format(JsExpression.New(
+                                                   JsExpression.MemberAccess(
+                                                       JsExpression.Number(1),
                                                        "Member"
                                                    ),
-                                                   new[] { Expression.Number(2) }
+                                                   new[] { JsExpression.Number(2) }
                                                )
                         ), Is.EqualTo("new (1.Member)(2)"));
         }
 
         [Test]
         public void CommaIsParenthesizedInsideConstructorArgumentList() {
-            Assert.That(OutputFormatter.Format(Expression.New(
-                                                   Expression.Number(10),
-                                                   Expression.Comma(
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.New(
+                                                   JsExpression.Number(10),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    ),
-                                                   Expression.Number(3),
-                                                   Expression.Comma(
-                                                       Expression.Number(4),
-                                                       Expression.Number(5)
+                                                   JsExpression.Number(3),
+                                                   JsExpression.Comma(
+                                                       JsExpression.Number(4),
+                                                       JsExpression.Number(5)
                                                    )
                                                )
                         ), Is.EqualTo("new 10((1, 2), 3, (4, 5))"));
@@ -362,10 +362,10 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void AssignmentIsNotParenthesizedInsideConstructorArgumentList() {
-            Assert.That(OutputFormatter.Format(Expression.ArrayLiteral(
-                                                   Expression.Binary(ExpressionNodeType.Assign,
-                                                       Expression.Number(1),
-                                                       Expression.Number(2)
+            Assert.That(OutputFormatter.Format(JsExpression.ArrayLiteral(
+                                                   JsExpression.Binary(ExpressionNodeType.Assign,
+                                                       JsExpression.Number(1),
+                                                       JsExpression.Number(2)
                                                    )
                                                )
                         ), Is.EqualTo("[1 = 2]"));
@@ -373,49 +373,49 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void IdentifierIsNotParenthesizedWhenUsedAsConstructor() {
-            Assert.That(OutputFormatter.Format(Expression.New(
-                                                   Expression.Identifier("X"),
-                                                   new Expression[0]
+            Assert.That(OutputFormatter.Format(JsExpression.New(
+                                                   JsExpression.Identifier("X"),
+                                                   new JsExpression[0]
                                                )
                         ), Is.EqualTo("new X()"));
         }
 
         [Test]
         public void IdentifierIsOutputCorrectly() {
-            Assert.That(OutputFormatter.Format(Expression.Identifier("SomeIdentifier")), Is.EqualTo("SomeIdentifier"));
+            Assert.That(OutputFormatter.Format(JsExpression.Identifier("SomeIdentifier")), Is.EqualTo("SomeIdentifier"));
         }
 
         [Test]
         public void IncrementIsParenthesizedWhenUsedAsInvocationMethod() {
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.Unary(ExpressionNodeType.PostfixMinusMinus,
-                                                       Expression.Identifier("x")
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.Unary(ExpressionNodeType.PostfixMinusMinus,
+                                                       JsExpression.Identifier("x")
                                                    ),
-                                                   new Expression[0]
+                                                   new JsExpression[0]
                                                )
                         ), Is.EqualTo("(x--)()"));
         }
 
         [Test]
         public void MemberAccessIsNotParenthesizedWhenUsedAsInvocationTarget() {
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.MemberAccess(
-                                                       Expression.Identifier("x"),
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.MemberAccess(
+                                                       JsExpression.Identifier("x"),
                                                        "Member"
                                                    ),
-                                                   new Expression[0]
+                                                   new JsExpression[0]
                                                )
                         ), Is.EqualTo("x.Member()"));
         }
 
         [Test]
         public void ChainedFunctionCallsAreNotParenthtesized() {
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.Invocation(
-                                                       Expression.Identifier("x"),
-                                                       new[] { Expression.Number(1) }
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.Invocation(
+                                                       JsExpression.Identifier("x"),
+                                                       new[] { JsExpression.Number(1) }
                                                    ),
-                                                   new[] { Expression.Number(2) }
+                                                   new[] { JsExpression.Number(2) }
                                                )
                         ), Is.EqualTo("x(1)(2)"));
         }
@@ -423,34 +423,34 @@ namespace Saltarelle.Compiler.Tests
         [Test]
         public void NewExpressionIsParenthesizedWhenBeingUsedAsInvocationTarget() {
             // Just to get rid of ambiguities
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.New(
-                                                       Expression.Identifier("X"),
-                                                       new Expression[0]
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.New(
+                                                       JsExpression.Identifier("X"),
+                                                       new JsExpression[0]
                                                    ),
-                                                   new[] { Expression.Number(1) }
+                                                   new[] { JsExpression.Number(1) }
                                                )
                         ), Is.EqualTo("(new X())(1)"));
         }
 
         [Test]
         public void IncrementIsParenthesizedWhenBeingUsedAsInvocationTarget() {
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.Unary(ExpressionNodeType.PostfixPlusPlus,
-                                                       Expression.Identifier("X")
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.Unary(ExpressionNodeType.PostfixPlusPlus,
+                                                       JsExpression.Identifier("X")
                                                    ),
-                                                   new[] { Expression.Number(1) }
+                                                   new[] { JsExpression.Number(1) }
                                                )
                         ), Is.EqualTo("(X++)(1)"));
         }
 
         [Test]
         public void ExpressionNodeTypeIsNotParenthesizedWhenUsedAsBinaryArgument() {
-            Assert.That(OutputFormatter.Format(Expression.Binary(ExpressionNodeType.Multiply,
-                                                   Expression.Unary(ExpressionNodeType.Negate,
-                                                       Expression.Identifier("X")
+            Assert.That(OutputFormatter.Format(JsExpression.Binary(ExpressionNodeType.Multiply,
+                                                   JsExpression.Unary(ExpressionNodeType.Negate,
+                                                       JsExpression.Identifier("X")
                                                    ),
-                                                   Expression.Number(1)
+                                                   JsExpression.Number(1)
                                                )
                         ), Is.EqualTo("-X * 1"));
         }
@@ -458,16 +458,16 @@ namespace Saltarelle.Compiler.Tests
         [Test]
         public void ExpressionNodeTypesAreParenthesizedInsideEachother() {
             // Just to get rid of ambiguities
-            Assert.That(OutputFormatter.Format(Expression.Unary(ExpressionNodeType.PostfixPlusPlus,
-                                                   Expression.Unary(ExpressionNodeType.LogicalNot,
-                                                       Expression.Identifier("X")
+            Assert.That(OutputFormatter.Format(JsExpression.Unary(ExpressionNodeType.PostfixPlusPlus,
+                                                   JsExpression.Unary(ExpressionNodeType.LogicalNot,
+                                                       JsExpression.Identifier("X")
                                                    )
                                                )
                         ), Is.EqualTo("(!X)++"));
 
-            Assert.That(OutputFormatter.Format(Expression.Unary(ExpressionNodeType.LogicalNot,
-                                                   Expression.Unary(ExpressionNodeType.PostfixPlusPlus,
-                                                       Expression.Identifier("X")
+            Assert.That(OutputFormatter.Format(JsExpression.Unary(ExpressionNodeType.LogicalNot,
+                                                   JsExpression.Unary(ExpressionNodeType.PostfixPlusPlus,
+                                                       JsExpression.Identifier("X")
                                                    )
                                                )
                         ), Is.EqualTo("!(X++)"));
@@ -475,67 +475,67 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void EmptyObjectLiteralIsOutputCorrectly() {
-            Assert.That(OutputFormatter.Format(Expression.ObjectLiteral()), Is.EqualTo("{}"));
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral()), Is.EqualTo("{}"));
         }
 
         [Test]
         public void ObjectLiteralWithOneValueIsOutputCorrectly() {
-            Assert.That(OutputFormatter.Format(Expression.ObjectLiteral(new ObjectLiteralProperty("x", Expression.Number(1)))), Is.EqualTo("{ x: 1 }"));
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)))), Is.EqualTo("{ x: 1 }"));
         }
 
         [Test]
         public void ObjectLiteralWithThreeValuesIsOutputCorrectly() {
-            Assert.That(OutputFormatter.Format(Expression.ObjectLiteral(new ObjectLiteralProperty("x", Expression.Number(1)),
-                                                                        new ObjectLiteralProperty("y", Expression.Number(2)),
-                                                                        new ObjectLiteralProperty("z", Expression.Number(3)))
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
+                                                                        new JsObjectLiteralProperty("y", JsExpression.Number(2)),
+                                                                        new JsObjectLiteralProperty("z", JsExpression.Number(3)))
                        ), Is.EqualTo("{ x: 1, y: 2, z: 3 }"));
         }
 
         [Test]
         public void ObjectLiteralWithNumericPropertyWorks() {
-            Assert.That(OutputFormatter.Format(Expression.ObjectLiteral(new ObjectLiteralProperty("1", Expression.Number(2)))), Is.EqualTo("{ '1': 2 }"));
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("1", JsExpression.Number(2)))), Is.EqualTo("{ '1': 2 }"));
         }
 
         [Test]
         public void ObjectLiteralWithInvalidIdentifierPropertyWorks() {
-            Assert.That(OutputFormatter.Format(Expression.ObjectLiteral(new ObjectLiteralProperty("a\\b", Expression.Number(1)))), Is.EqualTo("{ 'a\\\\b': 1 }"));
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a\\b", JsExpression.Number(1)))), Is.EqualTo("{ 'a\\\\b': 1 }"));
         }
 
         [Test]
         public void CommaExpressionIsParenthesizedInsideObjectLiteral() {
-            Assert.That(OutputFormatter.Format(Expression.ObjectLiteral(new ObjectLiteralProperty("x", Expression.Comma(Expression.Number(1), Expression.Number(2))),
-                                                                        new ObjectLiteralProperty("y", Expression.Number(3)))
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Comma(JsExpression.Number(1), JsExpression.Number(2))),
+                                                                        new JsObjectLiteralProperty("y", JsExpression.Number(3)))
                         ), Is.EqualTo("{ x: (1, 2), y: 3 }"));
         }
 
         [Test]
         public void EmptyFunctionDefinitionWithoutNameIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(Expression.FunctionDefinition(new string[0], BlockStatement.Empty, null)), Is.EqualTo("function() {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.Empty, null)), Is.EqualTo("function() {}"));
         }
 
         [Test]
         public void EmptyFunctionDefinitionWithNameIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(Expression.FunctionDefinition(new string[0], BlockStatement.Empty, "test")), Is.EqualTo("function test() {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.Empty, "test")), Is.EqualTo("function test() {}"));
         }
 
         [Test]
         public void EmptyFunctionDefinitionsWithArgumentsAreCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(Expression.FunctionDefinition(new[] { "a" }, BlockStatement.Empty, null)), Is.EqualTo("function(a) {}"));
-            Assert.That(OutputFormatter.Format(Expression.FunctionDefinition(new[] { "a", "b" }, BlockStatement.Empty, null)), Is.EqualTo("function(a, b) {}"));
-            Assert.That(OutputFormatter.Format(Expression.FunctionDefinition(new[] { "a", "b", "c" }, BlockStatement.Empty, "test")), Is.EqualTo("function test(a, b, c) {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a" }, JsBlockStatement.Empty, null)), Is.EqualTo("function(a) {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b" }, JsBlockStatement.Empty, null)), Is.EqualTo("function(a, b) {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b", "c" }, JsBlockStatement.Empty, "test")), Is.EqualTo("function test(a, b, c) {}"));
         }
 
         [Test]
         public void FunctionIsParenthesizedWhenInvokedDirectly() {
-            Assert.That(OutputFormatter.Format(Expression.Invocation(
-                                                   Expression.FunctionDefinition(new string[0], BlockStatement.Empty, null)
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.FunctionDefinition(new string[0], JsBlockStatement.Empty, null)
                                                )
                         ), Is.EqualTo("(function() {})()"));
         }
 
         [Test, Ignore("Can't yet output function definitions.")]
         public void FunctionDefinitionWithContentIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(Expression.FunctionDefinition(new string[0], new ReturnStatement(Expression.Null))), Is.EqualTo("function() { return null; }"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null))), Is.EqualTo("function() { return null; }"));
         }
 
         [Test]
@@ -555,7 +555,7 @@ namespace Saltarelle.Compiler.Tests
 
             for (var oper = ExpressionNodeType.UnaryFirst; oper <= ExpressionNodeType.UnaryLast; oper++) {
                 Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
-                var expr = Expression.Unary(oper, Expression.Identifier("a"));
+                var expr = JsExpression.Unary(oper, JsExpression.Identifier("a"));
                 Assert.That(OutputFormatter.Format(expr), Is.EqualTo(string.Format(operators[oper], "a")));
             }
         }
@@ -602,7 +602,7 @@ namespace Saltarelle.Compiler.Tests
 
             for (var oper = ExpressionNodeType.BinaryFirst; oper <= ExpressionNodeType.BinaryLast; oper++) {
                 Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
-                var expr = Expression.Binary(oper, Expression.Identifier("a"), Expression.Identifier("b"));
+                var expr = JsExpression.Binary(oper, JsExpression.Identifier("a"), JsExpression.Identifier("b"));
                 Assert.That(OutputFormatter.Format(expr), Is.EqualTo(string.Format(operators[oper], "a", "b")));
             }
         }

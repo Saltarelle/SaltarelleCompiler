@@ -6,28 +6,35 @@ using System.Text;
 using Saltarelle.Compiler.JSModel;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
+    /// <summary>
+    /// A class, interface or struct.
+    /// </summary>
     public class JsClass : JsType {
-        private IList<ScopedName> _implementedInterfaces;
-        private IList<Member> _constructors;
-        private IList<Member> _instanceMembers;
-        private IList<Member> _staticMembers;
+        public enum ClassTypeEnum { Struct, Class, Interface }
 
-        public JsClass BaseClass { get; private set; }
-        public IList<ScopedName> ImplementedInterfaces { get { return _implementedInterfaces; } }
-        public IList<Member> Constructors { get { return _constructors; } }
-        public IList<Member> InstanceMembers { get { return _instanceMembers; } }
-        public IList<Member> StaticMembers { get { return _staticMembers; } }
+        private IList<JsMember> _constructors;
+        private IList<JsMember> _instanceMembers;
+        private IList<JsMember> _staticMembers;
 
-        public JsClass(ScopedName name, JsClass baseClass) : base(name) {
-            BaseClass              = baseClass;
-            _implementedInterfaces = new List<ScopedName>();
-            _constructors          = new List<Member>();
-            _instanceMembers       = new List<Member>();
-            _staticMembers         = new List<Member>();
+        public ClassTypeEnum ClassType { get; private set; }
+        public JsConstructedType BaseClass { get; private set; }
+        public ReadOnlyCollection<string> TypeArgumentNames { get; private set; }
+        public ReadOnlyCollection<JsConstructedType> ImplementedInterfaces { get; private set; }
+        public IList<JsMember> Constructors { get { return _constructors; } }
+        public IList<JsMember> InstanceMembers { get { return _instanceMembers; } }
+        public IList<JsMember> StaticMembers { get { return _staticMembers; } }
+
+        public JsClass(ScopedName name, bool isPublic, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces) : base(name, isPublic) {
+            BaseClass             = baseClass;
+            ClassType             = classType;
+            TypeArgumentNames     = typeArgumentNames.AsReadOnly();
+            ImplementedInterfaces = implementedInterfaces.AsReadOnly();
+            _constructors         = new List<JsMember>();
+            _instanceMembers      = new List<JsMember>();
+            _staticMembers        = new List<JsMember>();
         }
 
         public override void Freeze() {
-            _implementedInterfaces = _implementedInterfaces.AsReadOnly();
             _constructors          = _constructors.AsReadOnly();
             _instanceMembers       = _instanceMembers.AsReadOnly();
             _staticMembers         = _instanceMembers.AsReadOnly();

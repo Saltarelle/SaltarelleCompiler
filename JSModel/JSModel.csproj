@@ -31,6 +31,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ICSharpCode.NRefactory">
+      <HintPath>..\packages-manual\NRefactory\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.CSharp">
+      <HintPath>..\packages-manual\NRefactory\ICSharpCode.NRefactory.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil, Version=0.6.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages-manual\NRefactory\Mono.Cecil.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,47 +50,49 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="Require.cs" />
-    <Compile Include="Expressions\ObjectLiteralProperty.cs" />
+    <Compile Include="Expressions\JsObjectLiteralProperty.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="Expressions\ArrayLiteralExpression.cs" />
-    <Compile Include="Expressions\BinaryExpression.cs" />
+    <Compile Include="Expressions\JsArrayLiteralExpression.cs" />
+    <Compile Include="Expressions\JsBinaryExpression.cs" />
     <Compile Include="IExpressionVisitor.cs" />
     <Compile Include="IStatementVisitor.cs" />
     <Compile Include="RewriterVisitorBase.cs" />
-    <Compile Include="Statements\BlockStatement.cs" />
-    <Compile Include="Statements\BreakStatement.cs" />
-    <Compile Include="Statements\ForStatement.cs" />
-    <Compile Include="Expressions\CommaExpression.cs" />
-    <Compile Include="Statements\ContinueStatement.cs" />
-    <Compile Include="Statements\DoWhileStatement.cs" />
-    <Compile Include="Statements\EmptyStatement.cs" />
-    <Compile Include="Expressions\Expression.cs" />
-    <Compile Include="Statements\ExpressionStatement.cs" />
-    <Compile Include="Statements\ForEachInStatement.cs" />
-    <Compile Include="Expressions\FunctionDefinitionExpression.cs" />
-    <Compile Include="Expressions\IdentifierExpression.cs" />
-    <Compile Include="Statements\IfStatement.cs" />
-    <Compile Include="Expressions\ObjectLiteralExpression.cs" />
-    <Compile Include="Expressions\MemberAccessExpression.cs" />
-    <Compile Include="Expressions\InvocationExpression.cs" />
-    <Compile Include="Expressions\NewExpression.cs" />
-    <Compile Include="Statements\ReturnStatement.cs" />
-    <Compile Include="Statements\Statement.cs" />
-    <Compile Include="Statements\SwitchStatement.cs" />
-    <Compile Include="Expressions\ConditionalExpression.cs" />
-    <Compile Include="Statements\ThrowStatement.cs" />
-    <Compile Include="Statements\TryCatchFinallyStatement.cs" />
-    <Compile Include="Expressions\UnaryExpression.cs" />
-    <Compile Include="Expressions\ConstantExpression.cs" />
-    <Compile Include="Statements\VariableDeclarationStatement.cs" />
-    <Compile Include="Statements\WhileStatement.cs" />
-    <Compile Include="Statements\WithStatement.cs" />
+    <Compile Include="Statements\JsBlockStatement.cs" />
+    <Compile Include="Statements\JsBreakStatement.cs" />
+    <Compile Include="Statements\JsForStatement.cs" />
+    <Compile Include="Expressions\JsCommaExpression.cs" />
+    <Compile Include="Statements\JsContinueStatement.cs" />
+    <Compile Include="Statements\JsDoWhileStatement.cs" />
+    <Compile Include="Statements\JsEmptyStatement.cs" />
+    <Compile Include="Expressions\JsExpression.cs" />
+    <Compile Include="Statements\JsExpressionStatement.cs" />
+    <Compile Include="Statements\JsForEachInStatement.cs" />
+    <Compile Include="Expressions\JsFunctionDefinitionExpression.cs" />
+    <Compile Include="Expressions\JsIdentifierExpression.cs" />
+    <Compile Include="Statements\JsIfStatement.cs" />
+    <Compile Include="Expressions\JsObjectLiteralExpression.cs" />
+    <Compile Include="Expressions\JsMemberAccessExpression.cs" />
+    <Compile Include="Expressions\JsInvocationExpression.cs" />
+    <Compile Include="Expressions\JsNewExpression.cs" />
+    <Compile Include="Statements\JsReturnStatement.cs" />
+    <Compile Include="Statements\JsStatement.cs" />
+    <Compile Include="Statements\JsSwitchStatement.cs" />
+    <Compile Include="Expressions\JsConditionalExpression.cs" />
+    <Compile Include="Statements\JsThrowStatement.cs" />
+    <Compile Include="Statements\JsTryCatchFinallyStatement.cs" />
+    <Compile Include="Expressions\JsUnaryExpression.cs" />
+    <Compile Include="Expressions\JsConstantExpression.cs" />
+    <Compile Include="Statements\JsVariableDeclarationStatement.cs" />
+    <Compile Include="Statements\JsWhileStatement.cs" />
+    <Compile Include="Statements\JsWithStatement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeSystem\JsConstructedType.cs" />
     <Compile Include="TypeSystem\JsClass.cs" />
     <Compile Include="TypeSystem\JsEnum.cs" />
-    <Compile Include="TypeSystem\EnumValue.cs" />
-    <Compile Include="TypeSystem\Member.cs" />
+    <Compile Include="TypeSystem\JsEnumValue.cs" />
+    <Compile Include="TypeSystem\JsMember.cs" />
     <Compile Include="TypeSystem\ScopedName.cs" />
     <Compile Include="TypeSystem\JsType.cs" />
   </ItemGroup>
