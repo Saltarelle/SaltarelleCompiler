@@ -14,66 +14,7 @@ using FluentAssertions;
 
 namespace Saltarelle.Compiler.Tests {
     [TestFixture]
-    public class TypeConvertVisitorTests {
-        private class MockSourceFile : ISourceFile {
-            private readonly string _fileName;
-            private readonly string _content;
-
-            public MockSourceFile(string fileName, string content) {
-                _fileName = fileName;
-                _content  = content;
-            }
-
-            public string FileName {
-                get { return _fileName; }
-            }
-
-            public TextReader Open() {
-                return new StringReader(_content);
-            }
-        }
-
-        private class MockNamingConventionResolver : INamingConventionResolver {
-            public string GetTypeName(ITypeDefinition typeDefinition) {
-                return typeDefinition.Name;
-            }
-
-            public string GetTypeParameterName(ITypeParameter typeDefinition) {
-                return typeDefinition.Name;
-            }
-        }
-
-        private static readonly Lazy<IProjectContent> _mscorlibLazy = new Lazy<IProjectContent>(() => new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location));
-        private IProjectContent Mscorlib { get { return _mscorlibLazy.Value; } }
-
-        private ReadOnlyCollection<JsType> Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null) {
-            var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
-            return new Compiler(namingConvention ?? new MockNamingConventionResolver()).Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
-        }
-
-        private ReadOnlyCollection<JsType> Compile(params string[] sources) {
-            return Compile((IEnumerable<string>)sources);
-        }
-
-        private string Stringify(JsExpression expression) {
-            switch (expression.NodeType) {
-                case ExpressionNodeType.Identifier: return ((JsIdentifierExpression)expression).Name;
-                case ExpressionNodeType.TypeReference: return "{" + ((JsTypeReferenceExpression)expression).TypeDefinition.ReflectionName + "}";
-                default: throw new ArgumentException("expression");
-            }
-        }
-
-        private string Stringify(JsConstructedType tp) {
-            return Stringify(tp.UnboundType) + (tp.TypeArguments.Count > 0 ? "<" + string.Join(",", tp.TypeArguments.Select(x => Stringify(x))) + ">" : "");
-        }
-
-        private JsClass FindClass(IEnumerable<JsType> allTypes, string name) {
-            var result = allTypes.SingleOrDefault(t => t.Name.ToString() == name);
-            if (result == null) Assert.Fail("Could not find type " + name);
-            if (!(result is JsClass)) Assert.Fail("Found type is not a JsClass, it is a " + result.GetType().Name);
-            return (JsClass)result;
-        }
-
+    public class TypeConversionTests : CompilerTestBase {
         [Test]
         public void EmptyGlobalClassIsCorrectlyReturned() {
             var types = Compile(@"class TestClass { }");
@@ -442,6 +383,24 @@ namespace Saltarelle.Compiler.Tests {
             types.Single(tp => tp.Name.ToString() == "C10+C11").IsPublic.Should().BeFalse();
             types.Single(tp => tp.Name.ToString() == "C10+C12").IsPublic.Should().BeTrue();
             types.Single(tp => tp.Name.ToString() == "C10+C13").IsPublic.Should().BeTrue();
+        }
+
+        [Test]
+        public void ClassesForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
+            var naming = new Mock<INamingConventionResolver>();
+            naming.Setup(_ => _.GetTypeName(It.IsAny<ITypeDefinition>())).Returns((ITypeDefinition type) => type.Name == "C2" ? null : type.Name);
+            var types = Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, naming.Object);
+            types.Should().HaveCount(1);
+            types[0].Name.ToString().Should().Be("C1");
+        }
+
+        [Test]
+        public void EnumsForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
+            var naming = new Mock<INamingConventionResolver>();
+            naming.Setup(_ => _.GetTypeName(It.IsAny<ITypeDefinition>())).Returns((ITypeDefinition type) => type.Name == "C2" ? null : type.Name);
+            var types = Compile(new[] { "enum C1 {} enum C2 {}" }, naming.Object);
+            types.Should().HaveCount(1);
+            types[0].Name.ToString().Should().Be("C1");
         }
     }
 }

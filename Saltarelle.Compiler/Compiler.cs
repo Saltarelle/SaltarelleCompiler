@@ -40,10 +40,20 @@ namespace Saltarelle.Compiler {
         }
 
         private ScopedName ConvertName(ITypeDefinition type) {
-            if (type.DeclaringType == null)
-                return ScopedName.Global(!string.IsNullOrEmpty(type.Namespace) ? type.Namespace : null, _namingConvention.GetTypeName(type));
-            else
-                return ScopedName.Nested(ConvertName(type.DeclaringTypeDefinition), _namingConvention.GetTypeName(type));
+            var name = _namingConvention.GetTypeName(type);
+            if (name == null) {
+                return null;
+            }
+            else if (type.DeclaringType == null) {
+                return ScopedName.Global(!string.IsNullOrEmpty(type.Namespace) ? type.Namespace : null, name);
+            }
+            else {
+                var declaringName = ConvertName(type.DeclaringTypeDefinition);
+                if (declaringName == null)
+                    return null;
+                else
+                    return ScopedName.Nested(declaringName, name);
+            }
         }
 
         private bool IsTypePublic(ITypeDefinition type) {
@@ -58,7 +68,8 @@ namespace Saltarelle.Compiler {
         }
 
         private JsEnum ConvertEnum(ITypeDefinition type) {
-            return new JsEnum(ConvertName(type), IsTypePublic(type));
+            var name = ConvertName(type);
+            return name != null ? new JsEnum(name, IsTypePublic(type)) : null;
         }
 
         private JsConstructedType ConvertPotentiallyGenericType(IType type) {
@@ -82,18 +93,23 @@ namespace Saltarelle.Compiler {
         }
 
         private JsClass ConvertClass(ITypeDefinition type) {
+            var name = ConvertName(type);
+            if (name == null)
+                return null;
+
             var baseTypes    = type.GetAllBaseTypes(_typeResolveContext).ToList();
             var baseClass    = type.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => t != type && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
             var interfaces   = baseTypes.Where(t => t != type && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
             var typeArgNames = type.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
 
-            return new JsClass(ConvertName(type), IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces);
+            return new JsClass(name, IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces);
         }
 
         private void CreateTypes() {
-        var x = _project.GetAllTypes();
             foreach (var type in _project.GetAllTypes()) {
-                _types[type] = (type.Kind == TypeKind.Enum ? (JsType)ConvertEnum(type) : (JsType)ConvertClass(type));
+                var t = (type.Kind == TypeKind.Enum ? (JsType)ConvertEnum(type) : (JsType)ConvertClass(type));
+                if (t != null)
+                    _types[type] = t;
             }
         }
 
