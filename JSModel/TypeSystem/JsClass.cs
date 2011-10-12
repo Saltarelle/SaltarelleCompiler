@@ -12,32 +12,22 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
     public class JsClass : JsType {
         public enum ClassTypeEnum { Struct, Class, Interface }
 
-        private IList<JsMember> _constructors;
-        private IList<JsMember> _instanceMembers;
-        private IList<JsMember> _staticMembers;
-
         public ClassTypeEnum ClassType { get; private set; }
         public JsConstructedType BaseClass { get; private set; }
         public ReadOnlyCollection<string> TypeArgumentNames { get; private set; }
         public ReadOnlyCollection<JsConstructedType> ImplementedInterfaces { get; private set; }
-        public IList<JsMember> Constructors { get { return _constructors; } }
-        public IList<JsMember> InstanceMembers { get { return _instanceMembers; } }
-        public IList<JsMember> StaticMembers { get { return _staticMembers; } }
+        public ReadOnlyCollection<JsMember> Constructors { get; private set; }
+        public ReadOnlyCollection<JsMember> InstanceMembers { get; private set; }
+        public ReadOnlyCollection<JsMember> StaticMembers { get; private set; }
 
-        public JsClass(ScopedName name, bool isPublic, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces) : base(name, isPublic) {
+        public JsClass(ScopedName name, bool isPublic, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces, IEnumerable<JsMember> constructors, IEnumerable<JsMember> instanceMembers, IEnumerable<JsMember> staticMembers) : base(name, isPublic) {
             BaseClass             = baseClass;
             ClassType             = classType;
             TypeArgumentNames     = typeArgumentNames.AsReadOnly();
             ImplementedInterfaces = implementedInterfaces.AsReadOnly();
-            _constructors         = new List<JsMember>();
-            _instanceMembers      = new List<JsMember>();
-            _staticMembers        = new List<JsMember>();
-        }
-
-        public override void Freeze() {
-            _constructors          = _constructors.AsReadOnly();
-            _instanceMembers       = _instanceMembers.AsReadOnly();
-            _staticMembers         = _instanceMembers.AsReadOnly();
+            Constructors          = constructors.AsReadOnly();
+            InstanceMembers       = instanceMembers.AsReadOnly();
+            StaticMembers         = staticMembers.AsReadOnly();
         }
     }
 }

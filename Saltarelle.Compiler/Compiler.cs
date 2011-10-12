@@ -92,6 +92,30 @@ namespace Saltarelle.Compiler {
             }
         }
 
+        private Tuple<IEnumerable<JsMember>, IEnumerable<JsMember>, IEnumerable<JsMember>> ConvertMembers(ITypeDefinition type) {
+            var constructors = new List<JsMember>();
+            var instanceMembers = new List<JsMember>();
+            var staticMembers = new List<JsMember>();
+
+            foreach (var c in type.GetConstructors(_typeResolveContext)) {
+                var name = GetConstructorName(c);
+            }
+
+            foreach (var m in type.GetMethods(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            }
+
+            foreach (var m in type.GetProperties(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            }
+
+            foreach (var m in type.GetEvents(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            }
+
+            foreach (var m in type.GetFields(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            }
+
+            return Tuple.Create(constructors, instanceMembers, staticMembers);
+        }
+
         private JsClass ConvertClass(ITypeDefinition type) {
             var name = ConvertName(type);
             if (name == null)
@@ -102,7 +126,9 @@ namespace Saltarelle.Compiler {
             var interfaces   = baseTypes.Where(t => t != type && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
             var typeArgNames = type.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
 
-            return new JsClass(name, IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces);
+            var members = ConvertMembers(type);
+
+            return new JsClass(name, IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, members.Item1, members.Item2, members.Item3);
         }
 
         private void CreateTypes() {

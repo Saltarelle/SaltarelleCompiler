@@ -30,34 +30,42 @@ namespace Saltarelle.Compiler.Tests {
             }
         }
 
-        private class MockNamingConventionResolver : INamingConventionResolver {
-            public string GetTypeName(ITypeDefinition typeDefinition) {
-                return typeDefinition.Name;
+        protected class MockNamingConventionResolver : INamingConventionResolver {
+            public MockNamingConventionResolver() {
+                GetTypeName = t => t.Name;
+                GetTypeParameterName = t => t.Name;
+                GetMethodImplementation = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);;
             }
 
-            public string GetTypeParameterName(ITypeParameter typeDefinition) {
-                return typeDefinition.Name;
+            public Func<ITypeDefinition, string> GetTypeName { get; set; }
+            public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
+            public Func<IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
+
+            string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
+                return GetTypeName(typeDefinition);
             }
 
-            public bool IsMemberStatic(IMember member) {
-                throw new NotImplementedException();
+            string INamingConventionResolver.GetTypeParameterName(ITypeParameter typeDefinition) {
+                return GetTypeParameterName(typeDefinition);
             }
 
-            public MethodImplOptions GetMethodImplementation(IMethod method) {
-                return method.IsStatic ? MethodImplOptions.StaticMethod(method.Name) : MethodImplOptions.InstanceMethod(method.Name);
+            MethodImplOptions INamingConventionResolver.GetMethodImplementation(IMethod method) {
+                return GetMethodImplementation(method);
             }
         }
 
         private static readonly Lazy<IProjectContent> _mscorlibLazy = new Lazy<IProjectContent>(() => new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location));
         protected IProjectContent Mscorlib { get { return _mscorlibLazy.Value; } }
 
-        protected ReadOnlyCollection<JsType> Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null) {
+        protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
+
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
-            return new Compiler(namingConvention ?? new MockNamingConventionResolver()).Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
+            CompiledTypes = new Compiler(namingConvention ?? new MockNamingConventionResolver()).Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
         }
 
-        protected ReadOnlyCollection<JsType> Compile(params string[] sources) {
-            return Compile((IEnumerable<string>)sources);
+        protected void Compile(params string[] sources) {
+            Compile((IEnumerable<string>)sources);
         }
 
         protected string Stringify(JsExpression expression) {
@@ -72,11 +80,23 @@ namespace Saltarelle.Compiler.Tests {
             return Stringify(tp.UnboundType) + (tp.TypeArguments.Count > 0 ? "<" + string.Join(",", tp.TypeArguments.Select(x => Stringify(x))) + ">" : "");
         }
 
-        protected JsClass FindClass(IEnumerable<JsType> allTypes, string name) {
-            var result = allTypes.SingleOrDefault(t => t.Name.ToString() == name);
+        protected JsClass FindClass(string name) {
+            var result = CompiledTypes.SingleOrDefault(t => t.Name.ToString() == name);
             if (result == null) Assert.Fail("Could not find type " + name);
             if (!(result is JsClass)) Assert.Fail("Found type is not a JsClass, it is a " + result.GetType().Name);
             return (JsClass)result;
+        }
+
+        protected JsMember FindInstanceMember(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.InstanceMembers.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
+        }
+
+        protected JsMember FindStaticMember(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.StaticMembers.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
         }
     }
 

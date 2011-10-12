@@ -68,10 +68,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CompilerTestBase.cs" />
+    <Compile Include="MemberConversionTests.cs" />
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScopedNameTests.cs" />
-    <Compile Include="TypeConvertVisitorTests.cs" />
+    <Compile Include="TypeConversionTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
