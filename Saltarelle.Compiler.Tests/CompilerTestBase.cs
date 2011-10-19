@@ -32,25 +32,31 @@ namespace Saltarelle.Compiler.Tests {
 
         protected class MockNamingConventionResolver : INamingConventionResolver {
             public MockNamingConventionResolver() {
-                GetTypeName = t => t.Name;
-                GetTypeParameterName = t => t.Name;
-                GetMethodImplementation = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);;
+                GetTypeName                  = (context, t) => t.Name;
+                GetTypeParameterName         = (context, t) => t.Name;
+                GetMethodImplementation      = (context, m) => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
+                GetConstructorImplementation = (context, c) => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Resolve(context).Name)));
             }
 
-            public Func<ITypeDefinition, string> GetTypeName { get; set; }
-            public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
-            public Func<IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
+            public Func<ITypeResolveContext, ITypeDefinition, string> GetTypeName { get; set; }
+            public Func<ITypeResolveContext, ITypeParameter, string> GetTypeParameterName { get; set; }
+            public Func<ITypeResolveContext, IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
+            public Func<ITypeResolveContext, IMethod, ConstructorImplOptions> GetConstructorImplementation { get; set; }
 
-            string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
-                return GetTypeName(typeDefinition);
+            string INamingConventionResolver.GetTypeName(ITypeResolveContext context, ITypeDefinition typeDefinition) {
+                return GetTypeName(context, typeDefinition);
             }
 
-            string INamingConventionResolver.GetTypeParameterName(ITypeParameter typeDefinition) {
-                return GetTypeParameterName(typeDefinition);
+            string INamingConventionResolver.GetTypeParameterName(ITypeResolveContext context, ITypeParameter typeDefinition) {
+                return GetTypeParameterName(context, typeDefinition);
             }
 
-            MethodImplOptions INamingConventionResolver.GetMethodImplementation(IMethod method) {
-                return GetMethodImplementation(method);
+            MethodImplOptions INamingConventionResolver.GetMethodImplementation(ITypeResolveContext context, IMethod method) {
+                return GetMethodImplementation(context, method);
+            }
+
+            ConstructorImplOptions INamingConventionResolver.GetConstructorImplementation(ITypeResolveContext context, IMethod method) {
+                return GetConstructorImplementation(context, method);
             }
         }
 
@@ -87,16 +93,22 @@ namespace Saltarelle.Compiler.Tests {
             return (JsClass)result;
         }
 
-        protected JsMember FindInstanceMember(string name) {
+        protected JsMethod FindInstanceMethod(string name) {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
-            return cls.InstanceMembers.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
+            return cls.InstanceMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
         }
 
-        protected JsMember FindStaticMember(string name) {
+        protected JsMethod FindStaticMethod(string name) {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
-            return cls.StaticMembers.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
+            return cls.StaticMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
+        }
+
+        protected JsConstructor FindConstructor(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.Constructors.SingleOrDefault(m => (m.Name ?? "<default>") == name.Substring(lastDot + 1));
         }
     }
 

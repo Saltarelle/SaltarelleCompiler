@@ -25,10 +25,18 @@ namespace Saltarelle.Compiler {
             /// No code will be generated for the method.
             /// </summary>
             InstanceMethodOnFirstArgument,
+
+            /// <summary>
+            /// The method can not be used from script. No code is generated, and any usage of it will give an error.
+            /// </summary>
+            NotUsableFromScript,
         }
 
         private string _text;
 
+        /// <summary>
+        /// Name of the method, where applicable.
+        /// </summary>
         public string Name {
             get {
                 if (Type != ImplType.InstanceMethod && Type != ImplType.StaticMethod && Type != ImplType.InstanceMethodOnFirstArgument)
@@ -37,6 +45,9 @@ namespace Saltarelle.Compiler {
             }
         }
 
+        /// <summary>
+        /// Literal code for the method, only applicable for type <see cref="ImplType.InlineCode"/>
+        /// </summary>
         public string LiteralCode {
             get {
                 if (Type != ImplType.InlineCode)
@@ -45,24 +56,47 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        public bool IgnoreGenericArguments { get; private set; }
-
+        /// <summary>
+        /// Implementation type.
+        /// </summary>
         public ImplType Type { get; private set; }
 
-        public static MethodImplOptions InstanceMethod(string name, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.InstanceMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments };
+        /// <summary>
+        /// Completely ignore any generic (type) arguments to this method.
+        /// </summary>
+        public bool IgnoreGenericArguments { get; private set; }
+
+        /// <summary>
+        /// Whether code should be added for this method. This can be false even though the method is usable from script.
+        /// </summary>
+        public bool GenerateCode { get; private set; }
+
+        /// <summary>
+        /// If true, "this" (the object on which the method is being invoked) will be added as the first argument to the method.
+        /// </summary>
+        public bool AddThisAsFirstArgument { get; private set; }
+
+        private MethodImplOptions() {
         }
 
-        public static MethodImplOptions StaticMethod(string name, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.StaticMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments };
+        public static MethodImplOptions InstanceMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool addThisAsFirstArgument = false) {
+            return new MethodImplOptions { Type = ImplType.InstanceMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, AddThisAsFirstArgument = addThisAsFirstArgument };
+        }
+
+        public static MethodImplOptions StaticMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool addThisAsFirstArgument = false) {
+            return new MethodImplOptions { Type = ImplType.StaticMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
         }
 
         public static MethodImplOptions InlineCode(string literalCode, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = ignoreGenericArguments };
+            return new MethodImplOptions { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = false };
         }
 
         public static MethodImplOptions InstanceMethodOnFirstArgument(string name, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.InstanceMethodOnFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments };
+            return new MethodImplOptions { Type = ImplType.InstanceMethodOnFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = false };
+        }
+
+        public static MethodImplOptions NotUsableFromScript() {
+            return new MethodImplOptions { Type = ImplType.NotUsableFromScript, GenerateCode = false };
         }
     }
 }

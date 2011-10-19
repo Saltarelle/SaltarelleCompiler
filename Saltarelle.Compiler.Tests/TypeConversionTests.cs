@@ -215,7 +215,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void NamingConventionIsCorrectlyApplied() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeName = def => "$" + def.Name, GetTypeParameterName = def => "$$" + def.Name };
+            var namingConvention = new MockNamingConventionResolver { GetTypeName = (_, def) => "$" + def.Name, GetTypeParameterName = (_, def) => "$$" + def.Name };
             Compile(new[] { @"using System.Collections.Generic;
                               class Test<T> : List<T>, IEnumerable<string>, IList<float> { }" }, namingConvention: namingConvention);
             var cls = FindClass("$Test");
@@ -385,18 +385,16 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void ClassesForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
-            var naming = new Mock<INamingConventionResolver>();
-            naming.Setup(_ => _.GetTypeName(It.IsAny<ITypeDefinition>())).Returns((ITypeDefinition type) => type.Name == "C2" ? null : type.Name);
-            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, naming.Object);
+            var namingConvention = new MockNamingConventionResolver { GetTypeName = (_, type) => type.Name == "C2" ? null : type.Name };
+            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.ToString().Should().Be("C1");
         }
 
         [Test]
         public void EnumsForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
-            var naming = new Mock<INamingConventionResolver>();
-            naming.Setup(_ => _.GetTypeName(It.IsAny<ITypeDefinition>())).Returns((ITypeDefinition type) => type.Name == "C2" ? null : type.Name);
-            Compile(new[] { "enum C1 {} enum C2 {}" }, naming.Object);
+            var namingConvention = new MockNamingConventionResolver { GetTypeName = (_, type) => type.Name == "C2" ? null : type.Name };
+            Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.ToString().Should().Be("C1");
         }

@@ -9,12 +9,19 @@ namespace Saltarelle.Compiler {
         /// <summary>
         /// Returns the name of a type as it should appear in the script. If null is included the class, and any nested class, will not appear in the output.
         /// </summary>
-        string GetTypeName(ITypeDefinition typeDefinition);
-        string GetTypeParameterName(ITypeParameter typeParameter);
+        string GetTypeName(ITypeResolveContext context, ITypeDefinition typeDefinition);
+        string GetTypeParameterName(ITypeResolveContext context, ITypeParameter typeParameter);
 
         /// <summary>
-        /// Gets the name of a method. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
+        /// Gets the implementation of a method. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
+        /// If this returns null, the method is not usable from script.
         /// </summary>
-        MethodImplOptions GetMethodImplementation(IMethod method);
+        MethodImplOptions GetMethodImplementation(ITypeResolveContext context, IMethod method);
+
+        /// <summary>
+        /// Returns the name of a constructor. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
+        /// If this returns null, the constructor is not usable from script.
+        /// </summary>
+        ConstructorImplOptions GetConstructorImplementation(ITypeResolveContext context, IMethod method);
     }
 }

@@ -12,9 +12,9 @@ namespace Saltarelle.Compiler.JSModel {
         }
 
         [DebuggerStepThrough]
-        public static void ValidJavaScriptIdentifier(string arg, string name) {
-            if (arg == null) throw new ArgumentNullException(name);
-            if (!arg.IsValidJavaScriptIdentifier()) throw new ArgumentException(name);
+        public static void ValidJavaScriptIdentifier(string arg, string name, bool allowNull = false) {
+            if (!allowNull && arg == null) throw new ArgumentNullException(name);
+            if (arg != null && !arg.IsValidJavaScriptIdentifier()) throw new ArgumentException(name);
         }
 
         [DebuggerStepThrough]

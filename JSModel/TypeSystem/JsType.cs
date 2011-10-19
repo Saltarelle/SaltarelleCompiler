@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
-    public abstract class JsType {
+    public abstract class JsType : IFreezable {
         public ScopedName Name { get; private set; }
         [Obsolete("Remove, replace with extension method used by naming convention")]
         public bool IsPublic { get; private set; }

@@ -8,6 +8,8 @@ using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 
@@ -19,7 +21,7 @@ namespace Saltarelle.Compiler {
     public class Compiler : DepthFirstAstVisitor<object, object>, ICompiler {
         private class ResolveAllNavigator : IResolveVisitorNavigator {
             public ResolveVisitorNavigationMode Scan(AstNode node) {
-                return ResolveVisitorNavigationMode.Resolve;
+                return ResolveVisitorNavigationMode.Scan;
             }
 
             public void Resolved(AstNode node, ResolveResult result) {
@@ -34,13 +36,14 @@ namespace Saltarelle.Compiler {
         private SimpleProjectContent _project;
         private Dictionary<ITypeDefinition, JsType> _types;
         private ResolveVisitor _resolver;
+        private Dictionary<IMethod, IContainsJsFunctionDefinition> _methodMap;
 
         public Compiler(INamingConventionResolver namingConvention) {
             _namingConvention = namingConvention;
         }
 
         private ScopedName ConvertName(ITypeDefinition type) {
-            var name = _namingConvention.GetTypeName(type);
+            var name = _namingConvention.GetTypeName(_typeResolveContext, type);
             if (name == null) {
                 return null;
             }
@@ -74,7 +77,7 @@ namespace Saltarelle.Compiler {
 
         private JsConstructedType ConvertPotentiallyGenericType(IType type) {
             if (type is ITypeParameter)
-                return new JsConstructedType(new JsIdentifierExpression(_namingConvention.GetTypeParameterName((ITypeParameter)type)));
+                return new JsConstructedType(new JsIdentifierExpression(_namingConvention.GetTypeParameterName(_typeResolveContext, (ITypeParameter)type)));
 
             var unconstructed = new JsTypeReferenceExpression(type.GetDefinition());
             if (type is ParameterizedType)
@@ -92,28 +95,80 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        private Tuple<IEnumerable<JsMember>, IEnumerable<JsMember>, IEnumerable<JsMember>> ConvertMembers(ITypeDefinition type) {
-            var constructors = new List<JsMember>();
-            var instanceMembers = new List<JsMember>();
-            var staticMembers = new List<JsMember>();
+        private IContainsJsFunctionDefinition ConvertConstructor(IMethod ctor, List<JsConstructor> constructors, List<JsMethod> staticMethods) {
+            var impl = _namingConvention.GetConstructorImplementation(_typeResolveContext, ctor);
+            if (!impl.GenerateCode)
+                return null;
+
+            switch (impl.Type) {
+                case ConstructorImplOptions.ImplType.UnnamedConstructor: {
+                    var result = new JsConstructor(null);
+                    constructors.Add(result);
+                    return result;
+                }
+                case ConstructorImplOptions.ImplType.NamedConstructor: {
+                    var result = new JsConstructor(impl.Name);
+                    constructors.Add(result);
+                    return result;
+                }
+                case ConstructorImplOptions.ImplType.StaticMethod: {
+                    var result = new JsMethod(impl.Name);
+                    staticMethods.Add(result);
+                    return result;
+                }
+                default:
+                    throw new ArgumentException("ctor");
+            }
+        }
+
+        private IContainsJsFunctionDefinition ConvertMethod(IMethod method, List<JsMethod> instanceMethods, List<JsMethod> staticMethods) {
+            var impl = _namingConvention.GetMethodImplementation(_typeResolveContext, method);
+            if (!impl.GenerateCode)
+                return null;
+
+            switch (impl.Type) {
+                case MethodImplOptions.ImplType.InstanceMethod: {
+                    var result = new JsMethod(impl.Name);
+                    instanceMethods.Add(result);
+                    return result;
+                }
+                case MethodImplOptions.ImplType.StaticMethod: {
+                    var result = new JsMethod(impl.Name);
+                    staticMethods.Add(result);
+                    return result;
+                }
+                default:
+                    throw new ArgumentException("ctor");
+            }
+        }
+
+        private Tuple<IEnumerable<JsConstructor>, IEnumerable<JsMethod>, IEnumerable<JsMethod>> ConvertMembers(ITypeDefinition type) {
+            var constructors    = new List<JsConstructor>();
+            var instanceMethods = new List<JsMethod>();
+            var staticMethods   = new List<JsMethod>();
 
             foreach (var c in type.GetConstructors(_typeResolveContext)) {
-                var name = GetConstructorName(c);
+                var def  = ConvertConstructor(c, constructors: constructors, staticMethods: staticMethods);
+                if (def != null)
+                    _methodMap.Add(c, def);
             }
 
             foreach (var m in type.GetMethods(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+                var def  = ConvertMethod(m, instanceMethods: instanceMethods, staticMethods: staticMethods);
+                if (def != null)
+                    _methodMap.Add(m, def);
             }
 
-            foreach (var m in type.GetProperties(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            foreach (var m in type.GetProperties(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers)) {
             }
 
-            foreach (var m in type.GetEvents(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            foreach (var m in type.GetEvents(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers)) {
             }
 
-            foreach (var m in type.GetFields(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
+            foreach (var m in type.GetFields(_typeResolveContext, options: GetMemberOptions.IgnoreInheritedMembers)) {
             }
 
-            return Tuple.Create(constructors, instanceMembers, staticMembers);
+            return Tuple.Create((IEnumerable<JsConstructor>)constructors, (IEnumerable<JsMethod>)instanceMethods, (IEnumerable<JsMethod>)staticMethods);
         }
 
         private JsClass ConvertClass(ITypeDefinition type) {
@@ -124,7 +179,7 @@ namespace Saltarelle.Compiler {
             var baseTypes    = type.GetAllBaseTypes(_typeResolveContext).ToList();
             var baseClass    = type.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => t != type && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
             var interfaces   = baseTypes.Where(t => t != type && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
-            var typeArgNames = type.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
+            var typeArgNames = type.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(_typeResolveContext, a)).ToList();
 
             var members = ConvertMembers(type);
 
@@ -157,6 +212,7 @@ namespace Saltarelle.Compiler {
             using (var syncContext = new CompositeTypeResolveContext(new[] { _project }.Concat(references)).Synchronize()) { // docs recommend synchronizing.
                 _typeResolveContext = syncContext;
                 _types              = new Dictionary<ITypeDefinition, JsType>();
+                _methodMap          = new Dictionary<IMethod, IContainsJsFunctionDefinition>();
 
                 CreateTypes();
 
@@ -168,15 +224,46 @@ namespace Saltarelle.Compiler {
                 }
             }
 
-            foreach (var t in _types.Values)
-                t.Freeze();
+            _types.Values.ForEach(t => t.Freeze());
 
             return _types.Values;
         }
 
-        public override object VisitTypeDeclaration(TypeDeclaration typeDeclaration, object data) {
-            var tp = _resolver.GetResolveResult(typeDeclaration);
-            return base.VisitTypeDeclaration(typeDeclaration, data);
+        public JsFunctionDefinitionExpression CompileMethod(AttributedNode method, bool constructorAsStaticMethod = false) {
+            // BIG TODO
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+        }
+
+        public override object VisitMethodDeclaration(MethodDeclaration methodDeclaration, object data) {
+            var resolveResult = _resolver.GetResolveResult(methodDeclaration);
+            if (!(resolveResult is MemberResolveResult))
+                throw new Exception("Method declaration " + methodDeclaration.Name + " does not resolve to a member.");
+            var method = ((MemberResolveResult)resolveResult).Member as IMethod;
+            if (method == null)
+                throw new Exception("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString());
+
+            IContainsJsFunctionDefinition jsMethod;
+            if (_methodMap.TryGetValue(method, out jsMethod)) {
+                jsMethod.Definition = CompileMethod(methodDeclaration);
+            }
+
+            return null;
+        }
+
+        public override object VisitConstructorDeclaration(ConstructorDeclaration constructorDeclaration, object data) {
+            var resolveResult = _resolver.GetResolveResult(constructorDeclaration);
+            if (!(resolveResult is MemberResolveResult))
+                throw new Exception("Method declaration " + constructorDeclaration.Name + " does not resolve to a member.");
+            var method = ((MemberResolveResult)resolveResult).Member as IMethod;
+            if (method == null)
+                throw new Exception("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString());
+
+            IContainsJsFunctionDefinition jsMethod;
+            if (_methodMap.TryGetValue(method, out jsMethod)) {
+                jsMethod.Definition = CompileMethod(constructorDeclaration);
+            }
+
+            return null;
         }
     }
 }
