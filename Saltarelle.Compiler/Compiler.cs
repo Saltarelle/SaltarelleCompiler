@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler {
                     return Tuple.Create((IContainsJsFunctionDefinition)result, MethodCompilationOptions.Constructor);
                 }
                 case ConstructorImplOptions.ImplType.StaticMethod: {
-                    var result = new JsMethod(impl.Name);
+                    var result = new JsMethod(impl.Name, null);
                     if (ctor.IsSynthetic)
                         result.Definition = CompileDefaultConstructorWithoutImplementation(ctor, MethodCompilationOptions.ConstructorAsStaticMethod);
                     staticMethods.Add(result);
@@ -135,18 +135,20 @@ namespace Saltarelle.Compiler {
             if (!impl.GenerateCode)
                 return null;
 
+            var typeParamNames = impl.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(_typeResolveContext, tp)).ToList();
+
             switch (impl.Type) {
                 case MethodImplOptions.ImplType.InstanceMethod: {
-                    var result = new JsMethod(impl.Name);
+                    var result = new JsMethod(impl.Name, typeParamNames);
                     instanceMethods.Add(result);
-                    instanceMethods.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an) {Definition = CompileDelegatingMethod(method)}));
+                    instanceMethods.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an, typeParamNames) {Definition = CompileDelegatingMethod(method)}));
 
                     return Tuple.Create((IContainsJsFunctionDefinition)result, MethodCompilationOptions.InstanceMethod);
                 }
                 case MethodImplOptions.ImplType.StaticMethod: {
-                    var result = new JsMethod(impl.Name);
+                    var result = new JsMethod(impl.Name, typeParamNames);
                     staticMethods.Add(result);
-                    staticMethods.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an) {Definition = CompileDelegatingMethod(method)}));
+                    staticMethods.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an, typeParamNames) {Definition = CompileDelegatingMethod(method)}));
                     return Tuple.Create((IContainsJsFunctionDefinition)result, MethodCompilationOptions.StaticMethod);
                 }
                 default:
@@ -284,13 +286,33 @@ namespace Saltarelle.Compiler {
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
-                _errorReporter.Error("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString());
+                _errorReporter.Error("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
                 return null;
             }
 
             Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
             if (_methodMap.TryGetValue(method, out jsMethod)) {
                 jsMethod.Item1.Definition = CompileMethod(methodDeclaration, jsMethod.Item2);
+            }
+
+            return null;
+        }
+
+        public override object VisitOperatorDeclaration(OperatorDeclaration operatorDeclaration, object data) {
+            var resolveResult = _resolver.GetResolveResult(operatorDeclaration);
+            if (!(resolveResult is MemberResolveResult)) {
+                _errorReporter.Error("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a member.");
+                return null;
+            }
+            var method = ((MemberResolveResult)resolveResult).Member as IMethod;
+            if (method == null) {
+                _errorReporter.Error("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
+                return null;
+            }
+
+            Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
+            if (_methodMap.TryGetValue(method, out jsMethod)) {
+                jsMethod.Item1.Definition = CompileMethod(operatorDeclaration, jsMethod.Item2);
             }
 
             return null;

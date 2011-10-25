@@ -154,7 +154,7 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void AdditionalNamesWorkForInstanceMethods() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" } ) };
-            Compile(new[] { "class C { public override void X() {} }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.InstanceMethods.Should().HaveCount(3);
             cls.InstanceMethods.Should().Contain(m => m.Name == "X");
@@ -165,7 +165,7 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void AdditionalNamesWorkForStaticMethods() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" } ) };
-            Compile(new[] { "class C { public override void X() {} }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.StaticMethods.Should().HaveCount(3);
             cls.StaticMethods.Should().Contain(m => m.Name == "X");
@@ -174,12 +174,54 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         [Test]
-        public void GenericMethodTypeArgumentsAreIncluded() {
+        public void OperatorsWork() {
+            Compile(new[] { "class C { public static bool operator==(C a, C b) {} }" });
+            FindStaticMethod("C.op_Equality").Should().NotBeNull();
+        }
+
+        [Test]
+        public void GenericMethodTypeArgumentsAreIncludedForInstanceMethods() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
+            FindInstanceMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
+            FindInstanceMethod("C.X1").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
+            FindInstanceMethod("C.X2").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
+        }
+
+        [Test]
+        public void GenericMethodTypeArgumentsAreIgnoredForInstanceMethodsIfTheMethodImplOptionsSaySo() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
+            FindInstanceMethod("C.X").TypeParameterNames.Should().BeEmpty();
+            FindInstanceMethod("C.X1").TypeParameterNames.Should().BeEmpty();
+            FindInstanceMethod("C.X2").TypeParameterNames.Should().BeEmpty();
+        }
+
+        [Test]
+        public void GenericMethodTypeArgumentsAreIncludedForStaticMethods() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
+            FindStaticMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
+            FindStaticMethod("C.X1").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
+            FindStaticMethod("C.X2").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
+        }
+
+        [Test]
+        public void GenericMethodTypeArgumentsAreIgnoredForStaticMethodsIfTheMethodImplOptionsSaySo() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
+            FindStaticMethod("C.X").TypeParameterNames.Should().BeEmpty();
+            FindStaticMethod("C.X1").TypeParameterNames.Should().BeEmpty();
+            FindStaticMethod("C.X2").TypeParameterNames.Should().BeEmpty();
+        }
+
+        [Test]
+        public void ImplicitlyImplementedPropertiesAreCorrectlyImported() {
             Assert.Inconclusive("TODO");
         }
 
         [Test]
-        public void GenericMethodTypeArgumentsAreIgnoredIfTheMethodImplOptionsSaySo() {
+        public void ExplicitlyImplementedPropertiesAreCorrectlyImported() {
             Assert.Inconclusive("TODO");
         }
 
@@ -204,32 +246,7 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         [Test]
-        public void ImplicitlyImplementedPropertiesAreCorrectlyImported() {
-            Assert.Inconclusive("TODO");
-        }
-
-        [Test]
-        public void ExplicitlyImplementedPropertiesAreCorrectlyImported() {
-            Assert.Inconclusive("TODO");
-        }
-
-        [Test]
         public void IndexersAreCorrectlyImported() {
-            Assert.Inconclusive("TODO");
-        }
-
-        [Test]
-        public void OverridingIndexersGetTheirNameFromTherDefiningMethod() {
-            Assert.Inconclusive("TODO");
-        }
-
-        [Test]
-        public void ExplicitInterfaceImplementationWorks() {
-            Assert.Inconclusive("TODO");
-        }
-
-        [Test]
-        public void MethodCanImplementMoreThanOneInterfaceMethod() {
             Assert.Inconclusive("TODO");
         }
     }
