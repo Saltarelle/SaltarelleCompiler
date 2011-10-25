@@ -53,6 +53,7 @@
     <Compile Include="CodeBuilder.cs" />
     <Compile Include="CodeConvertVisitor.cs" />
     <Compile Include="ConstructorImplOptions.cs" />
+    <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="ISourceFile.cs" />
     <Compile Include="MethodImplOptions.cs" />

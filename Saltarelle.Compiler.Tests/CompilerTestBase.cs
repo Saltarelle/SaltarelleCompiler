@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FluentAssertions;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
@@ -60,14 +61,43 @@ namespace Saltarelle.Compiler.Tests {
             }
         }
 
+        protected class MockErrorReporter : IErrorReporter {
+            public List<string> AllMessages { get; set; }
+
+            public MockErrorReporter() {
+                AllMessages = new List<string>();
+                Error   = s => { s = "Error: " + s; Console.WriteLine(s); AllMessages.Add(s); };
+                Warning = s => { s = "Warning: " + s; Console.WriteLine(s); AllMessages.Add(s); };
+            }
+
+            public Action<string> Error { get; set; }
+            public Action<string> Warning { get; set; }
+
+            void IErrorReporter.Error(string message) {
+                Error(message);
+            }
+
+            void IErrorReporter.Warning(string message) {
+                Warning(message);
+            }
+        }
+
         private static readonly Lazy<IProjectContent> _mscorlibLazy = new Lazy<IProjectContent>(() => new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location));
         protected IProjectContent Mscorlib { get { return _mscorlibLazy.Value; } }
 
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null) {
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IErrorReporter errorReporter = null) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
-            CompiledTypes = new Compiler(namingConvention ?? new MockNamingConventionResolver()).Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
+            bool defaultErrorHandling = false;
+            if (errorReporter == null) {
+                defaultErrorHandling = true;
+                errorReporter = new MockErrorReporter();
+            }
+            CompiledTypes = new Compiler(namingConvention ?? new MockNamingConventionResolver(), errorReporter).Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
+            if (defaultErrorHandling) {
+                ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
+            }
         }
 
         protected void Compile(params string[] sources) {
@@ -111,5 +141,4 @@ namespace Saltarelle.Compiler.Tests {
             return cls.Constructors.SingleOrDefault(m => (m.Name ?? "<default>") == name.Substring(lastDot + 1));
         }
     }
-
 }

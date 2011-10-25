@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Saltarelle.Compiler.JSModel;
 
 namespace Saltarelle.Compiler {
     public class MethodImplOptions {
@@ -76,15 +79,24 @@ namespace Saltarelle.Compiler {
         /// </summary>
         public bool AddThisAsFirstArgument { get; private set; }
 
+        private ReadOnlyCollection<string> additionalNames;
+        public ReadOnlyCollection<string> AdditionalNames {
+            get {
+                if (Type != ImplType.InstanceMethod && Type != ImplType.StaticMethod)
+                    throw new InvalidOperationException();
+                return additionalNames;
+            }
+        }
+
         private MethodImplOptions() {
         }
 
-        public static MethodImplOptions InstanceMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool addThisAsFirstArgument = false) {
-            return new MethodImplOptions { Type = ImplType.InstanceMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, AddThisAsFirstArgument = addThisAsFirstArgument };
+        public static MethodImplOptions InstanceMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool addThisAsFirstArgument = false, IEnumerable<string> additionalNames = null) {
+            return new MethodImplOptions { Type = ImplType.InstanceMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, AddThisAsFirstArgument = addThisAsFirstArgument, additionalNames = additionalNames.AsReadOnly() };
         }
 
-        public static MethodImplOptions StaticMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool addThisAsFirstArgument = false) {
-            return new MethodImplOptions { Type = ImplType.StaticMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+        public static MethodImplOptions StaticMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool addThisAsFirstArgument = false, IEnumerable<string> additionalNames = null) {
+            return new MethodImplOptions { Type = ImplType.StaticMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, AddThisAsFirstArgument = addThisAsFirstArgument, additionalNames = additionalNames.AsReadOnly() };
         }
 
         public static MethodImplOptions InlineCode(string literalCode, bool ignoreGenericArguments = false) {

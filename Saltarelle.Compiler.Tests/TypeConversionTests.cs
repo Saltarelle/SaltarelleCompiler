@@ -398,5 +398,11 @@ namespace Saltarelle.Compiler.Tests {
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.ToString().Should().Be("C1");
         }
+
+        [Test]
+        public void DelegatesAreNotImported() {
+            Compile(new[] { "delegate void D(int i);" });
+            CompiledTypes.Should().BeEmpty();
+        }
     }
 }

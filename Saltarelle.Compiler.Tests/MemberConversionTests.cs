@@ -84,13 +84,20 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         [Test]
+        public void DefaultConstructorImplementedAsStaticMethodWorks() {
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = (_, ctor) => ConstructorImplOptions.StaticMethod("X") };
+            Compile(new[] { "class C { }" }, namingConvention: namingConvention);
+            FindStaticMethod("C.X").Should().NotBeNull();
+            FindConstructor("C.X").Should().BeNull();
+        }
+
+        [Test]
         public void DefaultConstructorIsNotInsertedIfOtherConstructorIsDefined() {
             Compile(new[] { "class C { C(int i) {} }" });
             var cls = FindClass("C");
             cls.Constructors.Should().HaveCount(1);
             cls.Constructors[0].Name.Should().Be("ctor$Int32");
             cls.Constructors[0].Definition.Should().NotBeNull();
-            cls.Constructors[0].Definition.ParameterNames.Should().HaveCount(1);
         }
 
         [Test]
@@ -106,7 +113,7 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void ConstructorImplementedAsStaticMethodGetsAddedToTheStaticMethodsCollectionAndNotTheConstructors() {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = (_, ctor) => ConstructorImplOptions.StaticMethod("X") };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public C() {}" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindConstructor("C.X").Should().BeNull();
         }
@@ -128,21 +135,42 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         [Test]
-        public void OverridingMethodsGetTheirNameFromTheBase() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
-            Compile(new[] { "class B { public virtual void X(); } class C : B { public override void X() {} }" }, namingConvention: namingConvention);
-            var cls = FindClass("C");
-            cls.InstanceMethods.Should().HaveCount(1);
-            cls.InstanceMethods[0].Name.Should().Be("X");
-        }
-
-        [Test]
         public void ShadowingMethodsAreIncluded() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
             Compile(new[] { "class B { public void X(); } class C : B { public new void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.InstanceMethods.Should().HaveCount(1);
             cls.InstanceMethods[0].Name.Should().Be("XDerived");
+        }
+
+        [Test]
+        public void OverridingMethodsAreIncluded() {
+            Compile(new[] { "class B { public virtual void X(); } class C : B { public override void X() {} }" });
+            var cls = FindClass("C");
+            cls.InstanceMethods.Should().HaveCount(1);
+            cls.InstanceMethods[0].Name.Should().Be("X");
+        }
+
+        [Test]
+        public void AdditionalNamesWorkForInstanceMethods() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" } ) };
+            Compile(new[] { "class C { public override void X() {} }" }, namingConvention: namingConvention);
+            var cls = FindClass("C");
+            cls.InstanceMethods.Should().HaveCount(3);
+            cls.InstanceMethods.Should().Contain(m => m.Name == "X");
+            cls.InstanceMethods.Should().Contain(m => m.Name == "X1");
+            cls.InstanceMethods.Should().Contain(m => m.Name == "X2");
+        }
+
+        [Test]
+        public void AdditionalNamesWorkForStaticMethods() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" } ) };
+            Compile(new[] { "class C { public override void X() {} }" }, namingConvention: namingConvention);
+            var cls = FindClass("C");
+            cls.StaticMethods.Should().HaveCount(3);
+            cls.StaticMethods.Should().Contain(m => m.Name == "X");
+            cls.StaticMethods.Should().Contain(m => m.Name == "X1");
+            cls.StaticMethods.Should().Contain(m => m.Name == "X2");
         }
 
         [Test]
