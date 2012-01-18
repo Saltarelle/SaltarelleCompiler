@@ -33,43 +33,43 @@ namespace Saltarelle.Compiler.Tests {
 
         protected class MockNamingConventionResolver : INamingConventionResolver {
             public MockNamingConventionResolver() {
-                GetTypeName                               = (context, t) => t.Name;
-                GetTypeParameterName                      = (context, t) => t.Name;
-                GetMethodImplementation                   = (context, m) => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
-                GetConstructorImplementation              = (context, c) => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Resolve(context).Name)));
-                GetPropertyImplementation                 = (context, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
-                GetAutoPropertyBackingFieldImplementation = (context, p) => p.IsSealed ? FieldOptions.Static("$" + p.Name) : FieldOptions.Instance("$" + p.Name);
+                GetTypeName                               = t => t.Name;
+                GetTypeParameterName                      = t => t.Name;
+                GetMethodImplementation                   = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
+                GetConstructorImplementation              = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
+                GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
+                GetAutoPropertyBackingFieldImplementation = p => p.IsSealed ? FieldOptions.Static("$" + p.Name) : FieldOptions.Instance("$" + p.Name);
             }
 
-            public Func<ITypeResolveContext, ITypeDefinition, string> GetTypeName { get; set; }
-            public Func<ITypeResolveContext, ITypeParameter, string> GetTypeParameterName { get; set; }
-            public Func<ITypeResolveContext, IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
-            public Func<ITypeResolveContext, IMethod, ConstructorImplOptions> GetConstructorImplementation { get; set; }
-            public Func<ITypeResolveContext, IProperty, PropertyImplOptions> GetPropertyImplementation { get; set; }
-            public Func<ITypeResolveContext, IProperty, FieldOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
+            public Func<ITypeDefinition, string> GetTypeName { get; set; }
+            public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
+            public Func<IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
+            public Func<IMethod, ConstructorImplOptions> GetConstructorImplementation { get; set; }
+            public Func<IProperty, PropertyImplOptions> GetPropertyImplementation { get; set; }
+            public Func<IProperty, FieldOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
 
-            string INamingConventionResolver.GetTypeName(ITypeResolveContext context, ITypeDefinition typeDefinition) {
-                return GetTypeName(context, typeDefinition);
+            string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
+                return GetTypeName(typeDefinition);
             }
 
-            string INamingConventionResolver.GetTypeParameterName(ITypeResolveContext context, ITypeParameter typeDefinition) {
-                return GetTypeParameterName(context, typeDefinition);
+            string INamingConventionResolver.GetTypeParameterName(ITypeParameter typeDefinition) {
+                return GetTypeParameterName(typeDefinition);
             }
 
-            MethodImplOptions INamingConventionResolver.GetMethodImplementation(ITypeResolveContext context, IMethod method) {
-                return GetMethodImplementation(context, method);
+            MethodImplOptions INamingConventionResolver.GetMethodImplementation(IMethod method) {
+                return GetMethodImplementation(method);
             }
 
-            ConstructorImplOptions INamingConventionResolver.GetConstructorImplementation(ITypeResolveContext context, IMethod method) {
-                return GetConstructorImplementation(context, method);
+            ConstructorImplOptions INamingConventionResolver.GetConstructorImplementation(IMethod method) {
+                return GetConstructorImplementation(method);
             }
 
-            PropertyImplOptions INamingConventionResolver.GetPropertyImplementation(ITypeResolveContext context, IProperty property) {
-                return GetPropertyImplementation(context, property);
+            PropertyImplOptions INamingConventionResolver.GetPropertyImplementation(IProperty property) {
+                return GetPropertyImplementation(property);
             }
 
-            FieldOptions INamingConventionResolver.GetAutoPropertyBackingFieldImplementation(ITypeResolveContext context, IProperty property) {
-                return GetAutoPropertyBackingFieldImplementation(context, property);
+            FieldOptions INamingConventionResolver.GetAutoPropertyBackingFieldImplementation(IProperty property) {
+                return GetAutoPropertyBackingFieldImplementation(property);
             }
         }
 
@@ -94,8 +94,8 @@ namespace Saltarelle.Compiler.Tests {
             }
         }
 
-        private static readonly Lazy<IProjectContent> _mscorlibLazy = new Lazy<IProjectContent>(() => new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location));
-        protected IProjectContent Mscorlib { get { return _mscorlibLazy.Value; } }
+        private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location));
+        protected IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 

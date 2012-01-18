@@ -10,31 +10,31 @@ namespace Saltarelle.Compiler {
         /// <summary>
         /// Returns the name of a type as it should appear in the script. If null is included the class, and any nested class, will not appear in the output.
         /// </summary>
-        string GetTypeName(ITypeResolveContext context, ITypeDefinition typeDefinition);
-        string GetTypeParameterName(ITypeResolveContext context, ITypeParameter typeParameter);
+        string GetTypeName(ITypeDefinition typeDefinition);
+        string GetTypeParameterName(ITypeParameter typeParameter);
 
         /// <summary>
         /// Gets the implementation of a method. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        MethodImplOptions GetMethodImplementation(ITypeResolveContext context, IMethod method);
+        MethodImplOptions GetMethodImplementation(IMethod method);
 
         /// <summary>
         /// Returns the implementation of a constructor. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        ConstructorImplOptions GetConstructorImplementation(ITypeResolveContext context, IMethod method);
+        ConstructorImplOptions GetConstructorImplementation(IMethod method);
 
         /// <summary>
         /// Returns the implementation of an auto-implemented property. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        PropertyImplOptions GetPropertyImplementation(ITypeResolveContext context, IProperty property);
+        PropertyImplOptions GetPropertyImplementation(IProperty property);
 
         /// <summary>
         /// Returns the name of the backing field for the specified property. Must not return null.
         /// </summary>
-        FieldOptions GetAutoPropertyBackingFieldImplementation(ITypeResolveContext context, IProperty property);
+        FieldOptions GetAutoPropertyBackingFieldImplementation(IProperty property);
     }
 
     public class FieldOptions {

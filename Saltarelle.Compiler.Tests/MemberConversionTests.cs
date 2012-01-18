@@ -27,12 +27,12 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void NamingConventionIsUsedToDetermineMethodNameAndStaticity() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.InstanceMethod("X") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.InstanceMethod("X") };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             var m = FindInstanceMethod("C.X");
             m.Should().NotBeNull();
 
-            namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.StaticMethod("Y") };
+            namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.StaticMethod("Y") };
             Compile(new[] { "class C { public void M() {}" }, namingConvention: namingConvention);
             m = FindStaticMethod("C.Y");
             m.Should().NotBeNull();
@@ -40,35 +40,35 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void MethodImplementedAsInlineCodeDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.InlineCode("X") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.InlineCode("X") };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void MethodImplementedAsInstanceMethodOnFirstArgumentDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.InstanceMethodOnFirstArgument("X") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.InstanceMethodOnFirstArgument("X") };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void MethodImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.NotUsableFromScript() };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.NotUsableFromScript() };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void InstanceMethodWithGenerateCodeSetToFalseDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.InstanceMethod("X", generateCode: false) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.InstanceMethod("X", generateCode: false) };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void StaticMethodWithGenerateCodeSetToFalseDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, method) => MethodImplOptions.StaticMethod("X", generateCode: false) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.StaticMethod("X", generateCode: false) };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
@@ -85,7 +85,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void DefaultConstructorImplementedAsStaticMethodWorks() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = (_, ctor) => ConstructorImplOptions.StaticMethod("X") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.StaticMethod("X") };
             Compile(new[] { "class C { }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindConstructor("C.X").Should().BeNull();
@@ -102,7 +102,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = (_, ctor) => ctor.Parameters[0].Type.Equals(KnownTypeReference.String) ? ConstructorImplOptions.Named("StringCtor") : ConstructorImplOptions.StaticMethod("IntCtor") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ctor.Parameters[0].Type.Equals(KnownTypeReference.String) ? ConstructorImplOptions.Named("StringCtor") : ConstructorImplOptions.StaticMethod("IntCtor") };
             Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, namingConvention: namingConvention);
             FindClass("C").Constructors.Should().HaveCount(1);
             FindClass("C").StaticMethods.Should().HaveCount(1);
@@ -112,7 +112,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void ConstructorImplementedAsStaticMethodGetsAddedToTheStaticMethodsCollectionAndNotTheConstructors() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = (_, ctor) => ConstructorImplOptions.StaticMethod("X") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.StaticMethod("X") };
             Compile(new[] { "class C { public C() {}" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindConstructor("C.X").Should().BeNull();
@@ -120,7 +120,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void ConstructorImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = (_, ctor) => ConstructorImplOptions.NotUsableFromScript() };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.NotUsableFromScript() };
             Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
             var m = FindInstanceMethod("C.X");
             m.Should().BeNull();
@@ -136,7 +136,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void ShadowingMethodsAreIncluded() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.InstanceMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
             Compile(new[] { "class B { public void X(); } class C : B { public new void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.InstanceMethods.Should().HaveCount(1);
@@ -153,7 +153,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void AdditionalNamesWorkForInstanceMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" } ) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" } ) };
             Compile(new[] { "class C { public void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.InstanceMethods.Should().HaveCount(3);
@@ -164,7 +164,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void AdditionalNamesWorkForStaticMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" } ) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" } ) };
             Compile(new[] { "class C { public static void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.StaticMethods.Should().HaveCount(3);
@@ -181,7 +181,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForInstanceMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
             FindInstanceMethod("C.X1").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
@@ -190,7 +190,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForInstanceMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.InstanceMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.X").TypeParameterNames.Should().BeEmpty();
             FindInstanceMethod("C.X1").TypeParameterNames.Should().BeEmpty();
@@ -199,7 +199,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForStaticMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
             FindStaticMethod("C.X1").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
@@ -208,7 +208,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForStaticMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = (_, m) => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = (_, tp) => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.StaticMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().BeEmpty();
             FindStaticMethod("C.X1").TypeParameterNames.Should().BeEmpty();
@@ -217,8 +217,8 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesWithGetSetMethodsAndFieldAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name)),
-                                                                      GetAutoPropertyBackingFieldImplementation = (_, p) => FieldOptions.Instance("$" + p.Name)
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name)),
+                                                                      GetAutoPropertyBackingFieldImplementation = p => FieldOptions.Instance("$" + p.Name)
                                                                     };
 
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
@@ -229,8 +229,8 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesWithGetSetMethodsButNoFieldAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name)),
-                                                                      GetAutoPropertyBackingFieldImplementation = (_, p) => FieldOptions.NotUsableFromScript()
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name)),
+                                                                      GetAutoPropertyBackingFieldImplementation = p => FieldOptions.NotUsableFromScript()
                                                                     };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
@@ -240,8 +240,8 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesWithGetSetMethodsWithNoCodeAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name, generateCode: false), MethodImplOptions.InstanceMethod("set_" + p.Name, generateCode: false)),
-                                                                      GetAutoPropertyBackingFieldImplementation = (_, p) => FieldOptions.NotUsableFromScript()
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name, generateCode: false), MethodImplOptions.InstanceMethod("set_" + p.Name, generateCode: false)),
+                                                                      GetAutoPropertyBackingFieldImplementation = p => FieldOptions.NotUsableFromScript()
                                                                     };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -250,8 +250,8 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesWithGetSetMethodsStaticAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.StaticMethod("get_" + p.Name, generateCode: false), MethodImplOptions.StaticMethod("set_" + p.Name, generateCode: false)),
-                                                                      GetAutoPropertyBackingFieldImplementation = (_, p) => FieldOptions.NotUsableFromScript()
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.StaticMethod("get_" + p.Name, generateCode: false), MethodImplOptions.StaticMethod("set_" + p.Name, generateCode: false)),
+                                                                      GetAutoPropertyBackingFieldImplementation = p => FieldOptions.NotUsableFromScript()
                                                                     };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().BeNull();
@@ -264,8 +264,8 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesWithStaticFieldAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name, generateCode: false), MethodImplOptions.InstanceMethod("set_" + p.Name, generateCode: false)),
-                                                                      GetAutoPropertyBackingFieldImplementation = (_, p) => FieldOptions.Static("$" + p.Name)
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name, generateCode: false), MethodImplOptions.InstanceMethod("set_" + p.Name, generateCode: false)),
+                                                                      GetAutoPropertyBackingFieldImplementation = p => FieldOptions.Static("$" + p.Name)
                                                                     };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
@@ -276,7 +276,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesThatShouldBeInstanceFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.InstanceField("$" + p.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.InstanceField("$" + p.Name) };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
@@ -285,7 +285,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void InstanceAutoPropertiesThatShouldBeStaticFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = (_, p) => PropertyImplOptions.StaticField("$" + p.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.StaticField("$" + p.Name) };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
