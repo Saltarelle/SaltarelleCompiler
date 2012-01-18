@@ -200,7 +200,7 @@ namespace Saltarelle.Compiler {
 
             var members = ConvertMembers(type);
 
-            return new JsClass(name, IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, members.Item1, members.Item2, members.Item3);
+            return new JsClass(name, IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, constructors: members.Item1, instanceMethods: members.Item2, staticMethods: members.Item3, instanceFields: null, staticFields: null);
         }
 
         private void CreateTypes() {
@@ -263,19 +263,34 @@ namespace Saltarelle.Compiler {
             return _types.Values;
         }
 
-        public JsFunctionDefinitionExpression CompileDelegatingMethod(IMethod method) {
+        private JsFunctionDefinitionExpression CompileDelegatingMethod(IMethod method) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
         }
 
-        public JsFunctionDefinitionExpression CompileDefaultConstructorWithoutImplementation(IMethod method, MethodCompilationOptions options) {
+        private JsFunctionDefinitionExpression CompileDefaultConstructorWithoutImplementation(IMethod method, MethodCompilationOptions options) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
         }
 
-        public JsFunctionDefinitionExpression CompileMethod(AttributedNode method, MethodCompilationOptions options) {
+        private JsFunctionDefinitionExpression CompileMethod(AttributedNode method, MethodCompilationOptions options) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+        }
+
+        private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, FieldOptions backingField) {
+            // BIG TODO.
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+        }
+
+        private JsFunctionDefinitionExpression CompileAutoPropertySetter(IProperty property, FieldOptions backingField) {
+            // BIG TODO.
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+        }
+
+        private JsExpression CreateDefaultInitializer(IType type) {
+            // TODO
+            return JsExpression.Number(0);
         }
 
         public override object VisitMethodDeclaration(MethodDeclaration methodDeclaration, object data) {
@@ -326,13 +341,56 @@ namespace Saltarelle.Compiler {
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
-                _errorReporter.Error("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString());
+                _errorReporter.Error("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
                 return null;
             }
 
             Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
             if (_methodMap.TryGetValue(method, out jsMethod)) {
                 jsMethod.Item1.Definition = CompileMethod(constructorDeclaration, jsMethod.Item2);
+            }
+
+            return null;
+        }
+
+        public override object VisitPropertyDeclaration(PropertyDeclaration propertyDeclaration, object data) {
+            var resolveResult = _resolver.GetResolveResult(propertyDeclaration);
+            if (!(resolveResult is MemberResolveResult)) {
+                _errorReporter.Error("Property declaration " + propertyDeclaration.Name + " does not resolve to a member.");
+                return null;
+            }
+
+            var property = ((MemberResolveResult)resolveResult).Member as IProperty;
+            if (property == null) {
+                _errorReporter.Error("Property declaration " + propertyDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
+                return null;
+            }
+
+            var impl = _namingConvention.GetPropertyImplementation(_typeResolveContext, property);
+
+            if (impl.Type == PropertyImplOptions.ImplType.GetAndSetMethods) {
+                if (propertyDeclaration.Getter.Body == null) {
+                    // Auto-property.
+                    var fieldImpl = _namingConvention.GetAutoPropertyBackingFieldImplementation(_typeResolveContext, property);
+                    if (fieldImpl.Type != FieldOptions.ImplType.NotUsableFromScript) {
+                        var field = new JsField(fieldImpl.Name, CreateDefaultInitializer(property.ReturnType.Resolve(_typeResolveContext)));
+                        if (fieldImpl.Type == FieldOptions.ImplType.Instance) {
+                            ((JsClass)_types[property.DeclaringTypeDefinition]).InstanceFields.Add(field);
+                        }
+                        else if (fieldImpl.Type == FieldOptions.ImplType.Static) {
+                            ((JsClass)_types[property.DeclaringTypeDefinition]).StaticFields.Add(field);
+                        }
+                        else {
+                            _errorReporter.Error("Invalid field type");
+                        }
+                    }
+
+                    _methodMap[property.Getter] = CompileAutoPropertyGetter(property);
+                    _methodMap[property.Setter] = CompileAutoPropertySetter(property);
+                }
+                else {
+                    // Manual property: TODO
+                }
             }
 
             return null;

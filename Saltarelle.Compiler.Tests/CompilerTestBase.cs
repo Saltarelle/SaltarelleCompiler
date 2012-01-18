@@ -33,16 +33,20 @@ namespace Saltarelle.Compiler.Tests {
 
         protected class MockNamingConventionResolver : INamingConventionResolver {
             public MockNamingConventionResolver() {
-                GetTypeName                  = (context, t) => t.Name;
-                GetTypeParameterName         = (context, t) => t.Name;
-                GetMethodImplementation      = (context, m) => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
-                GetConstructorImplementation = (context, c) => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Resolve(context).Name)));
+                GetTypeName                               = (context, t) => t.Name;
+                GetTypeParameterName                      = (context, t) => t.Name;
+                GetMethodImplementation                   = (context, m) => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
+                GetConstructorImplementation              = (context, c) => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Resolve(context).Name)));
+                GetPropertyImplementation                 = (context, p) => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
+                GetAutoPropertyBackingFieldImplementation = (context, p) => p.IsSealed ? FieldOptions.Static("$" + p.Name) : FieldOptions.Instance("$" + p.Name);
             }
 
             public Func<ITypeResolveContext, ITypeDefinition, string> GetTypeName { get; set; }
             public Func<ITypeResolveContext, ITypeParameter, string> GetTypeParameterName { get; set; }
             public Func<ITypeResolveContext, IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
             public Func<ITypeResolveContext, IMethod, ConstructorImplOptions> GetConstructorImplementation { get; set; }
+            public Func<ITypeResolveContext, IProperty, PropertyImplOptions> GetPropertyImplementation { get; set; }
+            public Func<ITypeResolveContext, IProperty, FieldOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeResolveContext context, ITypeDefinition typeDefinition) {
                 return GetTypeName(context, typeDefinition);
@@ -58,6 +62,14 @@ namespace Saltarelle.Compiler.Tests {
 
             ConstructorImplOptions INamingConventionResolver.GetConstructorImplementation(ITypeResolveContext context, IMethod method) {
                 return GetConstructorImplementation(context, method);
+            }
+
+            PropertyImplOptions INamingConventionResolver.GetPropertyImplementation(ITypeResolveContext context, IProperty property) {
+                return GetPropertyImplementation(context, property);
+            }
+
+            FieldOptions INamingConventionResolver.GetAutoPropertyBackingFieldImplementation(ITypeResolveContext context, IProperty property) {
+                return GetAutoPropertyBackingFieldImplementation(context, property);
             }
         }
 
@@ -139,6 +151,18 @@ namespace Saltarelle.Compiler.Tests {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
             return cls.Constructors.SingleOrDefault(m => (m.Name ?? "<default>") == name.Substring(lastDot + 1));
+        }
+
+        protected JsField FindInstanceField(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.InstanceFields.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
+        }
+
+        protected JsField FindStaticField(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.StaticFields.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
         }
     }
 }
