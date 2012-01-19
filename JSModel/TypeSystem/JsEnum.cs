@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         private IList<JsEnumValue> _values;
         public IList<JsEnumValue> Values { get { return _values; } }
 
-        public JsEnum(ScopedName name, bool isPublic) : base(name, isPublic) {
+        public JsEnum(ScopedName name) : base(name) {
             _values = new List<JsEnumValue>();
         }
 

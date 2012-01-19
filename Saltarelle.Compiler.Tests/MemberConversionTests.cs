@@ -102,7 +102,7 @@ namespace Saltarelle.Compiler.Tests {
 
         [Test]
         public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ctor.Parameters[0].Type.Equals(KnownTypeReference.String) ? ConstructorImplOptions.Named("StringCtor") : ConstructorImplOptions.StaticMethod("IntCtor") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorImplOptions.Named("StringCtor") : ConstructorImplOptions.StaticMethod("IntCtor") };
             Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, namingConvention: namingConvention);
             FindClass("C").Constructors.Should().HaveCount(1);
             FindClass("C").StaticMethods.Should().HaveCount(1);

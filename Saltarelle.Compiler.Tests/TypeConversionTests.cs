@@ -207,13 +207,6 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         [Test]
-        public void ClassCanInheritInnerClassAndImplementInnerInterface() {
-            Compile(@"class Test : Test.Base, Test.ITest { public class Base {} interface ITest {} }");
-            var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{Test+Base}");
-        }
-
-        [Test]
         public void NamingConventionIsCorrectlyApplied() {
             var namingConvention = new MockNamingConventionResolver { GetTypeName = def => "$" + def.Name, GetTypeParameterName = def => "$$" + def.Name };
             Compile(new[] { @"using System.Collections.Generic;
@@ -339,8 +332,23 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         [Test]
+        public void NonGenericTypeNestedInGenericTypeWorks() {
+            Compile("class Test1<T1> { class Test2 {} }");
+            var test1 = FindClass("Test1");
+            var test2 = FindClass("Test1+Test2");
+            test1.TypeArgumentNames.Should().Equal(new[] { "T1" });
+            test2.Should().NotBeNull();
+        }
+
+        [Test]
+        public void EnumNestedInGenericTypeWorks() {
+            Compile("class Test1<T1> { enum Test2 {} }");
+        }
+
+        [Test]
         public void IsPublicFlagIsCorrectlySetForClasses() {
-            Compile(@"class C1 {}
+            Assert.Inconclusive("TODO: Move somewhere else");
+/*            Compile(@"class C1 {}
                       internal class C2 {}
                       public class C3 {}
                       public class C4 { internal class C5 { public class C6 {} } }
@@ -360,12 +368,13 @@ namespace Saltarelle.Compiler.Tests {
             FindClass("C10").IsPublic.Should().BeTrue();
             FindClass("C10+C11").IsPublic.Should().BeFalse();
             FindClass("C10+C12").IsPublic.Should().BeTrue();
-            FindClass("C10+C13").IsPublic.Should().BeTrue();
+            FindClass("C10+C13").IsPublic.Should().BeTrue();*/
         }
 
         [Test]
         public void IsPublicFlagIsCorrectlySetForEnums() {
-            Compile(@"enum C1 {}
+            Assert.Inconclusive("TODO: Move");
+/*            Compile(@"enum C1 {}
                       internal enum C2 {}
                       public enum C3 {}
                       public class C4 { internal class C5 { public enum C6 {} } }
@@ -380,7 +389,7 @@ namespace Saltarelle.Compiler.Tests {
             CompiledTypes.Single(tp => tp.Name.ToString() == "C7+C8+C9").IsPublic.Should().BeFalse();
             CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C11").IsPublic.Should().BeFalse();
             CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C12").IsPublic.Should().BeTrue();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C13").IsPublic.Should().BeTrue();
+            CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C13").IsPublic.Should().BeTrue();*/
         }
 
         [Test]

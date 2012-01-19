@@ -22,7 +22,7 @@ namespace Saltarelle.Compiler {
     public class Compiler : DepthFirstAstVisitor<object, object>, ICompiler {
         private class ResolveAllNavigator : IResolveVisitorNavigator {
             public ResolveVisitorNavigationMode Scan(AstNode node) {
-                return ResolveVisitorNavigationMode.Scan;
+                return ResolveVisitorNavigationMode.Resolve;
             }
 
             public void Resolved(AstNode node, ResolveResult result) {
@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler {
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
         private CSharpAstResolver _resolver;
-        private Dictionary<ITypeDefinition, JsType> _types;
+        private Dictionary<IType, JsType> _types;
         private Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>> _methodMap;
         private Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>> _defaultConstructors;
 
@@ -54,7 +54,7 @@ namespace Saltarelle.Compiler {
                 return ScopedName.Global(!string.IsNullOrEmpty(type.Namespace) ? type.Namespace : null, name);
             }
             else {
-                var declaringName = ConvertName(type.DeclaringTypeDefinition);
+                var declaringName = ConvertName(type.DeclaringType.GetDefinition());
                 if (declaringName == null)
                     return null;
                 else
@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler {
 
         private JsEnum ConvertEnum(ITypeDefinition type) {
             var name = ConvertName(type);
-            return name != null ? new JsEnum(name, IsTypePublic(type)) : null;
+            return name != null ? new JsEnum(name) : null;
         }
 
         private JsConstructedType ConvertPotentiallyGenericType(IType type) {
@@ -156,7 +156,7 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        private Tuple<IEnumerable<JsConstructor>, IEnumerable<JsMethod>, IEnumerable<JsMethod>> ConvertMembers(ITypeDefinition type) {
+        private Tuple<IEnumerable<JsConstructor>, IEnumerable<JsMethod>, IEnumerable<JsMethod>> ConvertMembers(IType type) {
             var constructors    = new List<JsConstructor>();
             var instanceMethods = new List<JsMethod>();
             var staticMethods   = new List<JsMethod>();
@@ -200,11 +200,18 @@ namespace Saltarelle.Compiler {
 
             var members = ConvertMembers(type);
 
-            return new JsClass(name, IsTypePublic(type), ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, constructors: members.Item1, instanceMethods: members.Item2, staticMethods: members.Item3, instanceFields: null, staticFields: null);
+            return new JsClass(name, ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, constructors: members.Item1, instanceMethods: members.Item2, staticMethods: members.Item3, instanceFields: null, staticFields: null);
+        }
+
+        private IEnumerable<IType> SelfAndNested(IType type) {
+            yield return type;
+            foreach (var x in type.GetNestedTypes(options: GetMemberOptions.IgnoreInheritedMembers).SelectMany(c => SelfAndNested(c))) {
+                yield return x;
+            }
         }
 
         private void CreateTypes() {
-            foreach (var type in _compilation.MainAssembly.TopLevelTypeDefinitions) {
+            foreach (var type in _compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).Select(c => c.GetDefinition())) {
                 switch (type.Kind) {
                     case TypeKind.Class:
                     case TypeKind.Struct:
@@ -225,7 +232,7 @@ namespace Saltarelle.Compiler {
         }
 
         public IEnumerable<JsType> Compile(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references) {
-            var project = new CSharpProjectContent();
+            IProjectContent project = new CSharpProjectContent();
             var parser = new CSharpParser();
             var files = sourceFiles.Select(f => { 
                                                     using (var rdr = f.Open()) {
@@ -236,13 +243,13 @@ namespace Saltarelle.Compiler {
             foreach (var f in files) {
                 var tcv = new TypeSystemConvertVisitor(f.ParsedFile);
                 f.CompilationUnit.AcceptVisitor(tcv);
-                project.UpdateProjectContent(null, f.ParsedFile);
+                project = project.UpdateProjectContent(null, f.ParsedFile);
             }
-            project.AddAssemblyReferences(references);
+            project = project.AddAssemblyReferences(references);
 
             _compilation = project.CreateCompilation();
 
-            _types               = new Dictionary<ITypeDefinition, JsType>();
+            _types               = new Dictionary<IType, JsType>();
             _methodMap           = new Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>>();
             _defaultConstructors = new Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>>();
 

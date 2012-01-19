@@ -22,7 +22,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         public IList<JsField> InstanceFields { get; private set; }
         public IList<JsField> StaticFields { get; private set; }
 
-        public JsClass(ScopedName name, bool isPublic, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces, IEnumerable<JsConstructor> constructors, IEnumerable<JsMethod> instanceMethods, IEnumerable<JsMethod> staticMethods, IEnumerable<JsField> instanceFields, IEnumerable<JsField> staticFields) : base(name, isPublic) {
+        public JsClass(ScopedName name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces, IEnumerable<JsConstructor> constructors, IEnumerable<JsMethod> instanceMethods, IEnumerable<JsMethod> staticMethods, IEnumerable<JsField> instanceFields, IEnumerable<JsField> staticFields) : base(name) {
             BaseClass             = baseClass;
             ClassType             = classType;
             TypeArgumentNames     = new List<string>(typeArgumentNames ?? new string[0]);
