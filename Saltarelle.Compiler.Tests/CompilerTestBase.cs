@@ -38,7 +38,8 @@ namespace Saltarelle.Compiler.Tests {
                 GetMethodImplementation                   = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
                 GetConstructorImplementation              = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
                 GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
-                GetAutoPropertyBackingFieldImplementation = p => p.IsSealed ? FieldOptions.Static("$" + p.Name) : FieldOptions.Instance("$" + p.Name);
+                GetAutoPropertyBackingFieldImplementation = p => p.IsStatic ? FieldImplOptions.Static("$" + p.Name) : FieldImplOptions.Instance("$" + p.Name);
+                GetFieldImplementation                    = f => f.IsStatic ? FieldImplOptions.Static("$" + f.Name) : FieldImplOptions.Instance("$" + f.Name);
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -46,7 +47,8 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
             public Func<IMethod, ConstructorImplOptions> GetConstructorImplementation { get; set; }
             public Func<IProperty, PropertyImplOptions> GetPropertyImplementation { get; set; }
-            public Func<IProperty, FieldOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
+            public Func<IProperty, FieldImplOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
+            public Func<IField, FieldImplOptions> GetFieldImplementation { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
                 return GetTypeName(typeDefinition);
@@ -68,8 +70,12 @@ namespace Saltarelle.Compiler.Tests {
                 return GetPropertyImplementation(property);
             }
 
-            FieldOptions INamingConventionResolver.GetAutoPropertyBackingFieldImplementation(IProperty property) {
+            FieldImplOptions INamingConventionResolver.GetAutoPropertyBackingFieldImplementation(IProperty property) {
                 return GetAutoPropertyBackingFieldImplementation(property);
+            }
+
+            FieldImplOptions INamingConventionResolver.GetFieldImplementation(IField field) {
+                return GetFieldImplementation(field);
             }
         }
 

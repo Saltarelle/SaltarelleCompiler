@@ -63,6 +63,7 @@
     <Compile Include="CodeBuilder.cs" />
     <Compile Include="CodeConvertVisitor.cs" />
     <Compile Include="ConstructorImplOptions.cs" />
+    <Compile Include="FieldImplOptions.cs" />
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="ISourceFile.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler.cs" />
+    <Compile Include="PropertyImplOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JSModel\JSModel.csproj">

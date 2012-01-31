@@ -39,6 +39,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             Constructors.ForEach(x => x.Freeze());
             InstanceMethods.ForEach(x => x.Freeze());
             StaticMethods.ForEach(x => x.Freeze());
+            InstanceFields.ForEach(x => x.Freeze());
+            StaticFields.ForEach(x => x.Freeze());
 
             TypeArgumentNames     = TypeArgumentNames.AsReadOnly();
             ImplementedInterfaces = ImplementedInterfaces.AsReadOnly();

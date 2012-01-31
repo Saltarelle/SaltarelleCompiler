@@ -20,6 +20,13 @@ namespace Saltarelle.Compiler {
     }
 
     public class Compiler : DepthFirstAstVisitor<object, object>, ICompiler {
+        public enum MethodCompilationOptions {
+            InstanceMethod,
+            StaticMethod,
+            Constructor,
+            ConstructorAsStaticMethod
+        }
+
         private class ResolveAllNavigator : IResolveVisitorNavigator {
             public ResolveVisitorNavigationMode Scan(AstNode node) {
                 return ResolveVisitorNavigationMode.Resolve;
@@ -38,6 +45,7 @@ namespace Saltarelle.Compiler {
         private CSharpAstResolver _resolver;
         private Dictionary<IType, JsType> _types;
         private Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>> _methodMap;
+        private Dictionary<IField, JsField> _fieldMap;
         private Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>> _defaultConstructors;
 
         public Compiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
@@ -205,10 +213,29 @@ namespace Saltarelle.Compiler {
                 }
             }
 
-            foreach (var m in type.GetEvents(options: GetMemberOptions.IgnoreInheritedMembers)) {
+            foreach (var f in type.GetFields(options: GetMemberOptions.IgnoreInheritedMembers)) {
+                var impl = _namingConvention.GetFieldImplementation(f);
+                switch (impl.Type) {
+                    case FieldImplOptions.ImplType.Instance: {
+                        var jsf = new JsField(impl.Name);
+                        instanceFields.Add(jsf);
+                        _fieldMap.Add(f, jsf);
+                        break;
+                    }
+                    case FieldImplOptions.ImplType.Static: {
+                        var jsf = new JsField(impl.Name);
+                        staticFields.Add(new JsField(impl.Name));
+                        _fieldMap.Add(f, jsf);
+                        break;
+                    }
+                    case FieldImplOptions.ImplType.NotUsableFromScript:
+                        break;
+                    default:
+                        throw new InvalidOperationException(string.Format("Invalid field implementation type {0}", impl.Type));
+                }
             }
 
-            foreach (var m in type.GetFields(options: GetMemberOptions.IgnoreInheritedMembers)) {
+            foreach (var m in type.GetEvents(options: GetMemberOptions.IgnoreInheritedMembers)) {
             }
 
             return Tuple.Create((IEnumerable<JsConstructor>)constructors, (IEnumerable<JsMethod>)instanceMethods, (IEnumerable<JsMethod>)staticMethods, (IEnumerable<JsField>)instanceFields, (IEnumerable<JsField>)staticFields);
@@ -277,6 +304,7 @@ namespace Saltarelle.Compiler {
 
             _types               = new Dictionary<IType, JsType>();
             _methodMap           = new Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>>();
+            _fieldMap            = new Dictionary<IField, JsField>();
             _defaultConstructors = new Dictionary<IMethod, Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions>>();
 
             CreateTypes();
@@ -291,6 +319,9 @@ namespace Saltarelle.Compiler {
 
             _methodMap.Where(kvp => kvp.Value.Item1.Definition == null)
                       .ForEach(kvp => _errorReporter.Error("Member " + kvp.Key.ToString() + " does not have an implementation."));
+
+            _fieldMap.Where(kvp => kvp.Value.Initializer == null)
+                      .ForEach(kvp => _errorReporter.Error("Field " + kvp.Key.ToString() + " does not have an initializer."));
 
             return _types.Values;
         }
@@ -310,17 +341,22 @@ namespace Saltarelle.Compiler {
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
-        private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IMethod method, FieldOptions backingField) {
+        private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IMethod method, FieldImplOptions backingField) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
-        private JsFunctionDefinitionExpression CompileAutoPropertySetter(IMethod method, FieldOptions backingField) {
+        private JsFunctionDefinitionExpression CompileAutoPropertySetter(IMethod method, FieldImplOptions backingField) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsExpression CreateDefaultInitializer(IType type) {
+            // TODO
+            return JsExpression.Number(0);
+        }
+
+        private JsExpression CompileInitializer(IField field, Expression initializer) {
             // TODO
             return JsExpression.Number(0);
         }
@@ -394,7 +430,7 @@ namespace Saltarelle.Compiler {
 
             var property = ((MemberResolveResult)resolveResult).Member as IProperty;
             if (property == null) {
-                _errorReporter.Error("Property declaration " + propertyDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
+                _errorReporter.Error("Property declaration " + propertyDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
                 return null;
             }
 
@@ -404,12 +440,12 @@ namespace Saltarelle.Compiler {
                 if (propertyDeclaration.Getter.Body.IsNull) {
                     // Auto-property.
                     var fieldImpl = _namingConvention.GetAutoPropertyBackingFieldImplementation(property);
-                    if (fieldImpl.Type != FieldOptions.ImplType.NotUsableFromScript) {
+                    if (fieldImpl.Type != FieldImplOptions.ImplType.NotUsableFromScript) {
                         var field = new JsField(fieldImpl.Name, CreateDefaultInitializer(property.ReturnType));
-                        if (fieldImpl.Type == FieldOptions.ImplType.Instance) {
+                        if (fieldImpl.Type == FieldImplOptions.ImplType.Instance) {
                             ((JsClass)_types[property.DeclaringTypeDefinition]).InstanceFields.Add(field);
                         }
-                        else if (fieldImpl.Type == FieldOptions.ImplType.Static) {
+                        else if (fieldImpl.Type == FieldImplOptions.ImplType.Static) {
                             ((JsClass)_types[property.DeclaringTypeDefinition]).StaticFields.Add(field);
                         }
                         else {
@@ -444,12 +480,26 @@ namespace Saltarelle.Compiler {
 
             return null;
         }
-    }
 
-    public enum MethodCompilationOptions {
-        InstanceMethod,
-        StaticMethod,
-        Constructor,
-        ConstructorAsStaticMethod
+        public override object VisitFieldDeclaration(FieldDeclaration fieldDeclaration, object data) {
+            foreach (var v in fieldDeclaration.Variables) {
+                var resolveResult = _resolver.Resolve(v);
+                if (!(resolveResult is MemberResolveResult)) {
+                    _errorReporter.Error("Field declaration " + v.Name + " does not resolve to a member.");
+                    return null;
+                }
+
+                var field = ((MemberResolveResult)resolveResult).Member as IField;
+                if (field == null) {
+                    _errorReporter.Error("Field declaration " + v.Name + " does not resolve to a field (resolves to " + resolveResult.ToString() + ")");
+                    return null;
+                }
+
+                JsField jsField;
+                if (_fieldMap.TryGetValue(field, out jsField))
+                    jsField.Initializer = (v.Initializer != null ? CompileInitializer(field, v.Initializer) : CreateDefaultInitializer(field.Type));
+            }
+            return null;
+        }
     }
 }
