@@ -130,8 +130,7 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        private Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> ConvertMethod(IMethod method, List<JsMethod> instanceMethods, List<JsMethod> staticMethods) {
-            var impl = _namingConvention.GetMethodImplementation(method);
+        private Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> ConvertMethod(MethodImplOptions impl, IMethod method, List<JsMethod> instanceMethods, List<JsMethod> staticMethods) {
             if (!impl.GenerateCode)
                 return null;
 
@@ -156,10 +155,12 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        private Tuple<IEnumerable<JsConstructor>, IEnumerable<JsMethod>, IEnumerable<JsMethod>> ConvertMembers(IType type) {
+        private Tuple<IEnumerable<JsConstructor>, IEnumerable<JsMethod>, IEnumerable<JsMethod>, IEnumerable<JsField>, IEnumerable<JsField>> ConvertMembers(IType type) {
             var constructors    = new List<JsConstructor>();
             var instanceMethods = new List<JsMethod>();
             var staticMethods   = new List<JsMethod>();
+            var instanceFields  = new List<JsField>();
+            var staticFields    = new List<JsField>();
 
             foreach (var c in type.GetConstructors()) {
                 var def  = ConvertConstructor(c, constructors: constructors, staticMethods: staticMethods);
@@ -171,12 +172,37 @@ namespace Saltarelle.Compiler {
             }
 
             foreach (var m in type.GetMethods(options: GetMemberOptions.IgnoreInheritedMembers).Where(m => !m.IsConstructor)) {
-                var def  = ConvertMethod(m, instanceMethods: instanceMethods, staticMethods: staticMethods);
+                var def  = ConvertMethod(_namingConvention.GetMethodImplementation(m), m, instanceMethods: instanceMethods, staticMethods: staticMethods);
                 if (def != null)
                     _methodMap.Add(m, def);
             }
 
-            foreach (var m in type.GetProperties(options: GetMemberOptions.IgnoreInheritedMembers)) {
+            foreach (var p in type.GetProperties(options: GetMemberOptions.IgnoreInheritedMembers)) {
+                var impl = _namingConvention.GetPropertyImplementation(p);
+                switch (impl.Type) {
+                    case PropertyImplOptions.ImplType.GetAndSetMethods: {
+                        if (p.CanGet) {
+                            var def = ConvertMethod(impl.GetMethod, p.Getter, instanceMethods: instanceMethods, staticMethods: staticMethods);
+                            if (def != null)
+                                _methodMap.Add(p.Getter, def);
+                        }
+                        if (p.CanSet) {
+                            var def = ConvertMethod(impl.SetMethod, p.Setter, instanceMethods: instanceMethods, staticMethods: staticMethods);
+                            if (def != null)
+                                _methodMap.Add(p.Setter, def);
+                        }
+                        break;
+                    }
+                    case PropertyImplOptions.ImplType.Field: {
+                        var field = new JsField(impl.FieldName, CreateDefaultInitializer(p.ReturnType));
+                        (impl.IsFieldStatic ? staticFields : instanceFields).Add(field);
+                        break;
+                    }
+                    case PropertyImplOptions.ImplType.NotUsableFromScript:
+                        break;
+                    default:
+                        throw new InvalidOperationException(string.Format("Invalid property implementation type {0}", impl.Type));
+                }
             }
 
             foreach (var m in type.GetEvents(options: GetMemberOptions.IgnoreInheritedMembers)) {
@@ -185,7 +211,7 @@ namespace Saltarelle.Compiler {
             foreach (var m in type.GetFields(options: GetMemberOptions.IgnoreInheritedMembers)) {
             }
 
-            return Tuple.Create((IEnumerable<JsConstructor>)constructors, (IEnumerable<JsMethod>)instanceMethods, (IEnumerable<JsMethod>)staticMethods);
+            return Tuple.Create((IEnumerable<JsConstructor>)constructors, (IEnumerable<JsMethod>)instanceMethods, (IEnumerable<JsMethod>)staticMethods, (IEnumerable<JsField>)instanceFields, (IEnumerable<JsField>)staticFields);
         }
 
         private JsClass ConvertClass(ITypeDefinition type) {
@@ -200,7 +226,7 @@ namespace Saltarelle.Compiler {
 
             var members = ConvertMembers(type);
 
-            return new JsClass(name, ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, constructors: members.Item1, instanceMethods: members.Item2, staticMethods: members.Item3, instanceFields: null, staticFields: null);
+            return new JsClass(name, ConvertClassType(type.Kind), typeArgNames, baseClass, interfaces, constructors: members.Item1, instanceMethods: members.Item2, staticMethods: members.Item3, instanceFields: members.Item4, staticFields: members.Item5);
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {
@@ -271,27 +297,27 @@ namespace Saltarelle.Compiler {
 
         private JsFunctionDefinitionExpression CompileDelegatingMethod(IMethod method) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileDefaultConstructorWithoutImplementation(IMethod method, MethodCompilationOptions options) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileMethod(AttributedNode method, MethodCompilationOptions options) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IMethod method, FieldOptions backingField) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileAutoPropertySetter(IMethod method, FieldOptions backingField) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.Empty);
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsExpression CreateDefaultInitializer(IType type) {
@@ -375,7 +401,7 @@ namespace Saltarelle.Compiler {
             var impl = _namingConvention.GetPropertyImplementation(property);
 
             if (impl.Type == PropertyImplOptions.ImplType.GetAndSetMethods) {
-                if (propertyDeclaration.Getter.Body == null) {
+                if (propertyDeclaration.Getter.Body.IsNull) {
                     // Auto-property.
                     var fieldImpl = _namingConvention.GetAutoPropertyBackingFieldImplementation(property);
                     if (fieldImpl.Type != FieldOptions.ImplType.NotUsableFromScript) {
@@ -392,15 +418,27 @@ namespace Saltarelle.Compiler {
                     }
 
                     Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
-                    if (_methodMap.TryGetValue(property.Getter, out jsMethod)) {
+                    if (property.Getter != null && _methodMap.TryGetValue(property.Getter, out jsMethod)) {
                         jsMethod.Item1.Definition = CompileAutoPropertyGetter(property.Getter, fieldImpl);
                     }
-                    if (_methodMap.TryGetValue(property.Getter, out jsMethod)) {
+                    if (property.Setter != null && _methodMap.TryGetValue(property.Setter, out jsMethod)) {
                         jsMethod.Item1.Definition = CompileAutoPropertySetter(property.Setter, fieldImpl);
                     }
                 }
                 else {
-                    // Manual property: TODO
+                    if (!propertyDeclaration.Getter.IsNull) {
+                        Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
+                        if (_methodMap.TryGetValue(property.Getter, out jsMethod)) {
+                            jsMethod.Item1.Definition = CompileMethod(propertyDeclaration.Getter, jsMethod.Item2);
+                        }
+                    }
+
+                    if (!propertyDeclaration.Setter.IsNull) {
+                        Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
+                        if (_methodMap.TryGetValue(property.Setter, out jsMethod)) {
+                            jsMethod.Item1.Definition = CompileMethod(propertyDeclaration.Setter, jsMethod.Item2);
+                        }
+                    }
                 }
             }
 

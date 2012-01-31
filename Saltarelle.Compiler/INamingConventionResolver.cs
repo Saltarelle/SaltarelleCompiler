@@ -113,6 +113,22 @@ namespace Saltarelle.Compiler {
             }
         }
 
+        public string FieldName {
+            get {
+                if (Type != ImplType.Field)
+                    throw new InvalidOperationException();
+                return _fieldName;
+            }
+        }
+
+        public bool IsFieldStatic {
+            get {
+                if (Type != ImplType.Field)
+                    throw new InvalidOperationException();
+                return _isFieldStatic;
+            }
+        }
+
         public static PropertyImplOptions GetAndSetMethods(MethodImplOptions getMethod, MethodImplOptions setMethod) {
             return new PropertyImplOptions { Type = ImplType.GetAndSetMethods, _getMethod = getMethod, _setMethod = setMethod };
         }

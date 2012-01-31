@@ -510,25 +510,25 @@ namespace Saltarelle.Compiler.Tests
 
         [Test]
         public void EmptyFunctionDefinitionWithoutNameIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.Empty, null)), Is.EqualTo("function() {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, null)), Is.EqualTo("function() {}"));
         }
 
         [Test]
         public void EmptyFunctionDefinitionWithNameIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.Empty, "test")), Is.EqualTo("function test() {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, "test")), Is.EqualTo("function test() {}"));
         }
 
         [Test]
         public void EmptyFunctionDefinitionsWithArgumentsAreCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a" }, JsBlockStatement.Empty, null)), Is.EqualTo("function(a) {}"));
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b" }, JsBlockStatement.Empty, null)), Is.EqualTo("function(a, b) {}"));
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b", "c" }, JsBlockStatement.Empty, "test")), Is.EqualTo("function test(a, b, c) {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a" }, JsBlockStatement.EmptyStatement, null)), Is.EqualTo("function(a) {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b" }, JsBlockStatement.EmptyStatement, null)), Is.EqualTo("function(a, b) {}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b", "c" }, JsBlockStatement.EmptyStatement, "test")), Is.EqualTo("function test(a, b, c) {}"));
         }
 
         [Test]
         public void FunctionIsParenthesizedWhenInvokedDirectly() {
             Assert.That(OutputFormatter.Format(JsExpression.Invocation(
-                                                   JsExpression.FunctionDefinition(new string[0], JsBlockStatement.Empty, null)
+                                                   JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, null)
                                                )
                         ), Is.EqualTo("(function() {})()"));
         }

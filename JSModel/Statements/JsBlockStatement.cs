@@ -23,8 +23,8 @@ namespace Saltarelle.Compiler.JSModel.Statements {
             return content as JsBlockStatement ?? new JsBlockStatement(content);
         }
 
-        private static readonly JsBlockStatement _empty = new JsBlockStatement(new JsStatement[0]);
-        public static JsBlockStatement Empty { get { return _empty; } }
+        private static readonly JsBlockStatement _emptyStatement = new JsBlockStatement(new JsStatement[0]);
+        public static JsBlockStatement EmptyStatement { get { return _emptyStatement; } }
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
