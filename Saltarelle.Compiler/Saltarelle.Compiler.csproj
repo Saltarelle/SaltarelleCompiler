@@ -63,6 +63,7 @@
     <Compile Include="CodeBuilder.cs" />
     <Compile Include="CodeConvertVisitor.cs" />
     <Compile Include="ConstructorImplOptions.cs" />
+    <Compile Include="EventImplOptions.cs" />
     <Compile Include="FieldImplOptions.cs" />
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />

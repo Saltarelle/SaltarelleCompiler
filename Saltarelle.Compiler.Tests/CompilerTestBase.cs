@@ -40,6 +40,8 @@ namespace Saltarelle.Compiler.Tests {
                 GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
                 GetAutoPropertyBackingFieldImplementation = p => p.IsStatic ? FieldImplOptions.Static("$" + p.Name) : FieldImplOptions.Instance("$" + p.Name);
                 GetFieldImplementation                    = f => f.IsStatic ? FieldImplOptions.Static("$" + f.Name) : FieldImplOptions.Instance("$" + f.Name);
+                GetEventImplementation                    = e => e.IsStatic ? EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + e.Name), MethodImplOptions.StaticMethod("remove_" + e.Name)) : EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + e.Name), MethodImplOptions.InstanceMethod("remove_" + e.Name));
+                GetAutoEventBackingFieldImplementation    = e => e.IsStatic ? FieldImplOptions.Static("$" + e.Name) : FieldImplOptions.Instance("$" + e.Name);
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -49,6 +51,8 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IProperty, PropertyImplOptions> GetPropertyImplementation { get; set; }
             public Func<IProperty, FieldImplOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
             public Func<IField, FieldImplOptions> GetFieldImplementation { get; set; }
+            public Func<IEvent, EventImplOptions> GetEventImplementation { get; set; }
+            public Func<IEvent, FieldImplOptions> GetAutoEventBackingFieldImplementation { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
                 return GetTypeName(typeDefinition);
@@ -76,6 +80,14 @@ namespace Saltarelle.Compiler.Tests {
 
             FieldImplOptions INamingConventionResolver.GetFieldImplementation(IField field) {
                 return GetFieldImplementation(field);
+            }
+
+            EventImplOptions INamingConventionResolver.GetEventImplementation(IEvent evt) {
+                return GetEventImplementation(evt);
+            }
+
+            FieldImplOptions INamingConventionResolver.GetAutoEventBackingFieldImplementation(IEvent evt) {
+                return GetAutoEventBackingFieldImplementation(evt);
             }
         }
 

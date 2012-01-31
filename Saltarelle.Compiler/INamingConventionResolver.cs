@@ -31,13 +31,23 @@ namespace Saltarelle.Compiler {
         PropertyImplOptions GetPropertyImplementation(IProperty property);
 
         /// <summary>
-        /// Returns the name of the backing field for the specified property. Must not return null, and must also not return NotUsableFromScript.
+        /// Returns the name of the backing field for the specified property. Must not return null. May return NotUsableFromScript if neither of the get and set methods generates any code.
         /// </summary>
         FieldImplOptions GetAutoPropertyBackingFieldImplementation(IProperty property);
 
         /// <summary>
-        /// Returns how a field is implemented.
+        /// Returns how a field is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// </summary>
         FieldImplOptions GetFieldImplementation(IField property);
+
+        /// <summary>
+        /// Returns how an event is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
+        /// </summary>
+        EventImplOptions GetEventImplementation(IEvent evt);
+        
+        /// <summary>
+        /// Returns the name of the backing field for the specified property. Must not return null. May return NotUsableFromScript if neither of the get and set methods generates any code.
+        /// </summary>
+        FieldImplOptions GetAutoEventBackingFieldImplementation(IEvent evt);
     }
 }

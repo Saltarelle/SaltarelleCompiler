@@ -235,7 +235,23 @@ namespace Saltarelle.Compiler {
                 }
             }
 
-            foreach (var m in type.GetEvents(options: GetMemberOptions.IgnoreInheritedMembers)) {
+            foreach (var e in type.GetEvents(options: GetMemberOptions.IgnoreInheritedMembers)) {
+                var impl = _namingConvention.GetEventImplementation(e);
+                switch (impl.Type) {
+                    case EventImplOptions.ImplType.AddAndRemoveMethods: {
+                        var add = ConvertMethod(impl.AddMethod, e.AddAccessor, instanceMethods: instanceMethods, staticMethods: staticMethods);
+                        if (add != null)
+                            _methodMap.Add(e.AddAccessor, add);
+                        var remove = ConvertMethod(impl.RemoveMethod, e.RemoveAccessor, instanceMethods: instanceMethods, staticMethods: staticMethods);
+                        if (add != null)
+                            _methodMap.Add(e.RemoveAccessor, remove);
+                        break;
+                    }
+                    case EventImplOptions.ImplType.NotUsableFromScript:
+                        break;
+                    default:
+                        throw new InvalidOperationException(string.Format("Invalid event implementation type {0}", impl.Type));
+                }
             }
 
             return Tuple.Create((IEnumerable<JsConstructor>)constructors, (IEnumerable<JsMethod>)instanceMethods, (IEnumerable<JsMethod>)staticMethods, (IEnumerable<JsField>)instanceFields, (IEnumerable<JsField>)staticFields);
@@ -341,12 +357,22 @@ namespace Saltarelle.Compiler {
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
-        private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IMethod method, FieldImplOptions backingField) {
+        private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, FieldImplOptions backingField) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
-        private JsFunctionDefinitionExpression CompileAutoPropertySetter(IMethod method, FieldImplOptions backingField) {
+        private JsFunctionDefinitionExpression CompileAutoPropertySetter(IProperty property, FieldImplOptions backingField) {
+            // BIG TODO.
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+        }
+
+        private JsFunctionDefinitionExpression CompileAutoEventAdder(IEvent evt, FieldImplOptions backingField) {
+            // BIG TODO.
+            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+        }
+
+        private JsFunctionDefinitionExpression CompileAutoEventRemover(IEvent evt, FieldImplOptions backingField) {
             // BIG TODO.
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
@@ -356,7 +382,7 @@ namespace Saltarelle.Compiler {
             return JsExpression.Number(0);
         }
 
-        private JsExpression CompileInitializer(IField field, Expression initializer) {
+        private JsExpression CompileInitializer(Expression initializer) {
             // TODO
             return JsExpression.Number(0);
         }
@@ -455,10 +481,10 @@ namespace Saltarelle.Compiler {
 
                     Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
                     if (property.Getter != null && _methodMap.TryGetValue(property.Getter, out jsMethod)) {
-                        jsMethod.Item1.Definition = CompileAutoPropertyGetter(property.Getter, fieldImpl);
+                        jsMethod.Item1.Definition = CompileAutoPropertyGetter(property, fieldImpl);
                     }
                     if (property.Setter != null && _methodMap.TryGetValue(property.Setter, out jsMethod)) {
-                        jsMethod.Item1.Definition = CompileAutoPropertySetter(property.Setter, fieldImpl);
+                        jsMethod.Item1.Definition = CompileAutoPropertySetter(property, fieldImpl);
                     }
                 }
                 else {
@@ -481,6 +507,80 @@ namespace Saltarelle.Compiler {
             return null;
         }
 
+        public override object VisitEventDeclaration(EventDeclaration eventDeclaration, object data) {
+            foreach (var singleEvt in eventDeclaration.Variables) {
+                var resolveResult = _resolver.Resolve(singleEvt);
+                if (!(resolveResult is MemberResolveResult)) {
+                    _errorReporter.Error("Event declaration " + singleEvt.Name + " does not resolve to a member.");
+                    return null;
+                }
+
+                var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
+                if (evt == null) {
+                    _errorReporter.Error("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
+                    return null;
+                }
+
+                var impl = _namingConvention.GetEventImplementation(evt);
+                switch (impl.Type) {
+                    case EventImplOptions.ImplType.AddAndRemoveMethods:
+                        var fieldImpl = _namingConvention.GetAutoEventBackingFieldImplementation(evt);
+                        if (fieldImpl.Type != FieldImplOptions.ImplType.NotUsableFromScript) {
+                            var field = new JsField(fieldImpl.Name, singleEvt.Initializer != null ? CompileInitializer(singleEvt.Initializer) : CreateDefaultInitializer(evt.ReturnType));
+                            if (fieldImpl.Type == FieldImplOptions.ImplType.Instance) {
+                                ((JsClass)_types[evt.DeclaringTypeDefinition]).InstanceFields.Add(field);
+                            }
+                            else if (fieldImpl.Type == FieldImplOptions.ImplType.Static) {
+                                ((JsClass)_types[evt.DeclaringTypeDefinition]).StaticFields.Add(field);
+                            }
+                            else {
+                                _errorReporter.Error("Invalid field type");
+                            }
+                        }
+                        Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
+                        if (_methodMap.TryGetValue(evt.AddAccessor, out jsMethod)) {
+                            jsMethod.Item1.Definition = CompileAutoEventAdder(evt, fieldImpl);
+                        }
+                        if (_methodMap.TryGetValue(evt.RemoveAccessor, out jsMethod)) {
+                            jsMethod.Item1.Definition = CompileAutoEventRemover(evt, fieldImpl);
+                        }
+                        break;
+
+                    case EventImplOptions.ImplType.NotUsableFromScript:
+                        break;
+
+                    default:
+                        throw new InvalidOperationException("Invalid event implementation type");
+                }
+            }
+
+            return null;
+        }
+
+        public override object VisitCustomEventDeclaration(CustomEventDeclaration eventDeclaration, object data) {
+            var resolveResult = _resolver.Resolve(eventDeclaration);
+            if (!(resolveResult is MemberResolveResult)) {
+                _errorReporter.Error("Event declaration " + eventDeclaration.Name + " does not resolve to a member.");
+                return null;
+            }
+
+            var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
+            if (evt == null) {
+                _errorReporter.Error("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
+                return null;
+            }
+
+            Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
+            if (_methodMap.TryGetValue(evt.AddAccessor, out jsMethod)) {
+                jsMethod.Item1.Definition = CompileMethod(eventDeclaration.AddAccessor, jsMethod.Item2);
+            }
+            if (_methodMap.TryGetValue(evt.RemoveAccessor, out jsMethod)) {
+                jsMethod.Item1.Definition = CompileMethod(eventDeclaration.RemoveAccessor, jsMethod.Item2);
+            }
+
+            return null;
+        }
+
         public override object VisitFieldDeclaration(FieldDeclaration fieldDeclaration, object data) {
             foreach (var v in fieldDeclaration.Variables) {
                 var resolveResult = _resolver.Resolve(v);
@@ -497,7 +597,7 @@ namespace Saltarelle.Compiler {
 
                 JsField jsField;
                 if (_fieldMap.TryGetValue(field, out jsField))
-                    jsField.Initializer = (v.Initializer != null ? CompileInitializer(field, v.Initializer) : CreateDefaultInitializer(field.Type));
+                    jsField.Initializer = (v.Initializer != null ? CompileInitializer(v.Initializer) : CreateDefaultInitializer(field.Type));
             }
             return null;
         }
