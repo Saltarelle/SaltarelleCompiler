@@ -49,5 +49,10 @@ namespace Saltarelle.Compiler {
         /// Returns the name of the backing field for the specified property. Must not return null. May return NotUsableFromScript if neither of the get and set methods generates any code.
         /// </summary>
         FieldImplOptions GetAutoEventBackingFieldImplementation(IEvent evt);
+
+        /// <summary>
+        /// Returns the name by which an enum field is to be known in script. May not return null.
+        /// </summary>
+        string GetEnumValueName(IField value);
     }
 }

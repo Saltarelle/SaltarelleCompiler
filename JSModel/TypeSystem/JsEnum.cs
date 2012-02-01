@@ -9,8 +9,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         private IList<JsEnumValue> _values;
         public IList<JsEnumValue> Values { get { return _values; } }
 
-        public JsEnum(ScopedName name) : base(name) {
-            _values = new List<JsEnumValue>();
+        public JsEnum(ScopedName name, IEnumerable<JsEnumValue> values) : base(name) {
+            _values = values.AsReadOnly();
         }
 
         public override void Freeze() {

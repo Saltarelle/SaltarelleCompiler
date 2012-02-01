@@ -70,20 +70,19 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        private bool IsTypePublic(ITypeDefinition type) {
-            // A type is public if the type and all its declaring types are public or protected (or protected internal).
-            while (type != null) {
-                bool isPublic = (type.Accessibility == Accessibility.Public || type.Accessibility == Accessibility.Protected || type.Accessibility == Accessibility.ProtectedOrInternal);
-                if (!isPublic)
-                    return false;
-                type = type.DeclaringTypeDefinition;
-            }
-            return true;
-        }
-
         private JsEnum ConvertEnum(ITypeDefinition type) {
             var name = ConvertName(type);
-            return name != null ? new JsEnum(name) : null;
+            var values = new List<JsEnumValue>();
+            foreach (var f in type.Fields) {
+                if (f.ConstantValue != null) {
+                    values.Add(new JsEnumValue(_namingConvention.GetEnumValueName(f), Convert.ToInt64(f.ConstantValue)));
+                }
+                else {
+                    _errorReporter.Error("Enum field " + type.FullName + "." + f.Name + " is not a DefaultResolvedField");
+                }
+            }
+
+            return name != null ? new JsEnum(name, values) : null;
         }
 
         private JsConstructedType ConvertPotentiallyGenericType(IType type) {

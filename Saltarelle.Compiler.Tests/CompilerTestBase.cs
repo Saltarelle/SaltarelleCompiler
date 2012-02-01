@@ -42,6 +42,7 @@ namespace Saltarelle.Compiler.Tests {
                 GetFieldImplementation                    = f => f.IsStatic ? FieldImplOptions.Static("$" + f.Name) : FieldImplOptions.Instance("$" + f.Name);
                 GetEventImplementation                    = e => e.IsStatic ? EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + e.Name), MethodImplOptions.StaticMethod("remove_" + e.Name)) : EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + e.Name), MethodImplOptions.InstanceMethod("remove_" + e.Name));
                 GetAutoEventBackingFieldImplementation    = e => e.IsStatic ? FieldImplOptions.Static("$" + e.Name) : FieldImplOptions.Instance("$" + e.Name);
+                GetEnumValueName                          = f => "$" + f.Name;
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -53,6 +54,7 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IField, FieldImplOptions> GetFieldImplementation { get; set; }
             public Func<IEvent, EventImplOptions> GetEventImplementation { get; set; }
             public Func<IEvent, FieldImplOptions> GetAutoEventBackingFieldImplementation { get; set; }
+            public Func<IField, string> GetEnumValueName { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
                 return GetTypeName(typeDefinition);
@@ -88,6 +90,10 @@ namespace Saltarelle.Compiler.Tests {
 
             FieldImplOptions INamingConventionResolver.GetAutoEventBackingFieldImplementation(IEvent evt) {
                 return GetAutoEventBackingFieldImplementation(evt);
+            }
+
+            string INamingConventionResolver.GetEnumValueName(IField value) {
+                return "$" + value.Name;
             }
         }
 
@@ -153,6 +159,13 @@ namespace Saltarelle.Compiler.Tests {
             return (JsClass)result;
         }
 
+        protected JsEnum FindEnum(string name) {
+            var result = CompiledTypes.SingleOrDefault(t => t.Name.ToString() == name);
+            if (result == null) Assert.Fail("Could not find type " + name);
+            if (!(result is JsEnum)) Assert.Fail("Found type is not a JsEnum, it is a " + result.GetType().Name);
+            return (JsEnum)result;
+        }
+
         protected JsMethod FindInstanceMethod(string name) {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
@@ -181,6 +194,12 @@ namespace Saltarelle.Compiler.Tests {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
             return cls.StaticFields.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
+        }
+
+        protected JsEnumValue FindEnumValue(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindEnum(name.Substring(0, lastDot));
+            return cls.Values.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
         }
     }
 }
