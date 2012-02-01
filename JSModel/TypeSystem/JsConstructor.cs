@@ -2,7 +2,7 @@ using System;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
-    public class JsConstructor : IContainsJsFunctionDefinition, IFreezable {
+    public class JsConstructor : IFreezable {
         /// <summary>
         /// Name of the constructor, or null if the constructor is the unnamed constructor.
         /// </summary>

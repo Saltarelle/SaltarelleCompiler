@@ -84,6 +84,7 @@
     <Compile Include="MemberConversionTests\IndexerConversionTests.cs" />
     <Compile Include="MemberConversionTests\MethodConversionTests.cs" />
     <Compile Include="MemberConversionTests\PropertyConversionTests.cs" />
+    <Compile Include="MethodCompilationTests\AllTests.cs" />
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScopedNameTests.cs" />

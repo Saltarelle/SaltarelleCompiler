@@ -43,6 +43,7 @@ namespace Saltarelle.Compiler.Tests {
                 GetEventImplementation                    = e => e.IsStatic ? EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + e.Name), MethodImplOptions.StaticMethod("remove_" + e.Name)) : EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + e.Name), MethodImplOptions.InstanceMethod("remove_" + e.Name));
                 GetAutoEventBackingFieldImplementation    = e => e.IsStatic ? FieldImplOptions.Static("$" + e.Name) : FieldImplOptions.Instance("$" + e.Name);
                 GetEnumValueName                          = f => "$" + f.Name;
+                GetVariableName                           = (v, used) => "$" + v.Name;
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -55,6 +56,7 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IEvent, EventImplOptions> GetEventImplementation { get; set; }
             public Func<IEvent, FieldImplOptions> GetAutoEventBackingFieldImplementation { get; set; }
             public Func<IField, string> GetEnumValueName { get; set; }
+            public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
                 return GetTypeName(typeDefinition);
@@ -93,7 +95,11 @@ namespace Saltarelle.Compiler.Tests {
             }
 
             string INamingConventionResolver.GetEnumValueName(IField value) {
-                return "$" + value.Name;
+                return GetEnumValueName(value);
+            }
+
+            string INamingConventionResolver.GetVariableName(IVariable variable, ISet<string> usedNames) {
+                return GetVariableName(variable, usedNames);
             }
         }
 

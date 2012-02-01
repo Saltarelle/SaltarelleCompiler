@@ -61,7 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
-    <Compile Include="IContainsJsFunctionDefinition.cs" />
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />
     <Compile Include="Expressions\JsObjectLiteralProperty.cs" />

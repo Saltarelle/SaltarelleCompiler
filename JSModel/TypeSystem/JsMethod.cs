@@ -6,7 +6,7 @@ using System.Text;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
-    public class JsMethod : IContainsJsFunctionDefinition, IFreezable {
+    public class JsMethod : IFreezable {
         public string Name { get; private set; }
         public ReadOnlyCollection<string> TypeParameterNames { get; private set; }
 

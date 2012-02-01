@@ -54,5 +54,10 @@ namespace Saltarelle.Compiler {
         /// Returns the name by which an enum field is to be known in script. May not return null.
         /// </summary>
         string GetEnumValueName(IField value);
+
+        /// <summary>
+        /// Gets the name of a variable, constrained to not used any of the names in the supplied set. Must not return null.
+        /// </summary>
+        string GetVariableName(IVariable variable, ISet<string> usedNames);
     }
 }

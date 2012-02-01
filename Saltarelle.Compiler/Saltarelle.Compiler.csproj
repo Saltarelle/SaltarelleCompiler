@@ -68,6 +68,7 @@
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="ISourceFile.cs" />
+    <Compile Include="MethodCompiler.cs" />
     <Compile Include="MethodImplOptions.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
