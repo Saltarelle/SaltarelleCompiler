@@ -206,6 +206,8 @@ namespace Saltarelle.Compiler {
                         (impl.IsFieldStatic ? staticFields : instanceFields).Add(field);
                         break;
                     }
+                    case PropertyImplOptions.ImplType.NativeIndexer:
+                        break;
                     case PropertyImplOptions.ImplType.NotUsableFromScript:
                         break;
                     default:
@@ -599,6 +601,30 @@ namespace Saltarelle.Compiler {
                 if (_fieldMap.TryGetValue(field, out jsField))
                     jsField.Initializer = (v.Initializer != null ? CompileInitializer(v.Initializer) : CreateDefaultInitializer(field.Type));
             }
+            return null;
+        }
+
+        public override object VisitIndexerDeclaration(IndexerDeclaration indexerDeclaration, object data) {
+            var resolveResult = _resolver.Resolve(indexerDeclaration);
+            if (!(resolveResult is MemberResolveResult)) {
+                _errorReporter.Error("Event declaration " + indexerDeclaration.Name + " does not resolve to a member.");
+                return null;
+            }
+
+            var prop = ((MemberResolveResult)resolveResult).Member as IProperty;
+            if (prop == null) {
+                _errorReporter.Error("Event declaration " + indexerDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
+                return null;
+            }
+
+            Tuple<IContainsJsFunctionDefinition, MethodCompilationOptions> jsMethod;
+            if (prop.Getter != null && _methodMap.TryGetValue(prop.Getter, out jsMethod)) {
+                jsMethod.Item1.Definition = CompileMethod(indexerDeclaration.Getter, jsMethod.Item2);
+            }
+            if (prop.Setter != null && _methodMap.TryGetValue(prop.Setter, out jsMethod)) {
+                jsMethod.Item1.Definition = CompileMethod(indexerDeclaration.Setter, jsMethod.Item2);
+            }
+
             return null;
         }
     }

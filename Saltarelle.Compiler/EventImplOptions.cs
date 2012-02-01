@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler {
     public class EventImplOptions {
         public enum ImplType {
             /// <summary>
-            /// The field is an instance field. The AddMethod and RemoveMethod members is valid.
+            /// The event uses add and remove methods. The AddMethod and RemoveMethod members is valid.
             /// </summary>
             AddAndRemoveMethods = 0,
             /// <summary>
