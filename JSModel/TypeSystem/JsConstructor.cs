@@ -16,6 +16,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             set {
                 if (_frozen)
                     throw new InvalidOperationException("Object is frozen");
+                else if (_definition != null)
+                    throw new InvalidOperationException("Can only set definition once");
                 _definition = value;
             }
         }
