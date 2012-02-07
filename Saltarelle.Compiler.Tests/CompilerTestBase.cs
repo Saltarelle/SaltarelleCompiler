@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -43,7 +44,15 @@ namespace Saltarelle.Compiler.Tests {
                 GetEventImplementation                    = e => e.IsStatic ? EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + e.Name), MethodImplOptions.StaticMethod("remove_" + e.Name)) : EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + e.Name), MethodImplOptions.InstanceMethod("remove_" + e.Name));
                 GetAutoEventBackingFieldImplementation    = e => e.IsStatic ? FieldImplOptions.Static("$" + e.Name) : FieldImplOptions.Instance("$" + e.Name);
                 GetEnumValueName                          = f => "$" + f.Name;
-                GetVariableName                           = (v, used) => "$" + v.Name;
+                GetVariableName                           = (v, used) => {
+                                                                             string baseName = "$" + v.Name;
+                                                                             if (!used.Contains(baseName))
+                                                                                 return baseName;
+                                                                             int i = 2;
+                                                                             while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
+                                                                                i++;
+                                                                             return baseName + i.ToString(CultureInfo.InvariantCulture);
+                                                                         };
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -129,14 +138,19 @@ namespace Saltarelle.Compiler.Tests {
 
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IErrorReporter errorReporter = null) {
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
                 defaultErrorHandling = true;
                 errorReporter = new MockErrorReporter();
             }
-            CompiledTypes = new Compiler(namingConvention ?? new MockNamingConventionResolver(), errorReporter).Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
+
+            var compiler = new Compiler(namingConvention ?? new MockNamingConventionResolver(), errorReporter);
+            if (methodCompiled != null)
+                compiler.MethodCompiled += methodCompiled;
+
+            CompiledTypes = compiler.Compile(sourceFiles, new[] { Mscorlib }).AsReadOnly();
             if (defaultErrorHandling) {
                 ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
             }

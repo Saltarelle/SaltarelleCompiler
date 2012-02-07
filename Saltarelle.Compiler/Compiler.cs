@@ -41,6 +41,13 @@ namespace Saltarelle.Compiler {
         private Dictionary<IMethod, Tuple<JsConstructor, JsMethod, ConstructorImplOptions>> _constructorMap;
         private Dictionary<IField, JsField> _fieldMap;
 
+        public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
+
+        private void OnMethodCompiled(IMethod method, JsFunctionDefinitionExpression result, MethodCompiler mc) {
+            if (MethodCompiled != null)
+                MethodCompiled(method, result, mc);
+        }
+
         public Compiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
             _namingConvention = namingConvention;
             _errorReporter = errorReporter;
@@ -335,7 +342,9 @@ namespace Saltarelle.Compiler {
 
         private JsFunctionDefinitionExpression CompileMethod(AttributedNode node, IMethod method, MethodImplOptions options) {
             var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver);
-            return mc.CompileMethod(node, method, options);
+            var result = mc.CompileMethod(node, method, options);
+            OnMethodCompiled(method, result, mc);
+            return result;
         }
 
         private JsFunctionDefinitionExpression CompileConstructor(AttributedNode node, IMethod method, ConstructorImplOptions options) {
@@ -451,7 +460,7 @@ namespace Saltarelle.Compiler {
             var impl = _namingConvention.GetPropertyImplementation(property);
 
             if (impl.Type == PropertyImplOptions.ImplType.GetAndSetMethods) {
-                if (propertyDeclaration.Getter.Body.IsNull) {
+                if (propertyDeclaration.Getter.IsNull && propertyDeclaration.Setter.IsNull) {
                     // Auto-property.
                     var fieldImpl = _namingConvention.GetAutoPropertyBackingFieldImplementation(property);
                     if (fieldImpl.Type != FieldImplOptions.ImplType.NotUsableFromScript) {
