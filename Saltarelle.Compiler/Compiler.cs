@@ -460,7 +460,7 @@ namespace Saltarelle.Compiler {
             var impl = _namingConvention.GetPropertyImplementation(property);
 
             if (impl.Type == PropertyImplOptions.ImplType.GetAndSetMethods) {
-                if (propertyDeclaration.Getter.IsNull && propertyDeclaration.Setter.IsNull) {
+                if (propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
                     // Auto-property.
                     var fieldImpl = _namingConvention.GetAutoPropertyBackingFieldImplementation(property);
                     if (fieldImpl.Type != FieldImplOptions.ImplType.NotUsableFromScript) {

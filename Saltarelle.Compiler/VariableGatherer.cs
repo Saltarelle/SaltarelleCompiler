@@ -67,5 +67,17 @@ namespace Saltarelle.Compiler
 				AddVariable(catchClause.VariableNameToken, catchClause.VariableName);
 			return base.VisitCatchClause(catchClause, data);
 		}
+
+		public override object VisitLambdaExpression(LambdaExpression lambdaExpression, object data) {
+			foreach (var p in lambdaExpression.Parameters)
+				AddVariable(p, p.Name);
+			return base.VisitLambdaExpression(lambdaExpression, data);
+		}
+
+		public override object VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression, object data) {
+			foreach (var p in anonymousMethodExpression.Parameters)
+				AddVariable(p, p.Name);
+			return base.VisitAnonymousMethodExpression(anonymousMethodExpression, data);
+		}
     }
 }
