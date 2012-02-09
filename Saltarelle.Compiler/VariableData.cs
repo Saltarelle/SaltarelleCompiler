@@ -7,11 +7,11 @@ using ICSharpCode.NRefactory.TypeSystem;
 namespace Saltarelle.Compiler {
 	public class VariableData {
 		public string Name { get; private set; }
-		public bool IsUsedByRef { get; private set; }
+		public bool UseByRefSemantics { get; private set; }
 
-		public VariableData(string name, bool isUsedByRef) {
+		public VariableData(string name, bool useByRefSemantics) {
 			Name = name;
-			IsUsedByRef = isUsedByRef;
+			UseByRefSemantics = useByRefSemantics;
 		}
 	}
 }

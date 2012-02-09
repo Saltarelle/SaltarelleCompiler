@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
         protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
         private void CompileMethod(string source, INamingConventionResolver namingConvention = null, IErrorReporter errorReporter = null, string methodName = "M") {
-            Compile(new[] { "class C { " + source + "}" }, namingConvention, errorReporter, (m, res, mc) => {
+            Compile(new[] { "using System; class C { " + source + "}" }, namingConvention, errorReporter, (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;
@@ -25,6 +25,14 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
         }
+
+		private void AssertUsedByReference(string scriptVariableName) {
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.True);
+		}
+
+		private void AssertNotUsedByReference(string scriptVariableName) {
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.False);
+		}
 
 		[SetUp]
 		public void Setup() {
@@ -66,7 +74,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -87,7 +95,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$i", "$a", "$i2", "$j", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -106,7 +114,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$i", "$a" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -127,7 +135,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$i", "$a", "$i2", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -148,7 +156,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$ms", "$a", "$ms2", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -167,7 +175,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$ms", "$a" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -201,7 +209,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$a", "$ex", "$a2", "$ex2", "$a3", "$a4", "$ex3", "$a5", "$ex4", "$a6" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -222,7 +230,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$a", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
         [Test]
@@ -243,15 +251,15 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$a", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
 		[Test]
 		public void ImplicitlyTypedLamdaExpressionParametersAreCorrectlyRegistered() {
 			CompileMethod(@"
 				public void M() {
-					System.Func<int, int, string> f = (a, b) => (a + b).ToString();
-					System.Func<int, int, string> f2 = (a, b) => (a + b).ToString();
+					Func<int, int, string> f = (a, b) => (a + b).ToString();
+					Func<int, int, string> f2 = (a, b) => (a + b).ToString();
 				}
 			");
 
@@ -260,15 +268,15 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void ExplicitlyTypedLamdaExpressionParametersAreCorrectlyRegistered() {
 			CompileMethod(@"
 				public void M() {
-					System.Func<int, int, string> f = (int a, int b) => (a + b).ToString();
-					System.Func<int, int, string> f2 = (int a, int b) => (a + b).ToString();
+					Func<int, int, string> f = (int a, int b) => (a + b).ToString();
+					Func<int, int, string> f2 = (int a, int b) => (a + b).ToString();
 				}
 			");
 
@@ -277,15 +285,15 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void OldStyleDelegateParametersAreCorrectlyRegistered() {
 			CompileMethod(@"
 				public void M() {
-					System.Func<int, int, string> f = delegate(int a, int b) { return (a + b).ToString(); };
-					System.Func<int, int, string> f2 = delegate(int a, int b)  { return (a + b).ToString(); };
+					Func<int, int, string> f = delegate(int a, int b) { return (a + b).ToString(); };
+					Func<int, int, string> f2 = delegate(int a, int b)  { return (a + b).ToString(); };
 				}
 			");
 
@@ -294,15 +302,15 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void OldStyleDelegateWithoutArgumentListIsNotRegistered() {
 			CompileMethod(@"
 				public void M() {
-					System.Func<int, int, string> f = delegate { return """"; };
-					System.Func<int, int, string> f2 = delegate { return """"; };
+					Func<int, int, string> f = delegate { return """"; };
+					Func<int, int, string> f2 = delegate { return """"; };
 				}
 			");
 
@@ -311,7 +319,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$f2" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
@@ -328,7 +336,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$value" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
@@ -339,7 +347,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$value" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
@@ -350,7 +358,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$value" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test, Ignore("NRefactory bug")]
@@ -361,7 +369,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$a", "$b" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test, Ignore("NRefactory bug")]
@@ -372,7 +380,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$a", "$b", "$value" });
-			MethodCompiler.variables.Where(x => x.Value.IsUsedByRef).Should().BeEmpty();
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
@@ -382,9 +390,9 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					z = 0;
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
-			MethodCompiler.variables.Single(v => v.Key.Name == "z").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
+			AssertUsedByReference("$z");
 		}
 
 		[Test]
@@ -395,8 +403,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					OtherMethod(x, ref y);
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
@@ -407,8 +415,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					OtherMethod(x, out y);
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
@@ -421,8 +429,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					d(x, ref y);
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
@@ -435,8 +443,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					d(x, out y);
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
@@ -447,8 +455,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					new X(x, ref y);
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
@@ -459,8 +467,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 					new X(x, ref y);
 				}
 			");
-			MethodCompiler.variables.Single(v => v.Key.Name == "x").Value.IsUsedByRef.Should().BeFalse();
-			MethodCompiler.variables.Single(v => v.Key.Name == "y").Value.IsUsedByRef.Should().BeTrue();
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
@@ -475,6 +483,123 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			", errorReporter: er);
 
 			er.AllMessages.Where(m => m.StartsWith("Error:")).Should().NotBeEmpty();
+		}
+
+		[Test]
+		public void CapturedVariableDoesUsuallyNotMeanByReference() {
+			CompileMethod(@"
+				public void M(int x) {
+					int y;
+					Func<int, int> f = t => x + y;
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertNotUsedByReference("$y");
+			AssertNotUsedByReference("$f");
+		}
+
+		[Test]
+		public void CapturedVariableDeclaredInsideForLoopIsConsideredUsedByReference() {
+			CompileMethod(@"
+				public void M() {
+					int x;
+					for (int y = 0; y < 10; y++) {
+						int z = y;
+						Func<int, int> f = t => x + y + z;
+					}
+					int a = 0;
+					Func<int> f2 = () => x + a;
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertNotUsedByReference("$y");
+			AssertNotUsedByReference("$t");
+			AssertUsedByReference("$z");
+			AssertNotUsedByReference("$a");
+			AssertNotUsedByReference("$f");
+			AssertNotUsedByReference("$f2");
+		}
+
+		[Test]
+		public void CapturedVariableDeclaredInsideForeachLoopIsConsideredUsedByReference() {
+			CompileMethod(@"
+				public void M() {
+					int x;
+					foreach (int y in new[] { 1, 2, 3 }) {
+						int z = y;
+						Func<int, int> f = t => x + y + z;
+					}
+					int a = 0;
+					Func<int> f2 = () => x + a;
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertNotUsedByReference("$y");
+			AssertNotUsedByReference("$t");
+			AssertUsedByReference("$z");
+			AssertNotUsedByReference("$a");
+			AssertNotUsedByReference("$f");
+			AssertNotUsedByReference("$f2");
+		}
+
+		[Test]
+		public void CapturedVariableDeclaredInsideWhileLoopIsConsideredUsedByReference() {
+			CompileMethod(@"
+				public void M() {
+					int x;
+					while (1 == 0) {
+						int y = x;
+						Func<int, int> f = t => x + y;
+					}
+					int a = 0;
+					Func<int> f2 = () => x + a;
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
+			AssertNotUsedByReference("$t");
+			AssertNotUsedByReference("$a");
+			AssertNotUsedByReference("$f");
+			AssertNotUsedByReference("$f2");
+		}
+
+		[Test]
+		public void CapturedVariableDeclaredInsideDoWhileLoopIsConsideredUsedByReference() {
+			CompileMethod(@"
+				public void M() {
+					int x;
+					do {
+						int y = x;
+						Func<int, int> f = t => x + y;
+					} while (1 == 0);
+					int a = 0;
+					Func<int> f2 = () => x + a;
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
+			AssertNotUsedByReference("$t");
+			AssertNotUsedByReference("$a");
+			AssertNotUsedByReference("$f");
+			AssertNotUsedByReference("$f2");
+		}
+
+		[Test]
+		public void LocalVariableInNestedFunctionIsNotConsideredUsedByReference() {
+			CompileMethod(@"
+				public void M() {
+					int x;
+					while (1 == 0) {
+						int y = x;
+						Func<int, int> f = t => { int a = 0; return a + x + y; };
+					}
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
+			AssertNotUsedByReference("$t");
+			AssertNotUsedByReference("$a");
+			AssertNotUsedByReference("$f");
 		}
     }
 }
