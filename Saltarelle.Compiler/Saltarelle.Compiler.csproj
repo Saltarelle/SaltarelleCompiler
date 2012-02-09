@@ -75,6 +75,7 @@
     <Compile Include="Compiler.cs" />
     <Compile Include="PropertyImplOptions.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="VariableData.cs" />
     <Compile Include="VariableGatherer.cs" />
   </ItemGroup>
   <ItemGroup>

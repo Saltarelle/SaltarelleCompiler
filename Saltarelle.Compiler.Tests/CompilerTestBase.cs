@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Tests {
                 GetTypeName                               = t => t.Name;
                 GetTypeParameterName                      = t => t.Name;
                 GetMethodImplementation                   = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
-                GetConstructorImplementation              = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
+                GetConstructorImplementation              = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
                 GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
                 GetAutoPropertyBackingFieldImplementation = p => p.IsStatic ? FieldImplOptions.Static("$" + p.Name) : FieldImplOptions.Instance("$" + p.Name);
                 GetFieldImplementation                    = f => f.IsStatic ? FieldImplOptions.Static("$" + f.Name) : FieldImplOptions.Instance("$" + f.Name);
@@ -113,12 +113,14 @@ namespace Saltarelle.Compiler.Tests {
         }
 
         protected class MockErrorReporter : IErrorReporter {
-            public List<string> AllMessages { get; set; }
+        	private readonly bool _logToConsole;
+        	public List<string> AllMessages { get; set; }
 
-            public MockErrorReporter() {
-                AllMessages = new List<string>();
-                Error   = s => { s = "Error: " + s; Console.WriteLine(s); AllMessages.Add(s); };
-                Warning = s => { s = "Warning: " + s; Console.WriteLine(s); AllMessages.Add(s); };
+            public MockErrorReporter(bool logToConsole) {
+            	_logToConsole = logToConsole;
+            	AllMessages = new List<string>();
+                Error   = s => { s = "Error: " + s; if (logToConsole) Console.WriteLine(s); AllMessages.Add(s); };
+                Warning = s => { s = "Warning: " + s; if (logToConsole) Console.WriteLine(s); AllMessages.Add(s); };
             }
 
             public Action<string> Error { get; set; }
@@ -143,7 +145,7 @@ namespace Saltarelle.Compiler.Tests {
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
                 defaultErrorHandling = true;
-                errorReporter = new MockErrorReporter();
+                errorReporter = new MockErrorReporter(true);
             }
 
             var compiler = new Compiler(namingConvention ?? new MockNamingConventionResolver(), errorReporter);

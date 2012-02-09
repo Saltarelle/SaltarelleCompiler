@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
         private HashSet<string> _usedNames;
-        private Dictionary<IVariable, string> _result;
+        private Dictionary<IVariable, VariableData> _result;
 
         public VariableGatherer(CSharpAstResolver resolver, INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
             _resolver = resolver;
@@ -22,12 +22,12 @@ namespace Saltarelle.Compiler
             _errorReporter = errorReporter;
         }
 
-        public IDictionary<IVariable, string> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
-            _result = new Dictionary<IVariable, string>();
+        public IDictionary<IVariable, VariableData> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
+            _result = new Dictionary<IVariable, VariableData>();
             _usedNames = new HashSet<string>(usedNames);
 
 			foreach (var p in method.Parameters) {
-				AddVariable(p);
+				AddVariable(p, p.IsRef || p.IsOut);
 			}
 
             node.AcceptVisitor(this);
@@ -43,10 +43,10 @@ namespace Saltarelle.Compiler
 			AddVariable(((LocalResolveResult)resolveResult).Variable);
     	}
 
-		private void AddVariable(IVariable v) {
+		private void AddVariable(IVariable v, bool isUsedByReference = false) {
     		string n = _namingConvention.GetVariableName(v, _usedNames);
     		_usedNames.Add(n);
-    		_result.Add(v, n);
+    		_result.Add(v, new VariableData(n, isUsedByReference));
 		}
 
     	public override object VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement, object data) {
@@ -78,6 +78,34 @@ namespace Saltarelle.Compiler
 			foreach (var p in anonymousMethodExpression.Parameters)
 				AddVariable(p, p.Name);
 			return base.VisitAnonymousMethodExpression(anonymousMethodExpression, data);
+		}
+
+		private void CheckByRefArguments(IEnumerable<AstNode> arguments) {
+			foreach (var a in arguments) {
+				if (a is DirectionExpression) {
+					var resolveResult = _resolver.Resolve(((DirectionExpression)a).Expression);
+					if (resolveResult is LocalResolveResult) {
+						var v = ((LocalResolveResult)resolveResult).Variable;
+						var current = _result[v];
+						if (!current.IsUsedByRef)
+							_result[v] = new VariableData(current.Name, true);
+					}
+					else {
+						_errorReporter.Error("Implementation limitation: only locals can be passed by reference");
+						continue;
+					}
+				}
+			}
+		}
+
+		public override object VisitInvocationExpression(InvocationExpression invocationExpression, object data) {
+			CheckByRefArguments(invocationExpression.Arguments);
+			return base.VisitInvocationExpression(invocationExpression, data);
+		}
+
+		public override object VisitObjectCreateExpression(ObjectCreateExpression objectCreateExpression, object data) {
+			CheckByRefArguments( objectCreateExpression.Arguments);
+			return base.VisitObjectCreateExpression(objectCreateExpression, data);
 		}
     }
 }

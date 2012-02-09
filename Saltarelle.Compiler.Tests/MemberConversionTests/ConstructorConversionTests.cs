@@ -28,7 +28,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void DefaultConstructorIsNotInsertedIfOtherConstructorIsDefined() {
-            Compile(new[] { "class C { C(int i) {} }" });
+			var namingConvention = new MockNamingConventionResolver() { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
+            Compile(new[] { "class C { C(int i) {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.Constructors.Should().HaveCount(1);
             cls.Constructors[0].Name.Should().Be("ctor$Int32");

@@ -13,9 +13,9 @@ namespace Saltarelle.Compiler {
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
-        private CSharpAstResolver _resolver;
+        private readonly CSharpAstResolver _resolver;
 
-        internal IDictionary<IVariable, string> variableNameMap;
+        internal IDictionary<IVariable, VariableData> variables;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver) {
             _namingConvention = namingConvention;
@@ -25,17 +25,12 @@ namespace Saltarelle.Compiler {
         }
 
         public JsFunctionDefinitionExpression CompileMethod(AttributedNode methodNode, IMethod method, MethodImplOptions impl) {
-            var usedNames   = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p)));
-            variableNameMap = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(methodNode, method, usedNames);
-            var paramNames  = new List<string>();
-            
-            foreach (var p in method.Parameters) {
-                paramNames.Add(variableNameMap[p]);
-            }
+            var usedNames = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
+            variables     = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(methodNode, method, usedNames);
 
-            methodNode.AcceptVisitor(this);
+        	methodNode.AcceptVisitor(this);
 
-            return new JsFunctionDefinitionExpression(paramNames, JsBlockStatement.EmptyStatement, "X");
+            return new JsFunctionDefinitionExpression(method.Parameters.Select(p => variables[p].Name), JsBlockStatement.EmptyStatement, "X");
         }
     }
 }
