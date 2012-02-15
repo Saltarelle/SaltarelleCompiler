@@ -247,7 +247,7 @@ namespace Saltarelle.Compiler {
                 VisitLocalResolveResult((LocalResolveResult)rr);
             }
             else if (rr is MemberResolveResult) {
-                VisitMemberResolveResult(NormalizeMemberAccess((MemberResolveResult)rr));
+                VisitMemberResolveResult((MemberResolveResult)rr);
             }
             else if (rr is OperatorResolveResult) {
                 VisitOperatorResolveResult((OperatorResolveResult)rr);
@@ -266,14 +266,6 @@ namespace Saltarelle.Compiler {
         protected virtual void VisitChildResolveResults(ResolveResult rr) {
             foreach (var r in rr.GetChildResults())
                 VisitResolveResult(r);
-        }
-
-        private MemberResolveResult NormalizeMemberAccess(MemberResolveResult rr) {
-            if (rr.TargetResult is TypeResolveResult && !rr.Member.IsStatic) {
-                return new MemberResolveResult(new ThisResolveResult(rr.TargetResult.Type), rr.Member, rr.Type, rr.IsCompileTimeConstant, rr.ConstantValue);
-            }
-            else
-                return rr;
         }
 
         protected virtual void VisitTypeOfResolveResult(TypeOfResolveResult rr) {
