@@ -133,7 +133,6 @@ namespace Saltarelle.Compiler
 					}
 					else {
 						_errorReporter.Error("Implementation limitation: only locals can be passed by reference");
-						continue;
 					}
 				}
 			}
