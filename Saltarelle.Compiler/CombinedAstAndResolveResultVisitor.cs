@@ -10,7 +10,6 @@ using Attribute = ICSharpCode.NRefactory.CSharp.Attribute;
 
 namespace Saltarelle.Compiler {
     public class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor<object, object> {
-        private bool _isInExpression;
         private CSharpAstResolver _resolver;
 
         public CombinedAstAndResolveResultVisitor(CSharpAstResolver resolver) {
@@ -18,45 +17,11 @@ namespace Saltarelle.Compiler {
         }
 
         public override object VisitLambdaExpression(LambdaExpression lambdaExpression, object data) {
-			AstNode next;
-			for (var child = lambdaExpression.FirstChild; child != null; child = next) {
-				// Store next to allow the loop to continue
-				// if the visitor removes/replaces child.
-				next = child.NextSibling;
-                if (child != lambdaExpression.Body)
-				    child.AcceptVisitor(this, data);
-			}
-
-            bool oldIsInExpression = _isInExpression;
-            try {
-                _isInExpression = false;
-                lambdaExpression.AcceptVisitor(this, data);
-            }
-            finally {
-                _isInExpression = oldIsInExpression;
-            }
-            return null;
+            return HandleExpressionNode(lambdaExpression);
         }
 
         public override object VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression, object data) {
-			AstNode next;
-			for (var child = anonymousMethodExpression.FirstChild; child != null; child = next) {
-				// Store next to allow the loop to continue
-				// if the visitor removes/replaces child.
-				next = child.NextSibling;
-                if (child != anonymousMethodExpression.Body)
-				    child.AcceptVisitor(this, data);
-			}
-
-            bool oldIsInExpression = _isInExpression;
-            try {
-                _isInExpression = false;
-                anonymousMethodExpression.AcceptVisitor(this, data);
-            }
-            finally {
-                _isInExpression = oldIsInExpression;
-            }
-            return null;
+            return HandleExpressionNode(anonymousMethodExpression);
         }
 
         public override object VisitUndocumentedExpression(UndocumentedExpression undocumentedExpression, object data) {
@@ -195,22 +160,10 @@ namespace Saltarelle.Compiler {
             return HandleExpressionNode(invocationExpression);
         }
 
-        public override object VisitCSharpTokenNode(CSharpTokenNode token, object data) {
-            return HandleExpressionNode(token);
-        }
-
         protected object HandleExpressionNode(AstNode node) {
-            if (!_isInExpression) {
-                try {
-                    _isInExpression = true;
-                    var rr = _resolver.Resolve(node);
-                    VisitResolveResult(rr);
-                }
-                finally {
-                    _isInExpression = false;
-                }
-            }
-            return node.AcceptVisitor(this);
+            var rr = _resolver.Resolve(node);
+            VisitResolveResult(rr);
+			return null;
         }
 
         protected virtual void VisitResolveResult(ResolveResult rr) {
@@ -259,13 +212,17 @@ namespace Saltarelle.Compiler {
                 VisitTypeOfResolveResult((TypeOfResolveResult)rr);
             }
             else {
-                throw new InvalidOperationException("Unknown resolve result " + rr + ". Does the code compile?");
+                VisitDefaultResolveResult(rr);
             }
         }
 
         protected virtual void VisitChildResolveResults(ResolveResult rr) {
             foreach (var r in rr.GetChildResults())
                 VisitResolveResult(r);
+        }
+
+        protected virtual void VisitDefaultResolveResult(ResolveResult rr) {
+            VisitChildResolveResults(rr);
         }
 
         protected virtual void VisitTypeOfResolveResult(TypeOfResolveResult rr) {

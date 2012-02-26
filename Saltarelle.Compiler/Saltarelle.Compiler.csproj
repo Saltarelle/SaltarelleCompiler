@@ -63,7 +63,7 @@
     <Compile Include="MethodCompiler.cs" />
     <Compile Include="MethodImplOptions.cs" />
     <Compile Include="NestedFunctionData.cs" />
-    <Compile Include="NestedFunctionsGatherer.cs" />
+    <Compile Include="NestedFunctionGatherer.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler.cs" />

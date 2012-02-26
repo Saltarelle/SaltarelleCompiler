@@ -76,6 +76,8 @@
     <Compile Include="MemberConversionTests\IndexerConversionTests.cs" />
     <Compile Include="MemberConversionTests\MethodConversionTests.cs" />
     <Compile Include="MemberConversionTests\PropertyConversionTests.cs" />
+    <Compile Include="MethodCompilationTests\MethodCompilerTestBase.cs" />
+    <Compile Include="MethodCompilationTests\NestedFunctionGathererTests.cs" />
     <Compile Include="MethodCompilationTests\VariableGatheringTests.cs" />
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

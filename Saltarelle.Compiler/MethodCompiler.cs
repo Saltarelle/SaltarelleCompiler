@@ -16,6 +16,7 @@ namespace Saltarelle.Compiler {
         private readonly CSharpAstResolver _resolver;
 
         internal IDictionary<IVariable, VariableData> variables;
+        internal List<NestedFunctionData> nestedFunctions;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver) {
             _namingConvention = namingConvention;
@@ -27,6 +28,7 @@ namespace Saltarelle.Compiler {
         public JsFunctionDefinitionExpression CompileMethod(AttributedNode methodNode, IMethod method, MethodImplOptions impl) {
             var usedNames = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
             variables     = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(methodNode, method, usedNames);
+            nestedFunctions = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(methodNode);
 
         	methodNode.AcceptVisitor(this);
 
