@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -578,5 +579,37 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			AssertNotUsedByReference("$a");
 			AssertNotUsedByReference("$f");
 		}
+
+        [Test]
+        public void DeclaringMethodsAreCorrect() {
+            CompileMethod(
+@"
+public void M(int p) {
+    Func<int> f = p2 => {
+        Func<string, double> f2 = delegate(string s) {
+            Func<int, int, int> f3 = (int i, int j) => (i + j);
+            Action<double> a1 = x => {};
+            return f3(1, 4);
+        };
+        Action<string> f4 = s2 => {
+            Func<int, string> f5 = y => y.ToString();
+        };
+    };
+    Action<Type> a = delegate {};
+}");
+
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 19)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 19)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 38)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 38)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 19)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(9, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
+        }
     }
 }

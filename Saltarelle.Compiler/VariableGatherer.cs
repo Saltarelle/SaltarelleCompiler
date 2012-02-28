@@ -18,6 +18,7 @@ namespace Saltarelle.Compiler
 		private HashSet<IVariable> _variablesDeclaredInsideLoop;
 
 		private bool _isInsideNestedFunction;
+        private AstNode _currentMethod;
 		private bool _isInsideLoop;
 
         public VariableGatherer(CSharpAstResolver resolver, INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
@@ -30,7 +31,7 @@ namespace Saltarelle.Compiler
             _result = new Dictionary<IVariable, VariableData>();
             _usedNames = new HashSet<string>(usedNames);
 			_isInsideNestedFunction = false;
-			_isInsideNestedFunction = false;
+            _currentMethod = node;
 			_variablesDeclaredInsideLoop = new HashSet<IVariable>();
 
 			foreach (var p in method.Parameters) {
@@ -53,7 +54,7 @@ namespace Saltarelle.Compiler
 		private void AddVariable(IVariable v, bool isUsedByReference = false) {
     		string n = _namingConvention.GetVariableName(v, _usedNames);
     		_usedNames.Add(n);
-    		_result.Add(v, new VariableData(n, isUsedByReference));
+    		_result.Add(v, new VariableData(n, _currentMethod, isUsedByReference));
 			if (_isInsideLoop)
 				_variablesDeclaredInsideLoop.Add(v);
 		}
@@ -87,9 +88,11 @@ namespace Saltarelle.Compiler
 
 		public override object VisitLambdaExpression(LambdaExpression lambdaExpression, object data) {
 			bool oldIsInsideNestedFunction = _isInsideNestedFunction;
+            AstNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideNestedFunction = true;
+                _currentMethod = lambdaExpression;
 				_isInsideLoop = false;
 
 				foreach (var p in lambdaExpression.Parameters)
@@ -99,15 +102,18 @@ namespace Saltarelle.Compiler
 			}
 			finally {
 				_isInsideNestedFunction = oldIsInsideNestedFunction;
+                _currentMethod = oldMethod;
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
 		public override object VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression, object data) {
 			bool oldIsInsideNestedFunction = _isInsideNestedFunction;
+            AstNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideNestedFunction = true;
+                _currentMethod = anonymousMethodExpression;
 				_isInsideLoop = false;
 
 				foreach (var p in anonymousMethodExpression.Parameters)
@@ -117,6 +123,7 @@ namespace Saltarelle.Compiler
 			}
 			finally {
 				_isInsideNestedFunction = oldIsInsideNestedFunction;
+                _currentMethod = oldMethod;
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
@@ -129,7 +136,7 @@ namespace Saltarelle.Compiler
 						var v = ((LocalResolveResult)resolveResult).Variable;
 						var current = _result[v];
 						if (!current.UseByRefSemantics)
-							_result[v] = new VariableData(current.Name, true);
+							_result[v] = new VariableData(current.Name, current.DeclaringMethod, true);
 					}
 					else {
 						_errorReporter.Error("Implementation limitation: only locals can be passed by reference");
@@ -195,7 +202,7 @@ namespace Saltarelle.Compiler
 					// the variable might suffer from all variables in JS being function-scoped, so use byref semantics.
 					var current = _result[rr.Variable];
 					if (!current.UseByRefSemantics)
-						_result[rr.Variable] = new VariableData(current.Name, true);
+						_result[rr.Variable] = new VariableData(current.Name, current.DeclaringMethod, true);
 				}
 			}
 			return base.VisitIdentifierExpression(identifierExpression, data);
