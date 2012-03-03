@@ -9,275 +9,227 @@ using ICSharpCode.NRefactory.Semantics;
 using Attribute = ICSharpCode.NRefactory.CSharp.Attribute;
 
 namespace Saltarelle.Compiler {
-    public class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor<object, object> {
+    public class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor, IResolveResultVisitor {
         private CSharpAstResolver _resolver;
 
         public CombinedAstAndResolveResultVisitor(CSharpAstResolver resolver) {
             _resolver = resolver;
         }
 
-        public override object VisitLambdaExpression(LambdaExpression lambdaExpression, object data) {
-            return HandleExpressionNode(lambdaExpression);
+        public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
+            HandleExpressionNode(lambdaExpression);
         }
 
-        public override object VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression, object data) {
-            return HandleExpressionNode(anonymousMethodExpression);
+        public override void VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression) {
+            HandleExpressionNode(anonymousMethodExpression);
         }
 
-        public override object VisitUndocumentedExpression(UndocumentedExpression undocumentedExpression, object data) {
-            return HandleExpressionNode(undocumentedExpression);
+        public override void VisitUndocumentedExpression(UndocumentedExpression undocumentedExpression) {
+            HandleExpressionNode(undocumentedExpression);
         }
 
-        public override object VisitArrayInitializerExpression(ArrayInitializerExpression arrayInitializerExpression, object data) {
-            return HandleExpressionNode(arrayInitializerExpression);
+        public override void VisitArrayInitializerExpression(ArrayInitializerExpression arrayInitializerExpression) {
+            HandleExpressionNode(arrayInitializerExpression);
         }
 
-        public override object VisitNamedArgumentExpression(NamedArgumentExpression namedArgumentExpression, object data) {
-            return HandleExpressionNode(namedArgumentExpression);
+        public override void VisitNamedArgumentExpression(NamedArgumentExpression namedArgumentExpression) {
+            HandleExpressionNode(namedArgumentExpression);
         }
 
-        public override object VisitNamedExpression(NamedExpression namedExpression, object data) {
-            return HandleExpressionNode(namedExpression);
+        public override void VisitNamedExpression(NamedExpression namedExpression) {
+            HandleExpressionNode(namedExpression);
         }
 
-        public override object VisitEmptyExpression(EmptyExpression emptyExpression, object data) {
-            return HandleExpressionNode(emptyExpression);
+        public override void VisitEmptyExpression(EmptyExpression emptyExpression) {
+            HandleExpressionNode(emptyExpression);
         }
 
-        public override object VisitIsExpression(IsExpression isExpression, object data) {
-            return HandleExpressionNode(isExpression);
+        public override void VisitIsExpression(IsExpression isExpression) {
+            HandleExpressionNode(isExpression);
         }
 
-        public override object VisitDefaultValueExpression(DefaultValueExpression defaultValueExpression, object data) {
-            return HandleExpressionNode(defaultValueExpression);
+        public override void VisitDefaultValueExpression(DefaultValueExpression defaultValueExpression) {
+            HandleExpressionNode(defaultValueExpression);
         }
 
-        public override object VisitMemberReferenceExpression(MemberReferenceExpression memberReferenceExpression, object data) {
-            return HandleExpressionNode(memberReferenceExpression);
+        public override void VisitMemberReferenceExpression(MemberReferenceExpression memberReferenceExpression) {
+            HandleExpressionNode(memberReferenceExpression);
         }
 
-        public override object VisitNullReferenceExpression(NullReferenceExpression nullReferenceExpression, object data) {
-            return HandleExpressionNode(nullReferenceExpression);
+        public override void VisitNullReferenceExpression(NullReferenceExpression nullReferenceExpression) {
+            HandleExpressionNode(nullReferenceExpression);
         }
 
-        public override object VisitObjectCreateExpression(ObjectCreateExpression objectCreateExpression, object data) {
-            return HandleExpressionNode(objectCreateExpression);
+        public override void VisitObjectCreateExpression(ObjectCreateExpression objectCreateExpression) {
+            HandleExpressionNode(objectCreateExpression);
         }
 
-        public override object VisitAnonymousTypeCreateExpression(AnonymousTypeCreateExpression anonymousTypeCreateExpression, object data) {
-            return HandleExpressionNode(anonymousTypeCreateExpression);
+        public override void VisitAnonymousTypeCreateExpression(AnonymousTypeCreateExpression anonymousTypeCreateExpression) {
+            HandleExpressionNode(anonymousTypeCreateExpression);
         }
 
-        public override object VisitParenthesizedExpression(ParenthesizedExpression parenthesizedExpression, object data) {
-            return HandleExpressionNode(parenthesizedExpression);
+        public override void VisitParenthesizedExpression(ParenthesizedExpression parenthesizedExpression) {
+            HandleExpressionNode(parenthesizedExpression);
         }
 
-        public override object VisitPointerReferenceExpression(PointerReferenceExpression pointerReferenceExpression, object data) {
-            return HandleExpressionNode(pointerReferenceExpression);
+        public override void VisitPointerReferenceExpression(PointerReferenceExpression pointerReferenceExpression) {
+            HandleExpressionNode(pointerReferenceExpression);
         }
 
-        public override object VisitPrimitiveExpression(PrimitiveExpression primitiveExpression, object data) {
-            return HandleExpressionNode(primitiveExpression);
+        public override void VisitPrimitiveExpression(PrimitiveExpression primitiveExpression) {
+            HandleExpressionNode(primitiveExpression);
         }
 
-        public override object VisitSizeOfExpression(SizeOfExpression sizeOfExpression, object data) {
-            return HandleExpressionNode(sizeOfExpression);
+        public override void VisitSizeOfExpression(SizeOfExpression sizeOfExpression) {
+            HandleExpressionNode(sizeOfExpression);
         }
 
-        public override object VisitStackAllocExpression(StackAllocExpression stackAllocExpression, object data) {
-            return HandleExpressionNode(stackAllocExpression);
+        public override void VisitStackAllocExpression(StackAllocExpression stackAllocExpression) {
+            HandleExpressionNode(stackAllocExpression);
         }
 
-        public override object VisitThisReferenceExpression(ThisReferenceExpression thisReferenceExpression, object data) {
-            return HandleExpressionNode(thisReferenceExpression);
+        public override void VisitThisReferenceExpression(ThisReferenceExpression thisReferenceExpression) {
+            HandleExpressionNode(thisReferenceExpression);
         }
 
-        public override object VisitTypeOfExpression(TypeOfExpression typeOfExpression, object data) {
-            return HandleExpressionNode(typeOfExpression);
+        public override void VisitTypeOfExpression(TypeOfExpression typeOfExpression) {
+            HandleExpressionNode(typeOfExpression);
         }
 
-        public override object VisitTypeReferenceExpression(TypeReferenceExpression typeReferenceExpression, object data) {
-            return HandleExpressionNode(typeReferenceExpression);
+        public override void VisitTypeReferenceExpression(TypeReferenceExpression typeReferenceExpression) {
+            HandleExpressionNode(typeReferenceExpression);
         }
 
-        public override object VisitUnaryOperatorExpression(UnaryOperatorExpression unaryOperatorExpression, object data) {
-            return HandleExpressionNode(unaryOperatorExpression);
+        public override void VisitUnaryOperatorExpression(UnaryOperatorExpression unaryOperatorExpression) {
+            HandleExpressionNode(unaryOperatorExpression);
         }
 
-        public override object VisitUncheckedExpression(UncheckedExpression uncheckedExpression, object data) {
-            return HandleExpressionNode(uncheckedExpression);
+        public override void VisitUncheckedExpression(UncheckedExpression uncheckedExpression) {
+            HandleExpressionNode(uncheckedExpression);
         }
 
-        public override object VisitQueryExpression(QueryExpression queryExpression, object data) {
-            return HandleExpressionNode(queryExpression);
+        public override void VisitQueryExpression(QueryExpression queryExpression) {
+            HandleExpressionNode(queryExpression);
         }
 
-        public override object VisitAsExpression(AsExpression asExpression, object data) {
-            return HandleExpressionNode(asExpression);
+        public override void VisitAsExpression(AsExpression asExpression) {
+            HandleExpressionNode(asExpression);
         }
 
-        public override object VisitArrayCreateExpression(ArrayCreateExpression arrayCreateExpression, object data) {
-            return HandleExpressionNode(arrayCreateExpression);
+        public override void VisitArrayCreateExpression(ArrayCreateExpression arrayCreateExpression) {
+            HandleExpressionNode(arrayCreateExpression);
         }
 
-        public override object VisitAssignmentExpression(AssignmentExpression assignmentExpression, object data) {
-            return HandleExpressionNode(assignmentExpression);
+        public override void VisitAssignmentExpression(AssignmentExpression assignmentExpression) {
+            HandleExpressionNode(assignmentExpression);
         }
 
-        public override object VisitBaseReferenceExpression(BaseReferenceExpression baseReferenceExpression, object data) {
-            return HandleExpressionNode(baseReferenceExpression);
+        public override void VisitBaseReferenceExpression(BaseReferenceExpression baseReferenceExpression) {
+            HandleExpressionNode(baseReferenceExpression);
         }
 
-        public override object VisitBinaryOperatorExpression(BinaryOperatorExpression binaryOperatorExpression, object data) {
-            return HandleExpressionNode(binaryOperatorExpression);
+        public override void VisitBinaryOperatorExpression(BinaryOperatorExpression binaryOperatorExpression) {
+            HandleExpressionNode(binaryOperatorExpression);
         }
 
-        public override object VisitCastExpression(CastExpression castExpression, object data) {
-            return HandleExpressionNode(castExpression);
+        public override void VisitCastExpression(CastExpression castExpression) {
+            HandleExpressionNode(castExpression);
         }
 
-        public override object VisitCheckedExpression(CheckedExpression checkedExpression, object data) {
-            return HandleExpressionNode(checkedExpression);
+        public override void VisitCheckedExpression(CheckedExpression checkedExpression) {
+            HandleExpressionNode(checkedExpression);
         }
 
-        public override object VisitConditionalExpression(ConditionalExpression conditionalExpression, object data) {
-            return HandleExpressionNode(conditionalExpression);
+        public override void VisitConditionalExpression(ConditionalExpression conditionalExpression) {
+            HandleExpressionNode(conditionalExpression);
         }
 
-        public override object VisitDirectionExpression(DirectionExpression directionExpression, object data) {
-            return HandleExpressionNode(directionExpression);
+        public override void VisitDirectionExpression(DirectionExpression directionExpression) {
+            HandleExpressionNode(directionExpression);
         }
 
-        public override object VisitIdentifierExpression(IdentifierExpression identifierExpression, object data) {
-            return HandleExpressionNode(identifierExpression);
+        public override void VisitIdentifierExpression(IdentifierExpression identifierExpression) {
+            HandleExpressionNode(identifierExpression);
         }
 
-        public override object VisitIndexerExpression(IndexerExpression indexerExpression, object data) {
-            return HandleExpressionNode(indexerExpression);
+        public override void VisitIndexerExpression(IndexerExpression indexerExpression) {
+            HandleExpressionNode(indexerExpression);
         }
 
-        public override object VisitInvocationExpression(InvocationExpression invocationExpression, object data) {
-            return HandleExpressionNode(invocationExpression);
+        public override void VisitInvocationExpression(InvocationExpression invocationExpression) {
+            HandleExpressionNode(invocationExpression);
         }
 
-        protected object HandleExpressionNode(AstNode node) {
+        protected void HandleExpressionNode(AstNode node) {
             var rr = _resolver.Resolve(node);
             VisitResolveResult(rr);
-			return null;
         }
 
-        protected virtual void VisitResolveResult(ResolveResult rr) {
-            if (rr is ArrayAccessResolveResult) {
-                VisitArrayAccessResolveResult((ArrayAccessResolveResult)rr);
-            }
-            else if (rr is ArrayCreateResolveResult) {
-                VisitArrayCreateResolveResult((ArrayCreateResolveResult)rr);
-            }
-            else if (rr is ByReferenceResolveResult) {
-                VisitByReferenceResolveResult((ByReferenceResolveResult)rr);
-            }
-            else if (rr is ConstantResolveResult) {
-                VisitConstantResolveResult((ConstantResolveResult)rr);
-            }
-            else if (rr is ConversionResolveResult) {
-                VisitConversionResolveResult((ConversionResolveResult)rr);
-            }
-            else if (rr is CSharpInvocationResolveResult) {
-                // TODO: What is this? Might be needed for named arguments
-                VisitCSharpInvocationResolveResult((CSharpInvocationResolveResult)rr);
-            }
-            else if (rr is InvocationResolveResult) {
-                VisitInvocationResolveResult((InvocationResolveResult)rr);
-            }
-            else if (rr is LambdaResolveResult) {
-                VisitLambdaResolveResult((LambdaResolveResult)rr);
-            }
-            else if (rr is MethodGroupResolveResult) {
-                // TODO: Is this really needed?
-                VisitMethodGroupResolveResult((MethodGroupResolveResult)rr);
-            }
-            else if (rr is LocalResolveResult) {
-                VisitLocalResolveResult((LocalResolveResult)rr);
-            }
-            else if (rr is MemberResolveResult) {
-                VisitMemberResolveResult((MemberResolveResult)rr);
-            }
-            else if (rr is OperatorResolveResult) {
-                VisitOperatorResolveResult((OperatorResolveResult)rr);
-            }
-            else if (rr is ThisResolveResult) {
-                VisitThisResolveResult((ThisResolveResult)rr);
-            }
-            else if (rr is TypeOfResolveResult) {
-                VisitTypeOfResolveResult((TypeOfResolveResult)rr);
-            }
-            else {
-                VisitDefaultResolveResult(rr);
-            }
+        public virtual void VisitResolveResult(ResolveResult rr) {
+			this.DefaultVisitResolveResult(rr);
         }
 
         protected virtual void VisitChildResolveResults(ResolveResult rr) {
-            foreach (var r in rr.GetChildResults())
-                VisitResolveResult(r);
+			this.DefaultVisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitDefaultResolveResult(ResolveResult rr) {
+        public virtual void VisitDefaultResolveResult(ResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitTypeOfResolveResult(TypeOfResolveResult rr) {
+        public virtual void VisitTypeOfResolveResult(TypeOfResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitThisResolveResult(ThisResolveResult rr) {
+        public virtual void VisitThisResolveResult(ThisResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitOperatorResolveResult(OperatorResolveResult rr) {
+        public virtual void VisitOperatorResolveResult(OperatorResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitMemberResolveResult(MemberResolveResult rr) {
+        public virtual void VisitMemberResolveResult(MemberResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitLocalResolveResult(LocalResolveResult rr) {
+        public virtual void VisitLocalResolveResult(LocalResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitMethodGroupResolveResult(MethodGroupResolveResult rr) {
+        public virtual void VisitMethodGroupResolveResult(MethodGroupResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitLambdaResolveResult(LambdaResolveResult rr) {
+        public virtual void VisitLambdaResolveResult(LambdaResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitInvocationResolveResult(InvocationResolveResult rr) {
+        public virtual void VisitInvocationResolveResult(InvocationResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr) {
+        public virtual void VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitConversionResolveResult(ConversionResolveResult rr) {
+        public virtual void VisitConversionResolveResult(ConversionResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitConstantResolveResult(ConstantResolveResult rr) {
+        public virtual void VisitConstantResolveResult(ConstantResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitByReferenceResolveResult(ByReferenceResolveResult rr) {
+        public virtual void VisitByReferenceResolveResult(ByReferenceResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitArrayCreateResolveResult(ArrayCreateResolveResult rr) {
+        public virtual void VisitArrayCreateResolveResult(ArrayCreateResolveResult rr) {
             VisitChildResolveResults(rr);
         }
 
-        protected virtual void VisitArrayAccessResolveResult(ArrayAccessResolveResult rr) {
+        public virtual void VisitArrayAccessResolveResult(ArrayAccessResolveResult rr) {
             VisitChildResolveResults(rr);
         }
     }

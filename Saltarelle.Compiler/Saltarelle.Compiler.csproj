@@ -56,10 +56,13 @@
     <Compile Include="CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="ConstructorImplOptions.cs" />
     <Compile Include="EventImplOptions.cs" />
+    <Compile Include="ExpressionCompiler.cs" />
     <Compile Include="FieldImplOptions.cs" />
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />
+    <Compile Include="IResolveResultVisitor.cs" />
     <Compile Include="ISourceFile.cs" />
+    <Compile Include="StatementCompiler.cs" />
     <Compile Include="MethodCompiler.cs" />
     <Compile Include="MethodImplOptions.cs" />
     <Compile Include="NestedFunctionData.cs" />
@@ -69,6 +72,7 @@
     <Compile Include="Compiler.cs" />
     <Compile Include="PropertyImplOptions.cs" />
     <Compile Include="ReadOnlySet.cs" />
+    <Compile Include="ResolveResultVisitor.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="VariableData.cs" />
     <Compile Include="VariableGatherer.cs" />

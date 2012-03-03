@@ -9,7 +9,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler
 {
-    public class VariableGatherer : DepthFirstAstVisitor<object, object> {
+    public class VariableGatherer : DepthFirstAstVisitor {
         private readonly CSharpAstResolver _resolver;
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
@@ -59,34 +59,34 @@ namespace Saltarelle.Compiler
 				_variablesDeclaredInsideLoop.Add(v);
 		}
 
-    	public override object VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement, object data) {
+    	public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
             foreach (var varNode in variableDeclarationStatement.Variables) {
 				AddVariable(varNode, varNode.Name);
             }
 
-            return base.VisitVariableDeclarationStatement(variableDeclarationStatement, data);
+            base.VisitVariableDeclarationStatement(variableDeclarationStatement);
         }
 
-		public override object VisitForeachStatement(ForeachStatement foreachStatement, object data) {
+		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
 			AddVariable(foreachStatement.VariableNameToken, foreachStatement.VariableName);
 
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				return base.VisitForeachStatement(foreachStatement, data);
+				base.VisitForeachStatement(foreachStatement);
 			}
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
-		public override object VisitCatchClause(CatchClause catchClause, object data) {
+		public override void VisitCatchClause(CatchClause catchClause) {
 			if (!catchClause.VariableNameToken.IsNull)
 				AddVariable(catchClause.VariableNameToken, catchClause.VariableName);
-			return base.VisitCatchClause(catchClause, data);
+			base.VisitCatchClause(catchClause);
 		}
 
-		public override object VisitLambdaExpression(LambdaExpression lambdaExpression, object data) {
+		public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
 			bool oldIsInsideNestedFunction = _isInsideNestedFunction;
             AstNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
@@ -98,7 +98,7 @@ namespace Saltarelle.Compiler
 				foreach (var p in lambdaExpression.Parameters)
 					AddVariable(p, p.Name);
 
-				return base.VisitLambdaExpression(lambdaExpression, data);
+				base.VisitLambdaExpression(lambdaExpression);
 			}
 			finally {
 				_isInsideNestedFunction = oldIsInsideNestedFunction;
@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler
 			}
 		}
 
-		public override object VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression, object data) {
+		public override void VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression) {
 			bool oldIsInsideNestedFunction = _isInsideNestedFunction;
             AstNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler
 				foreach (var p in anonymousMethodExpression.Parameters)
 					AddVariable(p, p.Name);
 
-				return base.VisitAnonymousMethodExpression(anonymousMethodExpression, data);
+				base.VisitAnonymousMethodExpression(anonymousMethodExpression);
 			}
 			finally {
 				_isInsideNestedFunction = oldIsInsideNestedFunction;
@@ -145,17 +145,17 @@ namespace Saltarelle.Compiler
 			}
 		}
 
-		public override object VisitInvocationExpression(InvocationExpression invocationExpression, object data) {
+		public override void VisitInvocationExpression(InvocationExpression invocationExpression) {
 			CheckByRefArguments(invocationExpression.Arguments);
-			return base.VisitInvocationExpression(invocationExpression, data);
+			base.VisitInvocationExpression(invocationExpression);
 		}
 
-		public override object VisitObjectCreateExpression(ObjectCreateExpression objectCreateExpression, object data) {
+		public override void VisitObjectCreateExpression(ObjectCreateExpression objectCreateExpression) {
 			CheckByRefArguments( objectCreateExpression.Arguments);
-			return base.VisitObjectCreateExpression(objectCreateExpression, data);
+			base.VisitObjectCreateExpression(objectCreateExpression);
 		}
 
-		public override object VisitForStatement(ForStatement forStatement, object data) {
+		public override void VisitForStatement(ForStatement forStatement) {
 			foreach (var s in forStatement.Initializers)
 				s.AcceptVisitor(this);
 			forStatement.Condition.AcceptVisitor(this);
@@ -170,32 +170,31 @@ namespace Saltarelle.Compiler
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
-			return null;
 		}
 
-		public override object VisitWhileStatement(WhileStatement whileStatement, object data) {
+		public override void VisitWhileStatement(WhileStatement whileStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				return base.VisitWhileStatement(whileStatement, data);
+				base.VisitWhileStatement(whileStatement);
 			}
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
-		public override object VisitDoWhileStatement(DoWhileStatement doWhileStatement, object data) {
+		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				return base.VisitDoWhileStatement(doWhileStatement, data);
+				base.VisitDoWhileStatement(doWhileStatement);
 			}
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
-		public override object VisitIdentifierExpression(IdentifierExpression identifierExpression, object data) {
+		public override void VisitIdentifierExpression(IdentifierExpression identifierExpression) {
 			if (_isInsideNestedFunction) {
 				var rr = _resolver.Resolve(identifierExpression) as LocalResolveResult;
 				if (rr != null && _variablesDeclaredInsideLoop.Contains(rr.Variable)) {
@@ -205,7 +204,7 @@ namespace Saltarelle.Compiler
 						_result[rr.Variable] = new VariableData(current.Name, current.DeclaringMethod, true);
 				}
 			}
-			return base.VisitIdentifierExpression(identifierExpression, data);
+			base.VisitIdentifierExpression(identifierExpression);
 		}
     }
 }

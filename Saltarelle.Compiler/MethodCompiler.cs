@@ -9,7 +9,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler {
-    public class MethodCompiler : DepthFirstAstVisitor<object, object> {
+    public class MethodCompiler {
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
@@ -18,6 +18,8 @@ namespace Saltarelle.Compiler {
         internal IDictionary<IVariable, VariableData> variables;
         internal List<NestedFunctionData> nestedFunctions;
 
+		private List<JsStatement> result;
+
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver) {
             _namingConvention = namingConvention;
             _errorReporter = errorReporter;
@@ -25,14 +27,13 @@ namespace Saltarelle.Compiler {
             _resolver = resolver;
         }
 
-        public JsFunctionDefinitionExpression CompileMethod(AttributedNode methodNode, IMethod method, MethodImplOptions impl) {
-            var usedNames = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
-            variables     = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(methodNode, method, usedNames);
-            nestedFunctions = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(methodNode);
+        public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, Statement body, IMethod method, MethodImplOptions impl) {
+            var usedNames    = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
+            variables        = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
+            nestedFunctions  = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity);
+			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctions);
 
-        	methodNode.AcceptVisitor(this);
-
-            return new JsFunctionDefinitionExpression(method.Parameters.Select(p => variables[p].Name), JsBlockStatement.EmptyStatement, "X");
+            return new JsFunctionDefinitionExpression(method.Parameters.Select(p => variables[p].Name), bodyCompiler.Compile(body), null);
         }
     }
 }

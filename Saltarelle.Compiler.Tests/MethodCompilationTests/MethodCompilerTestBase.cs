@@ -25,6 +25,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
         }
 
+
 		[SetUp]
 		public void Setup() {
 			Method = null;

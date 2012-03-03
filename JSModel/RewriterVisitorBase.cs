@@ -143,6 +143,10 @@ namespace Saltarelle.Compiler.JSModel
             return statement.Accept(this, data);
         }
 
+        public virtual JsStatement Visit(JsComment comment, TData data) {
+            return comment;
+        }
+
         public virtual JsStatement Visit(JsBlockStatement statement, TData data) {
             var after = Visit(statement.Statements, data);
             return ReferenceEquals(after, statement.Statements) ? statement : new JsBlockStatement(after, statement.StatementLabel);

@@ -62,6 +62,7 @@
     <Compile Include="IExpressionVisitor.cs" />
     <Compile Include="IStatementVisitor.cs" />
     <Compile Include="RewriterVisitorBase.cs" />
+    <Compile Include="Statements\JsComment.cs" />
     <Compile Include="Statements\JsBlockStatement.cs" />
     <Compile Include="Statements\JsBreakStatement.cs" />
     <Compile Include="Statements\JsForStatement.cs" />

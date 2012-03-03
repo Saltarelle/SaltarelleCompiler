@@ -3,6 +3,7 @@
 namespace Saltarelle.Compiler.JSModel {
     public interface IStatementVisitor<out TReturn, in TData> {
         TReturn Visit(JsStatement statement, TData data);
+        TReturn Visit(JsComment statement, TData data);
         TReturn Visit(JsBlockStatement statement, TData data);
         TReturn Visit(JsBreakStatement statement, TData data);
         TReturn Visit(JsContinueStatement statement, TData data);

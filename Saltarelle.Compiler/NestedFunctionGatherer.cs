@@ -10,7 +10,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 namespace Saltarelle.Compiler
 {
     public class NestedFunctionGatherer {
-        private class StructureGatherer : DepthFirstAstVisitor<object, object> {
+        private class StructureGatherer : DepthFirstAstVisitor {
             private readonly CSharpAstResolver _resolver;
             private List<NestedFunctionData> currentList;
 
@@ -37,14 +37,12 @@ namespace Saltarelle.Compiler
                 currentList = parentList;
             }
 
-            public override object VisitLambdaExpression(LambdaExpression lambdaExpression, object data) {
+            public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
                 VisitNestedFunction(lambdaExpression, lambdaExpression.Body);
-                return null;
             }
 
-            public override object VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression, object data) {
+            public override void VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression) {
                 VisitNestedFunction(anonymousMethodExpression, anonymousMethodExpression.Body);
-                return null;
             }
         }
 
@@ -64,17 +62,17 @@ namespace Saltarelle.Compiler
                 node.AcceptVisitor(this);
             }
 
-            public override object VisitBaseReferenceExpression(BaseReferenceExpression baseReferenceExpression, object data) {
+            public override void VisitBaseReferenceExpression(BaseReferenceExpression baseReferenceExpression) {
                 _usesThis = true;
-                return base.VisitBaseReferenceExpression(baseReferenceExpression, data);
+                base.VisitBaseReferenceExpression(baseReferenceExpression);
             }
 
-            protected override void VisitThisResolveResult(ThisResolveResult rr) {
+            public override void VisitThisResolveResult(ThisResolveResult rr) {
                 _usesThis = true;
                 base.VisitThisResolveResult(rr);
             }
 
-            protected override void VisitLocalResolveResult(LocalResolveResult rr) {
+            public override void VisitLocalResolveResult(LocalResolveResult rr) {
                 _usedVariables.Add(rr.Variable);
                 base.VisitLocalResolveResult(rr);
             }

@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler {
         IEnumerable<JsType> Compile(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references);
     }
 
-    public class Compiler : DepthFirstAstVisitor<object, object>, ICompiler {
+    public class Compiler : DepthFirstAstVisitor, ICompiler {
         private class ResolveAllNavigator : IResolveVisitorNavigator {
             public ResolveVisitorNavigationMode Scan(AstNode node) {
                 return ResolveVisitorNavigationMode.Resolve;
@@ -340,14 +340,14 @@ namespace Saltarelle.Compiler {
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
-        private JsFunctionDefinitionExpression CompileMethod(AttributedNode node, IMethod method, MethodImplOptions options) {
+        private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, Statement body, IMethod method, MethodImplOptions options) {
             var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver);
-            var result = mc.CompileMethod(node, method, options);
+            var result = mc.CompileMethod(node, body, method, options);
             OnMethodCompiled(method, result, mc);
             return result;
         }
 
-        private JsFunctionDefinitionExpression CompileConstructor(AttributedNode node, IMethod method, ConstructorImplOptions options) {
+        private JsFunctionDefinitionExpression CompileConstructor(EntityDeclaration node, IMethod method, ConstructorImplOptions options) {
             return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
         }
 
@@ -381,56 +381,52 @@ namespace Saltarelle.Compiler {
             return JsExpression.Number(0);
         }
 
-        public override object VisitMethodDeclaration(MethodDeclaration methodDeclaration, object data) {
+        public override void VisitMethodDeclaration(MethodDeclaration methodDeclaration) {
             var resolveResult = _resolver.Resolve(methodDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
                 _errorReporter.Error("Method declaration " + methodDeclaration.Name + " does not resolve to a member.");
-                return null;
+                return;
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
                 _errorReporter.Error("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
-                return null;
+                return;
             }
 
             Tuple<JsMethod, MethodImplOptions> jsMethod;
             if (_methodMap.TryGetValue(method, out jsMethod)) {
-                jsMethod.Item1.Definition = CompileMethod(methodDeclaration, method, jsMethod.Item2);
+                jsMethod.Item1.Definition = CompileMethod(methodDeclaration, methodDeclaration.Body, method, jsMethod.Item2);
             }
-
-            return null;
         }
 
-        public override object VisitOperatorDeclaration(OperatorDeclaration operatorDeclaration, object data) {
+        public override void VisitOperatorDeclaration(OperatorDeclaration operatorDeclaration) {
             var resolveResult = _resolver.Resolve(operatorDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
                 _errorReporter.Error("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a member.");
-                return null;
+                return;
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
                 _errorReporter.Error("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
-                return null;
+                return;
             }
 
             Tuple<JsMethod, MethodImplOptions> jsMethod;
             if (_methodMap.TryGetValue(method, out jsMethod)) {
-                jsMethod.Item1.Definition = CompileMethod(operatorDeclaration, method, jsMethod.Item2);
+                jsMethod.Item1.Definition = CompileMethod(operatorDeclaration, operatorDeclaration.Body, method, jsMethod.Item2);
             }
-
-            return null;
         }
 
-        public override object VisitConstructorDeclaration(ConstructorDeclaration constructorDeclaration, object data) {
+        public override void VisitConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
             var resolveResult = _resolver.Resolve(constructorDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
                 _errorReporter.Error("Method declaration " + constructorDeclaration.Name + " does not resolve to a member.");
-                return null;
+                return;
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
                 _errorReporter.Error("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
-                return null;
+                return;
             }
 
             Tuple<JsConstructor, JsMethod, ConstructorImplOptions> jsConstructor;
@@ -440,21 +436,19 @@ namespace Saltarelle.Compiler {
                 else
                     jsConstructor.Item2.Definition = CompileConstructor(constructorDeclaration, method, jsConstructor.Item3);
             }
-
-            return null;
         }
 
-        public override object VisitPropertyDeclaration(PropertyDeclaration propertyDeclaration, object data) {
+        public override void VisitPropertyDeclaration(PropertyDeclaration propertyDeclaration) {
             var resolveResult = _resolver.Resolve(propertyDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
                 _errorReporter.Error("Property declaration " + propertyDeclaration.Name + " does not resolve to a member.");
-                return null;
+                return;
             }
 
             var property = ((MemberResolveResult)resolveResult).Member as IProperty;
             if (property == null) {
                 _errorReporter.Error("Property declaration " + propertyDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
-                return null;
+                return;
             }
 
             var impl = _namingConvention.GetPropertyImplementation(property);
@@ -488,34 +482,32 @@ namespace Saltarelle.Compiler {
                     if (!propertyDeclaration.Getter.IsNull) {
                         Tuple<JsMethod, MethodImplOptions> jsMethod;
                         if (_methodMap.TryGetValue(property.Getter, out jsMethod)) {
-                            jsMethod.Item1.Definition = CompileMethod(propertyDeclaration.Getter, property.Getter, jsMethod.Item2);
+                            jsMethod.Item1.Definition = CompileMethod(propertyDeclaration.Getter, propertyDeclaration.Getter.Body, property.Getter, jsMethod.Item2);
                         }
                     }
 
                     if (!propertyDeclaration.Setter.IsNull) {
                         Tuple<JsMethod, MethodImplOptions> jsMethod;
                         if (_methodMap.TryGetValue(property.Setter, out jsMethod)) {
-                            jsMethod.Item1.Definition = CompileMethod(propertyDeclaration.Setter, property.Setter, jsMethod.Item2);
+                            jsMethod.Item1.Definition = CompileMethod(propertyDeclaration.Setter, propertyDeclaration.Setter.Body, property.Setter, jsMethod.Item2);
                         }
                     }
                 }
             }
-
-            return null;
         }
 
-        public override object VisitEventDeclaration(EventDeclaration eventDeclaration, object data) {
+        public override void VisitEventDeclaration(EventDeclaration eventDeclaration) {
             foreach (var singleEvt in eventDeclaration.Variables) {
                 var resolveResult = _resolver.Resolve(singleEvt);
                 if (!(resolveResult is MemberResolveResult)) {
                     _errorReporter.Error("Event declaration " + singleEvt.Name + " does not resolve to a member.");
-                    return null;
+                    return;
                 }
 
                 var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
                 if (evt == null) {
                     _errorReporter.Error("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
-                    return null;
+                    return;
                 }
 
                 var impl = _namingConvention.GetEventImplementation(evt);
@@ -550,77 +542,70 @@ namespace Saltarelle.Compiler {
                         throw new InvalidOperationException("Invalid event implementation type");
                 }
             }
-
-            return null;
         }
 
-        public override object VisitCustomEventDeclaration(CustomEventDeclaration eventDeclaration, object data) {
+        public override void VisitCustomEventDeclaration(CustomEventDeclaration eventDeclaration) {
             var resolveResult = _resolver.Resolve(eventDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
                 _errorReporter.Error("Event declaration " + eventDeclaration.Name + " does not resolve to a member.");
-                return null;
+                return;
             }
 
             var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
             if (evt == null) {
                 _errorReporter.Error("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
-                return null;
+                return;
             }
 
             Tuple<JsMethod, MethodImplOptions> jsMethod;
             if (_methodMap.TryGetValue(evt.AddAccessor, out jsMethod)) {
-                jsMethod.Item1.Definition = CompileMethod(eventDeclaration.AddAccessor, evt.AddAccessor, jsMethod.Item2);
+                jsMethod.Item1.Definition = CompileMethod(eventDeclaration.AddAccessor, eventDeclaration.AddAccessor.Body, evt.AddAccessor, jsMethod.Item2);
             }
             if (_methodMap.TryGetValue(evt.RemoveAccessor, out jsMethod)) {
-                jsMethod.Item1.Definition = CompileMethod(eventDeclaration.RemoveAccessor, evt.RemoveAccessor, jsMethod.Item2);
+                jsMethod.Item1.Definition = CompileMethod(eventDeclaration.RemoveAccessor, eventDeclaration.RemoveAccessor.Body, evt.RemoveAccessor, jsMethod.Item2);
             }
-
-            return null;
         }
 
-        public override object VisitFieldDeclaration(FieldDeclaration fieldDeclaration, object data) {
+        public override void VisitFieldDeclaration(FieldDeclaration fieldDeclaration) {
             foreach (var v in fieldDeclaration.Variables) {
                 var resolveResult = _resolver.Resolve(v);
                 if (!(resolveResult is MemberResolveResult)) {
                     _errorReporter.Error("Field declaration " + v.Name + " does not resolve to a member.");
-                    return null;
+                    return;
                 }
 
                 var field = ((MemberResolveResult)resolveResult).Member as IField;
                 if (field == null) {
                     _errorReporter.Error("Field declaration " + v.Name + " does not resolve to a field (resolves to " + resolveResult.ToString() + ")");
-                    return null;
+                    return;
                 }
 
                 JsField jsField;
                 if (_fieldMap.TryGetValue(field, out jsField))
                     jsField.Initializer = (v.Initializer != null ? CompileInitializer(v.Initializer) : CreateDefaultInitializer(field.Type));
             }
-            return null;
         }
 
-        public override object VisitIndexerDeclaration(IndexerDeclaration indexerDeclaration, object data) {
+        public override void VisitIndexerDeclaration(IndexerDeclaration indexerDeclaration) {
             var resolveResult = _resolver.Resolve(indexerDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
                 _errorReporter.Error("Event declaration " + indexerDeclaration.Name + " does not resolve to a member.");
-                return null;
+                return;
             }
 
             var prop = ((MemberResolveResult)resolveResult).Member as IProperty;
             if (prop == null) {
                 _errorReporter.Error("Event declaration " + indexerDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
-                return null;
+                return;
             }
 
             Tuple<JsMethod, MethodImplOptions> jsMethod;
             if (prop.Getter != null && _methodMap.TryGetValue(prop.Getter, out jsMethod)) {
-                jsMethod.Item1.Definition = CompileMethod(indexerDeclaration.Getter, prop.Getter, jsMethod.Item2);
+                jsMethod.Item1.Definition = CompileMethod(indexerDeclaration.Getter, indexerDeclaration.Getter.Body, prop.Getter, jsMethod.Item2);
             }
             if (prop.Setter != null && _methodMap.TryGetValue(prop.Setter, out jsMethod)) {
-                jsMethod.Item1.Definition = CompileMethod(indexerDeclaration.Setter, prop.Setter, jsMethod.Item2);
+                jsMethod.Item1.Definition = CompileMethod(indexerDeclaration.Setter, indexerDeclaration.Setter.Body, prop.Setter, jsMethod.Item2);
             }
-
-            return null;
         }
     }
 }

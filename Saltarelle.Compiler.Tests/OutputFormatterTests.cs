@@ -606,5 +606,19 @@ namespace Saltarelle.Compiler.Tests
                 Assert.That(OutputFormatter.Format(expr), Is.EqualTo(string.Format(operators[oper], "a", "b")));
             }
         }
+
+		[Test]
+		public void CommentsAreCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsComment("Line 1")), Is.EqualTo("//Line 1\r\n"));
+			Assert.That(OutputFormatter.Format(new JsComment(" With spaces ")), Is.EqualTo("// With spaces \r\n"));
+			Assert.That(OutputFormatter.Format(new JsComment(" With\r\n Multiple\n Lines")), Is.EqualTo("// With\r\n// Multiple\r\n// Lines\r\n"));
+		}
+
+		[Test]
+		public void BlockStatementsAreCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsBlockStatement(new JsStatement[0])), Is.EqualTo("{\r\n}\r\n"));
+			Assert.That(OutputFormatter.Format(new JsBlockStatement(new[] { new JsComment("X") })), Is.EqualTo("{\r\n\t//X\r\n}\r\n"));
+			Assert.That(OutputFormatter.Format(new JsBlockStatement(new[] { new JsComment("X"), new JsComment("Y") })), Is.EqualTo("{\r\n\t//X\r\n\t//Y\r\n}\r\n"));
+		}
     }
 }

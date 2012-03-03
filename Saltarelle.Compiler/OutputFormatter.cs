@@ -10,8 +10,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler
 {
-    public class OutputFormatter : IExpressionVisitor<object, bool>
-    {
+    public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
         private readonly CodeBuilder _cb = new CodeBuilder();
 
         private OutputFormatter() {
@@ -20,6 +19,12 @@ namespace Saltarelle.Compiler
         public static string Format(JsExpression expression) {
             var fmt = new OutputFormatter();
             fmt.Visit(expression, false);
+            return fmt._cb.ToString();
+        }
+
+        public static string Format(JsStatement statement) {
+            var fmt = new OutputFormatter();
+            fmt.Visit(statement, false);
             return fmt._cb.ToString();
         }
 
@@ -383,5 +388,85 @@ namespace Saltarelle.Compiler
                     throw new ArgumentException("nodeType");
             }
         }
+
+    	public object Visit(JsStatement statement, bool data) {
+			if (statement.StatementLabel != null)
+				_cb.Append(statement.StatementLabel).Append(": ");
+			return statement.Accept(this, data);
+    	}
+
+    	public object Visit(JsComment comment, bool data) {
+			foreach (var l in comment.Text.Replace("\r", "").Split('\n'))
+				_cb.AppendLine("//" + l);
+			return null;
+    	}
+
+    	public object Visit(JsBlockStatement statement, bool data) {
+			_cb.AppendLine("{").Indent();
+			foreach (var c in statement.Statements)
+				Visit(c, data);
+			_cb.Outdent().AppendLine("}");
+			return null;
+    	}
+
+    	public object Visit(JsBreakStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsContinueStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsDoWhileStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsEmptyStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsExpressionStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsForEachInStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsForStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsIfStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsReturnStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsSwitchStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsThrowStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsTryCatchFinallyStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsVariableDeclarationStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsWhileStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
+
+    	public object Visit(JsWithStatement statement, bool data) {
+    		throw new NotImplementedException();
+    	}
     }
 }
