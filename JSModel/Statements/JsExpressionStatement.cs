@@ -6,7 +6,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
     public class JsExpressionStatement : JsStatement {
         public JsExpression Expression { get; private set; }
 
-        public JsExpressionStatement(JsExpression expression, string statementLabel = null) : base(statementLabel) {
+        public JsExpressionStatement(JsExpression expression) {
             if (expression == null) throw new ArgumentNullException("expression");
             Expression = expression;
         }

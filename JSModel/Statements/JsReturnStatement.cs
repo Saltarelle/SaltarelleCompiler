@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public JsExpression Value { get; private set; }
 
-        public JsReturnStatement(JsExpression value = null, string statementLabel = null) : base(statementLabel) {
+        public JsReturnStatement(JsExpression value = null) {
             Value = value;
         }
 

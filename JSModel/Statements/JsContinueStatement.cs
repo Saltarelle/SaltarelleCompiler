@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public string TargetLabel { get; private set; }
 
-        public JsContinueStatement(string targetLabel = null, string statementLabel = null) : base(statementLabel) {
+        public JsContinueStatement(string targetLabel = null) {
             if (targetLabel != null && !targetLabel.IsValidJavaScriptIdentifier()) throw new ArgumentException("targetLabel");
             TargetLabel = targetLabel;
         }

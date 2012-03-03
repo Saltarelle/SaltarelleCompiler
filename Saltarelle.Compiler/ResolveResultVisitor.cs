@@ -6,73 +6,88 @@ using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 
 namespace Saltarelle.Compiler {
-	public class ResolveResultVisitor : IResolveResultVisitor {
-        public virtual void VisitResolveResult(ResolveResult rr) {
-			this.DefaultVisitResolveResult(rr);
+	public class ResolveResultVisitor<TResult, TData> : IResolveResultVisitor<TResult, TData> {
+        public virtual TResult VisitResolveResult(ResolveResult rr, TData data) {
+			return this.DefaultVisitResolveResult(rr, data);
         }
 
-        protected virtual void VisitChildResolveResults(ResolveResult rr) {
-			this.DefaultVisitChildResolveResults(rr);
+        protected virtual void VisitChildResolveResults(ResolveResult rr, TData data) {
+			this.DefaultVisitChildResolveResults(rr, data);
         }
 
-        public virtual void VisitDefaultResolveResult(ResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitDefaultResolveResult(ResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitTypeOfResolveResult(TypeOfResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitTypeOfResolveResult(TypeOfResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitThisResolveResult(ThisResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitThisResolveResult(ThisResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitOperatorResolveResult(OperatorResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitOperatorResolveResult(OperatorResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitMemberResolveResult(MemberResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitMemberResolveResult(MemberResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitLocalResolveResult(LocalResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitLocalResolveResult(LocalResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitMethodGroupResolveResult(MethodGroupResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitMethodGroupResolveResult(MethodGroupResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitLambdaResolveResult(LambdaResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitLambdaResolveResult(LambdaResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitInvocationResolveResult(InvocationResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitInvocationResolveResult(InvocationResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitConversionResolveResult(ConversionResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitConversionResolveResult(ConversionResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitConstantResolveResult(ConstantResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitConstantResolveResult(ConstantResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitByReferenceResolveResult(ByReferenceResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitByReferenceResolveResult(ByReferenceResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitArrayCreateResolveResult(ArrayCreateResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 
-        public virtual void VisitArrayAccessResolveResult(ArrayAccessResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual TResult VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
         }
 	}
 }

@@ -1,31 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.Statements {
-    [Serializable]
+	[Serializable]
     public class JsVariableDeclarationStatement : JsStatement {
-        public class VariableDeclaration {
-            public string Name { get; private set; }
-            /// <summary>
-            /// Null if the variable is not initialized.
-            /// </summary>
-            public JsExpression Initializer { get; private set; }
+        public ReadOnlyCollection<JsVariableDeclaration> Declarations { get; private set; }
 
-            public VariableDeclaration(string name, JsExpression initializer) {
-                if (name == null) throw new ArgumentNullException("name");
-                if (!name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");
-                Name        = name;
-                Initializer = initializer;
-            }
-        }
-
-        public ReadOnlyCollection<VariableDeclaration> Declarations { get; private set; }
-
-        public JsVariableDeclarationStatement(IEnumerable<VariableDeclaration> declarations, string statementLabel = null) : base(statementLabel) {
+        public JsVariableDeclarationStatement(IEnumerable<JsVariableDeclaration> declarations) {
             if (declarations == null) throw new ArgumentNullException("declarations");
             Declarations = declarations.AsReadOnly();
+        }
+
+        public JsVariableDeclarationStatement(params JsVariableDeclaration[] declarations) : this((IEnumerable<JsVariableDeclaration>)declarations) {
         }
 
         [System.Diagnostics.DebuggerStepThrough]

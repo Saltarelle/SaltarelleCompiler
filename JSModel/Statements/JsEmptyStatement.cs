@@ -4,7 +4,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 namespace Saltarelle.Compiler.JSModel.Statements {
     [Serializable]
     public class JsEmptyStatement : JsStatement {
-        public JsEmptyStatement(string statementLabel = null) : base(statementLabel) {
+        public JsEmptyStatement() {
         }
 
         [System.Diagnostics.DebuggerStepThrough]

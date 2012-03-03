@@ -215,6 +215,11 @@ namespace Saltarelle.Compiler
             throw new NotSupportedException("TypeReferenceExpressions should not occur in the output stage");
         }
 
+        public object Visit(JsThisExpression expression, bool data) {
+            _cb.Append("this");
+			return null;
+        }
+
         private static string GetBinaryOperatorString(ExpressionNodeType oper) {
             switch (oper) {
                 case ExpressionNodeType.Multiply:                 return "*";
@@ -356,6 +361,7 @@ namespace Saltarelle.Compiler
                     return PrecedenceFunctionDefinition;
 
                 case ExpressionNodeType.Identifier:
+				case ExpressionNodeType.This:
                     return PrecedenceTerminal;
 
                 case ExpressionNodeType.Invocation:
@@ -390,8 +396,6 @@ namespace Saltarelle.Compiler
         }
 
     	public object Visit(JsStatement statement, bool data) {
-			if (statement.StatementLabel != null)
-				_cb.Append(statement.StatementLabel).Append(": ");
 			return statement.Accept(this, data);
     	}
 
@@ -426,7 +430,9 @@ namespace Saltarelle.Compiler
     	}
 
     	public object Visit(JsExpressionStatement statement, bool data) {
-    		throw new NotImplementedException();
+    		Visit(statement.Expression, data);
+			_cb.AppendLine(";");
+			return null;
     	}
 
     	public object Visit(JsForEachInStatement statement, bool data) {
@@ -458,7 +464,20 @@ namespace Saltarelle.Compiler
     	}
 
     	public object Visit(JsVariableDeclarationStatement statement, bool data) {
-    		throw new NotImplementedException();
+    		_cb.Append("var ");
+			bool first = true;
+			foreach (var d in statement.Declarations) {
+				if (!first)
+					_cb.Append(", ");
+				_cb.Append(d.Name);
+				if (d.Initializer != null) {
+					_cb.Append(" = ");
+					this.Visit(d.Initializer, false);
+				}
+				first = false;
+			}
+			_cb.AppendLine(";");
+			return null;
     	}
 
     	public object Visit(JsWhileStatement statement, bool data) {

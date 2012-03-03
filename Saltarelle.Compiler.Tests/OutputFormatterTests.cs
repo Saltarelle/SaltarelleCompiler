@@ -608,6 +608,11 @@ namespace Saltarelle.Compiler.Tests
         }
 
 		[Test]
+		public void ThisIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(JsExpression.This), Is.EqualTo("this"));
+		}
+
+		[Test]
 		public void CommentsAreCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsComment("Line 1")), Is.EqualTo("//Line 1\r\n"));
 			Assert.That(OutputFormatter.Format(new JsComment(" With spaces ")), Is.EqualTo("// With spaces \r\n"));
@@ -619,6 +624,20 @@ namespace Saltarelle.Compiler.Tests
 			Assert.That(OutputFormatter.Format(new JsBlockStatement(new JsStatement[0])), Is.EqualTo("{\r\n}\r\n"));
 			Assert.That(OutputFormatter.Format(new JsBlockStatement(new[] { new JsComment("X") })), Is.EqualTo("{\r\n\t//X\r\n}\r\n"));
 			Assert.That(OutputFormatter.Format(new JsBlockStatement(new[] { new JsComment("X"), new JsComment("Y") })), Is.EqualTo("{\r\n\t//X\r\n\t//Y\r\n}\r\n"));
+		}
+
+		[Test]
+		public void VariableDeclarationStatementsAreCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", null) })), Is.EqualTo("var i;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", null), new JsVariableDeclaration("j", null) })), Is.EqualTo("var i, j;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", JsExpression.Number(0)) })), Is.EqualTo("var i = 0;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", JsExpression.Number(1)) })), Is.EqualTo("var i = 0, j = 1;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", null) })), Is.EqualTo("var i = 0, j;\r\n"));
+		}
+
+		[Test]
+		public void ExpressionStatementsAreCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsExpressionStatement(JsExpression.This)), Is.EqualTo("this;\r\n"));
 		}
     }
 }

@@ -9,7 +9,7 @@ using ICSharpCode.NRefactory.Semantics;
 using Attribute = ICSharpCode.NRefactory.CSharp.Attribute;
 
 namespace Saltarelle.Compiler {
-    public class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor, IResolveResultVisitor {
+    public class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor, IResolveResultVisitor<object, object> {
         private CSharpAstResolver _resolver;
 
         public CombinedAstAndResolveResultVisitor(CSharpAstResolver resolver) {
@@ -162,75 +162,91 @@ namespace Saltarelle.Compiler {
 
         protected void HandleExpressionNode(AstNode node) {
             var rr = _resolver.Resolve(node);
-            VisitResolveResult(rr);
+            VisitResolveResult(rr, null);
         }
 
-        public virtual void VisitResolveResult(ResolveResult rr) {
-			this.DefaultVisitResolveResult(rr);
+        public virtual object VisitResolveResult(ResolveResult rr, object data) {
+			this.DefaultVisitResolveResult(rr, data);
+			return null;
         }
 
-        protected virtual void VisitChildResolveResults(ResolveResult rr) {
-			this.DefaultVisitChildResolveResults(rr);
+        protected virtual void VisitChildResolveResults(ResolveResult rr, object data) {
+			this.DefaultVisitChildResolveResults(rr, data);
         }
 
-        public virtual void VisitDefaultResolveResult(ResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitDefaultResolveResult(ResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitTypeOfResolveResult(TypeOfResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitTypeOfResolveResult(TypeOfResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitThisResolveResult(ThisResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitThisResolveResult(ThisResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
+       }
+
+        public virtual object VisitOperatorResolveResult(OperatorResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitOperatorResolveResult(OperatorResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitMemberResolveResult(MemberResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitMemberResolveResult(MemberResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitLocalResolveResult(LocalResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitLocalResolveResult(LocalResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitMethodGroupResolveResult(MethodGroupResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitMethodGroupResolveResult(MethodGroupResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitLambdaResolveResult(LambdaResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitLambdaResolveResult(LambdaResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitInvocationResolveResult(InvocationResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitInvocationResolveResult(InvocationResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitConversionResolveResult(ConversionResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitConversionResolveResult(ConversionResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitConstantResolveResult(ConstantResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitConstantResolveResult(ConstantResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitByReferenceResolveResult(ByReferenceResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitByReferenceResolveResult(ByReferenceResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
 
-        public virtual void VisitArrayCreateResolveResult(ArrayCreateResolveResult rr) {
-            VisitChildResolveResults(rr);
-        }
-
-        public virtual void VisitArrayAccessResolveResult(ArrayAccessResolveResult rr) {
-            VisitChildResolveResults(rr);
+        public virtual object VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, object data) {
+            VisitChildResolveResults(rr, data);
+			return null;
         }
     }
 }

@@ -8,15 +8,12 @@ namespace Saltarelle.Compiler.JSModel.Statements {
     public class JsBlockStatement : JsStatement {
         public ReadOnlyCollection<JsStatement> Statements { get; private set; }
 
-        public JsBlockStatement(IEnumerable<JsStatement> statements, string statementLabel = null) : base(statementLabel) {
+        public JsBlockStatement(IEnumerable<JsStatement> statements) {
             if (statements == null) throw new ArgumentNullException("statements");
             Statements = statements.AsReadOnly();
         }
 
-        public JsBlockStatement(params JsStatement[] statements) : this(null, statements) {
-        }
-
-        public JsBlockStatement(string statementLabel, params JsStatement[] statements) : this(statements, statementLabel) {
+        public JsBlockStatement(params JsStatement[] statements) : this((IEnumerable<JsStatement>)statements) {
         }
 
         public static JsBlockStatement MakeBlock(JsStatement content) {

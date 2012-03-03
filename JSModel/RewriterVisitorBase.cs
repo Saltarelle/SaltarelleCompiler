@@ -111,6 +111,10 @@ namespace Saltarelle.Compiler.JSModel
             return expression;
         }
 
+        public virtual JsExpression Visit(JsThisExpression expression, TData data) {
+            return expression;
+        }
+
         public virtual IEnumerable<JsStatement> Visit(ReadOnlyCollection<JsStatement> statements, TData data) {
             return VisitCollection(statements, s => Visit(s, data));
         }
@@ -119,7 +123,7 @@ namespace Saltarelle.Compiler.JSModel
             return VisitCollection(clauses, c => Visit(c, data));
         }
 
-        public virtual IEnumerable<JsVariableDeclarationStatement.VariableDeclaration> Visit(ReadOnlyCollection<JsVariableDeclarationStatement.VariableDeclaration> declarations, TData data) {
+        public virtual IEnumerable<JsVariableDeclaration> Visit(ReadOnlyCollection<JsVariableDeclaration> declarations, TData data) {
             return VisitCollection(declarations, d => Visit(d, data));
         }
 
@@ -134,9 +138,9 @@ namespace Saltarelle.Compiler.JSModel
             return ReferenceEquals(body, clause.Body) ? clause : new JsTryCatchFinallyStatement.CatchClause(clause.Identifier, body);
         }
 
-        public virtual JsVariableDeclarationStatement.VariableDeclaration Visit(JsVariableDeclarationStatement.VariableDeclaration declaration, TData data) {
+        public virtual JsVariableDeclaration Visit(JsVariableDeclaration declaration, TData data) {
             var after = Visit(declaration.Initializer, data);
-            return ReferenceEquals(after, declaration.Initializer) ? declaration : new JsVariableDeclarationStatement.VariableDeclaration(declaration.Name, after);
+            return ReferenceEquals(after, declaration.Initializer) ? declaration : new JsVariableDeclaration(declaration.Name, after);
         }
 
         public virtual JsStatement Visit(JsStatement statement, TData data) {
@@ -149,7 +153,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement Visit(JsBlockStatement statement, TData data) {
             var after = Visit(statement.Statements, data);
-            return ReferenceEquals(after, statement.Statements) ? statement : new JsBlockStatement(after, statement.StatementLabel);
+            return ReferenceEquals(after, statement.Statements) ? statement : new JsBlockStatement(after);
         }
 
         public virtual JsStatement Visit(JsBreakStatement statement, TData data) {
@@ -163,7 +167,7 @@ namespace Saltarelle.Compiler.JSModel
         public virtual JsStatement Visit(JsDoWhileStatement statement, TData data) {
             var condition = Visit(statement.Condition, data);
             var body      = Visit(statement.Body, data);
-            return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsDoWhileStatement(condition, body, statement.StatementLabel);
+            return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsDoWhileStatement(condition, body);
         }
 
         public virtual JsStatement Visit(JsEmptyStatement statement, TData data) {
@@ -172,13 +176,13 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement Visit(JsExpressionStatement statement, TData data) {
             var after = Visit(statement.Expression, data);
-            return ReferenceEquals(after, statement.Expression) ? statement : new JsExpressionStatement(after, statement.StatementLabel);
+            return ReferenceEquals(after, statement.Expression) ? statement : new JsExpressionStatement(after);
         }
 
         public virtual JsStatement Visit(JsForEachInStatement statement, TData data) {
             var objectToIterateOver = Visit(statement.ObjectToIterateOver, data);
             var body = Visit(statement.Body, data);
-            return ReferenceEquals(objectToIterateOver, statement.ObjectToIterateOver) && ReferenceEquals(body, statement.Body) ? statement : new JsForEachInStatement(statement.LoopVariableName, objectToIterateOver, body, statement.IsLoopVariableDeclared, statement.StatementLabel);
+            return ReferenceEquals(objectToIterateOver, statement.ObjectToIterateOver) && ReferenceEquals(body, statement.Body) ? statement : new JsForEachInStatement(statement.LoopVariableName, objectToIterateOver, body, statement.IsLoopVariableDeclared);
         }
 
         public virtual JsStatement Visit(JsForStatement statement, TData data) {
@@ -188,54 +192,54 @@ namespace Saltarelle.Compiler.JSModel
             var body          = Visit(statement.Body, data);
             return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(incr, statement.IncrementExpression) && ReferenceEquals(body, statement.Body)
                  ? statement
-                 : new JsForStatement(initStatement, condition, incr, body, statement.StatementLabel);
+                 : new JsForStatement(initStatement, condition, incr, body);
         }
 
         public virtual JsStatement Visit(JsIfStatement statement, TData data) {
             var test  = Visit(statement.Test, data);
             var then  = Visit(statement.Then, data);
             var @else = statement.Else != null ? Visit(statement.Else, data) : null;
-            return ReferenceEquals(test, statement.Test) && ReferenceEquals(then, statement.Then) && ReferenceEquals(@else, statement.Else) ? statement : new JsIfStatement(test, then, @else, statement.StatementLabel);
+            return ReferenceEquals(test, statement.Test) && ReferenceEquals(then, statement.Then) && ReferenceEquals(@else, statement.Else) ? statement : new JsIfStatement(test, then, @else);
         }
 
         public virtual JsStatement Visit(JsReturnStatement statement, TData data) {
             var value = (statement.Value != null ? Visit(statement.Value, data) : null);
-            return ReferenceEquals(value, statement.Value) ? statement : new JsReturnStatement(value, statement.StatementLabel);
+            return ReferenceEquals(value, statement.Value) ? statement : new JsReturnStatement(value);
         }
 
         public virtual JsStatement Visit(JsSwitchStatement statement, TData data) {
             var test = Visit(statement.Test, data);
             var clauses = Visit(statement.Clauses, data);
-            return ReferenceEquals(test, statement.Test) && ReferenceEquals(clauses, statement.Clauses) ? statement : new JsSwitchStatement(test, clauses, statement.StatementLabel);
+            return ReferenceEquals(test, statement.Test) && ReferenceEquals(clauses, statement.Clauses) ? statement : new JsSwitchStatement(test, clauses);
         }
 
         public virtual JsStatement Visit(JsThrowStatement statement, TData data) {
             var expr = Visit(statement.Expression, data);
-            return ReferenceEquals(expr, statement.Expression) ? statement : new JsThrowStatement(expr, statement.StatementLabel);
+            return ReferenceEquals(expr, statement.Expression) ? statement : new JsThrowStatement(expr);
         }
 
         public virtual JsStatement Visit(JsTryCatchFinallyStatement statement, TData data) {
             var guarded  = Visit(statement.GuardedStatement, data);
             var @catch   = statement.Catch != null ? Visit(statement.Catch, data) : null;
             var @finally = statement.Finally != null ? Visit(statement.Finally, data) : null;
-            return ReferenceEquals(guarded, statement.GuardedStatement) && ReferenceEquals(@catch, statement.Catch) && ReferenceEquals(@finally, statement.Finally) ? statement : new JsTryCatchFinallyStatement(guarded, @catch, @finally, statement.StatementLabel);
+            return ReferenceEquals(guarded, statement.GuardedStatement) && ReferenceEquals(@catch, statement.Catch) && ReferenceEquals(@finally, statement.Finally) ? statement : new JsTryCatchFinallyStatement(guarded, @catch, @finally);
         }
 
         public virtual JsStatement Visit(JsVariableDeclarationStatement statement, TData data) {
             var declarations = Visit(statement.Declarations, data);
-            return ReferenceEquals(declarations, statement.Declarations) ? statement : new JsVariableDeclarationStatement(declarations, statement.StatementLabel);
+            return ReferenceEquals(declarations, statement.Declarations) ? statement : new JsVariableDeclarationStatement(declarations);
         }
 
         public virtual JsStatement Visit(JsWhileStatement statement, TData data) {
             var condition = Visit(statement.Condition, data);
             var body      = Visit(statement.Body, data);
-            return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsWhileStatement(condition, body, statement.StatementLabel);
+            return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsWhileStatement(condition, body);
         }
 
         public virtual JsStatement Visit(JsWithStatement statement, TData data) {
             var @object = Visit(statement.Object, data);
             var body    = Visit(statement.Body, data);
-            return ReferenceEquals(@object, statement.Object) && ReferenceEquals(body, statement.Body) ? statement : new JsWithStatement(@object, body, statement.StatementLabel);
+            return ReferenceEquals(@object, statement.Object) && ReferenceEquals(body, statement.Body) ? statement : new JsWithStatement(@object, body);
         }
     }
 }

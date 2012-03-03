@@ -6,79 +6,79 @@ using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 
 namespace Saltarelle.Compiler {
-	public interface IResolveResultVisitor {
-        void VisitResolveResult(ResolveResult rr);
-        void VisitDefaultResolveResult(ResolveResult rr);
-        void VisitTypeOfResolveResult(TypeOfResolveResult rr);
-        void VisitThisResolveResult(ThisResolveResult rr);
-        void VisitOperatorResolveResult(OperatorResolveResult rr);
-        void VisitMemberResolveResult(MemberResolveResult rr);
-        void VisitLocalResolveResult(LocalResolveResult rr);
-        void VisitMethodGroupResolveResult(MethodGroupResolveResult rr);
-        void VisitLambdaResolveResult(LambdaResolveResult rr);
-        void VisitInvocationResolveResult(InvocationResolveResult rr);
-        void VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr);
-        void VisitConversionResolveResult(ConversionResolveResult rr);
-        void VisitConstantResolveResult(ConstantResolveResult rr);
-        void VisitByReferenceResolveResult(ByReferenceResolveResult rr);
-        void VisitArrayCreateResolveResult(ArrayCreateResolveResult rr);
-        void VisitArrayAccessResolveResult(ArrayAccessResolveResult rr);
+	public interface IResolveResultVisitor<out TResult, in TData> {
+        TResult VisitResolveResult(ResolveResult rr, TData data);
+        TResult VisitDefaultResolveResult(ResolveResult rr, TData data);
+        TResult VisitTypeOfResolveResult(TypeOfResolveResult rr, TData data);
+        TResult VisitThisResolveResult(ThisResolveResult rr, TData data);
+        TResult VisitOperatorResolveResult(OperatorResolveResult rr, TData data);
+        TResult VisitMemberResolveResult(MemberResolveResult rr, TData data);
+        TResult VisitLocalResolveResult(LocalResolveResult rr, TData data);
+        TResult VisitMethodGroupResolveResult(MethodGroupResolveResult rr, TData data);
+        TResult VisitLambdaResolveResult(LambdaResolveResult rr, TData data);
+        TResult VisitInvocationResolveResult(InvocationResolveResult rr, TData data);
+        TResult VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, TData data);
+        TResult VisitConversionResolveResult(ConversionResolveResult rr, TData data);
+        TResult VisitConstantResolveResult(ConstantResolveResult rr, TData data);
+        TResult VisitByReferenceResolveResult(ByReferenceResolveResult rr, TData data);
+        TResult VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, TData data);
+        TResult VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, TData data);
 	}
 
 	public static class ResolveResultVisitorExtensions {
-		public static void DefaultVisitResolveResult(this IResolveResultVisitor visitor, ResolveResult rr) {
+		public static TResult DefaultVisitResolveResult<TResult, TData>(this IResolveResultVisitor<TResult, TData> visitor, ResolveResult rr, TData data) {
             if (rr is ArrayAccessResolveResult) {
-                visitor.VisitArrayAccessResolveResult((ArrayAccessResolveResult)rr);
+                return visitor.VisitArrayAccessResolveResult((ArrayAccessResolveResult)rr, data);
             }
             else if (rr is ArrayCreateResolveResult) {
-                visitor.VisitArrayCreateResolveResult((ArrayCreateResolveResult)rr);
+                return visitor.VisitArrayCreateResolveResult((ArrayCreateResolveResult)rr, data);
             }
             else if (rr is ByReferenceResolveResult) {
-                visitor.VisitByReferenceResolveResult((ByReferenceResolveResult)rr);
+                return visitor.VisitByReferenceResolveResult((ByReferenceResolveResult)rr, data);
             }
             else if (rr is ConstantResolveResult) {
-                visitor.VisitConstantResolveResult((ConstantResolveResult)rr);
+                return visitor.VisitConstantResolveResult((ConstantResolveResult)rr, data);
             }
             else if (rr is ConversionResolveResult) {
-                visitor.VisitConversionResolveResult((ConversionResolveResult)rr);
+                return visitor.VisitConversionResolveResult((ConversionResolveResult)rr, data);
             }
             else if (rr is CSharpInvocationResolveResult) {
                 // TODO: What is this? Might be needed for named arguments
-                visitor.VisitCSharpInvocationResolveResult((CSharpInvocationResolveResult)rr);
+                return visitor.VisitCSharpInvocationResolveResult((CSharpInvocationResolveResult)rr, data);
             }
             else if (rr is InvocationResolveResult) {
-                visitor.VisitInvocationResolveResult((InvocationResolveResult)rr);
+                return visitor.VisitInvocationResolveResult((InvocationResolveResult)rr, data);
             }
             else if (rr is LambdaResolveResult) {
-                visitor.VisitLambdaResolveResult((LambdaResolveResult)rr);
+                return visitor.VisitLambdaResolveResult((LambdaResolveResult)rr, data);
             }
             else if (rr is MethodGroupResolveResult) {
                 // TODO: Is this really needed?
-                visitor.VisitMethodGroupResolveResult((MethodGroupResolveResult)rr);
+                return visitor.VisitMethodGroupResolveResult((MethodGroupResolveResult)rr, data);
             }
             else if (rr is LocalResolveResult) {
-                visitor.VisitLocalResolveResult((LocalResolveResult)rr);
+                return visitor.VisitLocalResolveResult((LocalResolveResult)rr, data);
             }
             else if (rr is MemberResolveResult) {
-                visitor.VisitMemberResolveResult((MemberResolveResult)rr);
+                return visitor.VisitMemberResolveResult((MemberResolveResult)rr, data);
             }
             else if (rr is OperatorResolveResult) {
-                visitor.VisitOperatorResolveResult((OperatorResolveResult)rr);
+                return visitor.VisitOperatorResolveResult((OperatorResolveResult)rr, data);
             }
             else if (rr is ThisResolveResult) {
-                visitor.VisitThisResolveResult((ThisResolveResult)rr);
+                return visitor.VisitThisResolveResult((ThisResolveResult)rr, data);
             }
             else if (rr is TypeOfResolveResult) {
-                visitor.VisitTypeOfResolveResult((TypeOfResolveResult)rr);
+                return visitor.VisitTypeOfResolveResult((TypeOfResolveResult)rr, data);
             }
             else {
-                visitor.VisitDefaultResolveResult(rr);
+                return visitor.VisitDefaultResolveResult(rr, data);
             }
         }
 
-        public static void DefaultVisitChildResolveResults(this IResolveResultVisitor visitor, ResolveResult rr) {
+        public static void DefaultVisitChildResolveResults<TResult, TData>(this IResolveResultVisitor<TResult, TData> visitor, ResolveResult rr, TData data) {
             foreach (var r in rr.GetChildResults())
-                visitor.VisitResolveResult(r);
+                visitor.VisitResolveResult(r, data);
         }
 	}
 }

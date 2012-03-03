@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public JsExpression Test { get; private set; }
         public ReadOnlyCollection<Clause> Clauses { get; private set; }
 
-        public JsSwitchStatement(JsExpression test, IEnumerable<Clause> clauses, string statementLabel = null) : base(statementLabel) {
+        public JsSwitchStatement(JsExpression test, IEnumerable<Clause> clauses) {
             if (test == null) throw new ArgumentNullException("test");
             if (clauses == null) throw new ArgumentNullException("clauses");
 

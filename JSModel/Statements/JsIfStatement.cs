@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public JsStatement Else { get; private set; }
 
-        public JsIfStatement(JsExpression test, JsStatement then, JsStatement @else, string statementLabel = null) : base(statementLabel) {
+        public JsIfStatement(JsExpression test, JsStatement then, JsStatement @else) {
             if (test == null) throw new ArgumentNullException("test");
             if (then == null) throw new ArgumentNullException("then");
             Test = test;

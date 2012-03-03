@@ -62,19 +62,14 @@ namespace Saltarelle.Compiler
                 node.AcceptVisitor(this);
             }
 
-            public override void VisitBaseReferenceExpression(BaseReferenceExpression baseReferenceExpression) {
+            public override object VisitThisResolveResult(ThisResolveResult rr, object data) {
                 _usesThis = true;
-                base.VisitBaseReferenceExpression(baseReferenceExpression);
+                return base.VisitThisResolveResult(rr, data);
             }
 
-            public override void VisitThisResolveResult(ThisResolveResult rr) {
-                _usesThis = true;
-                base.VisitThisResolveResult(rr);
-            }
-
-            public override void VisitLocalResolveResult(LocalResolveResult rr) {
+            public override object VisitLocalResolveResult(LocalResolveResult rr, object data) {
                 _usedVariables.Add(rr.Variable);
-                base.VisitLocalResolveResult(rr);
+                return base.VisitLocalResolveResult(rr, data);
             }
         }
 

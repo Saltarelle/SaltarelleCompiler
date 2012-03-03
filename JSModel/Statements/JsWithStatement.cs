@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public JsExpression Object { get; private set; }
         public JsStatement Body { get; private set; }
 
-        public JsWithStatement(JsExpression @object, JsStatement body, string statementLabel = null) : base(statementLabel) {
+        public JsWithStatement(JsExpression @object, JsStatement body) {
             if (@object == null) throw new ArgumentNullException("object");
             if (body == null) throw new ArgumentNullException("body");
             Object = @object;

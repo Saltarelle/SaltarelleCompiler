@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="Statements\JsTryCatchFinallyStatement.cs" />
     <Compile Include="Expressions\JsUnaryExpression.cs" />
     <Compile Include="Expressions\JsConstantExpression.cs" />
+    <Compile Include="Statements\JsVariableDeclaration.cs" />
     <Compile Include="Statements\JsVariableDeclarationStatement.cs" />
     <Compile Include="Statements\JsWhileStatement.cs" />
     <Compile Include="Statements\JsWithStatement.cs" />

@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public JsExpression ObjectToIterateOver { get; private set; }
         public JsStatement Body { get; private set; }
 
-        public JsForEachInStatement(string loopVariableName, JsExpression objectToIterateOver, JsStatement body, bool isLoopVariableDeclared = true, string statementLabel = null) : base(statementLabel) {
+        public JsForEachInStatement(string loopVariableName, JsExpression objectToIterateOver, JsStatement body, bool isLoopVariableDeclared = true) {
             if (loopVariableName == null) throw new ArgumentNullException("loopVariableName");
             if (!loopVariableName.IsValidJavaScriptIdentifier()) throw new ArgumentException("loopVariableName");
             if (objectToIterateOver == null) throw new ArgumentNullException("objectToIterateOver");

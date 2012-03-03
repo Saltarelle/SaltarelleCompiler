@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public JsBlockStatement Finally { get; private set; }
 
-        public JsTryCatchFinallyStatement(JsStatement guardedStatement, CatchClause catchClause, JsStatement @finally, string statementLabel = null) : base(statementLabel) {
+        public JsTryCatchFinallyStatement(JsStatement guardedStatement, CatchClause catchClause, JsStatement @finally) {
             if (guardedStatement == null) throw new ArgumentException("guardedStatement");
             if (catchClause == null && @finally == null) throw new ArgumentException("Either catchClause or finally (or both) must be specified");
 

@@ -77,6 +77,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         BitwiseNot,
         // /Unary
 
+		This,
+
         // Fake
         TypeReference,
 
@@ -366,5 +368,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         public static JsUnaryExpression BitwiseNot(JsExpression operand) {
             return Unary(ExpressionNodeType.BitwiseNot, operand);
         }
+
+		public static JsThisExpression This { get { return JsThisExpression.This; } }
     }
 }

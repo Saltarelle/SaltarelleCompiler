@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public JsExpression IncrementExpression { get; private set; }
         public JsStatement Body { get; private set; }
 
-        public JsForStatement(JsStatement initStatement, JsExpression conditionExpression, JsExpression incrementExpression, JsStatement body, string statementLabel = null) : base(statementLabel) {
+        public JsForStatement(JsStatement initStatement, JsExpression conditionExpression, JsExpression incrementExpression, JsStatement body) {
             if (initStatement == null) throw new ArgumentNullException("initStatement");
             if (!(initStatement is JsVariableDeclarationStatement || initStatement is JsExpressionStatement)) throw new ArgumentException("initStatement must be a VariableDeclarationStatement or an ExpressionStatement.", "initStatement");
             if (conditionExpression == null) throw new ArgumentNullException("conditionExpression");

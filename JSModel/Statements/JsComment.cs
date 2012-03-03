@@ -6,7 +6,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
     public class JsComment : JsStatement {
         public string Text { get; private set; }
 
-        public JsComment(string text) : base(null) {
+        public JsComment(string text) {
             Text = text;
         }
 
