@@ -5,13 +5,13 @@ namespace Saltarelle.Compiler.JSModel.Statements {
     [Serializable]
     public class JsDoWhileStatement : JsStatement {
         public JsExpression Condition { get; private set; }
-        public JsStatement Body { get; private set; }
+        public JsBlockStatement Body { get; private set; }
 
         public JsDoWhileStatement(JsExpression condition, JsStatement body) {
             if (condition == null) throw new ArgumentNullException("condition");
             if (body == null) throw new ArgumentNullException("body");
             Condition = condition;
-            Body = body;
+            Body = JsBlockStatement.MakeBlock(body);
         }
 
         [System.Diagnostics.DebuggerStepThrough]

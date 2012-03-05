@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler {
 			_result             = new List<JsStatement>();
 		}
 
-		public StatementCompiler CreateInnerCompiler() {
+		private StatementCompiler CreateInnerCompiler() {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions);
 		}
 
@@ -43,6 +43,10 @@ namespace Saltarelle.Compiler {
 				return (JsBlockStatement)_result[0];
 			else
 				return new JsBlockStatement(_result);
+		}
+
+		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {
+			return _expressionCompiler.Compile(_resolver.Resolve(expr), returnValueIsImportant);
 		}
 
 		public override void VisitComment(Comment comment) {
@@ -81,7 +85,7 @@ namespace Saltarelle.Compiler {
 				var data = _variables[((LocalResolveResult)_resolver.Resolve(d)).Variable];
 				JsExpression initializer;
 				if (!d.Initializer.IsNull) {
-					var exprCompileResult = _expressionCompiler.Compile(_resolver.Resolve(d.Initializer), false);
+					var exprCompileResult = CompileExpression(d.Initializer, false);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
 						if (declarations.Count > 0) {
 							_result.Add(new JsVariableDeclarationStatement(declarations));
@@ -109,8 +113,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
-			#warning Not finished
-			var compiled = _expressionCompiler.Compile(_resolver.Resolve(expressionStatement.Expression), false);
+			var compiled = CompileExpression(expressionStatement.Expression, false);
 			_result.AddRange(compiled.AdditionalStatements);
 			_result.Add(new JsExpressionStatement(compiled.Expression));
 		}
@@ -126,7 +129,7 @@ namespace Saltarelle.Compiler {
 			else {
 				JsExpression initExpr = null;
 				foreach (var init in forStatement.Initializers) {
-					var compiledInit = _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)init).Expression), false);
+					var compiledInit = CompileExpression(((ExpressionStatement)init).Expression, false);
 					if (compiledInit.AdditionalStatements.Count == 0) {
 						initExpr = (initExpr != null ? JsExpression.Comma(initExpr, compiledInit.Expression) : compiledInit.Expression);
 					}
@@ -144,7 +147,7 @@ namespace Saltarelle.Compiler {
 			JsExpression condition;
 			List<JsStatement> preBody = null;
 			if (!forStatement.Condition.IsNull) {
-				var compiledCondition = _expressionCompiler.Compile(_resolver.Resolve(forStatement.Condition), true);
+				var compiledCondition = CompileExpression(forStatement.Condition, true);
 				if (compiledCondition.AdditionalStatements.Count == 0) {
 					condition = compiledCondition.Expression;
 				}
@@ -164,7 +167,7 @@ namespace Saltarelle.Compiler {
 			JsExpression iterator = null;
 			List<JsStatement> postBody = null;
 			if (forStatement.Iterators.Count > 0) {
-				var compiledIterators = forStatement.Iterators.Select(i => _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)i).Expression), false)).ToList();
+				var compiledIterators = forStatement.Iterators.Select(i => CompileExpression(((ExpressionStatement)i).Expression, false)).ToList();
 				if (compiledIterators.All(i => i.AdditionalStatements.Count == 0)) {
 					// No additional statements are required, add them as a single comma-separated expression to the JS iterator.
 					iterator = compiledIterators.Aggregate(iterator, (current, i) => (current != null ? JsExpression.Comma(current, i.Expression) : i.Expression));
@@ -202,7 +205,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitIfElseStatement(IfElseStatement ifElseStatement) {
-			var compiledCond = _expressionCompiler.Compile(_resolver.Resolve(ifElseStatement.Condition), true);
+			var compiledCond = CompileExpression(ifElseStatement.Condition, true);
 			_result.AddRange(compiledCond.AdditionalStatements);
 			_result.Add(new JsIfStatement(compiledCond.Expression, CreateInnerCompiler().Compile(ifElseStatement.TrueStatement), !ifElseStatement.FalseStatement.IsNull ? CreateInnerCompiler().Compile(ifElseStatement.FalseStatement) : null));
 		}
@@ -223,7 +226,11 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
-			throw new NotImplementedException();
+			var body = CreateInnerCompiler().Compile(doWhileStatement.EmbeddedStatement);
+			var compiledCondition = CompileExpression(doWhileStatement.Condition, true);
+			if (compiledCondition.AdditionalStatements.Count > 0)
+				body = new JsBlockStatement(body.Statements.Concat(compiledCondition.AdditionalStatements));
+			_result.Add(new JsDoWhileStatement(compiledCondition.Expression, body));
 		}
 
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {

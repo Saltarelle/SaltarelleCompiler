@@ -697,5 +697,11 @@ namespace Saltarelle.Compiler.Tests
 			Assert.That(OutputFormatter.Format(new JsContinueStatement()), Is.EqualTo("continue;\r\n"));
 			Assert.That(OutputFormatter.Format(new JsContinueStatement("someLabel")), Is.EqualTo("continue someLabel;\r\n"));
 		}
+
+		[Test]
+		public void DoWhileStatementIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsDoWhileStatement(JsExpression.True, new JsBlockStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("x", JsExpression.Number(0)))))),
+			            Is.EqualTo("do {\r\n\tvar x = 0;\r\n} while (true);\r\n"));
+		}
     }
 }
