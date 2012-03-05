@@ -499,8 +499,16 @@ namespace Saltarelle.Compiler
 			return null;
     	}
 
-    	public object Visit(JsReturnStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsReturnStatement statement, bool addNewline) {
+    		_cb.Append("return");
+			if (statement.Value != null) {
+				_cb.Append(" ");
+				Visit(statement.Value, false);
+			}
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
     	}
 
     	public object Visit(JsSwitchStatement statement, bool data) {

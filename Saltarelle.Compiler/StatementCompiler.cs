@@ -233,6 +233,17 @@ namespace Saltarelle.Compiler {
 			_result.Add(new JsDoWhileStatement(compiledCondition.Expression, body));
 		}
 
+		public override void VisitReturnStatement(ReturnStatement returnStatement) {
+			if (!returnStatement.Expression.IsNull) {
+				var expr = CompileExpression(returnStatement.Expression, true);
+				_result.AddRange(expr.AdditionalStatements);
+				_result.Add(new JsReturnStatement(expr.Expression));
+			}
+			else {
+				_result.Add(new JsReturnStatement());
+			}
+		}
+
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
 		}
@@ -258,10 +269,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitLockStatement(LockStatement lockStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitReturnStatement(ReturnStatement returnStatement) {
 			throw new NotImplementedException();
 		}
 

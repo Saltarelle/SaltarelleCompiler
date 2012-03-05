@@ -703,5 +703,11 @@ namespace Saltarelle.Compiler.Tests
 			Assert.That(OutputFormatter.Format(new JsDoWhileStatement(JsExpression.True, new JsBlockStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("x", JsExpression.Number(0)))))),
 			            Is.EqualTo("do {\r\n\tvar x = 0;\r\n} while (true);\r\n"));
 		}
+
+		[Test]
+		public void ReturnStatementWithOrWithoutExpressionIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsReturnStatement(null)), Is.EqualTo("return;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsReturnStatement(JsExpression.Identifier("x"))), Is.EqualTo("return x;\r\n"));
+		}
     }
 }
