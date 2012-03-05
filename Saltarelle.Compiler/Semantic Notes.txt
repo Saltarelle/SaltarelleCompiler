@@ -1,0 +1,2 @@
+﻿foreach does not dispose iterator.
+checked/unchecked statements and expressions have no effect.
