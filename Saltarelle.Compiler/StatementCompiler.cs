@@ -191,5 +191,17 @@ namespace Saltarelle.Compiler {
 				_result = oldResult;
 			}
 		}
+
+		public override void VisitBreakStatement(BreakStatement breakStatement) {
+			_result.Add(new JsBreakStatement());
+		}
+
+		public override void VisitContinueStatement(ContinueStatement continueStatement) {
+			_result.Add(new JsContinueStatement());
+		}
+
+		public override void VisitEmptyStatement(EmptyStatement emptyStatement) {
+			_result.Add(new JsEmptyStatement());
+		}
 	}
 }

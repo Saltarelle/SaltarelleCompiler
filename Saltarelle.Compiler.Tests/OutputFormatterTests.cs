@@ -691,5 +691,11 @@ namespace Saltarelle.Compiler.Tests
 			Assert.That(OutputFormatter.Format(new JsBreakStatement()), Is.EqualTo("break;\r\n"));
 			Assert.That(OutputFormatter.Format(new JsBreakStatement("someLabel")), Is.EqualTo("break someLabel;\r\n"));
 		}
+
+		[Test]
+		public void ContinueStatementIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsContinueStatement()), Is.EqualTo("continue;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsContinueStatement("someLabel")), Is.EqualTo("continue someLabel;\r\n"));
+		}
     }
 }

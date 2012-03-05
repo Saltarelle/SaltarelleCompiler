@@ -369,5 +369,48 @@ public void M() {
 	$i = 1;
 ");
 		}
+
+		[Test]
+		public void BreakStatementWorks() {
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	for (int i = 0; i < 10; i++) {
+		// BEGIN
+		break;
+		// END
+	}
+}",
+@"		break;
+");
+		}
+
+		[Test]
+		public void ContinueStatementWorks() {
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	for (int i = 0; i < 10; i++) {
+		// BEGIN
+		continue;
+		// END
+	}
+}",
+@"		continue;
+");
+		}
+
+		[Test]
+		public void EmptyStatementWorks() {
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	// BEGIN
+	;
+	// END
+}",
+@"	;
+");
+		}
 	}
 }

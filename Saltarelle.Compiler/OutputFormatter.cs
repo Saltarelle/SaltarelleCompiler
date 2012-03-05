@@ -429,7 +429,13 @@ namespace Saltarelle.Compiler
     	}
 
     	public object Visit(JsContinueStatement statement, bool addNewline) {
-    		throw new NotImplementedException();
+			_cb.Append("continue");
+			if (statement.TargetLabel != null)
+				_cb.Append(" ").Append(statement.TargetLabel);
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
     	}
 
     	public object Visit(JsDoWhileStatement statement, bool addNewline) {
