@@ -40,6 +40,13 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             }
         }
 
+        public bool BooleanValue {
+            get {
+                if (NodeType != ExpressionNodeType.Boolean) throw new InvalidOperationException();
+                return (bool)_value;
+            }
+        }
+
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
             return visitor.Visit(this, data);
@@ -65,11 +72,19 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             _value = value;
         }
 
+        private JsConstantExpression(bool value) : base(ExpressionNodeType.Boolean) {
+            _value = value;
+        }
+
         private JsConstantExpression() : base(ExpressionNodeType.Null) {
         }
 
         private static readonly JsConstantExpression _null = new JsConstantExpression();
+        private static readonly JsConstantExpression _true = new JsConstantExpression(true);
+        private static readonly JsConstantExpression _false = new JsConstantExpression(false);
 
         public static new JsConstantExpression Null { get { return _null; } }
+		public static new JsConstantExpression True { get { return _true; } }
+		public static new JsConstantExpression False { get { return _false; } }
     }
 }

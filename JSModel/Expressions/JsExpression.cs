@@ -52,6 +52,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         // Constants
         Number,
         String,
+		Boolean,
         Regexp,
         Null,
         // /Constants
@@ -284,6 +285,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         }
 
         public static JsConstantExpression Null { get { return JsConstantExpression.Null; } }
+        public static JsConstantExpression True { get { return JsConstantExpression.True; } }
+        public static JsConstantExpression False { get { return JsConstantExpression.False; } }
 
         public static JsFunctionDefinitionExpression FunctionDefinition(IEnumerable<string> parameterNames, JsStatement body, string name = null) {
             return new JsFunctionDefinitionExpression(parameterNames, body, name);

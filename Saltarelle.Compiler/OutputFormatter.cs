@@ -113,6 +113,9 @@ namespace Saltarelle.Compiler
                 case ExpressionNodeType.String:
                     _cb.Append("'" + expression.StringValue.EscapeJavascriptStringLiteral() + "'");
                     break;
+				case ExpressionNodeType.Boolean:
+					_cb.Append(expression.BooleanValue ? "true" : "false");
+					break;
                 default:
                     throw new ArgumentException("expression");
             }
@@ -416,7 +419,13 @@ namespace Saltarelle.Compiler
     	}
 
     	public object Visit(JsBreakStatement statement, bool addNewline) {
-    		throw new NotImplementedException();
+			_cb.Append("break");
+			if (statement.TargetLabel != null)
+				_cb.Append(" ").Append(statement.TargetLabel);
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
     	}
 
     	public object Visit(JsContinueStatement statement, bool addNewline) {
@@ -465,8 +474,16 @@ namespace Saltarelle.Compiler
 			return null;
     	}
 
-    	public object Visit(JsIfStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsIfStatement statement, bool addNewline) {
+			_cb.Append("if (");
+			Visit(statement.Test, false);
+			_cb.Append(") ");
+			Visit(statement.Then, statement.Else != null || addNewline);
+			if (statement.Else != null) {
+				_cb.Append("else ");
+				Visit(statement.Else, addNewline);
+			}
+			return null;
     	}
 
     	public object Visit(JsReturnStatement statement, bool data) {

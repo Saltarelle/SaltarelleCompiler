@@ -163,7 +163,7 @@ public void M() {
 	// END
 }",
 @"	for ($i = 0, $j = 1; $i < 10; $i++) {
-		var $k = $i;
+		var $k = 0;
 	}
 ");
 		}
@@ -171,15 +171,19 @@ public void M() {
 		[Test]
 		public void ForStatementWithVariableDeclarationInitializersRequiringMultipleStatementsWork() {
 			AssertCorrect(
-@"public void M() {
+@"public int SomeProperty { get; set; }
+public void M() {
 	// BEGIN
 	for (int i = (SomeProperty = 1), j = 2, k = 3, l = (SomeProperty = i), m = 4; i < 10; i++) {
 		int x = 0;
 	}
 	// END
 }",
-@"	for ($i = 0, $j = 1; $i < 10; $i++) {
-		var $k = $i;
+@"	this.set_SomeProperty(1);
+	var $i = 1, $j = 2, $k = 3;
+	this.set_SomeProperty($i);
+	for (var $l = $i, $m = 4; $i < 10; $i++) {
+		var $x = 0;
 	}
 ");
 		}
@@ -187,7 +191,8 @@ public void M() {
 		[Test]
 		public void ForStatementWithExpressionInitializersRequiringMultipleStatementsWork() {
 			AssertCorrect(
-@"public void M() {
+@"public int SomeProperty { get; set; }
+public void M() {
 	int i, j, k, l, m;
 	// BEGIN
 	for (i = (SomeProperty = 1), j = 2, k = 3, l = (SomeProperty = i), m = 4; i < 10; i++) {
@@ -195,8 +200,11 @@ public void M() {
 	}
 	// END
 }",
-@"	for ($i = 0, $j = 1; $i < 10; $i++) {
-		var $k = $i;
+@"	this.set_SomeProperty(1);
+	$i = 1, $j = 2, $k = 3;
+	this.set_SomeProperty($i);
+	for ($l = $i, $m = 4; $i < 10; $i++) {
+		var $x = 0;
 	}
 ");
 		}
@@ -219,7 +227,7 @@ public void M() {
 		}
 
 		[Test]
-		public void ForStatementWithoutTestWorks() {
+		public void ForStatementWithoutConditionWorks() {
 			AssertCorrect(
 @"public void M() {
 	// BEGIN
@@ -284,23 +292,49 @@ public void M() {
 		}
 
 		[Test]
-		public void ForStatementWithNonDeclarationInitializerThatNeedExtraStatementsWorks() {
-			Assert.Inconclusive("TODO: Fix and test");
+		public void ForStatementWithConditionThatNeedExtraStatementsWorks() {
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	// BEGIN
+	for (int i = 0; i < (SomeProperty = 1); i++) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for (var $i = 0;; $i++) {
+		this.set_SomeProperty(1);
+		if (!($i < 1)) {
+			break;
 		}
-
-		[Test]
-		public void ForStatementWithVariableDeclarationInitializerThatNeedExtraStatementsWorks() {
-			Assert.Inconclusive("TODO: Fix and test");
-		}
-
-		[Test]
-		public void ForStatementWithTestThatNeedExtraStatementsWorks() {
-			Assert.Inconclusive("TODO: Fix and test");
+		var $x = 0;
+	}
+");
 		}
 
 		[Test]
 		public void ForStatementWithIteratorThatNeedExtraStatementsWorks() {
-			Assert.Inconclusive("TODO: Fix and test");
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	int i, j, k, l, m;
+	// BEGIN
+	for (i = 0; i < 10; i = (SomeProperty = 1), j = 2, k = 3, l = (SomeProperty = i), m = 4) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for ($i = 0; $i < 10;) {
+		var $x = 0;
+		this.set_SomeProperty(1);
+		$i = 1;
+		$j = 2;
+		$k = 3;
+		this.set_SomeProperty($i);
+		$l = $i;
+		$m = 4;
+	}
+");
 		}
 	}
 }

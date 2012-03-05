@@ -16,8 +16,16 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public JsBlockStatement(params JsStatement[] statements) : this((IEnumerable<JsStatement>)statements) {
         }
 
-        public static JsBlockStatement MakeBlock(JsStatement content) {
-            return content as JsBlockStatement ?? new JsBlockStatement(content);
+        /// <summary>
+        /// Convert a statement to a block statement. Returns null if the input is null.
+        /// </summary>
+		public static JsBlockStatement MakeBlock(JsStatement content) {
+			if (content == null)
+				return null;
+			else if (content is JsBlockStatement)
+				return (JsBlockStatement)content;
+			else
+				return new JsBlockStatement(content);
         }
 
         private static readonly JsBlockStatement _emptyStatement = new JsBlockStatement(new JsStatement[0]);

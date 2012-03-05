@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler {
 
 		private List<JsStatement> _additionalStatements;
 
-		public Result Compile(ResolveResult expression) {
+		public Result Compile(ResolveResult expression, bool returnValueIsImportant) {
 			_additionalStatements = new List<JsStatement>();
 			var expr = VisitResolveResult(expression, null);
 			return new Result(expr, _additionalStatements);

@@ -272,6 +272,12 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
+        public void BooleanLiteralsWork() {
+            Assert.That(OutputFormatter.Format(JsExpression.True), Is.EqualTo("true"));
+            Assert.That(OutputFormatter.Format(JsExpression.False), Is.EqualTo("false"));
+        }
+
+        [Test]
         public void NumbersAreCorrectlyRepresented() {
             Assert.That(OutputFormatter.Format(JsExpression.Number(1)), Is.EqualTo("1"));
             Assert.That(OutputFormatter.Format(JsExpression.Number(1.25)), Is.EqualTo("1.25"));
@@ -670,6 +676,20 @@ namespace Saltarelle.Compiler.Tests
 		[Test]
 		public void EmptyStatementIsCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsEmptyStatement()), Is.EqualTo(";\r\n"));
+		}
+
+		[Test]
+		public void IfStatementIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsIfStatement(JsExpression.True, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), null)),
+			            Is.EqualTo("if (true) {\r\n\ti = 0;\r\n}\r\n"));
+			Assert.That(OutputFormatter.Format(new JsIfStatement(JsExpression.True, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1))))),
+			            Is.EqualTo("if (true) {\r\n\ti = 0;\r\n}\r\nelse {\r\n\ti = 1;\r\n}\r\n"));
+		}
+
+		[Test]
+		public void BreakStatementIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsBreakStatement()), Is.EqualTo("break;\r\n"));
+			Assert.That(OutputFormatter.Format(new JsBreakStatement("someLabel")), Is.EqualTo("break someLabel;\r\n"));
 		}
     }
 }
