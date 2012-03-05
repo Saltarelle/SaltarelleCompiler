@@ -233,6 +233,29 @@ namespace Saltarelle.Compiler {
 			_result.Add(new JsDoWhileStatement(compiledCondition.Expression, body));
 		}
 
+		public override void VisitWhileStatement(WhileStatement whileStatement) {
+			// Condition
+			JsExpression condition;
+			List<JsStatement> preBody = null;
+			var compiledCondition = CompileExpression(whileStatement.Condition, true);
+			if (compiledCondition.AdditionalStatements.Count == 0) {
+				condition = compiledCondition.Expression;
+			}
+			else {
+				// The condition requires additional statements. Transform "while ((SomeProperty = 1) < 0) { ... }" to "while (true) { this.set_SomeProperty(1); if (!(i < 1)) { break; } ... }
+				preBody = new List<JsStatement>();
+				preBody.AddRange(compiledCondition.AdditionalStatements);
+				preBody.Add(new JsIfStatement(JsExpression.LogicalNot(compiledCondition.Expression), new JsBreakStatement(), null));
+				condition = JsExpression.True;
+			}
+
+			var body = CreateInnerCompiler().Compile(whileStatement.EmbeddedStatement);
+			if (preBody != null)
+				body = new JsBlockStatement(preBody.Concat(body.Statements));
+
+			_result.Add(new JsWhileStatement(condition, body));
+		}
+
 		public override void VisitReturnStatement(ReturnStatement returnStatement) {
 			if (!returnStatement.Expression.IsNull) {
 				var expr = CompileExpression(returnStatement.Expression, true);
@@ -289,10 +312,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitUsingStatement(UsingStatement usingStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitWhileStatement(WhileStatement whileStatement) {
 			throw new NotImplementedException();
 		}
 

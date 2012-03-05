@@ -542,8 +542,12 @@ namespace Saltarelle.Compiler
 			return null;
     	}
 
-    	public object Visit(JsWhileStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsWhileStatement statement, bool addNewline) {
+			_cb.Append("while (");
+			Visit(statement.Condition, false);
+			_cb.Append(") ");
+			Visit(statement.Body, addNewline);
+			return null;
     	}
 
     	public object Visit(JsWithStatement statement, bool data) {
