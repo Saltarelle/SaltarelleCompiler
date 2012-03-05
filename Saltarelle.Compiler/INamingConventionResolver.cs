@@ -59,5 +59,11 @@ namespace Saltarelle.Compiler {
         /// Gets the name of a variable, constrained to not used any of the names in the supplied set. Must not return null.
         /// </summary>
         string GetVariableName(IVariable variable, ISet<string> usedNames);
+
+		/// <summary>
+		/// Gets the name of a temporary variable.
+		/// </summary>
+		/// <param name="index">The first temporary variable in a method will have index 0, the second will have index 1, and so on.</param>
+		string GetTemporaryVariableName(int index);
     }
 }

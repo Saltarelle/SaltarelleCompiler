@@ -18,8 +18,6 @@ namespace Saltarelle.Compiler {
         internal IDictionary<IVariable, VariableData> variables;
         internal List<NestedFunctionData> nestedFunctions;
 
-		private List<JsStatement> result;
-
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver) {
             _namingConvention = namingConvention;
             _errorReporter = errorReporter;

@@ -53,6 +53,7 @@ namespace Saltarelle.Compiler.Tests {
                                                                                 i++;
                                                                              return baseName + i.ToString(CultureInfo.InvariantCulture);
                                                                          };
+				GetTemporaryVariableName                  = index => string.Format(CultureInfo.InvariantCulture, "$tmp{0}", index + 1);
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -66,6 +67,7 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IEvent, FieldImplOptions> GetAutoEventBackingFieldImplementation { get; set; }
             public Func<IField, string> GetEnumValueName { get; set; }
             public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
+			public Func<int, string> GetTemporaryVariableName { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
                 return GetTypeName(typeDefinition);
@@ -110,6 +112,10 @@ namespace Saltarelle.Compiler.Tests {
             string INamingConventionResolver.GetVariableName(IVariable variable, ISet<string> usedNames) {
                 return GetVariableName(variable, usedNames);
             }
+
+			string INamingConventionResolver.GetTemporaryVariableName(int index) {
+				return GetTemporaryVariableName(index);
+			}
         }
 
         protected class MockErrorReporter : IErrorReporter {

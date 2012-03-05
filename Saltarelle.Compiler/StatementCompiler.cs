@@ -19,22 +19,25 @@ namespace Saltarelle.Compiler {
 		private readonly IDictionary<IVariable, VariableData> _variables;
 		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly ExpressionCompiler _expressionCompiler;
+		private SharedValue<int> _nextTemporaryVariableIndex;
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions) {
-			_namingConvention   = namingConvention;
-			_errorReporter      = errorReporter;
-			_compilation        = compilation;
-			_resolver           = resolver;
-			_variables          = variables;
-			_nestedFunctions    = nestedFunctions;
-			_expressionCompiler = new ExpressionCompiler(_namingConvention, _variables);
-			_result             = new List<JsStatement>();
+		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions)
+			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, null, null)
+		{
 		}
 
-		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions);
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex) {
+			_namingConvention           = namingConvention;
+			_errorReporter              = errorReporter;
+			_compilation                = compilation;
+			_resolver                   = resolver;
+			_variables                  = variables;
+			_nestedFunctions            = nestedFunctions;
+			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(namingConvention, variables, _nextTemporaryVariableIndex);
+			_result                     = new List<JsStatement>();
 		}
 
 		public JsBlockStatement Compile(Statement statement) {
@@ -43,6 +46,17 @@ namespace Saltarelle.Compiler {
 				return (JsBlockStatement)_result[0];
 			else
 				return new JsBlockStatement(_result);
+		}
+
+		private StatementCompiler CreateInnerCompiler() {
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _expressionCompiler, _nextTemporaryVariableIndex);
+		}
+
+		private LocalResolveResult CreateTemporaryVariable(IType type) {
+			string name = _namingConvention.GetTemporaryVariableName(_nextTemporaryVariableIndex.Value++);
+			IVariable variable = new SimpleVariable(new DomRegion(), type, name);
+			_variables[variable] = new VariableData(name, null, false);
+			return new LocalResolveResult(variable);
 		}
 
 		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {
@@ -274,11 +288,46 @@ namespace Saltarelle.Compiler {
 			lockStatement.EmbeddedStatement.AcceptVisitor(this);
 		}
 
-		public override void VisitFixedStatement(FixedStatement fixedStatement) {
-			throw new NotImplementedException();
+		private CSharpInvocationResolveResult ResolveGetEnumeratorInvocation(ResolveResult target) {
+			var method = target.Type.GetMethods().Single(m => m.Name == "GetEnumerator" && m.TypeParameters.Count == 0 && m.Parameters.Count == 0);
+			return new CSharpInvocationResolveResult(target, method, new ResolveResult[0]);
+		}
+
+		private ResolveResult ResolveMoveNextInvocation(ResolveResult target) {
+			var method = target.Type.GetMethods().Single(m => m.Name == "MoveNext" && m.TypeParameters.Count == 0 && m.Parameters.Count == 0);
+			return new CSharpInvocationResolveResult(target, method, new ResolveResult[0]);
+		}
+
+		private ResolveResult ResolveCurrentPropertyRead(ResolveResult target) {
+			var property = target.Type.GetProperties().Single(p => p.Name == "Current");
+			return new MemberResolveResult(target, property);
 		}
 
 		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
+			var resolved = _resolver.Resolve(foreachStatement.InExpression);
+			var getEnumeratorCall = ResolveGetEnumeratorInvocation(resolved);
+			var expr = _expressionCompiler.Compile(getEnumeratorCall, true);
+			_result.AddRange(expr.AdditionalStatements);
+			var enumerator = CreateTemporaryVariable(getEnumeratorCall.Member.ReturnType);
+			_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(enumerator.Variable.Name, expr.Expression)));
+
+			var moveNextInvocation = ResolveMoveNextInvocation(enumerator);
+			var condition = _expressionCompiler.Compile(moveNextInvocation, true);
+			if (condition.AdditionalStatements.Count > 0)
+				_errorReporter.Error("MoveNext() invocation is not allowed to require additional statements.");
+
+			var getCurrent = ResolveCurrentPropertyRead(enumerator);
+			var getCurrentCompiled = _expressionCompiler.Compile(getCurrent, true);
+			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
+			var preBody = getCurrentCompiled.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrentCompiled.Expression)) });
+			var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
+
+			body = new JsBlockStatement(preBody.Concat(body.Statements));
+
+			_result.Add(new JsWhileStatement(condition.Expression, body));
+		}
+
+		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
 		}
 

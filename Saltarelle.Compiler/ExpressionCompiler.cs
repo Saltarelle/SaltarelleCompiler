@@ -14,6 +14,7 @@ namespace Saltarelle.Compiler {
 	public class ExpressionCompiler : ResolveResultVisitor<JsExpression, object> {
 		private readonly INamingConventionResolver _namingConvention;
 		private readonly IDictionary<IVariable, VariableData> _variables;
+		private readonly SharedValue<int> _nextTemporaryVariableIndex;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -25,9 +26,10 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(INamingConventionResolver namingConvention, IDictionary<IVariable, VariableData> variables) {
+		public ExpressionCompiler(INamingConventionResolver namingConvention, IDictionary<IVariable, VariableData> variables, SharedValue<int> nextTemporaryVariableIndex) {
 			_namingConvention = namingConvention;
 			_variables = variables;
+			_nextTemporaryVariableIndex = nextTemporaryVariableIndex;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -88,6 +90,13 @@ namespace Saltarelle.Compiler {
 
 		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, object data) {
 			return JsExpression.This;
+		}
+
+		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, object data) {
+			if (rr.Member is IProperty) {
+				return JsExpression.Invocation(JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, false), "get_" + rr.Member.Name));
+			}
+			return base.VisitMemberResolveResult(rr, data);
 		}
 	}
 }

@@ -668,5 +668,46 @@ public void M() {
 	return 1;
 ");
 		}
+
+		[Test]
+		public void ForeachStatementThatDoesNotRequireExtraStatementsForInitializerWorks() {
+			AssertCorrect(
+@"public void M() {
+	System.Collections.Generic.List<int> list = null;
+	// BEGIN
+	foreach (var item in list) {
+		int x = 0;
+	}
+	// END
+}",
+@"	var $tmp1 = $list.GetEnumerator();
+	while ($tmp1.MoveNext()) {
+		var $item = $tmp1.get_Current();
+		var $x = 0;
+	}
+");
+		}
+
+		[Test]
+		public void ForeachStatementThatDoesRequireExtraStatementsForInitializerWorks() {
+			AssertCorrect(
+@"public System.Collections.Generic.List<int> SomeProperty { get; set; }
+public System.Collections.Generic.List<int> Method(System.Collections.Generic.List<int> l) { return null; }
+public void M() {
+	System.Collections.Generic.List<int> list = null;
+	// BEGIN
+	foreach (var item in (Method(SomeProperty = list))) {
+		int x = 0;
+	}
+	// END
+}",
+@"	this.set_SomeProperty($list);
+	var $tmp1 = (this.Method($list)).GetEnumerator();
+	while ($tmp1.MoveNext()) {
+		var $item = $tmp1.get_Current();
+		var $x = 0;
+	}
+");
+		}
 	}
 }

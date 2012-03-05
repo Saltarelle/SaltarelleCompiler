@@ -62,6 +62,8 @@
     <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="IResolveResultVisitor.cs" />
     <Compile Include="ISourceFile.cs" />
+    <Compile Include="SharedValue.cs" />
+    <Compile Include="SimpleVariable.cs" />
     <Compile Include="StatementCompiler.cs" />
     <Compile Include="MethodCompiler.cs" />
     <Compile Include="MethodImplOptions.cs" />
