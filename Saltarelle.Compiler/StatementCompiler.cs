@@ -215,7 +215,11 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitCheckedStatement(CheckedStatement checkedStatement) {
-			throw new NotImplementedException();
+			checkedStatement.Body.AcceptVisitor(this);
+		}
+
+		public override void VisitUncheckedStatement(UncheckedStatement uncheckedStatement) {
+			uncheckedStatement.Body.AcceptVisitor(this);
 		}
 
 		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
@@ -263,10 +267,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitTryCatchStatement(TryCatchStatement tryCatchStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitUncheckedStatement(UncheckedStatement uncheckedStatement) {
 			throw new NotImplementedException();
 		}
 

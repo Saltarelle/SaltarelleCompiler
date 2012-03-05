@@ -483,5 +483,39 @@ public void M() {
 	}
 ");
 		}
+
+		[Test]
+		public void CheckedStatementActsAsABlockStatement() {
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	// BEGIN
+	checked {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $x = 0;
+	}
+");
+		}
+
+		[Test]
+		public void UncheckedStatementActsAsABlockStatement() {
+			AssertCorrect(
+@"public int SomeProperty { get; set; }
+public void M() {
+	// BEGIN
+	unchecked {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $x = 0;
+	}
+");
+		}
 	}
 }
