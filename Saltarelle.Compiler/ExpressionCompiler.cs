@@ -82,7 +82,11 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, object data) {
-			// TODO: Obviously not how it should be
+			// TODO: Not finished
+			return JsExpression.Invocation(JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), rr.Member.Name), rr.Arguments.Select(a => VisitResolveResult(a, true)));
+		}
+
+		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, object data) {
 			return JsExpression.This;
 		}
 	}

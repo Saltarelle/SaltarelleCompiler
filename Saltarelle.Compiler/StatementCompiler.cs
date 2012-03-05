@@ -267,6 +267,13 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		public override void VisitLockStatement(LockStatement lockStatement) {
+			var expr = CompileExpression(lockStatement.Expression, false);
+			_result.AddRange(expr.AdditionalStatements);
+			_result.Add(new JsExpressionStatement(expr.Expression));
+			lockStatement.EmbeddedStatement.AcceptVisitor(this);
+		}
+
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
 		}
@@ -288,10 +295,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitLabelStatement(LabelStatement labelStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitLockStatement(LockStatement lockStatement) {
 			throw new NotImplementedException();
 		}
 

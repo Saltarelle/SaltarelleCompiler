@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
     [Serializable]
@@ -13,6 +14,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             if (arguments == null) throw new ArgumentNullException("arguments");
             Method = method;
             Arguments = arguments.AsReadOnly();
+			if (Arguments.Any(a => a == null)) throw new ArgumentException("All arguments must be non-null", "arguments");
         }
 
         [System.Diagnostics.DebuggerStepThrough]
