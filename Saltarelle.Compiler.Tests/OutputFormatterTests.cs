@@ -639,5 +639,37 @@ namespace Saltarelle.Compiler.Tests
 		public void ExpressionStatementsAreCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsExpressionStatement(JsExpression.This)), Is.EqualTo("this;\r\n"));
 		}
+
+		[Test]
+		public void ForStatementsAreCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsForStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("i", JsExpression.Number(0))),
+			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
+			                                                      JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
+			                                                      JsBlockStatement.EmptyStatement)),
+			            Is.EqualTo("for (var i = 0; i < 10; i++) {\r\n}\r\n"));
+
+			Assert.That(OutputFormatter.Format(new JsForStatement(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), 
+			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
+			                                                      JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
+			                                                      JsBlockStatement.EmptyStatement)),
+			            Is.EqualTo("for (i = 0; i < 10; i++) {\r\n}\r\n"));
+
+			Assert.That(OutputFormatter.Format(new JsForStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", JsExpression.Number(1))),
+			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
+			                                                      JsExpression.Comma(JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")), JsExpression.PostfixPlusPlus(JsExpression.Identifier("j"))),
+			                                                      JsBlockStatement.EmptyStatement)),
+			            Is.EqualTo("for (var i = 0, j = 1; i < 10; i++, j++) {\r\n}\r\n"));
+
+			Assert.That(OutputFormatter.Format(new JsForStatement(new JsEmptyStatement(),
+			                                                      null,
+			                                                      null,
+			                                                      JsBlockStatement.EmptyStatement)),
+			            Is.EqualTo("for (;;) {\r\n}\r\n"));
+		}
+
+		[Test]
+		public void EmptyStatementIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsEmptyStatement()), Is.EqualTo(";\r\n"));
+		}
     }
 }

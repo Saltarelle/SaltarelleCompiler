@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler
 
         public static string Format(JsStatement statement) {
             var fmt = new OutputFormatter();
-            fmt.Visit(statement, false);
+            fmt.Visit(statement, true);
             return fmt._cb.ToString();
         }
 
@@ -395,8 +395,8 @@ namespace Saltarelle.Compiler
             }
         }
 
-    	public object Visit(JsStatement statement, bool data) {
-			return statement.Accept(this, data);
+    	public object Visit(JsStatement statement, bool addNewline) {
+			return statement.Accept(this, addNewline);
     	}
 
     	public object Visit(JsComment comment, bool data) {
@@ -405,42 +405,64 @@ namespace Saltarelle.Compiler
 			return null;
     	}
 
-    	public object Visit(JsBlockStatement statement, bool data) {
+    	public object Visit(JsBlockStatement statement, bool addNewline) {
 			_cb.AppendLine("{").Indent();
 			foreach (var c in statement.Statements)
-				Visit(c, data);
-			_cb.Outdent().AppendLine("}");
+				Visit(c, true);
+			_cb.Outdent().Append("}");
+			if (addNewline)
+				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsBreakStatement statement, bool data) {
+    	public object Visit(JsBreakStatement statement, bool addNewline) {
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsContinueStatement statement, bool data) {
+    	public object Visit(JsContinueStatement statement, bool addNewline) {
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsDoWhileStatement statement, bool data) {
+    	public object Visit(JsDoWhileStatement statement, bool addNewline) {
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsEmptyStatement statement, bool data) {
-    		throw new NotImplementedException();
-    	}
-
-    	public object Visit(JsExpressionStatement statement, bool data) {
-    		Visit(statement.Expression, data);
-			_cb.AppendLine(";");
+    	public object Visit(JsEmptyStatement statement, bool addNewline) {
+    		_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsForEachInStatement statement, bool data) {
+    	public object Visit(JsExpressionStatement statement, bool addNewline) {
+    		Visit(statement.Expression, false);
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
+    	}
+
+    	public object Visit(JsForEachInStatement statement, bool addNewline) {
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsForStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsForStatement statement, bool addNewline) {
+    		_cb.Append("for (");
+			Visit(statement.InitStatement, false);
+
+			if (statement.ConditionExpression != null) {
+				_cb.Append(" ");
+				Visit(statement.ConditionExpression, false);
+			}
+			_cb.Append(";");
+
+			if (statement.IteratorExpression != null) {
+				_cb.Append(" ");
+				Visit(statement.IteratorExpression, false);
+			}
+			_cb.Append(") ");
+			Visit(statement.Body, addNewline);
+			return null;
     	}
 
     	public object Visit(JsIfStatement statement, bool data) {
@@ -463,7 +485,7 @@ namespace Saltarelle.Compiler
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsVariableDeclarationStatement statement, bool data) {
+    	public object Visit(JsVariableDeclarationStatement statement, bool addNewline) {
     		_cb.Append("var ");
 			bool first = true;
 			foreach (var d in statement.Declarations) {
@@ -476,7 +498,9 @@ namespace Saltarelle.Compiler
 				}
 				first = false;
 			}
-			_cb.AppendLine(";");
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
 			return null;
     	}
 

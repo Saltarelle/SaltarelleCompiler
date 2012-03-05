@@ -22,14 +22,18 @@ namespace Saltarelle.Compiler {
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, List<NestedFunctionData> nestedFunctions) {
+		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions) {
 			_namingConvention   = namingConvention;
 			_errorReporter      = errorReporter;
 			_compilation        = compilation;
 			_resolver           = resolver;
 			_variables          = variables;
-			_nestedFunctions    = nestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.ResolveResult);
+			_nestedFunctions    = nestedFunctions;
 			_expressionCompiler = new ExpressionCompiler(_namingConvention, _variables);
+		}
+
+		public StatementCompiler Clone() {
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions);
 		}
 
 		public JsBlockStatement Compile(Statement statement) {
@@ -99,6 +103,58 @@ namespace Saltarelle.Compiler {
 				_result.Add(new JsVariableDeclarationStatement(declarations));
 
 			base.VisitVariableDeclarationStatement(variableDeclarationStatement);
+		}
+
+		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
+			#warning Not finished
+			var compiled = _expressionCompiler.Compile(_resolver.Resolve(expressionStatement.Expression));
+			_result.AddRange(compiled.AdditionalStatements);
+			_result.Add(new JsExpressionStatement(compiled.Expression));
+		}
+
+		public override void VisitForStatement(ForStatement forStatement) {
+			var oldResult = _result;
+			try {
+				// Initializer
+				JsStatement initializer;
+				if (forStatement.Initializers.Count == 1 && forStatement.Initializers.First() is VariableDeclarationStatement) {
+					forStatement.Initializers.First().AcceptVisitor(this);
+					initializer = _result[_result.Count - 1];
+					_result.RemoveAt(_result.Count - 1);
+				}
+				else {
+					JsExpression initExpr = null;
+					foreach (var init in forStatement.Initializers) {
+						var compiledInit = _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)init).Expression));
+						initExpr = (initExpr != null ? JsExpression.Comma(initExpr, compiledInit.Expression) : compiledInit.Expression);
+					}
+					initializer = (initExpr != null ? (JsStatement)new JsExpressionStatement(initExpr) : (JsStatement)new JsEmptyStatement());
+				}
+
+				// Condition
+				JsExpression condition;
+				if (!forStatement.Condition.IsNull) {
+					condition = _expressionCompiler.Compile(_resolver.Resolve(forStatement.Condition)).Expression;
+				}
+				else {
+					condition = null;
+				}
+
+				// Iterators
+				JsExpression iterator = null;
+				foreach (var iter in forStatement.Iterators) {
+					var compiledIter = _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)iter).Expression));
+					iterator = (iterator != null ? JsExpression.Comma(iterator, compiledIter.Expression) : compiledIter.Expression);
+				}
+
+				// Body
+				var body = Clone().Compile(forStatement.EmbeddedStatement);
+
+				oldResult.Add(new JsForStatement(initializer, condition, iterator, body));
+			}
+			finally {
+				_result = oldResult;
+			}
 		}
 	}
 }

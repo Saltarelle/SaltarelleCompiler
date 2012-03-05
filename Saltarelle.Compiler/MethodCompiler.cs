@@ -31,7 +31,8 @@ namespace Saltarelle.Compiler {
             var usedNames    = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
             variables        = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
             nestedFunctions  = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity);
-			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctions);
+			var nestedFunctionsDict = nestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.ResolveResult);
+			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict);
 
             return new JsFunctionDefinitionExpression(method.Parameters.Select(p => variables[p].Name), bodyCompiler.Compile(body), null);
         }

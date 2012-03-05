@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.Statements {
@@ -9,19 +11,17 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public JsStatement InitStatement { get; private set; }
         public JsExpression ConditionExpression { get; private set; }
-        public JsExpression IncrementExpression { get; private set; }
+        public JsExpression IteratorExpression { get; private set; }
         public JsStatement Body { get; private set; }
 
-        public JsForStatement(JsStatement initStatement, JsExpression conditionExpression, JsExpression incrementExpression, JsStatement body) {
+        public JsForStatement(JsStatement initStatement, JsExpression conditionExpression, JsExpression iteratorExpression, JsStatement body) {
             if (initStatement == null) throw new ArgumentNullException("initStatement");
-            if (!(initStatement is JsVariableDeclarationStatement || initStatement is JsExpressionStatement)) throw new ArgumentException("initStatement must be a VariableDeclarationStatement or an ExpressionStatement.", "initStatement");
-            if (conditionExpression == null) throw new ArgumentNullException("conditionExpression");
-            if (incrementExpression == null) throw new ArgumentNullException("incrementExpression");
+            if (!(initStatement is JsEmptyStatement || initStatement is JsVariableDeclarationStatement || initStatement is JsExpressionStatement)) throw new ArgumentException("initStatement must be a VariableDeclarationStatement or an ExpressionStatement.", "initStatement");
             if (body == null) throw new ArgumentNullException("body");
             
             InitStatement       = initStatement;
             ConditionExpression = conditionExpression;
-            IncrementExpression = incrementExpression;
+            IteratorExpression  = iteratorExpression;
             Body                = body;
         }
 

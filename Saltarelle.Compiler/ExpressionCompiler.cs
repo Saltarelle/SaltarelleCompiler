@@ -53,6 +53,7 @@ namespace Saltarelle.Compiler {
 			return JsExpression.Identifier(_variables[rr.Variable].Name);	// Not really, this (might, or it might happen in the step above it) needs to take care of by-ref variables.
 		}
 
+		// TODO: UNTESTED and REALLY hacky, but needed for the statement compiler
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, object data) {
 			if (rr.OperatorType == ExpressionType.Assign) {
 				if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IProperty) {
@@ -65,8 +66,22 @@ namespace Saltarelle.Compiler {
 						return value;
 					}
 				}
+				else {
+					return JsExpression.Assign(VisitResolveResult(rr.Operands[0], data), VisitResolveResult(rr.Operands[1], data));
+				}
+			}
+			else if (rr.OperatorType == ExpressionType.LessThan) {
+				return JsExpression.Binary(ExpressionNodeType.Lesser, VisitResolveResult(rr.Operands[0], data), VisitResolveResult(rr.Operands[1], data));
+			}
+			else if (rr.OperatorType == ExpressionType.PostIncrementAssign) {
+				return JsExpression.PostfixPlusPlus(VisitResolveResult(rr.Operands[0], data));
 			}
 			return base.VisitOperatorResolveResult(rr, data);
+		}
+
+		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, object data) {
+			// TODO: Obviously not how it should be
+			return JsExpression.This;
 		}
 	}
 }
