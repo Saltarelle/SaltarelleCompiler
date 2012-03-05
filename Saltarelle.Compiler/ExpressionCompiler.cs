@@ -44,6 +44,8 @@ namespace Saltarelle.Compiler {
 				return JsExpression.String((string)rr.ConstantValue);
 			else if (rr.ConstantValue is int)
 				return JsExpression.Number((int)rr.ConstantValue);
+			else if (rr.ConstantValue is bool)
+				return (bool)rr.ConstantValue ? JsExpression.True : JsExpression.False;
 			else
 				return JsExpression.Null;
 		}

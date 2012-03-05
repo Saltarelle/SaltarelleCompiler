@@ -30,16 +30,19 @@ namespace Saltarelle.Compiler {
 			_variables          = variables;
 			_nestedFunctions    = nestedFunctions;
 			_expressionCompiler = new ExpressionCompiler(_namingConvention, _variables);
+			_result             = new List<JsStatement>();
 		}
 
-		public StatementCompiler Clone() {
+		public StatementCompiler CreateInnerCompiler() {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions);
 		}
 
 		public JsBlockStatement Compile(Statement statement) {
-			_result = new List<JsStatement>();
 			statement.AcceptVisitor(this);
-			return new JsBlockStatement(_result);
+			if (_result.Count == 1 && _result[0] is JsBlockStatement)
+				return (JsBlockStatement)_result[0];
+			else
+				return new JsBlockStatement(_result);
 		}
 
 		public override void VisitComment(Comment comment) {
@@ -113,83 +116,77 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitForStatement(ForStatement forStatement) {
-			var oldResult = _result;
-			try {
-				// Initializer. In case we need more than one statement, put all other statements just before this loop.
-				JsStatement initializer;
-				if (forStatement.Initializers.Count == 1 && forStatement.Initializers.First() is VariableDeclarationStatement) {
-					forStatement.Initializers.First().AcceptVisitor(this);
-					initializer = _result[_result.Count - 1];
-					_result.RemoveAt(_result.Count - 1);
-				}
-				else {
-					JsExpression initExpr = null;
-					foreach (var init in forStatement.Initializers) {
-						var compiledInit = _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)init).Expression), false);
-						if (compiledInit.AdditionalStatements.Count == 0) {
-							initExpr = (initExpr != null ? JsExpression.Comma(initExpr, compiledInit.Expression) : compiledInit.Expression);
-						}
-						else {
-							if (initExpr != null)
-								_result.Add(new JsExpressionStatement(initExpr));
-							_result.AddRange(compiledInit.AdditionalStatements);
-							initExpr = compiledInit.Expression;
-						}
-					}
-					initializer = (initExpr != null ? (JsStatement)new JsExpressionStatement(initExpr) : (JsStatement)new JsEmptyStatement());
-				}
-
-				// Condition
-				JsExpression condition;
-				List<JsStatement> preBody = null;
-				if (!forStatement.Condition.IsNull) {
-					var compiledCondition = _expressionCompiler.Compile(_resolver.Resolve(forStatement.Condition), true);
-					if (compiledCondition.AdditionalStatements.Count == 0) {
-						condition = compiledCondition.Expression;
+			// Initializer. In case we need more than one statement, put all other statements just before this loop.
+			JsStatement initializer;
+			if (forStatement.Initializers.Count == 1 && forStatement.Initializers.First() is VariableDeclarationStatement) {
+				forStatement.Initializers.First().AcceptVisitor(this);
+				initializer = _result[_result.Count - 1];
+				_result.RemoveAt(_result.Count - 1);
+			}
+			else {
+				JsExpression initExpr = null;
+				foreach (var init in forStatement.Initializers) {
+					var compiledInit = _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)init).Expression), false);
+					if (compiledInit.AdditionalStatements.Count == 0) {
+						initExpr = (initExpr != null ? JsExpression.Comma(initExpr, compiledInit.Expression) : compiledInit.Expression);
 					}
 					else {
-						// The condition requires additional statements. Transform "for (int i = 0; i < (SomeProperty = 1); i++) { ... }" to "for (var i = 0;; i++) { this.set_SomeProperty(1); if (!(i < 1)) { break; } ... }
-						preBody = new List<JsStatement>();
-						preBody.AddRange(compiledCondition.AdditionalStatements);
-						preBody.Add(new JsIfStatement(JsExpression.LogicalNot(compiledCondition.Expression), new JsBreakStatement(), null));
-						condition = null;
+						if (initExpr != null)
+							_result.Add(new JsExpressionStatement(initExpr));
+						_result.AddRange(compiledInit.AdditionalStatements);
+						initExpr = compiledInit.Expression;
 					}
 				}
+				initializer = (initExpr != null ? (JsStatement)new JsExpressionStatement(initExpr) : (JsStatement)new JsEmptyStatement());
+			}
+
+			// Condition
+			JsExpression condition;
+			List<JsStatement> preBody = null;
+			if (!forStatement.Condition.IsNull) {
+				var compiledCondition = _expressionCompiler.Compile(_resolver.Resolve(forStatement.Condition), true);
+				if (compiledCondition.AdditionalStatements.Count == 0) {
+					condition = compiledCondition.Expression;
+				}
 				else {
+					// The condition requires additional statements. Transform "for (int i = 0; i < (SomeProperty = 1); i++) { ... }" to "for (var i = 0;; i++) { this.set_SomeProperty(1); if (!(i < 1)) { break; } ... }
+					preBody = new List<JsStatement>();
+					preBody.AddRange(compiledCondition.AdditionalStatements);
+					preBody.Add(new JsIfStatement(JsExpression.LogicalNot(compiledCondition.Expression), new JsBreakStatement(), null));
 					condition = null;
 				}
+			}
+			else {
+				condition = null;
+			}
 
-				// Iterators
-				JsExpression iterator = null;
-				List<JsStatement> postBody = null;
-				if (forStatement.Iterators.Count > 0) {
-					var compiledIterators = forStatement.Iterators.Select(i => _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)i).Expression), false)).ToList();
-					if (compiledIterators.All(i => i.AdditionalStatements.Count == 0)) {
-						// No additional statements are required, add them as a single comma-separated expression to the JS iterator.
-						iterator = compiledIterators.Aggregate(iterator, (current, i) => (current != null ? JsExpression.Comma(current, i.Expression) : i.Expression));
-					}
-					else {
-						// At least one of the compiled iterators need additional statements. We could add the last expressions that don't need extra statements to the iterators section of the for loop, but for simplicity we'll just add everything to the end of the loop.
-						postBody = new List<JsStatement>();
-						foreach (var i in compiledIterators) {
-							postBody.AddRange(i.AdditionalStatements);
-							postBody.Add(new JsExpressionStatement(i.Expression));
-						}
+			// Iterators
+			JsExpression iterator = null;
+			List<JsStatement> postBody = null;
+			if (forStatement.Iterators.Count > 0) {
+				var compiledIterators = forStatement.Iterators.Select(i => _expressionCompiler.Compile(_resolver.Resolve(((ExpressionStatement)i).Expression), false)).ToList();
+				if (compiledIterators.All(i => i.AdditionalStatements.Count == 0)) {
+					// No additional statements are required, add them as a single comma-separated expression to the JS iterator.
+					iterator = compiledIterators.Aggregate(iterator, (current, i) => (current != null ? JsExpression.Comma(current, i.Expression) : i.Expression));
+				}
+				else {
+					// At least one of the compiled iterators need additional statements. We could add the last expressions that don't need extra statements to the iterators section of the for loop, but for simplicity we'll just add everything to the end of the loop.
+					postBody = new List<JsStatement>();
+					foreach (var i in compiledIterators) {
+						postBody.AddRange(i.AdditionalStatements);
+						postBody.Add(new JsExpressionStatement(i.Expression));
 					}
 				}
-
-				// Body
-				var body = Clone().Compile(forStatement.EmbeddedStatement);
-
-				if (preBody != null || postBody != null) {
-					body = new JsBlockStatement(((IEnumerable<JsStatement>)preBody ?? new JsStatement[0]).Concat(body.Statements).Concat((IEnumerable<JsStatement>)postBody ?? new JsStatement[0]));
-				}
-
-				oldResult.Add(new JsForStatement(initializer, condition, iterator, body));
 			}
-			finally {
-				_result = oldResult;
+
+			// Body
+			var body = CreateInnerCompiler().Compile(forStatement.EmbeddedStatement);
+
+			if (preBody != null || postBody != null) {
+				body = new JsBlockStatement(((IEnumerable<JsStatement>)preBody ?? new JsStatement[0]).Concat(body.Statements).Concat((IEnumerable<JsStatement>)postBody ?? new JsStatement[0]));
 			}
+
+			_result.Add(new JsForStatement(initializer, condition, iterator, body));
 		}
 
 		public override void VisitBreakStatement(BreakStatement breakStatement) {
@@ -202,6 +199,95 @@ namespace Saltarelle.Compiler {
 
 		public override void VisitEmptyStatement(EmptyStatement emptyStatement) {
 			_result.Add(new JsEmptyStatement());
+		}
+
+		public override void VisitIfElseStatement(IfElseStatement ifElseStatement) {
+			var compiledCond = _expressionCompiler.Compile(_resolver.Resolve(ifElseStatement.Condition), true);
+			_result.AddRange(compiledCond.AdditionalStatements);
+			_result.Add(new JsIfStatement(compiledCond.Expression, CreateInnerCompiler().Compile(ifElseStatement.TrueStatement), !ifElseStatement.FalseStatement.IsNull ? CreateInnerCompiler().Compile(ifElseStatement.FalseStatement) : null));
+		}
+
+		public override void VisitBlockStatement(BlockStatement blockStatement) {
+			var innerCompiler = CreateInnerCompiler();
+			foreach (var c in blockStatement.Children)
+				c.AcceptVisitor(innerCompiler);
+			_result.Add(new JsBlockStatement(innerCompiler._result));
+		}
+
+		public override void VisitCheckedStatement(CheckedStatement checkedStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitFixedStatement(FixedStatement fixedStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitGotoStatement(GotoStatement gotoStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitLabelStatement(LabelStatement labelStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitLockStatement(LockStatement lockStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitReturnStatement(ReturnStatement returnStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitThrowStatement(ThrowStatement throwStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitTryCatchStatement(TryCatchStatement tryCatchStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitUncheckedStatement(UncheckedStatement uncheckedStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitUnsafeStatement(UnsafeStatement unsafeStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitUsingStatement(UsingStatement usingStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitWhileStatement(WhileStatement whileStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
+			throw new NotImplementedException();
+		}
+
+		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
+			throw new NotImplementedException();
 		}
 	}
 }
