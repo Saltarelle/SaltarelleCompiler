@@ -87,7 +87,7 @@ namespace Saltarelle.Compiler {
 
         private JsConstructedType ConvertPotentiallyGenericType(IType type) {
             if (type is ITypeParameter)
-                return new JsConstructedType(new JsIdentifierExpression(_namingConvention.GetTypeParameterName((ITypeParameter)type)));
+                return new JsConstructedType(JsExpression.Identifier(_namingConvention.GetTypeParameterName((ITypeParameter)type)));
 
             var unconstructed = new JsTypeReferenceExpression(type.GetDefinition());
             if (type is ParameterizedType)
@@ -332,12 +332,12 @@ namespace Saltarelle.Compiler {
 
         private JsFunctionDefinitionExpression CompileDelegatingMethod(IMethod method) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileDefaultConstructorWithoutImplementation(IMethod method, ConstructorImplOptions options) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, Statement body, IMethod method, MethodImplOptions options) {
@@ -348,27 +348,27 @@ namespace Saltarelle.Compiler {
         }
 
         private JsFunctionDefinitionExpression CompileConstructor(EntityDeclaration node, IMethod method, ConstructorImplOptions options) {
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, FieldImplOptions backingField) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileAutoPropertySetter(IProperty property, FieldImplOptions backingField) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileAutoEventAdder(IEvent evt, FieldImplOptions backingField) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsFunctionDefinitionExpression CompileAutoEventRemover(IEvent evt, FieldImplOptions backingField) {
             // BIG TODO.
-            return new JsFunctionDefinitionExpression(new string[0], JsBlockStatement.EmptyStatement);
+            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
         }
 
         private JsExpression CreateDefaultInitializer(IType type) {

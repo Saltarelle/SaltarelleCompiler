@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         /// </summary>
         public string Name { get; private set; }
 
-        public JsFunctionDefinitionExpression(IEnumerable<string> parameterNames, JsStatement body, string name = null) : base(ExpressionNodeType.FunctionDefinition) {
+        internal JsFunctionDefinitionExpression(IEnumerable<string> parameterNames, JsStatement body, string name = null) : base(ExpressionNodeType.FunctionDefinition) {
             if (parameterNames == null) throw new ArgumentNullException("parameterNames");
             if (body == null) throw new ArgumentNullException("body");
             if (name != null && !name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");

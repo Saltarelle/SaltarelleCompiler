@@ -11,19 +11,21 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler
 {
     public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
-        private readonly CodeBuilder _cb = new CodeBuilder();
+    	private readonly bool _allowIntermediates;
+    	private readonly CodeBuilder _cb = new CodeBuilder();
 
-        private OutputFormatter() {
-        }
+        private OutputFormatter(bool allowIntermediates) {
+			_allowIntermediates = allowIntermediates;
+		}
 
-        public static string Format(JsExpression expression) {
-            var fmt = new OutputFormatter();
+    	public static string Format(JsExpression expression, bool allowIntermediates = false) {
+            var fmt = new OutputFormatter(allowIntermediates);
             fmt.Visit(expression, false);
             return fmt._cb.ToString();
         }
 
-        public static string Format(JsStatement statement) {
-            var fmt = new OutputFormatter();
+        public static string Format(JsStatement statement, bool allowIntermediates = false) {
+            var fmt = new OutputFormatter(allowIntermediates);
             fmt.Visit(statement, true);
             return fmt._cb.ToString();
         }
@@ -214,11 +216,14 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(JsTypeReferenceExpression expression, bool data) {
-            throw new NotSupportedException("TypeReferenceExpressions should not occur in the output stage");
+        public object Visit(JsTypeReferenceExpression expression, bool parenthesized) {
+			if (!_allowIntermediates)
+				throw new NotSupportedException("TypeReferenceExpressions should not occur in the output stage");
+			_cb.Append("{").Append(expression.TypeDefinition.FullName).Append("}");
+			return null;
         }
 
-        public object Visit(JsThisExpression expression, bool data) {
+        public object Visit(JsThisExpression expression, bool parenthesized) {
             _cb.Append("this");
 			return null;
         }
@@ -519,8 +524,18 @@ namespace Saltarelle.Compiler
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsTryCatchFinallyStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsTryCatchFinallyStatement statement, bool addNewline) {
+			_cb.Append("try ");
+			Visit(statement.GuardedStatement, true);
+			if (statement.Catch != null) {
+				_cb.AppendFormat("catch ({0}) ", statement.Catch.Identifier);
+				Visit(statement.Catch.Body, addNewline || statement.Finally != null);
+			}
+			if (statement.Finally != null) {
+				_cb.AppendFormat("finally ");
+				Visit(statement.Finally, addNewline);
+			}
+			return null;
     	}
 
     	public object Visit(JsVariableDeclarationStatement statement, bool addNewline) {

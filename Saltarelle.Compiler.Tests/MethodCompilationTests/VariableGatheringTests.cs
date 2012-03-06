@@ -111,12 +111,13 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
+				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
                 .Equal(new[] { "$i", "$a", "$i2", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("Using not yet implemented")]
         public void VariableDeclaredInUsingStatementIsCorrectlyRegistered() {
             CompileMethod(@"
                 public void M() {
@@ -137,7 +138,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("Using not yet implemented")]
         public void UsingStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
             CompileMethod(@"
                 public void M() {
@@ -156,7 +157,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("Try/catch not yet implemented")]
         public void VariableDeclaredInCatchBlockIsCorrectlyRegistered() {
             CompileMethod(@"
                 public void M() {
@@ -190,7 +191,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("Try/catch not yet implemented")]
         public void CatchBlockWithoutVariableDeclarationDoesNotCauseRegistration() {
             CompileMethod(@"
                 public void M() {
@@ -211,7 +212,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("Try/catch not yet implemented")]
         public void CatchAllBlockWorks() {
             CompileMethod(@"
                 public void M() {

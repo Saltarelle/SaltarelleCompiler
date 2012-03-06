@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler {
 			var nestedFunctionsDict = nestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.ResolveResult);
 			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict);
 
-            return new JsFunctionDefinitionExpression(method.Parameters.Select(p => variables[p].Name), bodyCompiler.Compile(body), null);
+            return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), bodyCompiler.Compile(body), null);
         }
     }
 }

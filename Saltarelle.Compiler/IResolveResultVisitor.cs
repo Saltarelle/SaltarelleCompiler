@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler {
         TResult VisitByReferenceResolveResult(ByReferenceResolveResult rr, TData data);
         TResult VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, TData data);
         TResult VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, TData data);
+		TResult VisitTypeResolveResult(TypeResolveResult rr, TData data);
 	}
 
 	public static class ResolveResultVisitorExtensions {
@@ -71,6 +72,9 @@ namespace Saltarelle.Compiler {
             else if (rr is TypeOfResolveResult) {
                 return visitor.VisitTypeOfResolveResult((TypeOfResolveResult)rr, data);
             }
+			else if (rr is TypeResolveResult) {
+				return visitor.VisitTypeResolveResult((TypeResolveResult)rr, data);
+			}
             else {
                 return visitor.VisitDefaultResolveResult(rr, data);
             }

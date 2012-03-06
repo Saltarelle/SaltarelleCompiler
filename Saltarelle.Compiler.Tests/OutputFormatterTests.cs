@@ -715,5 +715,15 @@ namespace Saltarelle.Compiler.Tests
 			Assert.That(OutputFormatter.Format(new JsReturnStatement(null)), Is.EqualTo("return;\r\n"));
 			Assert.That(OutputFormatter.Format(new JsReturnStatement(JsExpression.Identifier("x"))), Is.EqualTo("return x;\r\n"));
 		}
+
+		[Test]
+		public void TryCatchFinallyStatementWithCatchOrFinallyOrBothWorks() {
+			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), new JsExpressionStatement(JsExpression.Identifier("z")))),
+			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
+			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), null)),
+			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\n"));
+			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z")))),
+			            Is.EqualTo("try {\r\n\tx;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
+		}
     }
 }

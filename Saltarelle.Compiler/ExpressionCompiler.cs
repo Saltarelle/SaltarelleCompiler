@@ -40,7 +40,8 @@ namespace Saltarelle.Compiler {
 			return new Result(expr, _additionalStatements);
 		}
 
-		// TODO: UNTESTED, but needed for the statement compiler.
+		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
+
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, object data) {
 			if (rr.ConstantValue is string)
 				return JsExpression.String((string)rr.ConstantValue);
@@ -52,12 +53,10 @@ namespace Saltarelle.Compiler {
 				return JsExpression.Null;
 		}
 
-		// TODO: UNTESTED, but needed for the statement compiler.
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, object data) {
 			return JsExpression.Identifier(_variables[rr.Variable].Name);	// Not really, this (might, or it might happen in the step above it) needs to take care of by-ref variables.
 		}
 
-		// TODO: UNTESTED and REALLY hacky, but needed for the statement compiler
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, object data) {
 			if (rr.OperatorType == ExpressionType.Assign) {
 				if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IProperty) {
@@ -77,15 +76,24 @@ namespace Saltarelle.Compiler {
 			else if (rr.OperatorType == ExpressionType.LessThan) {
 				return JsExpression.Binary(ExpressionNodeType.Lesser, VisitResolveResult(rr.Operands[0], data), VisitResolveResult(rr.Operands[1], data));
 			}
+			else if (rr.OperatorType == ExpressionType.Add) {
+				return JsExpression.Add(VisitResolveResult(rr.Operands[0], data), VisitResolveResult(rr.Operands[1], data));
+			}
 			else if (rr.OperatorType == ExpressionType.PostIncrementAssign) {
 				return JsExpression.PostfixPlusPlus(VisitResolveResult(rr.Operands[0], data));
 			}
-			return base.VisitOperatorResolveResult(rr, data);
+			throw new NotImplementedException();
 		}
 
 		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, object data) {
-			// TODO: Not finished
-			return JsExpression.Invocation(JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), rr.Member.Name), rr.Arguments.Select(a => VisitResolveResult(a, true)));
+			// Note: This might also represent a constructor.
+			var arguments = rr.Arguments.Select(a => VisitResolveResult(a, true));
+			if (rr.Member is IMethod && ((IMethod)rr.Member).IsConstructor) {
+				return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments);
+			}
+			else {
+				return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+			}
 		}
 
 		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, object data) {
@@ -96,7 +104,53 @@ namespace Saltarelle.Compiler {
 			if (rr.Member is IProperty) {
 				return JsExpression.Invocation(JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, false), "get_" + rr.Member.Name));
 			}
+			else if (rr.Member is IField) {
+				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, false), rr.Member.Name);
+			}
 			return base.VisitMemberResolveResult(rr, data);
+		}
+
+		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, object data) {
+			return VisitResolveResult(rr.Input, data);
+		}
+
+		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, object data) {
+			return JsExpression.ArrayLiteral(rr.InitializerElements.Select(e => VisitResolveResult(e, data)));
+		}
+
+		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, object data) {
+			return VisitResolveResult(rr.ElementResult, data);
+		}
+
+		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, object data) {
+			throw new NotImplementedException();
+		}
+
+		public override JsExpression VisitDefaultResolveResult(ResolveResult rr, object data) {
+			if (rr.Type.Kind == TypeKind.Null)
+				return JsExpression.Null;
+			throw new NotImplementedException();
+		}
+
+		public override JsExpression VisitInvocationResolveResult(InvocationResolveResult rr, object data) {
+			throw new NotImplementedException();
+		}
+
+		public override JsExpression VisitLambdaResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.LambdaResolveResult rr, object data) {
+			return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Number(0))); 
+		}
+
+		public override JsExpression VisitMethodGroupResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.MethodGroupResolveResult rr, object data) {
+			var m = rr.Methods.First();
+			return JsExpression.MemberAccess(new JsTypeReferenceExpression(m.DeclaringType.GetDefinition()), m.Name);
+		}
+
+		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, object data) {
+			throw new NotImplementedException();
+		}
+
+		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, object data) {
+			return new JsTypeReferenceExpression(rr.Type.GetDefinition());
 		}
 	}
 }

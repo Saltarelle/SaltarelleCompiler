@@ -133,9 +133,9 @@ namespace Saltarelle.Compiler.JSModel
             return ReferenceEquals(value, clause.Value) && ReferenceEquals(body, clause.Body) ? clause : new JsSwitchStatement.Clause(value, body);
         }
 
-        public virtual JsTryCatchFinallyStatement.CatchClause Visit(JsTryCatchFinallyStatement.CatchClause clause, TData data) {
+        public virtual JsCatchClause Visit(JsCatchClause clause, TData data) {
             var body = Visit(clause.Body, data);
-            return ReferenceEquals(body, clause.Body) ? clause : new JsTryCatchFinallyStatement.CatchClause(clause.Identifier, body);
+            return ReferenceEquals(body, clause.Body) ? clause : new JsCatchClause(clause.Identifier, body);
         }
 
         public virtual JsVariableDeclaration Visit(JsVariableDeclaration declaration, TData data) {

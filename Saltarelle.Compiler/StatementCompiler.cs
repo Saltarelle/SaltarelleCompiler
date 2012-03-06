@@ -324,7 +324,37 @@ namespace Saltarelle.Compiler {
 
 			body = new JsBlockStatement(preBody.Concat(body.Statements));
 
-			_result.Add(new JsWhileStatement(condition.Expression, body));
+			JsStatement disposer;
+			var systemArray = _compilation.FindType(KnownTypeCode.Array);
+			if (resolved.Type == systemArray || resolved.Type.DirectBaseTypes.Contains(systemArray)) {
+				// Don't dispose array enumerators (we should according to C#, but it uglifies the script and we know it's a no-op.)
+				disposer = null;
+			}
+			else {
+				var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
+				var disposableConversion = Conversions.Get(_compilation).ImplicitConversion(enumerator.Type, systemIDisposable);
+				if (disposableConversion.IsValid) {
+					// If the enumerator is implicitly convertible to IDisposable, we should dispose it.
+					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, enumerator, disposableConversion), systemIDisposable.GetMethods(m => m.Name == "Dispose").Single(), new ResolveResult[0]), false);
+					if (compileResult.AdditionalStatements.Count != 0)
+						_errorReporter.Error("Call to IDisposable.Dispose must not return additional statements.");
+					disposer = new JsExpressionStatement(compileResult.Expression);
+				}
+				else if (enumerator.Type.GetDefinition().IsSealed) {
+					// If the enumerator is sealed and not implicitly convertible to IDisposable, we need not dispose it.
+					disposer = null;
+				}
+				else {
+					// We don't know whether the enumerator is convertible to IDisposable, so we need to conditionally dispose it.
+					throw new NotImplementedException();
+				}
+			}
+
+			JsStatement stmt = new JsWhileStatement(condition.Expression, body);
+			if (disposer != null)
+				stmt = new JsTryCatchFinallyStatement(stmt, null, disposer);
+
+			_result.Add(stmt);
 		}
 
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
