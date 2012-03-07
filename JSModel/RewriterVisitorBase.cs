@@ -241,5 +241,22 @@ namespace Saltarelle.Compiler.JSModel
             var body    = Visit(statement.Body, data);
             return ReferenceEquals(@object, statement.Object) && ReferenceEquals(body, statement.Body) ? statement : new JsWithStatement(@object, body);
         }
+
+    	public JsStatement Visit(JsLabelStatement statement, TData data) {
+    		return statement;
+    	}
+
+    	public JsStatement Visit(JsGotoStatement statement, TData data) {
+    		return statement;
+    	}
+
+    	public JsStatement Visit(JsYieldReturnStatement statement, TData data) {
+    		var value = Visit(statement.Value, data);
+			return ReferenceEquals(value, statement.Value) ? statement : new JsYieldReturnStatement(value);
+    	}
+
+    	public JsStatement Visit(JsYieldBreakStatement statement, TData data) {
+    		return statement;
+    	}
     }
 }

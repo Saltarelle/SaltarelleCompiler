@@ -1493,5 +1493,75 @@ public void M() {
 	}
 ");
 		}
+
+		[Test]
+		public void YieldReturnWithoutAdditionalStatementsWorks() {
+			AssertCorrect(
+@"public IEnumerable<int> M() {
+	int i = 1;
+	// BEGIN
+	yield return i;
+	// END
+}",
+@"	yield return $i;
+");
+		}
+
+		[Test]
+		public void YieldReturnWithAdditionalStatementsWorks() {
+			AssertCorrect(
+@"int MyProperty { get; set; }
+public IEnumerable<int> M() {
+	int i = 1;
+	// BEGIN
+	yield return (MyProperty = i);
+	// END
+}",
+@"	this.set_MyProperty($i);
+	yield return $i;
+");
+		}
+
+		[Test]
+		public void YieldBreakWorks() {
+			AssertCorrect(
+@"public IEnumerable<int> M() {
+	// BEGIN
+	yield break;
+	// END
+}",
+@"	yield break;
+");
+		}
+
+		[Test]
+		public void GotoWorks() {
+			AssertCorrect(
+@"Exception MyProperty { get; set; }
+public void M() {
+myLabel:
+	int i = 0;
+	// BEGIN
+	goto myLabel;
+	// END
+}",
+@"	goto myLabel;
+");
+		}
+
+		[Test]
+		public void LabelWorks() {
+			AssertCorrect(
+@"Exception MyProperty { get; set; }
+public void M() {
+	// BEGIN
+myLabel:
+	int i = 0;
+	// END
+}",
+@"myLabel:
+	var $i = 0;
+");
+		}
 	}
 }

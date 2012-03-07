@@ -20,5 +20,9 @@ namespace Saltarelle.Compiler.JSModel {
         TReturn Visit(JsVariableDeclarationStatement statement, TData data);
         TReturn Visit(JsWhileStatement statement, TData data);
         TReturn Visit(JsWithStatement statement, TData data);
+		TReturn Visit(JsLabelStatement statement, TData data);
+		TReturn Visit(JsGotoStatement statement, TData data);
+		TReturn Visit(JsYieldReturnStatement statement, TData data);
+		TReturn Visit(JsYieldBreakStatement statement, TData data);
     }
 }

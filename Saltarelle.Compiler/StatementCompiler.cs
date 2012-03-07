@@ -495,6 +495,24 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
+			_result.Add(new JsYieldBreakStatement());
+		}
+
+		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
+			var compiledExpr = CompileExpression(yieldReturnStatement.Expression, true);
+			_result.AddRange(compiledExpr.AdditionalStatements);
+			_result.Add(new JsYieldReturnStatement(compiledExpr.Expression));
+		}
+
+		public override void VisitGotoStatement(GotoStatement gotoStatement) {
+			_result.Add(new JsGotoStatement(gotoStatement.Label));
+		}
+
+		public override void VisitLabelStatement(LabelStatement labelStatement) {
+			_result.Add(new JsLabelStatement(labelStatement.Label));
+		}
+
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
 		}
@@ -507,27 +525,11 @@ namespace Saltarelle.Compiler {
 			throw new NotImplementedException();
 		}
 
-		public override void VisitGotoStatement(GotoStatement gotoStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitLabelStatement(LabelStatement labelStatement) {
-			throw new NotImplementedException();
-		}
-
 		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
 			throw new NotImplementedException();
 		}
 
 		public override void VisitUnsafeStatement(UnsafeStatement unsafeStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
 			throw new NotImplementedException();
 		}
 	}

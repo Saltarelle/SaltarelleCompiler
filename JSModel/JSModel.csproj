@@ -54,6 +54,10 @@
   <ItemGroup>
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
+    <Compile Include="Statements\JsGotoStatement.cs" />
+    <Compile Include="Statements\JsLabelStatement.cs" />
+    <Compile Include="Statements\JsYieldBreakStatement.cs" />
+    <Compile Include="Statements\JsYieldReturnStatement.cs" />
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />
     <Compile Include="Expressions\JsObjectLiteralProperty.cs" />

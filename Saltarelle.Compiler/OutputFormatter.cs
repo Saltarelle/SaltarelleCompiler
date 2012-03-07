@@ -581,5 +581,39 @@ redo:
     	public object Visit(JsWithStatement statement, bool data) {
     		throw new NotImplementedException();
     	}
+
+    	public object Visit(JsLabelStatement statement, bool addNewline) {
+    		_cb.PreventIndent().Append(statement.Name).Append(":");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
+    	}
+
+    	public object Visit(JsGotoStatement statement, bool addNewline) {
+    		_cb.Append("goto ").Append(statement.TargetLabel).Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
+    	}
+
+    	public object Visit(JsYieldReturnStatement statement, bool addNewline) {
+			if (!_allowIntermediates)
+				throw new NotSupportedException("yield return should not occur in the output stage");
+			_cb.Append("yield return ");
+			Visit(statement.Value, false);
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
+    	}
+
+    	public object Visit(JsYieldBreakStatement statement, bool addNewline) {
+			if (!_allowIntermediates)
+				throw new NotSupportedException("yield break should not occur in the output stage");
+			_cb.Append("yield break;");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
+    	}
     }
 }
