@@ -514,7 +514,11 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
-			throw new NotImplementedException();
+			throw new InvalidOperationException("fixed statement is not supported");	// Should be caught during the compilation step.
+		}
+
+		public override void VisitUnsafeStatement(UnsafeStatement unsafeStatement) {
+			throw new InvalidOperationException("unsafe statement is not supported");	// Should be caught during the compilation step.
 		}
 
 		public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
@@ -526,10 +530,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitUnsafeStatement(UnsafeStatement unsafeStatement) {
 			throw new NotImplementedException();
 		}
 	}
