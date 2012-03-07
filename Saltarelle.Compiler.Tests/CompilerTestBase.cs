@@ -118,6 +118,36 @@ namespace Saltarelle.Compiler.Tests {
 			}
         }
 
+		public class MockRuntimeLibrary : IRuntimeLibrary {
+			public MockRuntimeLibrary() {
+				TypeIs = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TypeIs"), e, t);
+				TypeAs = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TypeAs"), e, t);
+				Cast   = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "Cast"), e, t);
+				InstantiateGenericType = (c, e, a) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "InstantiateGenericType"), new[] { e }.Concat(a));
+			}
+
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeAs { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> Cast { get; set; }
+			public Func<ICompilation, JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
+			
+			JsExpression IRuntimeLibrary.TypeIs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
+				return TypeIs(compilation, expression, targetType);
+			}
+
+			JsExpression IRuntimeLibrary.TypeAs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
+				return TypeAs(compilation, expression, targetType);
+			}
+
+			JsExpression IRuntimeLibrary.Cast(ICompilation compilation, JsExpression expression, JsExpression targetType) {
+				return Cast(compilation, expression, targetType);
+			}
+
+			JsExpression IRuntimeLibrary.InstantiateGenericType(ICompilation compilation, JsExpression type, IEnumerable<JsExpression> typeArguments) {
+				return InstantiateGenericType(compilation, type, typeArguments);
+			}
+		}
+
         protected class MockErrorReporter : IErrorReporter {
         	private readonly bool _logToConsole;
         	public List<string> AllMessages { get; set; }
@@ -146,7 +176,7 @@ namespace Saltarelle.Compiler.Tests {
 
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null) {
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
@@ -154,7 +184,7 @@ namespace Saltarelle.Compiler.Tests {
                 errorReporter = new MockErrorReporter(true);
             }
 
-            var compiler = new Compiler(namingConvention ?? new MockNamingConventionResolver(), errorReporter);
+            var compiler = new Compiler(namingConvention ?? new MockNamingConventionResolver(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter);
             if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 

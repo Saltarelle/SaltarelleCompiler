@@ -33,6 +33,7 @@ namespace Saltarelle.Compiler {
         }
 
         private readonly INamingConventionResolver _namingConvention;
+		private readonly IRuntimeLibrary _runtimeLibrary;
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
         private CSharpAstResolver _resolver;
@@ -48,9 +49,10 @@ namespace Saltarelle.Compiler {
                 MethodCompiled(method, result, mc);
         }
 
-        public Compiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
+        public Compiler(INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
             _namingConvention = namingConvention;
-            _errorReporter = errorReporter;
+            _errorReporter    = errorReporter;
+        	_runtimeLibrary   = runtimeLibrary;
         }
 
         private ScopedName ConvertName(ITypeDefinition type) {
@@ -341,7 +343,7 @@ namespace Saltarelle.Compiler {
         }
 
         private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, Statement body, IMethod method, MethodImplOptions options) {
-            var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver);
+            var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
             var result = mc.CompileMethod(node, body, method, options);
             OnMethodCompiled(method, result, mc);
             return result;

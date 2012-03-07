@@ -61,6 +61,7 @@
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="IResolveResultVisitor.cs" />
+    <Compile Include="IRuntimeLibrary.cs" />
     <Compile Include="ISourceFile.cs" />
     <Compile Include="SharedValue.cs" />
     <Compile Include="SimpleVariable.cs" />

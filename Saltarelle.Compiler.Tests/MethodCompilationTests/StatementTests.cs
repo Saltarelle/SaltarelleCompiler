@@ -842,7 +842,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ForeachStatementGeneratesCheckedDisposeCallForUnsealedEnumeratorTypeThatDoesNotImplementIDisposable() {
 			AssertCorrect(
 @"
@@ -862,15 +862,17 @@ public void M() {
 	}
 	// END
 }",
-@"	try {
-		var $tmp1 = $e.GetEnumerator();
+@"	var $tmp1 = $e.GetEnumerator();
+	try {
 		while ($tmp1.MoveNext()) {
 			var $item = $tmp1.get_Current();
 			var $x = 0;
 		}
 	}
 	finally {
-		$tmp1.Dispose();
+		if ({System.Type}.TypeIs($tmp1, {System.IDisposable})) {
+			{System.Type}.Cast($tmp1, {System.IDisposable}).Dispose();
+		}
 	}
 ");
 		}

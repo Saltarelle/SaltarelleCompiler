@@ -13,8 +13,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
         protected MethodCompiler MethodCompiler { get; private set; }
         protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
-        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IErrorReporter errorReporter = null, string methodName = "M") {
-            Compile(new[] { "using System; class C { " + source + "}" }, namingConvention, errorReporter, (m, res, mc) => {
+        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M") {
+            Compile(new[] { "using System; class C { " + source + "}" }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;

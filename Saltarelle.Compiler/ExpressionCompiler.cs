@@ -12,7 +12,9 @@ using Saltarelle.Compiler.JSModel;
 
 namespace Saltarelle.Compiler {
 	public class ExpressionCompiler : ResolveResultVisitor<JsExpression, object> {
+		private readonly ICompilation _compilation;
 		private readonly INamingConventionResolver _namingConvention;
+		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IDictionary<IVariable, VariableData> _variables;
 		private readonly SharedValue<int> _nextTemporaryVariableIndex;
 
@@ -26,8 +28,10 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(INamingConventionResolver namingConvention, IDictionary<IVariable, VariableData> variables, SharedValue<int> nextTemporaryVariableIndex) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IDictionary<IVariable, VariableData> variables, SharedValue<int> nextTemporaryVariableIndex) {
+			_compilation = compilation;
 			_namingConvention = namingConvention;
+			_runtimeLibrary = runtimeLibrary;
 			_variables = variables;
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex;
 		}
@@ -111,7 +115,10 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, object data) {
-			return VisitResolveResult(rr.Input, data);
+			if (rr.Conversion.IsReferenceConversion) {
+				return _runtimeLibrary.Cast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+			}
+			throw new NotImplementedException();
 		}
 
 		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, object data) {
@@ -152,5 +159,9 @@ namespace Saltarelle.Compiler {
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, object data) {
 			return new JsTypeReferenceExpression(rr.Type.GetDefinition());
 		}
+
+        public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, object data) {
+			return _runtimeLibrary.TypeIs(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.TargetType.GetDefinition()));
+        }
 	}
 }

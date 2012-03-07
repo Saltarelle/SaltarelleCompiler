@@ -19,24 +19,26 @@ namespace Saltarelle.Compiler {
 		private readonly IDictionary<IVariable, VariableData> _variables;
 		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly ExpressionCompiler _expressionCompiler;
+		private readonly IRuntimeLibrary _runtimeLibrary;
 		private SharedValue<int> _nextTemporaryVariableIndex;
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions)
-			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, null, null)
+		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary)
+			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
 			_resolver                   = resolver;
 			_variables                  = variables;
 			_nestedFunctions            = nestedFunctions;
+			_runtimeLibrary             = runtimeLibrary;
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(namingConvention, variables, _nextTemporaryVariableIndex);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, variables, _nextTemporaryVariableIndex);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -49,7 +51,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _expressionCompiler, _nextTemporaryVariableIndex);
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _expressionCompiler, _nextTemporaryVariableIndex);
 		}
 
 		private LocalResolveResult CreateTemporaryVariable(IType type) {
@@ -332,10 +334,12 @@ namespace Saltarelle.Compiler {
 			}
 			else {
 				var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
-				var disposableConversion = Conversions.Get(_compilation).ImplicitConversion(enumerator.Type, systemIDisposable);
+				var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
+				var conversions = Conversions.Get(_compilation);
+				var disposableConversion = conversions.ImplicitConversion(enumerator.Type, systemIDisposable);
 				if (disposableConversion.IsValid) {
 					// If the enumerator is implicitly convertible to IDisposable, we should dispose it.
-					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, enumerator, disposableConversion), systemIDisposable.GetMethods(m => m.Name == "Dispose").Single(), new ResolveResult[0]), false);
+					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, enumerator, disposableConversion), disposeMethod, new ResolveResult[0]), false);
 					if (compileResult.AdditionalStatements.Count != 0)
 						_errorReporter.Error("Call to IDisposable.Dispose must not return additional statements.");
 					disposer = new JsExpressionStatement(compileResult.Expression);
@@ -346,7 +350,11 @@ namespace Saltarelle.Compiler {
 				}
 				else {
 					// We don't know whether the enumerator is convertible to IDisposable, so we need to conditionally dispose it.
-					throw new NotImplementedException();
+					var test = _expressionCompiler.Compile(new TypeIsResolveResult(enumerator, systemIDisposable, _compilation.FindType(KnownTypeCode.Boolean)), true);
+					if (test.AdditionalStatements.Count > 0)
+						_errorReporter.Error("\"is\" test must not return additional statements.");
+					var innerStatements = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, enumerator, conversions.ExplicitConversion(enumerator.Type, systemIDisposable)), disposeMethod, new ResolveResult[0]), false);
+					disposer = new JsIfStatement(test.Expression, new JsBlockStatement(innerStatements.AdditionalStatements.Concat(new[] { new JsExpressionStatement(innerStatements.Expression) })), null);
 				}
 			}
 

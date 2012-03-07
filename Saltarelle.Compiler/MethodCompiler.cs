@@ -14,15 +14,17 @@ namespace Saltarelle.Compiler {
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
         private readonly CSharpAstResolver _resolver;
+    	private readonly IRuntimeLibrary _runtimeLibrary;
 
-        internal IDictionary<IVariable, VariableData> variables;
+    	internal IDictionary<IVariable, VariableData> variables;
         internal List<NestedFunctionData> nestedFunctions;
 
-        public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver) {
+        public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
             _namingConvention = namingConvention;
             _errorReporter = errorReporter;
             _compilation = compilation;
             _resolver = resolver;
+        	_runtimeLibrary = runtimeLibrary;
         }
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, Statement body, IMethod method, MethodImplOptions impl) {
@@ -30,7 +32,7 @@ namespace Saltarelle.Compiler {
             variables        = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
             nestedFunctions  = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity);
 			var nestedFunctionsDict = nestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.ResolveResult);
-			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict);
+			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary);
 
             return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), bodyCompiler.Compile(body), null);
         }

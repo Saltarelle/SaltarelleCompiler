@@ -398,6 +398,9 @@ namespace Saltarelle.Compiler
                 case ExpressionNodeType.BitwiseNot:
                     return PrecedenceOtherUnary;
 
+				case ExpressionNodeType.TypeReference:
+					return PrecedenceTerminal;
+					
                 default:
                     throw new ArgumentException("nodeType");
             }
