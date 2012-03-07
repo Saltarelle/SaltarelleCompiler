@@ -720,7 +720,7 @@ public void M() {
 	// END
 }",
 @"	this.set_SomeProperty($list);
-	var $tmp1 = (this.Method($list)).GetEnumerator();
+	var $tmp1 = this.Method($list).GetEnumerator();
 	while ($tmp1.MoveNext()) {
 		var $item = $tmp1.get_Current();
 		var $x = 0;

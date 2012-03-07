@@ -178,7 +178,7 @@ namespace Saltarelle.Compiler
         }
 
         public object Visit(JsMemberAccessExpression expression, bool parenthesized) {
-            Visit(expression.Target, (GetPrecedence(expression.Target.NodeType) >= GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
+            Visit(expression.Target, (GetPrecedence(expression.Target.NodeType) >= GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
             _cb.Append(".");
             _cb.Append(expression.Member);
             return null;
@@ -271,25 +271,24 @@ namespace Saltarelle.Compiler
             }
         }
 
-        private const int PrecedenceTerminal           = 0;
-        private const int PrecedenceMemberOrNew        = PrecedenceTerminal           + 1;
-        private const int PrecedenceFunctionCall       = PrecedenceMemberOrNew        + 1;
-        private const int PrecedenceFunctionDefinition = PrecedenceFunctionCall       + 1; // The function definition precedence is kind of strange. function() {}(x) does not invoke the function, although I guess this is due to semicolon insertion rather than precedence. Cheating with the precedence solves the problem.
-        private const int PrecedenceIncrDecr           = PrecedenceFunctionDefinition + 1;
-        private const int PrecedenceOtherUnary         = PrecedenceIncrDecr           + 1;
-        private const int PrecedenceMultiply           = PrecedenceOtherUnary         + 1;
-        private const int PrecedenceAddition           = PrecedenceMultiply           + 1;
-        private const int PrecedenceBitwiseShift       = PrecedenceAddition           + 1;
-        private const int PrecedenceRelational         = PrecedenceBitwiseShift       + 1;
-        private const int PrecedenceEquality           = PrecedenceRelational         + 1;
-        private const int PrecedenceBitwiseAnd         = PrecedenceEquality           + 1;
-        private const int PrecedenceBitwiseXor         = PrecedenceBitwiseAnd         + 1;
-        private const int PrecedenceBitwiseOr          = PrecedenceBitwiseXor         + 1;
-        private const int PrecedenceLogicalAnd         = PrecedenceBitwiseOr          + 1;
-        private const int PrecedenceLogicalOr          = PrecedenceLogicalAnd         + 1;
-        private const int PrecedenceConditional        = PrecedenceLogicalOr          + 1;
-        private const int PrecedenceAssignment         = PrecedenceConditional        + 1;
-        private const int PrecedenceComma              = PrecedenceAssignment         + 1;
+        private const int PrecedenceTerminal                = 0;
+        private const int PrecedenceMemberOrNewOrInvocation = PrecedenceTerminal                + 1;
+        private const int PrecedenceFunctionDefinition      = PrecedenceMemberOrNewOrInvocation + 1; // The function definition precedence is kind of strange. function() {}(x) does not invoke the function, although I guess this is due to semicolon insertion rather than precedence. Cheating with the precedence solves the problem.
+        private const int PrecedenceIncrDecr                = PrecedenceFunctionDefinition      + 1;
+        private const int PrecedenceOtherUnary              = PrecedenceIncrDecr                + 1;
+        private const int PrecedenceMultiply                = PrecedenceOtherUnary              + 1;
+        private const int PrecedenceAddition                = PrecedenceMultiply                + 1;
+        private const int PrecedenceBitwiseShift            = PrecedenceAddition                + 1;
+        private const int PrecedenceRelational              = PrecedenceBitwiseShift            + 1;
+        private const int PrecedenceEquality                = PrecedenceRelational              + 1;
+        private const int PrecedenceBitwiseAnd              = PrecedenceEquality                + 1;
+        private const int PrecedenceBitwiseXor              = PrecedenceBitwiseAnd              + 1;
+        private const int PrecedenceBitwiseOr               = PrecedenceBitwiseXor              + 1;
+        private const int PrecedenceLogicalAnd              = PrecedenceBitwiseOr               + 1;
+        private const int PrecedenceLogicalOr               = PrecedenceLogicalAnd              + 1;
+        private const int PrecedenceConditional             = PrecedenceLogicalOr               + 1;
+        private const int PrecedenceAssignment              = PrecedenceConditional             + 1;
+        private const int PrecedenceComma                   = PrecedenceAssignment              + 1;
 
         private static int GetPrecedence(ExpressionNodeType nodeType) {
             switch (nodeType) {
@@ -372,13 +371,11 @@ namespace Saltarelle.Compiler
 				case ExpressionNodeType.This:
                     return PrecedenceTerminal;
 
-                case ExpressionNodeType.Invocation:
-                    return PrecedenceFunctionCall;
-
                 case ExpressionNodeType.MemberAccess:
                 case ExpressionNodeType.New:
                 case ExpressionNodeType.Index:
-                    return PrecedenceMemberOrNew;
+				case ExpressionNodeType.Invocation:
+                    return PrecedenceMemberOrNewOrInvocation;
 
                 case ExpressionNodeType.ObjectLiteral:
                     return PrecedenceTerminal;

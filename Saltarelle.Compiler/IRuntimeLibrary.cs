@@ -15,12 +15,17 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Returns an expression that casts an expression to a specified type, or returns null if the expression is not of that type (equivalent to C# "as").
 		/// </summary>
-		JsExpression TypeAs(ICompilation compilation, JsExpression expression, JsExpression targetType);
+		JsExpression TryCast(ICompilation compilation, JsExpression expression, JsExpression targetType);
 
 		/// <summary>
 		/// Returns an expression that casts an expression to a specified type, or throws an exception if the expression is not of that type (equivalent to C# "(Type)expression").
 		/// </summary>
 		JsExpression Cast(ICompilation compilation, JsExpression expression, JsExpression targetType);
+
+		/// <summary>
+		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List).
+		/// </summary>
+		JsExpression ImplicitReferenceConversion(ICompilation compilation, JsExpression expression, JsExpression targetType);
 
 		/// <summary>
 		/// Returns an expression that will instantiate a generic type.

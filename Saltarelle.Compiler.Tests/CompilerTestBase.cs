@@ -120,27 +120,34 @@ namespace Saltarelle.Compiler.Tests {
 
 		public class MockRuntimeLibrary : IRuntimeLibrary {
 			public MockRuntimeLibrary() {
-				TypeIs = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TypeIs"), e, t);
-				TypeAs = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TypeAs"), e, t);
-				Cast   = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "Cast"), e, t);
-				InstantiateGenericType = (c, e, a) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "InstantiateGenericType"), new[] { e }.Concat(a));
+				TypeIs                      = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TypeIs"), e, t);
+				TryCast                     = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TryCast"), e, t);
+				Cast                        = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "Cast"), e, t);
+				ImplicitReferenceConversion = (c, e, t) => e;
+				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "InstantiateGenericType"), new[] { e }.Concat(a));
 			}
 
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeAs { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TryCast { get; set; }
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> Cast { get; set; }
 			public Func<ICompilation, JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
 			
+
 			JsExpression IRuntimeLibrary.TypeIs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
 				return TypeIs(compilation, expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.TypeAs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
-				return TypeAs(compilation, expression, targetType);
+			JsExpression IRuntimeLibrary.TryCast(ICompilation compilation, JsExpression expression, JsExpression targetType) {
+				return TryCast(compilation, expression, targetType);
 			}
 
 			JsExpression IRuntimeLibrary.Cast(ICompilation compilation, JsExpression expression, JsExpression targetType) {
 				return Cast(compilation, expression, targetType);
+			}
+
+			JsExpression IRuntimeLibrary.ImplicitReferenceConversion(ICompilation compilation, JsExpression expression, JsExpression targetType) {
+				return ImplicitReferenceConversion(compilation, expression, targetType);
 			}
 
 			JsExpression IRuntimeLibrary.InstantiateGenericType(ICompilation compilation, JsExpression type, IEnumerable<JsExpression> typeArguments) {

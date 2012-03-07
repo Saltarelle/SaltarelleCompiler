@@ -115,8 +115,14 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, object data) {
-			if (rr.Conversion.IsReferenceConversion) {
-				return _runtimeLibrary.Cast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+			if (rr.Conversion.IsTryCast) {
+				return _runtimeLibrary.TryCast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+			}
+			else if (rr.Conversion.IsReferenceConversion) {
+				if (rr.Conversion.IsImplicit)
+					return _runtimeLibrary.ImplicitReferenceConversion(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+				else
+					return _runtimeLibrary.Cast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
 			throw new NotImplementedException();
 		}

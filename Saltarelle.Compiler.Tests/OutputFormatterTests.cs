@@ -302,7 +302,7 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
-        public void InvocationIsParenthesizedWhenUsedAsMemberAccessTarget() {
+        public void InvocationIsNotParenthesizedWhenUsedAsMemberAccessTarget() {
             Assert.That(OutputFormatter.Format(JsExpression.MemberAccess(
                                                    JsExpression.Invocation(
                                                        JsExpression.Number(1),
@@ -310,7 +310,7 @@ namespace Saltarelle.Compiler.Tests
                                                    ),
                                                    "Member"
                                                )
-                        ), Is.EqualTo("(1(2)).Member"));
+                        ), Is.EqualTo("1(2).Member"));
         }
 
         [Test]
@@ -424,6 +424,23 @@ namespace Saltarelle.Compiler.Tests
                                                    new[] { JsExpression.Number(2) }
                                                )
                         ), Is.EqualTo("x(1)(2)"));
+        }
+
+        [Test]
+        public void ChainedFunctionCallsAndMemberAccessesAreNotParenthtesized() {
+            Assert.That(OutputFormatter.Format(JsExpression.Invocation(
+                                                   JsExpression.MemberAccess(
+                                                       JsExpression.Invocation(
+                                                           JsExpression.MemberAccess(
+                                                               JsExpression.Invocation(
+                                                                   JsExpression.MemberAccess(JsExpression.This, "x"),
+                                                                   new[] { JsExpression.Number(1) }
+                                                               ), "y"),
+                                                           new[] { JsExpression.Number(2) }
+                                                        ), "z"),
+                                                   new[] { JsExpression.Number(3) }
+                                               )),
+                        Is.EqualTo("this.x(1).y(2).z(3)"));
         }
 
         [Test]
