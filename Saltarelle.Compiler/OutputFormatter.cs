@@ -219,7 +219,7 @@ namespace Saltarelle.Compiler
         public object Visit(JsTypeReferenceExpression expression, bool parenthesized) {
 			if (!_allowIntermediates)
 				throw new NotSupportedException("TypeReferenceExpressions should not occur in the output stage");
-			_cb.Append("{").Append(expression.TypeDefinition.FullName).Append("}");
+			_cb.Append("{").Append(expression.TypeDefinition.Name).Append("}");
 			return null;
         }
 

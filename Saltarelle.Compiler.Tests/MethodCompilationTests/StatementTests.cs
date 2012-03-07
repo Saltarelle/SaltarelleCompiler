@@ -738,7 +738,7 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = [1, 2, 3].GetEnumerator();
+@"	var $tmp1 = $Upcast([1, 2, 3], {IEnumerable}).GetEnumerator();
 	while ($tmp1.MoveNext()) {
 		var $item = $tmp1.get_Current();
 		var $x = 0;
@@ -803,7 +803,7 @@ public void M() {
 		}
 	}
 	finally {
-		$tmp1.Dispose();
+		$Upcast($tmp1, {IDisposable}).Dispose();
 	}
 ");
 		}
@@ -837,7 +837,7 @@ public void M() {
 		}
 	}
 	finally {
-		$tmp1.Dispose();
+		$Upcast($tmp1, {IDisposable}).Dispose();
 	}
 ");
 		}
@@ -870,8 +870,8 @@ public void M() {
 		}
 	}
 	finally {
-		if ({System.Type}.TypeIs($tmp1, {System.IDisposable})) {
-			{System.Type}.Cast($tmp1, {System.IDisposable}).Dispose();
+		if ($TypeIs($tmp1, {IDisposable})) {
+			$Cast($tmp1, {IDisposable}).Dispose();
 		}
 	}
 ");
@@ -1018,7 +1018,7 @@ public void M() {
 @"	{
 		this.set_MyProperty($a);
 		var $d = $a;
-		var $tmp1 = {System.Type}.Cast($d, {System.IDisposable});
+		var $tmp1 = $Cast($d, {IDisposable});
 		try {
 			var $x = 0;
 		}

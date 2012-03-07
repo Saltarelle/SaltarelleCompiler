@@ -120,11 +120,11 @@ namespace Saltarelle.Compiler.Tests {
 
 		public class MockRuntimeLibrary : IRuntimeLibrary {
 			public MockRuntimeLibrary() {
-				TypeIs                      = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TypeIs"), e, t);
-				TryCast                     = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "TryCast"), e, t);
-				Cast                        = (c, e, t) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "Cast"), e, t);
-				ImplicitReferenceConversion = (c, e, t) => e;
-				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.MemberAccess(new JsTypeReferenceExpression(c.FindType(KnownTypeCode.Type).GetDefinition()), "InstantiateGenericType"), new[] { e }.Concat(a));
+				TypeIs                      = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
+				TryCast                     = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
+				Cast                        = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
+				ImplicitReferenceConversion = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
+				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.Identifier("$MkGeneric"), new[] { e }.Concat(a));
 			}
 
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
