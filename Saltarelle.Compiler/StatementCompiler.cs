@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.CSharp;
@@ -9,6 +10,7 @@ using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Expression = ICSharpCode.NRefactory.CSharp.Expression;
 
 namespace Saltarelle.Compiler {
 	public class StatementCompiler : DepthFirstAstVisitor {
@@ -349,6 +351,71 @@ namespace Saltarelle.Compiler {
 			_result.Add(stmt);
 		}
 
+		private JsBlockStatement GenerateUsingBlock(LocalResolveResult resource, Expression aquisitionExpression, JsBlockStatement body) {
+			var boolType = _compilation.FindType(KnownTypeCode.Boolean);
+			var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
+			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
+			var conversions = Conversions.Get(_compilation);
+
+			var compiledAquisition = CompileExpression(aquisitionExpression, true);
+
+			var stmts = new List<JsStatement>();
+			stmts.AddRange(compiledAquisition.AdditionalStatements);
+			stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[resource.Variable].Name, compiledAquisition.Expression)));
+
+			bool isDynamic = resource.Type.Kind == TypeKind.Dynamic;
+
+			if (isDynamic) {
+				var newResource = CreateTemporaryVariable(systemIDisposable);
+				var castExpr = _expressionCompiler.Compile(new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
+				stmts.AddRange(castExpr.AdditionalStatements);
+				stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[newResource.Variable].Name, castExpr.Expression)));
+				resource = newResource;
+			}
+
+			var compiledDisposeCall = _expressionCompiler.Compile(
+			                              new CSharpInvocationResolveResult(
+			                                  new ConversionResolveResult(systemIDisposable, resource, conversions.ImplicitConversion(resource, systemIDisposable)),
+			                                  disposeMethod,
+			                                  new ResolveResult[0]
+			                              ), false);
+			if (compiledDisposeCall.AdditionalStatements.Count > 0)
+				_errorReporter.Error("Type test cannot return additional statements.");
+
+			JsStatement releaseStmt;
+			if (isDynamic) {
+				releaseStmt = new JsExpressionStatement(compiledDisposeCall.Expression);
+			}
+			else {
+				// if (d != null) ((IDisposable)d).Dispose()
+				var compiledTest = _expressionCompiler.Compile(new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
+				if (compiledTest.AdditionalStatements.Count > 0)
+					_errorReporter.Error("Null test cannot return additional statements.");
+				releaseStmt = new JsIfStatement(compiledTest.Expression, new JsExpressionStatement(compiledDisposeCall.Expression), null);
+			}
+
+			stmts.Add(new JsTryCatchFinallyStatement(body, null, releaseStmt));
+
+			return new JsBlockStatement(stmts);
+		}
+
+		public override void VisitUsingStatement(UsingStatement usingStatement) {
+			var stmt = CreateInnerCompiler().Compile(usingStatement.EmbeddedStatement);
+
+			var vds = usingStatement.ResourceAcquisition as VariableDeclarationStatement;
+			if (vds != null) {
+				foreach (var resource in vds.Variables.Reverse()) {
+					stmt = GenerateUsingBlock(((LocalResolveResult)_resolver.Resolve(resource)), resource.Initializer, stmt);
+				}
+			}
+			else {
+				var resource = CreateTemporaryVariable(_resolver.Resolve(usingStatement.ResourceAcquisition).Type);
+				stmt = GenerateUsingBlock(resource, (Expression)usingStatement.ResourceAcquisition, stmt);
+			}
+
+			_result.Add(stmt);
+		}
+
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
 		}
@@ -382,10 +449,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitUnsafeStatement(UnsafeStatement unsafeStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitUsingStatement(UsingStatement usingStatement) {
 			throw new NotImplementedException();
 		}
 

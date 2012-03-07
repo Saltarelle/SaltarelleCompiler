@@ -86,6 +86,12 @@ namespace Saltarelle.Compiler {
 			else if (rr.OperatorType == ExpressionType.PostIncrementAssign) {
 				return JsExpression.PostfixPlusPlus(VisitResolveResult(rr.Operands[0], data));
 			}
+			else if (rr.OperatorType == ExpressionType.Equal) {
+				return JsExpression.Equal(VisitResolveResult(rr.Operands[0], data), VisitResolveResult(rr.Operands[1], data));
+			}
+			else if (rr.OperatorType == ExpressionType.NotEqual) {
+				return JsExpression.NotEqual(VisitResolveResult(rr.Operands[0], data), VisitResolveResult(rr.Operands[1], data));
+			}
 			throw new NotImplementedException();
 		}
 
@@ -115,6 +121,9 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, object data) {
+			if (rr.Conversion.IsIdentityConversion) {
+				return VisitResolveResult(rr.Input, data);
+			}
 			if (rr.Conversion.IsTryCast) {
 				return _runtimeLibrary.TryCast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
@@ -123,6 +132,9 @@ namespace Saltarelle.Compiler {
 					return _runtimeLibrary.ImplicitReferenceConversion(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 				else
 					return _runtimeLibrary.Cast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+			}
+			else if (rr.Conversion.IsDynamicConversion) {
+				return _runtimeLibrary.Cast(_compilation, VisitResolveResult(rr.Input, data), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
 			throw new NotImplementedException();
 		}

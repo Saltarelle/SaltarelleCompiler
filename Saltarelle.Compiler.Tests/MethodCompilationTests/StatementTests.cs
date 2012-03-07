@@ -876,5 +876,157 @@ public void M() {
 	}
 ");
 		}
+
+		[Test]
+		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorks() {
+			AssertCorrect(
+@"public void M() {
+	IDisposable a = null;
+	// BEGIN
+	using (IDisposable d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($d != null) {
+				$d.Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithSingleVariableDeclarationWorks() {
+			AssertCorrect(
+@"IDisposable MyProperty { get; set; }
+public void M() {
+	IDisposable a = null;
+	// BEGIN
+	using (IDisposable d = (MyProperty = a)) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		this.set_MyProperty($a);
+		var $d = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($d != null) {
+				$d.Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithoutVariableDeclarationWorks() {
+			AssertCorrect(
+@"IDisposable MyProperty { get; set; }
+public void M() {
+	IDisposable a = null;
+	// BEGIN
+	using (MyProperty = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		this.set_MyProperty($a);
+		var $tmp1 = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($tmp1 != null) {
+				$tmp1.Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithMultipleVariableDeclarationsWork() {
+			AssertCorrect(
+@"IDisposable P1 { get; set; }
+IDisposable P2 { get; set; }
+IDisposable P3 { get; set; }
+public void M() {
+	IDisposable a = null, b = null, c = null;
+	// BEGIN
+	using (IDisposable d1 = (P1 = a), d2 = (P2 = b), d3 = (P3 = c)) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		this.set_P1($a);
+		var $d1 = $a;
+		try {
+			this.set_P2($b);
+			var $d2 = $b;
+			try {
+				this.set_P3($c);
+				var $d3 = $c;
+				try {
+					var $x = 0;
+				}
+				finally {
+					if ($d3 != null) {
+						$d3.Dispose();
+					}
+				}
+			}
+			finally {
+				if ($d2 != null) {
+					$d2.Dispose();
+				}
+			}
+		}
+		finally {
+			if ($d1 != null) {
+				$d1.Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithDynamicResourceWorks() {
+			AssertCorrect(
+@"IDisposable MyProperty { get; set; }
+public void M() {
+	IDisposable a = null;
+	// BEGIN
+	using (dynamic d = (MyProperty = a)) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		this.set_MyProperty($a);
+		var $d = $a;
+		var $tmp1 = {System.Type}.Cast($d, {System.IDisposable});
+		try {
+			var $x = 0;
+		}
+		finally {
+			$tmp1.Dispose();
+		}
+	}
+");
+		}
 	}
 }
