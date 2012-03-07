@@ -117,14 +117,14 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test, Ignore("Using not yet implemented")]
+        [Test]
         public void VariableDeclaredInUsingStatementIsCorrectlyRegistered() {
             CompileMethod(@"
                 public void M() {
-                    using (var ms = new MemoryStream()) {
+                    using (var ms = new System.IO.MemoryStream()) {
                         int a = 1;
                     }
-                    using (var ms = new MemoryStream()) {
+                    using (var ms = new System.IO.MemoryStream()) {
                         int a = 1;
                     }
                 }
@@ -138,12 +138,12 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test, Ignore("Using not yet implemented")]
+        [Test]
         public void UsingStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
             CompileMethod(@"
                 public void M() {
 					IDisposable ms;
-                    using (ms = new MemoryStream()) {
+                    using (ms = new System.IO.MemoryStream()) {
                         int a = 1;
                     }
                 }
@@ -152,12 +152,13 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
+				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
                 .Equal(new[] { "$ms", "$a" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test, Ignore("Try/catch not yet implemented")]
+        [Test]
         public void VariableDeclaredInCatchBlockIsCorrectlyRegistered() {
             CompileMethod(@"
                 public void M() {
@@ -186,12 +187,13 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
+				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
                 .Equal(new[] { "$a", "$ex", "$a2", "$ex2", "$a3", "$a4", "$ex3", "$a5", "$ex4", "$a6" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test, Ignore("Try/catch not yet implemented")]
+        [Test]
         public void CatchBlockWithoutVariableDeclarationDoesNotCauseRegistration() {
             CompileMethod(@"
                 public void M() {
@@ -207,12 +209,13 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
+				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
                 .Equal(new[] { "$a", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
         }
 
-        [Test, Ignore("Try/catch not yet implemented")]
+        [Test]
         public void CatchAllBlockWorks() {
             CompileMethod(@"
                 public void M() {
@@ -228,6 +231,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
+				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
                 .Equal(new[] { "$a", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
@@ -340,9 +344,9 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void IndexerGetterParametersAreCorrectlyRegistered() {
-            CompileMethod(@"public int this[int a, string b] { get { return 0; } }");
+            CompileMethod(@"public int this[int a, string b] { get { return 0; } }", methodName: "get_Item");
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
@@ -351,14 +355,13 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void IndexerSetterParametersAreCorrectlyRegistered() {
-            CompileMethod(@"public int this[int a, string b] { set {} }");
+            CompileMethod(@"public int this[int a, string b] { set {} }", methodName: "set_Item");
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Should()
-				.Equal(new[] { "$a", "$b", "$value" });
+				.BeEquivalentTo(new[] { "$a", "$b", "$value" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
