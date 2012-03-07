@@ -704,6 +704,29 @@ namespace Saltarelle.Compiler.Tests
 		}
 
 		[Test]
+		public void IfAndElseIfStatementsAreChained() {
+			Assert.That(OutputFormatter.Format(new JsIfStatement(JsExpression.True, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), null)),
+			            Is.EqualTo("if (true) {\r\n\ti = 0;\r\n}\r\n"));
+			Assert.That(OutputFormatter.Format(new JsIfStatement(JsExpression.Identifier("a"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))),
+			                                       new JsIfStatement(JsExpression.Identifier("b"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1))),
+												       new JsIfStatement(JsExpression.Identifier("c"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3))))))),
+			            Is.EqualTo(
+@"if (a) {
+	i = 0;
+}
+else if (b) {
+	i = 1;
+}
+else if (c) {
+	i = 2;
+}
+else {
+	i = 3;
+}
+"));
+		}
+
+		[Test]
 		public void BreakStatementIsCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsBreakStatement()), Is.EqualTo("break;\r\n"));
 			Assert.That(OutputFormatter.Format(new JsBreakStatement("someLabel")), Is.EqualTo("break someLabel;\r\n"));
@@ -741,6 +764,11 @@ namespace Saltarelle.Compiler.Tests
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\n"));
 			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z")))),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
+		}
+
+		[Test]
+		public void ThrowStatementWorks() {
+			Assert.That(OutputFormatter.Format(new JsThrowStatement(JsExpression.Identifier("x"))), Is.EqualTo("throw x;\r\n"));
 		}
     }
 }

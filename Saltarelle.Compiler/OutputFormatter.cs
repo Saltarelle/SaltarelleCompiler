@@ -493,14 +493,22 @@ namespace Saltarelle.Compiler
     	}
 
     	public object Visit(JsIfStatement statement, bool addNewline) {
+redo:
 			_cb.Append("if (");
 			Visit(statement.Test, false);
 			_cb.Append(") ");
 			Visit(statement.Then, statement.Else != null || addNewline);
 			if (statement.Else != null) {
 				_cb.Append("else ");
-				Visit(statement.Else, addNewline);
+				if (statement.Else.Statements.Count == 1 && statement.Else.Statements[0] is JsIfStatement) {
+					statement = (JsIfStatement)statement.Else.Statements[0];
+					goto redo;
+				}
 			}
+
+			if (statement.Else != null)
+				Visit(statement.Else, addNewline);
+
 			return null;
     	}
 
@@ -520,8 +528,13 @@ namespace Saltarelle.Compiler
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsThrowStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsThrowStatement statement, bool addNewline) {
+    		_cb.Append("throw ");
+			Visit(statement.Expression, false);
+			_cb.Append(";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
     	}
 
     	public object Visit(JsTryCatchFinallyStatement statement, bool addNewline) {

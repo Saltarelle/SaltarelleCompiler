@@ -125,6 +125,7 @@ namespace Saltarelle.Compiler.Tests {
 				Cast                        = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
 				ImplicitReferenceConversion = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
 				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.Identifier("$MkGeneric"), new[] { e }.Concat(a));
+				MakeException               = (c, e)    => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 			}
 
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
@@ -132,8 +133,8 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> Cast { get; set; }
 			public Func<ICompilation, JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression> MakeException { get; set; }
 			
-
 			JsExpression IRuntimeLibrary.TypeIs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
 				return TypeIs(compilation, expression, targetType);
 			}
@@ -152,6 +153,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.InstantiateGenericType(ICompilation compilation, JsExpression type, IEnumerable<JsExpression> typeArguments) {
 				return InstantiateGenericType(compilation, type, typeArguments);
+			}
+
+			JsExpression IRuntimeLibrary.MakeException(ICompilation compilation, JsExpression operand) {
+				return MakeException(compilation, operand);
 			}
 		}
 

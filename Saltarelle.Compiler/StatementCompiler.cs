@@ -67,6 +67,13 @@ namespace Saltarelle.Compiler {
 			return _expressionCompiler.Compile(_resolver.Resolve(expr), returnValueIsImportant);
 		}
 
+		private JsExpression GetJsType(AstType type) {
+			var result = _expressionCompiler.Compile(_resolver.Resolve(type), true);
+			if (result.AdditionalStatements.Count > 0)
+				_errorReporter.Error("Type reference cannot return additional statements.");
+			return result.Expression;
+		}
+
 		public override void VisitComment(Comment comment) {
 			switch (comment.CommentType) {
 				case CommentType.SingleLine: {
@@ -416,6 +423,61 @@ namespace Saltarelle.Compiler {
 			_result.Add(stmt);
 		}
 
+		private void RemoveCatchClausesAfterExceptionType(List<CatchClause> catchClauses, IType exceptionType) {
+			for (int i = 0; i < catchClauses.Count; i++) {
+				var type = _resolver.Resolve(catchClauses[i].Type).Type;
+				if (type == exceptionType) {
+					catchClauses.RemoveRange(i + 1, catchClauses.Count - i - 1);
+					return;
+				}
+			}
+		}
+
+		private JsBlockStatement CompileCatchClause(LocalResolveResult catchVariable, CatchClause catchClause, bool isCatchAll) {
+			JsStatement variableDeclaration = null;
+			if (!catchClause.VariableNameToken.IsNull) {
+				var compiledAssignment = isCatchAll ? _runtimeLibrary.MakeException(_compilation, JsExpression.Identifier(_variables[catchVariable.Variable].Name))
+				                                    : _runtimeLibrary.Cast(_compilation, JsExpression.Identifier(_variables[catchVariable.Variable].Name), GetJsType(catchClause.Type));
+
+				variableDeclaration = new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment));
+			}
+
+			var result = CreateInnerCompiler().Compile(catchClause.Body);
+			if (variableDeclaration != null)
+				result = new JsBlockStatement(new[] { variableDeclaration }.Concat(result.Statements));
+			return result;
+		}
+
+		public override void VisitTryCatchStatement(TryCatchStatement tryCatchStatement) {
+			var tryBlock = CreateInnerCompiler().Compile(tryCatchStatement.TryBlock);
+			JsCatchClause catchClause = null;
+			if (tryCatchStatement.CatchClauses.Count > 0) {
+				var catchVariable = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
+				string catchVariableName = _variables[catchVariable.Variable].Name;
+
+				var catchClauses = tryCatchStatement.CatchClauses.ToList();
+				var systemException = _compilation.FindType(KnownTypeCode.Exception);
+				RemoveCatchClausesAfterExceptionType(catchClauses, systemException);
+
+				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type == systemException);
+				JsStatement current = lastIsCatchall
+					                ? CompileCatchClause(catchVariable, catchClauses[catchClauses.Count - 1], true)
+					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
+
+				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
+					var test = _runtimeLibrary.TypeIs(_compilation, JsExpression.Identifier(catchVariableName), GetJsType(catchClauses[i].Type));
+					current = new JsIfStatement(test, CompileCatchClause(catchVariable, catchClauses[i], false), current);
+				}
+
+				catchClause = new JsCatchClause(catchVariableName, current);
+			}
+
+			var finallyBlock = (!tryCatchStatement.FinallyBlock.IsNull ? CreateInnerCompiler().Compile(tryCatchStatement.FinallyBlock) : null);
+
+			_result.Add(new JsTryCatchFinallyStatement(tryBlock, catchClause, finallyBlock));
+		}
+
+
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
 		}
@@ -441,10 +503,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitThrowStatement(ThrowStatement throwStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitTryCatchStatement(TryCatchStatement tryCatchStatement) {
 			throw new NotImplementedException();
 		}
 

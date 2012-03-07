@@ -31,5 +31,10 @@ namespace Saltarelle.Compiler {
 		/// Returns an expression that will instantiate a generic type.
 		/// </summary>
 		JsExpression InstantiateGenericType(ICompilation compilation, JsExpression type, IEnumerable<JsExpression> typeArguments);
+
+		/// <summary>
+		/// Returns an expression that will convert a given expression to an exception. This is used to be able to throw a JS string and catch it as an Exception.
+		/// </summary>
+		JsExpression MakeException(ICompilation compilation, JsExpression operand);
 	}
 }
