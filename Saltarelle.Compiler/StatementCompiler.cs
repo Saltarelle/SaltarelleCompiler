@@ -24,14 +24,16 @@ namespace Saltarelle.Compiler {
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private SharedValue<int> _nextTemporaryVariableIndex;
 
+		private LocalResolveResult _currentVariableForRethrow;
+
 		private List<JsStatement> _result;
 
 		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary)
-			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, null, null)
+			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, LocalResolveResult currentVariableForRethrow) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
@@ -39,6 +41,8 @@ namespace Saltarelle.Compiler {
 			_variables                  = variables;
 			_nestedFunctions            = nestedFunctions;
 			_runtimeLibrary             = runtimeLibrary;
+			_currentVariableForRethrow  = currentVariableForRethrow;
+
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
 			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, variables, _nextTemporaryVariableIndex);
 			_result                     = new List<JsStatement>();
@@ -53,7 +57,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _expressionCompiler, _nextTemporaryVariableIndex);
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _expressionCompiler, _nextTemporaryVariableIndex, _currentVariableForRethrow);
 		}
 
 		private LocalResolveResult CreateTemporaryVariable(IType type) {
@@ -452,8 +456,10 @@ namespace Saltarelle.Compiler {
 			var tryBlock = CreateInnerCompiler().Compile(tryCatchStatement.TryBlock);
 			JsCatchClause catchClause = null;
 			if (tryCatchStatement.CatchClauses.Count > 0) {
-				var catchVariable = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
-				string catchVariableName = _variables[catchVariable.Variable].Name;
+				var oldVariableForRethrow = _currentVariableForRethrow;
+
+				_currentVariableForRethrow = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
+				string catchVariableName = _variables[_currentVariableForRethrow.Variable].Name;
 
 				var catchClauses = tryCatchStatement.CatchClauses.ToList();
 				var systemException = _compilation.FindType(KnownTypeCode.Exception);
@@ -461,15 +467,16 @@ namespace Saltarelle.Compiler {
 
 				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type == systemException);
 				JsStatement current = lastIsCatchall
-					                ? CompileCatchClause(catchVariable, catchClauses[catchClauses.Count - 1], true)
+					                ? CompileCatchClause(_currentVariableForRethrow, catchClauses[catchClauses.Count - 1], true)
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
 					var test = _runtimeLibrary.TypeIs(_compilation, JsExpression.Identifier(catchVariableName), GetJsType(catchClauses[i].Type));
-					current = new JsIfStatement(test, CompileCatchClause(catchVariable, catchClauses[i], false), current);
+					current = new JsIfStatement(test, CompileCatchClause(_currentVariableForRethrow, catchClauses[i], false), current);
 				}
 
 				catchClause = new JsCatchClause(catchVariableName, current);
+				_currentVariableForRethrow = oldVariableForRethrow;
 			}
 
 			var finallyBlock = (!tryCatchStatement.FinallyBlock.IsNull ? CreateInnerCompiler().Compile(tryCatchStatement.FinallyBlock) : null);
@@ -477,6 +484,16 @@ namespace Saltarelle.Compiler {
 			_result.Add(new JsTryCatchFinallyStatement(tryBlock, catchClause, finallyBlock));
 		}
 
+		public override void VisitThrowStatement(ThrowStatement throwStatement) {
+			if (throwStatement.Expression.IsNull) {
+				_result.Add(new JsThrowStatement(JsExpression.Identifier(_variables[_currentVariableForRethrow.Variable].Name)));
+			}
+			else {
+				var compiledExpr = CompileExpression(throwStatement.Expression, true);
+				_result.AddRange(compiledExpr.AdditionalStatements);
+				_result.Add(new JsThrowStatement(compiledExpr.Expression));
+			}
+		}
 
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
 			throw new NotImplementedException();
@@ -499,10 +516,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
-			throw new NotImplementedException();
-		}
-
-		public override void VisitThrowStatement(ThrowStatement throwStatement) {
 			throw new NotImplementedException();
 		}
 
