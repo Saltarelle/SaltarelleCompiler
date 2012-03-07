@@ -290,45 +290,29 @@ namespace Saltarelle.Compiler {
 			lockStatement.EmbeddedStatement.AcceptVisitor(this);
 		}
 
-		private CSharpInvocationResolveResult ResolveGetEnumeratorInvocation(ResolveResult target) {
-			var method = target.Type.GetMethods().Single(m => m.Name == "GetEnumerator" && m.TypeParameters.Count == 0 && m.Parameters.Count == 0);
-			return new CSharpInvocationResolveResult(target, method, new ResolveResult[0]);
-		}
-
-		private ResolveResult ResolveMoveNextInvocation(ResolveResult target) {
-			var method = target.Type.GetMethods().Single(m => m.Name == "MoveNext" && m.TypeParameters.Count == 0 && m.Parameters.Count == 0);
-			return new CSharpInvocationResolveResult(target, method, new ResolveResult[0]);
-		}
-
-		private ResolveResult ResolveCurrentPropertyRead(ResolveResult target) {
-			var property = target.Type.GetProperties().Single(p => p.Name == "Current");
-			return new MemberResolveResult(target, property);
-		}
-
 		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
-			var resolved = _resolver.Resolve(foreachStatement.InExpression);
-			var getEnumeratorCall = ResolveGetEnumeratorInvocation(resolved);
-			var expr = _expressionCompiler.Compile(getEnumeratorCall, true);
-			_result.AddRange(expr.AdditionalStatements);
-			var enumerator = CreateTemporaryVariable(getEnumeratorCall.Member.ReturnType);
-			_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(enumerator.Variable.Name, expr.Expression)));
+			var ferr = (ForEachResolveResult)_resolver.Resolve(foreachStatement);
 
-			var moveNextInvocation = ResolveMoveNextInvocation(enumerator);
-			var condition = _expressionCompiler.Compile(moveNextInvocation, true);
-			if (condition.AdditionalStatements.Count > 0)
+			var getEnumeratorCall = _expressionCompiler.Compile(ferr.GetEnumeratorCall, true);
+			_result.AddRange(getEnumeratorCall.AdditionalStatements);
+			var enumerator = CreateTemporaryVariable(ferr.EnumeratorType);
+			_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(enumerator.Variable.Name, getEnumeratorCall.Expression)));
+
+			var moveNextInvocation = _expressionCompiler.Compile(new CSharpInvocationResolveResult(enumerator, ferr.MoveNextMethod, new ResolveResult[0]), true);
+			if (moveNextInvocation.AdditionalStatements.Count > 0)
 				_errorReporter.Error("MoveNext() invocation is not allowed to require additional statements.");
 
-			var getCurrent = ResolveCurrentPropertyRead(enumerator);
-			var getCurrentCompiled = _expressionCompiler.Compile(getCurrent, true);
+			var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(enumerator, ferr.CurrentProperty), true);
 			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
-			var preBody = getCurrentCompiled.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrentCompiled.Expression)) });
+			var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrent.Expression)) }).ToList();
 			var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
 
 			body = new JsBlockStatement(preBody.Concat(body.Statements));
 
 			JsStatement disposer;
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
-			if (resolved.Type == systemArray || resolved.Type.DirectBaseTypes.Contains(systemArray)) {
+			var inExpression = _resolver.Resolve(foreachStatement.InExpression);	// Needed to check whether we're enumerating an array (can avoid dispose). ferr.CollectionType will in this case be IEnumerable, so it's not useful.
+			if (inExpression.Type == systemArray || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
 				// Don't dispose array enumerators (we should according to C#, but it uglifies the script and we know it's a no-op.)
 				disposer = null;
 			}
@@ -358,7 +342,7 @@ namespace Saltarelle.Compiler {
 				}
 			}
 
-			JsStatement stmt = new JsWhileStatement(condition.Expression, body);
+			JsStatement stmt = new JsWhileStatement(moveNextInvocation.Expression, body);
 			if (disposer != null)
 				stmt = new JsTryCatchFinallyStatement(stmt, null, disposer);
 
