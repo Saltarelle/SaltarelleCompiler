@@ -9,7 +9,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.Tests
 {
     [TestFixture]
-    public class OutpuFormatterTests
+    public class OutputFormatterTests
     {
         [Test]
         public void LeftToRightAssociativityWorksForExpressionNodeTypes() {
@@ -769,6 +769,31 @@ else {
 		[Test]
 		public void ThrowStatementWorks() {
 			Assert.That(OutputFormatter.Format(new JsThrowStatement(JsExpression.Identifier("x"))), Is.EqualTo("throw x;\r\n"));
+		}
+
+		[Test]
+		public void SwitchStatementWorks() {
+			Assert.That(OutputFormatter.Format(new JsSwitchStatement(JsExpression.Identifier("x"),
+			                                       new JsSwitchSection(new[] { JsExpression.Number(0) }, new JsExpressionStatement(JsExpression.Identifier("a"))),
+			                                       new JsSwitchSection(new[] { JsExpression.Number(1), JsExpression.Number(2) }, new JsExpressionStatement(JsExpression.Identifier("b"))),
+			                                       new JsSwitchSection(new[] { null, JsExpression.Number(3) }, new JsExpressionStatement(JsExpression.Identifier("c")))
+			                                   )),
+			            Is.EqualTo(
+@"switch (x) {
+	case 0: {
+		a;
+	}
+	case 1:
+	case 2: {
+		b;
+	}
+	default:
+	case 3: {
+		c;
+	}
+}
+"));
+
 		}
     }
 }

@@ -524,8 +524,32 @@ redo:
 			return null;
     	}
 
-    	public object Visit(JsSwitchStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object Visit(JsSwitchStatement statement, bool addNewline) {
+    		_cb.Append("switch (");
+			Visit(statement.Expression, false);
+			_cb.AppendLine(") {").Indent();
+			foreach (var clause in statement.Clauses) {
+				bool first = true;
+				foreach (var v in clause.Values) {
+					if (!first)
+						_cb.AppendLine();
+					if (v != null) {
+						_cb.Append("case ");
+						Visit(v, false);
+						_cb.Append(":");
+					}
+					else {
+						_cb.Append("default:");
+					}
+					first = false;
+				}
+				_cb.Append(" ");
+				Visit(clause.Body, true);
+			}
+			_cb.Outdent().Append("}");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
     	}
 
     	public object Visit(JsThrowStatement statement, bool addNewline) {
@@ -583,7 +607,7 @@ redo:
     	}
 
     	public object Visit(JsLabelStatement statement, bool addNewline) {
-    		_cb.PreventIndent().Append(statement.Name).Append(":");
+    		_cb.Append(statement.Name).Append(":");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;

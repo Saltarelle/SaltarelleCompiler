@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -23,17 +24,19 @@ namespace Saltarelle.Compiler {
 		private readonly ExpressionCompiler _expressionCompiler;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private SharedValue<int> _nextTemporaryVariableIndex;
+		private SharedValue<int> _nextLabelIndex;
 
 		private LocalResolveResult _currentVariableForRethrow;
+		private IDictionary<object, string> _currentGotoCaseMap;
 
 		private List<JsStatement> _result;
 
 		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary)
-			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, null, null, null)
+			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, null, null, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, LocalResolveResult currentVariableForRethrow) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, SharedValue<int> nextLabelIndex, LocalResolveResult currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
@@ -42,8 +45,10 @@ namespace Saltarelle.Compiler {
 			_nestedFunctions            = nestedFunctions;
 			_runtimeLibrary             = runtimeLibrary;
 			_currentVariableForRethrow  = currentVariableForRethrow;
+			_currentGotoCaseMap         = currentGotoCaseMap;
 
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
+			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, variables, _nextTemporaryVariableIndex);
 			_result                     = new List<JsStatement>();
 		}
@@ -57,7 +62,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _expressionCompiler, _nextTemporaryVariableIndex, _currentVariableForRethrow);
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _expressionCompiler, _nextTemporaryVariableIndex, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
 		private LocalResolveResult CreateTemporaryVariable(IType type) {
@@ -521,16 +526,110 @@ namespace Saltarelle.Compiler {
 			throw new InvalidOperationException("unsafe statement is not supported");	// Should be caught during the compilation step.
 		}
 
-		public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
-			throw new NotImplementedException();
+		private static object NormalizeSwitchLabelValue(object value) {
+			if (value == null)
+				return DBNull.Value;	// Could use any value, just not null as that is an invalid key in the dictionary.
+			if (value is string)
+				return value;
+			else
+				return Convert.ChangeType(value, typeof(long));
 		}
 
-		public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
-			throw new NotImplementedException();
+		private class GatherGotoCaseAndDefaultDataVisitor : DepthFirstAstVisitor {
+			private Dictionary<object, SwitchSection> _sectionLookup;
+			private Dictionary<SwitchSection, string> _labels;
+			private Dictionary<object, string> _gotoCaseMap;
+			private readonly CSharpAstResolver _resolver;
+			private readonly SharedValue<int> _nextLabelIndex;
+
+			public GatherGotoCaseAndDefaultDataVisitor(CSharpAstResolver resolver, SharedValue<int> nextLabelIndex) {
+				_resolver = resolver;
+				_nextLabelIndex = nextLabelIndex;
+			}
+
+			public Tuple<Dictionary<SwitchSection, string>, Dictionary<object, string>> Process(SwitchStatement switchStatement) {
+				_labels      = new Dictionary<SwitchSection, string>();
+				_gotoCaseMap = new Dictionary<object, string>();
+				_sectionLookup = (  from section in switchStatement.SwitchSections
+				                    from label in section.CaseLabels
+				                  select new { section, rr = !label.Expression.IsNull ? _resolver.Resolve(label.Expression) : null }
+				                 ).ToDictionary(x => x.rr != null ? NormalizeSwitchLabelValue(x.rr.ConstantValue) : NormalizeSwitchLabelValue(null), x => x.section);
+
+				foreach (var section in switchStatement.SwitchSections)
+					section.AcceptVisitor(this);
+
+				return Tuple.Create(_labels, _gotoCaseMap);
+			}
+
+			private void HandleGoto(object labelValue) {
+				labelValue = NormalizeSwitchLabelValue(labelValue);
+				var targetSection = _sectionLookup[labelValue];
+				if (!_labels.ContainsKey(targetSection)) {
+					_labels.Add(targetSection, string.Format(CultureInfo.InvariantCulture, "$label{0}", _nextLabelIndex.Value++));
+				}
+				if (!_gotoCaseMap.ContainsKey(labelValue))
+					_gotoCaseMap[labelValue] = _labels[targetSection];
+			}
+
+			public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
+				HandleGoto(_resolver.Resolve(gotoCaseStatement.LabelExpression).ConstantValue);
+			}
+
+			public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
+				HandleGoto(null);
+			}
+
+			public override void VisitSwitchStatement(SwitchStatement switchStatement) {
+				// Switch statements start a new context so we don't want to go there.
+			}
 		}
 
 		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
-			throw new NotImplementedException();
+			var compiledExpr = CompileExpression(switchStatement.Expression, true);
+			_result.AddRange(compiledExpr.AdditionalStatements);
+
+			var oldGotoCaseMap = _currentGotoCaseMap;
+
+			var gotoCaseData = new GatherGotoCaseAndDefaultDataVisitor(_resolver, _nextLabelIndex).Process(switchStatement);
+			_currentGotoCaseMap = gotoCaseData.Item2;
+
+			var caseClauses = new List<JsSwitchSection>();
+			foreach (var section in switchStatement.SwitchSections) {
+				var values = new List<JsExpression>();
+				foreach (var v in section.CaseLabels) {
+					if (v.Expression.IsNull) {
+						values.Add(null);	// Default
+					}
+					else {
+						var rr = _resolver.Resolve(v.Expression);
+						if (rr.ConstantValue is string) {
+							values.Add(JsExpression.String((string)rr.ConstantValue));
+						}
+						else {
+							values.Add(JsExpression.Number((int)Convert.ChangeType(rr.ConstantValue, typeof(int))));
+						}
+					}
+				}
+
+				var statements = section.Statements.SelectMany(stmt => CreateInnerCompiler().Compile(stmt).Statements);
+
+				if (gotoCaseData.Item1.ContainsKey(section))
+					statements = new[] { new JsLabelStatement(gotoCaseData.Item1[section]) }.Concat(statements);
+
+				caseClauses.Add(new JsSwitchSection(values, new JsBlockStatement(statements)));
+			}
+
+			_result.Add(new JsSwitchStatement(compiledExpr.Expression, caseClauses));
+			_currentGotoCaseMap = oldGotoCaseMap;
+		}
+
+		public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
+			var value = _resolver.Resolve(gotoCaseStatement.LabelExpression).ConstantValue;
+			_result.Add(new JsGotoStatement(_currentGotoCaseMap[NormalizeSwitchLabelValue(value)]));
+		}
+
+		public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
+			_result.Add(new JsGotoStatement(_currentGotoCaseMap[NormalizeSwitchLabelValue(null)]));
 		}
 	}
 }

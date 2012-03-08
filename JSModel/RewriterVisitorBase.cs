@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler.JSModel
             return VisitCollection(statements, s => Visit(s, data));
         }
 
-        public virtual IEnumerable<JsSwitchStatement.Clause> Visit(ReadOnlyCollection<JsSwitchStatement.Clause> clauses, TData data) {
+        public virtual IEnumerable<JsSwitchSection> Visit(ReadOnlyCollection<JsSwitchSection> clauses, TData data) {
             return VisitCollection(clauses, c => Visit(c, data));
         }
 
@@ -127,10 +127,10 @@ namespace Saltarelle.Compiler.JSModel
             return VisitCollection(declarations, d => Visit(d, data));
         }
 
-        public virtual JsSwitchStatement.Clause Visit(JsSwitchStatement.Clause clause, TData data) {
-            var value = clause.Value != null ? Visit(clause.Value, data) : null;
+        public virtual JsSwitchSection Visit(JsSwitchSection clause, TData data) {
+            var values = VisitCollection(clause.Values, x => x != null ? x.Accept(this, data) : null);
             var body  = Visit(clause.Body, data);
-            return ReferenceEquals(value, clause.Value) && ReferenceEquals(body, clause.Body) ? clause : new JsSwitchStatement.Clause(value, body);
+            return ReferenceEquals(values, clause.Values) && ReferenceEquals(body, clause.Body) ? clause : new JsSwitchSection(values, body);
         }
 
         public virtual JsCatchClause Visit(JsCatchClause clause, TData data) {
@@ -208,9 +208,9 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement Visit(JsSwitchStatement statement, TData data) {
-            var test = Visit(statement.Test, data);
+            var test = Visit(statement.Expression, data);
             var clauses = Visit(statement.Clauses, data);
-            return ReferenceEquals(test, statement.Test) && ReferenceEquals(clauses, statement.Clauses) ? statement : new JsSwitchStatement(test, clauses);
+            return ReferenceEquals(test, statement.Expression) && ReferenceEquals(clauses, statement.Clauses) ? statement : new JsSwitchStatement(test, clauses);
         }
 
         public virtual JsStatement Visit(JsThrowStatement statement, TData data) {
