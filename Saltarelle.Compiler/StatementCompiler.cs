@@ -526,9 +526,12 @@ namespace Saltarelle.Compiler {
 			throw new InvalidOperationException("unsafe statement is not supported");	// Should be caught during the compilation step.
 		}
 
+		private static readonly object _gotoCaseMapDefaultKey = new object();
+		private static readonly object _gotoCaseMapCaseNullKey = new object();
+		
 		private static object NormalizeSwitchLabelValue(object value) {
 			if (value == null)
-				return DBNull.Value;	// Could use any value, just not null as that is an invalid key in the dictionary.
+				return _gotoCaseMapCaseNullKey;
 			if (value is string)
 				return value;
 			else
@@ -553,7 +556,7 @@ namespace Saltarelle.Compiler {
 				_sectionLookup = (  from section in switchStatement.SwitchSections
 				                    from label in section.CaseLabels
 				                  select new { section, rr = !label.Expression.IsNull ? _resolver.Resolve(label.Expression) : null }
-				                 ).ToDictionary(x => x.rr != null ? NormalizeSwitchLabelValue(x.rr.ConstantValue) : NormalizeSwitchLabelValue(null), x => x.section);
+				                 ).ToDictionary(x => x.rr != null ? NormalizeSwitchLabelValue(x.rr.ConstantValue) : _gotoCaseMapDefaultKey, x => x.section);
 
 				foreach (var section in switchStatement.SwitchSections)
 					section.AcceptVisitor(this);
@@ -562,7 +565,6 @@ namespace Saltarelle.Compiler {
 			}
 
 			private void HandleGoto(object labelValue) {
-				labelValue = NormalizeSwitchLabelValue(labelValue);
 				var targetSection = _sectionLookup[labelValue];
 				if (!_labels.ContainsKey(targetSection)) {
 					_labels.Add(targetSection, string.Format(CultureInfo.InvariantCulture, "$label{0}", _nextLabelIndex.Value++));
@@ -572,11 +574,11 @@ namespace Saltarelle.Compiler {
 			}
 
 			public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
-				HandleGoto(_resolver.Resolve(gotoCaseStatement.LabelExpression).ConstantValue);
+				HandleGoto(NormalizeSwitchLabelValue(_resolver.Resolve(gotoCaseStatement.LabelExpression).ConstantValue));
 			}
 
 			public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
-				HandleGoto(null);
+				HandleGoto(_gotoCaseMapDefaultKey);
 			}
 
 			public override void VisitSwitchStatement(SwitchStatement switchStatement) {
@@ -602,7 +604,10 @@ namespace Saltarelle.Compiler {
 					}
 					else {
 						var rr = _resolver.Resolve(v.Expression);
-						if (rr.ConstantValue is string) {
+						if (rr.ConstantValue == null) {
+							values.Add(JsExpression.Null);
+						}
+						else if (rr.ConstantValue is string) {
 							values.Add(JsExpression.String((string)rr.ConstantValue));
 						}
 						else {
@@ -629,7 +634,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
-			_result.Add(new JsGotoStatement(_currentGotoCaseMap[NormalizeSwitchLabelValue(null)]));
+			_result.Add(new JsGotoStatement(_currentGotoCaseMap[_gotoCaseMapDefaultKey]));
 		}
 	}
 }

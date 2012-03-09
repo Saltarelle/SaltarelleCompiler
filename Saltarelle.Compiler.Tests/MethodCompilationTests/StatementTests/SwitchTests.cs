@@ -219,5 +219,42 @@ public void M() {
 	}
 ");
 		}
+
+		[Test]
+		public void NullCaseWorksWithGotoCase() {
+			AssertCorrect(
+@"public void M() {
+	int? i = 0;
+	// BEGIN
+	switch (i) {
+		case 1:
+			goto case null;
+		case 2:
+			goto default;
+		case null:
+			break;
+		default:
+			break;
+	}
+	// END
+}",
+@"	switch ($i) {
+		case 1: {
+			goto $label1;
+		}
+		case 2: {
+			goto $label2;
+		}
+		case null: {
+			$label1:
+			break;
+		}
+		default: {
+			$label2:
+			break;
+		}
+	}
+");
+		}
 	}
 }
