@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class IfStatementTests : StatementTestBase {
+	public class IfStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void IfStatementWithoutElseWorks() {
 			AssertCorrect(

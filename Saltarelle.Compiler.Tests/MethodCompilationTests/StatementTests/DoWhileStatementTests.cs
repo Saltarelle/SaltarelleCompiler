@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class DoWhileStatementTests : StatementTestBase {
+	public class DoWhileStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void DoWhileStatementWithExpressionWithoutExtraStatementsWorks() {
 			AssertCorrect(

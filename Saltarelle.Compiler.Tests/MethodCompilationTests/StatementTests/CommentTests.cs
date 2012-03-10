@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class CommentTests : StatementTestBase {
+	public class CommentTests : MethodCompilerTestBase {
 		[Test]
 		public void CommentsAreCorrectlyTransferred() {
 			AssertCorrect(

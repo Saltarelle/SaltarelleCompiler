@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class ThrowStatementTests : StatementTestBase {
+	public class ThrowStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void ThrowStatementThatDoesNotRequireAdditionalStatementsWorks() {
 			AssertCorrect(

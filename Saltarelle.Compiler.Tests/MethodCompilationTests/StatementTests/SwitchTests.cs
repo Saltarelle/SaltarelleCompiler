@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class SwitchTests : StatementTestBase {
+	public class SwitchTests : MethodCompilerTestBase {
 		[Test]
 		public void SwitchStatementWorks() {
 			AssertCorrect(

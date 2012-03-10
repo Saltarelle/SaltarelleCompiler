@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class LockStatementTests : StatementTestBase {
+	public class LockStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void LockStatementEvaluatesArgumentThatDoesNotRequireExtraStatementsAndActsAsABlockStatement() {
 			AssertCorrect(

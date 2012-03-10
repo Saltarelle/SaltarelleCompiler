@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class WhileStatementTests : StatementTestBase {
+	public class WhileStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void WhileStatementWithExpressionWithoutExtraStatementsWorks() {
 			AssertCorrect(

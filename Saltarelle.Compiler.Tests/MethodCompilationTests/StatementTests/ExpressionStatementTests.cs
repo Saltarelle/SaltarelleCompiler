@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class ExpressionStatementTests : StatementTestBase {
+	public class ExpressionStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void ExpressionStatementThatOnlyRequiresASingleScriptStatementWorks() {
 			AssertCorrect(

@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class ForeachStatementTests : StatementTestBase {
+	public class ForeachStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void ForeachStatementThatDoesNotRequireExtraStatementsForInitializerWorks() {
 			AssertCorrect(

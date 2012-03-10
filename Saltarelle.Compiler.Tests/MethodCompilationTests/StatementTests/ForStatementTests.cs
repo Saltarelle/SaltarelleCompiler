@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class ForStatementTests : StatementTestBase {
+	public class ForStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void ForStatementWithVariableDeclarationsWorks() {
 			AssertCorrect(

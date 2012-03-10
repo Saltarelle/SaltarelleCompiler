@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class GotoStatementTests : StatementTestBase {
+	public class GotoStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void GotoWorks() {
 			AssertCorrect(

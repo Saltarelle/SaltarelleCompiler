@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class ReturnStatementTests : StatementTestBase {
+	public class ReturnStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void ReturnVoidStatementWorks() {
 			AssertCorrect(

@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	[TestFixture]
-	public class CheckedAndUncheckedStatementTests : StatementTestBase {
+	public class CheckedAndUncheckedStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void CheckedStatementActsAsABlockStatement() {
 			AssertCorrect(
