@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -26,7 +27,11 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
         }
 
 		protected void AssertCorrect(string csharp, string expected) {
-			CompileMethod(csharp);
+			CompileMethod(csharp, namingConvention: new MockNamingConventionResolver {
+				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? (p.IsStatic ? PropertyImplOptions.StaticField(p.Name) : PropertyImplOptions.InstanceField(p.Name))
+				                                                                        : PropertyImplOptions.GetAndSetMethods(p.IsStatic ? MethodImplOptions.StaticMethod("get_" + p.Name) : MethodImplOptions.InstanceMethod("get_" + p.Name),
+				                                                                                                               p.IsStatic ? MethodImplOptions.StaticMethod("set_" + p.Name) : MethodImplOptions.InstanceMethod("set_" + p.Name))
+			});
 			string actual = OutputFormatter.Format(CompiledMethod.Body, true);
 
 			int begin = actual.IndexOf("// BEGIN");
