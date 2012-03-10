@@ -126,6 +126,7 @@ namespace Saltarelle.Compiler.Tests {
 				ImplicitReferenceConversion = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
 				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.Identifier("$MkGeneric"), new[] { e }.Concat(a));
 				MakeException               = (c, e)    => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+				IntegerDivision             = (c, n, d) => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
 			}
 
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
@@ -134,6 +135,7 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<ICompilation, JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
 			public Func<ICompilation, JsExpression, JsExpression> MakeException { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
 			
 			JsExpression IRuntimeLibrary.TypeIs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
 				return TypeIs(compilation, expression, targetType);
@@ -157,6 +159,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.MakeException(ICompilation compilation, JsExpression operand) {
 				return MakeException(compilation, operand);
+			}
+
+			JsExpression IRuntimeLibrary.IntegerDivision(ICompilation compilation, JsExpression numerator, JsExpression denominator) {
+				return IntegerDivision(compilation, numerator, denominator);
 			}
 		}
 

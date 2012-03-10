@@ -36,5 +36,10 @@ namespace Saltarelle.Compiler {
 		/// Returns an expression that will convert a given expression to an exception. This is used to be able to throw a JS string and catch it as an Exception.
 		/// </summary>
 		JsExpression MakeException(ICompilation compilation, JsExpression operand);
+
+		/// <summary>
+		/// Returns an expression that will perform integer division.
+		/// </summary>
+		JsExpression IntegerDivision(ICompilation compilation, JsExpression numerator, JsExpression denominator);
 	}
 }

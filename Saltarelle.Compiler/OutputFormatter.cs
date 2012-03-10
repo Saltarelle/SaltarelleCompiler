@@ -260,8 +260,8 @@ namespace Saltarelle.Compiler
                 case ExpressionNodeType.AddAssign:                return "+=";
                 case ExpressionNodeType.SubtractAssign:           return "-=";
                 case ExpressionNodeType.LeftShiftAssign:          return "<<=";
-                case ExpressionNodeType.RightShiftAssign:         return ">>=";
-                case ExpressionNodeType.UnsignedRightShiftAssign: return ">>>=";
+                case ExpressionNodeType.RightShiftSignedAssign:   return ">>=";
+                case ExpressionNodeType.RightShiftUnsignedAssign: return ">>>=";
                 case ExpressionNodeType.BitwiseAndAssign:         return "&=";
                 case ExpressionNodeType.BitwiseOrAssign:          return "|=";
                 case ExpressionNodeType.BitwiseXOrAssign:         return "^=";
@@ -345,8 +345,8 @@ namespace Saltarelle.Compiler
                 case ExpressionNodeType.AddAssign:
                 case ExpressionNodeType.SubtractAssign:
                 case ExpressionNodeType.LeftShiftAssign:
-                case ExpressionNodeType.RightShiftAssign:
-                case ExpressionNodeType.UnsignedRightShiftAssign:
+                case ExpressionNodeType.RightShiftSignedAssign:
+                case ExpressionNodeType.RightShiftUnsignedAssign:
                 case ExpressionNodeType.BitwiseAndAssign:
                 case ExpressionNodeType.BitwiseOrAssign:
                 case ExpressionNodeType.BitwiseXOrAssign:

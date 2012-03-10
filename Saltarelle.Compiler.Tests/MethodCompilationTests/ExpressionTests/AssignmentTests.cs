@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
-	public class OperatorTests : MethodCompilerTestBase {
+	public class AssignmentTests : MethodCompilerTestBase {
 		[Test]
 		public void AssignmentWorksForLocalVariables() {
 			AssertCorrect(
@@ -244,7 +244,6 @@ public void M() {
 @"	{C}.a = {C}.b = $i;
 ");
 		}
-
 
 		[Test]
 		public void UsingPropertyThatIsNotUsableFromScriptGivesAnError() {

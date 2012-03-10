@@ -39,8 +39,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         AddAssign,
         SubtractAssign,
         LeftShiftAssign,
-        RightShiftAssign,
-        UnsignedRightShiftAssign,
+        RightShiftSignedAssign,
+        RightShiftUnsignedAssign,
         BitwiseAndAssign,
         BitwiseOrAssign,
         BitwiseXOrAssign,
@@ -240,12 +240,12 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             return Binary(ExpressionNodeType.LeftShiftAssign, left, right);
         }
 
-        public static JsBinaryExpression RightShiftAssign(JsExpression left, JsExpression right) {
-            return Binary(ExpressionNodeType.RightShiftAssign, left, right);
+        public static JsBinaryExpression RightShiftSignedAssign(JsExpression left, JsExpression right) {
+            return Binary(ExpressionNodeType.RightShiftSignedAssign, left, right);
         }
 
-        public static JsBinaryExpression UnsignedRightShiftAssign(JsExpression left, JsExpression right) {
-            return Binary(ExpressionNodeType.UnsignedRightShiftAssign, left, right);
+        public static JsBinaryExpression RightShiftUnsignedAssign(JsExpression left, JsExpression right) {
+            return Binary(ExpressionNodeType.RightShiftUnsignedAssign, left, right);
         }
 
         public static JsBinaryExpression BitwiseAndAssign(JsExpression left, JsExpression right) {

@@ -76,8 +76,9 @@
     <Compile Include="MemberConversionTests\IndexerConversionTests.cs" />
     <Compile Include="MemberConversionTests\MethodConversionTests.cs" />
     <Compile Include="MemberConversionTests\PropertyConversionTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\CompoundAssignmentTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\IsJsExpressionComplexEnoughToGetATemporaryVariableTests.cs" />
-    <Compile Include="MethodCompilationTests\ExpressionTests\OperatorTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\AssignmentTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BlockStatementTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BreakTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\CheckedAndUncheckedStatementTests.cs" />
