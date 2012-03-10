@@ -218,8 +218,39 @@ public void M() {
 		}
 
 		[Test]
+		public void AssigningToInstanceFieldWorks() {
+			AssertCorrect(
+@"int a, b;
+public void M() {
+	int i = 0;
+	// BEGIN
+	a = b = i;
+	// END
+}",
+@"	this.a = this.b = $i;
+");
+		}
+
+		[Test]
+		public void AssigningToStaticFieldWorks() {
+			AssertCorrect(
+@"static int a, b;
+public void M() {
+	int i = 0;
+	// BEGIN
+	a = b = i;
+	// END
+}",
+@"	{C}.a = {C}.b = $i;
+");
+		}
+
+
+		[Test]
 		public void UsingPropertyThatIsNotUsableFromScriptGivesAnError() {
-			Assert.Inconclusive("TODO");
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty = 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
 		}
 
 		[Test]

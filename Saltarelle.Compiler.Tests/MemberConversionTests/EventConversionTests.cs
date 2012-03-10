@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void InstanceAutoEventsWithAddRemoveMethodsAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name), MethodImplOptions.InstanceMethod("remove_" + f.Name)),
-                                                                      GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Instance("$" + f.Name)
+                                                                      GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
                                                                     };
 
             Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, namingConvention: namingConvention);
@@ -33,10 +33,10 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void StaticAutoEventsWithAddRemoveMethodsAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + f.Name), MethodImplOptions.StaticMethod("remove_" + f.Name)),
-                                                                      GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Static("$" + f.Name)
+                                                                      GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
                                                                     };
 
-            Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static event System.EventHandler SomeProp; }" }, namingConvention: namingConvention);
             FindStaticMethod("C.add_SomeProp").Should().NotBeNull();
             FindStaticMethod("C.remove_SomeProp").Should().NotBeNull();
             FindStaticField("C.$SomeProp").Should().NotBeNull();
@@ -72,7 +72,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void ImportingMultipleEventsInTheSameDeclarationWorks() {
             var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name), MethodImplOptions.InstanceMethod("remove_" + f.Name)),
-                                                                      GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Instance("$" + f.Name)
+                                                                      GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
                                                                     };
             Compile(new[] { "class C { public event System.EventHandler Event1, Event2; }" }, namingConvention: namingConvention);
             FindInstanceField("C.$Event1").Should().NotBeNull();

@@ -10,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
     public class FieldConversionTests : CompilerTestBase {
         [Test]
         public void InstanceFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Instance("$SomeProp") };
+            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Field("$SomeProp") };
             Compile(new[] { "class C { public int SomeField; }" }, namingConvention: namingConvention);
             FindInstanceField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").StaticFields.Should().BeEmpty();
@@ -20,8 +20,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void StaticFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Static("$SomeProp") };
-            Compile(new[] { "class C { public int SomeField; }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Field("$SomeProp") };
+            Compile(new[] { "class C { public static int SomeField; }" }, namingConvention: namingConvention);
             FindStaticField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceFields.Should().BeEmpty();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -40,7 +40,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ImportingMultipleFieldsInTheSameDeclarationWorks() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Instance("$" + f.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Field("$" + f.Name) };
             Compile(new[] { "class C { public int Field1, Field2; }" }, namingConvention: namingConvention);
             FindInstanceField("C.$Field1").Should().NotBeNull();
             FindInstanceField("C.$Field2").Should().NotBeNull();

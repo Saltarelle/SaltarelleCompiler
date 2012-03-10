@@ -4,17 +4,13 @@ namespace Saltarelle.Compiler {
     public class FieldImplOptions {
         public enum ImplType {
             /// <summary>
-            /// The field is an instance field. The Name member is valid.
+            /// The field is a field in script. The Name member is valid.
             /// </summary>
-            Instance = 0,
-            /// <summary>
-            /// The field is a static field. The Name member is valid.
-            /// </summary>
-            Static = 1,
+            Field = 0,
             /// <summary>
             /// The field is not usable from script. No other members are valid.
             /// </summary>
-            NotUsableFromScript = 2,
+            NotUsableFromScript = 1,
         }
 
         public ImplType Type { get; private set; }
@@ -22,7 +18,7 @@ namespace Saltarelle.Compiler {
 
         public String Name {
             get {
-                if (Type != ImplType.Instance && Type != ImplType.Static)
+                if (Type != ImplType.Field)
                     throw new InvalidOperationException();
                 return _name;
             }
@@ -31,12 +27,8 @@ namespace Saltarelle.Compiler {
         private FieldImplOptions() {
         }
 
-        public static FieldImplOptions Instance(string name) {
-            return new FieldImplOptions { Type = ImplType.Instance, _name = name };
-        }
-
-        public static FieldImplOptions Static(string name) {
-            return new FieldImplOptions { Type = ImplType.Static, _name = name };
+        public static FieldImplOptions Field(string name) {
+            return new FieldImplOptions { Type = ImplType.Field, _name = name };
         }
 
         public static FieldImplOptions NotUsableFromScript() {

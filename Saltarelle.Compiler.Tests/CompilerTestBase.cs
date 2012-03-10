@@ -39,10 +39,10 @@ namespace Saltarelle.Compiler.Tests {
                 GetMethodImplementation                   = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
                 GetConstructorImplementation              = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
                 GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
-                GetAutoPropertyBackingFieldImplementation = p => p.IsStatic ? FieldImplOptions.Static("$" + p.Name) : FieldImplOptions.Instance("$" + p.Name);
-                GetFieldImplementation                    = f => f.IsStatic ? FieldImplOptions.Static("$" + f.Name) : FieldImplOptions.Instance("$" + f.Name);
+                GetAutoPropertyBackingFieldImplementation = p => FieldImplOptions.Field("$" + p.Name);
+                GetFieldImplementation                    = f => FieldImplOptions.Field("$" + f.Name);
                 GetEventImplementation                    = e => e.IsStatic ? EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + e.Name), MethodImplOptions.StaticMethod("remove_" + e.Name)) : EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + e.Name), MethodImplOptions.InstanceMethod("remove_" + e.Name));
-                GetAutoEventBackingFieldImplementation    = e => e.IsStatic ? FieldImplOptions.Static("$" + e.Name) : FieldImplOptions.Instance("$" + e.Name);
+                GetAutoEventBackingFieldImplementation    = e => FieldImplOptions.Field("$" + e.Name);
                 GetEnumValueName                          = f => "$" + f.Name;
                 GetVariableName                           = (v, used) => {
                                                                              string baseName = "$" + v.Name;

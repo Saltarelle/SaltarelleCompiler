@@ -206,15 +206,9 @@ namespace Saltarelle.Compiler {
             foreach (var f in type.GetFields(options: GetMemberOptions.IgnoreInheritedMembers)) {
                 var impl = _namingConvention.GetFieldImplementation(f);
                 switch (impl.Type) {
-                    case FieldImplOptions.ImplType.Instance: {
+                    case FieldImplOptions.ImplType.Field: {
                         var jsf = new JsField(impl.Name);
-                        instanceFields.Add(jsf);
-                        _fieldMap.Add(f, jsf);
-                        break;
-                    }
-                    case FieldImplOptions.ImplType.Static: {
-                        var jsf = new JsField(impl.Name);
-                        staticFields.Add(new JsField(impl.Name));
+                        (f.IsStatic ? staticFields : instanceFields).Add(jsf);
                         _fieldMap.Add(f, jsf);
                         break;
                     }
@@ -461,11 +455,13 @@ namespace Saltarelle.Compiler {
                     var fieldImpl = _namingConvention.GetAutoPropertyBackingFieldImplementation(property);
                     if (fieldImpl.Type != FieldImplOptions.ImplType.NotUsableFromScript) {
                         var field = new JsField(fieldImpl.Name, CreateDefaultInitializer(property.ReturnType));
-                        if (fieldImpl.Type == FieldImplOptions.ImplType.Instance) {
-                            ((JsClass)_types[property.DeclaringTypeDefinition]).InstanceFields.Add(field);
-                        }
-                        else if (fieldImpl.Type == FieldImplOptions.ImplType.Static) {
-                            ((JsClass)_types[property.DeclaringTypeDefinition]).StaticFields.Add(field);
+                        if (fieldImpl.Type == FieldImplOptions.ImplType.Field) {
+							if (property.IsStatic) {
+	                            ((JsClass)_types[property.DeclaringTypeDefinition]).StaticFields.Add(field);
+							}
+							else {
+								((JsClass)_types[property.DeclaringTypeDefinition]).InstanceFields.Add(field);
+							}
                         }
                         else {
                             _errorReporter.Error("Invalid field type");
@@ -518,11 +514,13 @@ namespace Saltarelle.Compiler {
                         var fieldImpl = _namingConvention.GetAutoEventBackingFieldImplementation(evt);
                         if (fieldImpl.Type != FieldImplOptions.ImplType.NotUsableFromScript) {
                             var field = new JsField(fieldImpl.Name, singleEvt.Initializer != null ? CompileInitializer(singleEvt.Initializer) : CreateDefaultInitializer(evt.ReturnType));
-                            if (fieldImpl.Type == FieldImplOptions.ImplType.Instance) {
-                                ((JsClass)_types[evt.DeclaringTypeDefinition]).InstanceFields.Add(field);
-                            }
-                            else if (fieldImpl.Type == FieldImplOptions.ImplType.Static) {
-                                ((JsClass)_types[evt.DeclaringTypeDefinition]).StaticFields.Add(field);
+                            if (fieldImpl.Type == FieldImplOptions.ImplType.Field) {
+								if (evt.IsStatic) {
+									((JsClass)_types[evt.DeclaringTypeDefinition]).StaticFields.Add(field);
+								}
+								else {
+	                                ((JsClass)_types[evt.DeclaringTypeDefinition]).InstanceFields.Add(field);
+								}
                             }
                             else {
                                 _errorReporter.Error("Invalid field type");
