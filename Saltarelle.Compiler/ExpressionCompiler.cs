@@ -201,75 +201,60 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		private JsExpression CompilePropertySetter(IProperty property, MemberResolveResult target, ResolveResult value, bool returnValueIsImportant) {
+			var impl = _namingConvention.GetPropertyImplementation(property);
+
+			var expressions = new List<JsExpression>();
+			expressions.Add(VisitResolveResult(target.TargetResult, true));
+			if (property.IsIndexer) {
+				var indexerInvocation = (CSharpInvocationResolveResult)target;
+				foreach (var a in indexerInvocation.Arguments) {
+					expressions.Add(InnerCompile(a, false, expressions));
+				}
+			}
+
+			var jsValue = InnerCompile(value, returnValueIsImportant, expressions);
+
+			switch (impl.Type) {
+				case PropertyImplOptions.ImplType.GetAndSetMethods: {
+					var setter = CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { jsValue }));
+					if (returnValueIsImportant) {
+						_additionalStatements.Add(new JsExpressionStatement(setter));
+						return jsValue;
+					}
+					else {
+						return setter;
+					}
+				}
+
+				case PropertyImplOptions.ImplType.Field: {
+					if (expressions.Count != 1) {
+						_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name + ", declared as being a field, is an indexer.");
+						return JsExpression.Number(0);
+					}
+					return JsExpression.Assign(JsExpression.MemberAccess(expressions[0], impl.FieldName), jsValue);
+				}
+
+				case PropertyImplOptions.ImplType.NativeIndexer: {
+					if (expressions.Count != 2) {
+						_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name + ", declared as being a native indexer, does not have exactly one argument.");
+						return JsExpression.Number(0);
+					}
+					return JsExpression.Assign(JsExpression.Index(expressions[0], expressions[1]), jsValue);
+				}
+
+				default: {
+					_errorReporter.Error("Cannot use property " + property.DeclaringType.FullName + "." + property.Name + " from script.");
+					return JsExpression.Number(0);
+				}
+			}
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			if (rr.OperatorType == ExpressionType.Assign) {
 				if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IProperty) {
 					var mrr = (MemberResolveResult)rr.Operands[0];
-					var targetProperty = (IProperty)mrr.Member;
-					var impl = _namingConvention.GetPropertyImplementation(targetProperty);
-
-					if (targetProperty.IsIndexer) {
-						var indexerInvocation = (CSharpInvocationResolveResult)mrr;
-						var expressions = new List<JsExpression>();
-						expressions.Add(VisitResolveResult(indexerInvocation.TargetResult, true));
-						foreach (var a in indexerInvocation.Arguments) {
-							expressions.Add(InnerCompile(a, false, expressions));
-						}
-						switch (impl.Type) {
-							case PropertyImplOptions.ImplType.GetAndSetMethods: {
-								var value = InnerCompile(rr.Operands[1], returnValueIsImportant, expressions);
-								var setter = CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { value }));
-								if (returnValueIsImportant) {
-									_additionalStatements.Add(new JsExpressionStatement(setter));
-									return value;
-								}
-								else {
-									return setter;
-								}
-							}
-							case PropertyImplOptions.ImplType.Field:
-								_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a field, is an indexer.");
-								return JsExpression.Number(0);
-
-							case PropertyImplOptions.ImplType.NativeIndexer: {
-								if (expressions.Count != 2)
-									_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a native indexer, does not have exactly one argument.");
-								return JsExpression.Assign(JsExpression.Index(expressions[0], expressions[1]), VisitResolveResult(rr.Operands[1], true));
-							}
-
-							default:
-								_errorReporter.Error("Cannot use property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + " from script.");
-								return JsExpression.Number(0);
-						}
-					}
-					else {
-						JsExpression target = VisitResolveResult(mrr.TargetResult, true);
-						switch (impl.Type) {
-							case PropertyImplOptions.ImplType.GetAndSetMethods: {
-								var value = InnerCompile(rr.Operands[1], returnValueIsImportant, ref target);
-								var setter = CompileMethodCall(impl.SetMethod, target, new[] { value });
-								if (returnValueIsImportant) {
-									_additionalStatements.Add(new JsExpressionStatement(setter));
-									return value;
-								}
-								else {
-									return setter;
-								}
-							}
-							case PropertyImplOptions.ImplType.Field: {
-								var value = InnerCompile(rr.Operands[1], returnValueIsImportant, ref target);
-								return JsExpression.Assign(JsExpression.MemberAccess(target, impl.FieldName), value);
-							}
-
-							case PropertyImplOptions.ImplType.NativeIndexer:
-								_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a native indexer, is not an indexer.");
-								return JsExpression.Number(0);
-
-							default:
-								_errorReporter.Error("Cannot use property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + " from script.");
-								return JsExpression.Number(0);
-						}
-					}
+					return CompilePropertySetter((IProperty)mrr.Member, mrr, rr.Operands[1], returnValueIsImportant);
 				}
 				else {
 					return JsExpression.Assign(VisitResolveResult(rr.Operands[0], true), VisitResolveResult(rr.Operands[1], true));
