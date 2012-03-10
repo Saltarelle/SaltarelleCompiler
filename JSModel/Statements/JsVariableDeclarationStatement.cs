@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.Statements {
 	[Serializable]
@@ -13,6 +14,9 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         }
 
         public JsVariableDeclarationStatement(params JsVariableDeclaration[] declarations) : this((IEnumerable<JsVariableDeclaration>)declarations) {
+        }
+
+        public JsVariableDeclarationStatement(string name, JsExpression initializer) : this(new JsVariableDeclaration(name, initializer)) {
         }
 
         [System.Diagnostics.DebuggerStepThrough]

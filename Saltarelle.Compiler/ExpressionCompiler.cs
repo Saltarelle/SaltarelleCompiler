@@ -63,12 +63,57 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		internal class DoesJsExpressionHaveSideEffects : RewriterVisitorBase<object> {
+			private bool _result;
+
+			public static bool Process(JsExpression expression) {
+				var v = new DoesJsExpressionHaveSideEffects();
+				expression.Accept(v, null);
+				return v._result;
+			}
+
+			public override JsExpression Visit(JsInvocationExpression expression, object data) {
+				_result = true;
+				return expression;
+			}
+
+			public override JsExpression Visit(JsNewExpression expression, object data) {
+				_result = true;
+				return expression;
+			}
+
+			public override JsExpression Visit(JsBinaryExpression expression, object data) {
+				if (expression.NodeType >= ExpressionNodeType.AssignFirst && expression.NodeType <= ExpressionNodeType.AssignLast) {
+					_result = true;
+					return expression;
+				}
+				else {
+					return base.Visit(expression, data);
+				}
+			}
+
+			public override JsExpression Visit(JsUnaryExpression expression, object data) {
+				switch (expression.NodeType) {
+					case ExpressionNodeType.PrefixPlusPlus:
+					case ExpressionNodeType.PrefixMinusMinus:
+					case ExpressionNodeType.PostfixPlusPlus:
+					case ExpressionNodeType.PostfixMinusMinus:
+					case ExpressionNodeType.Delete:
+						_result = true;
+						return expression;
+					default:
+						return base.Visit(expression, data);
+				}
+			}
+		}
+
 		private readonly ICompilation _compilation;
 		private readonly INamingConventionResolver _namingConvention;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<IVariable, VariableData> _variables;
 		private readonly Func<IType, LocalResolveResult> _createTemporaryVariable;
+		private readonly Func<string, bool> _isVariableTemporary;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -80,13 +125,14 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, Func<IType, LocalResolveResult> createTemporaryVariable) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, Func<IType, LocalResolveResult> createTemporaryVariable, Func<string, bool> isVariableTemporary) {
 			_compilation = compilation;
 			_namingConvention = namingConvention;
 			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
 			_variables = variables;
 			_createTemporaryVariable = createTemporaryVariable;
+			_isVariableTemporary = isVariableTemporary;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -95,6 +141,53 @@ namespace Saltarelle.Compiler {
 			_additionalStatements = new List<JsStatement>();
 			var expr = VisitResolveResult(expression, returnValueIsImportant);
 			return new Result(expr, _additionalStatements);
+		}
+
+		private Result InnerCompile(ResolveResult expression, bool returnValueIsImportant) {
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _isVariableTemporary).Compile(expression, returnValueIsImportant);
+		}
+
+		private bool IsExpressionInvariantToOrder(JsExpression expression) {
+			if (expression is JsIdentifierExpression && _isVariableTemporary(((JsIdentifierExpression)expression).Name))
+				return true;	// Don't have to reorder expressions which only contain a temporary variable since noone is going to change the value of that variable. This check is important to get sensible results if using this method multiple times on the same list.
+			else if (expression is JsThisExpression)
+				return true;
+			else
+				return false;
+		}
+
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
+			var result = InnerCompile(rr, true);
+
+			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(result.Expression);
+			if (result.AdditionalStatements.Count > 0 || needsTemporary || DoesJsExpressionHaveSideEffects.Process(result.Expression)) {
+				// We have to ensure that everything is ordered correctly. First ensure that all expressions that have to be evaluated first actually are evaluated first.
+				for (int i = 0; i < expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression.Count; i++) {
+					if (IsExpressionInvariantToOrder(expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i]))
+						continue;
+					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i]));
+					expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i] = JsExpression.Identifier(_variables[temp.Variable].Name);
+				}
+			}
+
+			_additionalStatements.AddRange(result.AdditionalStatements);
+
+			if (needsTemporary) {
+				var temp = _createTemporaryVariable(rr.Type);
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, result.Expression));
+				return JsExpression.Identifier(_variables[temp.Variable].Name);
+			}
+			else {
+				return result.Expression;
+			}
+		}
+
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression) {
+			var l = new List<JsExpression> { expressionThatHasToBeEvaluatedInOrderBeforeThisExpression };
+			var r = InnerCompile(rr, usedMultipleTimes, l);
+			expressionThatHasToBeEvaluatedInOrderBeforeThisExpression = l[0];
+			return r;
 		}
 
 		private JsExpression CompileMethodCall(MethodImplOptions impl, JsExpression target, IEnumerable<JsExpression> arguments) {
@@ -117,17 +210,15 @@ namespace Saltarelle.Compiler {
 
 					if (targetProperty.IsIndexer) {
 						var indexerInvocation = (CSharpInvocationResolveResult)mrr;
-						JsExpression target = VisitResolveResult(indexerInvocation.TargetResult, true);
-						var indexerArgs = indexerInvocation.Arguments.Select(a => VisitResolveResult(a, true));
+						var expressions = new List<JsExpression>();
+						expressions.Add(VisitResolveResult(indexerInvocation.TargetResult, true));
+						foreach (var a in indexerInvocation.Arguments) {
+							expressions.Add(InnerCompile(a, false, expressions));
+						}
 						switch (impl.Type) {
 							case PropertyImplOptions.ImplType.GetAndSetMethods: {
-								var value = VisitResolveResult(rr.Operands[1], true);
-								if (returnValueIsImportant && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(value)) {
-									var temp  = _createTemporaryVariable(rr.Operands[1].Type);
-									_additionalStatements.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[temp.Variable].Name, value)));
-									value = JsExpression.Identifier(_variables[temp.Variable].Name);
-								}
-								var setter = CompileMethodCall(impl.SetMethod, target, indexerArgs.Concat(new[] { value }));
+								var value = InnerCompile(rr.Operands[1], returnValueIsImportant, expressions);
+								var setter = CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { value }));
 								if (returnValueIsImportant) {
 									_additionalStatements.Add(new JsExpressionStatement(setter));
 									return value;
@@ -141,10 +232,9 @@ namespace Saltarelle.Compiler {
 								return JsExpression.Number(0);
 
 							case PropertyImplOptions.ImplType.NativeIndexer: {
-								var l = indexerArgs.ToList();
-								if (l.Count != 1)
+								if (expressions.Count != 2)
 									_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a native indexer, does not have exactly one argument.");
-								return JsExpression.Assign(JsExpression.Index(target, l[0]), VisitResolveResult(rr.Operands[1], true));
+								return JsExpression.Assign(JsExpression.Index(expressions[0], expressions[1]), VisitResolveResult(rr.Operands[1], true));
 							}
 
 							default:
@@ -156,12 +246,7 @@ namespace Saltarelle.Compiler {
 						JsExpression target = VisitResolveResult(mrr.TargetResult, true);
 						switch (impl.Type) {
 							case PropertyImplOptions.ImplType.GetAndSetMethods: {
-								var value = VisitResolveResult(rr.Operands[1], true);
-								if (returnValueIsImportant && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(value)) {
-									var temp  = _createTemporaryVariable(rr.Operands[1].Type);
-									_additionalStatements.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[temp.Variable].Name, value)));
-									value = JsExpression.Identifier(_variables[temp.Variable].Name);
-								}
+								var value = InnerCompile(rr.Operands[1], returnValueIsImportant, ref target);
 								var setter = CompileMethodCall(impl.SetMethod, target, new[] { value });
 								if (returnValueIsImportant) {
 									_additionalStatements.Add(new JsExpressionStatement(setter));
@@ -171,8 +256,10 @@ namespace Saltarelle.Compiler {
 									return setter;
 								}
 							}
-							case PropertyImplOptions.ImplType.Field:
-								return JsExpression.Assign(JsExpression.MemberAccess(VisitResolveResult(mrr.TargetResult, true), impl.FieldName), VisitResolveResult(rr.Operands[1], true));
+							case PropertyImplOptions.ImplType.Field: {
+								var value = InnerCompile(rr.Operands[1], returnValueIsImportant, ref target);
+								return JsExpression.Assign(JsExpression.MemberAccess(target, impl.FieldName), value);
+							}
 
 							case PropertyImplOptions.ImplType.NativeIndexer:
 								_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a native indexer, is not an indexer.");

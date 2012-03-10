@@ -222,7 +222,7 @@ public void M() {
 			Assert.Inconclusive("TODO");
 		}
 
-		[Test, Ignore("TODO: Doesn't work and requires a lot of effort to get working")]
+		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenPropertiesAreSet() {
 			AssertCorrect(
 @"class C { public int P { get; set; } }
@@ -235,16 +235,38 @@ public void M() {
 	F1().P = F2().P = F();
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
-	var $tmp3 = this.F();
-	$tmp1.set_P($tmp3);
-	$tmp2.set_P($tmp3);
+@"	var $tmp3 = this.F1();
+	var $tmp1 = this.F2();
+	var $tmp2 = this.F();
+	$tmp1.set_P($tmp2);
+	$tmp3.set_P($tmp2);
 ");
 		}
 
-		[Test, Ignore("TODO: Doesn't work and requires a lot of effort to get working")]
-		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenIndexersAreUsed() {
+		[Test]
+		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenPropertiesWithFieldImplementationAreSet() {
+			AssertCorrect(
+@"class C { public int F { get; set; } }
+C F1() { return null; }
+C F2() { return null; }
+int F() { return 0; }
+int P { get; set; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	F1().F = F2().F = P = F();
+	// END
+}",
+@"	var $tmp3 = this.F1();
+	var $tmp2 = this.F2();
+	var $tmp1 = this.F();
+	this.set_P($tmp1);
+	$tmp3.F = $tmp2.F = $tmp1;
+");
+		}
+
+		[Test]
+		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenSetMethodIndexersAreUsed() {
 			AssertCorrect(
 @"class C { public int this[int x, int y] { get { return 0; } set {} } }
 public C FC() { return null; }
@@ -257,14 +279,36 @@ public void M() {
 	i = FC()[F1(), F2()] = F3();
 	// END
 }",
-@"	var $temp1 = this.FC();
-	var $temp2 = this.F1();
-	var $temp3 = this.F2();
-	var $temp4 = this.F3();
-	$temp1.set_Item($temp2, $temp3, $temp4);
-	$i = $temp4;
+@"	var $tmp1 = this.FC();
+	var $tmp2 = this.F1();
+	var $tmp3 = this.F2();
+	var $tmp4 = this.F3();
+	$tmp1.set_Item($tmp2, $tmp3, $tmp4);
+	$i = $tmp4;
 ");
-			Assert.Inconclusive("Verify that targets and values are evaluted left to right");
+		}
+
+		[Test]
+		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenNativeIndexersAreUsed() {
+			AssertCorrect(
+@"class C { public int this[int x, int y] { get { return 0; } set {} } }
+public C FC() { return null; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public int F3() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	i = FC()[F1(), F2()] = F3();
+	// END
+}",
+@"	var $tmp1 = this.FC();
+	var $tmp2 = this.F1();
+	var $tmp3 = this.F2();
+	var $tmp4 = this.F3();
+	$tmp1.set_Item($tmp2, $tmp3, $tmp4);
+	$i = $tmp4;
+");
 		}
 	}
 }
