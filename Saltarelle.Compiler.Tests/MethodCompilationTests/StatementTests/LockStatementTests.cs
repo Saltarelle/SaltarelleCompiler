@@ -43,7 +43,6 @@ public void M() {
 }",
 @"	this.set_P2($o);
 	this.set_P1($o);
-	$o;
 	{
 		var $x = 0;
 	}

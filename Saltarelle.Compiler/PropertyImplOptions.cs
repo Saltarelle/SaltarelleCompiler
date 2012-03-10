@@ -27,7 +27,6 @@ namespace Saltarelle.Compiler {
         public ImplType Type { get; private set; }
 
         private string _fieldName;
-        private bool _isFieldStatic;
         private MethodImplOptions _getMethod;
         private MethodImplOptions _setMethod;
 
@@ -55,24 +54,12 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        public bool IsFieldStatic {
-            get {
-                if (Type != ImplType.Field)
-                    throw new InvalidOperationException();
-                return _isFieldStatic;
-            }
-        }
-
         public static PropertyImplOptions GetAndSetMethods(MethodImplOptions getMethod, MethodImplOptions setMethod) {
             return new PropertyImplOptions { Type = ImplType.GetAndSetMethods, _getMethod = getMethod, _setMethod = setMethod };
         }
 
-        public static PropertyImplOptions InstanceField(string fieldName) {
-            return new PropertyImplOptions { Type = ImplType.Field, _fieldName = fieldName, _isFieldStatic = false };
-        }
-
-        public static PropertyImplOptions StaticField(string fieldName) {
-            return new PropertyImplOptions { Type = ImplType.Field, _fieldName = fieldName, _isFieldStatic = true };
+        public static PropertyImplOptions Field(string fieldName) {
+            return new PropertyImplOptions { Type = ImplType.Field, _fieldName = fieldName };
         }
 
         public static PropertyImplOptions NativeIndexer() {

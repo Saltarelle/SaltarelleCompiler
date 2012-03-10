@@ -101,6 +101,7 @@ namespace Saltarelle.Compiler {
 			// TODO
 			switch (impl.Type) {
 				case MethodImplOptions.ImplType.InstanceMethod:
+				case MethodImplOptions.ImplType.StaticMethod:
 					return JsExpression.Invocation(JsExpression.MemberAccess(target, impl.Name), arguments);
 				default:
 					throw new NotImplementedException();
@@ -139,9 +140,12 @@ namespace Saltarelle.Compiler {
 								_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a field, is an indexer.");
 								return JsExpression.Number(0);
 
-							case PropertyImplOptions.ImplType.NativeIndexer:
-								_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a native indexer, is not an indexer.");
-								return JsExpression.Number(0);
+							case PropertyImplOptions.ImplType.NativeIndexer: {
+								var l = indexerArgs.ToList();
+								if (l.Count != 1)
+									_errorReporter.Error("Property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + ", declared as being a native indexer, does not have exactly one argument.");
+								return JsExpression.Assign(JsExpression.Index(target, l[0]), VisitResolveResult(rr.Operands[1], true));
+							}
 
 							default:
 								_errorReporter.Error("Cannot use property " + targetProperty.DeclaringType.FullName + "." + targetProperty.Name + " from script.");

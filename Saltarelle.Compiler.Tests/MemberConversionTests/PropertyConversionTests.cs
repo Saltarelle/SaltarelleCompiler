@@ -105,20 +105,11 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void InstanceAutoPropertiesThatShouldBeInstanceFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.InstanceField("$" + p.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$" + p.Name) };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
             FindInstanceField("C.$SomeProp").Should().NotBeNull();
-        }
-
-        [Test]
-        public void InstanceAutoPropertiesThatShouldBeStaticFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.StaticField("$" + p.Name) };
-            Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
-            FindClass("C").InstanceMethods.Should().BeEmpty();
-            FindClass("C").StaticMethods.Should().BeEmpty();
-            FindStaticField("C.$SomeProp").Should().NotBeNull();
         }
 
         [Test]
@@ -146,8 +137,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void StaticAutoPropertiesThatShouldBeFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.StaticField("$" + p.Name) };
-            Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$" + p.Name) };
+            Compile(new[] { "class C { public static string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
             FindStaticField("C.$SomeProp").Should().NotBeNull();
@@ -169,7 +160,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ManuallyImplementedInstancePropertyThatShouldBeAFieldIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.InstanceField("$SomeProp") };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$SomeProp") };
             Compile(new[] { "class C { public int SomeProp { get { return 0; } set {} } }" }, namingConvention: namingConvention);
             FindInstanceField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -187,7 +178,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ManuallyImplementedReadOnlyInstancePropertyThatShouldBeAFieldIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.InstanceField("$SomeProp") };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$SomeProp") };
             Compile(new[] { "class C { public int SomeProp { get { return 0; } }" }, namingConvention: namingConvention);
             FindInstanceField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -205,7 +196,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ManuallyImplementedWriteOnlyInstancePropertyThatShouldBeAFieldIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.InstanceField("$SomeProp") };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$SomeProp") };
             Compile(new[] { "class C { public int SomeProp { set {} }" }, namingConvention: namingConvention);
             FindInstanceField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -223,8 +214,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ManuallyImplementedStaticPropertyThatShouldBeAFieldIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.StaticField("$SomeProp") };
-            Compile(new[] { "class C { public int SomeProp { get { return 0; } set {} } }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$SomeProp") };
+            Compile(new[] { "class C { public static int SomeProp { get { return 0; } set {} } }" }, namingConvention: namingConvention);
             FindStaticField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
@@ -241,8 +232,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ManuallyImplementedReadOnlyStaticPropertyThatShouldBeAFieldIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.StaticField("$SomeProp") };
-            Compile(new[] { "class C { public int SomeProp { get { return 0; } }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$SomeProp") };
+            Compile(new[] { "class C { public static int SomeProp { get { return 0; } }" }, namingConvention: namingConvention);
             FindStaticField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
@@ -251,7 +242,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void ManuallyImplementedWriteOnlyStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(null, MethodImplOptions.StaticMethod("set_SomeProp")) };
-            Compile(new[] { "class C { public int SomeProp { set {} } }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static int SomeProp { set {} } }" }, namingConvention: namingConvention);
             FindStaticMethod("C.get_SomeProp").Should().BeNull();
             FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -259,8 +250,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ManuallyImplementedWriteOnlyStaticPropertyThatShouldBeAFieldIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.StaticField("$SomeProp") };
-            Compile(new[] { "class C { public int SomeProp { set {} }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.Field("$SomeProp") };
+            Compile(new[] { "class C { public static int SomeProp { set {} }" }, namingConvention: namingConvention);
             FindStaticField("C.$SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();

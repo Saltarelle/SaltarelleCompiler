@@ -203,10 +203,18 @@ public void M() {
 ");
 		}
 
-
 		[Test]
 		public void AssigningToPropertyImplementedAsNativeIndexerWorks() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"int this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0, j = 1, k = 2, l;
+	// BEGIN
+	l = this[i] = k;
+	// END
+}",
+@"	$l = this[$i] = $k;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
 		}
 
 		[Test]

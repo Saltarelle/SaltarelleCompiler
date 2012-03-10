@@ -191,7 +191,7 @@ namespace Saltarelle.Compiler {
                     }
                     case PropertyImplOptions.ImplType.Field: {
                         var field = new JsField(impl.FieldName, CreateDefaultInitializer(p.ReturnType));
-                        (impl.IsFieldStatic ? staticFields : instanceFields).Add(field);
+                        (p.IsStatic ? staticFields : instanceFields).Add(field);
                         break;
                     }
                     case PropertyImplOptions.ImplType.NativeIndexer:

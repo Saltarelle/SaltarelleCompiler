@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler {
 				var data = _variables[((LocalResolveResult)_resolver.Resolve(d)).Variable];
 				JsExpression initializer;
 				if (!d.Initializer.IsNull) {
-					var exprCompileResult = CompileExpression(d.Initializer, false);
+					var exprCompileResult = CompileExpression(d.Initializer, true);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
 						if (declarations.Count > 0) {
 							_result.Add(new JsVariableDeclarationStatement(declarations));

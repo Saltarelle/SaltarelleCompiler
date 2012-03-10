@@ -26,9 +26,9 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
         }
 
-		protected void AssertCorrect(string csharp, string expected) {
-			CompileMethod(csharp, namingConvention: new MockNamingConventionResolver {
-				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? (p.IsStatic ? PropertyImplOptions.StaticField(p.Name) : PropertyImplOptions.InstanceField(p.Name))
+		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null) {
+			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
+				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? PropertyImplOptions.Field(p.Name)
 				                                                                        : PropertyImplOptions.GetAndSetMethods(p.IsStatic ? MethodImplOptions.StaticMethod("get_" + p.Name) : MethodImplOptions.InstanceMethod("get_" + p.Name),
 				                                                                                                               p.IsStatic ? MethodImplOptions.StaticMethod("set_" + p.Name) : MethodImplOptions.InstanceMethod("set_" + p.Name))
 			});
