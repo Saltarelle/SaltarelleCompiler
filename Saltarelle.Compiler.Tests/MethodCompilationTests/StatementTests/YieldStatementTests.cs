@@ -30,7 +30,7 @@ public IEnumerable<int> M() {
 	yield return (MyProperty = i);
 	// END
 }",
-@"	this.set_MyProperty($i);
+@"	this.set_$MyProperty($i);
 	yield return $i;
 ");
 		}

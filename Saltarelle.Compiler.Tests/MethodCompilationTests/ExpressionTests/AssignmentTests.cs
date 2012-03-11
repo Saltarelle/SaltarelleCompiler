@@ -45,7 +45,7 @@ public void M() {
 	P = i;
 	// END
 }",
-@"	this.set_P($i);
+@"	this.set_$P($i);
 ");
 		}
 
@@ -60,8 +60,8 @@ public void M() {
 	P1 = P2 = i;
 	// END
 }",
-@"	this.set_P2($i);
-	this.set_P1($i);
+@"	this.set_$P2($i);
+	this.set_$P1($i);
 ");
 		}
 
@@ -75,7 +75,7 @@ public void M() {
 	P1 = F();
 	// END
 }",
-@"	this.set_P1(this.F());
+@"	this.set_$P1(this.F());
 ");
 		}
 
@@ -92,8 +92,8 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	this.set_P2($tmp1);
-	this.set_P1($tmp1);
+	this.set_$P2($tmp1);
+	this.set_$P1($tmp1);
 ");
 		}
 
@@ -110,8 +110,8 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	this.set_P2($tmp1);
-	this.set_P1($tmp1);
+	this.set_$P2($tmp1);
+	this.set_$P1($tmp1);
 	if ($tmp1) {
 	}
 ");
@@ -127,7 +127,7 @@ public void M() {
 	F = i;
 	// END
 }",
-@"	this.F = $i;
+@"	this.$F = $i;
 ");
 		}
 
@@ -142,7 +142,7 @@ public void M() {
 	F1 = F2 = i;
 	// END
 }",
-@"	this.F1 = this.F2 = $i;
+@"	this.$F1 = this.$F2 = $i;
 ");
 		}
 
@@ -156,7 +156,7 @@ public void M() {
 	P = i;
 	// END
 }",
-@"	{C}.set_P($i);
+@"	{C}.set_$P($i);
 ");
 		}
 
@@ -170,7 +170,7 @@ public void M() {
 	F = i;
 	// END
 }",
-@"	{C}.F = $i;
+@"	{C}.$F = $i;
 ");
 		}
 
@@ -184,7 +184,7 @@ public void M() {
 	this[i, j] = k;
 	// END
 }",
-@"	this.set_Item($i, $j, $k);
+@"	this.set_$Item($i, $j, $k);
 ");
 		}
 
@@ -198,7 +198,7 @@ public void M() {
 	l = this[i, j] = k;
 	// END
 }",
-@"	this.set_Item($i, $j, $k);
+@"	this.set_$Item($i, $j, $k);
 	$l = $k;
 ");
 		}
@@ -268,8 +268,8 @@ public void M() {
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
 	var $tmp3 = this.F();
-	$tmp2.set_P($tmp3);
-	$tmp1.set_P($tmp3);
+	$tmp2.set_$P($tmp3);
+	$tmp1.set_$P($tmp3);
 ");
 		}
 
@@ -290,8 +290,8 @@ public void M() {
 @"	var $tmp3 = this.F1();
 	var $tmp2 = this.F2();
 	var $tmp1 = this.F();
-	this.set_P($tmp1);
-	$tmp3.F = $tmp2.F = $tmp1;
+	this.set_$P($tmp1);
+	$tmp3.$F = $tmp2.$F = $tmp1;
 ");
 		}
 
@@ -313,7 +313,7 @@ public void M() {
 	var $tmp2 = this.F1();
 	var $tmp3 = this.F2();
 	var $tmp4 = this.F3();
-	$tmp1.set_Item($tmp2, $tmp3, $tmp4);
+	$tmp1.set_$Item($tmp2, $tmp3, $tmp4);
 	$i = $tmp4;
 ");
 		}
@@ -336,7 +336,7 @@ public void M() {
 	var $tmp2 = this.F1();
 	var $tmp3 = this.F2();
 	var $tmp4 = this.F3();
-	$tmp1.set_Item($tmp2, $tmp3, $tmp4);
+	$tmp1.set_$Item($tmp2, $tmp3, $tmp4);
 	$i = $tmp4;
 ");
 		}

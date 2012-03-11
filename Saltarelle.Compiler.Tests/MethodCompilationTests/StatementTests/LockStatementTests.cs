@@ -20,7 +20,7 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_SomeProperty($o);
+@"	this.set_$SomeProperty($o);
 	this.Method($o);
 	{
 		var $x = 0;
@@ -41,8 +41,8 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_P2($o);
-	this.set_P1($o);
+@"	this.set_$P2($o);
+	this.set_$P1($o);
 	{
 		var $x = 0;
 	}

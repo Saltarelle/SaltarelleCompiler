@@ -41,7 +41,7 @@ public void M() {
 	return (SomeProperty = 1);
 	// END
 }",
-@"	this.set_SomeProperty(1);
+@"	this.set_$SomeProperty(1);
 	return 1;
 ");
 		}

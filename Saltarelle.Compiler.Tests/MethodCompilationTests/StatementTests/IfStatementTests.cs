@@ -57,7 +57,7 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_SomeProperty(1);
+@"	this.set_$SomeProperty(1);
 	if (1 < 0) {
 		var $x = 0;
 	}

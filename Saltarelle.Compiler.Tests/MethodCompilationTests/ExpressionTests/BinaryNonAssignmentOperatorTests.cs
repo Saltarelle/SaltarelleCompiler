@@ -66,8 +66,8 @@ public void M() {
 	var c = P + (P = a);
 	// END
 }",
-@"	var $tmp1 = this.get_P();
-	this.set_P($a);
+@"	var $tmp1 = this.get_$P();
+	this.set_$P($a);
 	var $c = $tmp1 + $a;
 ", includeEqualsAndNotEquals: true);
 		}

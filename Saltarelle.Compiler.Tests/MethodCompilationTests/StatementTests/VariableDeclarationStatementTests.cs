@@ -57,9 +57,9 @@ public void M() {
 	int i = (SomeProperty = 1), j = 2, k = 3, l = (SomeProperty = i), m = 4;
 }",
 @"{
-	this.set_SomeProperty(1);
+	this.set_$SomeProperty(1);
 	var $i = 1, $j = 2, $k = 3;
-	this.set_SomeProperty($i);
+	this.set_$SomeProperty($i);
 	var $l = $i, $m = 4;
 }
 ");

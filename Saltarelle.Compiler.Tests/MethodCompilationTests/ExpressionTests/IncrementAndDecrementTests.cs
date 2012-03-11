@@ -50,7 +50,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	this.set_P(this.get_P() + 1);
+@"	this.set_$P(this.get_$P() + 1);
 ");
 		}
 
@@ -64,7 +64,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	this.set_P(this.get_P() + 1);
+@"	this.set_$P(this.get_$P() + 1);
 ");
 		}
 
@@ -78,8 +78,8 @@ public void M() {
 	int j = ++P;
 	// END
 }",
-@"	var $tmp1 = this.get_P() + 1;
-	this.set_P($tmp1);
+@"	var $tmp1 = this.get_$P() + 1;
+	this.set_$P($tmp1);
 	var $j = $tmp1;
 ");
 		}
@@ -93,8 +93,8 @@ public void M() {
 	int j = P++;
 	// END
 }",
-@"	var $tmp1 = this.get_P();
-	this.set_P($tmp1 + 1);
+@"	var $tmp1 = this.get_$P();
+	this.set_$P($tmp1 + 1);
 	var $j = $tmp1;
 ");
 		}
@@ -110,7 +110,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	$tmp1.set_P($tmp1.get_P() + 1);
+	$tmp1.set_$P($tmp1.get_$P() + 1);
 ");
 		}
 
@@ -125,7 +125,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	$tmp1.set_P($tmp1.get_P() + 1);
+	$tmp1.set_$P($tmp1.get_$P() + 1);
 ");
 		}
 
@@ -138,7 +138,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	++this.F;
+@"	++this.$F;
 ");
 		}
 
@@ -151,7 +151,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	this.F++;
+@"	this.$F++;
 ");
 		}
 
@@ -165,7 +165,7 @@ public void M() {
 	++F().F;
 	// END
 }",
-@"	++this.F().F;
+@"	++this.F().$F;
 ");
 		}
 
@@ -179,7 +179,7 @@ public void M() {
 	F().F++;
 	// END
 }",
-@"	this.F().F++;
+@"	this.F().$F++;
 ");
 		}
 
@@ -193,7 +193,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	{C}.set_P({C}.get_P() + 1);
+@"	{C}.set_$P({C}.get_$P() + 1);
 ");
 		}
 
@@ -207,7 +207,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	{C}.set_P({C}.get_P() + 1);
+@"	{C}.set_$P({C}.get_$P() + 1);
 ");
 		}
 
@@ -221,7 +221,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	++{C}.F;
+@"	++{C}.$F;
 ");
 		}
 
@@ -235,7 +235,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	{C}.F++;
+@"	{C}.$F++;
 ");
 		}
 
@@ -249,7 +249,7 @@ public void M() {
 	++this[i, j];
 	// END
 }",
-@"	this.set_Item($i, $j, this.get_Item($i, $j) + 1);
+@"	this.set_$Item($i, $j, this.get_$Item($i, $j) + 1);
 ");
 		}
 
@@ -263,7 +263,7 @@ public void M() {
 	this[i, j]++;
 	// END
 }",
-@"	this.set_Item($i, $j, this.get_Item($i, $j) + 1);
+@"	this.set_$Item($i, $j, this.get_$Item($i, $j) + 1);
 ");
 		}
 
@@ -277,8 +277,8 @@ public void M() {
 	k = ++this[i, j];
 	// END
 }",
-@"	var $tmp1 = this.get_Item($i, $j) + 1;
-	this.set_Item($i, $j, $tmp1);
+@"	var $tmp1 = this.get_$Item($i, $j) + 1;
+	this.set_$Item($i, $j, $tmp1);
 	$k = $tmp1;
 ");
 		}
@@ -293,8 +293,8 @@ public void M() {
 	k = this[i, j]++;
 	// END
 }",
-@"	var $tmp1 = this.get_Item($i, $j);
-	this.set_Item($i, $j, $tmp1 + 1);
+@"	var $tmp1 = this.get_$Item($i, $j);
+	this.set_$Item($i, $j, $tmp1 + 1);
 	$k = $tmp1;
 ");
 		}
@@ -313,7 +313,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	this.set_Item($tmp1, $tmp2, this.get_Item($tmp1, $tmp2) + 1);
+	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + 1);
 ");
 		}
 
@@ -331,7 +331,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	this.set_Item($tmp1, $tmp2, this.get_Item($tmp1, $tmp2) + 1);
+	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + 1);
 ");
 		}
 
@@ -486,7 +486,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	this.set_P($Lift(this.get_P() + 1));
+@"	this.set_$P($Lift(this.get_$P() + 1));
 ");
 		}
 
@@ -500,7 +500,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	this.set_P($Lift(this.get_P() + 1));
+@"	this.set_$P($Lift(this.get_$P() + 1));
 ");
 		}
 
@@ -514,8 +514,8 @@ public void M() {
 	int j = ++P;
 	// END
 }",
-@"	var $tmp1 = $Lift(this.get_P() + 1);
-	this.set_P($tmp1);
+@"	var $tmp1 = $Lift(this.get_$P() + 1);
+	this.set_$P($tmp1);
 	var $j = $tmp1;
 ");
 		}
@@ -529,8 +529,8 @@ public void M() {
 	int j = P++;
 	// END
 }",
-@"	var $tmp1 = this.get_P();
-	this.set_P($Lift($tmp1 + 1));
+@"	var $tmp1 = this.get_$P();
+	this.set_$P($Lift($tmp1 + 1));
 	var $j = $tmp1;
 ");
 		}
@@ -546,7 +546,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	$tmp1.set_P($Lift($tmp1.get_P() + 1));
+	$tmp1.set_$P($Lift($tmp1.get_$P() + 1));
 ");
 		}
 
@@ -561,7 +561,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	$tmp1.set_P($Lift($tmp1.get_P() + 1));
+	$tmp1.set_$P($Lift($tmp1.get_$P() + 1));
 ");
 		}
 
@@ -574,7 +574,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	this.F = $Lift(this.F + 1);
+@"	this.$F = $Lift(this.$F + 1);
 ");
 		}
 
@@ -587,7 +587,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	this.F = $Lift(this.F + 1);
+@"	this.$F = $Lift(this.$F + 1);
 ");
 		}
 
@@ -600,7 +600,7 @@ public void M() {
 	var x = ++F;
 	// END
 }",
-@"	var $x = this.F = $Lift(this.F + 1);
+@"	var $x = this.$F = $Lift(this.$F + 1);
 ");
 		}
 
@@ -613,8 +613,8 @@ public void M() {
 	var x = F++;
 	// END
 }",
-@"	var $tmp1 = this.F;
-	this.F = $Lift($tmp1 + 1);
+@"	var $tmp1 = this.$F;
+	this.$F = $Lift($tmp1 + 1);
 	var $x = $tmp1;
 ");
 		}
@@ -629,7 +629,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	{C}.set_P($Lift({C}.get_P() + 1));
+@"	{C}.set_$P($Lift({C}.get_$P() + 1));
 ");
 		}
 
@@ -643,7 +643,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	{C}.set_P($Lift({C}.get_P() + 1));
+@"	{C}.set_$P($Lift({C}.get_$P() + 1));
 ");
 		}
 
@@ -657,7 +657,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	{C}.F = $Lift({C}.F + 1);
+@"	{C}.$F = $Lift({C}.$F + 1);
 ");
 		}
 
@@ -671,7 +671,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	{C}.F = $Lift({C}.F + 1);
+@"	{C}.$F = $Lift({C}.$F + 1);
 ");
 		}
 
@@ -685,7 +685,7 @@ public void M() {
 	++this[i, j];
 	// END
 }",
-@"	this.set_Item($i, $j, $Lift(this.get_Item($i, $j) + 1));
+@"	this.set_$Item($i, $j, $Lift(this.get_$Item($i, $j) + 1));
 ");
 		}
 
@@ -699,7 +699,7 @@ public void M() {
 	this[i, j]++;
 	// END
 }",
-@"	this.set_Item($i, $j, $Lift(this.get_Item($i, $j) + 1));
+@"	this.set_$Item($i, $j, $Lift(this.get_$Item($i, $j) + 1));
 ");
 		}
 
@@ -713,8 +713,8 @@ public void M() {
 	var x = ++this[i, j];
 	// END
 }",
-@"	var $tmp1 = $Lift(this.get_Item($i, $j) + 1);
-	this.set_Item($i, $j, $tmp1);
+@"	var $tmp1 = $Lift(this.get_$Item($i, $j) + 1);
+	this.set_$Item($i, $j, $tmp1);
 	var $x = $tmp1;
 ");
 		}
@@ -729,8 +729,8 @@ public void M() {
 	var k = this[i, j]++;
 	// END
 }",
-@"	var $tmp1 = this.get_Item($i, $j);
-	this.set_Item($i, $j, $Lift($tmp1 + 1));
+@"	var $tmp1 = this.get_$Item($i, $j);
+	this.set_$Item($i, $j, $Lift($tmp1 + 1));
 	var $k = $tmp1;
 ");
 		}
@@ -749,7 +749,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	this.set_Item($tmp1, $tmp2, $Lift(this.get_Item($tmp1, $tmp2) + 1));
+	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1));
 ");
 		}
 
@@ -767,7 +767,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	this.set_Item($tmp1, $tmp2, $Lift(this.get_Item($tmp1, $tmp2) + 1));
+	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1));
 ");
 		}
 

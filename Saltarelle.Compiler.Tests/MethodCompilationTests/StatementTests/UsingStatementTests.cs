@@ -45,7 +45,7 @@ public void M() {
 	// END
 }",
 @"	{
-		this.set_MyProperty($a);
+		this.set_$MyProperty($a);
 		var $d = $a;
 		try {
 			var $x = 0;
@@ -72,7 +72,7 @@ public void M() {
 	// END
 }",
 @"	{
-		this.set_MyProperty($a);
+		this.set_$MyProperty($a);
 		var $tmp1 = $a;
 		try {
 			var $x = 0;
@@ -101,13 +101,13 @@ public void M() {
 	// END
 }",
 @"	{
-		this.set_P1($a);
+		this.set_$P1($a);
 		var $d1 = $a;
 		try {
-			this.set_P2($b);
+			this.set_$P2($b);
 			var $d2 = $b;
 			try {
-				this.set_P3($c);
+				this.set_$P3($c);
 				var $d3 = $c;
 				try {
 					var $x = 0;
@@ -146,7 +146,7 @@ public void M() {
 	// END
 }",
 @"	{
-		this.set_MyProperty($a);
+		this.set_$MyProperty($a);
 		var $d = $a;
 		var $tmp1 = $Cast($d, {IDisposable});
 		try {

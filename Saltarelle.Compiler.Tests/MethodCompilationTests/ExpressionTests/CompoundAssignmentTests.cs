@@ -52,7 +52,7 @@ public void M() {
 	P += i;
 	// END
 }",
-@"	this.set_P(this.get_P() + $i);
+@"	this.set_$P(this.get_$P() + $i);
 ");
 		}
 
@@ -68,7 +68,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	$tmp1.set_P($tmp1.get_P() + $i);
+	$tmp1.set_$P($tmp1.get_$P() + $i);
 ");
 		}
 
@@ -86,10 +86,10 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F1();
-	var $tmp3 = $tmp1.get_P();
+	var $tmp3 = $tmp1.get_$P();
 	var $tmp2 = this.F2();
-	this.set_P($tmp2);
-	$tmp1.set_P($tmp3 + $tmp2);
+	this.set_$P($tmp2);
+	$tmp1.set_$P($tmp3 + $tmp2);
 ");
 		}
 
@@ -104,10 +104,10 @@ public void M() {
 	P1 += P2 += i;
 	// END
 }",
-@"	var $tmp2 = this.get_P1();
-	var $tmp1 = this.get_P2() + $i;
-	this.set_P2($tmp1);
-	this.set_P1($tmp2 + $tmp1);
+@"	var $tmp2 = this.get_$P1();
+	var $tmp1 = this.get_$P2() + $i;
+	this.set_$P2($tmp1);
+	this.set_$P1($tmp2 + $tmp1);
 ");
 		}
 
@@ -123,12 +123,12 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp3 = this.get_P1();
-	var $tmp1 = this.get_P2();
+@"	var $tmp3 = this.get_$P1();
+	var $tmp1 = this.get_$P2();
 	var $tmp2 = $tmp1 + this.F();
-	this.set_P2($tmp2);
+	this.set_$P2($tmp2);
 	var $tmp4 = $tmp3 + $tmp2;
-	this.set_P1($tmp4);
+	this.set_$P1($tmp4);
 	if ($tmp4 < 0) {
 	}
 ");
@@ -144,7 +144,7 @@ public void M() {
 	F += i;
 	// END
 }",
-@"	this.F += $i;
+@"	this.$F += $i;
 ");
 		}
 
@@ -159,7 +159,7 @@ public void M() {
 	F().F += i;
 	// END
 }",
-@"	this.F().F += $i;
+@"	this.F().$F += $i;
 ");
 		}
 
@@ -174,7 +174,7 @@ public void M() {
 	F1 += F2 += i;
 	// END
 }",
-@"	this.F1 += this.F2 += $i;
+@"	this.$F1 += this.$F2 += $i;
 ");
 		}
 
@@ -191,8 +191,8 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.F();
-	this.set_P($i);
-	$tmp1.F += $i;
+	this.set_$P($i);
+	$tmp1.$F += $i;
 ");
 		}
 
@@ -206,7 +206,7 @@ public void M() {
 	P += i;
 	// END
 }",
-@"	{C}.set_P({C}.get_P() + $i);
+@"	{C}.set_$P({C}.get_$P() + $i);
 ");
 		}
 
@@ -220,7 +220,7 @@ public void M() {
 	F += i;
 	// END
 }",
-@"	{C}.F += $i;
+@"	{C}.$F += $i;
 ");
 		}
 
@@ -234,7 +234,7 @@ public void M() {
 	this[i, j] += k;
 	// END
 }",
-@"	this.set_Item($i, $j, this.get_Item($i, $j) + $k);
+@"	this.set_$Item($i, $j, this.get_$Item($i, $j) + $k);
 ");
 		}
 
@@ -248,8 +248,8 @@ public void M() {
 	l = this[i, j] += k;
 	// END
 }",
-@"	var $tmp1 = this.get_Item($i, $j) + $k;
-	this.set_Item($i, $j, $tmp1);
+@"	var $tmp1 = this.get_$Item($i, $j) + $k;
+	this.set_$Item($i, $j, $tmp1);
 	$l = $tmp1;
 ");
 		}
@@ -269,8 +269,8 @@ public void M() {
 }",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	var $tmp3 = this.get_Item($tmp1, $tmp2);
-	this.set_Item($tmp1, $tmp2, $tmp3 + this.F3());
+	var $tmp3 = this.get_$Item($tmp1, $tmp2);
+	this.set_$Item($tmp1, $tmp2, $tmp3 + this.F3());
 ");
 		}
 
@@ -372,7 +372,7 @@ public void M() {
 	// END
 }
 ".Replace("type", type),
-@"	this.set_P($IntDiv(this.get_P(), $i));
+@"	this.set_$P($IntDiv(this.get_$P(), $i));
 "));
 		}
 
@@ -388,7 +388,7 @@ public void M() {
 	// END
 }
 ".Replace("type", type),
-@"	this.set_P(this.get_P() / $i);
+@"	this.set_$P(this.get_$P() / $i);
 "));
 		}
 
@@ -404,7 +404,7 @@ public void M() {
 	// END
 }
 ".Replace("type", type),
-@"	this.F = $IntDiv(this.F, $i);
+@"	this.$F = $IntDiv(this.$F, $i);
 "));
 		}
 
@@ -422,7 +422,7 @@ public void M() {
 }
 ".Replace("type", type),
 @"	var $tmp1 = this.F1();
-	$tmp1.F = $IntDiv($tmp1.F, $i);
+	$tmp1.$F = $IntDiv($tmp1.$F, $i);
 "));
 		}
 
@@ -438,7 +438,7 @@ public void M() {
 	// END
 }
 ".Replace("type", type),
-@"	this.F /= $i;
+@"	this.$F /= $i;
 "));
 		}
 
@@ -566,7 +566,7 @@ public void M() {
 	P >>= i;
 	// END
 }".Replace("type", type),
-@"	this.set_P(this.get_P() >>> $i);
+@"	this.set_$P(this.get_$P() >>> $i);
 "));
 		}
 
@@ -597,7 +597,7 @@ public void M() {
 	P >>= i;
 	// END
 }".Replace("type", type),
-@"	this.set_P(this.get_P() >> $i);
+@"	this.set_$P(this.get_$P() >> $i);
 "));
 		}
 
@@ -703,7 +703,7 @@ public void M() {
 @"	var $tmp1 = this.F1();
 	var $tmp3 = this.F2();
 	var $tmp2 = this.F3();
-	this.set_P($tmp2);
+	this.set_$P($tmp2);
 	$tmp1[$tmp3] += $tmp2;
 ");
 		}

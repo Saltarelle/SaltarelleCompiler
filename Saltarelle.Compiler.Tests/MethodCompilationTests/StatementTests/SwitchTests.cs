@@ -60,7 +60,7 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_SomeProperty($i);
+@"	this.set_$SomeProperty($i);
 	switch ($i) {
 		case 1: {
 			var $x = 0;

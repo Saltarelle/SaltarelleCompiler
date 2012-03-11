@@ -30,7 +30,7 @@ public void M() {
 	throw (MyProperty = ex);
 	// END
 }",
-@"	this.set_MyProperty($ex);
+@"	this.set_$MyProperty($ex);
 	throw $ex;
 ");
 		}

@@ -537,53 +537,19 @@ namespace Saltarelle.Compiler {
 				case ExpressionType.SubtractChecked:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, IsNullableType(rr.Operands[0].Type));
 
-				// TODO Not finished
-				case ExpressionType.ArrayLength:
-				case ExpressionType.ArrayIndex:
-				case ExpressionType.Call:
-				case ExpressionType.Conditional:
-				case ExpressionType.Constant:
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Invoke:
-				case ExpressionType.Lambda:
-				case ExpressionType.ListInit:
-				case ExpressionType.MemberAccess:
-				case ExpressionType.MemberInit:
 				case ExpressionType.Negate:
 				case ExpressionType.UnaryPlus:
 				case ExpressionType.NegateChecked:
-				case ExpressionType.New:
-				case ExpressionType.NewArrayInit:
-				case ExpressionType.NewArrayBounds:
 				case ExpressionType.Not:
-				case ExpressionType.Parameter:
-				case ExpressionType.Quote:
-				case ExpressionType.TypeAs:
-				case ExpressionType.TypeIs:
-				case ExpressionType.Block:
-				case ExpressionType.DebugInfo:
-				case ExpressionType.Decrement:
-				case ExpressionType.Dynamic:
-				case ExpressionType.Default:
-				case ExpressionType.Extension:
-				case ExpressionType.Goto:
-				case ExpressionType.Increment:
-				case ExpressionType.Index:
-				case ExpressionType.Label:
-				case ExpressionType.RuntimeVariables:
-				case ExpressionType.Loop:
-				case ExpressionType.Switch:
-				case ExpressionType.Throw:
-				case ExpressionType.Try:
-				case ExpressionType.Unbox:
-				case ExpressionType.TypeEqual:
 				case ExpressionType.OnesComplement:
-				case ExpressionType.IsTrue:
-				case ExpressionType.IsFalse:
 					throw new NotImplementedException();
+
+				// TODO Not finished
+				case ExpressionType.Conditional:
+
 				case ExpressionType.Power:
 				case ExpressionType.PowerAssign:
+				case ExpressionType.Decrement:
 				default:
 					throw new ArgumentException("Unsupported operator " + rr.OperatorType);
 			}
@@ -630,7 +596,9 @@ namespace Saltarelle.Compiler {
 
 		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Member is IProperty) {
-				return JsExpression.Invocation(JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, false), "get_" + rr.Member.Name));
+				// TODO: Obviously not.
+				var impl = _namingConvention.GetPropertyImplementation((IProperty)rr.Member);
+				return CompileMethodCall(impl.GetMethod, InnerCompile(rr.TargetResult, false), new JsExpression[0]);
 			}
 			else if (rr.Member is IField) {
 				var impl = _namingConvention.GetFieldImplementation((IField)rr.Member);

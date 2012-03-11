@@ -32,9 +32,9 @@ public void M() {
 	i = (P1 = P2 = P3 = 1);
 	// END
 }",
-@"	this.set_P3(1);
-	this.set_P2(1);
-	this.set_P1(1);
+@"	this.set_$P3(1);
+	this.set_$P2(1);
+	this.set_$P1(1);
 	$i = 1;
 ");
 		}

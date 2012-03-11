@@ -68,9 +68,9 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_SomeProperty(1);
+@"	this.set_$SomeProperty(1);
 	var $i = 1, $j = 2, $k = 3;
-	this.set_SomeProperty($i);
+	this.set_$SomeProperty($i);
 	for (var $l = $i, $m = 4; $i < 10; $i++) {
 		var $x = 0;
 	}
@@ -89,9 +89,9 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_SomeProperty(1);
+@"	this.set_$SomeProperty(1);
 	$i = 1, $j = 2, $k = 3;
-	this.set_SomeProperty($i);
+	this.set_$SomeProperty($i);
 	for ($l = $i, $m = 4; $i < 10; $i++) {
 		var $x = 0;
 	}
@@ -192,7 +192,7 @@ public void M() {
 	// END
 }",
 @"	for (var $i = 0;; $i++) {
-		this.set_SomeProperty(1);
+		this.set_$SomeProperty(1);
 		if (!($i < 1)) {
 			break;
 		}
@@ -215,11 +215,11 @@ public void M() {
 }",
 @"	for ($i = 0; $i < 10;) {
 		var $x = 0;
-		this.set_SomeProperty(1);
+		this.set_$SomeProperty(1);
 		$i = 1;
 		$j = 2;
 		$k = 3;
-		this.set_SomeProperty($i);
+		this.set_$SomeProperty($i);
 		$l = $i;
 		$m = 4;
 	}

@@ -36,7 +36,7 @@ public void M() {
 }",
 @"	do {
 		var $x = 0;
-		this.set_SomeProperty(1);
+		this.set_$SomeProperty(1);
 	} while (1 < 0);
 ");
 		}
