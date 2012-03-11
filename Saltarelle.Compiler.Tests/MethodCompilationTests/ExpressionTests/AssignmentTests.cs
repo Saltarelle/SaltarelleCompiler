@@ -265,11 +265,11 @@ public void M() {
 	F1().P = F2().P = F();
 	// END
 }",
-@"	var $tmp3 = this.F1();
-	var $tmp1 = this.F2();
-	var $tmp2 = this.F();
-	$tmp1.set_P($tmp2);
-	$tmp3.set_P($tmp2);
+@"	var $tmp1 = this.F1();
+	var $tmp2 = this.F2();
+	var $tmp3 = this.F();
+	$tmp2.set_P($tmp3);
+	$tmp1.set_P($tmp3);
 ");
 		}
 
@@ -338,6 +338,52 @@ public void M() {
 	var $tmp4 = this.F3();
 	$tmp1.set_Item($tmp2, $tmp3, $tmp4);
 	$i = $tmp4;
+");
+		}
+
+		[Test]
+		public void CanAssignToArrayElement() {
+			AssertCorrect(
+@"public void M() {
+	int[] arr = null;
+	int i = 0;
+	// BEGIN
+	arr[0] = i;
+	// END
+}",
+@"	$arr[0] = $i;
+");
+		}
+
+		[Test]
+		public void ArrayAccessEvaluatesArgumentsInTheCorrectOrder() {
+			AssertCorrect(
+@"int[] arr;
+int i;
+int F() { return 0; }
+public void M() {
+	// BEGIN
+	arr[i] = (i = F());
+	// END
+}",
+@"	var $tmp1 = this.$arr;
+	var $tmp2 = this.$i;
+	$tmp1[$tmp2] = this.$i = this.F();
+");
+		}
+
+		[Test]
+		public void AssigningToByRefLocalWorks() {
+			AssertCorrect(
+@"int[] arr;
+int i;
+int F() { return 0; }
+public void M(ref int i) {
+	// BEGIN
+	i = 1;
+	// END
+}",
+@"	$i.$ = 1;
 ");
 		}
 	}

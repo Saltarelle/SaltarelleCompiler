@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
 	public class CompoundAssignmentTests : MethodCompilerTestBase {
-		protected new void AssertCorrectForBulkOperators(string csharp, string expected, INamingConventionResolver namingConvention = null) {
+		protected void AssertCorrectForBulkOperators(string csharp, string expected, INamingConventionResolver namingConvention = null) {
 			// Bulk operators are all except for division and shift right.
 			foreach (var op in new[] { "+", "*", "%", "-", "<<", "&", "|", "^" }) {
 				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), namingConvention);
@@ -671,6 +671,73 @@ public void M() {
 }".Replace("type", type),
 @"	$i = $Lift($i >>> $j);
 "));
+		}
+
+		[Test]
+		public void CanCompoundAssignToArrayElement() {
+			AssertCorrect(
+@"public void M() {
+	int[] arr = null;
+	int i = 0;
+	// BEGIN
+	arr[0] = i;
+	// END
+}",
+@"	$arr[0] = $i;
+");
+		}
+
+		[Test]
+		public void CompoundAssignToArrayElementEvaluatesArgumentsInTheCorrectOrder() {
+			AssertCorrect(
+@"int[] F1() { return null; }
+int F2() { return 0; }
+int F3() { return 0; }
+int P { get; set; }
+public void M() {
+	int i;
+	// BEGIN
+	F1()[F2()] += (P = F3());
+	// END
+}",
+@"	var $tmp1 = this.F1();
+	var $tmp3 = this.F2();
+	var $tmp2 = this.F3();
+	this.set_P($tmp2);
+	$tmp1[$tmp3] += $tmp2;
+");
+		}
+
+		[Test]
+		public void LiftedCompoundAssignToArrayElementOnlyEvaluatesArgumentsOnce() {
+			AssertCorrect(
+@"int?[] F1() { return null; }
+int F2() { return 0; }
+int F3() { return 0; }
+public void M() {
+	// BEGIN
+	F1()[F2()] += F3();
+	// END
+}",
+@"	var $tmp1 = this.F1();
+	var $tmp2 = this.F2();
+	$tmp1[$tmp2] = $Lift($tmp1[$tmp2] + this.F3());
+");
+		}
+
+		[Test]
+		public void CompoundAssigningToByRefLocalWorks() {
+			AssertCorrectForBulkOperators(
+@"int[] arr;
+int i;
+int F() { return 0; }
+public void M(ref int i) {
+	// BEGIN
+	i += 1;
+	// END
+}",
+@"	$i.$ += 1;
+");
 		}
 
 		[Test]

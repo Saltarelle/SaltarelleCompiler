@@ -16,7 +16,6 @@ namespace Saltarelle.Compiler {
         TResult VisitLocalResolveResult(LocalResolveResult rr, TData data);
         TResult VisitMethodGroupResolveResult(MethodGroupResolveResult rr, TData data);
         TResult VisitLambdaResolveResult(LambdaResolveResult rr, TData data);
-        TResult VisitInvocationResolveResult(InvocationResolveResult rr, TData data);
         TResult VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, TData data);
         TResult VisitConversionResolveResult(ConversionResolveResult rr, TData data);
         TResult VisitConstantResolveResult(ConstantResolveResult rr, TData data);
@@ -47,9 +46,6 @@ namespace Saltarelle.Compiler {
             else if (rr is CSharpInvocationResolveResult) {
                 // TODO: What is this? Might be needed for named arguments
                 return visitor.VisitCSharpInvocationResolveResult((CSharpInvocationResolveResult)rr, data);
-            }
-            else if (rr is InvocationResolveResult) {
-                return visitor.VisitInvocationResolveResult((InvocationResolveResult)rr, data);
             }
             else if (rr is LambdaResolveResult) {
                 return visitor.VisitLambdaResolveResult((LambdaResolveResult)rr, data);

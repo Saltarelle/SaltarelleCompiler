@@ -11,12 +11,12 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 			// Bulk operators are all except for division, shift right, coalesce and the logical operators.
 			foreach (var op in new[] { "*", "%", "+", "-", "<<", "<", ">", "<=", ">=", "&", "^", "|" }) {
 				var jsOp = (op == "==" || op == "!=" ? op + "=" : op);	// Script should use strict equals (===) rather than normal equals (==)
-				base.AssertCorrect(csharp.Replace("+", op), expected.Replace("+", jsOp), namingConvention);
+				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", jsOp), namingConvention);
 			}
 
 			if (includeEqualsAndNotEquals) {
-				base.AssertCorrect(csharp.Replace("+", "=="), expected.Replace("+", "==="), namingConvention);
-				base.AssertCorrect(csharp.Replace("+", "!="), expected.Replace("+", "!=="), namingConvention);
+				AssertCorrect(csharp.Replace("+", "=="), expected.Replace("+", "==="), namingConvention);
+				AssertCorrect(csharp.Replace("+", "!="), expected.Replace("+", "!=="), namingConvention);
 			}
 		}
 

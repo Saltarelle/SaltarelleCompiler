@@ -61,6 +61,11 @@ namespace Saltarelle.Compiler {
 				_result = true;
 				return expression;
 			}
+
+			public override JsExpression Visit(JsMemberAccessExpression expression, object data) {
+ 				_result = true;
+				return expression;
+			}
 		}
 
 		internal class DoesJsExpressionHaveSideEffects : RewriterVisitorBase<object> {
@@ -233,56 +238,50 @@ namespace Saltarelle.Compiler {
 			return type.GetDefinition().Equals(_compilation.FindType(KnownTypeCode.NullableOfT));
 		}
 
-		private JsExpression CompilePropertySetter(IProperty property, MemberResolveResult target, ResolveResult value, bool returnValueIsImportant) {
-			var impl = _namingConvention.GetPropertyImplementation(property);
-
-			var expressions = new List<JsExpression>();
-			expressions.Add(VisitResolveResult(target.TargetResult, true));
-			if (property.IsIndexer) {
-				var indexerInvocation = (CSharpInvocationResolveResult)target;
-				foreach (var a in indexerInvocation.Arguments) {
-					expressions.Add(InnerCompile(a, false, expressions));
-				}
+		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
+			var jsTarget = InnerCompile(target.TargetResult, compoundFactory == null);
+			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
+			var access = JsExpression.MemberAccess(jsTarget, fieldName);
+			if (compoundFactory != null) {
+				return compoundFactory(access, jsOtherOperand);
 			}
-
-			var jsValue = InnerCompile(value, returnValueIsImportant, expressions);
-
-			switch (impl.Type) {
-				case PropertyImplOptions.ImplType.GetAndSetMethods: {
-					var setter = CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { jsValue }));
-					if (returnValueIsImportant) {
-						_additionalStatements.Add(new JsExpressionStatement(setter));
-						return jsValue;
-					}
-					else {
-						return setter;
-					}
+			else {
+				if (returnValueIsImportant && returnValueBeforeChange) {
+					var temp = _createTemporaryVariable(target.Type);
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, access));
+					_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp.Variable].Name), jsOtherOperand))));
+					return JsExpression.Identifier(_variables[temp.Variable].Name);
 				}
-
-				case PropertyImplOptions.ImplType.Field: {
-					if (expressions.Count != 1) {
-						_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name + ", declared as being a field, is an indexer.");
-						return JsExpression.Number(0);
-					}
-					return JsExpression.Assign(JsExpression.MemberAccess(expressions[0], impl.FieldName), jsValue);
-				}
-
-				case PropertyImplOptions.ImplType.NativeIndexer: {
-					if (expressions.Count != 2) {
-						_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name + ", declared as being a native indexer, does not have exactly one argument.");
-						return JsExpression.Number(0);
-					}
-					return JsExpression.Assign(JsExpression.Index(expressions[0], expressions[1]), jsValue);
-				}
-
-				default: {
-					_errorReporter.Error("Cannot use property " + property.DeclaringType.FullName + "." + property.Name + " from script.");
-					return JsExpression.Number(0);
+				else {
+					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
 				}
 			}
 		}
 
-		private JsExpression CompileCompoundAssignment(ResolveResult target, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted) {
+		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
+			var expressions = new List<JsExpression>();
+			expressions.Add(InnerCompile(array, compoundFactory == null, expressions));
+			expressions.Add(InnerCompile(index, compoundFactory == null, expressions));
+			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
+			var access = JsExpression.Index(expressions[0], expressions[1]);
+
+			if (compoundFactory != null) {
+				return compoundFactory(access, jsOtherOperand);
+			}
+			else {
+				if (returnValueIsImportant && returnValueBeforeChange) {
+					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, access));
+					_additionalStatements.Add(new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp.Variable].Name), jsOtherOperand))));
+					return JsExpression.Identifier(_variables[temp.Variable].Name);
+				}
+				else {
+					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
+				}
+			}
+		}
+
+		private JsExpression CompileCompoundAssignment(ResolveResult target, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
 			if (isLifted) {
 				compoundFactory = null;
 				var oldVF       = valueFactory;
@@ -307,52 +306,48 @@ namespace Saltarelle.Compiler {
 								}
 							}
 
-							expressions.Add(CompileMethodCall(impl.GetMethod, expressions[0], expressions.Skip(1)));
-							var jsOtherOperand = InnerCompile(otherOperand, false, expressions);
-							var newValue = valueFactory(expressions[expressions.Count - 1], jsOtherOperand);
-							expressions.RemoveAt(expressions.Count - 1); // Remove the current value because it should not be an argument to the setter.
-
-							if (returnValueIsImportant) {
-								if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(newValue)) {
-									var temp = _createTemporaryVariable(target.Type);
-									_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, newValue));
-									newValue = JsExpression.Identifier(_variables[temp.Variable].Name);
-								}
-								_additionalStatements.Add(new JsExpressionStatement(CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { newValue }))));
-								return newValue;
+							JsExpression oldValue, jsOtherOperand;
+							if (oldValueIsImportant) {
+								expressions.Add(CompileMethodCall(impl.GetMethod, expressions[0], expressions.Skip(1)));
+								jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
+								oldValue = expressions[expressions.Count - 1];
+								expressions.RemoveAt(expressions.Count - 1); // Remove the current value because it should not be an argument to the setter.
 							}
 							else {
-								return CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { newValue }));
+								jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
+								oldValue = null;
+							}
+
+							if (returnValueIsImportant) {
+								var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
+								if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(valueToReturn)) {
+									var temp = _createTemporaryVariable(target.Type);
+									_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, valueToReturn));
+									valueToReturn = JsExpression.Identifier(_variables[temp.Variable].Name);
+								}
+
+								var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
+
+								_additionalStatements.Add(new JsExpressionStatement(CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { newValue }))));
+								return valueToReturn;
+							}
+							else {
+								return CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { valueFactory(oldValue, jsOtherOperand) }));
 							}
 						}
 
 						case PropertyImplOptions.ImplType.Field: {
-							var jsTarget = InnerCompile(mrr.TargetResult, compoundFactory == null);
-							var jsOtherOperand = InnerCompile(otherOperand, false, ref jsTarget);
-							if (compoundFactory != null)
-								return compoundFactory(JsExpression.MemberAccess(jsTarget, impl.FieldName), jsOtherOperand);
-							else
-								return JsExpression.Assign(JsExpression.MemberAccess(jsTarget, impl.FieldName), valueFactory(JsExpression.MemberAccess(jsTarget, impl.FieldName), jsOtherOperand));
+							return CompileCompoundFieldAssignment(mrr, otherOperand, impl.FieldName, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 						}
 
 						case PropertyImplOptions.ImplType.NativeIndexer: {
 							if (!property.IsIndexer || property.Getter.Parameters.Count != 1) {
-								_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name + ", declared as being a native indexer, is not an indexer with exactly one argument.");
+								_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name +
+													 ", declared as being a native indexer, is not an indexer with exactly one argument.");
 								return JsExpression.Number(0);
 							}
 
-							var expressions = new List<JsExpression>();
-							expressions.Add(InnerCompile(mrr.TargetResult, compoundFactory == null, expressions));
-							foreach (var a in ((CSharpInvocationResolveResult)target).Arguments) {
-								expressions.Add(InnerCompile(a, compoundFactory == null, expressions));
-							}
-
-							var jsOtherOperand = InnerCompile(otherOperand, false, expressions);
-
-							if (compoundFactory != null)
-								return compoundFactory(JsExpression.Index(expressions[0], expressions[1]), jsOtherOperand);
-							else
-								return JsExpression.Assign(JsExpression.Index(expressions[0], expressions[1]), valueFactory(JsExpression.Index(expressions[0], expressions[1]), jsOtherOperand));
+							return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 						}
 
 						default: {
@@ -362,16 +357,10 @@ namespace Saltarelle.Compiler {
 					}
 				}
 				else if (mrr.Member is IField) {
-					var jsTarget = InnerCompile(mrr.TargetResult, true);
-					var jsOtherOperand = InnerCompile(otherOperand, false, ref jsTarget);
-
 					var field = (IField)mrr.Member;
 					var impl = _namingConvention.GetFieldImplementation(field);
 					if (impl.Type == FieldImplOptions.ImplType.Field) {
-						if (compoundFactory != null)
-							return compoundFactory(JsExpression.MemberAccess(jsTarget, impl.Name), jsOtherOperand);
-						else
-							return JsExpression.Assign(JsExpression.MemberAccess(jsTarget, impl.Name), valueFactory(JsExpression.MemberAccess(jsTarget, impl.Name), jsOtherOperand));
+						return CompileCompoundFieldAssignment(mrr, otherOperand, impl.Name, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 					}
 					else {
 						_errorReporter.Error("Field " + field.DeclaringType.FullName + "." + field.Name + " is not usable from script.");
@@ -383,12 +372,31 @@ namespace Saltarelle.Compiler {
 				}
 			}
 			else if (target is LocalResolveResult) {
-				var jsTarget = InnerCompile(target, true);
-				var jsOtherOperand = InnerCompile(otherOperand, false, ref jsTarget);
-				if (compoundFactory != null)
+				var jsTarget = InnerCompile(target, compoundFactory == null);
+				var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
+				if (compoundFactory != null) {
 					return compoundFactory(jsTarget, jsOtherOperand);
-				else
-					return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
+				}
+				else {
+					if (returnValueIsImportant && returnValueBeforeChange) {
+						var temp = _createTemporaryVariable(target.Type);
+						_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, jsTarget));
+						_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp.Variable].Name), jsOtherOperand))));
+						return JsExpression.Identifier(_variables[temp.Variable].Name);
+					}
+					else {
+						return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
+					}
+				}
+
+			}
+			else if (target is ArrayAccessResolveResult) {
+				var arr = (ArrayAccessResolveResult)target;
+				if (arr.Indices.Length != 1) {
+					_errorReporter.Error("Arrays have to be one-dimensional.");
+					return JsExpression.Number(0);
+				}
+				return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indices[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 			}
 			else {
 				_errorReporter.Error("Unsupported target of compound assignment: " + target.ToString());
@@ -409,13 +417,7 @@ namespace Saltarelle.Compiler {
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			switch (rr.OperatorType) {
 				case ExpressionType.Assign:
-					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IProperty) {
-						var mrr = (MemberResolveResult)rr.Operands[0];
-						return CompilePropertySetter((IProperty)mrr.Member, mrr, rr.Operands[1], returnValueIsImportant);
-					}
-					else {
-						return JsExpression.Assign(VisitResolveResult(rr.Operands[0], true), VisitResolveResult(rr.Operands[1], true));
-					}
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.Assign, (a, b) => b, returnValueIsImportant, false, oldValueIsImportant: false);
 
 				// Compound assignment operators
 				case ExpressionType.AddAssign:
@@ -456,6 +458,17 @@ namespace Saltarelle.Compiler {
 				case ExpressionType.SubtractAssign:
 				case ExpressionType.SubtractAssignChecked:
 					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+
+				case ExpressionType.PreIncrementAssign:
+					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PrefixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+
+				case ExpressionType.PreDecrementAssign:
+					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PrefixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+
+				case ExpressionType.PostIncrementAssign:
+					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PostfixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type), returnValueBeforeChange: true);
+				case ExpressionType.PostDecrementAssign:
+					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PostfixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type), returnValueBeforeChange: true);
 
 				// Binary non-assigning operators
 				case ExpressionType.Add:
@@ -525,12 +538,6 @@ namespace Saltarelle.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, IsNullableType(rr.Operands[0].Type));
 
 				// TODO Not finished
-				case ExpressionType.PreIncrementAssign:
-				case ExpressionType.PostIncrementAssign:
-				case ExpressionType.PreDecrementAssign:
-				case ExpressionType.PostDecrementAssign:
-					return JsExpression.PostfixPlusPlus(VisitResolveResult(rr.Operands[0], true));
-
 				case ExpressionType.ArrayLength:
 				case ExpressionType.ArrayIndex:
 				case ExpressionType.Call:
@@ -597,7 +604,13 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
-			return JsExpression.Identifier(_variables[rr.Variable].Name);	// Not really, this (might, or it might happen in the step above it) needs to take care of by-ref variables.
+			// Only other thing we have to take care of now is if we're accessing a byref variable declared in a parent function, in which case we'd have to return this.variable.$
+			var data = _variables[rr.Variable];
+			var ident = JsExpression.Identifier(_variables[rr.Variable].Name);
+			if (data.UseByRefSemantics)
+				return JsExpression.MemberAccess(ident, "$");
+			else
+				return ident;
 		}
 
 		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
@@ -648,7 +661,7 @@ namespace Saltarelle.Compiler {
 			else if (rr.Conversion.IsNullableConversion) {
 				return VisitResolveResult(rr.Input, returnValueIsImportant);
 			}
-			throw new NotImplementedException();
+			throw new NotImplementedException("Conversion " + rr.Conversion + " is not implemented");
 		}
 
 		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, bool returnValueIsImportant) {
@@ -660,17 +673,17 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
-			throw new NotImplementedException();
+			if (rr.Indices.Length != 1)
+				_errorReporter.Error("Arrays have to be one-dimensional");
+			var array = InnerCompile(rr.Array, false);
+			var index = InnerCompile(rr.Indices[0], false, ref array);
+			return JsExpression.Index(array, index);
 		}
 
 		public override JsExpression VisitDefaultResolveResult(ResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Type.Kind == TypeKind.Null)
 				return JsExpression.Null;
-			throw new NotImplementedException();
-		}
-
-		public override JsExpression VisitInvocationResolveResult(InvocationResolveResult rr, bool returnValueIsImportant) {
-			throw new NotImplementedException();
+			throw new NotImplementedException("Resolve result " + rr + " is not handled.");
 		}
 
 		public override JsExpression VisitLambdaResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.LambdaResolveResult rr, bool returnValueIsImportant) {

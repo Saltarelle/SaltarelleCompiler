@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 			var $x = 0;
 		}
 		finally {
-			if ($d != null) {
+			if ($d !== null) {
 				$d.Dispose();
 			}
 		}
@@ -51,7 +51,7 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($d != null) {
+			if ($d !== null) {
 				$d.Dispose();
 			}
 		}
@@ -78,7 +78,7 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($tmp1 != null) {
+			if ($tmp1 !== null) {
 				$tmp1.Dispose();
 			}
 		}
@@ -113,19 +113,19 @@ public void M() {
 					var $x = 0;
 				}
 				finally {
-					if ($d3 != null) {
+					if ($d3 !== null) {
 						$d3.Dispose();
 					}
 				}
 			}
 			finally {
-				if ($d2 != null) {
+				if ($d2 !== null) {
 					$d2.Dispose();
 				}
 			}
 		}
 		finally {
-			if ($d1 != null) {
+			if ($d1 !== null) {
 				$d1.Dispose();
 			}
 		}

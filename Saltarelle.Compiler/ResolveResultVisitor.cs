@@ -55,11 +55,6 @@ namespace Saltarelle.Compiler {
 			return default(TResult);
         }
 
-        public virtual TResult VisitInvocationResolveResult(InvocationResolveResult rr, TData data) {
-            VisitChildResolveResults(rr, data);
-			return default(TResult);
-        }
-
         public virtual TResult VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, TData data) {
             VisitChildResolveResults(rr, data);
 			return default(TResult);
