@@ -73,6 +73,20 @@ public void M() {
 		}
 
 		[Test]
+		public void SimpleOperatorWithTwoMethodCallsWorks() {
+			AssertCorrect(
+@"public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	// BEGIN
+	var x = F1() + F2();
+	// END
+}",
+@"	var $x = this.F1() + this.F2();
+");
+		}
+
+		[Test]
 		public void LiftedBulkOperatorsExceptForEqualsAndNotEqualsWork() {
 			AssertCorrectForBulkOperators(
 @"public void M() {

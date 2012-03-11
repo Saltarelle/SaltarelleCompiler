@@ -165,7 +165,7 @@ namespace Saltarelle.Compiler {
 			var result = CloneAndCompile(rr, true);
 
 			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(result.Expression);
-			if (result.AdditionalStatements.Count > 0 || needsTemporary || DoesJsExpressionHaveSideEffects.Process(result.Expression)) {
+			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
 				// We have to ensure that everything is ordered correctly. First ensure that all expressions that have to be evaluated first actually are evaluated first.
 				for (int i = 0; i < expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression.Count; i++) {
 					if (IsExpressionInvariantToOrder(expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i]))
@@ -248,6 +248,10 @@ namespace Saltarelle.Compiler {
 			    && ((ParameterizedType)type).TypeArguments[0] == _compilation.FindType(KnownTypeCode.Boolean);
 		}
 
+		private bool IsDelegateType(IType type) {
+			var del = _compilation.FindType(KnownTypeCode.Delegate);
+			return type.GetAllBaseTypes().Any(b => b.Equals(del));
+		}
 
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var jsTarget = InnerCompile(target.TargetResult, compoundFactory == null);
@@ -633,9 +637,20 @@ namespace Saltarelle.Compiler {
 			}
 			else if (rr.Member is IField) {
 				var impl = _namingConvention.GetFieldImplementation((IField)rr.Member);
-				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, false), impl.Name);
+				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
 			}
-			return base.VisitMemberResolveResult(rr, returnValueIsImportant);
+			else if (rr.Member is IEvent) {
+				var impl = _namingConvention.GetAutoEventBackingFieldImplementation((IEvent)rr.Member);
+				if (impl.Type == FieldImplOptions.ImplType.Field) {
+					return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
+				}
+				else {
+					_errorReporter.Error("Cannot use backing field of event " + rr.Member.DeclaringType + "." + rr.Member.Name + " from script.");
+					return JsExpression.Number(0);
+				}
+			}
+			else
+				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());
 		}
 
 		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
@@ -643,12 +658,23 @@ namespace Saltarelle.Compiler {
 			var arguments = rr.Arguments.Select(a => VisitResolveResult(a, true));
 			if (rr.Member is IMethod) {
 				// TODO: This one might require argument reordering and default argument evaluation
-				var method = (IMethod)rr.Member;
-				if (method.IsConstructor) {
-					return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments);
+				if (rr.Member.Name == "Invoke" && IsDelegateType(rr.Member.DeclaringType)) {
+					// Invoke the underlying method instead of the delegate.
+					var expressions = new List<JsExpression>();
+					expressions.Add(InnerCompile(rr.TargetResult, false));
+					foreach (var a in rr.Arguments) {
+						expressions.Add(InnerCompile(a, false, expressions));
+					}
+					return JsExpression.Invocation(expressions[0], expressions.Skip(1));
 				}
 				else {
-					return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+					var method = (IMethod)rr.Member;
+					if (method.IsConstructor) {
+						return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments);
+					}
+					else {
+						return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+					}
 				}
 			}
 			else if (rr.Member is IProperty) {
@@ -664,7 +690,7 @@ namespace Saltarelle.Compiler {
 				return CompileMethodCall(impl.GetMethod, expressions[0], expressions.Skip(1));
 			}
 			else {
-				return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+				throw new InvalidOperationException("Invocation of unsupported member " + rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
 			}
 		}
 
@@ -740,11 +766,16 @@ namespace Saltarelle.Compiler {
 				}
 
 				if (mgrr.TypeArguments.Count > 0 && !impl.IgnoreGenericArguments) {
-					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, mgrr.TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(mgrr.TargetResult.Type), true)));
+					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, mgrr.TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)));
 				}
 
 				return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
 			}
+			else if (rr.Conversion.IsImplicit) {
+				// Null literal conversion have no property, should report this
+				return VisitResolveResult(rr.Input, returnValueIsImportant);
+			}
+
 			throw new NotImplementedException("Conversion " + rr.Conversion + " is not implemented");
 		}
 

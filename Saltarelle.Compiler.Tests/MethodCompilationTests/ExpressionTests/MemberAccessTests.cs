@@ -109,17 +109,57 @@ public void M() {
 
 		[Test]
 		public void UsingEventAddAccessorWorks() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h;
+	// BEGIN
+	MyEvent += h;
+	// END
+}",
+@"	add_$MyEvent(h);
+");
 		}
 
 		[Test]
 		public void UsingEventRemoveAccessorWorks() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h;
+	// BEGIN
+	MyEvent -= h;
+	// END
+}",
+@"	remove_$MyEvent(h);
+");
 		}
 
 		[Test]
-		public void UsingEventRaiserWorks() {
-			Assert.Inconclusive("TODO");
+		public void InvokingEventBackingFieldWorks() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	// BEGIN
+	MyEvent(null, null);
+	// END
+}",
+@"	this.$MyEvent(null, null);
+");
+		}
+
+		[Test]
+		public void AccessingEventBackingFieldWorks() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h;
+	// BEGIN
+	var b = MyEvent != null;
+	// END
+}",
+@"	var $b = $Upcast(this.$MyEvent, {MulticastDelegate}) !== null;
+");
 		}
 
 		[Test]

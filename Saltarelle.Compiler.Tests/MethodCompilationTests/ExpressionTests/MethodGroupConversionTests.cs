@@ -91,7 +91,21 @@ public void M() {
 public void M() {
 	System.Action<int> f;
 	// BEGIN
-	f = F;
+	f = F<int>;
+	// END
+}",
+@"	$f = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
+");
+		}
+
+		[Test, Ignore("NRefactory bug")]
+		public void MethodGroupConversionCanInstantiateGenericMethodWhenTheGenericArgumentIsNotExplicitlySpecified() {
+			AssertCorrect(
+@"void F<T>(T x) {}
+public void M() {
+	System.Action<int> f;
+	// BEGIN
+	f = F<int>;
 	// END
 }",
 @"	$f = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
@@ -115,7 +129,16 @@ public void M() {
 
 		[Test]
 		public void MethodGroupConversionCanInstantiateGenericStaticMethod() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"static void F<T>(T x) {}
+public void M() {
+	System.Action<int> f;
+	// BEGIN
+	f = F<int>;
+	// END
+}",
+@"	$f = $InstantiateGenericMethod({C}.$F, {Int32});
+");
 		}
 	}
 }
