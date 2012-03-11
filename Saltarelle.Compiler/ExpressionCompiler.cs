@@ -405,13 +405,16 @@ namespace Saltarelle.Compiler {
 		}
 
 		private JsExpression CompileBinaryNonAssigningOperator(ResolveResult left, ResolveResult right, Func<JsExpression, JsExpression, JsExpression> resultFactory, bool isLifted) {
-			if (isLifted) {
-				var oldRF = resultFactory;
-				resultFactory = (a, b) => _runtimeLibrary.Lift(_compilation, oldRF(a, b));
-			}
 			var jsLeft  = InnerCompile(left, false);
 			var jsRight = InnerCompile(right, false, ref jsLeft);
-			return resultFactory(jsLeft, jsRight);
+			var result = resultFactory(jsLeft, jsRight);
+			return isLifted ? _runtimeLibrary.Lift(_compilation, result) : result;
+		}
+
+		private JsExpression CompileUnaryOperator(ResolveResult operand, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
+			var jsOperand = InnerCompile(operand, false);
+			var result = resultFactory(jsOperand);
+			return isLifted ? _runtimeLibrary.Lift(_compilation, result) : result;
 		}
 
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
@@ -538,11 +541,14 @@ namespace Saltarelle.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.Negate:
-				case ExpressionType.UnaryPlus:
 				case ExpressionType.NegateChecked:
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.Negate, IsNullableType(rr.Operands[0].Type));
+				case ExpressionType.UnaryPlus:
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.Positive, IsNullableType(rr.Operands[0].Type));
 				case ExpressionType.Not:
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.LogicalNot, IsNullableType(rr.Operands[0].Type));
 				case ExpressionType.OnesComplement:
-					throw new NotImplementedException();
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, IsNullableType(rr.Operands[0].Type));
 
 				// TODO Not finished
 				case ExpressionType.Conditional:
