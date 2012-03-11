@@ -276,5 +276,57 @@ public void M() {
 @"	var $c = $Coalesce($a, $b);
 ");
 		}
+
+		[Test]
+		public void NonLiftedBooleanAndWorks() {
+			AssertCorrect(
+@"public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	var c = a & b;
+	// END
+}",
+@"	var $c = $a & $b;
+");
+		}
+
+		[Test]
+		public void NonLiftedBooleanOrWorks() {
+			AssertCorrect(
+@"public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	var c = a | b;
+	// END
+}",
+@"	var $c = $a | $b;
+");
+		}
+
+		[Test]
+		public void LiftedBooleanAndWorks() {
+			AssertCorrect(
+@"public void M() {
+	bool? a = false, b = false;
+	// BEGIN
+	var c = a & b;
+	// END
+}",
+@"	var $c = $LiftedBooleanAnd($a, $b);
+");
+		}
+
+		[Test]
+		public void LiftedBooleanOrWorks() {
+			AssertCorrect(
+@"public void M() {
+	bool? a = false, b = false;
+	// BEGIN
+	var c = a | b;
+	// END
+}",
+@"	var $c = $LiftedBooleanOr($a, $b);
+");
+		}
 	}
 }

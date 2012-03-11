@@ -449,8 +449,8 @@ namespace Saltarelle.Compiler {
 		private JsBlockStatement CompileCatchClause(LocalResolveResult catchVariable, CatchClause catchClause, bool isCatchAll) {
 			JsStatement variableDeclaration = null;
 			if (!catchClause.VariableNameToken.IsNull) {
-				var compiledAssignment = isCatchAll ? _runtimeLibrary.MakeException(_compilation, JsExpression.Identifier(_variables[catchVariable.Variable].Name))
-				                                    : _runtimeLibrary.Cast(_compilation, JsExpression.Identifier(_variables[catchVariable.Variable].Name), GetJsType(catchClause.Type));
+				var compiledAssignment = isCatchAll ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name))
+				                                    : _runtimeLibrary.Cast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), GetJsType(catchClause.Type));
 
 				variableDeclaration = new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment));
 			}
@@ -480,7 +480,7 @@ namespace Saltarelle.Compiler {
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
-					var test = _runtimeLibrary.TypeIs(_compilation, JsExpression.Identifier(catchVariableName), GetJsType(catchClauses[i].Type));
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), GetJsType(catchClauses[i].Type));
 					current = new JsIfStatement(test, CompileCatchClause(_currentVariableForRethrow, catchClauses[i], false), current);
 				}
 

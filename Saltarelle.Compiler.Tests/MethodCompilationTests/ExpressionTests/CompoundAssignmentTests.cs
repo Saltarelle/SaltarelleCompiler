@@ -741,6 +741,134 @@ public void M(ref int i) {
 		}
 
 		[Test]
+		public void NonLiftedBooleanAndWorksForLocalVariables() {
+			foreach (var type in new[] { "bool", "int?", "int" }) {
+				AssertCorrect(
+@"public void M() {
+	type a = default(type), b = default(type);
+	// BEGIN
+	a &= b;
+	// END
+}".Replace("type", type),
+type.EndsWith("?")
+? @"	$a = $Lift($a & $b);
+"
+: @"	$a &= $b;
+");
+			}
+		}
+
+		[Test]
+		public void NonLiftedBooleanOrWorksForLocalVariables() {
+			foreach (var type in new[] { "bool", "int?", "int" }) {
+				AssertCorrect(
+@"public void M() {
+	type a = default(type), b = default(type);
+	// BEGIN
+	a |= b;
+	// END
+}".Replace("type", type),
+type.EndsWith("?")
+? @"	$a = $Lift($a | $b);
+"
+: @"	$a |= $b;
+");
+			}
+		}
+
+		[Test]
+		public void LiftedBooleanAndWorksForLocalVariables() {
+			AssertCorrect(
+@"public void M() {
+	bool? a = false, b = false;
+	// BEGIN
+	a &= b;
+	// END
+}",
+@"	$a = $LiftedBooleanAnd($a, $b);
+");
+		}
+
+		[Test]
+		public void LiftedBooleanOrWorksForLocalVariables() {
+			AssertCorrect(
+@"public void M() {
+	bool? a = false, b = false;
+	// BEGIN
+	a |= b;
+	// END
+}",
+@"	$a = $LiftedBooleanOr($a, $b);
+");
+		}
+
+		[Test]
+		public void NonLiftedBooleanAndWorksForMethodProperties() {
+			foreach (var type in new[] { "bool", "int?", "int" }) {
+				AssertCorrect(
+@"type P { get; set; }
+public void M() {
+	type a = default(type);
+	// BEGIN
+	P &= $a;
+	// END
+}".Replace("type", type),
+type.EndsWith("?")
+? @"	this.set_$P($Lift(this.get_$P() & $a));
+"
+: @"	this.set_$P(this.get_$P() & $a);
+");
+			}
+		}
+
+		[Test]
+		public void NonLiftedBooleanOrWorksForMethodProperties() {
+			foreach (var type in new[] { "bool", "int?", "int" }) {
+				AssertCorrect(
+@"type P { get; set; }
+public void M() {
+	type a = default(type);
+	// BEGIN
+	P |= $a;
+	// END
+}".Replace("type", type),
+type.EndsWith("?")
+? @"	this.set_$P($Lift(this.get_$P() | $a));
+"
+: @"	this.set_$P(this.get_$P() | $a);
+");
+			}
+		}
+
+		[Test]
+		public void LiftedBooleanAndWorksForMethodProperties() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	bool a = false;
+	// BEGIN
+	P &= $a;
+	// END
+}",
+@"	this.set_$P($LiftedBooleanAnd(this.get_$P(), $a));
+");
+		}
+
+		[Test]
+		public void LiftedBooleanOrWorksForMethodProperties() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	bool a = false;
+	// BEGIN
+	P |= $a;
+	// END
+}",
+@"	this.set_$P($LiftedBooleanOr(this.get_$P(), $a));
+");
+		}
+
+		[Test]
 		public void UsingPropertyThatIsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty += 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.NotUsableFromScript() }, errorReporter: er);

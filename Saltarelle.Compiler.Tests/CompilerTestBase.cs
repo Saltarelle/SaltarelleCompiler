@@ -120,62 +120,76 @@ namespace Saltarelle.Compiler.Tests {
 
 		public class MockRuntimeLibrary : IRuntimeLibrary {
 			public MockRuntimeLibrary() {
-				TypeIs                      = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
-				TryCast                     = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
-				Cast                        = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
-				ImplicitReferenceConversion = (c, e, t) => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
-				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.Identifier("$MkGeneric"), new[] { e }.Concat(a));
-				MakeException               = (c, e)    => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
-				IntegerDivision             = (c, n, d) => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-				Coalesce                    = (c, a, b) => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-				Lift                        = (c, e)    => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+				TypeIs                      = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
+				TryCast                     = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
+				Cast                        = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
+				ImplicitReferenceConversion = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
+				InstantiateGenericType      = (e, a) => JsExpression.Invocation(JsExpression.Identifier("$MkGeneric"), new[] { e }.Concat(a));
+				MakeException               = (e)    => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+				IntegerDivision             = (n, d) => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+				Coalesce                    = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+				Lift                        = (e)    => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+				LiftedBooleanAnd            = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
+				LiftedBooleanOr             = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
 			}
 
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TryCast { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> Cast { get; set; }
-			public Func<ICompilation, JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression> MakeException { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression, JsExpression> Coalesce { get; set; }
-			public Func<ICompilation, JsExpression, JsExpression> Lift { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> TryCast { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> Cast { get; set; }
+			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
+			public Func<JsExpression, JsExpression> MakeException { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> Coalesce { get; set; }
+			public Func<JsExpression, JsExpression> Lift { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanAnd { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanOr { get; set; }
 			
-			JsExpression IRuntimeLibrary.TypeIs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
-				return TypeIs(compilation, expression, targetType);
+			JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
+				return TypeIs(expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.TryCast(ICompilation compilation, JsExpression expression, JsExpression targetType) {
-				return TryCast(compilation, expression, targetType);
+			JsExpression IRuntimeLibrary.TryCast(JsExpression expression, JsExpression targetType) {
+				return TryCast(expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.Cast(ICompilation compilation, JsExpression expression, JsExpression targetType) {
-				return Cast(compilation, expression, targetType);
+			JsExpression IRuntimeLibrary.Cast(JsExpression expression, JsExpression targetType) {
+				return Cast(expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.ImplicitReferenceConversion(ICompilation compilation, JsExpression expression, JsExpression targetType) {
-				return ImplicitReferenceConversion(compilation, expression, targetType);
+			JsExpression IRuntimeLibrary.ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
+				return ImplicitReferenceConversion(expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.InstantiateGenericType(ICompilation compilation, JsExpression type, IEnumerable<JsExpression> typeArguments) {
-				return InstantiateGenericType(compilation, type, typeArguments);
+			JsExpression IRuntimeLibrary.InstantiateGenericType(JsExpression type, IEnumerable<JsExpression> typeArguments) {
+				return InstantiateGenericType(type, typeArguments);
 			}
 
-			JsExpression IRuntimeLibrary.MakeException(ICompilation compilation, JsExpression operand) {
-				return MakeException(compilation, operand);
+			JsExpression IRuntimeLibrary.MakeException(JsExpression operand) {
+				return MakeException(operand);
 			}
 
-			JsExpression IRuntimeLibrary.IntegerDivision(ICompilation compilation, JsExpression numerator, JsExpression denominator) {
-				return IntegerDivision(compilation, numerator, denominator);
+			JsExpression IRuntimeLibrary.IntegerDivision(JsExpression numerator, JsExpression denominator) {
+				return IntegerDivision(numerator, denominator);
 			}
 
-			JsExpression IRuntimeLibrary.Coalesce(ICompilation compilation, JsExpression numerator, JsExpression denominator) {
-				return Coalesce(compilation, numerator, denominator);
+			JsExpression IRuntimeLibrary.Coalesce(JsExpression a, JsExpression b) {
+				return Coalesce(a, b);
 			}
 
-			JsExpression IRuntimeLibrary.Lift(ICompilation compilation, JsExpression expression) {
-				return Lift(compilation, expression);
+			JsExpression IRuntimeLibrary.Lift(JsExpression expression) {
+				return Lift(expression);
 			}
+
+			JsExpression IRuntimeLibrary.LiftedBooleanAnd(JsExpression a, JsExpression b) {
+				return LiftedBooleanAnd(a, b);
+			}
+
+
+			JsExpression IRuntimeLibrary.LiftedBooleanOr(JsExpression a, JsExpression b) {
+				return LiftedBooleanOr(a, b);
+			}
+
 		}
 
         protected class MockErrorReporter : IErrorReporter {
