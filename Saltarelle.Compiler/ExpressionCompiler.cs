@@ -148,6 +148,10 @@ namespace Saltarelle.Compiler {
 			return new Result(expr, _additionalStatements);
 		}
 
+		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant) {
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _isVariableTemporary).Compile(expression, returnValueIsImportant);
+		}
+
 		private bool IsExpressionInvariantToOrder(JsExpression expression) {
 			if (expression is JsIdentifierExpression && _isVariableTemporary(((JsIdentifierExpression)expression).Name))
 				return true;	// Don't have to reorder expressions which only contain a temporary variable since noone is going to change the value of that variable. This check is important to get sensible results if using this method multiple times on the same list.
@@ -158,7 +162,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
-			var result = new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _isVariableTemporary).Compile(rr, true);
+			var result = CloneAndCompile(rr, true);
 
 			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(result.Expression);
 			if (result.AdditionalStatements.Count > 0 || needsTemporary || DoesJsExpressionHaveSideEffects.Process(result.Expression)) {
@@ -423,6 +427,23 @@ namespace Saltarelle.Compiler {
 			return isLifted ? _runtimeLibrary.Lift(result) : result;
 		}
 
+		private JsExpression CompileConditionalOperator(ResolveResult test, ResolveResult truePath, ResolveResult falsePath) {
+			var jsTest      = VisitResolveResult(test, true);
+			var trueResult  = CloneAndCompile(truePath, true);
+			var falseResult = CloneAndCompile(falsePath, true);
+
+			if (trueResult.AdditionalStatements.Count > 0 || falseResult.AdditionalStatements.Count > 0) {
+				var temp = _createTemporaryVariable(truePath.Type);
+				var trueBlock  = new JsBlockStatement(trueResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp.Variable].Name, trueResult.Expression) }));
+				var falseBlock = new JsBlockStatement(falseResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp.Variable].Name, falseResult.Expression) }));
+				_additionalStatements.Add(new JsIfStatement(jsTest, trueBlock, falseBlock));
+				return JsExpression.Identifier(_variables[temp.Variable].Name);
+			}
+			else {
+				return JsExpression.Conditional(jsTest, trueResult.Expression, falseResult.Expression);
+			}
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			switch (rr.OperatorType) {
 				case ExpressionType.Assign:
@@ -568,8 +589,8 @@ namespace Saltarelle.Compiler {
 				case ExpressionType.OnesComplement:
 					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, IsNullableType(rr.Operands[0].Type));
 
-				// TODO Not finished
 				case ExpressionType.Conditional:
+					return CompileConditionalOperator(rr.Operands[0], rr.Operands[1], rr.Operands[2]);
 
 				case ExpressionType.Power:
 				case ExpressionType.PowerAssign:
