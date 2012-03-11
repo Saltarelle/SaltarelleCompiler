@@ -8,8 +8,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
 	public class CompoundAssignmentTests : MethodCompilerTestBase {
 		protected new void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null) {
-			// TODO: Division is an ugly bastard, and so is unsigned right shift.
-			foreach (var op in new[] { "+", "*", "%", "-", "<<", ">>", "&", "|", "^" }) {
+			// Division and shift right need dedicated tests.
+			foreach (var op in new[] { "+", "*", "%", "-", "<<", "&", "|", "^" }) {
 				base.AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), namingConvention);
 			}
 		}
@@ -613,6 +613,82 @@ public void M() {
 	// END
 }".Replace("type", type),
 @"	this.set_P(this.get_P() >> $i);
+");
+			}
+		}
+
+		[Test]
+		public void LiftedOperatorsExceptForRightShiftAndDivisionWork() {
+			AssertCorrect(
+@"public void M() {
+	int? i = 0, j = 1;
+	// BEGIN
+	i += j;
+	// END
+}
+",
+@"	$i = $Lift($i + $j);
+");
+		}
+
+		[Test]
+		public void LiftedIntegerDivisionWorks() {
+			foreach (var type in new[] { "byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong" }) {
+				base.AssertCorrect(
+@"public void M() {
+	type? i = 0, j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}".Replace("type", type),
+@"	$i = $Lift($IntDiv($i, $j));
+");
+			}
+		}
+
+		[Test]
+		public void LiftedFloatingPointDivisionWorks() {
+			foreach (var type in new[] { "float", "double", "decimal" }) {
+				base.AssertCorrect(
+@"public void M() {
+	type? i = 0, j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}".Replace("type", type),
+@"	$i = $Lift($i / $j);
+");
+			}
+		}
+
+		[Test]
+		public void LiftedSignedRightShiftWorks() {
+			foreach (var type in new[] { "sbyte", "short", "int", "long" }) {
+				base.AssertCorrect(
+@"public void M() {
+	type? i = 0;
+	int? j = 0;
+	// BEGIN
+	i >>= j;
+	// END
+}".Replace("type", type),
+@"	$i = $Lift($i >> $j);
+");
+			}
+		}
+
+		[Test]
+		public void LiftedUnsignedRightShiftWorks() {
+			foreach (var type in new[] { "byte", "ushort", "uint", "ulong" }) {
+				base.AssertCorrect(
+@"public void M() {
+	type? i = 0;
+	int? j = 0;
+	// BEGIN
+	i >>= j;
+	// END
+}".Replace("type", type),
+@"	$i = $Lift($i >>> $j);
 ");
 			}
 		}

@@ -227,7 +227,7 @@ public void M() {
 	a = b = i;
 	// END
 }",
-@"	this.a = this.b = $i;
+@"	this.$a = this.$b = $i;
 ");
 		}
 
@@ -241,7 +241,7 @@ public void M() {
 	a = b = i;
 	// END
 }",
-@"	{C}.a = {C}.b = $i;
+@"	{C}.$a = {C}.$b = $i;
 ");
 		}
 

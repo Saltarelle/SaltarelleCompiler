@@ -127,6 +127,8 @@ namespace Saltarelle.Compiler.Tests {
 				InstantiateGenericType      = (c, e, a) => JsExpression.Invocation(JsExpression.Identifier("$MkGeneric"), new[] { e }.Concat(a));
 				MakeException               = (c, e)    => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 				IntegerDivision             = (c, n, d) => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+				Coalesce                    = (c, a, b) => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+				Lift                        = (c, e)    => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
 			}
 
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
@@ -136,6 +138,8 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
 			public Func<ICompilation, JsExpression, JsExpression> MakeException { get; set; }
 			public Func<ICompilation, JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression, JsExpression> Coalesce { get; set; }
+			public Func<ICompilation, JsExpression, JsExpression> Lift { get; set; }
 			
 			JsExpression IRuntimeLibrary.TypeIs(ICompilation compilation, JsExpression expression, JsExpression targetType) {
 				return TypeIs(compilation, expression, targetType);
@@ -163,6 +167,14 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.IntegerDivision(ICompilation compilation, JsExpression numerator, JsExpression denominator) {
 				return IntegerDivision(compilation, numerator, denominator);
+			}
+
+			JsExpression IRuntimeLibrary.Coalesce(ICompilation compilation, JsExpression numerator, JsExpression denominator) {
+				return Coalesce(compilation, numerator, denominator);
+			}
+
+			JsExpression IRuntimeLibrary.Lift(ICompilation compilation, JsExpression expression) {
+				return Lift(compilation, expression);
 			}
 		}
 
