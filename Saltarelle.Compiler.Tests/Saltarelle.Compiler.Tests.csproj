@@ -82,6 +82,7 @@
     <Compile Include="MethodCompilationTests\ExpressionTests\IncrementAndDecrementTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\IsJsExpressionComplexEnoughToGetATemporaryVariableTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\AssignmentTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\MemberAccessTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\UnaryOperatorTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BlockStatementTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BreakTests.cs" />

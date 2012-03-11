@@ -114,17 +114,12 @@ namespace Saltarelle.Compiler {
             var typeParamNames = impl.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(tp)).ToList();
 
             switch (impl.Type) {
-                case MethodImplOptions.ImplType.InstanceMethod: {
+                case MethodImplOptions.ImplType.NormalMethod: {
                     var result = new JsMethod(impl.Name, typeParamNames);
-                    instanceMethods.Add(result);
-                    instanceMethods.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an, typeParamNames) { Definition = CompileDelegatingMethod(method) }));
+					var list = (method.IsStatic ? staticMethods : instanceMethods);
+                    list.Add(result);
+                    list.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an, typeParamNames) { Definition = CompileDelegatingMethod(method) }));
 
-                    return Tuple.Create(result, impl);
-                }
-                case MethodImplOptions.ImplType.StaticMethod: {
-                    var result = new JsMethod(impl.Name, typeParamNames);
-                    staticMethods.Add(result);
-                    staticMethods.AddRange(impl.AdditionalNames.Select(an => new JsMethod(an, typeParamNames) { Definition = CompileDelegatingMethod(method) }));
                     return Tuple.Create(result, impl);
                 }
                 default:
@@ -194,8 +189,6 @@ namespace Saltarelle.Compiler {
                         (p.IsStatic ? staticFields : instanceFields).Add(field);
                         break;
                     }
-                    case PropertyImplOptions.ImplType.NativeIndexer:
-                        break;
                     case PropertyImplOptions.ImplType.NotUsableFromScript:
                         break;
                     default:

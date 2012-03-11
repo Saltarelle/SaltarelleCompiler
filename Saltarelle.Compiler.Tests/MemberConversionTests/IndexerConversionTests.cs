@@ -18,15 +18,15 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void IndexerWithGetAndSetMethodsIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_SomeProp"), MethodImplOptions.StaticMethod("set_SomeProp", addThisAsFirstArgument: true)) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_SomeProp"), MethodImplOptions.NormalMethod("set_SomeProp")) };
             Compile(new[] { "class C { public int this[int i] { get {} set {} } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
-            FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
+            FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
         }
 
         [Test]
         public void IndexerWithGetAndSetMethodsWithNoCodeIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_SomeProp", generateCode: false), MethodImplOptions.StaticMethod("set_SomeProp", generateCode: false)) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_SomeProp", generateCode: false), MethodImplOptions.NormalMethod("set_SomeProp", generateCode: false)) };
             Compile(new[] { "class C { public int this[int i] { get { return 0; } set {} } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().BeNull();
             FindInstanceMethod("C.set_SomeProp").Should().BeNull();
@@ -43,7 +43,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void ReadOnlyIndexerWithGetAndSetMethodsIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_SomeProp"), MethodImplOptions.InstanceMethod("set_SomeProp")) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_SomeProp"), MethodImplOptions.NormalMethod("set_SomeProp")) };
             Compile(new[] { "class C { public int this[int i] { get { return 0; } } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
             FindInstanceMethod("C.set_SomeProp").Should().BeNull();
@@ -60,7 +60,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void WriteOnlyIndexerWithGetAndSetMethodsIsCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_SomeProp"), MethodImplOptions.InstanceMethod("set_SomeProp")) };
+            var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_SomeProp"), MethodImplOptions.NormalMethod("set_SomeProp")) };
             Compile(new[] { "class C { public int this[int i] { set {} } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.get_SomeProp").Should().BeNull();
             FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();

@@ -29,8 +29,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null) {
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
 				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? PropertyImplOptions.Field("$" + p.Name)
-				                                                                        : PropertyImplOptions.GetAndSetMethods(p.IsStatic ? MethodImplOptions.StaticMethod("get_$" + p.Name) : MethodImplOptions.InstanceMethod("get_$" + p.Name),
-				                                                                                                               p.IsStatic ? MethodImplOptions.StaticMethod("set_$" + p.Name) : MethodImplOptions.InstanceMethod("set_$" + p.Name))
+				                                                                        : PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_$" + p.Name),
+				                                                                                                               MethodImplOptions.NormalMethod("set_$" + p.Name))
 			});
 			string actual = OutputFormatter.Format(CompiledMethod.Body, true);
 

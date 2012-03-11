@@ -10,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
     public class EventConversionTests : CompilerTestBase {
         [Test]
         public void InstanceAutoEventsWithAddRemoveMethodsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name), MethodImplOptions.InstanceMethod("remove_" + f.Name)),
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)),
                                                                       GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
                                                                     };
 
@@ -22,7 +22,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void InstanceAutoEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name, generateCode: false), MethodImplOptions.InstanceMethod("remove_" + f.Name, generateCode: false)),
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name, generateCode: false), MethodImplOptions.NormalMethod("remove_" + f.Name, generateCode: false)),
                                                                       GetAutoEventBackingFieldImplementation = f => FieldImplOptions.NotUsableFromScript()
                                                                     };
             Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, namingConvention: namingConvention);
@@ -30,9 +30,9 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").InstanceFields.Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("NRefactory bug")]
         public void StaticAutoEventsWithAddRemoveMethodsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + f.Name), MethodImplOptions.StaticMethod("remove_" + f.Name)),
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)),
                                                                       GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
                                                                     };
 
@@ -45,7 +45,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void InstanceManualEventsWithAddRemoveMethodsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name), MethodImplOptions.InstanceMethod("remove_" + f.Name)) };
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)) };
 
             Compile(new[] { "class C { public event System.EventHandler SomeProp { add {} remove{} } }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.add_SomeProp").Should().NotBeNull();
@@ -54,24 +54,24 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 
         [Test]
         public void InstanceManualEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name, generateCode: false), MethodImplOptions.InstanceMethod("remove_" + f.Name, generateCode: false)) };
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name, generateCode: false), MethodImplOptions.NormalMethod("remove_" + f.Name, generateCode: false)) };
             Compile(new[] { "class C { public event System.EventHandler SomeProp { add {} remove{} } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").InstanceFields.Should().BeEmpty();
         }
 
-        [Test]
+        [Test, Ignore("NRefactory bug")]
         public void StaticManualEventsWithAddRemoveMethodsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + f.Name), MethodImplOptions.StaticMethod("remove_" + f.Name)) };
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)) };
 
-            Compile(new[] { "class C { public event System.EventHandler SomeProp { add {} remove{} } }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static event System.EventHandler SomeProp { add {} remove{} } }" }, namingConvention: namingConvention);
             FindStaticMethod("C.add_SomeProp").Should().NotBeNull();
             FindStaticMethod("C.remove_SomeProp").Should().NotBeNull();
         }
 
         [Test]
         public void ImportingMultipleEventsInTheSameDeclarationWorks() {
-            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + f.Name), MethodImplOptions.InstanceMethod("remove_" + f.Name)),
+            var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)),
                                                                       GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
                                                                     };
             Compile(new[] { "class C { public event System.EventHandler Event1, Event2; }" }, namingConvention: namingConvention);

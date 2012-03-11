@@ -12,10 +12,6 @@ namespace Saltarelle.Compiler {
             /// </summary>
             Field,
             /// <summary>
-            /// The property is implemented as a native indexer. It must be an indexer property with one argument.
-            /// </summary>
-            NativeIndexer,
-            /// <summary>
             /// The property is not usable from script. No code is generated for it, and any usages of it will give an error.
             /// </summary>
             NotUsableFromScript,
@@ -63,7 +59,7 @@ namespace Saltarelle.Compiler {
         }
 
         public static PropertyImplOptions NativeIndexer() {
-            return new PropertyImplOptions { Type = ImplType.NativeIndexer };
+            return new PropertyImplOptions { Type = ImplType.GetAndSetMethods, _getMethod = MethodImplOptions.NativeIndexer(), _setMethod = MethodImplOptions.NativeIndexer() };
         }
 
         public static PropertyImplOptions NotUsableFromScript() {

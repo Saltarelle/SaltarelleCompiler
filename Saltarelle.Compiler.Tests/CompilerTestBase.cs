@@ -36,12 +36,12 @@ namespace Saltarelle.Compiler.Tests {
             public MockNamingConventionResolver() {
                 GetTypeName                               = t => t.Name;
                 GetTypeParameterName                      = t => t.Name;
-                GetMethodImplementation                   = m => m.IsStatic ? MethodImplOptions.StaticMethod(m.Name) : MethodImplOptions.InstanceMethod(m.Name);
+                GetMethodImplementation                   = m => MethodImplOptions.NormalMethod(m.Name);
                 GetConstructorImplementation              = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
-                GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InstanceMethod("get_" + p.Name), MethodImplOptions.InstanceMethod("set_" + p.Name));
+                GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name));
                 GetAutoPropertyBackingFieldImplementation = p => FieldImplOptions.Field("$" + p.Name);
                 GetFieldImplementation                    = f => FieldImplOptions.Field("$" + f.Name);
-                GetEventImplementation                    = e => e.IsStatic ? EventImplOptions.AddAndRemoveMethods(MethodImplOptions.StaticMethod("add_" + e.Name), MethodImplOptions.StaticMethod("remove_" + e.Name)) : EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InstanceMethod("add_" + e.Name), MethodImplOptions.InstanceMethod("remove_" + e.Name));
+                GetEventImplementation                    = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + e.Name), MethodImplOptions.NormalMethod("remove_" + e.Name));
                 GetAutoEventBackingFieldImplementation    = e => FieldImplOptions.Field("$" + e.Name);
                 GetEnumValueName                          = f => "$" + f.Name;
                 GetVariableName                           = (v, used) => {
