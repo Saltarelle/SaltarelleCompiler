@@ -30,7 +30,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
 				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? PropertyImplOptions.Field("$" + p.Name)
 				                                                                        : PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_$" + p.Name),
-				                                                                                                               MethodImplOptions.NormalMethod("set_$" + p.Name))
+				                                                                                                               MethodImplOptions.NormalMethod("set_$" + p.Name)),
+				GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name),
 			});
 			string actual = OutputFormatter.Format(CompiledMethod.Body, true);
 

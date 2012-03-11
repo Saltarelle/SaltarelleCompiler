@@ -5,7 +5,7 @@ using System.Text;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
-	[TestFixture, Ignore("TODO")]
+	[TestFixture]
 	public class MemberAccessTests : MethodCompilerTestBase {
 		[Test]
 		public void ReadingFieldWorks() {
@@ -61,22 +61,38 @@ public void M() {
 	int i = this[a, b];
 	// END
 }",
-@"	var $i = this.get_$Item(a, b);
+@"	var $i = this.get_$Item($a, $b);
 ");
 		}
 
+		[Test]
+		public void ReadingIndexerImplementedAsIndexingMethodEvaluatesArgumentsInOrder() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+int P { get; set; }
+public void M() {
+	int a = 0;
+	// BEGIN
+	int i = this[P, P = a];
+	// END
+}",
+@"	var $tmp1 = this.get_$P();
+	this.set_$P($a);
+	var $i = this.get_$Item($tmp1, $a);
+");
+		}
 
 		[Test]
 		public void ReadingPropertyImplementedAsNativeIndexerWorks() {
 			AssertCorrect(
-@"int this[int x, int y] { get { return 0; } set {} }
+@"int this[int x] { get { return 0; } set {} }
 public void M() {
 	int a = 0, b = 0;
 	// BEGIN
-	int i = this[a, b];
+	int i = this[a];
 	// END
 }",
-@"	var $i = this.get_$Item(a, b);
+@"	var $i = this[$a];
 ", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
 		}
 
@@ -86,13 +102,8 @@ public void M() {
 		}
 
 		[Test]
-		public void ReadingMethodGroupWorks() {
-			Assert.Inconclusive("TODO");
-		}
-
-		[Test]
 		public void InvokingMemberWorks() {
-			// Probably not here
+			// Probably not here. both generic and non-generic
 			Assert.Inconclusive("TODO");
 		}
 
@@ -118,6 +129,11 @@ public void M() {
 
 		[Test]
 		public void RaisingNotUsableEventGivesAnError() {
+			Assert.Inconclusive("TODO");
+		}
+
+		[Test]
+		public void AccessingDynamicMemberWorks() {
 			Assert.Inconclusive("TODO");
 		}
 	}

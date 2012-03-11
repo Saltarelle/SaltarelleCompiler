@@ -208,6 +208,8 @@ namespace Saltarelle.Compiler {
 			switch (impl.Type) {
 				case MethodImplOptions.ImplType.NormalMethod:
 					return JsExpression.Invocation(JsExpression.MemberAccess(target, impl.Name), arguments);
+				case MethodImplOptions.ImplType.NativeIndexer:
+					return JsExpression.Index(target, arguments.Single());
 				default:
 					throw new NotImplementedException();
 			}
@@ -608,6 +610,12 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		public override JsExpression VisitMethodGroupResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.MethodGroupResolveResult rr, bool returnValueIsImportant) {
+			throw new InvalidOperationException("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there");
+		}
+
+		// WIP
+
 		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, bool returnValueIsImportant) {
 			var jsTarget = InnerCompile(rr.TargetResult, true);
 			if (rr.Member is IProperty) {
@@ -629,6 +637,38 @@ namespace Saltarelle.Compiler {
 			}
 			return base.VisitMemberResolveResult(rr, returnValueIsImportant);
 		}
+
+		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
+			// Note: This might also represent a constructor.
+			var arguments = rr.Arguments.Select(a => VisitResolveResult(a, true));
+			if (rr.Member is IMethod) {
+				// TODO: This one might require argument reordering and default argument evaluation
+				var method = (IMethod)rr.Member;
+				if (method.IsConstructor) {
+					return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments);
+				}
+				else {
+					return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+				}
+			}
+			else if (rr.Member is IProperty) {
+				var property = (IProperty)rr.Member;
+				var impl = _namingConvention.GetPropertyImplementation(property);
+				if (impl.Type != PropertyImplOptions.ImplType.GetAndSetMethods) {
+					_errorReporter.Error("Cannot invoke property that does not have a get method.");
+					return JsExpression.Number(0);
+				}
+				var expressions = new List<JsExpression>() { InnerCompile(rr.TargetResult, false) };
+				foreach (var arg in rr.Arguments)
+					expressions.Add(InnerCompile(arg, false, expressions));
+				return CompileMethodCall(impl.GetMethod, expressions[0], expressions.Skip(1));
+			}
+			else {
+				return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+			}
+		}
+
+		// /WIP
 
 
 		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
@@ -652,17 +692,6 @@ namespace Saltarelle.Compiler {
 				return JsExpression.MemberAccess(ident, "$");
 			else
 				return ident;
-		}
-
-		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
-			// Note: This might also represent a constructor.
-			var arguments = rr.Arguments.Select(a => VisitResolveResult(a, true));
-			if (rr.Member is IMethod && ((IMethod)rr.Member).IsConstructor) {
-				return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments);
-			}
-			else {
-				return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
-			}
 		}
 
 		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, bool returnValueIsImportant) {
@@ -691,6 +720,31 @@ namespace Saltarelle.Compiler {
 			else if (rr.Conversion.IsNullableConversion) {
 				return VisitResolveResult(rr.Input, returnValueIsImportant);
 			}
+			else if (rr.Conversion.IsMethodGroupConversion) {
+				var mgrr = (MethodGroupResolveResult)rr.Input;
+				var impl = _namingConvention.GetMethodImplementation(rr.Conversion.Method);
+				if (impl.Type != MethodImplOptions.ImplType.NormalMethod) {
+					_errorReporter.Error("Cannot perform method group conversion on " + rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name + " because it is not a normal method.");
+					return JsExpression.Number(0);
+				}
+
+				JsExpression jsTarget, jsMethod;
+
+				if (rr.Conversion.Method.IsStatic) {
+					jsTarget = null;
+					jsMethod = JsExpression.MemberAccess(VisitResolveResult(new TypeResolveResult(mgrr.TargetResult.Type), true), impl.Name);
+				}
+				else {
+					jsTarget = InnerCompile(mgrr.TargetResult, true);
+					jsMethod = JsExpression.MemberAccess(jsTarget, impl.Name);
+				}
+
+				if (mgrr.TypeArguments.Count > 0 && !impl.IgnoreGenericArguments) {
+					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, mgrr.TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(mgrr.TargetResult.Type), true)));
+				}
+
+				return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
+			}
 			throw new NotImplementedException("Conversion " + rr.Conversion + " is not implemented");
 		}
 
@@ -718,11 +772,6 @@ namespace Saltarelle.Compiler {
 
 		public override JsExpression VisitLambdaResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.LambdaResolveResult rr, bool returnValueIsImportant) {
 			return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Number(0))); 
-		}
-
-		public override JsExpression VisitMethodGroupResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.MethodGroupResolveResult rr, bool returnValueIsImportant) {
-			var m = rr.Methods.First();
-			return JsExpression.MemberAccess(new JsTypeReferenceExpression(m.DeclaringType.GetDefinition()), m.Name);
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {

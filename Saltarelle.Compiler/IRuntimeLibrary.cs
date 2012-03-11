@@ -33,6 +33,11 @@ namespace Saltarelle.Compiler {
 		JsExpression InstantiateGenericType(JsExpression type, IEnumerable<JsExpression> typeArguments);
 
 		/// <summary>
+		/// Returns an expression that will instantiate a generic method.
+		/// </summary>
+		JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<JsExpression> typeArguments);
+
+		/// <summary>
 		/// Returns an expression that will convert a given expression to an exception. This is used to be able to throw a JS string and catch it as an Exception.
 		/// </summary>
 		JsExpression MakeException(JsExpression operand);
@@ -62,5 +67,10 @@ namespace Saltarelle.Compiler {
 		/// Generates a call to the lifted boolean | operator, which has the same semantics as the SQL OR operator.
 		/// </summary>
 		JsExpression LiftedBooleanOr(JsExpression a, JsExpression b);
+
+		/// <summary>
+		/// Bind a function to a target that will become "this" inside the function.
+		/// </summary>
+		JsExpression Bind(JsExpression function, JsExpression target);
 	}
 }
