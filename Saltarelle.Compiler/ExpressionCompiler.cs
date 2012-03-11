@@ -206,7 +206,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private bool IsIntegerType(IType type) {
-			if (type.GetDefinition().Equals(_compilation.FindType(KnownTypeCode.NullableOfT)))
+			if (IsNullableType(type))
 				type = ((ParameterizedType)type).TypeArguments[0];
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
@@ -220,13 +220,17 @@ namespace Saltarelle.Compiler {
 		}
 
 		private bool IsUnsignedType(IType type) {
-			if (type.GetDefinition().Equals(_compilation.FindType(KnownTypeCode.NullableOfT)))
+			if (IsNullableType(type))
 				type = ((ParameterizedType)type).TypeArguments[0];
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt16))
 				|| type.Equals(_compilation.FindType(KnownTypeCode.UInt32))
 				|| type.Equals(_compilation.FindType(KnownTypeCode.UInt64));
+		}
+
+		private bool IsNullableType(IType type) {
+			return type.GetDefinition().Equals(_compilation.FindType(KnownTypeCode.NullableOfT));
 		}
 
 		private JsExpression CompilePropertySetter(IProperty property, MemberResolveResult target, ResolveResult value, bool returnValueIsImportant) {
@@ -392,7 +396,11 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private JsExpression CompileBinaryNonAssigningOperator(ResolveResult left, ResolveResult right, Func<JsExpression, JsExpression, JsExpression> resultFactory) {
+		private JsExpression CompileBinaryNonAssigningOperator(ResolveResult left, ResolveResult right, Func<JsExpression, JsExpression, JsExpression> resultFactory, bool isLifted) {
+			if (isLifted) {
+				var oldRF = resultFactory;
+				resultFactory = (a, b) => _runtimeLibrary.Lift(_compilation, oldRF(a, b));
+			}
 			var jsLeft  = InnerCompile(left, false);
 			var jsRight = InnerCompile(right, false, ref jsLeft);
 			return resultFactory(jsLeft, jsRight);
@@ -412,109 +420,109 @@ namespace Saltarelle.Compiler {
 				// Compound assignment operators
 				case ExpressionType.AddAssign:
 				case ExpressionType.AddAssignChecked:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.AndAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.DivideAssign:
 					if (IsIntegerType(rr.Type))
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.IntegerDivision(_compilation, a, b), returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.IntegerDivision(_compilation, a, b), returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 					else
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.DivideAssign, JsExpression.Divide, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.DivideAssign, JsExpression.Divide, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.ExclusiveOrAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXOrAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXOrAssign, JsExpression.BitwiseXor, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.LeftShiftAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.LeftShiftAssign, JsExpression.LeftShift, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.LeftShiftAssign, JsExpression.LeftShift, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.ModuloAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.ModuloAssign, JsExpression.Modulo, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.ModuloAssign, JsExpression.Modulo, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.MultiplyAssign:
 				case ExpressionType.MultiplyAssignChecked:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.MultiplyAssign, JsExpression.Multiply, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.MultiplyAssign, JsExpression.Multiply, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.OrAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.RightShiftAssign:
 					if (IsUnsignedType(rr.Type))
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 					else
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.SubtractAssign:
 				case ExpressionType.SubtractAssignChecked:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, rr.Type.GetDefinition() == _compilation.FindType(KnownTypeCode.NullableOfT));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
 
 				// Binary non-assigning operators
 				case ExpressionType.Add:
 				case ExpressionType.AddChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.And:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.AndAlso:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalAnd);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalAnd, false);	// Operator does not have a lifted version.
 
 				case ExpressionType.Coalesce:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.Coalesce(_compilation, a, b));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.Coalesce(_compilation, a, b), false);
 
 				case ExpressionType.Divide:
 					if (IsIntegerType(rr.Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.IntegerDivision(_compilation, a, b));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.IntegerDivision(_compilation, a, b), IsNullableType(rr.Operands[0].Type));
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.ExclusiveOr:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.GreaterThan:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.GreaterThanOrEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.Equal:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Equal);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Same, false);	// We are so lucky that performing a lifted equality comparison in JS is the same as in C#, so no need to lift.
 
 				case ExpressionType.LeftShift:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.LessThan:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Lesser);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Lesser, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.LessThanOrEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LesserOrEqual);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LesserOrEqual, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.Modulo:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Modulo);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Modulo, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.NotEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.NotEqual);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.NotSame, false);	// We are so lucky that performing a lifted equality comparison in JS is the same as in C#, so no need to lift.
 
 				case ExpressionType.Or:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.OrElse:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalOr);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalOr, false);	// Operator does not have a lifted version.
 
 				case ExpressionType.RightShift:
 					if (IsUnsignedType(rr.Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsignedAssign);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsigned, IsNullableType(rr.Operands[0].Type));
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSignedAssign);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSigned, IsNullableType(rr.Operands[0].Type));
 
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, IsNullableType(rr.Operands[0].Type));
 
 				// TODO Not finished
 				case ExpressionType.PreIncrementAssign:

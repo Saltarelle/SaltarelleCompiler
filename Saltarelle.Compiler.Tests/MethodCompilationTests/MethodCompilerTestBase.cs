@@ -50,12 +50,31 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
+		protected void DoForAllIntegerTypes(Action<string> a) {
+			DoForAllSignedIntegerTypes(a);
+			DoForAllUnsignedIntegerTypes(a);
+		}
+
+		protected void DoForAllFloatingPointTypes(Action<string> a) {
+			foreach (var type in new[] { "float", "double", "decimal" })
+				a(type);
+		}
+
+		protected void DoForAllSignedIntegerTypes(Action<string> a) {
+			foreach (var type in new[] { "sbyte", "short", "int", "long" })
+				a(type);
+		}
+
+		protected void DoForAllUnsignedIntegerTypes(Action<string> a) {
+			foreach (var type in new[] { "byte", "ushort", "uint", "ulong"  })
+				a(type);
+		}
+
 		[SetUp]
 		public void Setup() {
 			Method = null;
 			MethodCompiler = null;
 			CompiledMethod = null;
 		}
-
     }
 }
