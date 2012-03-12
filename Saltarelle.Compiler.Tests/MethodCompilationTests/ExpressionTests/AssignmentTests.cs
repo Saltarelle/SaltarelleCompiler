@@ -75,7 +75,7 @@ public void M() {
 	P1 = F();
 	// END
 }",
-@"	this.set_$P1(this.F());
+@"	this.set_$P1(this.$F());
 ");
 		}
 
@@ -91,7 +91,7 @@ public void M() {
 	P1 = P2 = F();
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	this.set_$P2($tmp1);
 	this.set_$P1($tmp1);
 ");
@@ -109,7 +109,7 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	this.set_$P2($tmp1);
 	this.set_$P1($tmp1);
 	if ($tmp1) {
@@ -203,6 +203,27 @@ public void M() {
 ");
 		}
 
+		[Test, Ignore("Enable when invocations fixed")]
+		public void AssigningToIndexerWorksWhenReorderingArguments() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public int F3() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	int i = this[y: F1(), x: F2()] = F3();
+	// END
+}",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	this.set_$Item($tmp2, $tmp1, $tmp3);
+	var $i = $tmp3;
+");
+		}
+
 		[Test]
 		public void AssigningToPropertyImplementedAsNativeIndexerWorks() {
 			AssertCorrect(
@@ -265,9 +286,9 @@ public void M() {
 	F1().P = F2().P = F();
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
-	var $tmp3 = this.F();
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F();
 	$tmp2.set_$P($tmp3);
 	$tmp1.set_$P($tmp3);
 ");
@@ -287,9 +308,9 @@ public void M() {
 	F1().F = F2().F = P = F();
 	// END
 }",
-@"	var $tmp3 = this.F1();
-	var $tmp2 = this.F2();
-	var $tmp1 = this.F();
+@"	var $tmp3 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp1 = this.$F();
 	this.set_$P($tmp1);
 	$tmp3.$F = $tmp2.$F = $tmp1;
 ");
@@ -309,10 +330,10 @@ public void M() {
 	i = FC()[F1(), F2()] = F3();
 	// END
 }",
-@"	var $tmp1 = this.FC();
-	var $tmp2 = this.F1();
-	var $tmp3 = this.F2();
-	var $tmp4 = this.F3();
+@"	var $tmp1 = this.$FC();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	var $tmp4 = this.$F3();
 	$tmp1.set_$Item($tmp2, $tmp3, $tmp4);
 	$i = $tmp4;
 ");
@@ -332,10 +353,10 @@ public void M() {
 	i = FC()[F1(), F2()] = F3();
 	// END
 }",
-@"	var $tmp1 = this.FC();
-	var $tmp2 = this.F1();
-	var $tmp3 = this.F2();
-	var $tmp4 = this.F3();
+@"	var $tmp1 = this.$FC();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	var $tmp4 = this.$F3();
 	$tmp1.set_$Item($tmp2, $tmp3, $tmp4);
 	$i = $tmp4;
 ");
@@ -368,7 +389,7 @@ public void M() {
 }",
 @"	var $tmp2 = this.$arr;
 	var $tmp3 = this.get_$P();
-	var $tmp1 = this.F();
+	var $tmp1 = this.$F();
 	this.set_$P($tmp1);
 	$tmp2[$tmp3] = $tmp1;
 ");

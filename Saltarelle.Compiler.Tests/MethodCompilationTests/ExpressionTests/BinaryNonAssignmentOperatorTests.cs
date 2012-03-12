@@ -82,7 +82,7 @@ public void M() {
 	var x = F1() + F2();
 	// END
 }",
-@"	var $x = this.F1() + this.F2();
+@"	var $x = this.$F1() + this.$F2();
 ");
 		}
 

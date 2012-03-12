@@ -27,8 +27,8 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $list.GetEnumerator();
-	while ($tmp1.MoveNext()) {
+@"	var $tmp1 = $list.$GetEnumerator();
+	while ($tmp1.$MoveNext()) {
 		var $item = $tmp1.get_$Current();
 		var $x = 0;
 	}
@@ -58,8 +58,8 @@ public void M() {
 	// END
 }",
 @"	this.set_$SomeProperty($list);
-	var $tmp1 = this.Method($list).GetEnumerator();
-	while ($tmp1.MoveNext()) {
+	var $tmp1 = this.$Method($list).$GetEnumerator();
+	while ($tmp1.$MoveNext()) {
 		var $item = $tmp1.get_$Current();
 		var $x = 0;
 	}
@@ -76,8 +76,8 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $Upcast([1, 2, 3], {IEnumerable}).GetEnumerator();
-	while ($tmp1.MoveNext()) {
+@"	var $tmp1 = $Upcast([1, 2, 3], {IEnumerable}).$GetEnumerator();
+	while ($tmp1.$MoveNext()) {
 		var $item = $tmp1.get_$Current();
 		var $x = 0;
 	}
@@ -104,8 +104,8 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $e.GetEnumerator();
-	while ($tmp1.MoveNext()) {
+@"	var $tmp1 = $e.$GetEnumerator();
+	while ($tmp1.$MoveNext()) {
 		var $item = $tmp1.get_$Current();
 		var $x = 0;
 	}
@@ -133,15 +133,15 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $e.GetEnumerator();
+@"	var $tmp1 = $e.$GetEnumerator();
 	try {
-		while ($tmp1.MoveNext()) {
+		while ($tmp1.$MoveNext()) {
 			var $item = $tmp1.get_$Current();
 			var $x = 0;
 		}
 	}
 	finally {
-		$Upcast($tmp1, {IDisposable}).Dispose();
+		$Upcast($tmp1, {IDisposable}).$Dispose();
 	}
 ");
 		}
@@ -167,15 +167,15 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $e.GetEnumerator();
+@"	var $tmp1 = $e.$GetEnumerator();
 	try {
-		while ($tmp1.MoveNext()) {
+		while ($tmp1.$MoveNext()) {
 			var $item = $tmp1.get_$Current();
 			var $x = 0;
 		}
 	}
 	finally {
-		$Upcast($tmp1, {IDisposable}).Dispose();
+		$Upcast($tmp1, {IDisposable}).$Dispose();
 	}
 ");
 		}
@@ -200,16 +200,16 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $e.GetEnumerator();
+@"	var $tmp1 = $e.$GetEnumerator();
 	try {
-		while ($tmp1.MoveNext()) {
+		while ($tmp1.$MoveNext()) {
 			var $item = $tmp1.get_$Current();
 			var $x = 0;
 		}
 	}
 	finally {
 		if ($TypeIs($tmp1, {IDisposable})) {
-			$Cast($tmp1, {IDisposable}).Dispose();
+			$Cast($tmp1, {IDisposable}).$Dispose();
 		}
 	}
 ");

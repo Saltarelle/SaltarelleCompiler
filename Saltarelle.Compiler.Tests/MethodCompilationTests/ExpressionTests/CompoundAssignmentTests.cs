@@ -67,7 +67,7 @@ public void M() {
 	F().P += i;
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	$tmp1.set_$P($tmp1.get_$P() + $i);
 ");
 		}
@@ -85,9 +85,9 @@ public void M() {
 	F1().P += (P = F2());
 	// END
 }",
-@"	var $tmp1 = this.F1();
+@"	var $tmp1 = this.$F1();
 	var $tmp3 = $tmp1.get_$P();
-	var $tmp2 = this.F2();
+	var $tmp2 = this.$F2();
 	this.set_$P($tmp2);
 	$tmp1.set_$P($tmp3 + $tmp2);
 ");
@@ -124,7 +124,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp2 = this.get_$P1();
-	var $tmp1 = this.get_$P2() + this.F();
+	var $tmp1 = this.get_$P2() + this.$F();
 	this.set_$P2($tmp1);
 	var $tmp3 = $tmp2 + $tmp1;
 	this.set_$P1($tmp3);
@@ -158,7 +158,7 @@ public void M() {
 	F().F += i;
 	// END
 }",
-@"	this.F().$F += $i;
+@"	this.$F().$F += $i;
 ");
 		}
 
@@ -189,7 +189,7 @@ public void M() {
 	F().F += (P = i);
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	this.set_$P($i);
 	$tmp1.$F += $i;
 ");
@@ -266,9 +266,28 @@ public void M() {
 	this[F1(), F2()] += F3();
 	// END
 }",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + this.$F3());
+");
+		}
+
+		[Test, Ignore("Enable when invocations fixed")]
+		public void AssigningToIndexerWorksWhenReorderingArguments() {
+			AssertCorrectForBulkOperators(
+@"int this[int x, int y] { get { return 0; } set {} }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public int F3() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	this[y: F1(), x: F2()] += F3();
+	// END
+}",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + this.F3());
+	this.set_$Item($tmp2, $tmp1, this.get_$Item($tmp2, $tmp1) + this.F3());
 ");
 		}
 
@@ -419,7 +438,7 @@ public void M() {
 	// END
 }
 ".Replace("type", type),
-@"	var $tmp1 = this.F1();
+@"	var $tmp1 = this.$F1();
 	$tmp1.$F = $IntDiv($tmp1.$F, $i);
 "));
 		}
@@ -505,7 +524,7 @@ public void M() {
 	F().a /= i;
 	// END
 }".Replace("type", type),
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	$tmp1.$a = $IntDiv($tmp1.$a, $i);
 "));
 		}
@@ -698,9 +717,9 @@ public void M() {
 	F1()[F2()] += (P = F3());
 	// END
 }",
-@"	var $tmp2 = this.F1();
-	var $tmp3 = this.F2();
-	var $tmp1 = this.F3();
+@"	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	var $tmp1 = this.$F3();
 	this.set_$P($tmp1);
 	$tmp2[$tmp3] += $tmp1;
 ");
@@ -717,9 +736,9 @@ public void M() {
 	F1()[F2()] += F3();
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
-	$tmp1[$tmp2] = $Lift($tmp1[$tmp2] + this.F3());
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	$tmp1[$tmp2] = $Lift($tmp1[$tmp2] + this.$F3());
 ");
 		}
 

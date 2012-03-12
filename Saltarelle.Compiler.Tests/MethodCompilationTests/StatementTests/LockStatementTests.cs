@@ -21,7 +21,7 @@ public void M() {
 	// END
 }",
 @"	this.set_$SomeProperty($o);
-	this.Method($o);
+	this.$Method($o);
 	{
 		var $x = 0;
 	}

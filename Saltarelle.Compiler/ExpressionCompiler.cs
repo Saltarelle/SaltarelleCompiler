@@ -206,13 +206,18 @@ namespace Saltarelle.Compiler {
 
 		private JsExpression CompileMethodCall(MethodImplOptions impl, JsExpression target, IEnumerable<JsExpression> arguments) {
 			// TODO
-			switch (impl.Type) {
-				case MethodImplOptions.ImplType.NormalMethod:
-					return JsExpression.Invocation(JsExpression.MemberAccess(target, impl.Name), arguments);
-				case MethodImplOptions.ImplType.NativeIndexer:
-					return JsExpression.Index(target, arguments.Single());
-				default:
-					throw new NotImplementedException();
+			if (impl == null) {
+				return JsExpression.Invocation(target, arguments);	// Used for delegate invocations.
+			}
+			else {
+				switch (impl.Type) {
+					case MethodImplOptions.ImplType.NormalMethod:
+						return JsExpression.Invocation(JsExpression.MemberAccess(target, impl.Name), arguments);
+					case MethodImplOptions.ImplType.NativeIndexer:
+						return JsExpression.Index(target, arguments.Single());
+					default:
+						throw new NotImplementedException();
+				}
 			}
 		}
 
@@ -682,27 +687,31 @@ namespace Saltarelle.Compiler {
 				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());
 		}
 
+		private JsExpression CompileMethodInvocation(MethodImplOptions impl, ResolveResult target, IList<ResolveResult> arguments, IEnumerable<IType> typeArguments, IList<int> argumentToParameterMap) {
+			var expressions = new List<JsExpression>();
+			expressions.Add(InnerCompile(target, false));
+			foreach (var a in arguments) {
+				expressions.Add(InnerCompile(a, false, expressions));
+			}
+			return CompileMethodCall(impl, expressions[0], expressions.Skip(1));
+		}
+
 		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
 			// Note: This might also represent a constructor.
 			var arguments = rr.Arguments.Select(a => VisitResolveResult(a, true));
 			if (rr.Member is IMethod) {
 				// TODO: This one might require argument reordering and default argument evaluation
 				if (rr.Member.Name == "Invoke" && IsDelegateType(rr.Member.DeclaringType)) {
-					// Invoke the underlying method instead of the delegate.
-					var expressions = new List<JsExpression>();
-					expressions.Add(InnerCompile(rr.TargetResult, false));
-					foreach (var a in rr.Arguments) {
-						expressions.Add(InnerCompile(a, false, expressions));
-					}
-					return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+					// Invoke the underlying method instead of calling the Invoke method.
+					return CompileMethodInvocation(null, rr.TargetResult, rr.Arguments, new IType[0], rr.GetArgumentToParameterMap());
 				}
 				else {
 					var method = (IMethod)rr.Member;
 					if (method.IsConstructor) {
-						return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments);
+						return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), arguments); // Only temporary - Promised to be fixed in NR
 					}
 					else {
-						return JsExpression.Invocation(JsExpression.MemberAccess(rr.TargetResult != null ? VisitResolveResult(rr.TargetResult, true) : new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Member.Name), arguments);
+						return CompileMethodInvocation(_namingConvention.GetMethodImplementation((IMethod)rr.Member), rr.TargetResult, rr.Arguments, new IType[0], rr.GetArgumentToParameterMap());
 					}
 				}
 			}

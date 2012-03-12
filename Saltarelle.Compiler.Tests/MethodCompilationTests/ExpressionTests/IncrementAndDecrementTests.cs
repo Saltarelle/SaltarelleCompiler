@@ -109,7 +109,7 @@ public void M() {
 	++F().P;
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	$tmp1.set_$P($tmp1.get_$P() + 1);
 ");
 		}
@@ -124,7 +124,7 @@ public void M() {
 	F().P++;
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	$tmp1.set_$P($tmp1.get_$P() + 1);
 ");
 		}
@@ -165,7 +165,7 @@ public void M() {
 	++F().F;
 	// END
 }",
-@"	++this.F().$F;
+@"	++this.$F().$F;
 ");
 		}
 
@@ -179,7 +179,7 @@ public void M() {
 	F().F++;
 	// END
 }",
-@"	this.F().$F++;
+@"	this.$F().$F++;
 ");
 		}
 
@@ -299,6 +299,44 @@ public void M() {
 ");
 		}
 
+		[Test, Ignore("Enable when invocations fixed")]
+		public void PrefixForIndexerWithMethodsWorksWhenReorderingArguments() {
+			AssertCorrectForBoth(
+@"int this[int x, int y] { get { return 0; } set {} }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	// BEGIN
+	int i = ++this[y: F1(), x: F2()];
+	// END
+}",
+@"	var $tmp1 = this.F1();
+	var $tmp2 = this.F2();
+	var $tmp3 = this.get_$Item($tmp2, $tmp1) + 1;
+	this.set_$Item($tmp2, $tmp1, $tmp3);
+	var $i = $tmp3;
+");
+		}
+
+		[Test, Ignore("Enable when invocations fixed")]
+		public void PostfixForIndexerWithMethodsWorksWhenReorderingArguments() {
+			AssertCorrectForBoth(
+@"int this[int x, int y] { get { return 0; } set {} }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	// BEGIN
+	int i = this[y: F1(), x: F2()]++;
+	// END
+}",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.get_$Item($tmp2, $tmp1);
+	this.set_$Item($tmp2, $tmp1, $tmp3 + 1);
+	var $i = $tmp3;
+");
+		}
+
 		[Test]
 		public void PrefixForIndexerWithMethodsOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
 			AssertCorrectForBoth(
@@ -311,8 +349,8 @@ public void M() {
 	++this[F1(), F2()];
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
 	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + 1);
 ");
 		}
@@ -329,8 +367,8 @@ public void M() {
 	this[F1(), F2()]++;
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
 	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + 1);
 ");
 		}
@@ -545,7 +583,7 @@ public void M() {
 	++F().P;
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	$tmp1.set_$P($Lift($tmp1.get_$P() + 1));
 ");
 		}
@@ -560,7 +598,7 @@ public void M() {
 	F().P++;
 	// END
 }",
-@"	var $tmp1 = this.F();
+@"	var $tmp1 = this.$F();
 	$tmp1.set_$P($Lift($tmp1.get_$P() + 1));
 ");
 		}
@@ -747,8 +785,8 @@ public void M() {
 	++this[F1(), F2()];
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
 	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1));
 ");
 		}
@@ -765,8 +803,8 @@ public void M() {
 	this[F1(), F2()]++;
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
 	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1));
 ");
 		}
