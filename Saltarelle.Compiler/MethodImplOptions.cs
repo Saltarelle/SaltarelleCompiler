@@ -17,13 +17,13 @@ namespace Saltarelle.Compiler {
             StaticMethodWithThisAsFirstArgument,
 
             /// <summary>
-            /// The method (a static method in C#) is an instance method to be invoked on its first argument. Eg. JQueryDialog.Dialog(this JQuery q, string action) => q.dialog(action).
+            /// The method (a static method in C#) is an instance method to be invoked on its first argument. Eg. JQueryDialog.Dialog(this JQuery q, string action) => q.dialog(action). Generic arguments are ignored.
             /// No code will be generated for the method.
             /// </summary>
             InstanceMethodOnFirstArgument,
 
             /// <summary>
-            /// The method is implemented as inline code, eg Debugger.Break() => debugger. Can use the parameters {this} (for static methods), as well as all typenames and argument names in braces (eg. {arg0}, {TArg0}).
+            /// The method is implemented as inline code, eg Debugger.Break() => debugger. Can use the parameters {this} (for instance methods), as well as all typenames and argument names in braces (eg. {arg0}, {TArg0}).
             /// The method must use all of its arguments, or they risk not being evaluated.
             /// No code will be generated for the method.
             /// </summary>
@@ -99,12 +99,12 @@ namespace Saltarelle.Compiler {
             return new MethodImplOptions { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = false };
         }
 
-        public static MethodImplOptions InstanceMethodOnFirstArgument(string name, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.InstanceMethodOnFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = false };
+        public static MethodImplOptions InstanceMethodOnFirstArgument(string name) {
+            return new MethodImplOptions { Type = ImplType.InstanceMethodOnFirstArgument, _text = name, IgnoreGenericArguments = true, GenerateCode = false };
         }
 
-        public static MethodImplOptions InlineCode(string literalCode, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = false };
+        public static MethodImplOptions InlineCode(string literalCode) {
+            return new MethodImplOptions { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = true, GenerateCode = false };
         }
 
         public static MethodImplOptions NativeIndexer() {

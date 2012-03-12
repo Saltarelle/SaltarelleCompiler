@@ -38,5 +38,15 @@ public void M() {
 	$i = 1;
 ");
 		}
+
+		[Test]
+		public void CallToPartialMethodWithoutDefinitionIsRemoved() {
+			Assert.Inconclusive("TODO");
+		}
+
+		[Test]
+		public void CallToPartialMethodWithDefinitionIsNotRemoved() {
+			Assert.Inconclusive("TODO");
+		}
 	}
 }

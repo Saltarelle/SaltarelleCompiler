@@ -409,5 +409,10 @@ public void M(ref int i) {
 @"	$i.$ = 1;
 ");
 		}
+
+		[Test]
+		public void AssigningToPropertiesAndIndexersImplementedInDifferentWaysWorks() {
+			Assert.Inconclusive("TODO");
+		}
 	}
 }

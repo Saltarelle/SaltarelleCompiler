@@ -54,51 +54,6 @@ public void M() {
 		}
 
 		[Test]
-		public void ReadingIndexerImplementedAsIndexingMethodWorks() {
-			AssertCorrect(
-@"int this[int x, int y] { get { return 0; } set {} }
-public void M() {
-	int a = 0, b = 0;
-	// BEGIN
-	int i = this[a, b];
-	// END
-}",
-@"	var $i = this.get_$Item($a, $b);
-");
-		}
-
-		[Test]
-		public void ReadingIndexerImplementedAsIndexingMethodEvaluatesArgumentsInOrder() {
-			AssertCorrect(
-@"int this[int x, int y] { get { return 0; } set {} }
-int P { get; set; }
-public void M() {
-	int a = 0;
-	// BEGIN
-	int i = this[P, P = a];
-	// END
-}",
-@"	var $tmp1 = this.get_$P();
-	this.set_$P($a);
-	var $i = this.get_$Item($tmp1, $a);
-");
-		}
-
-		[Test]
-		public void ReadingPropertyImplementedAsNativeIndexerWorks() {
-			AssertCorrect(
-@"int this[int x] { get { return 0; } set {} }
-public void M() {
-	int a = 0, b = 0;
-	// BEGIN
-	int i = this[a];
-	// END
-}",
-@"	var $i = this[$a];
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
-		}
-
-		[Test]
 		public void ReadingNotUsablePropertyGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.NotUsableFromScript() }, errorReporter: er);

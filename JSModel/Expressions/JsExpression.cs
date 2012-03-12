@@ -82,6 +82,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 
         // Fake
         TypeReference,
+		Literal,
 
         AssignFirst = Assign,
         AssignLast = BitwiseXOrAssign,
@@ -373,5 +374,9 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         }
 
 		public static JsThisExpression This { get { return JsThisExpression.This; } }
+
+		public static JsLiteralExpression Literal(string format, IEnumerable<JsExpression> arguments) {
+			return new JsLiteralExpression(format, arguments);
+		}
     }
 }

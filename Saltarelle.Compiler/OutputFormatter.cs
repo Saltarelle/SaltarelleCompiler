@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler
 {
     public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
     	private readonly bool _allowIntermediates;
-    	private readonly CodeBuilder _cb = new CodeBuilder();
+    	private CodeBuilder _cb = new CodeBuilder();
 
         private OutputFormatter(bool allowIntermediates) {
 			_allowIntermediates = allowIntermediates;
@@ -75,10 +75,11 @@ namespace Saltarelle.Compiler
         }
 
         public object Visit(JsCommaExpression expression, bool parenthesized) {
+            int expressionPrecedence = GetPrecedence(expression.NodeType);
             for (int i = 0; i < expression.Expressions.Count; i++) {
                 if (i > 0)
                     _cb.Append(", ");
-                Visit(expression.Expressions[i], false);
+            	Visit(expression.Expressions[i], GetPrecedence(expression.Expressions[i].NodeType) > expressionPrecedence);
             }
             return null;
         }
@@ -228,6 +229,22 @@ namespace Saltarelle.Compiler
 			return null;
         }
 
+		public object Visit(JsLiteralExpression expression, bool parenthesized) {
+            int expressionPrecedence = GetPrecedence(expression.NodeType);
+			var oldCB = _cb;
+			var arguments = new string[expression.Arguments.Count];
+			for (int i = 0; i < expression.Arguments.Count; i++) {
+				_cb = new CodeBuilder();
+				Visit(expression.Arguments[i], GetPrecedence(expression.Arguments[i].NodeType) > expressionPrecedence);
+				arguments[i] = _cb.ToString();
+			}
+			_cb = oldCB;
+
+			_cb.Append(string.Format(expression.Format, arguments));
+
+			return null;
+		}
+
         private static string GetBinaryOperatorString(ExpressionNodeType oper) {
             switch (oper) {
                 case ExpressionNodeType.Multiply:                 return "*";
@@ -289,6 +306,7 @@ namespace Saltarelle.Compiler
         private const int PrecedenceConditional             = PrecedenceLogicalOr               + 1;
         private const int PrecedenceAssignment              = PrecedenceConditional             + 1;
         private const int PrecedenceComma                   = PrecedenceAssignment              + 1;
+		private const int PrecedenceLiteral                 = PrecedenceComma                   + 1;
 
         private static int GetPrecedence(ExpressionNodeType nodeType) {
             switch (nodeType) {
@@ -398,6 +416,9 @@ namespace Saltarelle.Compiler
 				case ExpressionNodeType.TypeReference:
 					return PrecedenceTerminal;
 					
+				case ExpressionNodeType.Literal:
+					return PrecedenceLiteral;
+
                 default:
                     throw new ArgumentException("nodeType");
             }

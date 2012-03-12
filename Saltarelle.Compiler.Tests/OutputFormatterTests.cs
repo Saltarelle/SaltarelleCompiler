@@ -556,6 +556,19 @@ namespace Saltarelle.Compiler.Tests
                         ), Is.EqualTo("(function() {})()"));
         }
 
+		[Test]
+		public void LiteralExpressionIsOutputCorrectly() {
+			Assert.That(OutputFormatter.Format(JsExpression.Literal("{0}_{2}_{1}", new[] { JsExpression.Identifier("X"), JsExpression.Identifier("Y"), JsExpression.Identifier("Z") })), Is.EqualTo("X_Z_Y"));
+		}
+
+		[Test]
+		public void LiteralExpressionIsParenthesizedInsideCommaOperator() {
+			Assert.That(OutputFormatter.Format(JsExpression.Comma(JsExpression.Identifier("a"),
+			                                                      JsExpression.Literal("_{0}_", new[] { JsExpression.Identifier("X") }),
+			                                                      JsExpression.Identifier("b"))),
+			            Is.EqualTo("a, (_X_), b"));
+		}
+
         [Test, Ignore("Can't yet output function definitions.")]
         public void FunctionDefinitionWithContentIsCorrectlyOutput() {
             Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null))), Is.EqualTo("function() { return null; }"));

@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expressions\JsLiteralExpression.cs" />
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />

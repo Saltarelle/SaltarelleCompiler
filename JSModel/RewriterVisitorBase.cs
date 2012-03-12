@@ -115,6 +115,11 @@ namespace Saltarelle.Compiler.JSModel
             return expression;
         }
 
+		public virtual JsExpression Visit(JsLiteralExpression expression, TData data) {
+			var arguments = Visit(expression.Arguments, data);
+			return ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Literal(expression.Format, arguments);
+		}
+
         public virtual IEnumerable<JsStatement> Visit(ReadOnlyCollection<JsStatement> statements, TData data) {
             return VisitCollection(statements, s => Visit(s, data));
         }

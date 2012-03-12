@@ -80,6 +80,7 @@
     <Compile Include="MethodCompilationTests\ExpressionTests\CompoundAssignmentTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\ConditionalTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\IncrementAndDecrementTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\InvocationTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\IsJsExpressionComplexEnoughToGetATemporaryVariableTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\AssignmentTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\MemberAccessTests.cs" />
