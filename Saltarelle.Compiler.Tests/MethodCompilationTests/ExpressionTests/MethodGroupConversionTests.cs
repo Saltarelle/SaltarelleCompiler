@@ -98,14 +98,14 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void MethodGroupConversionCanInstantiateGenericMethodWhenTheGenericArgumentIsNotExplicitlySpecified() {
 			AssertCorrect(
 @"void F<T>(T x) {}
 public void M() {
 	System.Action<int> f;
 	// BEGIN
-	f = F<int>;
+	f = F;
 	// END
 }",
 @"	$f = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
@@ -119,7 +119,7 @@ public void M() {
 public void M() {
 	System.Action<int> f;
 	// BEGIN
-	f = F;
+	f = F<int>;
 	// END
 }",
 @"	$f = $Bind(this.$F, this);

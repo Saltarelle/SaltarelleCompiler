@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").InstanceFields.Should().BeEmpty();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void StaticAutoEventsWithAddRemoveMethodsAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)),
                                                                       GetAutoEventBackingFieldImplementation = f => FieldImplOptions.Field("$" + f.Name)
@@ -60,7 +60,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").InstanceFields.Should().BeEmpty();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void StaticManualEventsWithAddRemoveMethodsAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name), MethodImplOptions.NormalMethod("remove_" + f.Name)) };
 

@@ -359,16 +359,18 @@ public void M() {
 		public void ArrayAccessEvaluatesArgumentsInTheCorrectOrder() {
 			AssertCorrect(
 @"int[] arr;
-int i;
+int P { get; set; }
 int F() { return 0; }
 public void M() {
 	// BEGIN
-	arr[i] = (i = F());
+	arr[P] = (P = F());
 	// END
 }",
-@"	var $tmp1 = this.$arr;
-	var $tmp2 = this.$i;
-	$tmp1[$tmp2] = this.$i = this.F();
+@"	var $tmp2 = this.$arr;
+	var $tmp3 = this.get_$P();
+	var $tmp1 = this.F();
+	this.set_$P($tmp1);
+	$tmp2[$tmp3] = $tmp1;
 ");
 		}
 

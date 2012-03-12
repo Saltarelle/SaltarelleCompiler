@@ -341,7 +341,7 @@ namespace Saltarelle.Compiler {
 			else {
 				var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
 				var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
-				var conversions = Conversions.Get(_compilation);
+				var conversions = CSharpConversions.Get(_compilation);
 				var disposableConversion = conversions.ImplicitConversion(enumerator.Type, systemIDisposable);
 				if (disposableConversion.IsValid) {
 					// If the enumerator is implicitly convertible to IDisposable, we should dispose it.
@@ -375,7 +375,7 @@ namespace Saltarelle.Compiler {
 			var boolType = _compilation.FindType(KnownTypeCode.Boolean);
 			var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
 			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
-			var conversions = Conversions.Get(_compilation);
+			var conversions = CSharpConversions.Get(_compilation);
 
 			var compiledAquisition = CompileExpression(aquisitionExpression, true);
 

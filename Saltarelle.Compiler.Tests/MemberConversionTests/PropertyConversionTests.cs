@@ -76,24 +76,24 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindInstanceField("C.$SomeProp").Should().NotBeNull();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void StaticAutoPropertiesWithGetSetMethodsAndFieldAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name)),
                                                                       GetAutoPropertyBackingFieldImplementation = p => FieldImplOptions.Field("$" + p.Name)
                                                                     };
 
-            Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
             FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
-            FindInstanceField("C.$SomeProp").Should().NotBeNull();
+            FindStaticField("C.$SomeProp").Should().NotBeNull();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void StaticAutoPropertiesWithGetSetMethodsButNoFieldAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name)),
                                                                       GetAutoPropertyBackingFieldImplementation = p => FieldImplOptions.NotUsableFromScript()
                                                                     };
-            Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
             FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
             FindClass("C").InstanceFields.Should().BeEmpty();
@@ -167,10 +167,10 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void ManuallyImplementedStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_SomeProp"), MethodImplOptions.NormalMethod("set_SomeProp")) };
-            Compile(new[] { "class C { public int SomeProp { get { return 0; } set {} } }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static int SomeProp { get { return 0; } set {} } }" }, namingConvention: namingConvention);
             FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
             FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -185,10 +185,10 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void ManuallyImplementedReadOnlyStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_SomeProp"), null) };
-            Compile(new[] { "class C { public int SomeProp { get { return 0; } } }" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static int SomeProp { get { return 0; } } }" }, namingConvention: namingConvention);
             FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
             FindStaticMethod("C.set_SomeProp").Should().BeNull();
             FindClass("C").InstanceMethods.Should().BeEmpty();
@@ -203,7 +203,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
 
-        [Test, Ignore("NRefactory bug")]
+        [Test]
         public void ManuallyImplementedWriteOnlyStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(null, MethodImplOptions.NormalMethod("set_SomeProp")) };
             Compile(new[] { "class C { public static int SomeProp { set {} } }" }, namingConvention: namingConvention);

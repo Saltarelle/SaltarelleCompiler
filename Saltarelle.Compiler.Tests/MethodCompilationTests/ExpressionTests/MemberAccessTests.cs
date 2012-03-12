@@ -22,7 +22,9 @@ public void M() {
 
 		[Test]
 		public void ReadingNotUsableFieldGivesAnError() {
-			Assert.Inconclusive("TODO");
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { int UnusableField; public void M() { int x = UnusableField; } }" }, namingConvention: new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableField")));
 		}
 
 		[Test]
@@ -98,13 +100,9 @@ public void M() {
 
 		[Test]
 		public void ReadingNotUsablePropertyGivesAnError() {
-			Assert.Inconclusive("TODO");
-		}
-
-		[Test]
-		public void InvokingMemberWorks() {
-			// Probably not here. both generic and non-generic
-			Assert.Inconclusive("TODO");
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
 		}
 
 		[Test]
@@ -112,12 +110,12 @@ public void M() {
 			AssertCorrect(
 @"event System.EventHandler MyEvent;
 public void M() {
-	System.EventHandler h;
+	System.EventHandler h = null;
 	// BEGIN
 	MyEvent += h;
 	// END
 }",
-@"	add_$MyEvent(h);
+@"	this.add_$MyEvent($h);
 ");
 		}
 
@@ -126,12 +124,12 @@ public void M() {
 			AssertCorrect(
 @"event System.EventHandler MyEvent;
 public void M() {
-	System.EventHandler h;
+	System.EventHandler h = null;
 	// BEGIN
 	MyEvent -= h;
 	// END
 }",
-@"	remove_$MyEvent(h);
+@"	this.remove_$MyEvent($h);
 ");
 		}
 
@@ -163,18 +161,70 @@ public void M() {
 		}
 
 		[Test]
-		public void SubscribingToNotUsableEventGivesAnError() {
-			Assert.Inconclusive("TODO");
+		public void ReadingIndexerImplementedAsMethodsWorks() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+public void M() {
+	int a = 0, b = 0;
+	// BEGIN
+	var c = this[a, b];
+	// END
+}",
+@"	var $c = this.get_$Item($a, $b);
+");
 		}
 
 		[Test]
-		public void RaisingNotUsableEventGivesAnError() {
+		public void ReadingIndexerImplementedAsNativeIndexerWorks() {
+			AssertCorrect(
+@"int this[int x] { get { return 0; } set {} }
+public void M() {
+	int a = 0, b = 0;
+	// BEGIN
+	var c = this[a];
+	// END
+}",
+@"	var $c = this[$a];
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
+		}
+
+		[Test]
+		public void SubscribingToNotUsableEventGivesAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent += null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventImplementation = e => EventImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+		}
+
+		[Test]
+		public void UnsubscribingFromNotUsableEventGivesAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent -= null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventImplementation = e => EventImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+		}
+
+		[Test]
+		public void  RaisingNotUsableEventGivesAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent(null, null); } }" }, namingConvention: new MockNamingConventionResolver { GetEventImplementation = e => EventImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+		}
+
+		[Test]
+		public void ReadingNotUsableEventGivesAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventImplementation = e => EventImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+		}
+
+		[Test]
+		public void InvokingMemberWorks() {
+			// Probably not here. both generic and non-generic
 			Assert.Inconclusive("TODO");
 		}
 
 		[Test]
 		public void AccessingDynamicMemberWorks() {
-			Assert.Inconclusive("TODO");
+			Assert.Inconclusive("Not supported in NRefactory");
 		}
 	}
 }

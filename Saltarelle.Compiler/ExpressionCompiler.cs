@@ -7,6 +7,7 @@ using System.Text;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel;
@@ -406,11 +407,11 @@ namespace Saltarelle.Compiler {
 			}
 			else if (target is ArrayAccessResolveResult) {
 				var arr = (ArrayAccessResolveResult)target;
-				if (arr.Indices.Length != 1) {
+				if (arr.Indexes.Count != 1) {
 					_errorReporter.Error("Arrays have to be one-dimensional.");
 					return JsExpression.Number(0);
 				}
-				return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indices[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 			}
 			else {
 				_errorReporter.Error("Unsupported target of compound assignment: " + target.ToString());
@@ -448,6 +449,21 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		private JsExpression CompileEventAddOrRemove(MemberResolveResult target, ResolveResult value, bool isAdd) {
+			var evt = (IEvent)target.Member;
+			var impl = _namingConvention.GetEventImplementation(evt);
+			switch (impl.Type) {
+				case EventImplOptions.ImplType.AddAndRemoveMethods: {
+					var jsTarget = InnerCompile(target.TargetResult, false);
+					var jsValue  = InnerCompile(value, false, ref jsTarget);
+					return CompileMethodCall(isAdd ? impl.AddMethod : impl.RemoveMethod, jsTarget, new[] { jsValue });
+				}
+				default:
+					_errorReporter.Error("Cannot use event " + target.Member.DeclaringType.FullName + "." + target.Member.Name + " from script.");
+					return JsExpression.Number(0);
+			}
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			switch (rr.OperatorType) {
 				case ExpressionType.Assign:
@@ -457,48 +473,54 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.AddAssign:
 				case ExpressionType.AddAssignChecked:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent)
+						return CompileEventAddOrRemove((MemberResolveResult)rr.Operands[0], rr.Operands[1], true);
+					else
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.AndAssign:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b), returnValueIsImportant, false);
 					else
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.DivideAssign:
 					if (IsIntegerType(rr.Type))
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.IntegerDivision(a, b), returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.IntegerDivision(a, b), returnValueIsImportant, rr.IsLiftedOperator);
 					else
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.DivideAssign, JsExpression.Divide, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.DivideAssign, JsExpression.Divide, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.ExclusiveOrAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXOrAssign, JsExpression.BitwiseXor, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXOrAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.LeftShiftAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.LeftShiftAssign, JsExpression.LeftShift, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.LeftShiftAssign, JsExpression.LeftShift, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.ModuloAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.ModuloAssign, JsExpression.Modulo, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.ModuloAssign, JsExpression.Modulo, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.MultiplyAssign:
 				case ExpressionType.MultiplyAssignChecked:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.MultiplyAssign, JsExpression.Multiply, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.MultiplyAssign, JsExpression.Multiply, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.OrAssign:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b), returnValueIsImportant, false);
 					else
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.RightShiftAssign:
 					if (IsUnsignedType(rr.Type))
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, returnValueIsImportant, rr.IsLiftedOperator);
 					else
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.SubtractAssign:
 				case ExpressionType.SubtractAssignChecked:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
+					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent)
+						return CompileEventAddOrRemove((MemberResolveResult)rr.Operands[0], rr.Operands[1], false);
+					else
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.PreIncrementAssign:
 					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PrefixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type));
@@ -508,6 +530,7 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.PostIncrementAssign:
 					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PostfixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type), returnValueBeforeChange: true);
+
 				case ExpressionType.PostDecrementAssign:
 					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PostfixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), returnValueIsImportant, IsNullableType(rr.Operands[0].Type), returnValueBeforeChange: true);
 
@@ -515,13 +538,13 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Add:
 				case ExpressionType.AddChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
 
 				case ExpressionType.And:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b), false);	// We have already lifted it, so it should not be lifted again.
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd, IsNullableType(rr.Operands[0].Type));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd, rr.IsLiftedOperator);
 
 				case ExpressionType.AndAlso:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalAnd, false);	// Operator does not have a lifted version.
@@ -531,37 +554,37 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Divide:
 					if (IsIntegerType(rr.Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.IntegerDivision(a, b), IsNullableType(rr.Operands[0].Type));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.IntegerDivision(a, b), rr.IsLiftedOperator);
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide, IsNullableType(rr.Operands[0].Type));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide, rr.IsLiftedOperator);
 
 				case ExpressionType.ExclusiveOr:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, rr.IsLiftedOperator);
 
 				case ExpressionType.GreaterThan:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater, rr.IsLiftedOperator);
 
 				case ExpressionType.GreaterThanOrEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, rr.IsLiftedOperator);
 
 				case ExpressionType.Equal:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Same, false);	// We are so lucky that performing a lifted equality comparison in JS is the same as in C#, so no need to lift.
 
 				case ExpressionType.LeftShift:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, rr.IsLiftedOperator);
 
 				case ExpressionType.LessThan:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Lesser, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Lesser, rr.IsLiftedOperator);
 
 				case ExpressionType.LessThanOrEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LesserOrEqual, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LesserOrEqual, rr.IsLiftedOperator);
 
 				case ExpressionType.Modulo:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Modulo, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Modulo, rr.IsLiftedOperator);
 
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, rr.IsLiftedOperator);
 
 				case ExpressionType.NotEqual:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.NotSame, false);	// We are so lucky that performing a lifted equality comparison in JS is the same as in C#, so no need to lift.
@@ -570,20 +593,20 @@ namespace Saltarelle.Compiler {
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b), false);	// We have already lifted it, so it should not be lifted again.
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr, IsNullableType(rr.Operands[0].Type));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr, rr.IsLiftedOperator);
 
 				case ExpressionType.OrElse:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalOr, false);	// Operator does not have a lifted version.
 
 				case ExpressionType.RightShift:
 					if (IsUnsignedType(rr.Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsigned, IsNullableType(rr.Operands[0].Type));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsigned, rr.IsLiftedOperator);
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSigned, IsNullableType(rr.Operands[0].Type));
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSigned, rr.IsLiftedOperator);
 
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, IsNullableType(rr.Operands[0].Type));
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
 
 				// Unary operators
 
@@ -626,23 +649,29 @@ namespace Saltarelle.Compiler {
 				var impl = _namingConvention.GetPropertyImplementation((IProperty)rr.Member);
 				switch (impl.Type) {
 					case PropertyImplOptions.ImplType.GetAndSetMethods:
-						return CompileMethodCall(impl.GetMethod, jsTarget, new JsExpression[0]);	// What about indexer?
+						return CompileMethodCall(impl.GetMethod, jsTarget, new JsExpression[0]);	// We know we have no arguments because indexers are treated as invocations.
 					case PropertyImplOptions.ImplType.Field:
 						return JsExpression.MemberAccess(jsTarget, impl.FieldName);
-					case PropertyImplOptions.ImplType.NotUsableFromScript:
+					default:
 						_errorReporter.Error("Property " + rr.Member.DeclaringType + "." + rr.Member.Name + " is not usable from script.");
 						return JsExpression.Number(0);
 				}
-				return CompileMethodCall(impl.GetMethod, InnerCompile(rr.TargetResult, false), new JsExpression[0]);
 			}
 			else if (rr.Member is IField) {
 				var impl = _namingConvention.GetFieldImplementation((IField)rr.Member);
-				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
-			}
-			else if (rr.Member is IEvent) {
-				var impl = _namingConvention.GetAutoEventBackingFieldImplementation((IEvent)rr.Member);
 				if (impl.Type == FieldImplOptions.ImplType.Field) {
 					return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
+				}
+				else {
+					_errorReporter.Error("Cannot use field " + rr.Member.DeclaringType.Name + "." + rr.Member.Name + " from script.");
+					return JsExpression.Number(0);
+				}
+			}
+			else if (rr.Member is IEvent) {
+				var eimpl = _namingConvention.GetEventImplementation((IEvent)rr.Member);
+				var fimpl = (eimpl.Type != EventImplOptions.ImplType.NotUsableFromScript ? _namingConvention.GetAutoEventBackingFieldImplementation((IEvent)rr.Member) : FieldImplOptions.NotUsableFromScript());
+				if (fimpl.Type == FieldImplOptions.ImplType.Field) {
+					return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), fimpl.Name);
 				}
 				else {
 					_errorReporter.Error("Cannot use backing field of event " + rr.Member.DeclaringType + "." + rr.Member.Name + " from script.");
@@ -765,8 +794,8 @@ namespace Saltarelle.Compiler {
 					jsMethod = JsExpression.MemberAccess(jsTarget, impl.Name);
 				}
 
-				if (mgrr.TypeArguments.Count > 0 && !impl.IgnoreGenericArguments) {
-					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, mgrr.TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)));
+				if (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) {
+					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)));
 				}
 
 				return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
@@ -788,10 +817,10 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Indices.Length != 1)
+			if (rr.Indexes.Count != 1)
 				_errorReporter.Error("Arrays have to be one-dimensional");
 			var array = InnerCompile(rr.Array, false);
-			var index = InnerCompile(rr.Indices[0], false, ref array);
+			var index = InnerCompile(rr.Indexes[0], false, ref array);
 			return JsExpression.Index(array, index);
 		}
 

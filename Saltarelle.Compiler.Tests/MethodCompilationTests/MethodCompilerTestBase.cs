@@ -32,6 +32,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 				                                                                        : PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_$" + p.Name),
 				                                                                                                               MethodImplOptions.NormalMethod("set_$" + p.Name)),
 				GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name),
+				GetEventImplementation  = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_$" + e.Name), MethodImplOptions.NormalMethod("remove_$" + e.Name)),
 			});
 			string actual = OutputFormatter.Format(CompiledMethod.Body, true);
 

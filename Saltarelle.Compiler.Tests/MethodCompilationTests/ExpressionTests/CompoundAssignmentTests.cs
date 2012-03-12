@@ -123,13 +123,12 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp3 = this.get_$P1();
-	var $tmp1 = this.get_$P2();
-	var $tmp2 = $tmp1 + this.F();
-	this.set_$P2($tmp2);
-	var $tmp4 = $tmp3 + $tmp2;
-	this.set_$P1($tmp4);
-	if ($tmp4 < 0) {
+@"	var $tmp2 = this.get_$P1();
+	var $tmp1 = this.get_$P2() + this.F();
+	this.set_$P2($tmp1);
+	var $tmp3 = $tmp2 + $tmp1;
+	this.set_$P1($tmp3);
+	if ($tmp3 < 0) {
 	}
 ");
 		}
@@ -269,8 +268,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.F1();
 	var $tmp2 = this.F2();
-	var $tmp3 = this.get_$Item($tmp1, $tmp2);
-	this.set_$Item($tmp1, $tmp2, $tmp3 + this.F3());
+	this.set_$Item($tmp1, $tmp2, this.get_$Item($tmp1, $tmp2) + this.F3());
 ");
 		}
 
@@ -700,11 +698,11 @@ public void M() {
 	F1()[F2()] += (P = F3());
 	// END
 }",
-@"	var $tmp1 = this.F1();
+@"	var $tmp2 = this.F1();
 	var $tmp3 = this.F2();
-	var $tmp2 = this.F3();
-	this.set_$P($tmp2);
-	$tmp1[$tmp3] += $tmp2;
+	var $tmp1 = this.F3();
+	this.set_$P($tmp1);
+	$tmp2[$tmp3] += $tmp1;
 ");
 		}
 
