@@ -133,6 +133,7 @@ namespace Saltarelle.Compiler.Tests {
 				LiftedBooleanAnd            = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
 				LiftedBooleanOr             = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
 				Bind                        = (f, t) => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+				Default                     = t      => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
 			}
 
 			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
@@ -148,6 +149,7 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanAnd { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanOr { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
+			public Func<JsExpression, JsExpression> Default { get; set; }
 			
 			JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
 				return TypeIs(expression, targetType);
@@ -199,6 +201,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.Bind(JsExpression function, JsExpression target) {
 				return Bind(function, target);
+			}
+
+			JsExpression IRuntimeLibrary.Default(JsExpression type) {
+				return Default(type);
 			}
 		}
 

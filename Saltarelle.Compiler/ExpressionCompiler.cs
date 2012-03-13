@@ -239,6 +239,19 @@ namespace Saltarelle.Compiler {
 			return type.GetAllBaseTypes().Any(b => b.Equals(del));
 		}
 
+		private JsExpression GetJsType(IType type) {
+			if (type is ParameterizedType) {
+				var pt = (ParameterizedType)type;
+				return _runtimeLibrary.InstantiateGenericType(GetJsType(pt.GetDefinition()), pt.TypeArguments.Select(GetJsType));
+			}
+			else if (type is ITypeDefinition)
+				return new JsTypeReferenceExpression((ITypeDefinition)type);
+			else if (type is ITypeParameter)
+				return JsExpression.Identifier(_namingConvention.GetTypeParameterName(((ITypeParameter)type)));
+			else
+				throw new NotSupportedException("Unsupported type " + type.ToString());
+		}
+
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var jsTarget = InnerCompile(target.TargetResult, compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
@@ -735,7 +748,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod member, IList<JsExpression> thisAndArguments, IList<IType> typeArguments) {
-			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)).ToList() : new List<JsExpression>());
+			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(GetJsType).ToList() : new List<JsExpression>());
 
 			if (impl == null) {
 				return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));	// Used for delegate invocations.
@@ -756,7 +769,7 @@ namespace Saltarelle.Compiler {
 					}
 
 					case MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument: {
-						var jsMethod = JsExpression.MemberAccess(VisitResolveResult(new TypeResolveResult(member.DeclaringType), true), impl.Name);
+						var jsMethod = JsExpression.MemberAccess(GetJsType(member.DeclaringType), impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
 							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
@@ -777,13 +790,13 @@ namespace Saltarelle.Compiler {
 						if (parameterizedType != null) {
 							var def = parameterizedType.GetDefinition();
 							for (int i = 0; i < def.TypeParameters.Count; i++)
-								allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, VisitResolveResult(new TypeResolveResult(parameterizedType.TypeArguments[i]), true)));
+								allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, GetJsType(parameterizedType.TypeArguments[i])));
 						}
 
 						var specializedMethod = member as SpecializedMethod;
 						if (member is SpecializedMethod) {
 							for (int i = 0; i < specializedMethod.TypeArguments.Count; i++)
-								allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, VisitResolveResult(new TypeResolveResult(specializedMethod.TypeArguments[i]), true)));
+								allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, GetJsType(specializedMethod.TypeArguments[i])));
 						}
 						if (!member.IsStatic)
 							allSubstitutions.Add(Tuple.Create("this", thisAndArguments[0]));
@@ -852,19 +865,47 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
-
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
-			// Only tricky thing is default(TValue)
-			if (rr.ConstantValue is string)
-				return JsExpression.String((string)rr.ConstantValue);
+			if (rr.ConstantValue is bool)
+				return (bool)rr.ConstantValue ? JsExpression.True : JsExpression.False;
+			else if (rr.ConstantValue is sbyte)
+				return JsExpression.Number((sbyte)rr.ConstantValue);
+			else if (rr.ConstantValue is byte)
+				return JsExpression.Number((byte)rr.ConstantValue);
+			else if (rr.ConstantValue is char)
+				return JsExpression.Number((char)rr.ConstantValue);
+			else if (rr.ConstantValue is short)
+				return JsExpression.Number((short)rr.ConstantValue);
+			else if (rr.ConstantValue is ushort)
+				return JsExpression.Number((ushort)rr.ConstantValue);
 			else if (rr.ConstantValue is int)
 				return JsExpression.Number((int)rr.ConstantValue);
-			else if (rr.ConstantValue is bool)
-				return (bool)rr.ConstantValue ? JsExpression.True : JsExpression.False;
+			else if (rr.ConstantValue is uint)
+				return JsExpression.Number((uint)rr.ConstantValue);
+			else if (rr.ConstantValue is long)
+				return JsExpression.Number((long)rr.ConstantValue);
+			else if (rr.ConstantValue is ulong)
+				return JsExpression.Number((ulong)rr.ConstantValue);
+			else if (rr.ConstantValue is float)
+				return JsExpression.Number((float)rr.ConstantValue);
+			else if (rr.ConstantValue is double)
+				return JsExpression.Number((double)rr.ConstantValue);
+			else if (rr.ConstantValue is decimal)
+				return JsExpression.Number((double)(decimal)rr.ConstantValue);
+			if (rr.ConstantValue is string)
+				return JsExpression.String((string)rr.ConstantValue);
+			else if (rr.ConstantValue == null) {
+				if (rr.Type.IsReferenceType == true)
+					return JsExpression.Null;
+				else
+					return _runtimeLibrary.Default(GetJsType(rr.Type));
+			}
 			else
-				return JsExpression.Null;
+				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");
 		}
+
+		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
+
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
 			// Only other thing we have to take care of now is if we're accessing a byref variable declared in a parent function, in which case we'd have to return this.variable.$
@@ -915,7 +956,7 @@ namespace Saltarelle.Compiler {
 
 				if (rr.Conversion.Method.IsStatic) {
 					jsTarget = null;
-					jsMethod = JsExpression.MemberAccess(VisitResolveResult(new TypeResolveResult(mgrr.TargetResult.Type), true), impl.Name);
+					jsMethod = JsExpression.MemberAccess(GetJsType(mgrr.TargetResult.Type), impl.Name);
 				}
 				else {
 					jsTarget = InnerCompile(mgrr.TargetResult, true);
@@ -923,7 +964,7 @@ namespace Saltarelle.Compiler {
 				}
 
 				if (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) {
-					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)));
+					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(GetJsType));
 				}
 
 				return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
@@ -969,16 +1010,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Type is ParameterizedType) {
-				var pt = (ParameterizedType)rr.Type;
-				return _runtimeLibrary.InstantiateGenericType(VisitResolveResult(new TypeResolveResult(pt.GetDefinition()), true), pt.TypeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)));
-			}
-			else if (rr.Type is ITypeDefinition)
-				return new JsTypeReferenceExpression((ITypeDefinition)rr.Type);
-			else if (rr.Type is ITypeParameter)
-				return JsExpression.Identifier(_namingConvention.GetTypeParameterName(((ITypeParameter)rr.Type)));
-			else
-				throw new NotSupportedException("Unsupported type " + rr.Type.ToString());
+			return GetJsType(rr.Type);
 		}
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {

@@ -72,5 +72,10 @@ namespace Saltarelle.Compiler {
 		/// Bind a function to a target that will become "this" inside the function.
 		/// </summary>
 		JsExpression Bind(JsExpression function, JsExpression target);
+
+		/// <summary>
+		/// Generates an expression that returns the default value for a type (C#: default(T)).
+		/// </summary>
+		JsExpression Default(JsExpression type);
 	}
 }
