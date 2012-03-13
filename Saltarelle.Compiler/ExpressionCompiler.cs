@@ -120,7 +120,6 @@ namespace Saltarelle.Compiler {
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<IVariable, VariableData> _variables;
 		private readonly Func<IType, LocalResolveResult> _createTemporaryVariable;
-		private readonly Func<string, bool> _isVariableTemporary;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -132,14 +131,13 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, Func<IType, LocalResolveResult> createTemporaryVariable, Func<string, bool> isVariableTemporary) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, Func<IType, LocalResolveResult> createTemporaryVariable) {
 			_compilation = compilation;
 			_namingConvention = namingConvention;
 			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
 			_variables = variables;
 			_createTemporaryVariable = createTemporaryVariable;
-			_isVariableTemporary = isVariableTemporary;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -151,24 +149,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _isVariableTemporary).Compile(expression, returnValueIsImportant);
-		}
-
-		private bool DoesOrderMatter(JsExpression first, JsExpression second) {
-			// This fails if we have additional statements. Isch.
-/*			if ((first is JsIdentifierExpression && _isVariableTemporary(((JsIdentifierExpression)first).Name)) || (second is JsIdentifierExpression && _isVariableTemporary(((JsIdentifierExpression)second).Name)))
-				return false;	// Don't have to reorder expressions which only contain a temporary variable since noone is going to change the value of that variable. This check is important to get sensible results if using this method multiple times on the same list.
-			else if (first is JsThisExpression || first is JsTypeReferenceExpression || second is JsThisExpression || second is JsTypeReferenceExpression)
-				return false;
-			else
-				return true;
-				*/
-			if (second is JsIdentifierExpression && _isVariableTemporary(((JsIdentifierExpression)second).Name))
-				return false;	// Don't have to reorder expressions which only contain a temporary variable since noone is going to change the value of that variable. This check is important to get sensible results if using this method multiple times on the same list.
-			else if (second is JsThisExpression || second is JsTypeReferenceExpression)
-				return false;
-			else
-				return true;
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable).Compile(expression, returnValueIsImportant);
 		}
 
 		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
@@ -178,7 +159,7 @@ namespace Saltarelle.Compiler {
 			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
 				// We have to ensure that everything is ordered correctly. First ensure that all expressions that have to be evaluated first actually are evaluated first.
 				for (int i = 0; i < expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression.Count; i++) {
-					if (!DoesOrderMatter(result.Expression, expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i]))
+					if (!ExpressionOrderer.DoesOrderMatter(expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i], result))
 						continue;
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
 					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i]));
@@ -691,12 +672,42 @@ namespace Saltarelle.Compiler {
 				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());
 		}
 
-		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMember member, ResolveResult target, IList<ResolveResult> arguments, IList<IType> typeArguments, IList<int> argumentToParameterMap) {
+		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMember member, ResolveResult target, IList<ResolveResult> specifiedArguments, IList<ResolveResult> argumentsForCall, IList<IType> typeArguments, IList<int> argumentToParameterMap) {
 			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)).ToList() : new List<JsExpression>());
 			var expressions = new List<JsExpression>();
 			expressions.Add(InnerCompile(target, jsTypeArguments.Count > 0 && !member.IsStatic));
-			foreach (var a in arguments) {
+			foreach (var a in specifiedArguments) {
 				expressions.Add(InnerCompile(a, false, expressions));
+			}
+
+			if (argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n)) {
+				// We have to perform argument rearrangement. The easiest way would be for us to just use the argumentsForCall directly, but if we did, we wouldn't evaluate all expressions in left-to-right order.
+				var newExpressions = new List<JsExpression>() { expressions[0] };
+				for (int i = 0; i < argumentsForCall.Count; i++) {
+					int specifiedIndex = -1;
+					for (int j = 0; j < argumentToParameterMap.Count; j++) {
+						if (argumentToParameterMap[j] == i) {
+							specifiedIndex = j;
+							break;
+						}
+					}
+					if (specifiedIndex == -1) {
+						// The argument was not specified - use the value in the argumentsForCall, which has to be constant.
+						newExpressions.Add(VisitResolveResult(argumentsForCall[i], true));
+					}
+					else {
+						// Ensure that all arguments are evaluated in the correct order.
+						for (int j = 0; j < specifiedIndex; j++) {
+							if (argumentToParameterMap[j] > i && ExpressionOrderer.DoesOrderMatter(expressions[specifiedIndex + 1], expressions[j + 1])) {	// This expression used to be evaluated before us, but will now be evaluated after us, so we need to create a temporary.
+								var temp = _createTemporaryVariable(specifiedArguments[j].Type);
+								_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressions[j + 1]));
+								expressions[j + 1] = JsExpression.Identifier(_variables[temp.Variable].Name);
+							}
+						}
+						newExpressions.Add(expressions[specifiedIndex + 1]);
+					}
+				}
+				expressions = newExpressions;
 			}
 
 			if (impl == null) {
@@ -787,7 +798,7 @@ namespace Saltarelle.Compiler {
 			if (rr.Member is IMethod) {
 				if (rr.Member.Name == "Invoke" && IsDelegateType(rr.Member.DeclaringType)) {
 					// Invoke the underlying method instead of calling the Invoke method.
-					return CompileMethodInvocation(null, (IMethod)rr.Member, rr.TargetResult, rr.Arguments, new IType[0], rr.GetArgumentToParameterMap());
+					return CompileMethodInvocation(null, (IMethod)rr.Member, rr.TargetResult, rr.Arguments, rr.GetArgumentsForCall(), new IType[0], rr.GetArgumentToParameterMap());
 				}
 				else {
 					var method = (IMethod)rr.Member;
@@ -795,7 +806,7 @@ namespace Saltarelle.Compiler {
 						return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Arguments.Select(a => VisitResolveResult(a, true))); // Only temporary - Promised to be fixed in NR
 					}
 					else {
-						return CompileMethodInvocation(_namingConvention.GetMethodImplementation((IMethod)rr.Member), (IMethod)rr.Member, rr.TargetResult, rr.GetArgumentsForCall(), rr.Member is SpecializedMethod ? ((SpecializedMethod)rr.Member).TypeArguments : new IType[0], rr.GetArgumentToParameterMap());
+						return CompileMethodInvocation(_namingConvention.GetMethodImplementation((IMethod)rr.Member), (IMethod)rr.Member, rr.TargetResult, rr.Arguments, rr.GetArgumentsForCall(), rr.Member is SpecializedMethod ? ((SpecializedMethod)rr.Member).TypeArguments : new IType[0], rr.GetArgumentToParameterMap());
 					}
 				}
 			}

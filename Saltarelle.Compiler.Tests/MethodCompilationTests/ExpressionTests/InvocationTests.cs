@@ -144,7 +144,55 @@ public void M() {
 
 		[Test]
 		public void NormalMethodInvocationWorksForReorderedAndDefaultArguments() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	this.$F(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+");
+		}
+
+		[Test]
+		public void PassingRefAndOutParametersToNormalMethodWorks() {
+			AssertCorrect(
+@"void F(ref int x, out int y, int z) {}
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	F(ref a, out b, c);
+	// END
+}
+",
+@"	this.$F($a, $b, $c.$);
+");
+		}
+
+		[Test]
+		public void RefAndOutParametersAreNotSubjectToReordering() {
+			AssertCorrect(
+@"void F(ref int x, out int y, int z) {}
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	F(ref a, out b, a = b = c);
+	// END
+}
+",
+@"	$b = $c;
+	$a = $c;
+	this.$F($a, $b, $c.$);
+");
 		}
 
 		[Test]

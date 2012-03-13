@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler {
 
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, CreateTemporaryVariable, IsVariableTemporary);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, CreateTemporaryVariable);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -70,10 +70,6 @@ namespace Saltarelle.Compiler {
 			IVariable variable = new SimpleVariable(new DomRegion(), type, name);
 			_variables[variable] = new VariableData(name, null, false);
 			return new LocalResolveResult(variable);
-		}
-
-		private bool IsVariableTemporary(string scriptName) {
-			return _variables.Any(v => v.Value.Name == scriptName);
 		}
 
 		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {

@@ -57,6 +57,7 @@
     <Compile Include="ConstructorImplOptions.cs" />
     <Compile Include="EventImplOptions.cs" />
     <Compile Include="ExpressionCompiler.cs" />
+    <Compile Include="ExpressionOrderer.cs" />
     <Compile Include="FieldImplOptions.cs" />
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="INamingConventionResolver.cs" />

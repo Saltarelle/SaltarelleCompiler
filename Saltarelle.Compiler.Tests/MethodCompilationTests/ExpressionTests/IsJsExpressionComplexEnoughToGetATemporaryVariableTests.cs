@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	public class IsJsExpressionComplexEnoughToGetATemporaryVariableTests {
 		[Test]
 		public void Works() {
-			Assert.Inconclusive("TODO: Test this class, and also DoesJsExpressionHaveSideEffects");
+			Assert.Inconclusive("TODO: Test this class, and also DoesJsExpressionHaveSideEffects, and DoesOrderMatter");
 		}
 	}
 }
