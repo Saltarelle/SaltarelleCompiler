@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
@@ -48,7 +49,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test, Ignore("NRefactory bug, reports target as this.")]
 		public void StaticMethodInvocationWithArgumentsWorks() {
 			AssertCorrect(
 @"static void F(int x, int y, int z) {}
@@ -127,7 +128,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test, Ignore("NRefactory reports this as target")]
 		public void GenericMethodInvocationWorksForStaticMethod() {
 			AssertCorrect(
 @"static void F<T1, T2>(T1 x, int y, T2 z) {}
@@ -166,9 +167,8 @@ public void M() {
 		[Test]
 		public void PassingRefAndOutParametersToNormalMethodWorks() {
 			AssertCorrect(
-@"void F(ref int x, out int y, int z) {}
-public void M() {
-	int a = 0, b = 0, c = 0;
+@"void F(ref int x, out int y, int z) { y = 0; }
+public void M(ref int a, ref int b, ref int c) {
 	// BEGIN
 	F(ref a, out b, c);
 	// END
@@ -181,18 +181,30 @@ public void M() {
 		[Test]
 		public void RefAndOutParametersAreNotSubjectToReordering() {
 			AssertCorrect(
-@"void F(ref int x, out int y, int z) {}
+@"void F(ref int x, out int y, int z) { y = 0; }
 public void M() {
 	int a = 0, b = 0, c = 0;
 	// BEGIN
-	F(ref a, out b, a = b = c);
+	F(z: a = b = c, x: ref a, y: out b);
 	// END
 }
 ",
-@"	$b = $c;
-	$a = $c;
-	this.$F($a, $b, $c.$);
+@"	this.$F($a, $b, $a.$ = $b.$ = $c);
 ");
+		}
+
+		[Test]
+		public void PassingAFieldByReferenceGivesAnError() {
+			var er = new MockErrorReporter(false);
+			CompileMethod(@"
+				public int f;
+				public void OtherMethod(int a, ref int b) {}
+				public void M(int x) {
+					OtherMethod(x, ref f);
+				}
+			", errorReporter: er);
+
+			er.AllMessages.Where(m => m.StartsWith("Error:")).Should().NotBeEmpty();
 		}
 
 		[Test]
@@ -228,7 +240,23 @@ public void M() {
 
 		[Test]
 		public void ReadingIndexerImplementedAsIndexingMethodWorksWithReorderedAndDefaultArguments() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	int i = this[d: F1(), g: F2(), f: F3(), b: F4()];
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $i = this.get_$Item(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+");
 		}
 
 		[Test]
@@ -262,8 +290,27 @@ public void M() {
 
 		[Test]
 		public void DelegateInvocationWorksForReorderedAndDefaultArguments() {
-			Assert.Inconclusive("TODO");
-		}
+			AssertCorrect(
+@"delegate void D(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7);
+void F(int f1, int f2, int f3, int f4, int f5, int f6, int f7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	D d;
+	d = F;
+	// BEGIN
+	d(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}
+
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	$d(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+");		}
 
 		[Test]
 		public void StaticMethodWithThisAsFirstArgumentWorks() {
@@ -313,7 +360,23 @@ public void M() {
 
 		[Test]
 		public void StaticMethodWithThisAsFirstArgumentWorksWithReorderedAndDefaultArguments() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	{C}.$F(this, 1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodImplOptions.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodImplOptions.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -335,7 +398,23 @@ public void M() {
 
 		[Test]
 		public void InstanceMethodOnFirstArgumentWorksWithReorderedAndDefaultArguments() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"static void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F2(), f: F3(), a: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	this.$F4().$F(2, 3, $tmp1, 5, $tmp3, $tmp2);
+", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodImplOptions.InstanceMethodOnFirstArgument("$" + m.Name) : MethodImplOptions.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -357,7 +436,23 @@ public void M() {
 
 		[Test]
 		public void InvokingMethodImplementedAsInlineCodeWorksWithReorderedAndDefaultArguments() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2_;
+", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodImplOptions.InlineCode("_{a}_{b}_{c}_{d}_{e}_{f}_{g}_") : MethodImplOptions.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]

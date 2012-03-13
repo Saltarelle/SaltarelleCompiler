@@ -152,19 +152,26 @@ namespace Saltarelle.Compiler {
 			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable).Compile(expression, returnValueIsImportant);
 		}
 
+		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
+			for (int i = 0; i < expressions.Count; i++) {
+				if (ExpressionOrderer.DoesOrderMatter(expressions[i], newExpressions)) {
+					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressions[i]));
+					expressions[i] = JsExpression.Identifier(_variables[temp.Variable].Name);
+				}
+			}
+		}
+
+		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, JsExpression newExpression) {
+			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, new Result(newExpression, new JsStatement[0]));
+		}
+
 		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
 			var result = CloneAndCompile(rr, true);
 
 			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(result.Expression);
 			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
-				// We have to ensure that everything is ordered correctly. First ensure that all expressions that have to be evaluated first actually are evaluated first.
-				for (int i = 0; i < expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression.Count; i++) {
-					if (!ExpressionOrderer.DoesOrderMatter(expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i], result))
-						continue;
-					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i]));
-					expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression[i] = JsExpression.Identifier(_variables[temp.Variable].Name);
-				}
+				CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression, result);
 			}
 
 			_additionalStatements.AddRange(result.AdditionalStatements);
@@ -192,18 +199,6 @@ namespace Saltarelle.Compiler {
 		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes) {
 			JsExpression _ = null;
 			return InnerCompile(rr, usedMultipleTimes, ref _);
-		}
-
-		private JsExpression CompileMethodCall(MethodImplOptions impl, JsExpression target, IEnumerable<JsExpression> arguments) {
-			// TODO
-			switch (impl.Type) {
-				case MethodImplOptions.ImplType.NormalMethod:
-					return JsExpression.Invocation(JsExpression.MemberAccess(target, impl.Name), arguments);
-				case MethodImplOptions.ImplType.NativeIndexer:
-					return JsExpression.Index(target, arguments.Single());
-				default:
-					throw new NotImplementedException();
-			}
 		}
 
 		private bool IsIntegerType(IType type) {
@@ -311,30 +306,31 @@ namespace Saltarelle.Compiler {
 								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 							}
 							else {
-								var expressions = new List<JsExpression>();
-								expressions.Add(InnerCompile(mrr.TargetResult, true, expressions));
+								List<JsExpression> thisAndArguments;
 								if (property.IsIndexer) {
-									var indexerInvocation = (CSharpInvocationResolveResult)target;
-									foreach (var a in indexerInvocation.Arguments) {
-										expressions.Add(InnerCompile(a, true, expressions));
-									}
+									thisAndArguments = CompileThisAndArgumentListForMethodCall((CSharpInvocationResolveResult)target, oldValueIsImportant, oldValueIsImportant);
+								}
+								else {
+									thisAndArguments = new List<JsExpression> { InnerCompile(mrr.TargetResult, oldValueIsImportant) };
 								}
 
 								JsExpression oldValue, jsOtherOperand;
 								if (oldValueIsImportant) {
-									expressions.Add(CompileMethodCall(impl.GetMethod, expressions[0], expressions.Skip(1)));
-									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
-									oldValue = expressions[expressions.Count - 1];
-									expressions.RemoveAt(expressions.Count - 1); // Remove the current value because it should not be an argument to the setter.
+									thisAndArguments.Add(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, new IType[0]));
+									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, thisAndArguments) : null);
+									oldValue = thisAndArguments[thisAndArguments.Count - 1];
+									thisAndArguments.RemoveAt(thisAndArguments.Count - 1); // Remove the current value because it should not be an argument to the setter.
 								}
 								else {
-									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
+									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, thisAndArguments) : null);
 									oldValue = null;
 								}
 
 								if (returnValueIsImportant) {
 									var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
 									if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(valueToReturn)) {
+										// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
+										CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(thisAndArguments, valueToReturn);
 										var temp = _createTemporaryVariable(target.Type);
 										_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, valueToReturn));
 										valueToReturn = JsExpression.Identifier(_variables[temp.Variable].Name);
@@ -342,11 +338,13 @@ namespace Saltarelle.Compiler {
 
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
-									_additionalStatements.Add(new JsExpressionStatement(CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { newValue }))));
+									thisAndArguments.Add(newValue);
+									_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0])));
 									return valueToReturn;
 								}
 								else {
-									return CompileMethodCall(impl.SetMethod, expressions[0], expressions.Skip(1).Concat(new[] { valueFactory(oldValue, jsOtherOperand) }));
+									thisAndArguments.Add(valueFactory(oldValue, jsOtherOperand));
+									return CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0]);
 								}
 							}
 						}
@@ -444,9 +442,8 @@ namespace Saltarelle.Compiler {
 			var impl = _namingConvention.GetEventImplementation(evt);
 			switch (impl.Type) {
 				case EventImplOptions.ImplType.AddAndRemoveMethods: {
-					var jsTarget = InnerCompile(target.TargetResult, false);
-					var jsValue  = InnerCompile(value, false, ref jsTarget);
-					return CompileMethodCall(isAdd ? impl.AddMethod : impl.RemoveMethod, jsTarget, new[] { jsValue });
+					var accessor = isAdd ? evt.AddAccessor : evt.RemoveAccessor;
+					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, new CSharpInvocationResolveResult(target.TargetResult, accessor, new[] { value }));
 				}
 				default:
 					_errorReporter.Error("Cannot use event " + target.Member.DeclaringType.FullName + "." + target.Member.Name + " from script.");
@@ -631,20 +628,22 @@ namespace Saltarelle.Compiler {
 			throw new InvalidOperationException("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there");
 		}
 
-		// WIP
-
 		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, bool returnValueIsImportant) {
-			var jsTarget = InnerCompile(rr.TargetResult, true);
 			if (rr.Member is IProperty) {
 				var impl = _namingConvention.GetPropertyImplementation((IProperty)rr.Member);
 				switch (impl.Type) {
-					case PropertyImplOptions.ImplType.GetAndSetMethods:
-						return CompileMethodCall(impl.GetMethod, jsTarget, new JsExpression[0]);	// We know we have no arguments because indexers are treated as invocations.
-					case PropertyImplOptions.ImplType.Field:
+					case PropertyImplOptions.ImplType.GetAndSetMethods: {
+						var getter = ((IProperty)rr.Member).Getter;
+						return CompileMethodInvocation(impl.GetMethod, getter, new CSharpInvocationResolveResult(rr.TargetResult, getter, new ResolveResult[0]));	// We know we have no arguments because indexers are treated as invocations.
+					}
+					case PropertyImplOptions.ImplType.Field: {
+						var jsTarget = InnerCompile(rr.TargetResult, true);
 						return JsExpression.MemberAccess(jsTarget, impl.FieldName);
-					default:
+					}
+					default: {
 						_errorReporter.Error("Property " + rr.Member.DeclaringType + "." + rr.Member.Name + " is not usable from script.");
 						return JsExpression.Number(0);
+					}
 				}
 			}
 			else if (rr.Member is IField) {
@@ -672,15 +671,29 @@ namespace Saltarelle.Compiler {
 				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());
 		}
 
-		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMember member, ResolveResult target, IList<ResolveResult> specifiedArguments, IList<ResolveResult> argumentsForCall, IList<IType> typeArguments, IList<int> argumentToParameterMap) {
-			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)).ToList() : new List<JsExpression>());
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(CSharpInvocationResolveResult invocation, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes) {
+			return CompileThisAndArgumentListForMethodCall(invocation.TargetResult, targetUsedMultipleTimes, argumentsUsedMultipleTimes, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+		}
+
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(ResolveResult target, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, IList<ResolveResult> specifiedArguments, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
 			var expressions = new List<JsExpression>();
-			expressions.Add(InnerCompile(target, jsTypeArguments.Count > 0 && !member.IsStatic));
+			expressions.Add(InnerCompile(target, targetUsedMultipleTimes));
 			foreach (var a in specifiedArguments) {
-				expressions.Add(InnerCompile(a, false, expressions));
+				if (a is ByReferenceResolveResult) {
+					var r = (ByReferenceResolveResult)a;
+					if (r.ElementResult is LocalResolveResult) {
+						expressions.Add(JsExpression.Identifier(_variables[((LocalResolveResult)r.ElementResult).Variable].Name));
+					}
+					else {
+						_errorReporter.Error("Only locals can be passed by reference.");
+						expressions.Add(JsExpression.Number(0));
+					}
+				}
+				else
+					expressions.Add(InnerCompile(a, argumentsUsedMultipleTimes, expressions));
 			}
 
-			if (argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n)) {
+			if (argumentToParameterMap != null && (argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.
 				// We have to perform argument rearrangement. The easiest way would be for us to just use the argumentsForCall directly, but if we did, we wouldn't evaluate all expressions in left-to-right order.
 				var newExpressions = new List<JsExpression>() { expressions[0] };
 				for (int i = 0; i < argumentsForCall.Count; i++) {
@@ -696,12 +709,14 @@ namespace Saltarelle.Compiler {
 						newExpressions.Add(VisitResolveResult(argumentsForCall[i], true));
 					}
 					else {
-						// Ensure that all arguments are evaluated in the correct order.
-						for (int j = 0; j < specifiedIndex; j++) {
-							if (argumentToParameterMap[j] > i && ExpressionOrderer.DoesOrderMatter(expressions[specifiedIndex + 1], expressions[j + 1])) {	// This expression used to be evaluated before us, but will now be evaluated after us, so we need to create a temporary.
-								var temp = _createTemporaryVariable(specifiedArguments[j].Type);
-								_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressions[j + 1]));
-								expressions[j + 1] = JsExpression.Identifier(_variables[temp.Variable].Name);
+						if (!(specifiedArguments[specifiedIndex] is ByReferenceResolveResult)) {
+							// Ensure that all arguments are evaluated in the correct order (doesn't have to be done for ref and out arguments.
+							for (int j = 0; j < specifiedIndex; j++) {
+								if (argumentToParameterMap[j] > i && ExpressionOrderer.DoesOrderMatter(expressions[specifiedIndex + 1], expressions[j + 1])) {	// This expression used to be evaluated before us, but will now be evaluated after us, so we need to create a temporary.
+									var temp = _createTemporaryVariable(specifiedArguments[j].Type);
+									_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressions[j + 1]));
+									expressions[j + 1] = JsExpression.Identifier(_variables[temp.Variable].Name);
+								}
 							}
 						}
 						newExpressions.Add(expressions[specifiedIndex + 1]);
@@ -710,21 +725,33 @@ namespace Saltarelle.Compiler {
 				expressions = newExpressions;
 			}
 
+			return expressions;
+		}
+
+		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
+			var typeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : new IType[0];
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.TargetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments);
+		}
+
+		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod member, IList<JsExpression> thisAndArguments, IList<IType> typeArguments) {
+			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => VisitResolveResult(new TypeResolveResult(a), true)).ToList() : new List<JsExpression>());
+
 			if (impl == null) {
-				return JsExpression.Invocation(expressions[0], expressions.Skip(1));	// Used for delegate invocations.
+				return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));	// Used for delegate invocations.
 			}
 			else {
 				switch (impl.Type) {
 					case MethodImplOptions.ImplType.NormalMethod: {
-						var jsMethod = JsExpression.MemberAccess(expressions[0], impl.Name);
+						var jsMethod = JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
 							if (member.IsStatic)
-								expressions[0] = JsExpression.Null;
-							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), expressions);
+								thisAndArguments[0] = JsExpression.Null;
+							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), thisAndArguments);
 						}
 						else {
-							return JsExpression.Invocation(jsMethod, expressions.Skip(1));
+							return JsExpression.Invocation(jsMethod, thisAndArguments.Skip(1));
 						}
 					}
 
@@ -732,15 +759,15 @@ namespace Saltarelle.Compiler {
 						var jsMethod = JsExpression.MemberAccess(VisitResolveResult(new TypeResolveResult(member.DeclaringType), true), impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
-							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(expressions));
+							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
 						}
 						else {
-							return JsExpression.Invocation(jsMethod, expressions);
+							return JsExpression.Invocation(jsMethod, thisAndArguments);
 						}
 					}
 
 					case MethodImplOptions.ImplType.InstanceMethodOnFirstArgument:
-						return JsExpression.Invocation(JsExpression.MemberAccess(expressions[1], impl.Name), expressions.Skip(2));
+						return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
 
 					case MethodImplOptions.ImplType.InlineCode: {
 						var method = (IMethod)member;
@@ -759,9 +786,9 @@ namespace Saltarelle.Compiler {
 								allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, VisitResolveResult(new TypeResolveResult(specializedMethod.TypeArguments[i]), true)));
 						}
 						if (!member.IsStatic)
-							allSubstitutions.Add(Tuple.Create("this", expressions[0]));
-						for (int i = 1; i < expressions.Count; i++)
-							allSubstitutions.Add(Tuple.Create(method.Parameters[i - 1].Name, expressions[i]));
+							allSubstitutions.Add(Tuple.Create("this", thisAndArguments[0]));
+						for (int i = 1; i < thisAndArguments.Count; i++)
+							allSubstitutions.Add(Tuple.Create(method.Parameters[i - 1].Name, thisAndArguments[i]));
 
 						string format = impl.LiteralCode;
 						var fmtarguments = new List<JsExpression>();
@@ -784,7 +811,8 @@ namespace Saltarelle.Compiler {
 					}
 
 					case MethodImplOptions.ImplType.NativeIndexer:
-						return JsExpression.Index(expressions[0], expressions[1]);
+						return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
+
 					default: {
 						_errorReporter.Error("Method " + member.DeclaringType.FullName + "." + member.Name + " cannot be used from script.");
 						return JsExpression.Number(0);
@@ -793,12 +821,12 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public override JsExpression VisitCSharpInvocationResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
+		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
 			// Note: This might also represent a constructor.
 			if (rr.Member is IMethod) {
 				if (rr.Member.Name == "Invoke" && IsDelegateType(rr.Member.DeclaringType)) {
 					// Invoke the underlying method instead of calling the Invoke method.
-					return CompileMethodInvocation(null, (IMethod)rr.Member, rr.TargetResult, rr.Arguments, rr.GetArgumentsForCall(), new IType[0], rr.GetArgumentToParameterMap());
+					return CompileMethodInvocation(null, (IMethod)rr.Member, rr);
 				}
 				else {
 					var method = (IMethod)rr.Member;
@@ -806,7 +834,7 @@ namespace Saltarelle.Compiler {
 						return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Arguments.Select(a => VisitResolveResult(a, true))); // Only temporary - Promised to be fixed in NR
 					}
 					else {
-						return CompileMethodInvocation(_namingConvention.GetMethodImplementation((IMethod)rr.Member), (IMethod)rr.Member, rr.TargetResult, rr.Arguments, rr.GetArgumentsForCall(), rr.Member is SpecializedMethod ? ((SpecializedMethod)rr.Member).TypeArguments : new IType[0], rr.GetArgumentToParameterMap());
+						return CompileMethodInvocation(_namingConvention.GetMethodImplementation(method), method, rr);
 					}
 				}
 			}
@@ -817,18 +845,12 @@ namespace Saltarelle.Compiler {
 					_errorReporter.Error("Cannot invoke property that does not have a get method.");
 					return JsExpression.Number(0);
 				}
-				var expressions = new List<JsExpression>() { InnerCompile(rr.TargetResult, false) };
-				foreach (var arg in rr.Arguments)
-					expressions.Add(InnerCompile(arg, false, expressions));
-				return CompileMethodCall(impl.GetMethod, expressions[0], expressions.Skip(1));
+				return CompileMethodInvocation(impl.GetMethod, property.Getter, rr);
 			}
 			else {
 				throw new InvalidOperationException("Invocation of unsupported member " + rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
 			}
 		}
-
-		// /WIP
-
 
 		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
 
@@ -919,7 +941,9 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
-			return VisitResolveResult(rr.ElementResult, true);
+			return VisitResolveResult(rr.ElementResult, returnValueIsImportant);
+			// Should be like below, but that requires us to implement object construction first.
+			// throw new InvalidOperationException("Resolve result " + rr.ToString() + " should have been handled in method call.");
 		}
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {

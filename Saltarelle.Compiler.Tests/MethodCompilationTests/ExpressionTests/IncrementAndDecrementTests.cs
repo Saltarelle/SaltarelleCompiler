@@ -299,44 +299,6 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("Enable when invocations fixed")]
-		public void PrefixForIndexerWithMethodsWorksWhenReorderingArguments() {
-			AssertCorrectForBoth(
-@"int this[int x, int y] { get { return 0; } set {} }
-public int F1() { return 0; }
-public int F2() { return 0; }
-public void M() {
-	// BEGIN
-	int i = ++this[y: F1(), x: F2()];
-	// END
-}",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
-	var $tmp3 = this.get_$Item($tmp2, $tmp1) + 1;
-	this.set_$Item($tmp2, $tmp1, $tmp3);
-	var $i = $tmp3;
-");
-		}
-
-		[Test, Ignore("Enable when invocations fixed")]
-		public void PostfixForIndexerWithMethodsWorksWhenReorderingArguments() {
-			AssertCorrectForBoth(
-@"int this[int x, int y] { get { return 0; } set {} }
-public int F1() { return 0; }
-public int F2() { return 0; }
-public void M() {
-	// BEGIN
-	int i = this[y: F1(), x: F2()]++;
-	// END
-}",
-@"	var $tmp1 = this.$F1();
-	var $tmp2 = this.$F2();
-	var $tmp3 = this.get_$Item($tmp2, $tmp1);
-	this.set_$Item($tmp2, $tmp1, $tmp3 + 1);
-	var $i = $tmp3;
-");
-		}
-
 		[Test]
 		public void PrefixForIndexerWithMethodsOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
 			AssertCorrectForBoth(
@@ -399,6 +361,158 @@ public void M() {
 }",
 @"	$j = this[$i]++;
 ", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
+		}
+
+		[Test]
+		public void PrefixForIndexerWorksWhenReorderingArguments() {
+			AssertCorrect(
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	++this[d: F1(), g: F2(), f: F3(), b: F4()];
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $tmp4 = this.$F4();
+	this.set_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2, this.get_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2) + 1);
+");
+		}
+
+		[Test]
+		public void PostfixForIndexerWorksWhenReorderingArguments() {
+			AssertCorrect(
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	this[d: F1(), g: F2(), f: F3(), b: F4()]++;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $tmp4 = this.$F4();
+	this.set_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2, this.get_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2) + 1);
+");
+		}
+
+		[Test]
+		public void PrefixForIndexerWorksWhenReorderingArgumentsAndUsingTheReturnValue() {
+			AssertCorrect(
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	i = ++this[d: F1(), g: F2(), f: F3(), b: F4()];
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $tmp4 = this.$F4();
+	var $tmp5 = this.get_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2) + 1;
+	this.set_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2, $tmp5);
+	$i = $tmp5;
+");
+		}
+
+		[Test]
+		public void PostfixForIndexerWorksWhenReorderingArgumentsAndUsingTheReturnValue() {
+			AssertCorrect(
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	i = this[d: F1(), g: F2(), f: F3(), b: F4()]++;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $tmp4 = this.$F4();
+	var $tmp5 = this.get_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2);
+	this.set_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2, $tmp5 + 1);
+	$i = $tmp5;
+");
+		}
+
+		[Test]
+		public void PrefixForIndexerImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+public void M() {
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	++this[i, j];
+	// END
+}",
+@"	set_this_$i_$j_(get_this_$i_$j) + 1;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}_{x}_{y}"), MethodImplOptions.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyImplOptions.Field(p.Name) });
+		}
+
+		[Test]
+		public void PostfixForIndexerImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+public void M() {
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	++this[i, j];
+	// END
+}",
+@"	set_this_$i_$j_(get_this_$i_$j) + 1;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}_{x}_{y}"), MethodImplOptions.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyImplOptions.Field(p.Name) });
+		}
+
+		[Test]
+		public void PrefixForPropertyWithSetMethodImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int P { get; set; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	++P;
+	// END
+}",
+@"	set_this_(get_this) + 1;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}"), MethodImplOptions.InlineCode("set_{this}_{value}")) });
+		}
+
+		[Test]
+		public void PostfixForPropertyWithSetMethodImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int P { get; set; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	++P;
+	// END
+}",
+@"	set_this_(get_this) + 1;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}"), MethodImplOptions.InlineCode("set_{this}_{value}")) });
 		}
 
 		[Test]

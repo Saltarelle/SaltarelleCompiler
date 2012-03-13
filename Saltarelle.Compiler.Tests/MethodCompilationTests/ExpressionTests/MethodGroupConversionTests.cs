@@ -21,6 +21,19 @@ public void M() {
 ");
 		}
 
+		[Test, Ignore("NRefactory loses method group conversion")]
+		public void CombiningDeclarationAndAssignmentWorks() {
+			AssertCorrect(
+@"void F(int x) {}
+public void M() {
+	// BEGIN
+	System.Action<int> f = F;
+	// END
+}",
+@"	var $f = $Bind(this.$F, this);
+");
+		}
+
 		[Test]
 		public void ReadingStaticMethodGroupWorks() {
 			AssertCorrect(

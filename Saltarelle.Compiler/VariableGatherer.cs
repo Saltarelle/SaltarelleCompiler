@@ -130,16 +130,14 @@ namespace Saltarelle.Compiler
 
 		private void CheckByRefArguments(IEnumerable<AstNode> arguments) {
 			foreach (var a in arguments) {
-				if (a is DirectionExpression) {
-					var resolveResult = _resolver.Resolve(((DirectionExpression)a).Expression);
+				var actual = (a is NamedArgumentExpression ? ((NamedArgumentExpression)a).Expression : a);
+				if (actual is DirectionExpression) {
+					var resolveResult = _resolver.Resolve(((DirectionExpression)actual).Expression);
 					if (resolveResult is LocalResolveResult) {
 						var v = ((LocalResolveResult)resolveResult).Variable;
 						var current = _result[v];
 						if (!current.UseByRefSemantics)
 							_result[v] = new VariableData(current.Name, current.DeclaringMethod, true);
-					}
-					else {
-						_errorReporter.Error("Implementation limitation: only locals can be passed by reference");
 					}
 				}
 			}

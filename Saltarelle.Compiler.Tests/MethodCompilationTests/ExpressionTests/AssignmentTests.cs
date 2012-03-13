@@ -203,25 +203,40 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("Enable when invocations fixed")]
+		[Test]
 		public void AssigningToIndexerWorksWhenReorderingArguments() {
 			AssertCorrect(
-@"int this[int x, int y] { get { return 0; } set {} }
-public int F1() { return 0; }
-public int F2() { return 0; }
-public int F3() { return 0; }
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
 public void M() {
 	int i = 0;
 	// BEGIN
-	int i = this[y: F1(), x: F2()] = F3();
+	this[d: F1(), g: F2(), f: F3(), b: F4()] = i;
 	// END
-}",
+}
+",
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	this.set_$Item($tmp2, $tmp1, $tmp3);
-	var $i = $tmp3;
+	this.set_$Item(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2, $i);
 ");
+		}
+
+		[Test]
+		public void AssigningToIndexerImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+public void M() {
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	this[i, j] = k;
+	// END
+}",
+@"	set_this_$i_$j_$k;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}_{x}_{y}"), MethodImplOptions.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyImplOptions.Field(p.Name) });
 		}
 
 		[Test]
@@ -236,6 +251,20 @@ public void M() {
 }",
 @"	$l = this[$i] = $k;
 ", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
+		}
+
+		[Test]
+		public void AssigningToPropertyWithSetMethodImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int P { get; set; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	P = i;
+	// END
+}",
+@"	set_this_$i;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}"), MethodImplOptions.InlineCode("set_{this}_{value}")) });
 		}
 
 		[Test]
@@ -286,11 +315,11 @@ public void M() {
 	F1().P = F2().P = F();
 	// END
 }",
-@"	var $tmp1 = this.$F1();
-	var $tmp2 = this.$F2();
-	var $tmp3 = this.$F();
-	$tmp2.set_$P($tmp3);
-	$tmp1.set_$P($tmp3);
+@"	var $tmp3 = this.$F1();
+	var $tmp1 = this.$F2();
+	var $tmp2 = this.$F();
+	$tmp1.set_$P($tmp2);
+	$tmp3.set_$P($tmp2);
 ");
 		}
 
@@ -340,7 +369,7 @@ public void M() {
 		}
 
 		[Test]
-		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenNativeIndexersAreUsed() {
+		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenIndexersWithGetMethodsAreUsed() {
 			AssertCorrect(
 @"class C { public int this[int x, int y] { get { return 0; } set {} } }
 public C FC() { return null; }
@@ -408,11 +437,6 @@ public void M(ref int i) {
 }",
 @"	$i.$ = 1;
 ");
-		}
-
-		[Test]
-		public void AssigningToPropertiesAndIndexersImplementedInDifferentWaysWorks() {
-			Assert.Inconclusive("TODO");
 		}
 	}
 }

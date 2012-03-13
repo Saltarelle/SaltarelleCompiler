@@ -272,23 +272,41 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("Enable when invocations fixed")]
-		public void AssigningToIndexerWorksWhenReorderingArguments() {
+		[Test]
+		public void CompoundAssigningToIndexerWorksWhenReorderingArguments() {
 			AssertCorrectForBulkOperators(
-@"int this[int x, int y] { get { return 0; } set {} }
-public int F1() { return 0; }
-public int F2() { return 0; }
-public int F3() { return 0; }
+@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
 public void M() {
 	int i = 0;
 	// BEGIN
-	this[y: F1(), x: F2()] += F3();
+	this[d: F1(), g: F2(), f: F3(), b: F4()] += i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $tmp4 = this.$F4();
+	this.set_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2, this.get_$Item(1, $tmp4, 3, $tmp1, 5, $tmp3, $tmp2) + $i);
+");
+		}
+
+		[Test]
+		public void CompoundAssigningToIndexerImplementedAsInlineCodeWorks() {
+			AssertCorrectForBulkOperators(
+@"int this[int x, int y] { get { return 0; } set {} }
+public void M() {
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	this[i, j] += k;
 	// END
 }",
-@"	var $tmp1 = this.F1();
-	var $tmp2 = this.F2();
-	this.set_$Item($tmp2, $tmp1, this.get_$Item($tmp2, $tmp1) + this.F3());
-");
+@"	set_this_$i_$j_(get_this_$i_$j_) + $k_;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}_{x}_{y}_"), MethodImplOptions.InlineCode("set_{this}_{x}_{y}_{value}_")) : PropertyImplOptions.Field(p.Name) });
 		}
 
 		[Test]
@@ -303,6 +321,20 @@ public void M() {
 }",
 @"	$l = this[$i] += $k;
 ", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyImplOptions.NativeIndexer() : PropertyImplOptions.Field(p.Name) });
+		}
+
+		[Test]
+		public void CompoundAssigningToPropertyWithSetMethodImplementedAsLiteralCodeWorks() {
+			AssertCorrectForBulkOperators(
+@"int P { get; set; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	P += i;
+	// END
+}",
+@"	set_this_(get_this_) + $i_;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}_"), MethodImplOptions.InlineCode("set_{this}_{value}_")) });
 		}
 
 		[Test]

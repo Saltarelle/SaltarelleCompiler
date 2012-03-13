@@ -41,6 +41,19 @@ public void M() {
 		}
 
 		[Test]
+		public void ReadingPropertyWithGetMethodImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"int P { get; set; }
+public void M() {
+	// BEGIN
+	int i = P;
+	// END
+}",
+@"	var $i = get_this_;
+", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.InlineCode("get_{this}_"), MethodImplOptions.InlineCode("set_{this}_{value}_")) });
+		}
+
+		[Test]
 		public void ReadingPropertyImplementedAsFieldWorks() {
 			AssertCorrect(
 @"int F { get; set; }
@@ -75,6 +88,20 @@ public void M() {
 		}
 
 		[Test]
+		public void UsingEventAddAccessorImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h = null;
+	// BEGIN
+	MyEvent += h;
+	// END
+}",
+@"	add_this_$h;
+", namingConvention: new MockNamingConventionResolver() { GetEventImplementation = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InlineCode("add_{this}_{value}"), MethodImplOptions.InlineCode("remove_{this}_{value}")) });
+		}
+
+		[Test]
 		public void UsingEventRemoveAccessorWorks() {
 			AssertCorrect(
 @"event System.EventHandler MyEvent;
@@ -86,6 +113,20 @@ public void M() {
 }",
 @"	this.remove_$MyEvent($h);
 ");
+		}
+
+		[Test]
+		public void UsingEventRemoveAccessorImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h = null;
+	// BEGIN
+	MyEvent -= h;
+	// END
+}",
+@"	remove_this_$h;
+", namingConvention: new MockNamingConventionResolver() { GetEventImplementation = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.InlineCode("add_{this}_{value}"), MethodImplOptions.InlineCode("remove_{this}_{value}")) });
 		}
 
 		[Test]
@@ -169,12 +210,6 @@ public void M() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventImplementation = e => EventImplOptions.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
-		}
-
-		[Test]
-		public void InvokingMemberWorks() {
-			// Probably not here. both generic and non-generic
-			Assert.Inconclusive("TODO");
 		}
 
 		[Test]

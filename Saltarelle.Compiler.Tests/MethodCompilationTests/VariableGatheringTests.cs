@@ -366,6 +366,22 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		}
 
 		[Test]
+		public void ByReferenceSemanticGatheringWorksWithNamedArguments() {
+			CompileMethod(
+@"
+void F(ref int x, out int y, int z) { y = 0; }
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	F(z: c, x: ref a, y: out b);
+	// END
+");
+			MethodCompiler.variables.Single(kvp => kvp.Key.Name == "a").Value.UseByRefSemantics.Should().BeTrue();
+			MethodCompiler.variables.Single(kvp => kvp.Key.Name == "b").Value.UseByRefSemantics.Should().BeTrue();
+			MethodCompiler.variables.Single(kvp => kvp.Key.Name == "c").Value.UseByRefSemantics.Should().BeFalse();
+		}
+
+		[Test]
 		public void ByRefAndOutParametersToMethodAreConsideredUsedByReference() {
 			CompileMethod(@"
 				public void M(int x, ref int y, out int z) {
@@ -401,7 +417,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			AssertUsedByReference("$y");
 		}
 
-		[Test, Ignore("To be investigated")]
+		[Test, Ignore("NRefactory misses method group conversion")]
 		public void VariableUsedAsARefDelegateInvocationArgumentIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public delegate void D(int a, ref int b);
@@ -415,7 +431,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			AssertUsedByReference("$y");
 		}
 
-		[Test, Ignore("To be investigated")]
+		[Test, Ignore("NRefactory misses method group conversion")]
 		public void VariableUsedAsAnOutDelegateInvocationArgumentIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public delegate void D(int a, out int b);
@@ -451,20 +467,6 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			");
 			AssertNotUsedByReference("$x");
 			AssertUsedByReference("$y");
-		}
-
-		[Test]
-		public void PassingAFieldByReferenceGivesAnError() {
-			var er = new MockErrorReporter(false);
-			CompileMethod(@"
-				public int f;
-				public void OtherMethod(int a, ref int b) {}
-				public void M(int x) {
-					OtherMethod(x, ref f);
-				}
-			", errorReporter: er);
-
-			er.AllMessages.Where(m => m.StartsWith("Error:")).Should().NotBeEmpty();
 		}
 
 		[Test]
