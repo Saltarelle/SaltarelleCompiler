@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler {
 		private readonly INamingConventionResolver _namingConvention;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
-		private readonly IDictionary<IVariable, VariableData> _variables;
+		private readonly IDictionary<DomRegion, VariableData> _variables;
 		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly Func<IType, LocalResolveResult> _createTemporaryVariable;
 		private readonly Func<StatementCompiler> _createInnerCompiler;
@@ -134,7 +134,7 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<StatementCompiler> createInnerCompiler) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<StatementCompiler> createInnerCompiler) {
 			_compilation = compilation;
 			_namingConvention = namingConvention;
 			_runtimeLibrary = runtimeLibrary;
@@ -161,8 +161,8 @@ namespace Saltarelle.Compiler {
 			for (int i = 0; i < expressions.Count; i++) {
 				if (ExpressionOrderer.DoesOrderMatter(expressions[i], newExpressions)) {
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressions[i]));
-					expressions[i] = JsExpression.Identifier(_variables[temp.Variable].Name);
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, expressions[i]));
+					expressions[i] = JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 				}
 			}
 		}
@@ -183,8 +183,8 @@ namespace Saltarelle.Compiler {
 
 			if (needsTemporary) {
 				var temp = _createTemporaryVariable(rr.Type);
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, result.Expression));
-				return JsExpression.Identifier(_variables[temp.Variable].Name);
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, result.Expression));
+				return JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 			}
 			else {
 				return result.Expression;
@@ -267,9 +267,9 @@ namespace Saltarelle.Compiler {
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(target.Type);
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, access));
-					_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp.Variable].Name), jsOtherOperand))));
-					return JsExpression.Identifier(_variables[temp.Variable].Name);
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, access));
+					_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp.Variable.Region].Name), jsOtherOperand))));
+					return JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 				}
 				else {
 					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
@@ -290,9 +290,9 @@ namespace Saltarelle.Compiler {
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, access));
-					_additionalStatements.Add(new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp.Variable].Name), jsOtherOperand))));
-					return JsExpression.Identifier(_variables[temp.Variable].Name);
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, access));
+					_additionalStatements.Add(new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp.Variable.Region].Name), jsOtherOperand))));
+					return JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 				}
 				else {
 					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
@@ -350,8 +350,8 @@ namespace Saltarelle.Compiler {
 										// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
 										CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(thisAndArguments, valueToReturn);
 										var temp = _createTemporaryVariable(target.Type);
-										_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, valueToReturn));
-										valueToReturn = JsExpression.Identifier(_variables[temp.Variable].Name);
+										_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, valueToReturn));
+										valueToReturn = JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 									}
 
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
@@ -401,9 +401,9 @@ namespace Saltarelle.Compiler {
 				else {
 					if (returnValueIsImportant && returnValueBeforeChange) {
 						var temp = _createTemporaryVariable(target.Type);
-						_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, jsTarget));
-						_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp.Variable].Name), jsOtherOperand))));
-						return JsExpression.Identifier(_variables[temp.Variable].Name);
+						_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, jsTarget));
+						_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp.Variable.Region].Name), jsOtherOperand))));
+						return JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 					}
 					else {
 						return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
@@ -445,10 +445,10 @@ namespace Saltarelle.Compiler {
 
 			if (trueResult.AdditionalStatements.Count > 0 || falseResult.AdditionalStatements.Count > 0) {
 				var temp = _createTemporaryVariable(truePath.Type);
-				var trueBlock  = new JsBlockStatement(trueResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp.Variable].Name, trueResult.Expression) }));
-				var falseBlock = new JsBlockStatement(falseResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp.Variable].Name, falseResult.Expression) }));
+				var trueBlock  = new JsBlockStatement(trueResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, trueResult.Expression) }));
+				var falseBlock = new JsBlockStatement(falseResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, falseResult.Expression) }));
 				_additionalStatements.Add(new JsIfStatement(jsTest, trueBlock, falseBlock));
-				return JsExpression.Identifier(_variables[temp.Variable].Name);
+				return JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 			}
 			else {
 				return JsExpression.Conditional(jsTest, trueResult.Expression, falseResult.Expression);
@@ -704,7 +704,7 @@ namespace Saltarelle.Compiler {
 				if (a is ByReferenceResolveResult) {
 					var r = (ByReferenceResolveResult)a;
 					if (r.ElementResult is LocalResolveResult) {
-						expressions.Add(JsExpression.Identifier(_variables[((LocalResolveResult)r.ElementResult).Variable].Name));
+						expressions.Add(JsExpression.Identifier(_variables[((LocalResolveResult)r.ElementResult).Variable.Region].Name));
 					}
 					else {
 						_errorReporter.Error("Only locals can be passed by reference.");
@@ -736,8 +736,8 @@ namespace Saltarelle.Compiler {
 							for (int j = 0; j < specifiedIndex; j++) {
 								if (argumentToParameterMap[j] > i && ExpressionOrderer.DoesOrderMatter(expressions[specifiedIndex + 1], expressions[j + 1])) {	// This expression used to be evaluated before us, but will now be evaluated after us, so we need to create a temporary.
 									var temp = _createTemporaryVariable(specifiedArguments[j].Type);
-									_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable].Name, expressions[j + 1]));
-									expressions[j + 1] = JsExpression.Identifier(_variables[temp.Variable].Name);
+									_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp.Variable.Region].Name, expressions[j + 1]));
+									expressions[j + 1] = JsExpression.Identifier(_variables[temp.Variable.Region].Name);
 								}
 							}
 						}
@@ -927,7 +927,7 @@ namespace Saltarelle.Compiler {
 				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(result.Expression) : (JsStatement)new JsExpressionStatement(result.Expression));
 				jsBody = new JsBlockStatement(result.AdditionalStatements.Concat(new[] { lastStatement }));
 			}
-			return JsExpression.FunctionDefinition(rr.Parameters.Select(p => rr.IsImplicitlyTyped ? p.Name : _variables[p].Name), jsBody);	// Currently there seems to be a NR bug that causes the parameters to implicitly typed lambdas to not be correct.
+			return JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p.Region].Name), jsBody);
 		}
 
 		// /WIP
@@ -938,8 +938,8 @@ namespace Saltarelle.Compiler {
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
 			// Only other thing we have to take care of now is if we're accessing a byref variable declared in a parent function, in which case we'd have to return this.variable.$
-			var data = _variables[rr.Variable];
-			var ident = JsExpression.Identifier(_variables[rr.Variable].Name);
+			var data = _variables[rr.Variable.Region];
+			var ident = JsExpression.Identifier(_variables[rr.Variable.Region].Name);
 			if (data.UseByRefSemantics)
 				return JsExpression.MemberAccess(ident, "$");
 			else

@@ -14,8 +14,8 @@ namespace Saltarelle.Compiler
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
         private HashSet<string> _usedNames;
-        private Dictionary<IVariable, VariableData> _result;
-		private HashSet<IVariable> _variablesDeclaredInsideLoop;
+        private Dictionary<DomRegion, VariableData> _result;
+		private HashSet<DomRegion> _variablesDeclaredInsideLoop;
 
 		private bool _isInsideNestedFunction;
         private AstNode _currentMethod;
@@ -27,12 +27,12 @@ namespace Saltarelle.Compiler
             _errorReporter = errorReporter;
         }
 
-        public IDictionary<IVariable, VariableData> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
-            _result = new Dictionary<IVariable, VariableData>();
+        public IDictionary<DomRegion, VariableData> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
+            _result = new Dictionary<DomRegion, VariableData>();
             _usedNames = new HashSet<string>(usedNames);
 			_isInsideNestedFunction = false;
             _currentMethod = node;
-			_variablesDeclaredInsideLoop = new HashSet<IVariable>();
+			_variablesDeclaredInsideLoop = new HashSet<DomRegion>();
 
 			foreach (var p in method.Parameters) {
 				AddVariable(p, p.IsRef || p.IsOut);
@@ -54,9 +54,9 @@ namespace Saltarelle.Compiler
 		private void AddVariable(IVariable v, bool isUsedByReference = false) {
     		string n = _namingConvention.GetVariableName(v, _usedNames);
     		_usedNames.Add(n);
-    		_result.Add(v, new VariableData(n, _currentMethod, isUsedByReference));
+    		_result.Add(v.Region, new VariableData(n, _currentMethod, isUsedByReference));
 			if (_isInsideLoop)
-				_variablesDeclaredInsideLoop.Add(v);
+				_variablesDeclaredInsideLoop.Add(v.Region);
 		}
 
     	public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
@@ -135,9 +135,9 @@ namespace Saltarelle.Compiler
 					var resolveResult = _resolver.Resolve(((DirectionExpression)actual).Expression);
 					if (resolveResult is LocalResolveResult) {
 						var v = ((LocalResolveResult)resolveResult).Variable;
-						var current = _result[v];
+						var current = _result[v.Region];
 						if (!current.UseByRefSemantics)
-							_result[v] = new VariableData(current.Name, current.DeclaringMethod, true);
+							_result[v.Region] = new VariableData(current.Name, current.DeclaringMethod, true);
 					}
 				}
 			}
@@ -195,11 +195,11 @@ namespace Saltarelle.Compiler
 		public override void VisitIdentifierExpression(IdentifierExpression identifierExpression) {
 			if (_isInsideNestedFunction) {
 				var rr = _resolver.Resolve(identifierExpression) as LocalResolveResult;
-				if (rr != null && _variablesDeclaredInsideLoop.Contains(rr.Variable)) {
+				if (rr != null && _variablesDeclaredInsideLoop.Contains(rr.Variable.Region)) {
 					// the variable might suffer from all variables in JS being function-scoped, so use byref semantics.
-					var current = _result[rr.Variable];
+					var current = _result[rr.Variable.Region];
 					if (!current.UseByRefSemantics)
-						_result[rr.Variable] = new VariableData(current.Name, current.DeclaringMethod, true);
+						_result[rr.Variable.Region] = new VariableData(current.Name, current.DeclaringMethod, true);
 				}
 			}
 			base.VisitIdentifierExpression(identifierExpression);
