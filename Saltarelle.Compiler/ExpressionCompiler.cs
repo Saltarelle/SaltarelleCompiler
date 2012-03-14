@@ -612,16 +612,16 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Negate:
 				case ExpressionType.NegateChecked:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.Negate, IsNullableType(rr.Operands[0].Type));
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.Negate, rr.IsLiftedOperator);
 
 				case ExpressionType.UnaryPlus:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.Positive, IsNullableType(rr.Operands[0].Type));
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.Positive, rr.IsLiftedOperator);
 
 				case ExpressionType.Not:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.LogicalNot, IsNullableType(rr.Operands[0].Type));
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.LogicalNot, rr.IsLiftedOperator);
 
 				case ExpressionType.OnesComplement:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, IsNullableType(rr.Operands[0].Type));
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, rr.IsLiftedOperator);
 
 				// Conditional operator
 

@@ -417,7 +417,7 @@ public void M() {
 			AssertUsedByReference("$y");
 		}
 
-		[Test, Ignore("NRefactory misses method group conversion")]
+		[Test]
 		public void VariableUsedAsARefDelegateInvocationArgumentIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public delegate void D(int a, ref int b);
@@ -431,7 +431,7 @@ public void M() {
 			AssertUsedByReference("$y");
 		}
 
-		[Test, Ignore("NRefactory misses method group conversion")]
+		[Test]
 		public void VariableUsedAsAnOutDelegateInvocationArgumentIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public delegate void D(int a, out int b);
@@ -591,7 +591,7 @@ public void M() {
             CompileMethod(
 @"
 public void M(int p) {
-    Func<int> f = p2 => {
+    Func<int, int> f = p2 => {
         Func<string, double> f2 = delegate(string s) {
             Func<int, int, int> f3 = (int i, int j) => (i + j);
             Action<double> a1 = x => {};
@@ -600,20 +600,21 @@ public void M(int p) {
         Action<string> f4 = s2 => {
             Func<int, string> f5 = y => y.ToString();
         };
+		return 0;
     };
     Action<Type> a = delegate {};
 }");
 
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 19)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 19)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 24)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 24)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 38)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 38)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 19)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 24)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(9, 29)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
         }

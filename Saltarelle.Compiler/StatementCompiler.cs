@@ -116,10 +116,16 @@ namespace Saltarelle.Compiler {
 		public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
 			var declarations = new List<JsVariableDeclaration>();
 			foreach (var d in variableDeclarationStatement.Variables) {
-				var data = _variables[((LocalResolveResult)_resolver.Resolve(d)).Variable];
-				JsExpression initializer;
+				var variable = ((LocalResolveResult)_resolver.Resolve(d)).Variable;
+				var data = _variables[variable];
+				JsExpression jsInitializer;
 				if (!d.Initializer.IsNull) {
-					var exprCompileResult = CompileExpression(d.Initializer, true);
+					var initializer = _resolver.Resolve(d.Initializer);
+					if (!initializer.Type.Equals(variable.Type)) {
+						initializer = new ConversionResolveResult(variable.Type, initializer, CSharpConversions.Get(_compilation).ImplicitConversion(initializer, variable.Type));
+					}
+
+					var exprCompileResult = _expressionCompiler.Compile(initializer, true);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
 						if (declarations.Count > 0) {
 							_result.Add(new JsVariableDeclarationStatement(declarations));
@@ -129,15 +135,15 @@ namespace Saltarelle.Compiler {
 							_result.Add(s);
 						}
 					}
-					initializer = (data.UseByRefSemantics ? JsExpression.ObjectLiteral(new[] { new JsObjectLiteralProperty("$", exprCompileResult.Expression) }) : exprCompileResult.Expression);
+					jsInitializer = (data.UseByRefSemantics ? JsExpression.ObjectLiteral(new[] { new JsObjectLiteralProperty("$", exprCompileResult.Expression) }) : exprCompileResult.Expression);
 				}
 				else {
 					if (data.UseByRefSemantics)
-						initializer = JsExpression.ObjectLiteral(new[] { new JsObjectLiteralProperty("$", JsExpression.Null) });
+						jsInitializer = JsExpression.ObjectLiteral(new[] { new JsObjectLiteralProperty("$", JsExpression.Null) });
 					else
-						initializer = null;
+						jsInitializer = null;
 				}
-				declarations.Add(new JsVariableDeclaration(data.Name, initializer));
+				declarations.Add(new JsVariableDeclaration(data.Name, jsInitializer));
 			}
 
 			if (declarations.Count > 0)

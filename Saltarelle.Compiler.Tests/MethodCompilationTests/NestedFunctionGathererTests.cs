@@ -7,6 +7,7 @@ using NUnit.Framework;
 using FluentAssertions;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
+
 	[TestFixture]
     public class NestedFunctionGathererTests : MethodCompilerTestBase {
         [Test]
@@ -22,6 +23,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
         Action<string> f4 = s2 => {
             Func<int, string> f5 = y => y.ToString();
         };
+		return 0;
     };
     Action<Type> a = delegate {};
 }");
@@ -43,7 +45,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.nestedFunctions[0].NestedFunctions[0].NestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(5, 33));
             MethodCompiler.nestedFunctions[0].NestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(8, 29));
             MethodCompiler.nestedFunctions[0].NestedFunctions[1].NestedFunctions[0].DefinitionNode.StartLocation.Should().Be(new TextLocation(9, 36));
-            MethodCompiler.nestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(12, 22));
+            MethodCompiler.nestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(13, 22));
 
             // Verify bodies
             MethodCompiler.nestedFunctions[0].BodyNode.StartLocation.Should().Be(new TextLocation(2, 25));
@@ -52,7 +54,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             MethodCompiler.nestedFunctions[0].NestedFunctions[0].NestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(5, 38));
             MethodCompiler.nestedFunctions[0].NestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(8, 35));
             MethodCompiler.nestedFunctions[0].NestedFunctions[1].NestedFunctions[0].BodyNode.StartLocation.Should().Be(new TextLocation(9, 41));
-            MethodCompiler.nestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(12, 31));
+            MethodCompiler.nestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(13, 31));
 
             // Verify resolve results
             MethodCompiler.nestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);

@@ -21,7 +21,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory loses method group conversion")]
+		[Test]
 		public void CombiningDeclarationAndAssignmentWorks() {
 			AssertCorrect(
 @"void F(int x) {}

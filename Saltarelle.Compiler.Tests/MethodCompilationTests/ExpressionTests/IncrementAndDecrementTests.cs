@@ -663,7 +663,7 @@ public void M() {
 public void M() {
 	int i = 0;
 	// BEGIN
-	int j = ++P;
+	int? j = ++P;
 	// END
 }",
 @"	var $tmp1 = $Lift(this.get_$P() + 1);
@@ -678,7 +678,7 @@ public void M() {
 @"public int? P { get; set; }
 public void M() {
 	// BEGIN
-	int j = P++;
+	int? j = P++;
 	// END
 }",
 @"	var $tmp1 = this.get_$P();

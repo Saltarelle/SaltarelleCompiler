@@ -49,7 +49,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug, reports target as this.")]
+		[Test]
 		public void StaticMethodInvocationWithArgumentsWorks() {
 			AssertCorrect(
 @"static void F(int x, int y, int z) {}
@@ -128,7 +128,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory reports this as target")]
+		[Test]
 		public void GenericMethodInvocationWorksForStaticMethod() {
 			AssertCorrect(
 @"static void F<T1, T2>(T1 x, int y, T2 z) {}
