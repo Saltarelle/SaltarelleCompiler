@@ -76,6 +76,7 @@
     <Compile Include="MemberConversionTests\IndexerConversionTests.cs" />
     <Compile Include="MemberConversionTests\MethodConversionTests.cs" />
     <Compile Include="MemberConversionTests\PropertyConversionTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\AnonymousMethodTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\BinaryNonAssignmentOperatorTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\CompoundAssignmentTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\ConditionalTests.cs" />

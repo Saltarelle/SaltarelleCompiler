@@ -75,9 +75,9 @@ public void M() {
 		[Test]
 		public void CompoundAssignmentToPropertyWithMethodsEvaluatesTheArgumentsInCorrectOrder() {
 			AssertCorrectForBulkOperators(
-@"class X { public int P { get; set; } }
+@"public class X { public int P { get; set; } }
 public X F1() { return null; }
-public int F2() { return null; }
+public int F2() { return 0; }
 public int P { get; set; }
 public void M() {
 	int i = 0;

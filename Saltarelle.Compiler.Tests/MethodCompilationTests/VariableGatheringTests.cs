@@ -551,7 +551,7 @@ public void M() {
 		public void CapturedVariableDeclaredInsideDoWhileLoopIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public void M() {
-					int x;
+					int x = 0;
 					do {
 						int y = x;
 						Func<int, int> f = t => x + y;

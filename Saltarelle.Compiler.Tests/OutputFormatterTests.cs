@@ -532,28 +532,11 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
-        public void EmptyFunctionDefinitionWithoutNameIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, null)), Is.EqualTo("function() {}"));
-        }
-
-        [Test]
-        public void EmptyFunctionDefinitionWithNameIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, "test")), Is.EqualTo("function test() {}"));
-        }
-
-        [Test]
-        public void EmptyFunctionDefinitionsWithArgumentsAreCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a" }, JsBlockStatement.EmptyStatement, null)), Is.EqualTo("function(a) {}"));
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b" }, JsBlockStatement.EmptyStatement, null)), Is.EqualTo("function(a, b) {}"));
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new[] { "a", "b", "c" }, JsBlockStatement.EmptyStatement, "test")), Is.EqualTo("function test(a, b, c) {}"));
-        }
-
-        [Test]
         public void FunctionIsParenthesizedWhenInvokedDirectly() {
             Assert.That(OutputFormatter.Format(JsExpression.Invocation(
                                                    JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, null)
                                                )
-                        ), Is.EqualTo("(function() {})()"));
+                        ), Is.EqualTo("(function() {\r\n})()"));
         }
 
 		[Test]
@@ -569,9 +552,11 @@ namespace Saltarelle.Compiler.Tests
 			            Is.EqualTo("a, (_X_), b"));
 		}
 
-        [Test, Ignore("Can't yet output function definitions.")]
-        public void FunctionDefinitionWithContentIsCorrectlyOutput() {
-            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null))), Is.EqualTo("function() { return null; }"));
+        [Test]
+		public void FunctionDefinitionExpressionIsCorrectlyOutput() {
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null))), Is.EqualTo("function() {\r\n\treturn null;\r\n}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new [] { "a", "b" }, new JsReturnStatement(JsExpression.Null))), Is.EqualTo("function(a, b) {\r\n\treturn null;\r\n}"));
+            Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null), name: "myFunction")), Is.EqualTo("function myFunction() {\r\n\treturn null;\r\n}"));
         }
 
         [Test]

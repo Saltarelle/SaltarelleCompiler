@@ -138,9 +138,8 @@ namespace Saltarelle.Compiler
                 _cb.Append(arg);
                 first = false;
             }
-            _cb.Append(")");
-
-            _cb.Append(" {}");  // This is obviously not correct.
+            _cb.Append(") ");
+			Visit(expression.Body, false);
 
             return null;
         }

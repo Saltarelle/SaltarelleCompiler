@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler {
 
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, CreateTemporaryVariable);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, () => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary));
 			_result                     = new List<JsStatement>();
 		}
 
@@ -72,8 +72,16 @@ namespace Saltarelle.Compiler {
 			return new LocalResolveResult(variable);
 		}
 
+		private ResolveResult ResolveWithConversion(Expression expr) {
+			var rr = _resolver.Resolve(expr);
+			var conversion = _resolver.GetConversion(expr);
+			if (!conversion.IsIdentityConversion)
+				rr = new ConversionResolveResult(_resolver.GetExpectedType(expr), rr, conversion);
+			return rr;
+		}
+
 		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {
-			return _expressionCompiler.Compile(_resolver.Resolve(expr), returnValueIsImportant);
+			return _expressionCompiler.Compile(ResolveWithConversion(expr), returnValueIsImportant);
 		}
 
 		private JsExpression GetJsType(AstType type) {
@@ -120,10 +128,7 @@ namespace Saltarelle.Compiler {
 				var data = _variables[variable];
 				JsExpression jsInitializer;
 				if (!d.Initializer.IsNull) {
-					var initializer = _resolver.Resolve(d.Initializer);
-					if (!initializer.Type.Equals(variable.Type)) {
-						initializer = new ConversionResolveResult(variable.Type, initializer, CSharpConversions.Get(_compilation).ImplicitConversion(initializer, variable.Type));
-					}
+					var initializer = ResolveWithConversion(d.Initializer);
 
 					var exprCompileResult = _expressionCompiler.Compile(initializer, true);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
@@ -148,8 +153,6 @@ namespace Saltarelle.Compiler {
 
 			if (declarations.Count > 0)
 				_result.Add(new JsVariableDeclarationStatement(declarations));
-
-			base.VisitVariableDeclarationStatement(variableDeclarationStatement);
 		}
 
 		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
@@ -335,7 +338,7 @@ namespace Saltarelle.Compiler {
 
 			JsStatement disposer;
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
-			var inExpression = _resolver.Resolve(foreachStatement.InExpression);	// Needed to check whether we're enumerating an array (can avoid dispose). ferr.CollectionType will in this case be IEnumerable, so it's not useful.
+			var inExpression = ResolveWithConversion(foreachStatement.InExpression);	// Needed to check whether we're enumerating an array (can avoid dispose). ferr.CollectionType will in this case be IEnumerable, so it's not useful.
 			if (inExpression.Type == systemArray || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
 				// Don't dispose array enumerators (we should according to C#, but it uglifies the script and we know it's a no-op.)
 				disposer = null;
@@ -431,7 +434,7 @@ namespace Saltarelle.Compiler {
 				}
 			}
 			else {
-				var resource = CreateTemporaryVariable(_resolver.Resolve(usingStatement.ResourceAcquisition).Type);
+				var resource = CreateTemporaryVariable(ResolveWithConversion((Expression)usingStatement.ResourceAcquisition).Type);
 				stmt = GenerateUsingBlock(resource, (Expression)usingStatement.ResourceAcquisition, stmt);
 			}
 

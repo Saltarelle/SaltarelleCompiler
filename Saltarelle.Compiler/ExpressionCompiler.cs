@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -119,7 +120,9 @@ namespace Saltarelle.Compiler {
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<IVariable, VariableData> _variables;
+		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly Func<IType, LocalResolveResult> _createTemporaryVariable;
+		private readonly Func<StatementCompiler> _createInnerCompiler;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -131,13 +134,15 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, Func<IType, LocalResolveResult> createTemporaryVariable) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<StatementCompiler> createInnerCompiler) {
 			_compilation = compilation;
 			_namingConvention = namingConvention;
 			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
 			_variables = variables;
+			_nestedFunctions = nestedFunctions;
 			_createTemporaryVariable = createTemporaryVariable;
+			_createInnerCompiler = createInnerCompiler;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -149,7 +154,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -641,6 +646,10 @@ namespace Saltarelle.Compiler {
 			throw new InvalidOperationException("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there");
 		}
 
+		public override JsExpression VisitLambdaResolveResult(LambdaResolveResult rr, bool returnValueIsImportant) {
+			throw new InvalidOperationException("LambdaResolveResult should always be the target of an anonymous method conversion, and is handled there");
+		}
+
 		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Member is IProperty) {
 				var impl = _namingConvention.GetPropertyImplementation((IProperty)rr.Member);
@@ -904,6 +913,26 @@ namespace Saltarelle.Compiler {
 				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");
 		}
 
+
+		// WIP
+
+		private JsExpression CompileLambda(LambdaResolveResult rr, bool returnValue) {
+			var f = _nestedFunctions[rr];
+			JsBlockStatement jsBody;
+			if (f.BodyNode is Statement) {
+				jsBody = _createInnerCompiler().Compile((Statement)f.BodyNode);
+			}
+			else {
+				var result = CloneAndCompile(rr.Body, true);
+				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(result.Expression) : (JsStatement)new JsExpressionStatement(result.Expression));
+				jsBody = new JsBlockStatement(result.AdditionalStatements.Concat(new[] { lastStatement }));
+			}
+			return JsExpression.FunctionDefinition(rr.Parameters.Select(p => rr.IsImplicitlyTyped ? p.Name : _variables[p].Name), jsBody);	// Currently there seems to be a NR bug that causes the parameters to implicitly typed lambdas to not be correct.
+		}
+
+		// /WIP
+
+
 		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
 
 
@@ -926,10 +955,16 @@ namespace Saltarelle.Compiler {
 			if (rr.Conversion.IsIdentityConversion) {
 				return VisitResolveResult(rr.Input, returnValueIsImportant);
 			}
-			if (rr.Conversion.IsTryCast) {
+			else if (rr.Conversion.IsAnonymousFunctionConversion) {
+				var retType = rr.Type.GetMethods().Single(m => m.Name == "Invoke").ReturnType;
+				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
+			}
+			else if (rr.Conversion.IsTryCast) {
 				return _runtimeLibrary.TryCast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
+				if (rr.Type.Kind == TypeKind.Dynamic)
+					return VisitResolveResult(rr.Input, returnValueIsImportant);
 				if (rr.Conversion.IsImplicit)
 					return _runtimeLibrary.ImplicitReferenceConversion(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 				else
@@ -999,10 +1034,6 @@ namespace Saltarelle.Compiler {
 			if (rr.Type.Kind == TypeKind.Null)
 				return JsExpression.Null;
 			throw new NotImplementedException("Resolve result " + rr + " is not handled.");
-		}
-
-		public override JsExpression VisitLambdaResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.LambdaResolveResult rr, bool returnValueIsImportant) {
-			return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Number(0))); 
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
