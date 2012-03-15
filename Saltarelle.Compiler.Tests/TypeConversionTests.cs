@@ -159,31 +159,31 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithTypeParameter() {
             Compile("class Test<T> : System.Collections.Generic.IEqualityComparer<T> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<T>");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<$T>");
         }
 
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithSelf() {
             Compile("class Test : System.Collections.Generic.IEqualityComparer<Test> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<{Test}>");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<{$Test}>");
         }
 
         [Test]
         public void ClassCanUseOwnTypeParameterInBaseClass() {
             Compile("class Base<T> {} class Test<U> : Base<U> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<U>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<$U>");
         }
 
         [Test]
         public void ClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test : Base<Test> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{Test}>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{$Test}>");
         }
 
         [Test]
         public void GenericClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test<T> : Base<Test<T>> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{Test`1}<T>>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{Test`1}<$T>>");
         }
 
         [Test]
@@ -272,15 +272,15 @@ namespace Saltarelle.Compiler.Tests {
                       class Test : ITest3<int, string> {}
                       interface ITest<T> : ITest3<T, T> {}");
             FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1`1}<{System.Int32}>", "{ITest2`1}<{System.String}>", "{ITest3`2}<{System.Int32},{System.String}>" });
-            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1`1}<T>", "{ITest2`1}<T>", "{ITest3`2}<T,T>" });
+            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1`1}<$T>", "{ITest2`1}<$T>", "{ITest3`2}<$T,$T>" });
         }
 
         [Test]
         public void InheritedImportedInterfacesAreRecordedInTheInterfaceListForClasses() {
             Compile("class Test<T> : System.Collections.Generic.Dictionary<T, int> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<T,{System.Int32}>",
-                                                                                                      "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<T,{System.Int32}>>",
-                                                                                                      "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<T,{System.Int32}>>",
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<$T,{System.Int32}>",
+                                                                                                      "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
+                                                                                                      "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
                                                                                                       "{System.Collections.IDictionary}",
                                                                                                       "{System.Collections.ICollection}",
                                                                                                       "{System.Collections.IEnumerable}",
@@ -291,9 +291,9 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void IndirectlyImplementedInterfacesAreRecordedInTheInterfaceListForClasses() {
             Compile("class Test<T> : System.Collections.Generic.IDictionary<T, int> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<T,{System.Int32}>",
-                                                                                                      "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<T,{System.Int32}>>",
-                                                                                                      "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<T,{System.Int32}>>",
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<$T,{System.Int32}>",
+                                                                                                      "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
+                                                                                                      "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
                                                                                                       "{System.Collections.IEnumerable}" });
         }
 
@@ -310,10 +310,10 @@ namespace Saltarelle.Compiler.Tests {
         public void InheritingNestedGenericTypesWorks() {
             Compile("using System.Collections.Generic; class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{System.Collections.Generic.List`1}<{System.Collections.Generic.Dictionary`2}<T1,T2>>");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IList`1}<{System.Collections.Generic.Dictionary`2}<T1,T2>>",
-                                                                                        "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.Dictionary`2}<T1,T2>>",
-                                                                                        "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.Dictionary`2}<T1,T2>>",
+            Stringify(cls.BaseClass).Should().Be("{System.Collections.Generic.List`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IList`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>",
+                                                                                        "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>",
+                                                                                        "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>",
                                                                                         "{System.Collections.IList}",
                                                                                         "{System.Collections.ICollection}",
                                                                                         "{System.Collections.IEnumerable}" });
@@ -326,9 +326,9 @@ namespace Saltarelle.Compiler.Tests {
             var test1 = FindClass("Test1");
             var test2 = FindClass("Test1+Test2");
             var test3 = FindClass("Test1+Test2+Test3");
-            test1.TypeArgumentNames.Should().Equal(new[] { "T1" });
-            test2.TypeArgumentNames.Should().Equal(new[] { "T1", "T2", "T3" });
-            test3.TypeArgumentNames.Should().Equal(new[] { "T1", "T2", "T3", "T4" });
+            test1.TypeArgumentNames.Should().Equal(new[] { "$T1" });
+            test2.TypeArgumentNames.Should().Equal(new[] { "$T1", "$T2", "$T3" });
+            test3.TypeArgumentNames.Should().Equal(new[] { "$T1", "$T2", "$T3", "$T4" });
         }
 
         [Test]
@@ -336,7 +336,7 @@ namespace Saltarelle.Compiler.Tests {
             Compile("class Test1<T1> { class Test2 {} }");
             var test1 = FindClass("Test1");
             var test2 = FindClass("Test1+Test2");
-            test1.TypeArgumentNames.Should().Equal(new[] { "T1" });
+            test1.TypeArgumentNames.Should().Equal(new[] { "$T1" });
             test2.Should().NotBeNull();
         }
 

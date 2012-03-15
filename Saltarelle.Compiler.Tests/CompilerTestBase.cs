@@ -34,7 +34,7 @@ namespace Saltarelle.Compiler.Tests {
 
         protected class MockNamingConventionResolver : INamingConventionResolver {
             public MockNamingConventionResolver() {
-                GetTypeName                               = t => { var prefix = (t.DeclaringType != null ? GetTypeName(t.DeclaringTypeDefinition) + "_" : ""); return prefix + "$" + t.Name; };
+                GetTypeName                               = t => t.Name;
                 GetTypeParameterName                      = t => "$" + t.Name;
                 GetMethodImplementation                   = m => MethodImplOptions.NormalMethod(m.Name);
                 GetConstructorImplementation              = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
