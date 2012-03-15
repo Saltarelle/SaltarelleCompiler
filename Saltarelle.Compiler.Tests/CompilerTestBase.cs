@@ -54,6 +54,7 @@ namespace Saltarelle.Compiler.Tests {
                                                                              return baseName + i.ToString(CultureInfo.InvariantCulture);
                                                                          };
 				GetTemporaryVariableName                  = index => string.Format(CultureInfo.InvariantCulture, "$tmp{0}", index + 1);
+				ThisAlias                                 = "$this";
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -68,6 +69,7 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IField, string> GetEnumValueName { get; set; }
             public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
 			public Func<int, string> GetTemporaryVariableName { get; set; }
+			public string ThisAlias { get; set; }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
                 return GetTypeName(typeDefinition);
@@ -115,6 +117,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			string INamingConventionResolver.GetTemporaryVariableName(int index) {
 				return GetTemporaryVariableName(index);
+			}
+
+			string INamingConventionResolver.ThisAlias {
+				get { return ThisAlias; }
 			}
         }
 

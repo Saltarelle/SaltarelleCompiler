@@ -123,6 +123,7 @@ namespace Saltarelle.Compiler {
 		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly Func<IType, LocalResolveResult> _createTemporaryVariable;
 		private readonly Func<StatementCompiler> _createInnerCompiler;
+		private readonly JsExpression _jsThis;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -134,7 +135,7 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<StatementCompiler> createInnerCompiler) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<StatementCompiler> createInnerCompiler, JsExpression jsThis) {
 			_compilation = compilation;
 			_namingConvention = namingConvention;
 			_runtimeLibrary = runtimeLibrary;
@@ -143,6 +144,7 @@ namespace Saltarelle.Compiler {
 			_nestedFunctions = nestedFunctions;
 			_createTemporaryVariable = createTemporaryVariable;
 			_createInnerCompiler = createInnerCompiler;
+			_jsThis = jsThis;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -154,7 +156,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _jsThis).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -913,6 +915,9 @@ namespace Saltarelle.Compiler {
 				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");
 		}
 
+		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, bool returnValueIsImportant) {
+			return _jsThis;
+		}
 
 		// WIP
 
@@ -944,11 +949,6 @@ namespace Saltarelle.Compiler {
 				return JsExpression.MemberAccess(ident, "$");
 			else
 				return ident;
-		}
-
-		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, bool returnValueIsImportant) {
-			// Also need to handle (1) StaticMethodWithThisAsFirstArgument, and (2) closures with captured byref variables.
-			return JsExpression.This;
 		}
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {

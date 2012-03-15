@@ -126,5 +126,107 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	};
 ");
 		}
+
+		[Test]
+		public void InvokingLambdaDirectlyWorks() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	((Func<int, int>)(i => i + 1))(0);
+	// END
+}
+",
+@"	(function($i) {
+		return $i + 1;
+	})(0);
+");
+		}
+
+		[Test]
+		public void AnonymousMethodThatUsesThisWorks() {
+			AssertCorrect(
+@"public int x;
+public void M() {
+	Func<int> f;
+	// BEGIN
+	f = () => x;
+	// END
+}",
+@"	f = $Bind(function() { return this.x; }, this);
+");
+		}
+
+		[Test]
+		public void AnonymousMethodThatUsesByRefVariablesWorks() {
+			AssertCorrect(
+@"public void F(ref int a) {}
+public void M() {
+	int i = 0;
+	Func<int> f;
+	// BEGIN
+	f = () => i;
+	// END
+	F(ref i);
+}",
+@"	f = $Bind(function() { return this.x; }, { $i: $i });
+");
+		}
+
+		[Test]
+		public void AnonymousMethodThatUsesThisAndByRefVariablesWorks() {
+			AssertCorrect(
+@"public void F(ref int a) {}
+public void M() {
+	int i = 0;
+	Func<int> f;
+	// BEGIN
+	f = () => i;
+	// END
+	F(ref i);
+}",
+@"	f = $Bind(function() { return this.x; }, { $this: this, $i: $i });
+");
+		}
+
+		[Test]
+		public void AnonymousMethodDoesNotGetBoundToParametersDeclaredInsideItselfOrNestedFunctions() {
+			AssertCorrect(
+@"public void F(ref int a) {}
+public void M() {
+	int i = 0;
+	Action f;
+	// BEGIN
+	f = () => {
+		int j = 0;
+		Action g = () => {
+			int k = 0;
+			F(ref k);
+		};
+		F(ref j);
+	};
+	// END
+	F(ref i);
+}",
+@"	f = $Bind(function() { return this.x; }, { $this: this, $i: $i });	// Not really but I'm too lazy to work it out now.
+");
+		}
+
+		[Test]
+		public void AnonymousMethodThatUsesThisIsNotBoundInAStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"int x;
+public void M() {
+	// BEGIN
+	Func<int> f = () => x;
+	// END
+}",
+@"	var $f = function() { return $this.x; };
+");
+		}
+
+		[Test]
+		public void WorksWhenUsingThisInStaticMethodWithThisAsFirstArgument() {
+			Assert.Fail("TODO");
+		}
 	}
 }

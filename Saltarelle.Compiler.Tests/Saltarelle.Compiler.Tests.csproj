@@ -87,6 +87,7 @@
     <Compile Include="MethodCompilationTests\ExpressionTests\AssignmentTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\MemberAccessTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\MethodGroupConversionTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\ThisTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\UnaryOperatorTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BlockStatementTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BreakTests.cs" />

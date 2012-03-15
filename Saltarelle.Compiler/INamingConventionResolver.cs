@@ -65,5 +65,10 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="index">The first temporary variable in a method will have index 0, the second will have index 1, and so on.</param>
 		string GetTemporaryVariableName(int index);
+
+		/// <summary>
+		/// Returns the alias for "this" whenever it has to be aliased, eg. inside a static method with this as first argument.
+		/// </summary>
+		string ThisAlias { get; }
     }
 }

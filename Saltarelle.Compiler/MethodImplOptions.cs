@@ -95,8 +95,8 @@ namespace Saltarelle.Compiler {
             return new MethodImplOptions { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, _additionalNames = additionalNames.AsReadOnly() };
         }
 
-        public static MethodImplOptions StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false) {
-            return new MethodImplOptions { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = false };
+        public static MethodImplOptions StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+            return new MethodImplOptions { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
         }
 
         public static MethodImplOptions InstanceMethodOnFirstArgument(string name) {

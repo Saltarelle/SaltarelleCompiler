@@ -58,6 +58,14 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         }
 
         [Test]
+        public void StaticMethodWithThisAsFirstArgumentAppearsOnTheType() {
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.StaticMethodWithThisAsFirstArgument("X") };
+            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            FindClass("C").InstanceMethods.Should().BeEmpty();
+            FindStaticMethod("C.X").Should().NotBeNull();
+        }
+
+        [Test]
         public void BaseMethodsAreNotIncludedInDerivedType() {
             Compile(new[] { "class B { public void X(); } class C : B { public void Y() {} }" });
             var cls = FindClass("C");

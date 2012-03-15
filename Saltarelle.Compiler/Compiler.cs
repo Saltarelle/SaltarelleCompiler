@@ -122,8 +122,13 @@ namespace Saltarelle.Compiler {
 
                     return Tuple.Create(result, impl);
                 }
+                case MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument: {
+                    var result = new JsMethod(impl.Name, typeParamNames);
+					staticMethods.Add(result);
+					return Tuple.Create(result, impl);
+				}
                 default:
-                    throw new ArgumentException("ctor");
+                    throw new ArgumentException("method");
             }
         }
 

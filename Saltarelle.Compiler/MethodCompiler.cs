@@ -32,7 +32,9 @@ namespace Saltarelle.Compiler {
             variables        = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
             nestedFunctions  = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity);
 			var nestedFunctionsDict = nestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.ResolveResult);
-			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary);
+
+			var jsThis = (impl.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument ? (JsExpression)JsExpression.Identifier(_namingConvention.ThisAlias) : JsExpression.This);
+			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, jsThis);
 
             return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p.Region].Name), bodyCompiler.Compile(body), null);
         }
