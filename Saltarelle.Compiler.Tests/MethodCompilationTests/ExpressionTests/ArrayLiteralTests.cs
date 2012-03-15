@@ -80,14 +80,14 @@ public void M() {
 		[Test]
 		public void DeclaringAMultiDimensionalArrayIsAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { public void M() { var arr = new int[2, 2]; } }" }, namingConvention: new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { public void M() { var arr = new int[2, 2]; } }" }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
 		}
 
 		[Test]
 		public void DeclaringAMultiDimensionalArrayIsAnError2() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { public void M() { var arr = new int[,] {}; } }" }, namingConvention: new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { public void M() { var arr = new int[,] {}; } }" }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
 		}
 	}

@@ -77,6 +77,7 @@
     <Compile Include="MemberConversionTests\MethodConversionTests.cs" />
     <Compile Include="MemberConversionTests\PropertyConversionTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\AnonymousMethodTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\ArrayAccessTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\ArrayLiteralTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\BinaryNonAssignmentOperatorTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\CompoundAssignmentTests.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="MethodCompilationTests\ExpressionTests\MemberAccessTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\MethodGroupConversionTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\ThisTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\TypeIsTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\TypeOfTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\UnaryOperatorTests.cs" />
     <Compile Include="MethodCompilationTests\StatementTests\BlockStatementTests.cs" />

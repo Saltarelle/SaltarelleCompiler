@@ -1011,6 +1011,41 @@ namespace Saltarelle.Compiler {
 			return GetJsType(rr.Type);
 		}
 
+		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
+			if (rr.Indexes.Count != 1) {
+				_errorReporter.Error("Arrays have to be one-dimensional");
+				return JsExpression.Number(0);
+			}
+			var array = InnerCompile(rr.Array, false);
+			var index = InnerCompile(rr.Indexes[0], false, ref array);
+			return JsExpression.Index(array, index);
+		}
+
+		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, bool returnValueIsImportant) {
+			if (((ArrayType)rr.Type).Dimensions != 1) {
+				_errorReporter.Error("Multi-dimensional arrays are not supported.");
+				return JsExpression.Number(0);
+			}
+			if (rr.SizeArguments != null) {
+				if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0)
+					return JsExpression.ArrayLiteral();
+
+				return _runtimeLibrary.CreateArray(VisitResolveResult(rr.SizeArguments[0], true));
+			}
+			if (rr.InitializerElements != null) {
+				var expressions = new List<JsExpression>();
+				foreach (var init in rr.InitializerElements)
+					expressions.Add(InnerCompile(init, false, expressions));
+				return JsExpression.ArrayLiteral(expressions);
+			}
+			else {
+				return JsExpression.ArrayLiteral();
+			}
+		}
+
+        public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
+			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), GetJsType(rr.TargetType));
+        }
 
 		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
 
@@ -1075,40 +1110,10 @@ namespace Saltarelle.Compiler {
 			throw new NotImplementedException("Conversion " + rr.Conversion + " is not implemented");
 		}
 
-		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, bool returnValueIsImportant) {
-			if (((ArrayType)rr.Type).Dimensions != 1) {
-				_errorReporter.Error("Multi-dimensional arrays are not supported.");
-				return JsExpression.Number(0);
-			}
-			if (rr.SizeArguments != null) {
-				if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0)
-					return JsExpression.ArrayLiteral();
-
-				return _runtimeLibrary.CreateArray(VisitResolveResult(rr.SizeArguments[0], true));
-			}
-			if (rr.InitializerElements != null) {
-				var expressions = new List<JsExpression>();
-				foreach (var init in rr.InitializerElements)
-					expressions.Add(InnerCompile(init, false, expressions));
-				return JsExpression.ArrayLiteral(expressions);
-			}
-			else {
-				return JsExpression.ArrayLiteral();
-			}
-		}
-
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
 			return VisitResolveResult(rr.ElementResult, returnValueIsImportant);
 			// Should be like below, but that requires us to implement object construction first.
 			// throw new InvalidOperationException("Resolve result " + rr.ToString() + " should have been handled in method call.");
-		}
-
-		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Indexes.Count != 1)
-				_errorReporter.Error("Arrays have to be one-dimensional");
-			var array = InnerCompile(rr.Array, false);
-			var index = InnerCompile(rr.Indexes[0], false, ref array);
-			return JsExpression.Index(array, index);
 		}
 
 		public override JsExpression VisitDefaultResolveResult(ResolveResult rr, bool returnValueIsImportant) {
@@ -1116,9 +1121,5 @@ namespace Saltarelle.Compiler {
 				return JsExpression.Null;
 			throw new NotImplementedException("Resolve result " + rr + " is not handled.");
 		}
-
-        public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
-			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), new JsTypeReferenceExpression(rr.TargetType.GetDefinition()));
-        }
 	}
 }
