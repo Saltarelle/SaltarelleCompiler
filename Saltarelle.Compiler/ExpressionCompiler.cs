@@ -1003,6 +1003,15 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
+			return GetJsType(rr.ReferencedType);
+		}
+
+		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
+			return GetJsType(rr.Type);
+		}
+
+
 		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
@@ -1088,14 +1097,6 @@ namespace Saltarelle.Compiler {
 			if (rr.Type.Kind == TypeKind.Null)
 				return JsExpression.Null;
 			throw new NotImplementedException("Resolve result " + rr + " is not handled.");
-		}
-
-		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
-			throw new NotImplementedException();
-		}
-
-		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
-			return GetJsType(rr.Type);
 		}
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
