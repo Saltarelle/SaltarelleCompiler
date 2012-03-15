@@ -1076,7 +1076,25 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, bool returnValueIsImportant) {
-			return JsExpression.ArrayLiteral(rr.InitializerElements.Select(e => VisitResolveResult(e, true)));
+			if (((ArrayType)rr.Type).Dimensions != 1) {
+				_errorReporter.Error("Multi-dimensional arrays are not supported.");
+				return JsExpression.Number(0);
+			}
+			if (rr.SizeArguments != null) {
+				if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0)
+					return JsExpression.ArrayLiteral();
+
+				return _runtimeLibrary.CreateArray(VisitResolveResult(rr.SizeArguments[0], true));
+			}
+			if (rr.InitializerElements != null) {
+				var expressions = new List<JsExpression>();
+				foreach (var init in rr.InitializerElements)
+					expressions.Add(InnerCompile(init, false, expressions));
+				return JsExpression.ArrayLiteral(expressions);
+			}
+			else {
+				return JsExpression.ArrayLiteral();
+			}
 		}
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
