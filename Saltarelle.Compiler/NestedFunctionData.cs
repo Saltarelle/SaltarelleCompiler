@@ -51,15 +51,26 @@ namespace Saltarelle.Compiler {
 
         private bool _frozen;
 
-	    public ISet<IVariable> DirectlyUsedVariables { get; private set; }
+	    public ISet<DomRegion> DirectlyUsedVariables { get; private set; }
+		public ISet<DomRegion> DirectlyDeclaredVariables { get; private set; }
         public IList<NestedFunctionData> NestedFunctions { get; private set; }
+		public NestedFunctionData Parent { get; private set; }
 
-		public NestedFunctionData() {
-            DirectlyUsedVariables = new HashSet<IVariable>();
-            NestedFunctions       = new List<NestedFunctionData>();
+		public NestedFunctionData(NestedFunctionData parent) {
+			Parent                    = parent;
+            DirectlyUsedVariables     = new HashSet<DomRegion>();
+            DirectlyDeclaredVariables = new HashSet<DomRegion>();
+            NestedFunctions           = new List<NestedFunctionData>();
 		}
 
-        public IEnumerable<IVariable> DirectlyOrIndirectlyUsedVariables {
+		public IEnumerable<NestedFunctionData> AllParents {
+			get {
+				for (var p = Parent; p != null; p = p.Parent)
+					yield return p;
+			}
+		}
+
+        public IEnumerable<DomRegion> DirectlyOrIndirectlyUsedVariables {
             get {
                 return DirectlyUsedVariables.Concat(NestedFunctions.SelectMany(f => f.DirectlyOrIndirectlyUsedVariables)).Distinct();
             }
@@ -71,15 +82,16 @@ namespace Saltarelle.Compiler {
             }
         }
 
-        public IEnumerable<NestedFunctionData> SelfAndDirectlyOrIndirectlyNestedFunctions {
+        public IEnumerable<NestedFunctionData> DirectlyOrIndirectlyNestedFunctions {
             get {
-                return new[] { this }.Concat(NestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions));
+                return NestedFunctions.SelectMany(f => new[] { f }.Concat(f.DirectlyOrIndirectlyNestedFunctions));
             }
         }
 
         public void Freeze() {
             _frozen = true;
-            DirectlyUsedVariables = new ReadOnlySet<IVariable>(DirectlyUsedVariables);
+            DirectlyUsedVariables     = new ReadOnlySet<DomRegion>(DirectlyUsedVariables);
+            DirectlyDeclaredVariables = new ReadOnlySet<DomRegion>(DirectlyDeclaredVariables);
             NestedFunctions = NestedFunctions.AsReadOnly();
         }
 	}

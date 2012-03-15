@@ -15,6 +15,17 @@ using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel;
 
 namespace Saltarelle.Compiler {
+	public class NestedFunctionContext {
+		public ReadOnlySet<DomRegion> CapturedByRefVariables { get; private set; }
+
+		public NestedFunctionContext(IEnumerable<DomRegion> capturedByRefVariables) {
+			var s = new HashSet<DomRegion>();
+			foreach (var v in capturedByRefVariables)
+				s.Add(v);
+			CapturedByRefVariables = new ReadOnlySet<DomRegion>(s);
+		}
+	}
+
 	public class ExpressionCompiler : ResolveResultVisitor<JsExpression, bool> {
 		internal class IsJsExpressionComplexEnoughToGetATemporaryVariable : RewriterVisitorBase<object> {
 			private bool _result;
@@ -122,8 +133,9 @@ namespace Saltarelle.Compiler {
 		private readonly IDictionary<DomRegion, VariableData> _variables;
 		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly Func<IType, LocalResolveResult> _createTemporaryVariable;
-		private readonly Func<StatementCompiler> _createInnerCompiler;
-		private readonly JsExpression _jsThis;
+		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
+		private readonly string _thisAlias;
+		private NestedFunctionContext _nestedFunctionContext;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -135,7 +147,9 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<StatementCompiler> createInnerCompiler, JsExpression jsThis) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext) {
+			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
+
 			_compilation = compilation;
 			_namingConvention = namingConvention;
 			_runtimeLibrary = runtimeLibrary;
@@ -144,7 +158,8 @@ namespace Saltarelle.Compiler {
 			_nestedFunctions = nestedFunctions;
 			_createTemporaryVariable = createTemporaryVariable;
 			_createInnerCompiler = createInnerCompiler;
-			_jsThis = jsThis;
+			_thisAlias = thisAlias;
+			_nestedFunctionContext = nestedFunctionContext;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -155,8 +170,8 @@ namespace Saltarelle.Compiler {
 			return new Result(expr, _additionalStatements);
 		}
 
-		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _jsThis).Compile(expression, returnValueIsImportant);
+		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -915,41 +930,80 @@ namespace Saltarelle.Compiler {
 				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");
 		}
 
-		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, bool returnValueIsImportant) {
-			return _jsThis;
+		private JsExpression CompileThis() {
+			if (_thisAlias != null) {
+				return JsExpression.Identifier(_thisAlias);
+			}
+			else if (_nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Count != 0) {
+				return JsExpression.MemberAccess(JsExpression.This, _namingConvention.ThisAlias);
+			}
+			else {
+				return JsExpression.This;
+			}
 		}
 
-		// WIP
+		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, bool returnValueIsImportant) {
+			return CompileThis();
+		}
 
 		private JsExpression CompileLambda(LambdaResolveResult rr, bool returnValue) {
 			var f = _nestedFunctions[rr];
+
+			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedVariables.Where(v => _variables[v].UseByRefSemantics).ToList();
+			if (capturedByRefVariables.Count > 0) {
+				var allParents = f.AllParents;
+				capturedByRefVariables.RemoveAll(v => !allParents.Any(p => p.DirectlyDeclaredVariables.Contains(v)));	// Remove used byref variables that were declared in this method or any nested method.
+			}
+
+			bool captureThis = (_thisAlias == null && f.DirectlyOrIndirectlyUsesThis);
+			var newContext = new NestedFunctionContext(capturedByRefVariables);
+
 			JsBlockStatement jsBody;
 			if (f.BodyNode is Statement) {
-				jsBody = _createInnerCompiler().Compile((Statement)f.BodyNode);
+				jsBody = _createInnerCompiler(newContext).Compile((Statement)f.BodyNode);
 			}
 			else {
-				var result = CloneAndCompile(rr.Body, true);
+				var result = CloneAndCompile(rr.Body, true, nestedFunctionContext: newContext);
 				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(result.Expression) : (JsStatement)new JsExpressionStatement(result.Expression));
 				jsBody = new JsBlockStatement(result.AdditionalStatements.Concat(new[] { lastStatement }));
 			}
-			return JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p.Region].Name), jsBody);
+
+			var def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p.Region].Name), jsBody);
+			JsExpression captureObject;
+			if (newContext.CapturedByRefVariables.Count > 0) {
+				var toCapture = newContext.CapturedByRefVariables.Select(v => new JsObjectLiteralProperty(_variables[v].Name, _nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Contains(v) ? (JsExpression)JsExpression.MemberAccess(JsExpression.This, _variables[v].Name) : JsExpression.Identifier(_variables[v].Name))).ToList();
+				if (captureThis)
+					toCapture.Add(new JsObjectLiteralProperty(_namingConvention.ThisAlias, CompileThis()));
+				captureObject = JsExpression.ObjectLiteral(toCapture);
+			}
+			else if (captureThis) {
+				captureObject = CompileThis();
+			}
+			else {
+				captureObject = null;
+			}
+
+			return captureObject != null
+			     ? _runtimeLibrary.Bind(def, captureObject)
+				 : def;
 		}
-
-		// /WIP
-
-
-		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
-
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
 			// Only other thing we have to take care of now is if we're accessing a byref variable declared in a parent function, in which case we'd have to return this.variable.$
 			var data = _variables[rr.Variable.Region];
-			var ident = JsExpression.Identifier(_variables[rr.Variable.Region].Name);
-			if (data.UseByRefSemantics)
-				return JsExpression.MemberAccess(ident, "$");
-			else
-				return ident;
+			if (data.UseByRefSemantics) {
+				var target = _nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Contains(rr.Variable.Region)
+				           ? (JsExpression)JsExpression.MemberAccess(JsExpression.This, data.Name)	// If using a captured by-ref variable, we access it using this.name.$
+						   : (JsExpression)JsExpression.Identifier(data.Name);
+
+				return JsExpression.MemberAccess(target, "$");
+			}
+			else {
+				return JsExpression.Identifier(_variables[rr.Variable.Region].Name);
+			}
 		}
+
+		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Conversion.IsIdentityConversion) {

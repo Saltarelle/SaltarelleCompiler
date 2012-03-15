@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler {
     	private readonly IRuntimeLibrary _runtimeLibrary;
 
     	internal IDictionary<DomRegion, VariableData> variables;
-        internal List<NestedFunctionData> nestedFunctions;
+        internal NestedFunctionData nestedFunctionsRoot;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
             _namingConvention = namingConvention;
@@ -28,13 +28,13 @@ namespace Saltarelle.Compiler {
         }
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, Statement body, IMethod method, MethodImplOptions impl) {
-            var usedNames    = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
-            variables        = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
-            nestedFunctions  = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity);
-			var nestedFunctionsDict = nestedFunctions.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.ResolveResult);
+            var usedNames      = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => "$" + p.Name));
+            variables          = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
+            nestedFunctionsRoot = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables);
+			var nestedFunctionsDict = nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions.ToDictionary(f => f.ResolveResult);
 
-			var jsThis = (impl.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument ? (JsExpression)JsExpression.Identifier(_namingConvention.ThisAlias) : JsExpression.This);
-			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, jsThis);
+			var thisAlias = (impl.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null);
+			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, null);
 
             return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p.Region].Name), bodyCompiler.Compile(body), null);
         }

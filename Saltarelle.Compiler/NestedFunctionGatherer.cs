@@ -12,29 +12,26 @@ namespace Saltarelle.Compiler
     public class NestedFunctionGatherer {
         private class StructureGatherer : DepthFirstAstVisitor {
             private readonly CSharpAstResolver _resolver;
-            private List<NestedFunctionData> currentList;
+			private NestedFunctionData currentFunction;
 
             public StructureGatherer(CSharpAstResolver resolver) {
                 _resolver = resolver;
             }
 
-            public List<NestedFunctionData> GatherNestedFunctions(AstNode node) {
-                currentList = new List<NestedFunctionData>();
+            public NestedFunctionData GatherNestedFunctions(AstNode node) {
+				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, BodyNode = node, ResolveResult = null };
                 node.AcceptVisitor(this);
-                return currentList;
+                return currentFunction;
             }
 
             private void VisitNestedFunction(AstNode node, AstNode body) {
-                var parentList = currentList;
+                var parentFunction = currentFunction;
 
-                currentList = new List<NestedFunctionData>();
+                currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node, BodyNode = body, ResolveResult = (LambdaResolveResult)_resolver.Resolve(node) };
                 body.AcceptVisitor(this);
-                var newData = new NestedFunctionData { DefinitionNode = node, BodyNode = body, ResolveResult = (LambdaResolveResult)_resolver.Resolve(node) };
-                foreach (var x in currentList)
-                    newData.NestedFunctions.Add(x);
-                parentList.Add(newData);
 
-                currentList = parentList;
+				parentFunction.NestedFunctions.Add(currentFunction);
+                currentFunction = parentFunction;
             }
 
             public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
@@ -48,10 +45,10 @@ namespace Saltarelle.Compiler
 
         private class CaptureAnalyzer : CombinedAstAndResolveResultVisitor {
             private bool _usesThis;
-            private HashSet<IVariable> _usedVariables = new HashSet<IVariable>();
+            private HashSet<DomRegion> _usedVariables = new HashSet<DomRegion>();
 
             public bool UsesThis { get { return _usesThis; } }
-            public HashSet<IVariable> UsedVariables { get { return _usedVariables; } }
+            public HashSet<DomRegion> UsedVariables { get { return _usedVariables; } }
 
             public CaptureAnalyzer(CSharpAstResolver resolver) : base(resolver) {
             }
@@ -68,7 +65,7 @@ namespace Saltarelle.Compiler
             }
 
             public override object VisitLocalResolveResult(LocalResolveResult rr, object data) {
-                _usedVariables.Add(rr.Variable);
+                _usedVariables.Add(rr.Variable.Region);
                 return base.VisitLocalResolveResult(rr, data);
             }
         }
@@ -79,10 +76,16 @@ namespace Saltarelle.Compiler
             _resolver = resolver;
         }
 
-        public List<NestedFunctionData> GatherNestedFunctions(AstNode node) {
+        public NestedFunctionData GatherNestedFunctions(AstNode node, IDictionary<DomRegion, VariableData> allVariables) {
             var result = new StructureGatherer(_resolver).GatherNestedFunctions(node);
+
+			var allNestedFunctions = new[] { result }.Concat(result.DirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.DefinitionNode);
+			foreach (var v in allVariables) {
+				allNestedFunctions[v.Value.DeclaringMethod].DirectlyDeclaredVariables.Add(v.Key);
+			}
+
             var analyzer = new CaptureAnalyzer(_resolver);
-            foreach (var f in result.SelectMany(f => f.SelfAndDirectlyOrIndirectlyNestedFunctions)) {
+            foreach (var f in allNestedFunctions.Values) {
                 analyzer.Analyze(f.BodyNode);
                 f.DirectlyUsesThis = analyzer.UsesThis;
                 foreach (var v in analyzer.UsedVariables)

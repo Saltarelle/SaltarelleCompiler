@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 
 namespace Saltarelle.Compiler.JSModel {
-    internal static class Require {
+	public static class Require {
         [DebuggerStepThrough]
         public static void NotNull<T>(T arg, string name) where T : class {
             if (arg == null) throw new ArgumentNullException(name);

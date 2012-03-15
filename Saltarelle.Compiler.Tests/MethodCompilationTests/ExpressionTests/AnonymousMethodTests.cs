@@ -152,12 +152,14 @@ public void M() {
 	f = () => x;
 	// END
 }",
-@"	f = $Bind(function() { return this.x; }, this);
+@"	$f = $Bind(function() {
+		return this.$x;
+	}, this);
 ");
 		}
 
 		[Test]
-		public void AnonymousMethodThatUsesByRefVariablesWorks() {
+		public void StatementLambdaThatUsesByRefVariablesWorks() {
 			AssertCorrect(
 @"public void F(ref int a) {}
 public void M() {
@@ -168,30 +170,94 @@ public void M() {
 	// END
 	F(ref i);
 }",
-@"	f = $Bind(function() { return this.x; }, { $i: $i });
+@"	$f = $Bind(function() {
+		return this.$i.$;
+	}, { $i: $i });
 ");
 		}
 
 		[Test]
-		public void AnonymousMethodThatUsesThisAndByRefVariablesWorks() {
+		public void StatementLambdaThatIndirectlyUsesThisWorks() {
+			AssertCorrect(
+@"int x;
+public void M() {
+	// BEGIN
+	Action a = () => {
+		Func<int> f = () => x;
+	};
+	// END
+}",
+@"	var $a = $Bind(function() {
+		var $f = $Bind(function() {
+			return this.$x;
+		}, this);
+	}, this);
+");
+		}
+
+		[Test]
+		public void StatementLambdaThatIndirectlyUsesByRefVariableWorks() {
 			AssertCorrect(
 @"public void F(ref int a) {}
+public void M() {
+	int i;
+	// BEGIN
+	Action a = () => {
+		Func<int> f = () => i;
+	};
+	// END
+	F(ref i);
+}",
+@"	var $a = $Bind(function() {
+		var $f = $Bind(function() {
+			return this.$i.$;
+		}, { $i: this.$i });
+	}, { $i: $i });
+");
+		}
+
+		[Test]
+		public void StatementLambdaThatUsesThisAndByRefVariablesWorks() {
+			AssertCorrect(
+@"public void F(ref int a) {}
+int x;
 public void M() {
 	int i = 0;
 	Func<int> f;
 	// BEGIN
-	f = () => i;
+	f = () => { return x + i; };
 	// END
 	F(ref i);
 }",
-@"	f = $Bind(function() { return this.x; }, { $this: this, $i: $i });
+@"	$f = $Bind(function() {
+		return this.$this.$x + this.$i.$;
+	}, { $i: $i, $this: this });
 ");
 		}
 
 		[Test]
-		public void AnonymousMethodDoesNotGetBoundToParametersDeclaredInsideItselfOrNestedFunctions() {
+		public void ExpressionLambdaThatUsesThisAndByRefVariablesWorks() {
 			AssertCorrect(
 @"public void F(ref int a) {}
+int x;
+public void M() {
+	int i = 0;
+	Func<int> f;
+	// BEGIN
+	f = () => i + x;
+	// END
+	F(ref i);
+}",
+@"	$f = $Bind(function() {
+		return this.$i.$ + this.$this.$x;
+	}, { $i: $i, $this: this });
+");
+		}
+
+		[Test]
+		public void StatementLambdaDoesNotGetBoundToParametersDeclaredInsideItselfOrNestedFunctions() {
+			AssertCorrect(
+@"static void F(ref int a) {}
 public void M() {
 	int i = 0;
 	Action f;
@@ -207,12 +273,34 @@ public void M() {
 	// END
 	F(ref i);
 }",
-@"	f = $Bind(function() { return this.x; }, { $this: this, $i: $i });	// Not really but I'm too lazy to work it out now.
+@"	$f = function() {
+		var $j = { $: 0 };
+		var $g = function() {
+			var $k = { $: 0 };
+			{C}.$F($k);
+		};
+		{C}.$F($j);
+	};
 ");
 		}
 
 		[Test]
-		public void AnonymousMethodThatUsesThisIsNotBoundInAStaticMethodWithThisAsFirstArgument() {
+		public void StatementLambdaThatUsesThisIsNotBoundInAStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"int x;
+public void M() {
+	// BEGIN
+	Func<int> f = () => { return x; };
+	// END
+}",
+@"	var $f = function() {
+		return $this.$x;
+	};
+", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+		}
+
+		[Test]
+		public void ExpressionLambdaThatUsesThisIsNotBoundInAStaticMethodWithThisAsFirstArgument() {
 			AssertCorrect(
 @"int x;
 public void M() {
@@ -220,13 +308,10 @@ public void M() {
 	Func<int> f = () => x;
 	// END
 }",
-@"	var $f = function() { return $this.x; };
-");
-		}
-
-		[Test]
-		public void WorksWhenUsingThisInStaticMethodWithThisAsFirstArgument() {
-			Assert.Fail("TODO");
+@"	var $f = function() {
+		return $this.$x;
+	};
+", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 	}
 }

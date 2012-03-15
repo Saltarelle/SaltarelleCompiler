@@ -23,21 +23,22 @@ namespace Saltarelle.Compiler {
 		private readonly IDictionary<LambdaResolveResult, NestedFunctionData> _nestedFunctions;
 		private readonly ExpressionCompiler _expressionCompiler;
 		private readonly IRuntimeLibrary _runtimeLibrary;
-		private readonly JsExpression _jsThis;
-		private SharedValue<int> _nextTemporaryVariableIndex;
-		private SharedValue<int> _nextLabelIndex;
+		private readonly string _thisAlias;
+		private readonly NestedFunctionContext _nestedFunctionContext;
+		private readonly SharedValue<int> _nextTemporaryVariableIndex;
+		private readonly SharedValue<int> _nextLabelIndex;
 
 		private LocalResolveResult _currentVariableForRethrow;
 		private IDictionary<object, string> _currentGotoCaseMap;
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, JsExpression jsThis)
-			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, jsThis, null, null, null, null, null)
+		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, NestedFunctionContext nestedFunctionContext)
+			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, thisAlias, nestedFunctionContext, null, null, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, JsExpression jsThis, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, SharedValue<int> nextLabelIndex, LocalResolveResult currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<DomRegion, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, NestedFunctionContext nestedFunctionContext, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, SharedValue<int> nextLabelIndex, LocalResolveResult currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
@@ -45,14 +46,15 @@ namespace Saltarelle.Compiler {
 			_variables                  = variables;
 			_nestedFunctions            = nestedFunctions;
 			_runtimeLibrary             = runtimeLibrary;
-			_jsThis                     = jsThis;
+			_thisAlias                  = thisAlias;
+			_nestedFunctionContext      = nestedFunctionContext;
 			_currentVariableForRethrow  = currentVariableForRethrow;
 			_currentGotoCaseMap         = currentGotoCaseMap;
 
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, () => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, jsThis), jsThis);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, c), thisAlias, nestedFunctionContext);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -65,7 +67,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _jsThis, _expressionCompiler, _nextTemporaryVariableIndex, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _nestedFunctionContext, _expressionCompiler, _nextTemporaryVariableIndex, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
 		private LocalResolveResult CreateTemporaryVariable(IType type) {
@@ -147,7 +149,7 @@ namespace Saltarelle.Compiler {
 				}
 				else {
 					if (data.UseByRefSemantics)
-						jsInitializer = JsExpression.ObjectLiteral(new[] { new JsObjectLiteralProperty("$", JsExpression.Null) });
+						jsInitializer = JsExpression.ObjectLiteral();
 					else
 						jsInitializer = null;
 				}

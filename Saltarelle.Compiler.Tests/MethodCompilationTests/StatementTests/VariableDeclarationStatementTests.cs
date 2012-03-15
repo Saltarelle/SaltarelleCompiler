@@ -45,7 +45,7 @@ public void M() {
 	// END
 	OtherMethod(out i, out j);
 }",
-@"	var $i = { $: 0 }, $j = { $: null };
+@"	var $i = { $: 0 }, $j = {};
 ");
 		}
 
