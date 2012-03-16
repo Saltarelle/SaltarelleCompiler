@@ -165,7 +165,7 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithSelf() {
             Compile("class Test : System.Collections.Generic.IEqualityComparer<Test> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<{$Test}>");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<{Test}>");
         }
 
         [Test]
@@ -177,7 +177,7 @@ namespace Saltarelle.Compiler.Tests {
         [Test]
         public void ClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test : Base<Test> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{$Test}>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{Test}>");
         }
 
         [Test]
