@@ -255,6 +255,23 @@ public void M() {
 		}
 
 		[Test]
+		public void UsingByRefVariableAsRefArgumentInsideNestedFunctionWorks() {
+			AssertCorrect(
+@"public void F(ref int a) {}
+public void M() {
+	Action f;
+	int i;
+	// BEGIN
+	f = () => { F(ref i); }
+	// END
+}",
+@"	$f = $Bind(function() {
+		this.$this.$F(this.$i);
+	}, { $i: $i, $this: this });
+");
+		}
+
+		[Test]
 		public void StatementLambdaDoesNotGetBoundToParametersDeclaredInsideItselfOrNestedFunctions() {
 			AssertCorrect(
 @"static void F(ref int a) {}

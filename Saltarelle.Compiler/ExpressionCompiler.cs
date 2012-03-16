@@ -721,7 +721,7 @@ namespace Saltarelle.Compiler {
 				if (a is ByReferenceResolveResult) {
 					var r = (ByReferenceResolveResult)a;
 					if (r.ElementResult is LocalResolveResult) {
-						expressions.Add(JsExpression.Identifier(_variables[((LocalResolveResult)r.ElementResult).Variable].Name));
+						expressions.Add(CompileLocal(((LocalResolveResult)r.ElementResult).Variable, true));
 					}
 					else {
 						_errorReporter.Error("Only locals can be passed by reference.");
@@ -971,7 +971,7 @@ namespace Saltarelle.Compiler {
 			var def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
 			JsExpression captureObject;
 			if (newContext.CapturedByRefVariables.Count > 0) {
-				var toCapture = newContext.CapturedByRefVariables.Select(v => new JsObjectLiteralProperty(_variables[v].Name, _nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Contains(v) ? (JsExpression)JsExpression.MemberAccess(JsExpression.This, _variables[v].Name) : JsExpression.Identifier(_variables[v].Name))).ToList();
+				var toCapture = newContext.CapturedByRefVariables.Select(v => new JsObjectLiteralProperty(_variables[v].Name, CompileLocal(v, true))).ToList();
 				if (captureThis)
 					toCapture.Add(new JsObjectLiteralProperty(_namingConvention.ThisAlias, CompileThis()));
 				captureObject = JsExpression.ObjectLiteral(toCapture);
@@ -988,19 +988,22 @@ namespace Saltarelle.Compiler {
 				 : def;
 		}
 
-		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
-			// Only other thing we have to take care of now is if we're accessing a byref variable declared in a parent function, in which case we'd have to return this.variable.$
-			var data = _variables[rr.Variable];
+		private JsExpression CompileLocal(IVariable variable, bool returnReference) {
+			var data = _variables[variable];
 			if (data.UseByRefSemantics) {
-				var target = _nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Contains(rr.Variable)
+				var target = _nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Contains(variable)
 				           ? (JsExpression)JsExpression.MemberAccess(JsExpression.This, data.Name)	// If using a captured by-ref variable, we access it using this.name.$
 						   : (JsExpression)JsExpression.Identifier(data.Name);
 
-				return JsExpression.MemberAccess(target, "$");
+				return returnReference ? target : JsExpression.MemberAccess(target, "$");
 			}
 			else {
-				return JsExpression.Identifier(_variables[rr.Variable].Name);
+				return JsExpression.Identifier(_variables[variable].Name);
 			}
+		}
+
+		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
+			return CompileLocal(rr.Variable, false);
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
