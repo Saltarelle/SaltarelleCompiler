@@ -51,15 +51,15 @@ namespace Saltarelle.Compiler {
 
         private bool _frozen;
 
-	    public ISet<DomRegion> DirectlyUsedVariables { get; private set; }
-		public ISet<DomRegion> DirectlyDeclaredVariables { get; private set; }
+	    public ISet<IVariable> DirectlyUsedVariables { get; private set; }
+		public ISet<IVariable> DirectlyDeclaredVariables { get; private set; }
         public IList<NestedFunctionData> NestedFunctions { get; private set; }
 		public NestedFunctionData Parent { get; private set; }
 
 		public NestedFunctionData(NestedFunctionData parent) {
 			Parent                    = parent;
-            DirectlyUsedVariables     = new HashSet<DomRegion>();
-            DirectlyDeclaredVariables = new HashSet<DomRegion>();
+            DirectlyUsedVariables     = new HashSet<IVariable>();
+            DirectlyDeclaredVariables = new HashSet<IVariable>();
             NestedFunctions           = new List<NestedFunctionData>();
 		}
 
@@ -70,7 +70,7 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-        public IEnumerable<DomRegion> DirectlyOrIndirectlyUsedVariables {
+        public IEnumerable<IVariable> DirectlyOrIndirectlyUsedVariables {
             get {
                 return DirectlyUsedVariables.Concat(NestedFunctions.SelectMany(f => f.DirectlyOrIndirectlyUsedVariables)).Distinct();
             }
@@ -90,8 +90,8 @@ namespace Saltarelle.Compiler {
 
         public void Freeze() {
             _frozen = true;
-            DirectlyUsedVariables     = new ReadOnlySet<DomRegion>(DirectlyUsedVariables);
-            DirectlyDeclaredVariables = new ReadOnlySet<DomRegion>(DirectlyDeclaredVariables);
+            DirectlyUsedVariables     = new ReadOnlySet<IVariable>(DirectlyUsedVariables);
+            DirectlyDeclaredVariables = new ReadOnlySet<IVariable>(DirectlyDeclaredVariables);
             NestedFunctions = NestedFunctions.AsReadOnly();
         }
 	}

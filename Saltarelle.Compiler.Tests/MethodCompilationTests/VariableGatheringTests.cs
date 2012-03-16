@@ -48,7 +48,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" });
@@ -69,7 +69,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$i", "$a", "$i2", "$j", "$a2" });
@@ -88,7 +88,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$i", "$a" });
@@ -109,7 +109,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
@@ -131,7 +131,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$ms", "$a", "$ms2", "$a2" });
@@ -150,7 +150,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
@@ -185,7 +185,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
@@ -207,7 +207,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
@@ -229,7 +229,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
             ");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Where(name => !name.StartsWith("$tmp"))
                 .Should()
@@ -247,7 +247,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
@@ -264,7 +264,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
@@ -281,7 +281,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
@@ -298,7 +298,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			");
 
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
                 .Should()
                 .Equal(new[] { "$f", "$f2" });
@@ -315,7 +315,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		public void ImplicitValueParameterToPropertySetterIsCorrectlyRegistered() {
             CompileMethod(@"public int P { set {} }", methodName: "set_P");
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$value" });
@@ -326,7 +326,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		public void ImplicitValueParameterToEventAdderIsCorrectlyRegistered() {
             CompileMethod(@"public event System.EventHandler E { add {} remove {} }", methodName: "add_E");
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$value" });
@@ -337,7 +337,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		public void ImplicitValueParameterToEventRemoverIsCorrectlyRegistered() {
             CompileMethod(@"public event System.EventHandler E { remove {} add {} }", methodName: "remove_E");
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$value" });
@@ -348,7 +348,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		public void IndexerGetterParametersAreCorrectlyRegistered() {
             CompileMethod(@"public int this[int a, string b] { get { return 0; } }", methodName: "get_Item");
             MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Begin)
+                .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)
 				.Should()
 				.Equal(new[] { "$a", "$b" });

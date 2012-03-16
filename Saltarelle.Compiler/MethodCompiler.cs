@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler {
         private readonly CSharpAstResolver _resolver;
     	private readonly IRuntimeLibrary _runtimeLibrary;
 
-    	internal IDictionary<DomRegion, VariableData> variables;
+    	internal IDictionary<IVariable, VariableData> variables;
         internal NestedFunctionData nestedFunctionsRoot;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler {
 			var thisAlias = (impl.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null);
 			var bodyCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, null);
 
-            return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p.Region].Name), bodyCompiler.Compile(body), null);
+            return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), bodyCompiler.Compile(body), null);
         }
     }
 }
