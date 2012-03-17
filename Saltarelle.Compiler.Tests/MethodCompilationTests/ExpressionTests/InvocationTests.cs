@@ -35,6 +35,51 @@ public void M() {
 ");
 		}
 
+
+		[Test, Ignore("NRefactory bug")]
+		public void ExtensionMethodInvocationWorks() {
+			AssertCorrect(
+@"namespace N {
+	public class X {}
+	public static class Ex {
+		public static void F(this X x, int y, int z) {}
+	}
+	class C {
+		public void M() {
+			X a = null;
+			int b = 0, c = 0;
+			// BEGIN
+			a.F(b, c);
+			// END
+		}
+	}
+}",
+@"	{Ex}.$F($a, $b, $c);
+", addSkeleton: false);
+		}
+
+		[Test, Ignore("NRefactory bug")]
+		public void ExtensionMethodInvocationWithReorderedAndDefaultArgumentsWorks() {
+			AssertCorrect(
+@"namespace N {
+	public class X {}
+	public static class Ex {
+		public static void F(this X x, int y, int z, int t = 0) {}
+	}
+	class C {
+		public void M() {
+			X a = null;
+			int b = 0, c = 0;
+			// BEGIN
+			a.F(y: b, x: c);
+			// END
+		}
+	}
+}",
+@"	{Ex}.$F($a, $b, $c, 0);
+", addSkeleton: false);
+		}
+
 		[Test]
 		public void MethodInvocationWithDefaultArgumentsWorks() {
 			AssertCorrect(

@@ -48,5 +48,15 @@ public void M() {
 		public void CallToPartialMethodWithDefinitionIsNotRemoved() {
 			Assert.Inconclusive("TODO");
 		}
+
+		[Test]
+		public void CallToConditionalMethodIsRemovedWhenTheSymbolIsNotDefined() {
+			Assert.Inconclusive("TODO");
+		}
+
+		[Test]
+		public void CallToConditionalMethodIsNotRemovedWhenTheSymbolIsDefined() {
+			Assert.Inconclusive("TODO");
+		}
 	}
 }
