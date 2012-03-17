@@ -923,5 +923,33 @@ public void M() {
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty += 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyImplOptions.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
 		}
+
+		[Test]
+		public void CompoundAddAssignForDelegateTypeInvokesDelegateCombine() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	Action a = null, b = null;
+	// BEGIN
+	a += b;
+	// END
+}",
+@"	$a = {Delegate}.$Combine($a, $b);
+");
+		}
+
+		[Test]
+		public void CompoundSubtractAssignForDelegateTypeInvokesDelegateRemove() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	Action a = null, b = null;
+	// BEGIN
+	a -= b;
+	// END
+}",
+@"	$a = {Delegate}.$Remove($a, $b);
+");
+		}
 	}
 }

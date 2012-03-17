@@ -495,10 +495,18 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.AddAssign:
 				case ExpressionType.AddAssignChecked:
-					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent)
+					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent) {
 						return CompileEventAddOrRemove((MemberResolveResult)rr.Operands[0], rr.Operands[1], true);
-					else
+					}
+					else if (IsDelegateType(rr.Operands[0].Type)) {
+						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
+						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
+						var impl = _namingConvention.GetMethodImplementation(combine);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0]), returnValueIsImportant, false);
+					}
+					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, rr.IsLiftedOperator);
+					}
 
 				case ExpressionType.AndAssign:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
@@ -539,10 +547,18 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.SubtractAssign:
 				case ExpressionType.SubtractAssignChecked:
-					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent)
+					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent) {
 						return CompileEventAddOrRemove((MemberResolveResult)rr.Operands[0], rr.Operands[1], false);
-					else
+					}
+					else if (IsDelegateType(rr.Operands[0].Type)) {
+						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
+						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
+						var impl = _namingConvention.GetMethodImplementation(remove);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0]), returnValueIsImportant, false);
+					}
+					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, rr.IsLiftedOperator);
+					}
 
 				case ExpressionType.PreIncrementAssign:
 					return CompileCompoundAssignment(rr.Operands[0], null, (a, b) => JsExpression.PrefixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), returnValueIsImportant, rr.IsLiftedOperator);
@@ -560,7 +576,14 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Add:
 				case ExpressionType.AddChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
+					if (IsDelegateType(rr.Operands[0].Type)) {
+						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
+						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
+						var impl = _namingConvention.GetMethodImplementation(combine);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0]), false);
+					}
+					else
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
 
 				case ExpressionType.And:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
@@ -628,7 +651,14 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
+					if (IsDelegateType(rr.Operands[0].Type)) {
+						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
+						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
+						var impl = _namingConvention.GetMethodImplementation(remove);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0]), false);
+					}
+					else
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
 
 				// Unary operators
 

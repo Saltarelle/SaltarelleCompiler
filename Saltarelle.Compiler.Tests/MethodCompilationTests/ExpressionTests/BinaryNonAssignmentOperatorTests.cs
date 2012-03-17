@@ -342,5 +342,33 @@ public void M() {
 @"	var $c = $LiftedBooleanOr($a, $b);
 ");
 		}
+
+		[Test]
+		public void AddForDelegateTypeInvokesDelegateCombine() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	Action a = null, b = null;
+	// BEGIN
+	Action c = a + b;
+	// END
+}",
+@"	var $c = {Delegate}.$Combine($a, $b);
+");
+		}
+
+		[Test]
+		public void SubtractForDelegateTypeInvokesDelegateRemove() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	Action a = null, b = null;
+	// BEGIN
+	Action c = a - b;
+	// END
+}",
+@"	var $c = {Delegate}.$Remove($a, $b);
+");
+		}
 	}
 }
