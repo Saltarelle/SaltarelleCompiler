@@ -54,7 +54,7 @@ namespace Saltarelle.Compiler {
 			_nextTemporaryVariableIndex = nextTemporaryVariableIndex ?? new SharedValue<int>(0);
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, c), thisAlias, nestedFunctionContext);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, c), thisAlias, nestedFunctionContext, null);
 			_result                     = new List<JsStatement>();
 		}
 

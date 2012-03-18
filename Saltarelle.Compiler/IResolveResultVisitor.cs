@@ -24,6 +24,7 @@ namespace Saltarelle.Compiler {
         TResult VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, TData data);
 		TResult VisitTypeResolveResult(TypeResolveResult rr, TData data);
 		TResult VisitTypeIsResolveResult(TypeIsResolveResult rr, TData data);
+		TResult VisitInitializedObjectResolveResult(InitializedObjectResolveResult rr, TData data);
 	}
 
 	public static class ResolveResultVisitorExtensions {
@@ -44,14 +45,12 @@ namespace Saltarelle.Compiler {
                 return visitor.VisitConversionResolveResult((ConversionResolveResult)rr, data);
             }
             else if (rr is CSharpInvocationResolveResult) {
-                // TODO: What is this? Might be needed for named arguments
                 return visitor.VisitCSharpInvocationResolveResult((CSharpInvocationResolveResult)rr, data);
             }
             else if (rr is LambdaResolveResult) {
                 return visitor.VisitLambdaResolveResult((LambdaResolveResult)rr, data);
             }
             else if (rr is MethodGroupResolveResult) {
-                // TODO: Is this really needed?
                 return visitor.VisitMethodGroupResolveResult((MethodGroupResolveResult)rr, data);
             }
             else if (rr is LocalResolveResult) {
@@ -74,6 +73,9 @@ namespace Saltarelle.Compiler {
 			}
 			else if (rr is TypeIsResolveResult) {
 				return visitor.VisitTypeIsResolveResult((TypeIsResolveResult)rr, data);
+			}
+			else if (rr is InitializedObjectResolveResult) {
+				return visitor.VisitInitializedObjectResolveResult((InitializedObjectResolveResult)rr, data);
 			}
             else {
                 return visitor.VisitDefaultResolveResult(rr, data);

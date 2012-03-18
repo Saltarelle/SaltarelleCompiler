@@ -136,6 +136,7 @@ namespace Saltarelle.Compiler {
 		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private NestedFunctionContext _nestedFunctionContext;
+		private IVariable _objectBeingInitialized;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -147,7 +148,7 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, LocalResolveResult> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -160,6 +161,7 @@ namespace Saltarelle.Compiler {
 			_createInnerCompiler = createInnerCompiler;
 			_thisAlias = thisAlias;
 			_nestedFunctionContext = nestedFunctionContext;
+			_objectBeingInitialized = objectBeingInitialized;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -171,7 +173,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -892,24 +894,49 @@ namespace Saltarelle.Compiler {
 		private JsExpression CompileConstrutorInvocation(ConstructorImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 
+			JsExpression constructorCall;
+
 			switch (impl.Type) {
 				case ConstructorImplOptions.ImplType.UnnamedConstructor:
-					return JsExpression.New(thisAndArguments[0], thisAndArguments.Skip(1));
+					constructorCall = JsExpression.New(thisAndArguments[0], thisAndArguments.Skip(1));
+					break;
 
 				case ConstructorImplOptions.ImplType.NamedConstructor:
-					return JsExpression.New(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+					constructorCall = JsExpression.New(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+					break;
 
 				case ConstructorImplOptions.ImplType.StaticMethod:
-					return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+					constructorCall = JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+					break;
 
 				default:
 					_errorReporter.Error("This constructor cannot be used from script.");
 					return JsExpression.Number(0);
 			}
+
+			if (invocation.InitializerStatements != null && invocation.InitializerStatements.Count > 0) {
+				var obj = _createTemporaryVariable(method.DeclaringType);
+				var oldObjectBeingInitialized = _objectBeingInitialized;
+				_objectBeingInitialized = obj.Variable;
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, constructorCall));
+				foreach (var init in invocation.InitializerStatements) {
+					var js = VisitResolveResult(init, false);
+					_additionalStatements.Add(new JsExpressionStatement(js));
+				}
+				_objectBeingInitialized = oldObjectBeingInitialized;
+
+				return JsExpression.Identifier(_variables[obj.Variable].Name);
+			}
+			else {
+				return constructorCall;
+			}
+		}
+
+		public override JsExpression VisitInitializedObjectResolveResult(InitializedObjectResolveResult rr, bool data) {
+			return JsExpression.Identifier(_variables[_objectBeingInitialized].Name);
 		}
 
 		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
-			// Note: This might also represent a constructor.
 			if (rr.Member is IMethod) {
 				if (rr.Member.Name == "Invoke" && IsDelegateType(rr.Member.DeclaringType)) {
 					// Invoke the underlying method instead of calling the Invoke method.

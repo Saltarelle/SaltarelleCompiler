@@ -12,6 +12,7 @@ namespace Saltarelle.Compiler {
 			Debug.Assert(name != null);
 			this.type = type;
 			this.name = name;
+			this.region = new DomRegion();
 		}
 			
 		public string Name {

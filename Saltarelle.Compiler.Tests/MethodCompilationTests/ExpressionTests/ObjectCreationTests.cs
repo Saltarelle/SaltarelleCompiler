@@ -190,7 +190,7 @@ public void M() {
 @"	var $tmp1 = new {C}();
 	$tmp1.$x = $i;
 	$tmp1.set_$P($j);
-	var $c = $tmp1;	
+	var $c = $tmp1;
 ");
 		}
 
@@ -210,7 +210,7 @@ public void M() {
 @"	var $tmp1 = new {C}();
 	$tmp1.$Add($i);
 	$tmp1.$Add($j);
-	var $c = $tmp1;	
+	var $c = $tmp1;
 ");
 		}
 
@@ -231,63 +231,82 @@ public void M() {
 @"	var $tmp1 = new {C}();
 	$tmp1.$Add($i, $s);
 	$tmp1.$Add($j, $t);
-	var $c = $tmp1;	
+	var $c = $tmp1;
 ");
 		}
 
-class Point { public int X, Y; }
-class Test {
-	private Point _pos = new Point();
-	private List<string> _list = new List<string>();
-	public Point Pos {
-		get { Console.WriteLine("Get pos"); return _pos; }
-		set { Console.WriteLine("Set pos"); _pos = value; }
-	}
-
-	public List<string> List { get { Console.WriteLine("Get List"); return _list; } set { Console.WriteLine("Set list"); _list = value; } }
-	public Dictionary<string, int> _dict = new Dictionary<string, int>();
-	public Dictionary<string, int> Dict {
-		get { Console.WriteLine("Get dict"); return _dict; }
-		set { Console.WriteLine("Set dict"); _dict = value; }
-	}
-
-
-
-	public void M() {
-		var x = new Test {
-			Pos = { X = 1, Y = 2 },
-			List = { "Hello", "World" },
-			Dict = { { "A", 1 } }
-		};
-	}
-}
 		[Test]
 		public void ComplexObjectAndCollectionInitializersWork() {
-			new Test().M();
 			AssertCorrect(
 @"using System;
 using System.Collections.Generic;
-struct Point { public int X, Y; }
+class Point { public int X, Y; }
 class Test {
-	public Point Pos;
-	public List<string> List = new List<string>();
-	public Dictionary<string, int> Dict = new Dictionary<string, int>();
+	public Point Pos { get; set; }
+	public List<string> List { get; set; }
+	public Dictionary<string, int> Dict { get; set; }
 	
 	void M() {
+		// BEGIN
 		var x = new Test {
 			Pos = { X = 1, Y = 2 },
 			List = { ""Hello"", ""World"" },
 			Dict = { { ""A"", 1 } }
 		};
+		// END
 	}
 }",
-@"
+@"	var $tmp1 = new {Test}();
+	$tmp1.get_$Pos().$X = 1;
+	$tmp1.get_$Pos().$Y = 2;
+	$tmp1.get_$List().$Add('Hello');
+	$tmp1.get_$List().$Add('World');
+	$tmp1.get_$Dict().$Add('A', 1);
+	var $x = $tmp1;
 ", addSkeleton: false);
 		}
 
 		[Test]
 		public void NestingObjectAndCollectionInitializersWorks() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"using System;
+using System.Collections.Generic;
+class Color { public int R, G, B; }
+class Point { public int X, Y; public Color Color; }
+class Test {
+	public Point Pos { get; set; }
+	public List<string> List { get; set; }
+	public Dictionary<string, int> Dict { get; set; }
+	
+	void M() {
+		// BEGIN
+		var x = new Test {
+			Pos = new Point() { X = 1, Y = 2, Color = new Color { R = 4, G = 5, B = 6 } },
+			List = new List<string> { ""Hello"", ""World"" },
+			Dict = new Dictionary<string, int> { { ""A"", 1 } }
+		};
+		// END
+	}
+}",
+@"	var $tmp1 = new {Test}();
+	var $tmp2 = new {Point}();
+	$tmp2.$X = 1;
+	$tmp2.$Y = 2;
+	var $tmp3 = new {Color}();
+	$tmp3.$R = 4;
+	$tmp3.$G = 5;
+	$tmp3.$B = 6;
+	$tmp2.$Color = $tmp3;
+	$tmp1.set_$Pos($tmp2);
+	var $tmp4 = new ($InstantiateGenericType({List}, {String}))();
+	$tmp4.$Add('Hello');
+	$tmp4.$Add('World');
+	$tmp1.set_$List($tmp4);
+	var $tmp5 = new ($InstantiateGenericType({Dictionary}, {String}, {Int32}))();
+	$tmp5.$Add('A', 1);
+	$tmp1.set_$Dict($tmp5);
+	var $x = $tmp1;
+", addSkeleton: false);
 		}
 	}
 }
