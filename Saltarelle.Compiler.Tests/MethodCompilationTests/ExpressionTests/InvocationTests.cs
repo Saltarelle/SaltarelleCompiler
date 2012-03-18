@@ -506,5 +506,10 @@ public void M() {
 			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "UnusableMethod" ? MethodImplOptions.NotUsableFromScript() : MethodImplOptions.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
 		}
+
+		[Test]
+		public void InvokingOverriddenMethodWorks() {
+			Assert.Fail("TODO, it doesn't");
+		}
 	}
 }

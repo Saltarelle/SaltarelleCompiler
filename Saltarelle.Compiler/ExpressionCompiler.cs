@@ -803,7 +803,7 @@ namespace Saltarelle.Compiler {
 			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments);
 		}
 
-		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod member, IList<JsExpression> thisAndArguments, IList<IType> typeArguments) {
+		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod method, IList<JsExpression> thisAndArguments, IList<IType> typeArguments) {
 			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(GetJsType).ToList() : new List<JsExpression>());
 
 			if (impl == null) {
@@ -815,7 +815,7 @@ namespace Saltarelle.Compiler {
 						var jsMethod = JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
-							if (member.IsStatic)
+							if (method.IsStatic)
 								thisAndArguments[0] = JsExpression.Null;
 							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), thisAndArguments);
 						}
@@ -825,7 +825,7 @@ namespace Saltarelle.Compiler {
 					}
 
 					case MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument: {
-						var jsMethod = JsExpression.MemberAccess(GetJsType(member.DeclaringType), impl.Name);
+						var jsMethod = JsExpression.MemberAccess(GetJsType(method.DeclaringType), impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
 							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
@@ -839,22 +839,21 @@ namespace Saltarelle.Compiler {
 						return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
 
 					case MethodImplOptions.ImplType.InlineCode: {
-						var method = (IMethod)member;
 						var allSubstitutions = new List<Tuple<string, JsExpression>>();
 
-						var parameterizedType = member.DeclaringType as ParameterizedType;
+						var parameterizedType = method.DeclaringType as ParameterizedType;
 						if (parameterizedType != null) {
 							var def = parameterizedType.GetDefinition();
 							for (int i = 0; i < def.TypeParameters.Count; i++)
 								allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, GetJsType(parameterizedType.TypeArguments[i])));
 						}
 
-						var specializedMethod = member as SpecializedMethod;
-						if (member is SpecializedMethod) {
+						var specializedMethod = method as SpecializedMethod;
+						if (method is SpecializedMethod) {
 							for (int i = 0; i < specializedMethod.TypeArguments.Count; i++)
 								allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, GetJsType(specializedMethod.TypeArguments[i])));
 						}
-						if (!member.IsStatic)
+						if (!method.IsStatic)
 							allSubstitutions.Add(Tuple.Create("this", thisAndArguments[0]));
 						for (int i = 1; i < thisAndArguments.Count; i++)
 							allSubstitutions.Add(Tuple.Create(method.Parameters[i - 1].Name, thisAndArguments[i]));
@@ -872,7 +871,7 @@ namespace Saltarelle.Compiler {
 							string.Format(format, new object[fmtarguments.Count]);
 						}
 						catch (Exception) {
-							_errorReporter.Error("Invalid inline implementation of method " + member.DeclaringType.FullName + "." + member.Name);
+							_errorReporter.Error("Invalid inline implementation of method " + method.DeclaringType.FullName + "." + method.Name);
 							return JsExpression.Number(0);
 						}
 
@@ -883,10 +882,29 @@ namespace Saltarelle.Compiler {
 						return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
 
 					default: {
-						_errorReporter.Error("Method " + member.DeclaringType.FullName + "." + member.Name + " cannot be used from script.");
+						_errorReporter.Error("Method " + method.DeclaringType.FullName + "." + method.Name + " cannot be used from script.");
 						return JsExpression.Number(0);
 					}
 				}
+			}
+		}
+
+		private JsExpression CompileConstrutorInvocation(ConstructorImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+
+			switch (impl.Type) {
+				case ConstructorImplOptions.ImplType.UnnamedConstructor:
+					return JsExpression.New(thisAndArguments[0], thisAndArguments.Skip(1));
+
+				case ConstructorImplOptions.ImplType.NamedConstructor:
+					return JsExpression.New(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+
+				case ConstructorImplOptions.ImplType.StaticMethod:
+					return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+
+				default:
+					_errorReporter.Error("This constructor cannot be used from script.");
+					return JsExpression.Number(0);
 			}
 		}
 
@@ -900,7 +918,7 @@ namespace Saltarelle.Compiler {
 				else {
 					var method = (IMethod)rr.Member;
 					if (method.IsConstructor) {
-						return JsExpression.New(new JsTypeReferenceExpression(rr.Member.DeclaringType.GetDefinition()), rr.Arguments.Select(a => VisitResolveResult(a, true))); // Only temporary - Promised to be fixed in NR
+						return CompileConstrutorInvocation(_namingConvention.GetConstructorImplementation(method), method, rr);
 					}
 					else {
 						return CompileMethodInvocation(_namingConvention.GetMethodImplementation(method), method, rr);

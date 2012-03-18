@@ -14,8 +14,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
         protected MethodCompiler MethodCompiler { get; private set; }
         protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
-        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M") {
-            Compile(new[] { "using System; class C { " + source + "}" }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
+        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true) {
+            Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;
@@ -26,14 +26,14 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
         }
 
-		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null) {
+		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
 				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? PropertyImplOptions.Field("$" + p.Name)
 				                                                                        : PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_$" + p.Name),
 				                                                                                                               MethodImplOptions.NormalMethod("set_$" + p.Name)),
 				GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name),
 				GetEventImplementation  = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_$" + e.Name), MethodImplOptions.NormalMethod("remove_$" + e.Name)),
-			});
+			}, addSkeleton: addSkeleton);
 			string actual = OutputFormatter.Format(CompiledMethod.Body, true);
 
 			int begin = actual.IndexOf("// BEGIN");
