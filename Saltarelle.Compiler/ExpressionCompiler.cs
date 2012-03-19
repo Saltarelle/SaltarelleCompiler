@@ -1184,9 +1184,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
-			return VisitResolveResult(rr.ElementResult, returnValueIsImportant);
-			// Should be like below, but that requires us to implement object construction first.
-			// throw new InvalidOperationException("Resolve result " + rr.ToString() + " should have been handled in method call.");
+			throw new InvalidOperationException("Resolve result " + rr.ToString() + " should have been handled in method call.");
 		}
 
 		public override JsExpression VisitDefaultResolveResult(ResolveResult rr, bool returnValueIsImportant) {
