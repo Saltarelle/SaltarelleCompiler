@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler {
 		private readonly SharedValue<int> _nextTemporaryVariableIndex;
 		private readonly SharedValue<int> _nextLabelIndex;
 
-		private LocalResolveResult _currentVariableForRethrow;
+		private IVariable _currentVariableForRethrow;
 		private IDictionary<object, string> _currentGotoCaseMap;
 
 		private List<JsStatement> _result;
@@ -38,7 +38,7 @@ namespace Saltarelle.Compiler {
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, NestedFunctionContext nestedFunctionContext, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, SharedValue<int> nextLabelIndex, LocalResolveResult currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, NestedFunctionContext nestedFunctionContext, ExpressionCompiler expressionCompiler, SharedValue<int> nextTemporaryVariableIndex, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
@@ -70,11 +70,11 @@ namespace Saltarelle.Compiler {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _nestedFunctionContext, _expressionCompiler, _nextTemporaryVariableIndex, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
-		private LocalResolveResult CreateTemporaryVariable(IType type) {
+		private IVariable CreateTemporaryVariable(IType type) {
 			string name = _namingConvention.GetTemporaryVariableName(_nextTemporaryVariableIndex.Value++);
 			IVariable variable = new SimpleVariable(type, name);
 			_variables[variable] = new VariableData(name, null, false);
-			return new LocalResolveResult(variable);
+			return variable;
 		}
 
 		private ResolveResult ResolveWithConversion(Expression expr) {
@@ -328,13 +328,13 @@ namespace Saltarelle.Compiler {
 			var getEnumeratorCall = _expressionCompiler.Compile(ferr.GetEnumeratorCall, true);
 			_result.AddRange(getEnumeratorCall.AdditionalStatements);
 			var enumerator = CreateTemporaryVariable(ferr.EnumeratorType);
-			_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(enumerator.Variable.Name, getEnumeratorCall.Expression)));
+			_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(enumerator.Name, getEnumeratorCall.Expression)));
 
-			var moveNextInvocation = _expressionCompiler.Compile(new CSharpInvocationResolveResult(enumerator, ferr.MoveNextMethod, new ResolveResult[0]), true);
+			var moveNextInvocation = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new LocalResolveResult(enumerator), ferr.MoveNextMethod, new ResolveResult[0]), true);
 			if (moveNextInvocation.AdditionalStatements.Count > 0)
 				_errorReporter.Error("MoveNext() invocation is not allowed to require additional statements.");
 
-			var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(enumerator, ferr.CurrentProperty), true);
+			var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
 			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
 			var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrent.Expression)) }).ToList();
 			var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
@@ -355,7 +355,7 @@ namespace Saltarelle.Compiler {
 				var disposableConversion = conversions.ImplicitConversion(enumerator.Type, systemIDisposable);
 				if (disposableConversion.IsValid) {
 					// If the enumerator is implicitly convertible to IDisposable, we should dispose it.
-					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, enumerator, disposableConversion), disposeMethod, new ResolveResult[0]), false);
+					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), disposableConversion), disposeMethod, new ResolveResult[0]), false);
 					if (compileResult.AdditionalStatements.Count != 0)
 						_errorReporter.Error("Call to IDisposable.Dispose must not return additional statements.");
 					disposer = new JsExpressionStatement(compileResult.Expression);
@@ -366,10 +366,10 @@ namespace Saltarelle.Compiler {
 				}
 				else {
 					// We don't know whether the enumerator is convertible to IDisposable, so we need to conditionally dispose it.
-					var test = _expressionCompiler.Compile(new TypeIsResolveResult(enumerator, systemIDisposable, _compilation.FindType(KnownTypeCode.Boolean)), true);
+					var test = _expressionCompiler.Compile(new TypeIsResolveResult(new LocalResolveResult(enumerator), systemIDisposable, _compilation.FindType(KnownTypeCode.Boolean)), true);
 					if (test.AdditionalStatements.Count > 0)
 						_errorReporter.Error("\"is\" test must not return additional statements.");
-					var innerStatements = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, enumerator, conversions.ExplicitConversion(enumerator.Type, systemIDisposable)), disposeMethod, new ResolveResult[0]), false);
+					var innerStatements = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), conversions.ExplicitConversion(enumerator.Type, systemIDisposable)), disposeMethod, new ResolveResult[0]), false);
 					disposer = new JsIfStatement(test.Expression, new JsBlockStatement(innerStatements.AdditionalStatements.Concat(new[] { new JsExpressionStatement(innerStatements.Expression) })), null);
 				}
 			}
@@ -399,8 +399,8 @@ namespace Saltarelle.Compiler {
 				var newResource = CreateTemporaryVariable(systemIDisposable);
 				var castExpr = _expressionCompiler.Compile(new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
 				stmts.AddRange(castExpr.AdditionalStatements);
-				stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[newResource.Variable].Name, castExpr.Expression)));
-				resource = newResource;
+				stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[newResource].Name, castExpr.Expression)));
+				resource = new LocalResolveResult(newResource);
 			}
 
 			var compiledDisposeCall = _expressionCompiler.Compile(
@@ -440,7 +440,7 @@ namespace Saltarelle.Compiler {
 			}
 			else {
 				var resource = CreateTemporaryVariable(ResolveWithConversion((Expression)usingStatement.ResourceAcquisition).Type);
-				stmt = GenerateUsingBlock(resource, (Expression)usingStatement.ResourceAcquisition, stmt);
+				stmt = GenerateUsingBlock(new LocalResolveResult(resource), (Expression)usingStatement.ResourceAcquisition, stmt);
 			}
 
 			_result.Add(stmt);
@@ -478,7 +478,7 @@ namespace Saltarelle.Compiler {
 				var oldVariableForRethrow = _currentVariableForRethrow;
 
 				_currentVariableForRethrow = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
-				string catchVariableName = _variables[_currentVariableForRethrow.Variable].Name;
+				string catchVariableName = _variables[_currentVariableForRethrow].Name;
 
 				var catchClauses = tryCatchStatement.CatchClauses.ToList();
 				var systemException = _compilation.FindType(KnownTypeCode.Exception);
@@ -486,12 +486,12 @@ namespace Saltarelle.Compiler {
 
 				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type == systemException);
 				JsStatement current = lastIsCatchall
-					                ? CompileCatchClause(_currentVariableForRethrow, catchClauses[catchClauses.Count - 1], true)
+					                ? CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[catchClauses.Count - 1], true)
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
 					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), GetJsType(catchClauses[i].Type));
-					current = new JsIfStatement(test, CompileCatchClause(_currentVariableForRethrow, catchClauses[i], false), current);
+					current = new JsIfStatement(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false), current);
 				}
 
 				catchClause = new JsCatchClause(catchVariableName, current);
@@ -505,7 +505,7 @@ namespace Saltarelle.Compiler {
 
 		public override void VisitThrowStatement(ThrowStatement throwStatement) {
 			if (throwStatement.Expression.IsNull) {
-				_result.Add(new JsThrowStatement(JsExpression.Identifier(_variables[_currentVariableForRethrow.Variable].Name)));
+				_result.Add(new JsThrowStatement(JsExpression.Identifier(_variables[_currentVariableForRethrow].Name)));
 			}
 			else {
 				var compiledExpr = CompileExpression(throwStatement.Expression, true);
