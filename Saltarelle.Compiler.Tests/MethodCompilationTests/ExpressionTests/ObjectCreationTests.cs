@@ -308,5 +308,10 @@ class Test {
 	var $x = $tmp1;
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void CreatingDelegateWorks() {
+			Assert.Fail("TODO: Handle new Func<string>(MyFunction)");
+		}
 	}
 }
