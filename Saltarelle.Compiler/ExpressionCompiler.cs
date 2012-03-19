@@ -258,11 +258,6 @@ namespace Saltarelle.Compiler {
 			    && ((ParameterizedType)type).TypeArguments[0] == _compilation.FindType(KnownTypeCode.Boolean);
 		}
 
-		private bool IsDelegateType(IType type) {
-			var del = _compilation.FindType(KnownTypeCode.Delegate);
-			return type.GetAllBaseTypes().Any(b => b.Equals(del));
-		}
-
 		private JsExpression GetJsType(IType type) {
 			if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;
@@ -500,7 +495,7 @@ namespace Saltarelle.Compiler {
 					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent) {
 						return CompileEventAddOrRemove((MemberResolveResult)rr.Operands[0], rr.Operands[1], true);
 					}
-					else if (IsDelegateType(rr.Operands[0].Type)) {
+					else if (rr.Operands[0].Type.Kind == TypeKind.Delegate) {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodImplementation(combine);
@@ -552,7 +547,7 @@ namespace Saltarelle.Compiler {
 					if (rr.Operands[0] is MemberResolveResult && ((MemberResolveResult)rr.Operands[0]).Member is IEvent) {
 						return CompileEventAddOrRemove((MemberResolveResult)rr.Operands[0], rr.Operands[1], false);
 					}
-					else if (IsDelegateType(rr.Operands[0].Type)) {
+					else if (rr.Operands[0].Type.Kind == TypeKind.Delegate) {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodImplementation(remove);
@@ -578,7 +573,7 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Add:
 				case ExpressionType.AddChecked:
-					if (IsDelegateType(rr.Operands[0].Type)) {
+					if (rr.Operands[0].Type.Kind == TypeKind.Delegate) {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodImplementation(combine);
@@ -653,7 +648,7 @@ namespace Saltarelle.Compiler {
 
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
-					if (IsDelegateType(rr.Operands[0].Type)) {
+					if (rr.Operands[0].Type.Kind == TypeKind.Delegate) {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodImplementation(remove);
@@ -938,7 +933,7 @@ namespace Saltarelle.Compiler {
 
 		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Member is IMethod) {
-				if (rr.Member.Name == "Invoke" && IsDelegateType(rr.Member.DeclaringType)) {
+				if (rr.Member.Name == "Invoke" && rr.Member.DeclaringType.Kind == TypeKind.Delegate) {
 					// Invoke the underlying method instead of calling the Invoke method.
 					return CompileMethodInvocation(null, (IMethod)rr.Member, rr);
 				}
