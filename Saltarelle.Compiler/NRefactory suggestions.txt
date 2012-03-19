@@ -1,1 +1,0 @@
-﻿Would be good to have a way to get from IMethod to IProperty/IEvent.
