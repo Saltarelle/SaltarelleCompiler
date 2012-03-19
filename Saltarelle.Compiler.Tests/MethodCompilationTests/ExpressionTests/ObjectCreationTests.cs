@@ -310,8 +310,32 @@ class Test {
 		}
 
 		[Test]
-		public void CreatingDelegateWorks() {
-			Assert.Fail("TODO: Handle new Func<string>(MyFunction)");
+		public void CreatingDelegateWorks1() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	var f = new Func<int>(() => 0);
+	// END
+}",
+@"	var $f = function() {
+		return 0;
+	};
+");
+		}
+
+		[Test]
+		public void CreatingDelegateWorks2() {
+			AssertCorrect(
+@"int x;
+public void M() {
+	// BEGIN
+	var f = new Func<int>(() => x);
+	// END
+}",
+@"	var $f = $Bind(function() {
+		return this.$x;
+	}, this);
+");
 		}
 	}
 }
