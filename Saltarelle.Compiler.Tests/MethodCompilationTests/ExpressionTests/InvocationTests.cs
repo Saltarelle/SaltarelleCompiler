@@ -36,7 +36,7 @@ public void M() {
 		}
 
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void ExtensionMethodInvocationWorks() {
 			AssertCorrect(
 @"namespace N {
@@ -58,7 +58,7 @@ public void M() {
 ", addSkeleton: false);
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void ExtensionMethodInvocationWithReorderedAndDefaultArgumentsWorks() {
 			AssertCorrect(
 @"namespace N {
@@ -71,12 +71,12 @@ public void M() {
 			X a = null;
 			int b = 0, c = 0;
 			// BEGIN
-			a.F(y: b, x: c);
+			a.F(z: b, y: c);
 			// END
 		}
 	}
 }",
-@"	{Ex}.$F($a, $b, $c, 0);
+@"	{Ex}.$F($a, $c, $b, 0);
 ", addSkeleton: false);
 		}
 
@@ -509,7 +509,185 @@ public void M() {
 
 		[Test]
 		public void InvokingOverriddenMethodWorks() {
-			Assert.Fail("TODO, it doesn't");
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, int y) {}
+}
+class D : B {
+	public override void F(int x, int y) {}
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase({B}, '$F', $c, $d);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingShadowedMethodIsNothingSpecial() {
+			// This test looks a little strange, but the reason is that the import library must give the methods different aliases in a real scenario.
+			AssertCorrect(
+@"class B {
+	public virtual void F() {}
+}
+class D : B {
+	public new void F() {}
+	public void M() {
+		// BEGIN
+		this.F();
+		base.F();
+		// END
+	}
+}
+",
+@"	this.$F();
+	this.$F();
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingMethodOverriddenFromGenericClassWorks() {
+			AssertCorrect(
+@"class B<T> {
+	public virtual void F(T x, int y) {}
+}
+class D : B<string> {
+	public override void F(string x, int y) {}
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase($MakeGenericType({B}, {String}).$F, $c, $d);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingMethodOverriddenFromGenericClassWorks2() {
+			AssertCorrect(
+@"class B<T> {
+	public virtual void F(T x, int y) {}
+}
+class D<T2> : B<T2> {
+	public override void F(T2 x, int y) {}
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase($MakeGenericType({B}, {T2}).$F, $c, $d);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingGenericOverriddenMethodWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual void F<T>(T x, int y) {}
+}
+class D : B {
+	public override void F<U>(U x, int y) {}
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase($MakeGenericMethod({B}.$F, {Int32}), $c, $d);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingGenericMethodOverriddenFromGenericClassWorks2() {
+			AssertCorrect(
+@"class B<T> {
+	public virtual void F<U>(T x, int y) {}
+}
+class D<T2> : B<T2> {
+	public override void F<S>(T2 x, int y) {}
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase($MakeGenericType({B}, {T2}).$F, $c, $d);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingBaseVersionOfMethodInheritedFromGrandParentWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, int y) {}
+}
+class D : B {
+}
+class D2 : D {
+	public override void F(int x, int y) {}
+
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase($MakeGenericMethod({B}.$F, {Int32}), $c, $d);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingBaseVersionOfMethodDefinedInGrandParentAndOverriddenInParentWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, int y) {}
+}
+class D : B {
+	public virtual void F(int x, int y) {}
+}
+class D2 : D {
+	public override void F(int x, int y) {}
+
+	public void M() {
+		int a = 0, b = 0, c = 0, d = 0;
+		// BEGIN
+		this.F(a, b);
+		base.F(c, d);
+		// END
+	}
+}
+",
+@"	this.$F($a, $b);
+	$CallBase($MakeGenericMethod({B}.$F, {Int32}), $c, $d);
+", addSkeleton: false);
 		}
 	}
 }

@@ -126,21 +126,22 @@ namespace Saltarelle.Compiler.Tests {
 
 		public class MockRuntimeLibrary : IRuntimeLibrary {
 			public MockRuntimeLibrary() {
-				TypeIs                      = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
-				TryCast                     = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
-				Cast                        = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
-				ImplicitReferenceConversion = (e, t) => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
-				InstantiateGenericType      = (t, a) => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { t }.Concat(a));
-				InstantiateGenericMethod    = (m, a) => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
-				MakeException               = (e)    => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
-				IntegerDivision             = (n, d) => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-				Coalesce                    = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-				Lift                        = (e)    => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
-				LiftedBooleanAnd            = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
-				LiftedBooleanOr             = (a, b) => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
-				Bind                        = (f, t) => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
-				Default                     = t      => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
-				CreateArray                 = s      => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
+				TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
+				TryCast                     = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
+				Cast                        = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
+				ImplicitReferenceConversion = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
+				InstantiateGenericType      = (t, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { t }.Concat(a));
+				InstantiateGenericMethod    = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
+				MakeException               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+				IntegerDivision             = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+				Coalesce                    = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+				Lift                        = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+				LiftedBooleanAnd            = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
+				LiftedBooleanOr             = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
+				Bind                        = (f, t)        => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+				Default                     = t             => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
+				CreateArray                 = s             => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
+				CallBase                    = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), JsExpression.ArrayLiteral(a) });
 			}
 
 			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
@@ -158,6 +159,7 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
 			public Func<JsExpression, JsExpression> Default { get; set; }
 			public Func<JsExpression, JsExpression> CreateArray { get; set; }
+			public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 			
 			JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
 				return TypeIs(expression, targetType);
@@ -217,6 +219,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.CreateArray(JsExpression size) {
 				return CreateArray(size);
+			}
+
+			JsExpression IRuntimeLibrary.CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
+				return CallBase(baseType, methodName, typeArguments, thisAndArguments);
 			}
 		}
 

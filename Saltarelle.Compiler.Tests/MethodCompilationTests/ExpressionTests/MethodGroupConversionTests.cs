@@ -155,6 +155,25 @@ public void M() {
 		}
 
 		[Test]
+		public void MethodGroupConversionWorksForNonVirtualBaseCall() {
+			AssertCorrect(
+@"class B {
+	public virtual void F() {}
+}
+class D : B {
+	public override void F() {}
+	public void M() {
+		System.Action f;
+		// BEGIN
+		f = base.F;
+		// END
+	}
+}",
+@"	TODO: Determine what it should be and fix test.
+", addSkeleton: false);
+		}
+
+		[Test]
 		public void UsingAMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { System.Func<int> f; f = UnusableMethod; } }" }, namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "UnusableMethod" ? MethodImplOptions.NotUsableFromScript() : MethodImplOptions.NormalMethod(m.Name) }, errorReporter: er);

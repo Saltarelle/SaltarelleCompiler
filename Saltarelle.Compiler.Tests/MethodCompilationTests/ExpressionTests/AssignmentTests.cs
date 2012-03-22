@@ -438,5 +438,23 @@ public void M(ref int i) {
 @"	$i.$ = 1;
 ");
 		}
+
+		[Test]
+		public void NonVirtualCompoundAssignToBasePropertyWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual int P { get; set; }
+}
+class D : B {
+	public override int P { get; set; }
+	public void M() {
+		// BEGIN
+		base.P = 10;
+		// END
+	}
+}",
+@"	TODO: Determine what it should be
+", addSkeleton: false);
+		}
 	}
 }

@@ -82,5 +82,14 @@ namespace Saltarelle.Compiler {
 		/// Generates an expression that creates an array of a specified size, with all elements uninitialized.
 		/// </summary>
 		JsExpression CreateArray(JsExpression size);
+
+		/// <summary>
+		/// Generates an expression to call a base implementation of an overridden method
+		/// </summary>
+		/// <param name="baseType">Type whose implementation of the method to invoke</param>
+		/// <param name="methodName">Name of the method to invoke.</param>
+		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
+		/// <param name="thisAndArguments">Arguments to the method, including "this" as the first element.</param>
+		JsExpression CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments);
 	}
 }

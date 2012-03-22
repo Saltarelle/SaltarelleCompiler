@@ -341,8 +341,11 @@ namespace Saltarelle.Compiler {
             return result;
         }
 
-        private JsFunctionDefinitionExpression CompileConstructor(EntityDeclaration node, IMethod method, ConstructorImplOptions options) {
-            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+        private JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration node, IMethod method, ConstructorImplOptions options) {
+            var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+            var result = mc.CompileConstructor(node, method, options);
+            OnMethodCompiled(method, result, mc);
+            return result;
         }
 
         private JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, FieldImplOptions backingField) {

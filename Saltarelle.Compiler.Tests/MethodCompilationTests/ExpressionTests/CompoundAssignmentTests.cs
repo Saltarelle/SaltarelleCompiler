@@ -7,10 +7,10 @@ using NUnit.Framework;
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
 	public class CompoundAssignmentTests : MethodCompilerTestBase {
-		protected void AssertCorrectForBulkOperators(string csharp, string expected, INamingConventionResolver namingConvention = null) {
+		protected void AssertCorrectForBulkOperators(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
 			// Bulk operators are all except for division and shift right.
 			foreach (var op in new[] { "+", "*", "%", "-", "<<", "&", "|", "^" }) {
-				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), namingConvention);
+				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), namingConvention, addSkeleton);
 			}
 		}
 
@@ -950,6 +950,24 @@ public void M() {
 }",
 @"	$a = {Delegate}.$Remove($a, $b);
 ");
+		}
+
+		[Test]
+		public void NonVirtualCompoundAssignToBasePropertyWorks() {
+			AssertCorrectForBulkOperators(
+@"class B {
+	public virtual int P { get; set; }
+}
+class D : B {
+	public override int P { get; set; }
+	public void M() {
+		// BEGIN
+		base.P += 10;
+		// END
+	}
+}",
+@"	TODO: Determine what it should be
+", addSkeleton: false);
 		}
 	}
 }
