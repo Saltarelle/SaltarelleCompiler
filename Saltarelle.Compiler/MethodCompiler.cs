@@ -43,7 +43,21 @@ namespace Saltarelle.Compiler {
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod method, ConstructorImplOptions impl) {
-			return CompileCommon(ctor, ctor.Body, method, (impl.Type == ConstructorImplOptions.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
+			var result = CompileCommon(ctor, ctor.Body, method, (impl.Type == ConstructorImplOptions.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
+			if (!ctor.Initializer.IsNull) {
+				switch (ctor.Initializer.ConstructorInitializerType) {
+					case ConstructorInitializerType.Base: {
+						throw new NotImplementedException("Calling base not yet implemented");
+					}
+					case ConstructorInitializerType.This: {
+						break;
+					}
+					default:
+						throw new ArgumentException("Unknown initializer type", "ctor");
+				}
+			}
+
+			return body;
         }
     }
 }

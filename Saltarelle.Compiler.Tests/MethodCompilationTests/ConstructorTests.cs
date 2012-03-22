@@ -46,16 +46,19 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		}
 
 		[Test]
-		public void ConstructorChainingWithoutArgumentsWorks() {
-			Assert.Fail("TODO");
+		public void ConstructorChainingToUnnamedConstructorWithoutArgumentsWorks() {
 			AssertCorrect(
 @"class C {
-	[System.Runtime.CompilerServices.CompilerGenerated]
 	public C() {
+	}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C(int x) : this() {
 		int i = 0;
 	}
 }",
-@"function() {
+@"function($x) {
+	{C}.call(this);
 	var $i = 0;
 }");
 		}
@@ -91,7 +94,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		}
 
 		[Test]
-		public void ChainingToStaticMethodConstructorWorks() {
+		public void ChainingToStaticMethodConstructorFromAnotherStaticMethodConstructorWorks() {
 			Assert.Fail("TODO");
 			AssertCorrect(
 @"class C {
@@ -106,7 +109,22 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 		}
 
 		[Test]
-		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructor() {
+		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotDerivingFromObject() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void ChainingToAnonymousConstructorFromStaticMethodConstructorWorks() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void ConstructorWithoutExplicitBaseInvokerDoesNotInvokeBaseClassDefaultConstructorIfDerivingFromObject() {
 			Assert.Fail("TODO");
 		}
 
