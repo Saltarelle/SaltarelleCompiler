@@ -59,11 +59,21 @@ namespace Saltarelle.Compiler {
 		}
 
 		public JsBlockStatement Compile(Statement statement) {
+			_result = new List<JsStatement>();
 			statement.AcceptVisitor(this);
 			if (_result.Count == 1 && _result[0] is JsBlockStatement)
 				return (JsBlockStatement)_result[0];
 			else
 				return new JsBlockStatement(_result);
+		}
+
+		public IList<JsStatement> CompileConstructorInitializer(ConstructorInitializer initializer, bool currentIsStaticMethod) {
+			return _expressionCompiler.CompileConstructorInitializer((CSharpInvocationResolveResult)_resolver.Resolve(initializer), currentIsStaticMethod);
+		}
+
+		public IList<JsStatement> CompileImplicitBaseConstructorCall(IType type, bool currentIsStaticMethod) {
+			var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
+			return _expressionCompiler.CompileConstructorInitializer(new CSharpInvocationResolveResult(new TypeResolveResult(baseType), baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0]), currentIsStaticMethod);
 		}
 
 		private StatementCompiler CreateInnerCompiler() {

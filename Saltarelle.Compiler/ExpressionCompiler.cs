@@ -172,6 +172,45 @@ namespace Saltarelle.Compiler {
 			return new Result(expr, _additionalStatements);
 		}
 
+		public IList<JsStatement> CompileConstructorInitializer(CSharpInvocationResolveResult initializer, bool currentIsStaticMethod) {
+			_additionalStatements = new List<JsStatement>();
+			var impl = _namingConvention.GetConstructorImplementation((IMethod)initializer.Member);
+
+			if (currentIsStaticMethod) {
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, (IMethod)initializer.Member, initializer)));
+			}
+			else {
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(initializer.Member.DeclaringType), false, false, initializer.Arguments, initializer.GetArgumentsForCall(), initializer.GetArgumentToParameterMap());
+				var jsType           = thisAndArguments[0];
+				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
+
+				switch (impl.Type) {
+					case ConstructorImplOptions.ImplType.UnnamedConstructor:
+						_additionalStatements.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(jsType, "call"), thisAndArguments)));
+						break;
+
+					case ConstructorImplOptions.ImplType.NamedConstructor:
+						_additionalStatements.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.MemberAccess(jsType, impl.Name), "call"), thisAndArguments)));
+						break;
+
+					case ConstructorImplOptions.ImplType.StaticMethod:
+						_errorReporter.Error("Chaining from a normal constructor to a static method constructor is not supported.");
+						break;
+
+					case ConstructorImplOptions.ImplType.InlineCode:
+						throw new NotImplementedException();
+
+					default:
+						_errorReporter.Error("This constructor cannot be used from script.");
+						break;
+				}
+			}
+
+			var result = _additionalStatements;
+			_additionalStatements = null;	// Just so noone else messes with it by accident (shouldn't happen).
+			return result;
+		}
+
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
 			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized).Compile(expression, returnValueIsImportant);
 		}
@@ -891,7 +930,7 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private JsExpression CompileConstrutorInvocation(ConstructorImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
+		private JsExpression CompileConstructorInvocation(ConstructorImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 
 			JsExpression constructorCall;
@@ -908,6 +947,9 @@ namespace Saltarelle.Compiler {
 				case ConstructorImplOptions.ImplType.StaticMethod:
 					constructorCall = JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
 					break;
+
+				case ConstructorImplOptions.ImplType.InlineCode:
+					throw new NotImplementedException();
 
 				default:
 					_errorReporter.Error("This constructor cannot be used from script.");
@@ -945,7 +987,7 @@ namespace Saltarelle.Compiler {
 				else {
 					var method = (IMethod)rr.Member;
 					if (method.IsConstructor) {
-						return CompileConstrutorInvocation(_namingConvention.GetConstructorImplementation(method), method, rr);
+						return CompileConstructorInvocation(_namingConvention.GetConstructorImplementation(method), method, rr);
 					}
 					else {
 						return CompileMethodInvocation(_namingConvention.GetMethodImplementation(method), method, rr);

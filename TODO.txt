@@ -6,7 +6,6 @@ goto
 Metadata importer
 Reference importer
 Output writer
-Constructor chaining/base constructor invocation
 Field initialization
 User-defined operators
 Conversions

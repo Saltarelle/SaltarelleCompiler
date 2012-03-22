@@ -170,6 +170,11 @@ public void M() {
 ", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.StaticMethod("create_" + c.DeclaringType.Name), GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name) });
 		}
 
+		[Test, Ignore("TODO")]
+		public void ChainingToConstructorImplementedAsInlineCodeWorks() {
+			Assert.Fail("TODO");
+		}
+
 		[Test]
 		public void UsingConstructorMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
