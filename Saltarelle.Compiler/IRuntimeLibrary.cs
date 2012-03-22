@@ -86,10 +86,19 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Generates an expression to call a base implementation of an overridden method
 		/// </summary>
-		/// <param name="baseType">Type whose implementation of the method to invoke</param>
+		/// <param name="baseType">Type whose implementation of the method to invoke.</param>
 		/// <param name="methodName">Name of the method to invoke.</param>
 		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
 		/// <param name="thisAndArguments">Arguments to the method, including "this" as the first element.</param>
 		JsExpression CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments);
+
+		/// <summary>
+		/// Generates an expression to bind a base implementation of an overridden method. Used when converting a method group to a delegate.
+		/// </summary>
+		/// <param name="baseType">Type whose implementation of the method to bind.</param>
+		/// <param name="methodName">Name of the method to bind.</param>
+		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
+		/// <param name="@this">Expression to use for "this" (target of the method call).</param>
+		JsExpression BindBaseCall(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, JsExpression @this);
 	}
 }

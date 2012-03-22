@@ -1124,5 +1124,45 @@ public void M() {
 @"	{C}.$a = $Lift({C}.$a + 1);
 ");
 		}
+
+		[Test]
+		public void PrefixWorksForBaseCall() {
+			AssertCorrect(
+@"class B {
+	public virtual int P { get; set; }
+}
+class D : B {
+	public override int P { get; set; }
+	public void M() {
+		// BEGIN
+		int i = ++base.P;
+		// END
+	}
+}",
+@"	var $tmp1 = $CallBase({B}, 'get_$P', [], [this]) + 1;
+	$CallBase({B}, 'set_$P', [], [this, $tmp1]);
+	var $i = $tmp1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PostfixWorksForBaseCall() {
+			AssertCorrect(
+@"class B {
+	public virtual int P { get; set; }
+}
+class D : B {
+	public override int P { get; set; }
+	public void M() {
+		// BEGIN
+		int i = base.P++;
+		// END
+	}
+}",
+@"	var $tmp1 = $CallBase({B}, 'get_$P', [], [this]);
+	$CallBase({B}, 'set_$P', [], [this, $tmp1 + 1]);
+	var $i = $tmp1;
+", addSkeleton: false);
+		}
 	}
 }

@@ -142,6 +142,7 @@ namespace Saltarelle.Compiler.Tests {
 				Default                     = t             => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
 				CreateArray                 = s             => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
 				CallBase                    = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), JsExpression.ArrayLiteral(a) });
+				BindBaseCall                = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
 			}
 
 			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
@@ -160,6 +161,7 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<JsExpression, JsExpression> Default { get; set; }
 			public Func<JsExpression, JsExpression> CreateArray { get; set; }
 			public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
+			public Func<JsExpression, string, IEnumerable<JsExpression>, JsExpression, JsExpression> BindBaseCall { get; set; }
 			
 			JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
 				return TypeIs(expression, targetType);
@@ -223,6 +225,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
 				return CallBase(baseType, methodName, typeArguments, thisAndArguments);
+			}
+
+			JsExpression IRuntimeLibrary.BindBaseCall(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, JsExpression @this) {
+				return BindBaseCall(baseType, methodName, typeArguments, @this);
 			}
 		}
 

@@ -966,7 +966,7 @@ class D : B {
 		// END
 	}
 }",
-@"	TODO: Determine what it should be
+@"	$CallBase({B}, 'set_$P', [], [this, $CallBase({B}, 'get_$P', [], [this]) + 10]);
 ", addSkeleton: false);
 		}
 	}

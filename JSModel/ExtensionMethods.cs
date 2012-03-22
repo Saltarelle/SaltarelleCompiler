@@ -11,8 +11,6 @@ namespace Saltarelle.Compiler.JSModel {
                 return new List<T>().AsReadOnly();
             else if (source is ReadOnlyCollection<T>)
                 return (ReadOnlyCollection<T>)source;
-            else if (source is List<T>)
-                return ((List<T>)source).AsReadOnly();
             else
                 return new List<T>(source).AsReadOnly();
         }

@@ -348,7 +348,6 @@ namespace Saltarelle.Compiler {
 
 								JsExpression oldValue, jsOtherOperand;
 								if (oldValueIsImportant) {
-								#warning TODO
 									thisAndArguments.Add(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, new IType[0], mrr.Member.IsVirtual && !mrr.IsVirtualCall));
 									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, thisAndArguments) : null);
 									oldValue = thisAndArguments[thisAndArguments.Count - 1];
@@ -372,13 +371,11 @@ namespace Saltarelle.Compiler {
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
 									thisAndArguments.Add(newValue);
-#warning TODO
 									_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0], mrr.Member.IsVirtual && !mrr.IsVirtualCall)));
 									return valueToReturn;
 								}
 								else {
 									thisAndArguments.Add(valueFactory(oldValue, jsOtherOperand));
-#warning TODO
 									return CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0], mrr.Member.IsVirtual && !mrr.IsVirtualCall);
 								}
 							}
@@ -1176,22 +1173,31 @@ namespace Saltarelle.Compiler {
 					return JsExpression.Number(0);
 				}
 
-				JsExpression jsTarget, jsMethod;
+				var jsTypeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(GetJsType).ToList() : new List<JsExpression>();
 
-				if (rr.Conversion.Method.IsStatic) {
-					jsTarget = null;
-					jsMethod = JsExpression.MemberAccess(GetJsType(mgrr.TargetResult.Type), impl.Name);
+				if (rr.Conversion.Method.IsVirtual && !rr.Conversion.IsVirtualMethodLookup) {
+					// base.Method
+					var jsTarget = InnerCompile(mgrr.TargetResult, true);
+					return _runtimeLibrary.BindBaseCall(GetJsType(rr.Conversion.Method.DeclaringType), impl.Name, jsTypeArguments, jsTarget);
 				}
 				else {
-					jsTarget = InnerCompile(mgrr.TargetResult, true);
-					jsMethod = JsExpression.MemberAccess(jsTarget, impl.Name);
-				}
+					JsExpression jsTarget, jsMethod;
 
-				if (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) {
-					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(GetJsType));
-				}
+					if (rr.Conversion.Method.IsStatic) {
+						jsTarget = null;
+						jsMethod = JsExpression.MemberAccess(GetJsType(mgrr.TargetResult.Type), impl.Name);
+					}
+					else {
+						jsTarget = InnerCompile(mgrr.TargetResult, true);
+						jsMethod = JsExpression.MemberAccess(jsTarget, impl.Name);
+					}
 
-				return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
+					if (jsTypeArguments.Count > 0) {
+						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
+					}
+
+					return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
+				}
 			}
 			else if (rr.Conversion.IsImplicit) {
 				// Null literal conversion have no property, should report this

@@ -155,29 +155,173 @@ public void M() {
 		}
 
 		[Test]
-		public void MethodGroupConversionWorksForNonVirtualBaseCall() {
-			AssertCorrect(
-@"class B {
-	public virtual void F() {}
-}
-class D : B {
-	public override void F() {}
-	public void M() {
-		System.Action f;
-		// BEGIN
-		f = base.F;
-		// END
-	}
-}",
-@"	TODO: Determine what it should be and fix test.
-", addSkeleton: false);
-		}
-
-		[Test]
 		public void UsingAMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { System.Func<int> f; f = UnusableMethod; } }" }, namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "UnusableMethod" ? MethodImplOptions.NotUsableFromScript() : MethodImplOptions.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
 		}
+
+		[Test]
+		public void MethodGroupConversionForBaseVersionOfOverriddenMethodWorks() {
+			AssertCorrect(
+@"
+class B {
+	public virtual void F(int x, int y) {}
+}
+class D : B {
+	public override void F(int x, int y) {}
+	public void M() {
+		System.Action<int, int> a;
+		// BEGIN
+		a = this.F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind(this.$F, this);
+	$a = $BindBaseCall({B}, '$F', [], this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionForMethodOverriddenFromGenericClassWorks() {
+			AssertCorrect(
+@"class B<T> {
+	public virtual void F(T x, int y) {}
+}
+class D : B<string> {
+	public override void F(string x, int y) {}
+	public void M() {
+		System.Action<string, int> a;
+		// BEGIN
+		a = this.F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind(this.$F, this);
+	$a = $BindBaseCall($InstantiateGenericType({B}, {String}), '$F', [], this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionForMethodOverriddenFromGenericClassWorks2() {
+			AssertCorrect(
+@"class B<T> {
+	public virtual void F(T x, int y) {}
+}
+class D<T2> : B<T2> {
+	public override void F(T2 x, int y) {}
+	public void M() {
+		System.Action<T2, int> a;
+		// BEGIN
+		a = this.F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind(this.$F, this);
+	$a = $BindBaseCall($InstantiateGenericType({B}, $T2), '$F', [], this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionForGenericOverriddenMethodWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual void F<T>(T x, int y) {}
+}
+class D : B {
+	public override void F<U>(U x, int y) {}
+	public void M() {
+		System.Action<int, int> a;
+		// BEGIN
+		a = this.F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
+	$a = $BindBaseCall({B}, '$F', [{Int32}], this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionForGenericMethodOverriddenFromGenericClassWorks2() {
+			AssertCorrect(
+@"class B<T> {
+	public virtual void F<U>(U x, int y) {}
+}
+class D<T2> : B<T2> {
+	public override void F<S>(S x, int y) {}
+	public void M() {
+		System.Action<int, int> a;
+		// BEGIN
+		a = F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
+	$a = $BindBaseCall($InstantiateGenericType({B}, $T2), '$F', [{Int32}], this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionForBaseVersionOfMethodInheritedFromGrandParentWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, int y) {}
+}
+class D : B {
+}
+class D2 : D {
+	public override void F(int x, int y) {}
+
+	public void M() {
+		System.Action<int, int> a;
+		// BEGIN
+		a = this.F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind(this.$F, this);
+	$a = $BindBaseCall({B}, '$F', [], this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionForBaseVersionOfMethodDefinedInGrandParentAndOverriddenInParentWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, int y) {}
+}
+class D : B {
+	public virtual void F(int x, int y) {}
+}
+class D2 : D {
+	public override void F(int x, int y) {}
+
+	public void M() {
+		System.Action<int, int> a;
+		// BEGIN
+		a = this.F;
+		a = base.F;
+		// END
+	}
+}
+",
+@"	$a = $Bind(this.$F, this);
+	$a = $BindBaseCall({D}, '$F', [], this);
+", addSkeleton: false);
+		}
+
 	}
 }

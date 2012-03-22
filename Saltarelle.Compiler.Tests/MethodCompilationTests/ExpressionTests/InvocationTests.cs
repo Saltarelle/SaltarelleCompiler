@@ -525,29 +525,7 @@ class D : B {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase({B}, '$F', $c, $d);
-", addSkeleton: false);
-		}
-
-		[Test]
-		public void InvokingShadowedMethodIsNothingSpecial() {
-			// This test looks a little strange, but the reason is that the import library must give the methods different aliases in a real scenario.
-			AssertCorrect(
-@"class B {
-	public virtual void F() {}
-}
-class D : B {
-	public new void F() {}
-	public void M() {
-		// BEGIN
-		this.F();
-		base.F();
-		// END
-	}
-}
-",
-@"	this.$F();
-	this.$F();
+	$CallBase({B}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -560,7 +538,8 @@ class D : B {
 class D : B<string> {
 	public override void F(string x, int y) {}
 	public void M() {
-		int a = 0, b = 0, c = 0, d = 0;
+		string a = null, c = null;
+		int b = 0, d = 0;
 		// BEGIN
 		this.F(a, b);
 		base.F(c, d);
@@ -569,7 +548,7 @@ class D : B<string> {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase($MakeGenericType({B}, {String}).$F, $c, $d);
+	$CallBase($InstantiateGenericType({B}, {String}), '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -582,7 +561,8 @@ class D : B<string> {
 class D<T2> : B<T2> {
 	public override void F(T2 x, int y) {}
 	public void M() {
-		int a = 0, b = 0, c = 0, d = 0;
+		T2 a = default(T2), c = default(T2);
+		int b = 0, d = 0;
 		// BEGIN
 		this.F(a, b);
 		base.F(c, d);
@@ -591,7 +571,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase($MakeGenericType({B}, {T2}).$F, $c, $d);
+	$CallBase($InstantiateGenericType({B}, $T2), '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -612,8 +592,8 @@ class D : B {
 	}
 }
 ",
-@"	this.$F($a, $b);
-	$CallBase($MakeGenericMethod({B}.$F, {Int32}), $c, $d);
+@"	$InstantiateGenericMethod(this.$F, {Int32}).call(this, $a, $b);
+	$CallBase({B}, '$F', [{Int32}], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -621,21 +601,21 @@ class D : B {
 		public void InvokingGenericMethodOverriddenFromGenericClassWorks2() {
 			AssertCorrect(
 @"class B<T> {
-	public virtual void F<U>(T x, int y) {}
+	public virtual void F<U>(U x, int y) {}
 }
 class D<T2> : B<T2> {
-	public override void F<S>(T2 x, int y) {}
+	public override void F<S>(S x, int y) {}
 	public void M() {
 		int a = 0, b = 0, c = 0, d = 0;
 		// BEGIN
-		this.F(a, b);
+		F(a, b);
 		base.F(c, d);
 		// END
 	}
 }
 ",
-@"	this.$F($a, $b);
-	$CallBase($MakeGenericType({B}, {T2}).$F, $c, $d);
+@"	$InstantiateGenericMethod(this.$F, {Int32}).call(this, $a, $b);
+	$CallBase($InstantiateGenericType({B}, $T2), '$F', [{Int32}], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -660,7 +640,7 @@ class D2 : D {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase($MakeGenericMethod({B}.$F, {Int32}), $c, $d);
+	$CallBase({B}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -686,7 +666,7 @@ class D2 : D {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase($MakeGenericMethod({B}.$F, {Int32}), $c, $d);
+	$CallBase({D}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 	}
