@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler {
         }
 
 		private void CreateCompilationContext(EntityDeclaration entity, IMethod method, string thisAlias) {
-            var usedNames           = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p)));
+            var usedNames           = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p))) : new HashSet<string>();
             variables               = entity != null ? new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames) : new Dictionary<IVariable, VariableData>();
             nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions.ToDictionary(f => f.ResolveResult);
@@ -75,6 +75,11 @@ namespace Saltarelle.Compiler {
 
         public JsFunctionDefinitionExpression CompileDefaultConstructor(IMethod constructor, ConstructorImplOptions impl) {
             return CompileConstructor(null, constructor, impl);
+        }
+
+        public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {
+            CreateCompilationContext(null, null, null);
+            return statementCompiler.CompileFieldInitializer(field, expression);
         }
     }
 }

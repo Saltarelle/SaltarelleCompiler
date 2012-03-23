@@ -61,5 +61,25 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var m = FindInstanceMethod("C.X");
             m.Should().BeNull();
         }
+
+        [Test]
+        public void StaticConstructorBodyGetsAddedLastInTheStaticInitStatements() {
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorImplOptions.Unnamed(); } };
+            Compile(new[] {
+@"class C {
+    static int x = 0;
+    static C() {
+        int z = 2;
+    }
+    static int y = 1;
+}" }, namingConvention: namingConvention);
+
+            var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
+            cctor.Should().Be(
+@"{C}.$x = 0;
+{C}.$y = 1;
+var $z = 2;
+");
+        }
     }
 }

@@ -76,6 +76,11 @@ namespace Saltarelle.Compiler {
 			return _expressionCompiler.CompileConstructorInitializer(new CSharpInvocationResolveResult(new TypeResolveResult(baseType), baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0]), currentIsStaticMethod);
 		}
 
+        public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {
+            var result = _expressionCompiler.Compile(ResolveWithConversion(expression), true);
+            return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
+        }
+
 		private StatementCompiler CreateInnerCompiler() {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _nestedFunctionContext, _expressionCompiler, _nextTemporaryVariableIndex, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}

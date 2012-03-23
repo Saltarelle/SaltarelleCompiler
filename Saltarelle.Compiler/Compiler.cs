@@ -173,6 +173,10 @@ namespace Saltarelle.Compiler {
             return _types.Values.Cast<JsType>().Concat(enums).Where(t => t != null);
         }
 
+        private MethodCompiler CreateMethodCompiler() {
+            return new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+        }
+
         private void AddCompiledMethodToType(JsClass jsClass, IMethod method, MethodImplOptions options, JsMethod jsMethod) {
             if ((options.Type == MethodImplOptions.ImplType.NormalMethod && method.IsStatic) || options.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
                 jsClass.StaticMethods.Add(jsMethod);
@@ -213,7 +217,7 @@ namespace Saltarelle.Compiler {
 
         private void MaybeCompileAndAddConstructorToType(JsClass jsClass, ConstructorDeclaration node, IMethod constructor, ConstructorImplOptions options) {
             if (options.GenerateCode) {
-                var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+                var mc = CreateMethodCompiler();
                 var compiled = mc.CompileConstructor(node, constructor, options);
                 OnMethodCompiled(constructor, compiled, mc);
                 AddCompiledConstructorToType(jsClass, constructor, options, compiled);
@@ -223,7 +227,7 @@ namespace Saltarelle.Compiler {
         private void MaybeAddDefaultConstructorToType(JsClass jsClass, IMethod constructor) {
             var options = _namingConvention.GetConstructorImplementation(constructor);
             if (options.GenerateCode) {
-                var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+                var mc = CreateMethodCompiler();
                 var compiled = mc.CompileDefaultConstructor(constructor, options);
                 OnMethodCompiled(constructor, compiled, mc);
                 AddCompiledConstructorToType(jsClass, constructor, options, compiled);
@@ -231,7 +235,7 @@ namespace Saltarelle.Compiler {
         }
 
         private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, Statement body, IMethod method, MethodImplOptions options) {
-            var mc = new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+            var mc = CreateMethodCompiler();
             var result = mc.CompileMethod(node, body, method, options);
             OnMethodCompiled(method, result, mc);
             return result;
@@ -274,10 +278,10 @@ namespace Saltarelle.Compiler {
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             // TODO
             if (isStatic) {
-                jsClass.StaticInitStatements.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), JsExpression.Null)));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), initializer));
             }
             else {
-                jsClass.InstanceInitStatements.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, fieldName), JsExpression.Null)));
+                jsClass.InstanceInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
             }
         }
 
@@ -289,8 +293,9 @@ namespace Saltarelle.Compiler {
                     return;
                 }
                 GetJsClass(resolveResult.Type.GetDefinition());
+
+                base.VisitTypeDeclaration(typeDeclaration);
             }
-            base.VisitTypeDeclaration(typeDeclaration);
         }
 
         public override void VisitMethodDeclaration(MethodDeclaration methodDeclaration) {
@@ -349,7 +354,12 @@ namespace Saltarelle.Compiler {
             if (jsClass == null)
                 return;
 
-            MaybeCompileAndAddConstructorToType(jsClass, constructorDeclaration, method, _namingConvention.GetConstructorImplementation(method));
+            if (method.IsStatic) {
+                jsClass.StaticInitStatements.AddRange(CompileMethod(constructorDeclaration, constructorDeclaration.Body, method, MethodImplOptions.NormalMethod("X")).Body.Statements);
+            }
+            else {
+                MaybeCompileAndAddConstructorToType(jsClass, constructorDeclaration, method, _namingConvention.GetConstructorImplementation(method));
+            }
         }
 
 
