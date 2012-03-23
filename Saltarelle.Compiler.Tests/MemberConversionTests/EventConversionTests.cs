@@ -84,10 +84,11 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticInitStatements.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
-
         [Test]
         public void BackingFieldsForAutoEventsWithInitializerUseThatInitializer() {
-            Assert.Inconclusive("TODO");
+            Compile(new[] { "class C { public static System.EventHandler GetHandler() { return null; } public event System.EventHandler Event1 = new System.EventHandler(null), Event2 = GetHandler(); }" });
+            FindInstanceFieldInitializer("C.$Event1").Should().Be("null");
+            FindInstanceFieldInitializer("C.$Event2").Should().Be("{C}.GetHandler()");
         }
 
         [Test]
