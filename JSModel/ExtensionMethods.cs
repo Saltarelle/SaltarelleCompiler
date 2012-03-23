@@ -15,6 +15,11 @@ namespace Saltarelle.Compiler.JSModel {
                 return new List<T>(source).AsReadOnly();
         }
 
+        public static void AddRange<T>(this IList<T> list, IEnumerable<T> items) {
+            foreach (var item in items)
+                list.Add(item);
+        }
+
         private static readonly Regex _jsIdentifierRegex = new Regex("^[_$a-z][_$a-z0-9]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         public static bool IsValidJavaScriptIdentifier(this string s) {

@@ -763,14 +763,13 @@ namespace Saltarelle.Compiler {
 			}
 			else if (rr.Member is IEvent) {
 				var eimpl = _namingConvention.GetEventImplementation((IEvent)rr.Member);
-				var fimpl = (eimpl.Type != EventImplOptions.ImplType.NotUsableFromScript ? _namingConvention.GetAutoEventBackingFieldImplementation((IEvent)rr.Member) : FieldImplOptions.NotUsableFromScript());
-				if (fimpl.Type == FieldImplOptions.ImplType.Field) {
-					return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), fimpl.Name);
-				}
-				else {
-					_errorReporter.Error("Cannot use backing field of event " + rr.Member.DeclaringType + "." + rr.Member.Name + " from script.");
+                if (eimpl.Type == EventImplOptions.ImplType.NotUsableFromScript) {
+					_errorReporter.Error("Cannot use event " + rr.Member.DeclaringType + "." + rr.Member.Name + " from script.");
 					return JsExpression.Number(0);
-				}
+                }
+
+				var fname = _namingConvention.GetAutoEventBackingFieldName((IEvent)rr.Member);
+				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), fname);
 			}
 			else
 				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());

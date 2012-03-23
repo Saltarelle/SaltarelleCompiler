@@ -10,6 +10,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 
 namespace Saltarelle.Compiler.Tests {
@@ -34,27 +35,27 @@ namespace Saltarelle.Compiler.Tests {
 
         protected class MockNamingConventionResolver : INamingConventionResolver {
             public MockNamingConventionResolver() {
-                GetTypeName                               = t => t.Name;
-                GetTypeParameterName                      = t => "$" + t.Name;
-                GetMethodImplementation                   = m => MethodImplOptions.NormalMethod(m.Name);
-                GetConstructorImplementation              = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
-                GetPropertyImplementation                 = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name));
-                GetAutoPropertyBackingFieldImplementation = p => FieldImplOptions.Field("$" + p.Name);
-                GetFieldImplementation                    = f => FieldImplOptions.Field("$" + f.Name);
-                GetEventImplementation                    = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + e.Name), MethodImplOptions.NormalMethod("remove_" + e.Name));
-                GetAutoEventBackingFieldImplementation    = e => FieldImplOptions.Field("$" + e.Name);
-                GetEnumValueName                          = f => "$" + f.Name;
-                GetVariableName                           = (v, used) => {
-                                                                             string baseName = "$" + v.Name;
-                                                                             if (!used.Contains(baseName))
-                                                                                 return baseName;
-                                                                             int i = 2;
-                                                                             while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
-                                                                                i++;
-                                                                             return baseName + i.ToString(CultureInfo.InvariantCulture);
-                                                                         };
-				GetTemporaryVariableName                  = index => string.Format(CultureInfo.InvariantCulture, "$tmp{0}", index + 1);
-				ThisAlias                                 = "$this";
+                GetTypeName                     = t => t.Name;
+                GetTypeParameterName            = t => "$" + t.Name;
+                GetMethodImplementation         = m => MethodImplOptions.NormalMethod(m.Name);
+                GetConstructorImplementation    = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
+                GetPropertyImplementation       = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name));
+                GetAutoPropertyBackingFieldName = p => "$" + p.Name;
+                GetFieldImplementation          = f => FieldImplOptions.Field("$" + f.Name);
+                GetEventImplementation          = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + e.Name), MethodImplOptions.NormalMethod("remove_" + e.Name));
+                GetAutoEventBackingFieldName    = e => "$" + e.Name;
+                GetEnumValueName                = f => "$" + f.Name;
+                GetVariableName                 = (v, used) => {
+                                                                   string baseName = "$" + v.Name;
+                                                                   if (!used.Contains(baseName))
+                                                                       return baseName;
+                                                                   int i = 2;
+                                                                   while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
+                                                                      i++;
+                                                                   return baseName + i.ToString(CultureInfo.InvariantCulture);
+                                                               };
+				GetTemporaryVariableName        = index => string.Format(CultureInfo.InvariantCulture, "$tmp{0}", index + 1);
+				ThisAlias                       = "$this";
             }
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
@@ -62,10 +63,10 @@ namespace Saltarelle.Compiler.Tests {
             public Func<IMethod, MethodImplOptions> GetMethodImplementation { get; set; }
             public Func<IMethod, ConstructorImplOptions> GetConstructorImplementation { get; set; }
             public Func<IProperty, PropertyImplOptions> GetPropertyImplementation { get; set; }
-            public Func<IProperty, FieldImplOptions> GetAutoPropertyBackingFieldImplementation { get; set; }
+            public Func<IProperty, string> GetAutoPropertyBackingFieldName { get; set; }
             public Func<IField, FieldImplOptions> GetFieldImplementation { get; set; }
             public Func<IEvent, EventImplOptions> GetEventImplementation { get; set; }
-            public Func<IEvent, FieldImplOptions> GetAutoEventBackingFieldImplementation { get; set; }
+            public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
             public Func<IField, string> GetEnumValueName { get; set; }
             public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
 			public Func<int, string> GetTemporaryVariableName { get; set; }
@@ -91,8 +92,8 @@ namespace Saltarelle.Compiler.Tests {
                 return GetPropertyImplementation(property);
             }
 
-            FieldImplOptions INamingConventionResolver.GetAutoPropertyBackingFieldImplementation(IProperty property) {
-                return GetAutoPropertyBackingFieldImplementation(property);
+            string INamingConventionResolver.GetAutoPropertyBackingFieldName(IProperty property) {
+                return GetAutoPropertyBackingFieldName(property);
             }
 
             FieldImplOptions INamingConventionResolver.GetFieldImplementation(IField field) {
@@ -103,8 +104,8 @@ namespace Saltarelle.Compiler.Tests {
                 return GetEventImplementation(evt);
             }
 
-            FieldImplOptions INamingConventionResolver.GetAutoEventBackingFieldImplementation(IEvent evt) {
-                return GetAutoEventBackingFieldImplementation(evt);
+            string INamingConventionResolver.GetAutoEventBackingFieldName(IEvent evt) {
+                return GetAutoEventBackingFieldName(evt);
             }
 
             string INamingConventionResolver.GetEnumValueName(IField value) {
@@ -314,28 +315,44 @@ namespace Saltarelle.Compiler.Tests {
             return cls.InstanceMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
         }
 
+        protected string FindInstanceFieldInitializer(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.InstanceInitStatements.OfType<JsExpressionStatement>()
+                                             .Select(s => s.Expression)
+                                             .OfType<JsBinaryExpression>()
+                                             .Where(be =>    be.NodeType == ExpressionNodeType.Assign
+                                                          && be.Left is JsMemberAccessExpression
+                                                          && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
+                                                          && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                             .Select(be => OutputFormatter.Format(be.Right, true))
+                                             .SingleOrDefault();
+        }
+
+        protected string FindStaticFieldInitializer(string name) {
+            var lastDot = name.LastIndexOf('.');
+            var cls = FindClass(name.Substring(0, lastDot));
+            return cls.StaticInitStatements.OfType<JsExpressionStatement>()
+                                           .Select(s => s.Expression)
+                                           .OfType<JsBinaryExpression>()
+                                           .Where(be =>    be.NodeType == ExpressionNodeType.Assign
+                                                        && be.Left is JsMemberAccessExpression
+                                                        && ((JsMemberAccessExpression)be.Left).Target is JsTypeReferenceExpression
+                                                        && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                           .Select(be => OutputFormatter.Format(be.Right, true))
+                                           .SingleOrDefault();
+        }
+
         protected JsMethod FindStaticMethod(string name) {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
             return cls.StaticMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
         }
 
-        protected JsConstructor FindConstructor(string name) {
+        protected JsNamedConstructor FindNamedConstructor(string name) {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
-            return cls.Constructors.SingleOrDefault(m => (m.Name ?? "<default>") == name.Substring(lastDot + 1));
-        }
-
-        protected JsField FindInstanceField(string name) {
-            var lastDot = name.LastIndexOf('.');
-            var cls = FindClass(name.Substring(0, lastDot));
-            return cls.InstanceFields.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
-        }
-
-        protected JsField FindStaticField(string name) {
-            var lastDot = name.LastIndexOf('.');
-            var cls = FindClass(name.Substring(0, lastDot));
-            return cls.StaticFields.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
+            return cls.NamedConstructors.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
         }
 
         protected JsEnumValue FindEnumValue(string name) {

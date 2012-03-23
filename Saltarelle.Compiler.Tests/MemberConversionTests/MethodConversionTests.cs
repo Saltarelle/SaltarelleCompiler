@@ -95,10 +95,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", additionalNames: new[] { "X1", "X2" } ) };
             Compile(new[] { "class C { public void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
-            cls.InstanceMethods.Should().HaveCount(3);
-            cls.InstanceMethods.Should().Contain(m => m.Name == "X");
-            cls.InstanceMethods.Should().Contain(m => m.Name == "X1");
-            cls.InstanceMethods.Should().Contain(m => m.Name == "X2");
+            cls.InstanceMethods.Should().HaveCount(1);
+            FindInstanceMethod("C.X").AdditionalNames.Should().BeEquivalentTo(new[] { "X1", "X2" });
         }
 
         [Test]
@@ -106,10 +104,8 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", additionalNames: new[] { "X1", "X2" } ) };
             Compile(new[] { "class C { public static void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
-            cls.StaticMethods.Should().HaveCount(3);
-            cls.StaticMethods.Should().Contain(m => m.Name == "X");
-            cls.StaticMethods.Should().Contain(m => m.Name == "X1");
-            cls.StaticMethods.Should().Contain(m => m.Name == "X2");
+            cls.StaticMethods.Should().HaveCount(1);
+            FindStaticMethod("C.X").AdditionalNames.Should().BeEquivalentTo(new[] { "X1", "X2" });
         }
 
         [Test]
@@ -118,7 +114,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindStaticMethod("C.op_Equality").Should().NotBeNull();
         }
 
-        [Test, Ignore("Partial methods lack support in NRefactory")]
+        [Test]
         public void PartialMethodWithoutDefinitionIsNotImported() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => { throw new InvalidOperationException(); } };
             Compile(new[] { "partial class C { private partial void M(); }" }, namingConvention: namingConvention);
@@ -126,61 +122,48 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
 
-        [Test, Ignore("Partial methods lack support in NRefactory")]
+        [Test]
         public void OverloadedPartialMethodsWork() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("$M_" + m.Parameters.Count) };
             Compile(new[] { "partial class C { partial void M(); partial void M(int i); }", "partial class C { partial void M(int i) {} }" }, namingConvention: namingConvention);
-            #warning TODO: Find out why code below fails
             Assert.That(FindInstanceMethod("C.$M_0"), Is.Null);
-            Assert.That(FindInstanceMethod("C.$M_1"), Is.Null);
-            #if FALSE
-            FindInstanceMethod("C.$M_0").Should().BeNull();
-            FindInstanceMethod("C.$M_1").Should().NotBeNull();
-            #endif
+            Assert.That(FindInstanceMethod("C.$M_1"), Is.Not.Null);
         }
 
-        [Test, Ignore("Partial methods lack support in NRefactory")]
+        [Test]
         public void PartialMethodWithDeclarationAndDefinitionIsImported() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("$M") };
             Compile(new[] { "partial class C { partial void M(); }", "partial class C { partial void M() {} }" }, namingConvention: namingConvention);
-            FindClass("C").InstanceMethods.Should().BeEmpty();
+            FindInstanceMethod("C.$M").Should().NotBeNull();
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForInstanceMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
-            FindInstanceMethod("C.X1").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
-            FindInstanceMethod("C.X2").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForInstanceMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.X").TypeParameterNames.Should().BeEmpty();
-            FindInstanceMethod("C.X1").TypeParameterNames.Should().BeEmpty();
-            FindInstanceMethod("C.X2").TypeParameterNames.Should().BeEmpty();
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForStaticMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", additionalNames: new[] { "X1", "X2" }), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
-            FindStaticMethod("C.X1").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
-            FindStaticMethod("C.X2").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForStaticMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", additionalNames: new[] { "X1", "X2" }, ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodImplOptions.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().BeEmpty();
-            FindStaticMethod("C.X1").TypeParameterNames.Should().BeEmpty();
-            FindStaticMethod("C.X2").TypeParameterNames.Should().BeEmpty();
         }
     }
 }

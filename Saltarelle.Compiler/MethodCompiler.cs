@@ -29,9 +29,9 @@ namespace Saltarelle.Compiler {
         }
 
 		private void CreateCompilationContext(EntityDeclaration entity, IMethod method, string thisAlias) {
-            var usedNames      = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p)));
-            variables          = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
-            nestedFunctionsRoot = new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables);
+            var usedNames           = new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p)));
+            variables               = entity != null ? new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames) : new Dictionary<IVariable, VariableData>();
+            nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions.ToDictionary(f => f.ResolveResult);
 
 			statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, null);
@@ -42,34 +42,39 @@ namespace Saltarelle.Compiler {
             return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), statementCompiler.Compile(body), null);
         }
 
-        public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod method, ConstructorImplOptions impl) {
-			CreateCompilationContext(ctor, method, (impl.Type == ConstructorImplOptions.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
+        public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, ConstructorImplOptions impl) {
+			CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorImplOptions.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
 			var body = new List<JsStatement>();
 
 			var systemObject = _compilation.FindType(KnownTypeCode.Object);
 			if (impl.Type == ConstructorImplOptions.ImplType.StaticMethod) {
-				if (!ctor.Initializer.IsNull) {
+				if (ctor != null && !ctor.Initializer.IsNull) {
 					body.AddRange(statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 				}
-				else if (!method.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-					body.AddRange(statementCompiler.CompileImplicitBaseConstructorCall(method.DeclaringType, true));
+				else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
+					body.AddRange(statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, true));
 				}
 				else {
 					body.Add(new JsVariableDeclarationStatement(_namingConvention.ThisAlias, JsExpression.ObjectLiteral()));
 				}
 			}
 			else {
-				if (!ctor.Initializer.IsNull) {
+				if (ctor != null && !ctor.Initializer.IsNull) {
 					body.AddRange(statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 				}
-				else if (!method.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-					body.AddRange(statementCompiler.CompileImplicitBaseConstructorCall(method.DeclaringType, false));
+				else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
+					body.AddRange(statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, false));
 				}
 			}
 
-			body.AddRange(statementCompiler.Compile(ctor.Body).Statements);
+            if (ctor != null)
+			    body.AddRange(statementCompiler.Compile(ctor.Body).Statements);
 
-			return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
+			return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
+        }
+
+        public JsFunctionDefinitionExpression CompileDefaultConstructor(IMethod constructor, ConstructorImplOptions impl) {
+            return CompileConstructor(null, constructor, impl);
         }
     }
 }

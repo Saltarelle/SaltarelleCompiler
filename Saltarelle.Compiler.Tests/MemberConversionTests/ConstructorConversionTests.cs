@@ -12,10 +12,9 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         public void DefaultConstructorIsInsertedIfNoConstructorIsDefined() {
             Compile(new[] { "class C {}" });
             var cls = FindClass("C");
-            cls.Constructors.Should().HaveCount(1);
-            cls.Constructors[0].Name.Should().BeNull();
-            cls.Constructors[0].Definition.Should().NotBeNull();
-            cls.Constructors[0].Definition.ParameterNames.Should().HaveCount(0);
+            cls.NamedConstructors.Should().BeEmpty();
+            cls.UnnamedConstructor.Should().NotBeNull();
+            cls.UnnamedConstructor.ParameterNames.Should().HaveCount(0);
         }
 
         [Test]
@@ -23,7 +22,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.StaticMethod("X") };
             Compile(new[] { "class C { }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
-            FindConstructor("C.X").Should().BeNull();
+            FindNamedConstructor("C.X").Should().BeNull();
         }
 
         [Test]
@@ -31,18 +30,19 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
 			var namingConvention = new MockNamingConventionResolver() { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
             Compile(new[] { "class C { C(int i) {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
-            cls.Constructors.Should().HaveCount(1);
-            cls.Constructors[0].Name.Should().Be("ctor$Int32");
-            cls.Constructors[0].Definition.Should().NotBeNull();
+            cls.UnnamedConstructor.Should().BeNull();
+            cls.NamedConstructors.Should().HaveCount(1);
+            cls.NamedConstructors[0].Name.Should().Be("ctor$Int32");
+            cls.NamedConstructors[0].Definition.Should().NotBeNull();
         }
 
         [Test]
         public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorImplOptions.Named("StringCtor") : ConstructorImplOptions.StaticMethod("IntCtor") };
             Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, namingConvention: namingConvention);
-            FindClass("C").Constructors.Should().HaveCount(1);
+            FindClass("C").NamedConstructors.Should().HaveCount(1);
             FindClass("C").StaticMethods.Should().HaveCount(1);
-            FindConstructor("C.StringCtor").Should().NotBeNull();
+            FindNamedConstructor("C.StringCtor").Should().NotBeNull();
             FindStaticMethod("C.IntCtor").Should().NotBeNull();
         }
 
@@ -51,7 +51,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.StaticMethod("X") };
             Compile(new[] { "class C { public C() {}" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
-            FindConstructor("C.X").Should().BeNull();
+            FindNamedConstructor("C.X").Should().BeNull();
         }
 
         [Test]

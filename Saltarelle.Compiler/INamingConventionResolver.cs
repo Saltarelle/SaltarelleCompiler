@@ -31,9 +31,9 @@ namespace Saltarelle.Compiler {
         PropertyImplOptions GetPropertyImplementation(IProperty property);
 
         /// <summary>
-        /// Returns the name of the backing field for the specified property. Must not return null. May return NotUsableFromScript if neither of the get and set methods generates any code.
+        /// Returns the name of the backing field for the specified property. Must not return null.
         /// </summary>
-        FieldImplOptions GetAutoPropertyBackingFieldImplementation(IProperty property);
+        string GetAutoPropertyBackingFieldName(IProperty property);
 
         /// <summary>
         /// Returns how a field is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
@@ -46,9 +46,9 @@ namespace Saltarelle.Compiler {
         EventImplOptions GetEventImplementation(IEvent evt);
         
         /// <summary>
-        /// Returns the name of the backing field for the specified property. Must not return null. May return NotUsableFromScript if neither of the get and set methods generates any code.
+        /// Returns the name of the backing field for the specified property. Must not return null.
         /// </summary>
-        FieldImplOptions GetAutoEventBackingFieldImplementation(IEvent evt);
+        string GetAutoEventBackingFieldName(IEvent evt);
 
         /// <summary>
         /// Returns the name by which an enum field is to be known in script. May not return null.

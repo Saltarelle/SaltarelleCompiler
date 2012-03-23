@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler {
         private ReadOnlyCollection<string> _additionalNames;
         public ReadOnlyCollection<string> AdditionalNames {
             get {
-                if (Type != ImplType.NormalMethod)
+                if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument)
                     throw new InvalidOperationException();
                 return _additionalNames;
             }
@@ -95,8 +95,8 @@ namespace Saltarelle.Compiler {
             return new MethodImplOptions { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, _additionalNames = additionalNames.AsReadOnly() };
         }
 
-        public static MethodImplOptions StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
-            return new MethodImplOptions { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+        public static MethodImplOptions StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, IEnumerable<string> additionalNames = null) {
+            return new MethodImplOptions { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, _additionalNames = additionalNames.AsReadOnly() };
         }
 
         public static MethodImplOptions InstanceMethodOnFirstArgument(string name) {

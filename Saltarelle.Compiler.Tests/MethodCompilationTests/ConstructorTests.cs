@@ -147,7 +147,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	{C}.call(this, 1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.Unnamed() });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Named("ctor1") : ConstructorImplOptions.Unnamed() });
 		}
 
 		[Test]
