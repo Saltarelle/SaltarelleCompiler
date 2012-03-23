@@ -23,7 +23,6 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         public IList<JsNamedConstructor> NamedConstructors { get; private set; }
         public IList<JsMethod> InstanceMethods { get; private set; }
         public IList<JsMethod> StaticMethods { get; private set; }
-        public IList<JsStatement> InstanceInitStatements { get; private set; }
         public IList<JsStatement> StaticInitStatements { get; private set; }
 
         public JsFunctionDefinitionExpression UnnamedConstructor {
@@ -38,27 +37,25 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         }
 
         public JsClass(ScopedName name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces) : base(name) {
-            BaseClass              = baseClass;
-            ClassType              = classType;
-            TypeArgumentNames      = new List<string>(typeArgumentNames ?? new string[0]);
-            ImplementedInterfaces  = new List<JsConstructedType>(implementedInterfaces ?? new JsConstructedType[0]);
-            NamedConstructors      = new List<JsNamedConstructor>();
-            InstanceMethods        = new List<JsMethod>();
-            StaticMethods          = new List<JsMethod>();
-            InstanceInitStatements = new List<JsStatement>();
-            StaticInitStatements   = new List<JsStatement>();
+            BaseClass             = baseClass;
+            ClassType             = classType;
+            TypeArgumentNames     = new List<string>(typeArgumentNames ?? new string[0]);
+            ImplementedInterfaces = new List<JsConstructedType>(implementedInterfaces ?? new JsConstructedType[0]);
+            NamedConstructors     = new List<JsNamedConstructor>();
+            InstanceMethods       = new List<JsMethod>();
+            StaticMethods         = new List<JsMethod>();
+            StaticInitStatements  = new List<JsStatement>();
         }
 
         public override void Freeze() {
             base.Freeze();
             
-            TypeArgumentNames      = TypeArgumentNames.AsReadOnly();
-            ImplementedInterfaces  = ImplementedInterfaces.AsReadOnly();
-            NamedConstructors      = NamedConstructors.AsReadOnly();
-            InstanceMethods        = InstanceMethods.AsReadOnly();
-            StaticMethods          = StaticMethods.AsReadOnly();
-            InstanceInitStatements = InstanceInitStatements.AsReadOnly();
-            StaticInitStatements   = StaticInitStatements.AsReadOnly();
+            TypeArgumentNames     = TypeArgumentNames.AsReadOnly();
+            ImplementedInterfaces = ImplementedInterfaces.AsReadOnly();
+            NamedConstructors     = NamedConstructors.AsReadOnly();
+            InstanceMethods       = InstanceMethods.AsReadOnly();
+            StaticMethods         = StaticMethods.AsReadOnly();
+            StaticInitStatements  = StaticInitStatements.AsReadOnly();
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
                                                                     };
             Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
-            FindClass("C").InstanceInitStatements.Should().BeEmpty();
+            FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var namingConvention = new MockNamingConventionResolver { GetEventImplementation = f => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + f.Name, generateCode: false), MethodImplOptions.NormalMethod("remove_" + f.Name, generateCode: false)) };
             Compile(new[] { "class C { public event System.EventHandler SomeProp { add {} remove{} } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
-            FindClass("C").InstanceInitStatements.Should().BeEmpty();
+            FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
         }
 
         [Test]

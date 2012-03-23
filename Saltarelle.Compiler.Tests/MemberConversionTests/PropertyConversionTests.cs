@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             };
             Compile(new[] { "class C { public string SomeProp { get; set; } }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
-            FindClass("C").InstanceInitStatements.Should().BeEmpty();
+            FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Null);
             Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Null);
             Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Null);
-            Assert.That(FindClass("C").InstanceInitStatements, Is.Empty);
+            FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
             Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
         }
 

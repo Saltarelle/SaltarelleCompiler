@@ -23,7 +23,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.Field("$SomeProp") };
             Compile(new[] { "class C { public static int SomeField; }" }, namingConvention: namingConvention);
             FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
-            FindClass("C").InstanceInitStatements.Should().BeEmpty();
+            FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         public void FieldsThatAreNotUsableFromScriptAreNotImported() {
             var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldImplOptions.NotUsableFromScript() };
             Compile(new[] { "class C { public int SomeField; }" }, namingConvention: namingConvention);
-            FindClass("C").InstanceInitStatements.Should().BeEmpty();
+            FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
             FindClass("C").StaticInitStatements.Should().BeEmpty();
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();

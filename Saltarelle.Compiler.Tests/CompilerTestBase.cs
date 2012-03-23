@@ -318,15 +318,16 @@ namespace Saltarelle.Compiler.Tests {
         protected string FindInstanceFieldInitializer(string name) {
             var lastDot = name.LastIndexOf('.');
             var cls = FindClass(name.Substring(0, lastDot));
-            return cls.InstanceInitStatements.OfType<JsExpressionStatement>()
-                                             .Select(s => s.Expression)
-                                             .OfType<JsBinaryExpression>()
-                                             .Where(be =>    be.NodeType == ExpressionNodeType.Assign
-                                                          && be.Left is JsMemberAccessExpression
-                                                          && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
-                                                          && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
-                                             .Select(be => OutputFormatter.Format(be.Right, true))
-                                             .SingleOrDefault();
+            return cls.UnnamedConstructor.Body.Statements
+                                              .OfType<JsExpressionStatement>()
+                                              .Select(s => s.Expression)
+                                              .OfType<JsBinaryExpression>()
+                                              .Where(be =>    be.NodeType == ExpressionNodeType.Assign
+                                                           && be.Left is JsMemberAccessExpression
+                                                           && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
+                                                           && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                              .Select(be => OutputFormatter.Format(be.Right, true))
+                                              .SingleOrDefault();
         }
 
         protected string FindStaticFieldInitializer(string name) {

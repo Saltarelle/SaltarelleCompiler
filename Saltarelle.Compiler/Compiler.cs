@@ -39,6 +39,7 @@ namespace Saltarelle.Compiler {
         private CSharpAstResolver _resolver;
         private Dictionary<ITypeDefinition, JsClass> _types;
         private HashSet<ConstructorDeclaration> _constructorDeclarations;
+        private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
 
         public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
 
@@ -109,6 +110,21 @@ namespace Saltarelle.Compiler {
             return result;
         }
 
+        private void AddInstanceInitStatements(JsClass jsClass, IEnumerable<JsStatement> statements) {
+            List<JsStatement> l;
+            if (!_instanceInitStatements.TryGetValue(jsClass, out l))
+                _instanceInitStatements[jsClass] = l = new List<JsStatement>();
+            l.AddRange(statements);
+        }
+
+        private List<JsStatement> TryGetInstanceInitStatements(JsClass jsClass) {
+            List<JsStatement> l;
+            if (_instanceInitStatements.TryGetValue(jsClass, out l))
+                return l;
+            else
+                return new List<JsStatement>();
+        }
+
         private JsEnum ConvertEnum(ITypeDefinition type) {
             var name = ConvertName(type);
             var values = new List<JsEnumValue>();
@@ -151,6 +167,7 @@ namespace Saltarelle.Compiler {
 
             _types = new Dictionary<ITypeDefinition, JsClass>();
             _constructorDeclarations = new HashSet<ConstructorDeclaration>();
+            _instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
             foreach (var f in files) {
                 _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
@@ -218,7 +235,7 @@ namespace Saltarelle.Compiler {
         private void MaybeCompileAndAddConstructorToType(JsClass jsClass, ConstructorDeclaration node, IMethod constructor, ConstructorImplOptions options) {
             if (options.GenerateCode) {
                 var mc = CreateMethodCompiler();
-                var compiled = mc.CompileConstructor(node, constructor, options);
+                var compiled = mc.CompileConstructor(node, constructor, TryGetInstanceInitStatements(jsClass), options);
                 OnMethodCompiled(constructor, compiled, mc);
                 AddCompiledConstructorToType(jsClass, constructor, options, compiled);
             }
@@ -228,7 +245,7 @@ namespace Saltarelle.Compiler {
             var options = _namingConvention.GetConstructorImplementation(constructor);
             if (options.GenerateCode) {
                 var mc = CreateMethodCompiler();
-                var compiled = mc.CompileDefaultConstructor(constructor, options);
+                var compiled = mc.CompileDefaultConstructor(constructor, TryGetInstanceInitStatements(jsClass), options);
                 OnMethodCompiled(constructor, compiled, mc);
                 AddCompiledConstructorToType(jsClass, constructor, options, compiled);
             }
@@ -271,17 +288,16 @@ namespace Saltarelle.Compiler {
                 jsClass.StaticInitStatements.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), JsExpression.Null)));
             }
             else {
-                jsClass.InstanceInitStatements.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, fieldName), JsExpression.Null)));
+                AddInstanceInitStatements(jsClass, new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, fieldName), JsExpression.Null)) });
             }
         }
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
-            // TODO
             if (isStatic) {
                 jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), initializer));
             }
             else {
-                jsClass.InstanceInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
             }
         }
 

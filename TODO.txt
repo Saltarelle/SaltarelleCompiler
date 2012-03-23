@@ -17,4 +17,3 @@ Parameters using byref semantics
 Dynamic
 Auto-properties
 Auto-events
-Delegating methods

@@ -42,9 +42,11 @@ namespace Saltarelle.Compiler {
             return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), statementCompiler.Compile(body), null);
         }
 
-        public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, ConstructorImplOptions impl) {
+        public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorImplOptions impl) {
 			CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorImplOptions.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
 			var body = new List<JsStatement>();
+
+            body.AddRange(instanceInitStatements);
 
 			var systemObject = _compilation.FindType(KnownTypeCode.Object);
 			if (impl.Type == ConstructorImplOptions.ImplType.StaticMethod) {
@@ -73,8 +75,8 @@ namespace Saltarelle.Compiler {
 			return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
         }
 
-        public JsFunctionDefinitionExpression CompileDefaultConstructor(IMethod constructor, ConstructorImplOptions impl) {
-            return CompileConstructor(null, constructor, impl);
+        public JsFunctionDefinitionExpression CompileDefaultConstructor(IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorImplOptions impl) {
+            return CompileConstructor(null, constructor, instanceInitStatements, impl);
         }
 
         public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {
