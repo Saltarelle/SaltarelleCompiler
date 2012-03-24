@@ -41,12 +41,45 @@ public void M() {
 
 		[Test]
 		public void CallToPartialMethodWithoutDefinitionIsRemoved() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"partial class C {
+	partial void Method();
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	var $y = 0;
+");
 		}
 
 		[Test]
 		public void CallToPartialMethodWithDefinitionIsNotRemoved() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"partial class C {
+	partial void Method() {
+	}
+}
+partial class C {
+	partial void Method();
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	this.$Method();
+	var $y = 0;
+");
 		}
 
 		[Test]

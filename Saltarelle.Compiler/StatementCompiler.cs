@@ -12,6 +12,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Expression = ICSharpCode.NRefactory.CSharp.Expression;
+using InvocationExpression = ICSharpCode.NRefactory.CSharp.InvocationExpression;
 
 namespace Saltarelle.Compiler {
 	public class StatementCompiler : DepthFirstAstVisitor {
@@ -176,7 +177,16 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
-			var compiled = CompileExpression(expressionStatement.Expression, false);
+			var resolveResult = ResolveWithConversion(expressionStatement.Expression);
+			if (   resolveResult is InvocationResolveResult
+			    && ((InvocationResolveResult)resolveResult).Member is IMethod
+				&& ((IUnresolvedMethod)((InvocationResolveResult)resolveResult).Member.UnresolvedMember).IsPartialMethodDeclaration)	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
+			{
+				// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
+				return;
+			}
+
+			var compiled = _expressionCompiler.Compile(resolveResult, false);
 			_result.AddRange(compiled.AdditionalStatements);
 			_result.Add(new JsExpressionStatement(compiled.Expression));
 		}
