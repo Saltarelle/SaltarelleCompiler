@@ -13,9 +13,9 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
         protected MethodCompiler MethodCompiler { get; private set; }
         protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
 
-        protected void Compile(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null) {
+        protected void Compile(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
             Compile(new[] { source }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
-				if (m.IsConstructor && m.Attributes.Any()) {
+				if (m.IsConstructor && (m.Attributes.Any() || useFirstConstructor)) {
 					Constructor = m;
 					MethodCompiler = mc;
 					CompiledConstructor = res;
@@ -25,8 +25,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests {
 			Assert.That(Constructor, Is.Not.Null, "No constructors with attributes were compiled.");
         }
 
-		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null) {
-			Compile(csharp, namingConvention);
+		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool useFirstConstructor = false) {
+			Compile(csharp, namingConvention, useFirstConstructor: useFirstConstructor);
 			string actual = OutputFormatter.Format(CompiledConstructor, allowIntermediates: true);
 			Assert.That(actual, Is.EqualTo(expected));
 		}
@@ -203,9 +203,30 @@ class D : B {
 }", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
-			Assert.Fail("TODO");
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public C() : this(0) {
+	}
+	public C(int x) {
+	}
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.StaticMethod("ctor") });
+			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
+		}
+
+		[Test]
+		public void InvokingBaseStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class B {
+	public B() {}
+}
+class D : B {
+	public D() {}
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.DeclaringType.Name == "D" ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.StaticMethod("ctor") });
+			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
 		[Test]
@@ -229,12 +250,33 @@ class D : B {
 }");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ChainingToConstructorMarkedAsNotUsableFromScriptIsAnError() {
-			Assert.Fail("TODO");
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public C() : this(0) {
+	}
+	public C(int x) {
+	}
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.NotUsableFromScript() });
+			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
+		public void InvokingBaseConstructorMarkedAsNotUsableFromScriptIsAnError() {
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class B {
+	public B() {}
+}
+class D : B {
+	public D() {}
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.DeclaringType.Name == "D" ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.NotUsableFromScript() });
+			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
+		}
+
+		[Test]
 		public void ChainingToAnonymousConstructorFromStaticMethodConstructorWorks() {
 			AssertCorrect(
 @"class C {
@@ -311,41 +353,192 @@ class D : B {
 }", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.Unnamed() });
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void FieldsAreInitialized() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"class C {
+	int f1 = 1;
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	C() {
+	}
+	string f2 = ""X"";
+}",
+@"function() {
+	this.$f1 = 1;
+	this.$f2 = 'X';
+}");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
+		public void FieldsAreInitializedInImplicitlyDefinedConstructor() {
+			AssertCorrect(
+@"class C {
+	int f1 = 1;
+	string f2 = ""X"";
+}",
+@"function() {
+	this.$f1 = 1;
+	this.$f2 = 'X';
+}", useFirstConstructor: true);
+		}
+
+		[Test]
 		public void FieldsAreNotInitializedWhenChainingConstructors() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"class C {
+	int x = 1;
+	public void M() {}
+
+	public C() {
+	}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C(int x) : this() {
+		M();
+	}
+}",
+@"function($x) {
+	{C}.call(this);
+	this.M();
+}");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void FieldInitializationWorksForStaticMethodConstructors() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"class C {
+	int x = 1;
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() {
+		M();
+	}
+}",
+@"function() {
+	var $this = {};
+	$this.$x = 1;
+	$this.M();
+}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.StaticMethod("ctor") });
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
+		public void FieldInitializationWorksForStaticMethodConstructorsWhenCallingBase() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	int x = 1;
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() {
+		this.M();
+	}
+}",
+@"function() {
+	var $this = {B}.ctor();
+	$this.$x = 1;
+	$this.M();
+}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.StaticMethod("ctor") });
+		}
+
+		[Test]
 		public void FieldsAreInitializedBeforeCallingBaseWhenBaseCallIsImplicit() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	int i = 1;
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() {
+		this.M();
+	}
+}",
+@"function() {
+	this.$i = 1;
+	{B}.call(this);
+	this.M();
+}");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void FieldsAreInitializedBeforeCallingBaseWhenBaseCallIsExplicit() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	int i = 1;
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base() {
+		this.M();
+	}
+}",
+@"function() {
+	this.$i = 1;
+	{B}.call(this);
+	this.M();
+}");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ImplicitlyDeclaredConstructorInvokesBaseWhenNotDerivedFromObject() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+}",
+@"function() {
+	{B}.call(this);
+}", useFirstConstructor: true);
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ImplicitlyDeclaredConstructorDoesNotInvokeBaseWhenDerivedFromObject() {
+			AssertCorrect(
+@"class C {
+}",
+@"function() {
+}", useFirstConstructor: true);
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ImplicitlyDeclaredConstructorInitializesFieldsBeforeInvokingBase() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	int i = 1;
+}",
+@"function() {
+	this.$i = 1;
+	{B}.call(this);
+}", useFirstConstructor: true);
 		}
+
+		[Test]
+		public void FieldInitializersWithMultipleStatementsWork() {
+			AssertCorrect(
+@"class X {
+	public int P { get; set; }
+}
+class C {
+	X x = new X { P = 10 };
+}",
+@"function() {
+	var $tmp1 = new {X}();
+	$tmp1.set_P(10);
+	this.$x = $tmp1;
+}", useFirstConstructor: true);
+		}
+
+        [Test, Ignore("TODO")]
+        public void InstanceFieldWithoutInitializerIsInitializedToDefault() {
+            Assert.Fail("TODO");
+        }
 	}
 }

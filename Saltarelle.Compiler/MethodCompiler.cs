@@ -5,11 +5,29 @@ using System.Text;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler {
     public class MethodCompiler {
+		private class ThisReplacer : RewriterVisitorBase<object> {
+			private JsExpression _replaceWith;
+
+			public ThisReplacer(JsExpression replaceWith) {
+				_replaceWith = replaceWith;
+			}
+
+			public override JsExpression Visit(JsThisExpression expression, object data) {
+				return _replaceWith;
+			}
+
+			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
+				// Inside a function, "this" is in another context and should thus not be replaced.
+				return expression;
+			}
+		}
+
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
@@ -46,8 +64,6 @@ namespace Saltarelle.Compiler {
 			CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorImplOptions.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
 			var body = new List<JsStatement>();
 
-            body.AddRange(instanceInitStatements);
-
 			var systemObject = _compilation.FindType(KnownTypeCode.Object);
 			if (impl.Type == ConstructorImplOptions.ImplType.StaticMethod) {
 				if (ctor != null && !ctor.Initializer.IsNull) {
@@ -60,7 +76,17 @@ namespace Saltarelle.Compiler {
 					body.Add(new JsVariableDeclarationStatement(_namingConvention.ThisAlias, JsExpression.ObjectLiteral()));
 				}
 			}
-			else {
+
+			if (ctor == null || ctor.Initializer.IsNull || ctor.Initializer.ConstructorInitializerType != ConstructorInitializerType.This) {
+				if (impl.Type == ConstructorImplOptions.ImplType.StaticMethod) {
+					// The compiler one step up has created the statements as "this.a = b;", but we need to replace that with "$this.a = b;" (or whatever name the this alias has).
+					var replacer = new ThisReplacer(JsExpression.Identifier(_namingConvention.ThisAlias));
+					instanceInitStatements = instanceInitStatements.Select(s => replacer.Visit(s, null)).ToList();
+				}
+	            body.AddRange(instanceInitStatements);	// Don't initialize fields when we are chaining, but do it when we 1) compile the default constructor, 2) don't have an initializer, or 3) when the initializer is not this(...).
+			}
+
+			if (impl.Type != ConstructorImplOptions.ImplType.StaticMethod) {
 				if (ctor != null && !ctor.Initializer.IsNull) {
 					body.AddRange(statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 				}
@@ -69,8 +95,9 @@ namespace Saltarelle.Compiler {
 				}
 			}
 
-            if (ctor != null)
+            if (ctor != null) {
 			    body.AddRange(statementCompiler.Compile(ctor.Body).Statements);
+			}
 
 			return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
         }

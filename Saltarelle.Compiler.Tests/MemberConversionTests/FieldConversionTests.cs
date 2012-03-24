@@ -49,15 +49,9 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
 
-
-        [Test]
-        public void FieldWithoutInitializerIsInitializedToDefault() {
-            Assert.Inconclusive("TODO");
-        }
-
-        [Test]
-        public void FieldInitializersAreCorrectlyImported() {
-            Assert.Inconclusive("TODO");
+        [Test, Ignore("TODO")]
+        public void StaticFieldWithoutInitializerIsInitializedToDefault() {
+            Assert.Fail("TODO");
         }
     }
 }
