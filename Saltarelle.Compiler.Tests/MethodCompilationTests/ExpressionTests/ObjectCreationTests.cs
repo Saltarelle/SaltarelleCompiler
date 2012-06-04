@@ -170,9 +170,28 @@ public void M() {
 ", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.StaticMethod("create_" + c.DeclaringType.Name), GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name) });
 		}
 
-		[Test, Ignore("TODO")]
-		public void ChainingToConstructorImplementedAsInlineCodeWorks() {
-			Assert.Fail("TODO");
+		[Test]
+		public void InvokingConstructorImplementedAsInlineCodeWorks() {
+			AssertCorrect(
+@"class X {
+	public X(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	var x = new X(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	var $x = __CreateX_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2__;
+", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorImplOptions.InlineCode("__CreateX_{a}_{b}_{c}_{d}_{e}_{f}_{g}__"), GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]

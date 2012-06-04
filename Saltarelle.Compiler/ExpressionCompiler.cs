@@ -198,7 +198,8 @@ namespace Saltarelle.Compiler {
 						break;
 
 					case ConstructorImplOptions.ImplType.InlineCode:
-						throw new NotImplementedException();
+						_errorReporter.Error("Chaining from a normal constructor to a constructor implemented as inline code is not supported.");
+						break;
 
 					default:
 						_errorReporter.Error("This constructor cannot be used from script.");
@@ -838,6 +839,46 @@ namespace Saltarelle.Compiler {
 			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsVirtual && !invocation.IsVirtualCall);
 		}
 
+		private JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, IList<JsExpression> thisAndArguments) {
+			var allSubstitutions = new List<Tuple<string, JsExpression>>();
+
+			var parameterizedType = method.DeclaringType as ParameterizedType;
+			if (parameterizedType != null) {
+				var def = parameterizedType.GetDefinition();
+				for (int i = 0; i < def.TypeParameters.Count; i++)
+					allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, GetJsType(parameterizedType.TypeArguments[i])));
+			}
+
+			var specializedMethod = method as SpecializedMethod;
+			if (method is SpecializedMethod) {
+				for (int i = 0; i < specializedMethod.TypeArguments.Count; i++)
+					allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, GetJsType(specializedMethod.TypeArguments[i])));
+			}
+			if (!method.IsStatic)
+				allSubstitutions.Add(Tuple.Create("this", thisAndArguments[0]));
+			for (int i = 1; i < thisAndArguments.Count; i++)
+				allSubstitutions.Add(Tuple.Create(method.Parameters[i - 1].Name, thisAndArguments[i]));
+
+			string format = literalCode;
+			var fmtarguments = new List<JsExpression>();
+			foreach (var s in allSubstitutions) {
+				if (format.Contains("{" + s.Item1 + "}")) {
+					format = format.Replace("{" + s.Item1 + "}", "{" + fmtarguments.Count.ToString(CultureInfo.InvariantCulture) + "}");
+					fmtarguments.Add(s.Item2);
+				}
+			}
+
+			try {
+				string.Format(format, new object[fmtarguments.Count]);
+			}
+			catch (Exception) {
+				_errorReporter.Error("Invalid inline implementation of method " + method.DeclaringType.FullName + "." + method.Name);
+				return JsExpression.Number(0);
+			}
+
+			return JsExpression.Literal(format, fmtarguments);
+		}
+
 		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod method, IList<JsExpression> thisAndArguments, IList<IType> typeArguments, bool isNonVirtualInvocationOfVirtualMethod) {
 			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(GetJsType).ToList() : new List<JsExpression>());
 
@@ -879,43 +920,7 @@ namespace Saltarelle.Compiler {
 						return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
 
 					case MethodImplOptions.ImplType.InlineCode: {
-						var allSubstitutions = new List<Tuple<string, JsExpression>>();
-
-						var parameterizedType = method.DeclaringType as ParameterizedType;
-						if (parameterizedType != null) {
-							var def = parameterizedType.GetDefinition();
-							for (int i = 0; i < def.TypeParameters.Count; i++)
-								allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, GetJsType(parameterizedType.TypeArguments[i])));
-						}
-
-						var specializedMethod = method as SpecializedMethod;
-						if (method is SpecializedMethod) {
-							for (int i = 0; i < specializedMethod.TypeArguments.Count; i++)
-								allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, GetJsType(specializedMethod.TypeArguments[i])));
-						}
-						if (!method.IsStatic)
-							allSubstitutions.Add(Tuple.Create("this", thisAndArguments[0]));
-						for (int i = 1; i < thisAndArguments.Count; i++)
-							allSubstitutions.Add(Tuple.Create(method.Parameters[i - 1].Name, thisAndArguments[i]));
-
-						string format = impl.LiteralCode;
-						var fmtarguments = new List<JsExpression>();
-						foreach (var s in allSubstitutions) {
-							if (format.Contains("{" + s.Item1 + "}")) {
-								format = format.Replace("{" + s.Item1 + "}", "{" + fmtarguments.Count.ToString(CultureInfo.InvariantCulture) + "}");
-								fmtarguments.Add(s.Item2);
-							}
-						}
-
-						try {
-							string.Format(format, new object[fmtarguments.Count]);
-						}
-						catch (Exception) {
-							_errorReporter.Error("Invalid inline implementation of method " + method.DeclaringType.FullName + "." + method.Name);
-							return JsExpression.Number(0);
-						}
-
-						return JsExpression.Literal(format, fmtarguments);
+						return CompileInlineCodeMethodInvocation(method, impl.LiteralCode, thisAndArguments);
 					}
 
 					case MethodImplOptions.ImplType.NativeIndexer:
@@ -948,7 +953,7 @@ namespace Saltarelle.Compiler {
 					break;
 
 				case ConstructorImplOptions.ImplType.InlineCode:
-					throw new NotImplementedException();
+					return CompileInlineCodeMethodInvocation(method, impl.LiteralCode, thisAndArguments);
 
 				default:
 					_errorReporter.Error("This constructor cannot be used from script.");
