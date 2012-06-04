@@ -82,14 +82,47 @@ partial class C {
 ");
 		}
 
-		[Test]
+		[Test, Ignore("No NRefactory support")]
 		public void CallToConditionalMethodIsRemovedWhenTheSymbolIsNotDefined() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"class C {
+	[System.Diagnostics.Conditional(""__TEST__"")]
+	void Method() {
+	}
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	var $y = 0;
+");
 		}
 
 		[Test]
 		public void CallToConditionalMethodIsNotRemovedWhenTheSymbolIsDefined() {
-			Assert.Inconclusive("TODO");
+			AssertCorrect(
+@"class C {
+	[System.Diagnostics.Conditional(""__TEST__"")]
+	void Method() {
+	}
+#define __TEST__
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	this.$Method();
+	var $y = 0;
+");
 		}
 	}
 }
