@@ -17,3 +17,4 @@ Parameters using byref semantics
 Dynamic
 Auto-properties
 Auto-events
+Static constructors and fields
