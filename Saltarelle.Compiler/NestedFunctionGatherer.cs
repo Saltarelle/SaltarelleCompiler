@@ -18,9 +18,20 @@ namespace Saltarelle.Compiler
                 _resolver = resolver;
             }
 
+			private AstNode GetBodyNode(AstNode methodNode) {
+				if (methodNode is AnonymousMethodExpression)
+					return ((AnonymousMethodExpression)methodNode).Body;
+				else if (methodNode is LambdaExpression)
+					return ((LambdaExpression)methodNode).Body;
+				else if (methodNode is MethodDeclaration)
+					return ((MethodDeclaration)methodNode).Body;
+				else
+					return methodNode;
+			}
+
             public NestedFunctionData GatherNestedFunctions(AstNode node) {
-				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, BodyNode = node, ResolveResult = null };
-                node.AcceptVisitor(this);
+				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, BodyNode = GetBodyNode(node), ResolveResult = _resolver.Resolve(node) as LambdaResolveResult };
+				VisitChildren(node);
                 return currentFunction;
             }
 

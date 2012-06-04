@@ -34,8 +34,10 @@ namespace Saltarelle.Compiler
             _currentMethod = node;
 			_variablesDeclaredInsideLoop = new HashSet<IVariable>();
 
-			foreach (var p in method.Parameters) {
-				AddVariable(p, p.IsRef || p.IsOut);
+			if (method != null) {
+				foreach (var p in method.Parameters) {
+					AddVariable(p, p.IsRef || p.IsOut);
+				}
 			}
 
             node.AcceptVisitor(this);

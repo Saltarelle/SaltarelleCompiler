@@ -46,11 +46,11 @@ namespace Saltarelle.Compiler {
         	_runtimeLibrary = runtimeLibrary;
         }
 
-		private void CreateCompilationContext(EntityDeclaration entity, IMethod method, string thisAlias) {
+		private void CreateCompilationContext(AstNode entity, IMethod method, string thisAlias) {
             var usedNames           = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p))) : new HashSet<string>();
             variables               = entity != null ? new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames) : new Dictionary<IVariable, VariableData>();
             nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
-			var nestedFunctionsDict = nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions.ToDictionary(f => f.ResolveResult);
+			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
 			statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, null);
 		}
@@ -107,8 +107,13 @@ namespace Saltarelle.Compiler {
         }
 
         public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {
-            CreateCompilationContext(null, null, null);
+            CreateCompilationContext(expression, null, null);
             return statementCompiler.CompileFieldInitializer(field, expression);
+        }
+
+        public IList<JsStatement> CompileDefaultFieldInitializer(JsExpression field, IType type) {
+            CreateCompilationContext(null, null, null);
+            return statementCompiler.CompileDefaultFieldInitializer(field, type);
         }
     }
 }

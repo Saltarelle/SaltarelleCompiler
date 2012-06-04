@@ -170,9 +170,42 @@ class D : B {
 }");
 		}
 
-		[Test, Ignore("TODO")]
-		public void ChainingToConstructorImplementedAsInlineCodeWorks() {
-			Assert.Fail("TODO");
+		[Test]
+		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorIsAnError() {
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(0, ""X"") {
+		M();
+	}
+
+	public C(int x, string s) {
+	}
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.InlineCode("__Literal_{x}_{s}__") });
+			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+		}
+
+		[Test]
+		public void ChainingToConstructorImplementedAsInlineCodeFromStaticMethodConstructorWorks() {
+			AssertCorrect(
+@"class C {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(0, ""X"") {
+		M();
+	}
+
+	public C(int x, string s) {
+	}
+}",
+@"function() {
+	var $this = __Literal_0_'X'__;
+	$this.M();
+}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorImplOptions.StaticMethod("M") : ConstructorImplOptions.InlineCode("__Literal_{x}_{s}__") });
 		}
 
 		[Test]
@@ -536,9 +569,66 @@ class C {
 }", useFirstConstructor: true);
 		}
 
-        [Test, Ignore("TODO")]
+        [Test]
         public void InstanceFieldWithoutInitializerIsInitializedToDefault() {
-            Assert.Fail("TODO");
+			AssertCorrect(
+@"class C {
+	int i;
+	int i2 = 1;
+	string s;
+	object o;
+}",
+@"function() {
+	this.$i = 0;
+	this.$i2 = 1;
+	this.$s = null;
+	this.$o = null;
+}", useFirstConstructor: true);
+        }
+
+        [Test]
+        public void InstanceFieldInitializedToDefaultValueForTypeParamWorks() {
+			AssertCorrect(
+@"class C<T> {
+	T t1, t2 = default(T);
+}",
+@"function() {
+	this.$t1 = $Default($T);
+	this.$t2 = $Default($T);
+}", useFirstConstructor: true);
+        }
+
+        [Test]
+        public void InstanceFieldInitializedToDefaultValueForReferenceTypeParamWorks() {
+			AssertCorrect(
+@"class C<T> where T : class {
+	T t1, t2 = default(T);
+}",
+@"function() {
+	this.$t1 = null;
+	this.$t2 = null;
+}", useFirstConstructor: true);
+        }
+
+        [Test]
+        public void InitializingAnInstanceFieldToALambdaWorks() {
+			AssertCorrect(
+@"class C {
+	System.Func<int, string> f1 = x => ""A"";
+	System.Func<int, string> f2 = (int x) => ""B"";
+	System.Func<int, string> f3 = delegate(int x) { return ""C""; };
+}",
+@"function() {
+	this.$f1 = function($x) {
+		return 'A';
+	};
+	this.$f2 = function($x) {
+		return 'B';
+	};
+	this.$f3 = function($x) {
+		return 'C';
+	};
+}", useFirstConstructor: true);
         }
 	}
 }

@@ -82,6 +82,25 @@ namespace Saltarelle.Compiler {
             return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
         }
 
+		public IList<JsStatement> CompileDefaultFieldInitializer(JsExpression field, IType type) {
+			JsExpression value;
+			if (type.IsReferenceType == true) {
+				value = JsExpression.Null;
+			}
+			else if (type.IsReferenceType == null) {
+				var jsType = _expressionCompiler.Compile(new TypeResolveResult(type), true);
+				if (jsType.AdditionalStatements.Count > 0)
+					_errorReporter.Error("Type reference cannot return additional statements.");
+
+				value = _runtimeLibrary.Default(jsType.Expression);
+			}
+			else {
+				value = JsExpression.Number(0);	// This might not hold in the future, but it does today. Since we don't support user-defined structs, we know that the only value types we have are numbers.
+			}
+
+			return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
+		}
+
 		private StatementCompiler CreateInnerCompiler() {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _nestedFunctionContext, _expressionCompiler, _nextTemporaryVariableIndex, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}

@@ -84,16 +84,33 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
             FindClass("C").StaticInitStatements.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
+
         [Test]
-        public void BackingFieldsForAutoEventsWithInitializerUseThatInitializer() {
-            Compile(new[] { "class C { public static System.EventHandler GetHandler() { return null; } public event System.EventHandler Event1 = new System.EventHandler(null), Event2 = GetHandler(); }" });
+        public void BackingFieldsForInstanceAutoEventsWithInitializerUseThatInitializer() {
+            Compile(new[] { "class C { public static System.EventHandler GetHandler() { return null; } public event System.EventHandler Event1 = null, Event2 = GetHandler(), Event3 = (s, e) => {}; }" });
             FindInstanceFieldInitializer("C.$Event1").Should().Be("null");
             FindInstanceFieldInitializer("C.$Event2").Should().Be("{C}.GetHandler()");
+            FindInstanceFieldInitializer("C.$Event3").Should().Be("function($s, $e) {\r\n}");
         }
 
         [Test]
-        public void BackingFieldsForAutoEventsWithNoInitializerGetInitializedToDefault() {
-            Assert.Inconclusive("TODO");
+        public void BackingFieldsForInstanceAutoEventsWithNoInitializerGetInitializedToDefault() {
+            Compile(new[] { "class C { public event System.EventHandler Event1; }" });
+            FindInstanceFieldInitializer("C.$Event1").Should().Be("null");
+        }
+
+        [Test]
+        public void BackingFieldsForStaticAutoEventsWithInitializerUseThatInitializer() {
+            Compile(new[] { "class C { public static System.EventHandler GetHandler() { return null; } public static event System.EventHandler Event1 = null, Event2 = GetHandler(), Event3 = (s, e) => {}; }" });
+            FindStaticFieldInitializer("C.$Event1").Should().Be("null");
+            FindStaticFieldInitializer("C.$Event2").Should().Be("{C}.GetHandler()");
+            FindStaticFieldInitializer("C.$Event3").Should().Be("function($s, $e) {\r\n}");
+        }
+
+        [Test]
+        public void BackingFieldsForStaticAutoEventsWithNoInitializerGetInitializedToDefault() {
+            Compile(new[] { "class C { public static event System.EventHandler Event1; }" });
+            FindStaticFieldInitializer("C.$Event1").Should().Be("null");
         }
     }
 }

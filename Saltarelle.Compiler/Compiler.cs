@@ -283,12 +283,11 @@ namespace Saltarelle.Compiler {
         }
 
         private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IType fieldType, ITypeDefinition owningType, bool isStatic) {
-            // TODO
             if (isStatic) {
-                jsClass.StaticInitStatements.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), JsExpression.Null)));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), fieldType));
             }
             else {
-                AddInstanceInitStatements(jsClass, new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, fieldName), JsExpression.Null)) });
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
             }
         }
 
