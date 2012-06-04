@@ -25,42 +25,42 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void MethodImplementedAsInlineCodeDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.InlineCode("X") };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void MethodImplementedAsInstanceMethodOnFirstArgumentDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.InstanceMethodOnFirstArgument("X") };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void MethodImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.NotUsableFromScript() };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void InstanceMethodWithGenerateCodeSetToFalseDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.NormalMethod("X", generateCode: false) };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void StaticMethodWithGenerateCodeSetToFalseDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.NormalMethod("X", generateCode: false) };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void StaticMethodWithThisAsFirstArgumentAppearsOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodImplOptions.StaticMethodWithThisAsFirstArgument("X") };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindStaticMethod("C.X").Should().NotBeNull();
         }

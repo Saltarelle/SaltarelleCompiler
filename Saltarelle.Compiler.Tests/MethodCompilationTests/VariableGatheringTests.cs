@@ -375,7 +375,7 @@ public void M() {
 	// BEGIN
 	F(z: c, x: ref a, y: out b);
 	// END
-");
+}");
 			MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$a").Value.UseByRefSemantics.Should().BeTrue();
 			MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$b").Value.UseByRefSemantics.Should().BeTrue();
 			MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$c").Value.UseByRefSemantics.Should().BeFalse();

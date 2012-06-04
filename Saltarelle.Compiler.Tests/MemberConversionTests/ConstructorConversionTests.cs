@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void ConstructorImplementedAsStaticMethodGetsAddedToTheStaticMethodsCollectionAndNotTheConstructors() {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.StaticMethod("X") };
-            Compile(new[] { "class C { public C() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindNamedConstructor("C.X").Should().BeNull();
         }
@@ -57,7 +57,7 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void ConstructorImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.NotUsableFromScript() };
-            Compile(new[] { "class C { public static void M() {}" }, namingConvention: namingConvention);
+            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             var m = FindInstanceMethod("C.X");
             m.Should().BeNull();
         }
