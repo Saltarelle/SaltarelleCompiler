@@ -258,14 +258,13 @@ namespace Saltarelle.Compiler {
             return result;
         }
 
-        private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, PropertyDeclaration node, IProperty property, PropertyImplOptions options, string backingFieldName) {
-            // TODO
+        private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IProperty property, PropertyImplOptions options, string backingFieldName) {
             if (options.GetMethod.GenerateCode) {
-                var compiled = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+                var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, property.Getter, options.GetMethod, new JsMethod(options.GetMethod.Name, new string[0], options.GetMethod.AdditionalNames, compiled));
             }
             if (options.SetMethod.GenerateCode) {
-                var compiled = JsExpression.FunctionDefinition(new[] { "value" }, JsBlockStatement.EmptyStatement);
+                var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, property.Setter, options.SetMethod, new JsMethod(options.SetMethod.Name, new string[0], options.SetMethod.AdditionalNames, compiled));
             }
         }
@@ -408,7 +407,7 @@ namespace Saltarelle.Compiler {
                         if ((impl.GetMethod != null && impl.GetMethod.GenerateCode) || (impl.SetMethod != null && impl.SetMethod.GenerateCode)) {
                             var fieldName = _namingConvention.GetAutoPropertyBackingFieldName(property);
                             AddDefaultFieldInitializerToType(jsClass, fieldName, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
-                            CompileAndAddAutoPropertyMethodsToType(jsClass, propertyDeclaration, property, impl, fieldName);
+                            CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
                         }
                     }
                     else {

@@ -298,13 +298,18 @@ namespace Saltarelle.Compiler {
 			    && ((ParameterizedType)type).TypeArguments[0] == _compilation.FindType(KnownTypeCode.Boolean);
 		}
 
-		private JsExpression GetJsType(IType type) {
+		public JsExpression GetJsType(IType type) {
 			if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;
-				return _runtimeLibrary.InstantiateGenericType(GetJsType(pt.GetDefinition()), pt.TypeArguments.Select(GetJsType));
+				return _runtimeLibrary.InstantiateGenericType(new JsTypeReferenceExpression(pt.GetDefinition()), pt.TypeArguments.Select(GetJsType));
 			}
-			else if (type is ITypeDefinition)
-				return new JsTypeReferenceExpression((ITypeDefinition)type);
+			else if (type is ITypeDefinition) {
+				var td = (ITypeDefinition)type;
+				if (td.TypeParameterCount > 0)
+					return _runtimeLibrary.InstantiateGenericType(new JsTypeReferenceExpression(td), td.TypeParameters.Select(p => JsExpression.Identifier(_namingConvention.GetTypeParameterName(p))));
+				else
+					return new JsTypeReferenceExpression((ITypeDefinition)type);
+			}
 			else if (type is ITypeParameter)
 				return JsExpression.Identifier(_namingConvention.GetTypeParameterName(((ITypeParameter)type)));
 			else
@@ -1128,7 +1133,10 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
-			return GetJsType(rr.ReferencedType);
+			if (rr.ReferencedType.TypeParameterCount > 0 && !(rr.ReferencedType is ParameterizedType))
+				return new JsTypeReferenceExpression(rr.ReferencedType.GetDefinition());	// This handles open generic types ( typeof(C<,>) )
+			else
+				return GetJsType(rr.ReferencedType);
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {

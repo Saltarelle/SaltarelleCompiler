@@ -115,5 +115,35 @@ namespace Saltarelle.Compiler {
             CreateCompilationContext(null, null, null);
             return statementCompiler.CompileDefaultFieldInitializer(field, type);
         }
+
+		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, PropertyImplOptions impl, string backingFieldName) {
+			if (property.IsStatic) {
+				CreateCompilationContext(null, null, null);
+				var jsType = statementCompiler.GetJsType(property.DeclaringType);
+				return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.MemberAccess(jsType, backingFieldName)));
+			}
+			else if (impl.GetMethod.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
+				return JsExpression.FunctionDefinition(new[] { _namingConvention.ThisAlias }, new JsReturnStatement(JsExpression.MemberAccess(JsExpression.Identifier(_namingConvention.ThisAlias), backingFieldName)));
+			}
+			else {
+				return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.MemberAccess(JsExpression.This, backingFieldName)));
+			}
+		}
+
+		public JsFunctionDefinitionExpression CompileAutoPropertySetter(IProperty property, PropertyImplOptions impl, string backingFieldName) {
+			string valueName = _namingConvention.GetVariableName(property.Setter.Parameters[0], new HashSet<string>(property.DeclaringTypeDefinition.TypeParameters.Select(p => _namingConvention.GetTypeParameterName(p))));
+
+			if (property.IsStatic) {
+				CreateCompilationContext(null, null, null);
+				var jsType = statementCompiler.GetJsType(property.DeclaringType);
+				return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(jsType, backingFieldName), JsExpression.Identifier(valueName))));
+			}
+			else if (impl.GetMethod.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
+				return JsExpression.FunctionDefinition(new[] { _namingConvention.ThisAlias, valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.Identifier(_namingConvention.ThisAlias), backingFieldName), JsExpression.Identifier(valueName))));
+			}
+			else {
+				return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName))));
+			}
+		}
     }
 }

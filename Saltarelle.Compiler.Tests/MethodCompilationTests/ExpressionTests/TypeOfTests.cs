@@ -21,7 +21,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 		}
 
 		[Test]
-		public void TypeOfUnInstantiatedGenericTypesWorks() {
+		public void TypeOfUninstantiatedGenericTypesWorks() {
 			AssertCorrect(
 @"class X<T1, T2> {}
 public void M() {
