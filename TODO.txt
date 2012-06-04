@@ -6,7 +6,6 @@ goto
 Metadata importer
 Reference importer
 Output writer
-Field initialization
 User-defined operators
 Conversions
 User-defined conversions
@@ -15,5 +14,4 @@ Anonymous objects
 Query comprehension
 Parameters using byref semantics
 Dynamic
-Auto-events
-Static constructors and fields
+Static constructors and fields (and field init)

@@ -731,6 +731,22 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
+		public JsExpression CompileDelegateCombineCall(JsExpression a, JsExpression b) {
+			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
+			var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
+			var impl = _namingConvention.GetMethodImplementation(combine);
+			var thisAndArguments = (combine.IsStatic ? new[] { GetJsType(del), a, b } : new[] { a, b });
+			return CompileMethodInvocation(impl, combine, thisAndArguments, new IType[0], false);
+		}
+
+		public JsExpression CompileDelegateRemoveCall(JsExpression a, JsExpression b) {
+			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
+			var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
+			var impl = _namingConvention.GetMethodImplementation(remove);
+			var thisAndArguments = (remove.IsStatic ? new[] { GetJsType(del), a, b } : new[] { a, b });
+			return CompileMethodInvocation(impl, remove, thisAndArguments, new IType[0], false);
+		}
+
 		public override JsExpression VisitMethodGroupResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.MethodGroupResolveResult rr, bool returnValueIsImportant) {
 			throw new InvalidOperationException("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there");
 		}

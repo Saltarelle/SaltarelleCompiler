@@ -82,6 +82,14 @@ namespace Saltarelle.Compiler {
             return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
         }
 
+		public JsExpression CompileDelegateCombineCall(JsExpression a, JsExpression b) {
+			return _expressionCompiler.CompileDelegateCombineCall(a, b);
+		}
+
+		public JsExpression CompileDelegateRemoveCall(JsExpression a, JsExpression b) {
+			return _expressionCompiler.CompileDelegateRemoveCall(a, b);
+		}
+
 		public IList<JsStatement> CompileDefaultFieldInitializer(JsExpression field, IType type) {
 			JsExpression value;
 			if (type.IsReferenceType == true) {

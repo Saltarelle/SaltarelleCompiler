@@ -270,13 +270,12 @@ namespace Saltarelle.Compiler {
         }
 
         private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, EventDeclaration node, IEvent evt, EventImplOptions options, string backingFieldName) {
-            // TODO
             if (options.AddMethod.GenerateCode) {
-                var compiled = JsExpression.FunctionDefinition(new[] { "value" }, JsBlockStatement.EmptyStatement);
+                var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, evt.AddAccessor, options.AddMethod, new JsMethod(options.AddMethod.Name, new string[0], options.AddMethod.AdditionalNames, compiled));
             }
             if (options.RemoveMethod.GenerateCode) {
-                var compiled = JsExpression.FunctionDefinition(new[] { "value" }, JsBlockStatement.EmptyStatement);
+                var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, evt.RemoveAccessor, options.RemoveMethod, new JsMethod(options.RemoveMethod.Name, new string[0], options.RemoveMethod.AdditionalNames, compiled));
             }
         }

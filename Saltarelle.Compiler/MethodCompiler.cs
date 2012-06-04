@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler {
 
     	internal IDictionary<IVariable, VariableData> variables;
         internal NestedFunctionData nestedFunctionsRoot;
-		private StatementCompiler statementCompiler;
+		private StatementCompiler _statementCompiler;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
             _namingConvention = namingConvention;
@@ -52,12 +52,12 @@ namespace Saltarelle.Compiler {
             nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
-			statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, null);
+			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, null);
 		}
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, Statement body, IMethod method, MethodImplOptions impl) {
 			CreateCompilationContext(entity, method, (impl.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null));
-            return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), statementCompiler.Compile(body), null);
+            return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), _statementCompiler.Compile(body), null);
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorImplOptions impl) {
@@ -67,10 +67,10 @@ namespace Saltarelle.Compiler {
 			var systemObject = _compilation.FindType(KnownTypeCode.Object);
 			if (impl.Type == ConstructorImplOptions.ImplType.StaticMethod) {
 				if (ctor != null && !ctor.Initializer.IsNull) {
-					body.AddRange(statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
+					body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 				}
 				else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-					body.AddRange(statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, true));
+					body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, true));
 				}
 				else {
 					body.Add(new JsVariableDeclarationStatement(_namingConvention.ThisAlias, JsExpression.ObjectLiteral()));
@@ -88,15 +88,15 @@ namespace Saltarelle.Compiler {
 
 			if (impl.Type != ConstructorImplOptions.ImplType.StaticMethod) {
 				if (ctor != null && !ctor.Initializer.IsNull) {
-					body.AddRange(statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
+					body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 				}
 				else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-					body.AddRange(statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, false));
+					body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, false));
 				}
 			}
 
             if (ctor != null) {
-			    body.AddRange(statementCompiler.Compile(ctor.Body).Statements);
+			    body.AddRange(_statementCompiler.Compile(ctor.Body).Statements);
 			}
 
 			return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
@@ -108,18 +108,18 @@ namespace Saltarelle.Compiler {
 
         public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {
             CreateCompilationContext(expression, null, null);
-            return statementCompiler.CompileFieldInitializer(field, expression);
+            return _statementCompiler.CompileFieldInitializer(field, expression);
         }
 
         public IList<JsStatement> CompileDefaultFieldInitializer(JsExpression field, IType type) {
             CreateCompilationContext(null, null, null);
-            return statementCompiler.CompileDefaultFieldInitializer(field, type);
+            return _statementCompiler.CompileDefaultFieldInitializer(field, type);
         }
 
 		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, PropertyImplOptions impl, string backingFieldName) {
 			if (property.IsStatic) {
 				CreateCompilationContext(null, null, null);
-				var jsType = statementCompiler.GetJsType(property.DeclaringType);
+				var jsType = _statementCompiler.GetJsType(property.DeclaringType);
 				return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.MemberAccess(jsType, backingFieldName)));
 			}
 			else if (impl.GetMethod.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -135,7 +135,7 @@ namespace Saltarelle.Compiler {
 
 			if (property.IsStatic) {
 				CreateCompilationContext(null, null, null);
-				var jsType = statementCompiler.GetJsType(property.DeclaringType);
+				var jsType = _statementCompiler.GetJsType(property.DeclaringType);
 				return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 			}
 			else if (impl.GetMethod.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -144,6 +144,56 @@ namespace Saltarelle.Compiler {
 			else {
 				return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName))));
 			}
+		}
+
+		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEvent @event, EventImplOptions impl, string backingFieldName) {
+			string valueName = _namingConvention.GetVariableName(@event.AddAccessor.Parameters[0], new HashSet<string>(@event.DeclaringTypeDefinition.TypeParameters.Select(p => _namingConvention.GetTypeParameterName(p))));
+			CreateCompilationContext(null, null, null);
+
+			JsExpression target;
+			string[] args;
+			if (@event.IsStatic) {
+				target = _statementCompiler.GetJsType(@event.DeclaringType);
+				args = new[] { valueName };
+			}
+			else if (impl.AddMethod.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
+				target = JsExpression.Identifier(_namingConvention.ThisAlias);
+				args = new[] { _namingConvention.ThisAlias, valueName };
+			}
+			else {
+				target = JsExpression.This;
+				args = new[] { valueName };
+			}
+
+			var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
+			var combineCall = _statementCompiler.CompileDelegateCombineCall(bfAccessor, JsExpression.Identifier(valueName));
+			return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
+		}
+
+		public JsFunctionDefinitionExpression CompileAutoEventRemover(IEvent @event, EventImplOptions impl, string backingFieldName) {
+			CreateCompilationContext(null, null, null);
+			string valueName = _namingConvention.GetVariableName(@event.RemoveAccessor.Parameters[0], new HashSet<string>(@event.DeclaringTypeDefinition.TypeParameters.Select(p => _namingConvention.GetTypeParameterName(p))));
+
+			CreateCompilationContext(null, null, null);
+
+			JsExpression target;
+			string[] args;
+			if (@event.IsStatic) {
+				target = _statementCompiler.GetJsType(@event.DeclaringType);
+				args = new[] { valueName };
+			}
+			else if (impl.RemoveMethod.Type == MethodImplOptions.ImplType.StaticMethodWithThisAsFirstArgument) {
+				target = JsExpression.Identifier(_namingConvention.ThisAlias);
+				args = new[] { _namingConvention.ThisAlias, valueName };
+			}
+			else {
+				target = JsExpression.This;
+				args = new[] { valueName };
+			}
+
+			var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
+			var combineCall = _statementCompiler.CompileDelegateRemoveCall(bfAccessor, JsExpression.Identifier(valueName));
+			return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 		}
     }
 }
