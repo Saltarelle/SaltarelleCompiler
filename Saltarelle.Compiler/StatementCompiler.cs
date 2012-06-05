@@ -103,7 +103,19 @@ namespace Saltarelle.Compiler {
 				value = _runtimeLibrary.Default(jsType.Expression);
 			}
 			else {
-				value = JsExpression.Number(0);	// This might not hold in the future, but it does today. Since we don't support user-defined structs, we know that the only value types we have are numbers.
+				var code = type.GetDefinition().KnownTypeCode;
+				switch (code) {
+					case KnownTypeCode.Boolean:
+						value = JsExpression.False;
+						break;
+					case KnownTypeCode.NullableOfT:
+						value = JsExpression.Null;
+						break;
+					default:
+						// This might not hold in the future, but it does today. Since we don't support user-defined structs, we know that the only value types we have are numbers.
+						value = JsExpression.Number(0);
+						break;
+				}
 			}
 
 			return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
