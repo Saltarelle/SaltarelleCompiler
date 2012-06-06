@@ -18,9 +18,9 @@ namespace Saltarelle.Compiler {
 		JsExpression TryCast(JsExpression expression, JsExpression targetType);
 
 		/// <summary>
-		/// Returns an expression that casts an expression to a specified type, or throws an exception if the expression is not of that type (equivalent to C# "(Type)expression").
+		/// Returns an expression that casts a class to a derived class, or throws an exception if the cast is not possible.
 		/// </summary>
-		JsExpression Cast(JsExpression expression, JsExpression targetType);
+		JsExpression Downcast(JsExpression expression, JsExpression targetType);
 
 		/// <summary>
 		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List).
@@ -46,6 +46,11 @@ namespace Saltarelle.Compiler {
 		/// Returns an expression that will perform integer division.
 		/// </summary>
 		JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator);
+
+		/// <summary>
+		/// Returns an expression that converts a floating-point number to an integer.
+		/// </summary>
+		JsExpression FloatToInt(JsExpression operand);
 
 		/// <summary>
 		/// Returns an expression that will perform null coalesce (C#: a ?? b).

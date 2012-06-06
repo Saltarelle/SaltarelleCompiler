@@ -34,7 +34,7 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 				GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name),
 				GetEventImplementation  = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_$" + e.Name), MethodImplOptions.NormalMethod("remove_$" + e.Name)),
 			}, addSkeleton: addSkeleton);
-			string actual = OutputFormatter.Format(CompiledMethod.Body, true);
+			string actual = OutputFormatter.Format(CompiledMethod, true);
 
 			int begin = actual.IndexOf("// BEGIN");
 			if (begin > -1) {

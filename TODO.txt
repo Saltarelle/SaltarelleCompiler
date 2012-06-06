@@ -15,3 +15,4 @@ Query comprehension
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
+Const fields

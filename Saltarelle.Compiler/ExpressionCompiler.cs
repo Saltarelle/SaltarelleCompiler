@@ -271,6 +271,7 @@ namespace Saltarelle.Compiler {
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.SByte))
+			    || type.Equals(_compilation.FindType(KnownTypeCode.Char))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.Int16))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt16))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.Int32))
@@ -1205,14 +1206,12 @@ namespace Saltarelle.Compiler {
 			throw new NotImplementedException("Resolve result " + rr + " is not handled.");
 		}
 
-		// TODO: Methods below are UNTESTED and REALLY hacky, but needed for the statement compiler
-
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Conversion.IsIdentityConversion) {
 				return VisitResolveResult(rr.Input, returnValueIsImportant);
 			}
 			else if (rr.Conversion.IsAnonymousFunctionConversion) {
-				var retType = rr.Type.GetMethods().Single(m => m.Name == "Invoke").ReturnType;
+				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
 				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
 			}
 			else if (rr.Conversion.IsTryCast) {
@@ -1224,13 +1223,17 @@ namespace Saltarelle.Compiler {
 				if (rr.Conversion.IsImplicit)
 					return _runtimeLibrary.ImplicitReferenceConversion(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 				else
-					return _runtimeLibrary.Cast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+					return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsNumericConversion) {
-				return VisitResolveResult(rr.Input, returnValueIsImportant);
+				var input = VisitResolveResult(rr.Input, returnValueIsImportant);
+
+				return !IsIntegerType(rr.Input.Type) && IsIntegerType(rr.Type)
+				       	? _runtimeLibrary.FloatToInt(input)
+				       	: input;
 			}
 			else if (rr.Conversion.IsDynamicConversion) {
-				return _runtimeLibrary.Cast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+				return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsNullableConversion) {
 				return VisitResolveResult(rr.Input, returnValueIsImportant);

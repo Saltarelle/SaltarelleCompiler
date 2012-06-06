@@ -528,7 +528,7 @@ namespace Saltarelle.Compiler {
 			JsStatement variableDeclaration = null;
 			if (!catchClause.VariableNameToken.IsNull) {
 				var compiledAssignment = isCatchAll ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name))
-				                                    : _runtimeLibrary.Cast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), GetJsType(catchClause.Type));
+				                                    : _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), GetJsType(catchClause.Type));
 
 				variableDeclaration = new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment));
 			}

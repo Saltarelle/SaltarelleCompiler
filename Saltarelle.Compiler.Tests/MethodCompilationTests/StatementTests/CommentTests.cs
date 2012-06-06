@@ -17,13 +17,12 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	   comment
 	*/
 }",
-@"{
+@"function() {
 	// Some comment
 	// And some
 	// multiline
 	// comment
-}
-");
+}");
 		}
 
 		[Test]
@@ -35,9 +34,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.StatementTests {
 	that should not appear in the script
 #endif
 }",
-@"{
-}
-");
+@"function() {
+}");
 		}
 	}
 }

@@ -129,12 +129,13 @@ namespace Saltarelle.Compiler.Tests {
 			public MockRuntimeLibrary() {
 				TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
 				TryCast                     = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
-				Cast                        = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
+				Downcast                    = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
 				ImplicitReferenceConversion = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
 				InstantiateGenericType      = (t, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { t }.Concat(a));
 				InstantiateGenericMethod    = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
 				MakeException               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 				IntegerDivision             = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+				FloatToInt                  = e             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
 				Coalesce                    = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
 				Lift                        = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
 				LiftedBooleanAnd            = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
@@ -148,12 +149,13 @@ namespace Saltarelle.Compiler.Tests {
 
 			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> TryCast { get; set; }
-			public Func<JsExpression, JsExpression, JsExpression> Cast { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> Downcast { get; set; }
 			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
 			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
 			public Func<JsExpression, JsExpression> MakeException { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
+			public Func<JsExpression, JsExpression> FloatToInt { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> Coalesce { get; set; }
 			public Func<JsExpression, JsExpression> Lift { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanAnd { get; set; }
@@ -172,8 +174,8 @@ namespace Saltarelle.Compiler.Tests {
 				return TryCast(expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.Cast(JsExpression expression, JsExpression targetType) {
-				return Cast(expression, targetType);
+			JsExpression IRuntimeLibrary.Downcast(JsExpression expression, JsExpression targetType) {
+				return Downcast(expression, targetType);
 			}
 
 			JsExpression IRuntimeLibrary.ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
@@ -194,6 +196,10 @@ namespace Saltarelle.Compiler.Tests {
 
 			JsExpression IRuntimeLibrary.IntegerDivision(JsExpression numerator, JsExpression denominator) {
 				return IntegerDivision(numerator, denominator);
+			}
+
+			JsExpression IRuntimeLibrary.FloatToInt(JsExpression operand) {
+				return FloatToInt(operand);
 			}
 
 			JsExpression IRuntimeLibrary.Coalesce(JsExpression a, JsExpression b) {
