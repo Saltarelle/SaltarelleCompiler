@@ -127,11 +127,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		public class MockRuntimeLibrary : IRuntimeLibrary {
 			public MockRuntimeLibrary() {
+				GetArrayType                = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Array"), e);
 				TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
-				TryCast                     = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
+				TryDowncast                 = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
 				Downcast                    = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
-				Unbox                       = (o, t)        => JsExpression.Invocation(JsExpression.Identifier("$Unbox"), o, t);
-				TryUnbox                    = (o, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryUnbox"), o, t);
 				ImplicitReferenceConversion = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
 				InstantiateGenericType      = (t, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { t }.Concat(a));
 				InstantiateGenericMethod    = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
@@ -150,11 +149,10 @@ namespace Saltarelle.Compiler.Tests {
 				BindBaseCall                = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
 			}
 
+			public Func<JsExpression, JsExpression> GetArrayType { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
-			public Func<JsExpression, JsExpression, JsExpression> TryCast { get; set; }
+			public Func<JsExpression, JsExpression, JsExpression> TryDowncast { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> Downcast { get; set; }
-			public Func<JsExpression, JsExpression, JsExpression> Unbox { get; set; }
-			public Func<JsExpression, JsExpression, JsExpression> TryUnbox { get; set; }
 			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
 			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
@@ -171,25 +169,21 @@ namespace Saltarelle.Compiler.Tests {
 			public Func<JsExpression, JsExpression> CreateArray { get; set; }
 			public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 			public Func<JsExpression, string, IEnumerable<JsExpression>, JsExpression, JsExpression> BindBaseCall { get; set; }
+
+			JsExpression IRuntimeLibrary.GetArrayType(JsExpression elementType) {
+				return GetArrayType(elementType);
+			}
 			
 			JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
 				return TypeIs(expression, targetType);
 			}
 
-			JsExpression IRuntimeLibrary.TryCast(JsExpression expression, JsExpression targetType) {
-				return TryCast(expression, targetType);
+			JsExpression IRuntimeLibrary.TryDowncast(JsExpression expression, JsExpression targetType) {
+				return TryDowncast(expression, targetType);
 			}
 
 			JsExpression IRuntimeLibrary.Downcast(JsExpression expression, JsExpression targetType) {
 				return Downcast(expression, targetType);
-			}
-
-			JsExpression IRuntimeLibrary.Unbox(JsExpression obj, JsExpression targetType) {
-				return Unbox(obj, targetType);
-			}
-
-			JsExpression IRuntimeLibrary.TryUnbox(JsExpression obj, JsExpression targetType) {
-				return TryUnbox(obj, targetType);
 			}
 
 			JsExpression IRuntimeLibrary.ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {

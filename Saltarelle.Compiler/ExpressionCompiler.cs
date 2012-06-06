@@ -313,6 +313,8 @@ namespace Saltarelle.Compiler {
 			}
 			else if (type is ITypeParameter)
 				return JsExpression.Identifier(_namingConvention.GetTypeParameterName(((ITypeParameter)type)));
+			else if (type is ArrayType)
+				return _runtimeLibrary.GetArrayType(GetJsType(((ArrayType)type).ElementType));
 			else
 				throw new NotSupportedException("Unsupported type " + type.ToString());
 		}
@@ -1193,7 +1195,8 @@ namespace Saltarelle.Compiler {
 		}
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
-			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), GetJsType(rr.TargetType));
+			var targetType = IsNullableType(rr.TargetType) ? ((ParameterizedType)rr.TargetType).TypeArguments[0] : rr.TargetType;
+			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), GetJsType(targetType));
         }
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
@@ -1219,12 +1222,16 @@ namespace Saltarelle.Compiler {
 				throw new NotImplementedException("Not implemented");
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
+				var input = VisitResolveResult(rr.Input, true);
+
+				if (rr.Type is ArrayType && rr.Input.Type is ArrayType)	// Array covariance / contravariance.
+					return input;
 				if (rr.Type.Kind == TypeKind.Dynamic)
-					return VisitResolveResult(rr.Input, true);
+					return input;
 				if (rr.Conversion.IsImplicit)
-					return _runtimeLibrary.ImplicitReferenceConversion(VisitResolveResult(rr.Input, true), GetJsType(rr.Type));
+					return _runtimeLibrary.ImplicitReferenceConversion(input, GetJsType(rr.Type));
 				else
-					return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), GetJsType(rr.Type));
+					return _runtimeLibrary.Downcast(input, GetJsType(rr.Type));
 			}
 			else if (rr.Conversion.IsNumericConversion) {
 				var result = VisitResolveResult(rr.Input, true);
@@ -1241,7 +1248,19 @@ namespace Saltarelle.Compiler {
 				return result;
 			}
 			else if (rr.Conversion.IsDynamicConversion) {
-				return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+				var result = VisitResolveResult(rr.Input, true);
+				if (IsNullableType(rr.Type)) {
+					// Unboxing to nullable type.
+					return _runtimeLibrary.Downcast(result, GetJsType(((ParameterizedType)rr.Type).TypeArguments[0]));
+				}
+				else if (rr.Type.Kind == TypeKind.Struct) {
+					// Unboxing to non-nullable type.
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, GetJsType(rr.Type)));
+				}
+				else {
+					// Converting to a boring reference type.
+					return _runtimeLibrary.Downcast(result, GetJsType(rr.Type));
+				}
 			}
 			else if (rr.Conversion.IsNullableConversion) {
 				var result = VisitResolveResult(rr.Input, true);
@@ -1284,15 +1303,18 @@ namespace Saltarelle.Compiler {
 				}
 			}
 			else if (rr.Conversion.IsBoxingConversion) {
-				return VisitResolveResult(rr.Input, true);
+				var result = VisitResolveResult(rr.Input, true);
+				if (rr.Type.GetDefinition().KnownTypeCode == KnownTypeCode.ValueType)
+					result = _runtimeLibrary.ImplicitReferenceConversion(result, GetJsType(rr.Type));
+				return result;
 			}
 			else if (rr.Conversion.IsUnboxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
-					return _runtimeLibrary.Unbox(result, GetJsType(((ParameterizedType)rr.Type).TypeArguments[0]));
+					return _runtimeLibrary.Downcast(result, GetJsType(((ParameterizedType)rr.Type).TypeArguments[0]));
 				}
 				else {
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Unbox(result, GetJsType(rr.Type)));
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, GetJsType(rr.Type)));
 				}
 			}
 			else if (rr.Conversion.IsImplicit) {

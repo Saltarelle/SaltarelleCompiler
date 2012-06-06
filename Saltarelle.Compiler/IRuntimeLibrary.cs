@@ -8,36 +8,31 @@ using Saltarelle.Compiler.JSModel.Expressions;
 namespace Saltarelle.Compiler {
 	public interface IRuntimeLibrary {
 		/// <summary>
+		/// Returns the type of an array with the specified element type.
+		/// </summary>
+		/// <param name="elementType">Element in the array.</param>
+		JsExpression GetArrayType(JsExpression elementType);
+
+		/// <summary>
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").
+		/// This might also represent an unboxing, in which case it must be verified that (any non-null) object can be converted to the target type before returning true.
 		/// </summary>
 		JsExpression TypeIs(JsExpression expression, JsExpression targetType);
 
 		/// <summary>
 		/// Returns an expression that casts an expression to a specified type, or returns null if the expression is not of that type (equivalent to C# "as").
+		/// This might also represent an unboxing, in which null should be returned if the object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
 		/// </summary>
-		JsExpression TryCast(JsExpression expression, JsExpression targetType);
+		JsExpression TryDowncast(JsExpression expression, JsExpression targetType);
 
 		/// <summary>
 		/// Returns an expression that casts a class to a derived class, or throws an exception if the cast is not possible.
+		/// This might also represent an unboxing, in which case it must be verified that (any non-null) object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
 		/// </summary>
 		JsExpression Downcast(JsExpression expression, JsExpression targetType);
 
 		/// <summary>
-		/// Returns an expression that should unbox a value, or return null if the value to unbox is null. This means verifying that (any non-null) object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
-		/// </summary>
-		/// <param name="obj">Object to unbox.</param>
-		/// <param name="targetType">Target type for the unboxing.</param>
-		JsExpression Unbox(JsExpression obj, JsExpression targetType);
-
-		/// <summary>
-		/// Returns an expression that should try to unbox a value, or return null if the value could for some reason not be unboxed (eg, when the input is null, or when unboxing an integer it must be verified that there are no decimal places in the number).
-		/// </summary>
-		/// <param name="obj">Object to try to unbox.</param>
-		/// <param name="targetType">Target type for the unboxing.</param>
-		JsExpression TryUnbox(JsExpression obj, JsExpression targetType);
-
-		/// <summary>
-		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List).
+		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List). Note that this might also represent a generic variance conversion.
 		/// </summary>
 		JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType);
 

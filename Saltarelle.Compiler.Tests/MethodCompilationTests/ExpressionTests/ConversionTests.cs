@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,41 +18,37 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	// Unboxing
 	// Explicit reference
 	// Explicit interface
+	// Implicit reference to base class
+	// Implicit reference to interface
+	// Implicit reference to dynamic
+	// T[] to Array
+	// Array to T[]
+	// C => IF if C does not implement IF
+	// IF => T, if T is not sealed or T implements IF
+	// IF1 => IF2, if IF1 is not derived from IF2
+	// T[] to S[] if T : S
+	// T[] to S[] if S : T
+	// IEnumerable<S> to IEnumerable<T> if S : T (or List<S> to IEnumerable<T>)
+	// Null literal to reference
+	// Explicit dynamic
+	// Variance
 
 	// Conversions:
 	// Implicit enum
 	// Implicit reference:
-	//   Implicit reference to base class
-	//   Implicit reference to interface
-	//   Implicit reference to dynamic
-	//   T[] to S[] if T : S
-	//   T[] to Array
 	//   T[] to IList<S> if T : S
 	//   delegate => System.Delegate
-	//   Null literal to reference
-	//   IEnumerable<S> to IEnumerable<T> if S : T (or List<S> to IEnumerable<T>)
-	// Implicit dynamic
 	// Implicit type param to base
 	// op_Implicit
-	// Explicit dynamic
 	// op_Explicit
 	// Explicit reference:
 	//    object => T
-	//    dynamic => T
-	//    C => IF if C does not implement IF
-	//    IF => T, if T is not sealed or T implements IF
-	//    IF1 => IF2, if IF1 is not derived from IF2
-	//    T[] to S[] if S : T
-	//    Array to T[]
 	//    T[] to IList<S> if explicit conv from S to T
 	//    Delegate => delegate
-	//    variance
 	//    variance (delegate)
 	//    Explicit type param conversions
 
-	// TryCast (and TryUnbox)
-
-
+	// TryCast
 
 	[TestFixture]
 	public class ConversionTests  : MethodCompilerTestBase {
@@ -825,12 +822,12 @@ public void M() {
 }",
 @"function() {
 	var $o = null;
-	var $x1 = $FromNullable($Unbox($o, {Int32}));
-	var $x2 = $Unbox($o, {Int32});
-	var $x3 = $FromNullable($Unbox($o, {Double}));
-	var $x4 = $Unbox($o, {Double});
-	var $x5 = $FromNullable($Unbox($o, {Boolean}));
-	var $x6 = $Unbox($o, {Boolean});
+	var $x1 = $FromNullable($Cast($o, {Int32}));
+	var $x2 = $Cast($o, {Int32});
+	var $x3 = $FromNullable($Cast($o, {Double}));
+	var $x4 = $Cast($o, {Double});
+	var $x5 = $FromNullable($Cast($o, {Boolean}));
+	var $x6 = $Cast($o, {Boolean});
 }");
 		}
 
@@ -847,7 +844,6 @@ public void M() {
 }",
 @"	var $d = $Cast($b, {D});
 ");
-
 		}
 
 		[Test]
@@ -862,7 +858,6 @@ public void M() {
 }",
 @"	var $d = $Cast($b, $InstantiateGenericType({IEnumerable}, {Object}));
 ");
-
 		}
 
 		[Test]
@@ -877,7 +872,294 @@ public void M() {
 }",
 @"	var $i2 = $Cast($i, $InstantiateGenericType({IEnumerable}, {Object}));
 ");
+		}
 
+		[Test]
+		public void UpcastingWorks() {
+			AssertCorrect(
+@"class B {}
+class D : B {}
+public void M() {
+	D d = null;
+	// BEGIN
+	B b1 = (B)d;
+	B b2 = (B)d;
+	// END
+}",
+@"	var $b1 = $Upcast($d, {B});
+	var $b2 = $Upcast($d, {B});
+");
+		}
+
+		[Test]
+		public void CastingToImplementedInterfaceWorks() {
+			AssertCorrect(
+@"public class C : System.Collections.Generic.IEnumerable<object> {}
+public void M() {
+	C c = null;
+	// BEGIN
+	System.Collections.Generic.IEnumerable<object> i1 = (System.Collections.Generic.IEnumerable<object>)c;
+	System.Collections.Generic.IEnumerable<object> i2 = c;
+	// END
+}",
+@"	var $i1 = $Upcast($c, $InstantiateGenericType({IEnumerable}, {Object}));
+	var $i2 = $Upcast($c, $InstantiateGenericType({IEnumerable}, {Object}));
+");
+		}
+
+		[Test]
+		public void CastingInterfaceToUnrelatedTypeWorks() {
+			AssertCorrect(
+@"public class C : System.Collections.Generic.IEnumerable<object> {}
+public void M() {
+	System.Collections.Generic.IEnumerable<object> i = null;
+	// BEGIN
+	C c = (C)i;
+	// END
+}",
+@"	var $c = $Cast($i, {C});
+");
+		}
+
+		[Test]
+		public void CastingInterfaceToTypeThatImplementsTheInterfaceWorks() {
+			AssertCorrect(
+@"public class C {}
+public void M() {
+	System.Collections.Generic.IEnumerable<object> i = null;
+	// BEGIN
+	C c = (C)i;
+	// END
+}",
+@"	var $c = $Cast($i, {C});
+");
+		}
+
+		[Test]
+		public void CastingToObjectWorks() {
+			AssertCorrect(
+@"public class C {}
+public void M() {
+	C c = null;
+	object[] arr = null;
+	// BEGIN
+	object o1 = c;
+	object o2 = c;
+	object o3 = arr;
+	// END
+}",
+@"	var $o1 = $Upcast($c, {Object});
+	var $o2 = $Upcast($c, {Object});
+	var $o3 = $Upcast($arr, {Object});
+");
+		}
+
+		[Test]
+		public void CastingToDynamicWorks() {
+			AssertCorrect(
+@"public class C {}
+public void M() {
+	C c = null;
+	// BEGIN
+	dynamic d1 = c;
+	dynamic d2 = (dynamic)c;
+	// END
+}",
+@"	var $d1 = $c;
+	var $d2 = $c;
+");
+		}
+
+		[Test]
+		public void ArrayCovarianceIsANoOp() {
+			AssertCorrect(
+@"public class B {}
+public class D : B {}
+public void M() {
+	D[] d = null;
+	// BEGIN
+	B[] b1 = d;
+	B[] b2 = (B[])d;
+	// END
+}",
+@"	var $b1 = $d;
+	var $b2 = $d;
+");
+		}
+
+		[Test]
+		public void ArrayContravarianceIsANoOp() {
+			AssertCorrect(
+@"public class B {}
+public class D : B {}
+public void M() {
+	B[] b = null;
+	// BEGIN
+	D[] d = (D[])b;
+	// END
+}",
+@"	var $d = $b;
+");
+		}
+
+		[Test]
+		public void ConvertingArrayTypeToSystemArrayIsAnUpcast() {
+			AssertCorrect(
+@"public class C {}
+public void M() {
+	C[] c = null;
+	// BEGIN
+	Array a1 = (Array)c;
+	Array a2 = (Array)c;
+	// END
+}",
+@"	var $a1 = $Upcast($c, {Array});
+	var $a2 = $Upcast($c, {Array});
+");
+		}
+
+		[Test]
+		public void ConvertingSystemArrayToArrayTypeIsADowncast() {
+			AssertCorrect(
+@"public class C {}
+public void M() {
+	Array a = null;
+	// BEGIN
+	C[] c = (C[])a;
+	// END
+}",
+@"	var $c = $Cast($a, $Array({C}));
+");
+		}
+
+		[Test]
+		public void GenericVarianceConversionIsAnUpcast() {
+			AssertCorrect(
+@"class C {}
+public void M() {
+	System.Collections.Generic.IEnumerable<C> c1 = null;
+	System.Collections.Generic.List<C> c2 = null;
+	// BEGIN
+	System.Collections.Generic.IEnumerable<object> o1 = c1;
+	System.Collections.Generic.IEnumerable<object> o2 = c2;
+	// END
+}",
+@"	var $o1 = $Upcast($c1, $InstantiateGenericType({IEnumerable}, {Object}));
+	var $o2 = $Upcast($c2, $InstantiateGenericType({IEnumerable}, {Object}));
+");
+		}
+
+		[Test]
+		public void NullLiteralToReferenceTypeWorks() {
+			AssertCorrect(
+@"class C {}
+public void M() {
+	// BEGIN
+	object o1 = null;
+	System.Collections.Generic.IEnumerable<object> o2 = null;
+	System.Collections.Generic.List<object> o3 = null;
+	// END
+}",
+@"	var $o1 = null;
+	var $o2 = null;
+	var $o3 = null;
+");
+		}
+
+		[Test]
+		public void CastingDynamicToObjectIsANoOp() {
+			AssertCorrect(
+@"class C {}
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	object o = d;
+	// END
+}",
+@"	var $o = $d;
+");
+		}
+
+		[Test]
+		public void CastingDynamicToReferenceTypeIsADowncast() {
+			AssertCorrect(
+@"class C {}
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	System.Collections.Generic.List<object> l = (System.Collections.Generic.List<object>)d;
+	// END
+}",
+@"	var $l = $Cast($d, $InstantiateGenericType({List}, {Object}));
+");
+		}
+
+		[Test]
+		public void CastingDynamicToNullableValueTypeIsADowncast() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+
+	// BEGIN
+	int? x1 = (int?)d;
+	double? x2 = (double?)d;
+	bool? x3 = (bool?)d;
+	// END
+}",
+@"	var $x1 = $Cast($d, {Int32});
+	var $x2 = $Cast($d, {Double});
+	var $x3 = $Cast($d, {Boolean});
+");
+		}
+
+		[Test]
+		public void CastingDynamicToValueTypeIsADowncast() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+
+	// BEGIN
+	int x1 = (int)d;
+	double x2 = (double)d;
+	bool x3 = (bool)d;
+	// END
+}",
+@"	var $x1 = $FromNullable($Cast($d, {Int32}));
+	var $x2 = $FromNullable($Cast($d, {Double}));
+	var $x3 = $FromNullable($Cast($d, {Boolean}));
+");
+		}
+
+		[Test]
+		public void ConvertingNumberToSystemValueTypeIsAnUpcast() {
+			AssertCorrect(
+@"public void M() {
+	int i = 0;
+
+	// BEGIN
+	ValueType v1 = i;
+	ValueType v2 = (ValueType)i;
+	// END
+}",
+@"	var $v1 = $Upcast($i, {ValueType});
+	var $v2 = $Upcast($i, {ValueType});
+");
+		}
+
+		[Test]
+		public void ConvertingSystemValueTypeToNumberIsADowncast() {
+			AssertCorrect(
+@"public void M() {
+	ValueType v = null;
+
+	// BEGIN
+	int i1 = (int)v;
+	int? i2 = (int?)v;
+	// END
+}",
+@"	var $i1 = $FromNullable($Cast($v, {Int32}));
+	var $i2 = $Cast($v, {Int32});
+");
 		}
 	}
 }
