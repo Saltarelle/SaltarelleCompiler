@@ -1208,35 +1208,46 @@ namespace Saltarelle.Compiler {
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Conversion.IsIdentityConversion) {
-				return VisitResolveResult(rr.Input, returnValueIsImportant);
+				return VisitResolveResult(rr.Input, true);
 			}
 			else if (rr.Conversion.IsAnonymousFunctionConversion) {
 				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
 				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
 			}
 			else if (rr.Conversion.IsTryCast) {
-				return _runtimeLibrary.TryCast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+//				return _runtimeLibrary.TryCast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+				throw new NotImplementedException("Not implemented");
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
 				if (rr.Type.Kind == TypeKind.Dynamic)
-					return VisitResolveResult(rr.Input, returnValueIsImportant);
+					return VisitResolveResult(rr.Input, true);
 				if (rr.Conversion.IsImplicit)
-					return _runtimeLibrary.ImplicitReferenceConversion(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+					return _runtimeLibrary.ImplicitReferenceConversion(VisitResolveResult(rr.Input, true), GetJsType(rr.Type));
 				else
-					return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
+					return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), GetJsType(rr.Type));
 			}
 			else if (rr.Conversion.IsNumericConversion) {
-				var input = VisitResolveResult(rr.Input, returnValueIsImportant);
+				var result = VisitResolveResult(rr.Input, true);
+				if (IsNullableType(rr.Input.Type) && !IsNullableType(rr.Type))
+					result = _runtimeLibrary.FromNullable(result);
 
-				return !IsIntegerType(rr.Input.Type) && IsIntegerType(rr.Type)
-				       	? _runtimeLibrary.FloatToInt(input)
-				       	: input;
+				if (!IsIntegerType(rr.Input.Type) && IsIntegerType(rr.Type)) {
+					result = _runtimeLibrary.FloatToInt(result);
+
+					if (IsNullableType(rr.Input.Type) && IsNullableType(rr.Type)) {
+						result = _runtimeLibrary.Lift(result);
+					}
+				}
+				return result;
 			}
 			else if (rr.Conversion.IsDynamicConversion) {
 				return _runtimeLibrary.Downcast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsNullableConversion) {
-				return VisitResolveResult(rr.Input, returnValueIsImportant);
+				var result = VisitResolveResult(rr.Input, true);
+				if (IsNullableType(rr.Input.Type) && !IsNullableType(rr.Type))
+					result = _runtimeLibrary.FromNullable(result);
+				return result;
 			}
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
@@ -1272,9 +1283,21 @@ namespace Saltarelle.Compiler {
 					return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
 				}
 			}
+			else if (rr.Conversion.IsBoxingConversion) {
+				return VisitResolveResult(rr.Input, true);
+			}
+			else if (rr.Conversion.IsUnboxingConversion) {
+				var result = VisitResolveResult(rr.Input, true);
+				if (IsNullableType(rr.Type)) {
+					return _runtimeLibrary.Unbox(result, GetJsType(((ParameterizedType)rr.Type).TypeArguments[0]));
+				}
+				else {
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Unbox(result, GetJsType(rr.Type)));
+				}
+			}
 			else if (rr.Conversion.IsImplicit) {
 				// Null literal conversion have no property, should report this
-				return VisitResolveResult(rr.Input, returnValueIsImportant);
+				return VisitResolveResult(rr.Input, true);
 			}
 
 			throw new NotImplementedException("Conversion " + rr.Conversion + " is not implemented");

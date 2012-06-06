@@ -23,6 +23,20 @@ namespace Saltarelle.Compiler {
 		JsExpression Downcast(JsExpression expression, JsExpression targetType);
 
 		/// <summary>
+		/// Returns an expression that should unbox a value, or return null if the value to unbox is null. This means verifying that (any non-null) object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
+		/// </summary>
+		/// <param name="obj">Object to unbox.</param>
+		/// <param name="targetType">Target type for the unboxing.</param>
+		JsExpression Unbox(JsExpression obj, JsExpression targetType);
+
+		/// <summary>
+		/// Returns an expression that should try to unbox a value, or return null if the value could for some reason not be unboxed (eg, when the input is null, or when unboxing an integer it must be verified that there are no decimal places in the number).
+		/// </summary>
+		/// <param name="obj">Object to try to unbox.</param>
+		/// <param name="targetType">Target type for the unboxing.</param>
+		JsExpression TryUnbox(JsExpression obj, JsExpression targetType);
+
+		/// <summary>
 		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List).
 		/// </summary>
 		JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType);
@@ -62,6 +76,12 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="expression">Expression to lift. This will always be an invocation, or a (unary or binary) operator.</param>
 		JsExpression Lift(JsExpression expression);
+
+		/// <summary>
+		/// Generates an expression that converts from a nullable type to a non-nullable type (should return the passed-in argument if non-null, throw if it is null).
+		/// </summary>
+		/// <param name="expression">Expression to ensure that it is non-null.</param>
+		JsExpression FromNullable(JsExpression expression);
 
 		/// <summary>
 		/// Generates a call to the lifted boolean &amp; operator, which has the same semantics as the SQL AND operator.

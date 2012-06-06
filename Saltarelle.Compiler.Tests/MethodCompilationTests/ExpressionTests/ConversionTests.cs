@@ -6,14 +6,20 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	// DONE
+	// Identity
 	// Implicit numeric
 	// Explicit numeric
+	// To nullable
+	// From nullable
+	// Null literal to Nullable<T>
+	// Explicit nullable
+	// Boxing
+	// Unboxing
+	// Explicit reference
+	// Explicit interface
 
 	// Conversions:
-	// Identity
 	// Implicit enum
-	// Implicit nullable
-	// Null literal to Nullable<T>
 	// Implicit reference:
 	//   Implicit reference to base class
 	//   Implicit reference to interface
@@ -24,17 +30,11 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	//   delegate => System.Delegate
 	//   Null literal to reference
 	//   IEnumerable<S> to IEnumerable<T> if S : T (or List<S> to IEnumerable<T>)
-	// Boxing
 	// Implicit dynamic
 	// Implicit type param to base
 	// op_Implicit
-	// Explicit nullable
-	// Explicit reference
-	// Explicit interface
-	// Unboxing
 	// Explicit dynamic
 	// op_Explicit
-	// Explicit nullable
 	// Explicit reference:
 	//    object => T
 	//    dynamic => T
@@ -48,6 +48,8 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
 	//    variance
 	//    variance (delegate)
 	//    Explicit type param conversions
+
+	// TryCast (and TryUnbox)
 
 
 
@@ -696,6 +698,186 @@ public void M() {
 	var $db = $src;
 	var $dc = $src;
 }");
+		}
+
+		[Test]
+		public void ConversionToNullable() {
+			AssertCorrect(
+@"public void M() {
+	int  i1 = 0;
+	int? i2 = i1;
+	int? i3 = (int?)i1;
+
+	decimal  d1 = 0m;
+	decimal? d2 = d1;
+	decimal? d3 = (decimal?)d1;
+
+	double  f1 = 0.0;
+	double? f2 = f1;
+	double? f3 = (double?)f1;
+
+	double? f4 = (double?)i1;
+
+	int? i4 = (int?)f1;
+	int? i5 = (int?)f2;
+}",
+@"function() {
+	var $i1 = 0;
+	var $i2 = $i1;
+	var $i3 = $i1;
+	var $d1 = 0;
+	var $d2 = $d1;
+	var $d3 = $d1;
+	var $f1 = 0;
+	var $f2 = $f1;
+	var $f3 = $f1;
+	var $f4 = $i1;
+	var $i4 = $Truncate($f1);
+	var $i5 = $Lift($Truncate($f2));
+}");
+		}
+
+		[Test]
+		public void NullLiteralToNullable() {
+			AssertCorrect(
+@"public void M() {
+	int? x = null;
+}",
+@"function() {
+	var $x = null;
+}");
+		}
+
+		[Test]
+		public void ConversionFromNullable() {
+			AssertCorrect(
+@"public void M() {
+	int? i1 = null;
+	int i2 = (int)i1;
+
+	double? d1 = null;
+	double d2 = (double)d1;
+
+	int i3 = (int)d1;
+	double d3 = (double)i1;
+
+	bool? b1 = false;
+	bool b2 = (bool)b1;
+}",
+@"function() {
+	var $i1 = null;
+	var $i2 = $FromNullable($i1);
+	var $d1 = null;
+	var $d2 = $FromNullable($d1);
+	var $i3 = $Truncate($FromNullable($d1));
+	var $d3 = $FromNullable($i1);
+	var $b1 = false;
+	var $b2 = $FromNullable($b1);
+}");
+		}
+
+		[Test]
+		public void BoxingDoesNothing() {
+			AssertCorrect(
+@"public void M() {
+	int x1 = 0;
+	int? x2 = 0;
+	double x3 = 0;
+	double? x4 = 0;
+	bool x5 = false;
+	bool? x6 = false;
+
+	object o1 = x1;
+	object o2 = x2;
+	object o3 = x3;
+	object o4 = x4;
+	object o5 = x5;
+	object o6 = x6;
+}",
+@"function() {
+	var $x1 = 0;
+	var $x2 = 0;
+	var $x3 = 0;
+	var $x4 = 0;
+	var $x5 = false;
+	var $x6 = false;
+	var $o1 = $x1;
+	var $o2 = $x2;
+	var $o3 = $x3;
+	var $o4 = $x4;
+	var $o5 = $x5;
+	var $o6 = $x6;
+}");
+		}
+
+		[Test]
+		public void UnboxingWorks() {
+			AssertCorrect(
+@"public void M() {
+	object o = null;
+
+	int x1 = (int)o;
+	int? x2 = (int?)o;
+	double x3 = (double)o;
+	double? x4 = (double?)o;
+	bool x5 = (bool)o;
+	bool? x6 = (bool?)o;
+}",
+@"function() {
+	var $o = null;
+	var $x1 = $FromNullable($Unbox($o, {Int32}));
+	var $x2 = $Unbox($o, {Int32});
+	var $x3 = $FromNullable($Unbox($o, {Double}));
+	var $x4 = $Unbox($o, {Double});
+	var $x5 = $FromNullable($Unbox($o, {Boolean}));
+	var $x6 = $Unbox($o, {Boolean});
+}");
+		}
+
+		[Test]
+		public void DowncastingToDerivedClassWorks() {
+			AssertCorrect(
+@"class B {}
+class D : B {}
+public void M() {
+	B b = null;
+	// BEGIN
+	D d = (D)b;
+	// END
+}",
+@"	var $d = $Cast($b, {D});
+");
+
+		}
+
+		[Test]
+		public void DowncastingToUnimplementedInterfaceWorks() {
+			AssertCorrect(
+@"public class B {}
+public void M() {
+	B b = null;
+	// BEGIN
+	var d = (System.Collections.Generic.IEnumerable<object>)b;
+	// END
+}",
+@"	var $d = $Cast($b, $InstantiateGenericType({IEnumerable}, {Object}));
+");
+
+		}
+
+		[Test]
+		public void CastingBetweenUnrelatedInterfacesWorks() {
+			AssertCorrect(
+@"public interface I {}
+public void M() {
+	I i = null;
+	// BEGIN
+	var i2 = (System.Collections.Generic.IEnumerable<object>)i;
+	// END
+}",
+@"	var $i2 = $Cast($i, $InstantiateGenericType({IEnumerable}, {Object}));
+");
+
 		}
 	}
 }
