@@ -26,6 +26,12 @@ namespace Saltarelle.Compiler {
             /// </summary>
             InlineCode,
 
+			/// <summary>
+			/// The constructor call should be treated as JSON, meaning that no code will be generated, and any code that uses this constructor will use inline object syntax ( { a: b, c : d } ) instead of calling it.
+			/// No other members are valid.
+			/// </summary>
+			Json,
+
             /// <summary>
             /// The constructor is not usable from script. No code is generated for it, and any usages of it will give an error.
             /// </summary>
@@ -88,5 +94,9 @@ namespace Saltarelle.Compiler {
         public static ConstructorImplOptions NotUsableFromScript() {
             return new ConstructorImplOptions { Type = ImplType.NotUsableFromScript, GenerateCode = false };
         }
+
+		public static ConstructorImplOptions Json() {
+			return new ConstructorImplOptions { Type = ImplType.Json, GenerateCode = false };
+		}
     }
 }

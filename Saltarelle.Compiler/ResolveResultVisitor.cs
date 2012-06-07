@@ -60,6 +60,11 @@ namespace Saltarelle.Compiler {
 			return default(TResult);
         }
 
+        public virtual TResult VisitInvocationResolveResult(InvocationResolveResult rr, TData data) {
+            VisitChildResolveResults(rr, data);
+			return default(TResult);
+        }
+
         public virtual TResult VisitConversionResolveResult(ConversionResolveResult rr, TData data) {
             VisitChildResolveResults(rr, data);
 			return default(TResult);

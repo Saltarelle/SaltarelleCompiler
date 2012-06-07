@@ -177,7 +177,7 @@ namespace Saltarelle.Compiler {
 			var impl = _namingConvention.GetConstructorImplementation((IMethod)initializer.Member);
 
 			if (currentIsStaticMethod) {
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, (IMethod)initializer.Member, initializer)));
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, (IMethod)initializer.Member, initializer.Arguments, initializer.GetArgumentsForCall(), initializer.GetArgumentToParameterMap(), initializer.InitializerStatements)));
 			}
 			else {
 				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(initializer.Member.DeclaringType), false, false, initializer.Arguments, initializer.GetArgumentsForCall(), initializer.GetArgumentToParameterMap());
@@ -527,7 +527,7 @@ namespace Saltarelle.Compiler {
 			switch (impl.Type) {
 				case EventImplOptions.ImplType.AddAndRemoveMethods: {
 					var accessor = isAdd ? evt.AddAccessor : evt.RemoveAccessor;
-					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, new CSharpInvocationResolveResult(target.TargetResult, accessor, new[] { value }));
+					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, target.TargetResult, new[] { value }, new[] { value }, new[] { 0 }, false);
 				}
 				default:
 					_errorReporter.Error("Cannot use event " + target.Member.DeclaringType.FullName + "." + target.Member.Name + " from script.");
@@ -768,7 +768,7 @@ namespace Saltarelle.Compiler {
 				switch (impl.Type) {
 					case PropertyImplOptions.ImplType.GetAndSetMethods: {
 						var getter = ((IProperty)rr.Member).Getter;
-						return CompileMethodInvocation(impl.GetMethod, getter, new CSharpInvocationResolveResult(rr.TargetResult, getter, new ResolveResult[0]));	// We know we have no arguments because indexers are treated as invocations.
+						return CompileMethodInvocation(impl.GetMethod, getter, rr.TargetResult, new ResolveResult[0], new ResolveResult[0], new int[0], false);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyImplOptions.ImplType.Field: {
 						var jsTarget = InnerCompile(rr.TargetResult, true);
@@ -808,6 +808,7 @@ namespace Saltarelle.Compiler {
 			return CompileThisAndArgumentListForMethodCall(invocation.TargetResult, targetUsedMultipleTimes, argumentsUsedMultipleTimes, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 		}
 
+#warning Try removing specifiedArguments
 		private List<JsExpression> CompileThisAndArgumentListForMethodCall(ResolveResult target, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, IList<ResolveResult> specifiedArguments, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
 			var expressions = new List<JsExpression>();
 			expressions.Add(InnerCompile(target, targetUsedMultipleTimes));
@@ -861,10 +862,10 @@ namespace Saltarelle.Compiler {
 			return expressions;
 		}
 
-		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
+		private JsExpression CompileMethodInvocation(MethodImplOptions impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> arguments, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall) {
 			var typeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : new IType[0];
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.TargetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
-			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsVirtual && !invocation.IsVirtualCall);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, arguments, argumentsForCall, argumentToParameterMap);
+			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsVirtual && !isVirtualCall);
 		}
 
 		private JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, IList<JsExpression> thisAndArguments) {
@@ -962,8 +963,8 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private JsExpression CompileConstructorInvocation(ConstructorImplOptions impl, IMethod method, CSharpInvocationResolveResult invocation) {
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, invocation.Arguments, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+		private JsExpression CompileConstructorInvocation(ConstructorImplOptions impl, IMethod method, IList<ResolveResult> arguments, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, arguments, argumentsForCall, argumentToParameterMap);
 
 			JsExpression constructorCall;
 
@@ -988,12 +989,12 @@ namespace Saltarelle.Compiler {
 					return JsExpression.Number(0);
 			}
 
-			if (invocation.InitializerStatements != null && invocation.InitializerStatements.Count > 0) {
+			if (initializerStatements != null && initializerStatements.Count > 0) {
 				var obj = _createTemporaryVariable(method.DeclaringType);
 				var oldObjectBeingInitialized = _objectBeingInitialized;
 				_objectBeingInitialized = obj;
 				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, constructorCall));
-				foreach (var init in invocation.InitializerStatements) {
+				foreach (var init in initializerStatements) {
 					var js = VisitResolveResult(init, false);
 					_additionalStatements.Add(new JsExpressionStatement(js));
 				}
@@ -1010,34 +1011,42 @@ namespace Saltarelle.Compiler {
 			return JsExpression.Identifier(_variables[_objectBeingInitialized].Name);
 		}
 
-		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Member is IMethod) {
-				if (rr.Member.Name == "Invoke" && rr.Member.DeclaringType.Kind == TypeKind.Delegate) {
+		private JsExpression HandleInvocation(IMember member, ResolveResult targetResult, IList<ResolveResult> arguments, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool isVirtualCall) {
+			if (member is IMethod) {
+				if (member.Name == "Invoke" && member.DeclaringType.Kind == TypeKind.Delegate) {
 					// Invoke the underlying method instead of calling the Invoke method.
-					return CompileMethodInvocation(null, (IMethod)rr.Member, rr);
+					return CompileMethodInvocation(null, (IMethod)member, targetResult, arguments, argumentsForCall, argumentToParameterMap, isVirtualCall);
 				}
 				else {
-					var method = (IMethod)rr.Member;
+					var method = (IMethod)member;
 					if (method.IsConstructor) {
-						return CompileConstructorInvocation(_namingConvention.GetConstructorImplementation(method), method, rr);
+						return CompileConstructorInvocation(_namingConvention.GetConstructorImplementation(method), method, arguments, argumentsForCall, argumentToParameterMap, initializerStatements);
 					}
 					else {
-						return CompileMethodInvocation(_namingConvention.GetMethodImplementation(method), method, rr);
+						return CompileMethodInvocation(_namingConvention.GetMethodImplementation(method), method, targetResult, arguments, argumentsForCall, argumentToParameterMap, isVirtualCall);
 					}
 				}
 			}
-			else if (rr.Member is IProperty) {
-				var property = (IProperty)rr.Member;
+			else if (member is IProperty) {
+				var property = (IProperty)member;
 				var impl = _namingConvention.GetPropertyImplementation(property);
 				if (impl.Type != PropertyImplOptions.ImplType.GetAndSetMethods) {
 					_errorReporter.Error("Cannot invoke property that does not have a get method.");
 					return JsExpression.Number(0);
 				}
-				return CompileMethodInvocation(impl.GetMethod, property.Getter, rr);
+				return CompileMethodInvocation(impl.GetMethod, property.Getter, targetResult, arguments, argumentsForCall, argumentToParameterMap, isVirtualCall);
 			}
 			else {
-				throw new InvalidOperationException("Invocation of unsupported member " + rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
+				throw new InvalidOperationException("Invocation of unsupported member " + member.DeclaringType.FullName + "." + member.Name);
 			}
+		}
+
+		public override JsExpression VisitInvocationResolveResult(InvocationResolveResult rr, bool data) {
+			return HandleInvocation(rr.Member, rr.TargetResult, rr.Arguments, rr.Arguments, Enumerable.Range(0, rr.Arguments.Count).ToList(), rr.InitializerStatements, rr.IsVirtualCall);
+		}
+
+		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
+			return HandleInvocation(rr.Member, rr.TargetResult, rr.Arguments, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, rr.IsVirtualCall);
 		}
 
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {

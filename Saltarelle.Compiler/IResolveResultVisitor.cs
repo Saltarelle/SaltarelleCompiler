@@ -17,6 +17,7 @@ namespace Saltarelle.Compiler {
         TResult VisitMethodGroupResolveResult(MethodGroupResolveResult rr, TData data);
         TResult VisitLambdaResolveResult(LambdaResolveResult rr, TData data);
         TResult VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, TData data);
+        TResult VisitInvocationResolveResult(InvocationResolveResult rr, TData data);
         TResult VisitConversionResolveResult(ConversionResolveResult rr, TData data);
         TResult VisitConstantResolveResult(ConstantResolveResult rr, TData data);
         TResult VisitByReferenceResolveResult(ByReferenceResolveResult rr, TData data);
@@ -46,6 +47,9 @@ namespace Saltarelle.Compiler {
             }
             else if (rr is CSharpInvocationResolveResult) {
                 return visitor.VisitCSharpInvocationResolveResult((CSharpInvocationResolveResult)rr, data);
+            }
+            else if (rr is InvocationResolveResult) {
+                return visitor.VisitInvocationResolveResult((InvocationResolveResult)rr, data);
             }
             else if (rr is LambdaResolveResult) {
                 return visitor.VisitLambdaResolveResult((LambdaResolveResult)rr, data);

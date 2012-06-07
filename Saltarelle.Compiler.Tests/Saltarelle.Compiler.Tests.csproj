@@ -80,6 +80,7 @@
     <Compile Include="MethodCompilationTests\ConstructorTests.cs" />
     <Compile Include="MethodCompilationTests\AutoEventAccessorCompilationTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\AnonymousMethodTests.cs" />
+    <Compile Include="MethodCompilationTests\ExpressionTests\AnonymousObjectCreationTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\ArrayAccessTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\ArrayLiteralTests.cs" />
     <Compile Include="MethodCompilationTests\ExpressionTests\BinaryNonAssignmentOperatorTests.cs" />

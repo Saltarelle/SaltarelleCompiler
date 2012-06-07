@@ -57,9 +57,22 @@ namespace Saltarelle.Compiler.Tests.MemberConversionTests {
         [Test]
         public void ConstructorImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
             var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.NotUsableFromScript() };
-            Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
-            var m = FindInstanceMethod("C.X");
-            m.Should().BeNull();
+            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            FindClass("C").UnnamedConstructor.Should().BeNull();
+        }
+
+        [Test]
+        public void ConstructorImplementedAsInlineCodeDoesNotAppearOnTheType() {
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.InlineCode("X") };
+            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            FindClass("C").UnnamedConstructor.Should().BeNull();
+        }
+
+        [Test]
+        public void ConstructorImplementedAsJsonDoesNotAppearOnTheType() {
+            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorImplOptions.Json() };
+            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]

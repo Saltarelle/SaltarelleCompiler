@@ -38,7 +38,14 @@ namespace Saltarelle.Compiler.Tests {
                 GetTypeName                     = t => t.Name;
                 GetTypeParameterName            = t => "$" + t.Name;
                 GetMethodImplementation         = m => MethodImplOptions.NormalMethod(m.Name);
-                GetConstructorImplementation    = c => (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0) ? ConstructorImplOptions.Unnamed() : ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
+                GetConstructorImplementation    = c => {
+					if (c.DeclaringType.GetDefinition().IsSynthetic)
+						return ConstructorImplOptions.Json();
+					else if (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0)
+						return ConstructorImplOptions.Unnamed();
+					else
+						return ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
+				};
                 GetPropertyImplementation       = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name));
                 GetAutoPropertyBackingFieldName = p => "$" + p.Name;
                 GetFieldImplementation          = f => FieldImplOptions.Field("$" + f.Name);
