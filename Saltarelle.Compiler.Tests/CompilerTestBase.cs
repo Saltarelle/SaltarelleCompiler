@@ -39,14 +39,19 @@ namespace Saltarelle.Compiler.Tests {
                 GetTypeParameterName            = t => "$" + t.Name;
                 GetMethodImplementation         = m => MethodImplOptions.NormalMethod(m.Name);
                 GetConstructorImplementation    = c => {
-					if (c.DeclaringType.GetDefinition().IsSynthetic)
+					if (c.DeclaringType.Kind == TypeKind.Anonymous)
 						return ConstructorImplOptions.Json();
 					else if (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0)
 						return ConstructorImplOptions.Unnamed();
 					else
 						return ConstructorImplOptions.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
 				};
-                GetPropertyImplementation       = p => PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name));
+                GetPropertyImplementation       = p => {
+					if (p.DeclaringType.Kind == TypeKind.Anonymous)
+						return PropertyImplOptions.Field("$" + p.Name);
+					else
+						return PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_" + p.Name), MethodImplOptions.NormalMethod("set_" + p.Name));
+				};
                 GetAutoPropertyBackingFieldName = p => "$" + p.Name;
                 GetFieldImplementation          = f => FieldImplOptions.Field("$" + f.Name);
                 GetEventImplementation          = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_" + e.Name), MethodImplOptions.NormalMethod("remove_" + e.Name));

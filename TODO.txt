@@ -9,7 +9,6 @@ Output writer
 User-defined operators
 User-defined conversions
 Runtime library
-Anonymous objects
 Query comprehension
 Parameters using byref semantics
 Dynamic

@@ -28,9 +28,12 @@ namespace Saltarelle.Compiler.Tests.MethodCompilationTests
 
 		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
-				GetPropertyImplementation = p => new Regex("^F[0-9]*$").IsMatch(p.Name) ? PropertyImplOptions.Field("$" + p.Name)
-				                                                                        : PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_$" + p.Name),
-				                                                                                                               MethodImplOptions.NormalMethod("set_$" + p.Name)),
+				GetPropertyImplementation = p => {
+					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name))
+						return PropertyImplOptions.Field("$" + p.Name);
+					else
+				        return PropertyImplOptions.GetAndSetMethods(MethodImplOptions.NormalMethod("get_$" + p.Name), MethodImplOptions.NormalMethod("set_$" + p.Name));
+				},
 				GetMethodImplementation = m => MethodImplOptions.NormalMethod("$" + m.Name),
 				GetEventImplementation  = e => EventImplOptions.AddAndRemoveMethods(MethodImplOptions.NormalMethod("add_$" + e.Name), MethodImplOptions.NormalMethod("remove_$" + e.Name)),
 			}, addSkeleton: addSkeleton);

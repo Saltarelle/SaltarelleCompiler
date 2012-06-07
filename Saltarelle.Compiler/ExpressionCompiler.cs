@@ -974,47 +974,101 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private JsExpression CompileConstructorInvocation(ConstructorImplOptions impl, IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap);
+		private JsExpression CompileJsonConstructorCall(IMethod constructor, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
+			var jsPropertyNames = new List<string>();
+			var expressions = new List<JsExpression>();
+			foreach (var init in initializerStatements) {
+				var orr = init as OperatorResolveResult;
+				if (orr != null && orr.OperatorType == ExpressionType.Assign && orr.Operands[0] is MemberResolveResult && ((MemberResolveResult)orr.Operands[0]).TargetResult is InitializedObjectResolveResult) {
+					var currentMember = ((MemberResolveResult)orr.Operands[0]).Member;
+					string jsName;
+					if (currentMember is IProperty) {
+						var currentImpl = _namingConvention.GetPropertyImplementation((IProperty)currentMember);
+						if (currentImpl.Type == PropertyImplOptions.ImplType.Field) {
+							jsName = currentImpl.FieldName;
+						}
+						else {
+							_errorReporter.Error("Cannot use the the property " + currentMember.Name + " in an anonymous object initializer.");
+							jsName = "X";
+						}
+					}
+					else if (currentMember is IField) {
+						var currentImpl = _namingConvention.GetFieldImplementation((IField)currentMember);
+						if (currentImpl.Type == FieldImplOptions.ImplType.Field) {
+							jsName = currentImpl.Name;
+						}
+						else {
+							_errorReporter.Error("Cannot use the field " + currentMember.Name + " in an anonymous object initializer.");
+							jsName = "X";
+						}
+					}
+					else {
+						_errorReporter.Error("Cannot use the member " + currentMember.Name + " in an anonymous object initializer.");
+						jsName = "X";
+					}
 
-			JsExpression constructorCall;
-
-			switch (impl.Type) {
-				case ConstructorImplOptions.ImplType.UnnamedConstructor:
-					constructorCall = JsExpression.New(thisAndArguments[0], thisAndArguments.Skip(1));
-					break;
-
-				case ConstructorImplOptions.ImplType.NamedConstructor:
-					constructorCall = JsExpression.New(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
-					break;
-
-				case ConstructorImplOptions.ImplType.StaticMethod:
-					constructorCall = JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
-					break;
-
-				case ConstructorImplOptions.ImplType.InlineCode:
-					return CompileInlineCodeMethodInvocation(method, impl.LiteralCode, thisAndArguments);
-
-				default:
-					_errorReporter.Error("This constructor cannot be used from script.");
-					return JsExpression.Number(0);
+					jsPropertyNames.Add(jsName);
+					expressions.Add(InnerCompile(orr.Operands[1], false, expressions));
+				}
+				else {
+					_errorReporter.Error("Expected an assignment to an InitializedObjectResolveResult, got " + orr);
+					jsPropertyNames.Add("X");
+					expressions.Add(JsExpression.Null);
+				}
 			}
 
-			if (initializerStatements != null && initializerStatements.Count > 0) {
-				var obj = _createTemporaryVariable(method.DeclaringType);
-				var oldObjectBeingInitialized = _objectBeingInitialized;
-				_objectBeingInitialized = obj;
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, constructorCall));
-				foreach (var init in initializerStatements) {
-					var js = VisitResolveResult(init, false);
-					_additionalStatements.Add(new JsExpressionStatement(js));
-				}
-				_objectBeingInitialized = oldObjectBeingInitialized;
+			var jsProperties = new List<JsObjectLiteralProperty>();
+			for (int i = 0; i < initializerStatements.Count; i++)
+				jsProperties.Add(new JsObjectLiteralProperty(jsPropertyNames[i], expressions[i]));
+			return JsExpression.ObjectLiteral(jsProperties);
+		}
 
-				return JsExpression.Identifier(_variables[obj].Name);
+		private JsExpression CompileConstructorInvocation(ConstructorImplOptions impl, IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
+			if (impl.Type == ConstructorImplOptions.ImplType.Json) {
+				return CompileJsonConstructorCall(method, argumentsForCall, argumentToParameterMap, initializerStatements);
 			}
 			else {
-				return constructorCall;
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap);
+
+				JsExpression constructorCall;
+
+				switch (impl.Type) {
+					case ConstructorImplOptions.ImplType.UnnamedConstructor:
+						constructorCall = JsExpression.New(thisAndArguments[0], thisAndArguments.Skip(1));
+						break;
+
+					case ConstructorImplOptions.ImplType.NamedConstructor:
+						constructorCall = JsExpression.New(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+						break;
+
+					case ConstructorImplOptions.ImplType.StaticMethod:
+						constructorCall = JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+						break;
+
+					case ConstructorImplOptions.ImplType.InlineCode:
+						return CompileInlineCodeMethodInvocation(method, impl.LiteralCode, thisAndArguments);
+
+					default:
+						_errorReporter.Error("This constructor cannot be used from script.");
+						return JsExpression.Number(0);
+				}
+
+				if (initializerStatements != null && initializerStatements.Count > 0) {
+					var obj = _createTemporaryVariable(method.DeclaringType);
+					var oldObjectBeingInitialized = _objectBeingInitialized;
+					_objectBeingInitialized = obj;
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, constructorCall));
+					foreach (var init in initializerStatements) {
+						var js = VisitResolveResult(init, false);
+						_additionalStatements.Add(new JsExpressionStatement(js));
+					}
+					_objectBeingInitialized = oldObjectBeingInitialized;
+
+					return JsExpression.Identifier(_variables[obj].Name);
+				}
+				else {
+					return constructorCall;
+				}
 			}
 		}
 
@@ -1053,7 +1107,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public override JsExpression VisitInvocationResolveResult(InvocationResolveResult rr, bool data) {
-			return HandleInvocation(rr.Member, rr.TargetResult, rr.Arguments, Enumerable.Range(0, rr.Arguments.Count).ToList(), rr.InitializerStatements, rr.IsVirtualCall);
+			return HandleInvocation(rr.Member, rr.TargetResult, rr.Arguments, null, rr.InitializerStatements, rr.IsVirtualCall);
 		}
 
 		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, bool returnValueIsImportant) {
