@@ -1,16 +1,19 @@
 TODO:
+v1:
 params
-yield
-async
-goto
 Metadata importer
 Reference importer
 Output writer
-User-defined operators
-User-defined conversions
 Runtime library
 Query comprehension
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
 Const fields
+
+v2:
+yield
+async
+goto
+User-defined operators
+User-defined conversions
