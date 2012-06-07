@@ -5,7 +5,6 @@ Metadata importer
 Reference importer
 Output writer
 Runtime library
-Query comprehension
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
@@ -17,3 +16,4 @@ async
 goto
 User-defined operators
 User-defined conversions
+Query comprehension
