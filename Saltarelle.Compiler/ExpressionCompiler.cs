@@ -267,7 +267,7 @@ namespace Saltarelle.Compiler {
 
 		private bool IsIntegerType(IType type) {
 			if (IsNullableType(type))
-				type = ((ParameterizedType)type).TypeArguments[0];
+				type = GetNonNullableType(type);
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.SByte))
@@ -282,7 +282,7 @@ namespace Saltarelle.Compiler {
 
 		private bool IsUnsignedType(IType type) {
 			if (IsNullableType(type))
-				type = ((ParameterizedType)type).TypeArguments[0];
+				type = GetNonNullableType(type);
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt16))
@@ -291,12 +291,16 @@ namespace Saltarelle.Compiler {
 		}
 
 		private bool IsNullableType(IType type) {
-			return type.GetDefinition().Equals(_compilation.FindType(KnownTypeCode.NullableOfT));
+			return Equals(type.GetDefinition(), _compilation.FindType(KnownTypeCode.NullableOfT));
+		}
+
+		private IType GetNonNullableType(IType nullableType) {
+			return ((ParameterizedType)nullableType).TypeArguments[0];
 		}
 
 		private bool IsNullableBooleanType(IType type) {
-			return type.GetDefinition().Equals(_compilation.FindType(KnownTypeCode.NullableOfT))
-			    && ((ParameterizedType)type).TypeArguments[0] == _compilation.FindType(KnownTypeCode.Boolean);
+			return Equals(type.GetDefinition(), _compilation.FindType(KnownTypeCode.NullableOfT))
+			    && Equals(GetNonNullableType(type), _compilation.FindType(KnownTypeCode.Boolean));
 		}
 
 		public JsExpression GetJsType(IType type) {
@@ -1195,7 +1199,7 @@ namespace Saltarelle.Compiler {
 		}
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
-			var targetType = IsNullableType(rr.TargetType) ? ((ParameterizedType)rr.TargetType).TypeArguments[0] : rr.TargetType;
+			var targetType = IsNullableType(rr.TargetType) ? GetNonNullableType(rr.TargetType) : rr.TargetType;
 			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), GetJsType(targetType));
         }
 
@@ -1218,8 +1222,7 @@ namespace Saltarelle.Compiler {
 				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
 			}
 			else if (rr.Conversion.IsTryCast) {
-//				return _runtimeLibrary.TryCast(VisitResolveResult(rr.Input, true), new JsTypeReferenceExpression(rr.Type.GetDefinition()));
-				throw new NotImplementedException("Not implemented");
+				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), GetJsType(IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type));
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
 				var input = VisitResolveResult(rr.Input, true);
@@ -1251,7 +1254,7 @@ namespace Saltarelle.Compiler {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(result, GetJsType(((ParameterizedType)rr.Type).TypeArguments[0]));
+					return _runtimeLibrary.Downcast(result, GetJsType(GetNonNullableType(rr.Type)));
 				}
 				else if (rr.Type.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
@@ -1311,10 +1314,13 @@ namespace Saltarelle.Compiler {
 			else if (rr.Conversion.IsUnboxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
-					return _runtimeLibrary.Downcast(result, GetJsType(((ParameterizedType)rr.Type).TypeArguments[0]));
+					return _runtimeLibrary.Downcast(result, GetJsType(GetNonNullableType(rr.Type)));
 				}
 				else {
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, GetJsType(rr.Type)));
+					result = _runtimeLibrary.Downcast(result, GetJsType(rr.Type));
+					if (rr.Type.Kind == TypeKind.Struct)
+						result = _runtimeLibrary.FromNullable(result);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
+					return result;
 				}
 			}
 			else if (rr.Conversion.IsImplicit) {

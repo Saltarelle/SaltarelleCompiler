@@ -6,50 +6,6 @@ using System.Text;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
-	// DONE
-	// Identity
-	// Implicit numeric
-	// Explicit numeric
-	// To nullable
-	// From nullable
-	// Null literal to Nullable<T>
-	// Explicit nullable
-	// Boxing
-	// Unboxing
-	// Explicit reference
-	// Explicit interface
-	// Implicit reference to base class
-	// Implicit reference to interface
-	// Implicit reference to dynamic
-	// T[] to Array
-	// Array to T[]
-	// C => IF if C does not implement IF
-	// IF => T, if T is not sealed or T implements IF
-	// IF1 => IF2, if IF1 is not derived from IF2
-	// T[] to S[] if T : S
-	// T[] to S[] if S : T
-	// IEnumerable<S> to IEnumerable<T> if S : T (or List<S> to IEnumerable<T>)
-	// Null literal to reference
-	// Explicit dynamic
-	// Variance
-
-	// Conversions:
-	// Implicit enum
-	// Implicit reference:
-	//   T[] to IList<S> if T : S
-	//   delegate => System.Delegate
-	// Implicit type param to base
-	// op_Implicit
-	// op_Explicit
-	// Explicit reference:
-	//    object => T
-	//    T[] to IList<S> if explicit conv from S to T
-	//    Delegate => delegate
-	//    variance (delegate)
-	//    Explicit type param conversions
-
-	// TryCast
-
 	[TestFixture]
 	public class ConversionTests  : MethodCompilerTestBase {
 		[Test]
@@ -944,13 +900,29 @@ public void M() {
 	object[] arr = null;
 	// BEGIN
 	object o1 = c;
-	object o2 = c;
+	object o2 = (object)c;
 	object o3 = arr;
 	// END
 }",
 @"	var $o1 = $Upcast($c, {Object});
 	var $o2 = $Upcast($c, {Object});
 	var $o3 = $Upcast($arr, {Object});
+");
+		}
+
+		[Test]
+		public void CastingFromObjectWorks() {
+			AssertCorrect(
+@"public class C {}
+public void M() {
+	object o;
+	// BEGIN
+	C c = (C)o;
+	object[] arr = (object[])o;
+	// END
+}",
+@"	var $c = $Cast($o, {C});
+	var $arr = $Cast($o, $Array({Object}));
 ");
 		}
 
@@ -1159,6 +1131,300 @@ public void M() {
 }",
 @"	var $i1 = $FromNullable($Cast($v, {Int32}));
 	var $i2 = $Cast($v, {Int32});
+");
+		}
+
+		[Test]
+		public void LiteralZeroCanBeConvertedToEnum() {
+			AssertCorrect(
+@"enum E { A, B, C }
+public void M() {
+	// BEGIN
+	E e1 = 0;
+	E? e2 = 0;
+	// END
+}",
+@"	var $e1 = 0;
+	var $e2 = 0;
+");
+		}
+
+		[Test]
+		public void ImplicitArrayToGenericIList() {
+			AssertCorrect(
+@"class B {}
+class D : B {}
+
+public void M() {
+	D[] src = null;
+	// BEGIN
+	System.Collections.Generic.IList<B> l1 = src;
+	System.Collections.Generic.IList<B> l2 = (System.Collections.Generic.IList<B>)src;
+	System.Collections.Generic.IList<D> l3 = src;
+	System.Collections.Generic.IList<D> l4 = (System.Collections.Generic.IList<D>)src;
+	// END
+}",
+@"	var $l1 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
+	var $l2 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
+	var $l3 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
+	var $l4 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
+");
+		}
+
+		[Test]
+		public void ExplicitArrayToGenericIList() {
+			AssertCorrect(
+@"class B {}
+class D : B {}
+
+public void M() {
+	B[] src = null;
+	// BEGIN
+	System.Collections.Generic.IList<D> l = (System.Collections.Generic.IList<D>)src;
+	// END
+}",
+@"	var $l = $Cast($src, $InstantiateGenericType({IList}, {D}));
+");
+		}
+
+		[Test]
+		public void DelegateTypeCanBeConvertedToSystemDelegate() {
+			AssertCorrect(
+@"public void M() {
+	Func<int> f = null;
+	// BEGIN
+	Delegate d1 = (Delegate)f;
+	Delegate d2 = f;
+	// END
+}",
+@"	var $d1 = $Upcast($f, {Delegate});
+	var $d2 = $Upcast($f, {Delegate});
+");
+		}
+
+		[Test]
+		public void DelegateTypeCanBeVarianceConvertedToOtherDelegateType() {
+			AssertCorrect(
+@"class B {}
+class D : B {}
+
+public void M() {
+	Func<B, D> f;
+	// BEGIN
+	Func<D, B> f2 = f;
+	// END
+}",
+@"	var $f2 = $Upcast($f, $InstantiateGenericType({Func}, {D}, {B}));
+");
+		}
+
+		[Test]
+		public void SystemDelegateCanBeConvertedToDelegateTypeDelegateType() {
+			AssertCorrect(
+@"public void M() {
+	Delegate d = null;
+	
+	// BEGIN
+	var f = (Func<int>)d;
+	// END
+}",
+@"	var $f = $Cast($d, $InstantiateGenericType({Func}, {Int32}));
+");
+		}
+
+		[Test]
+		public void TypeParameterCanBeConvertedToConcreteBaseType() {
+			AssertCorrect(
+@"public class C {}
+public interface I {}
+public void M<T>() where T : C, I {
+	T t = default(T);
+	// BEGIN
+	object o1 = (object)t;
+	object o2 = t;
+	C c1 = (C)t;
+	C c2 = t;
+	I i1 = (I)t;
+	I i2 = t;
+	// END
+}",
+@"	var $o1 = $Upcast($t, {Object});
+	var $o2 = $Upcast($t, {Object});
+	var $c1 = $Upcast($t, {C});
+	var $c2 = $Upcast($t, {C});
+	var $i1 = $Upcast($t, {I});
+	var $i2 = $Upcast($t, {I});
+");
+
+			AssertCorrect(
+@"public class C {}
+public interface I {}
+public void M<T>() where T : class, C, I {
+	T t = default(T);
+	// BEGIN
+	object o1 = (object)t;
+	object o2 = t;
+	C c1 = (C)t;
+	C c2 = t;
+	I i1 = (I)t;
+	I i2 = t;
+	// END
+}",
+@"	var $o1 = $Upcast($t, {Object});
+	var $o2 = $Upcast($t, {Object});
+	var $c1 = $Upcast($t, {C});
+	var $c2 = $Upcast($t, {C});
+	var $i1 = $Upcast($t, {I});
+	var $i2 = $Upcast($t, {I});
+");
+		}
+
+		[Test, Ignore("NRefactory bug")]
+		public void TypeParameterCanBeConvertedToOtherTypeParameterOnWhichItDepends() {
+			AssertCorrect(
+@"public void M<T, U>() where T : U {
+	T t = default(T);
+	// BEGIN
+	U u1 = (U)t;
+	U u2 = t;
+	// END
+}",
+@"	var $u1 = $Upcast($t, {U});
+	var $u2 = $Upcast($t, {U});
+");
+
+			AssertCorrect(
+@"public void M<T, U>() where T : class, U {
+	T t = default(T);
+	// BEGIN
+	U u1 = (U)t;
+	U u2 = t;
+	// END
+}",
+@"	var $u1 = $Upcast($t, {U});
+	var $u2 = $Upcast($t, {U});
+");
+		}
+
+		[Test]
+		public void ExplicitConversionFromBaseClassToTypeParameterWorks() {
+			AssertCorrect(
+@"public class B {}
+public class D : B {}
+public void M<T>() where T : D {
+	object o = null;
+	B b = null;
+	D d = null;
+	// BEGIN
+	T t1 = (T)o;
+	T t2 = (T)b;
+	T t3 = (T)d;
+	// END
+}",
+@"	var $t1 = $Cast($o, $T);
+	var $t2 = $Cast($b, $T);
+	var $t3 = $Cast($d, $T);
+");
+
+			AssertCorrect(
+@"public class B {}
+public class D : B {}
+public void M<T>() where T : class, D {
+	object o = null;
+	B b = null;
+	D d = null;
+	// BEGIN
+	T t1 = (T)o;
+	T t2 = (T)b;
+	T t3 = (T)d;
+	// END
+}",
+@"	var $t1 = $Cast($o, $T);
+	var $t2 = $Cast($b, $T);
+	var $t3 = $Cast($d, $T);
+");
+		}
+
+		[Test, Ignore("NRefactory bug")]
+		public void ExplicitConversionFromInterfaceToTypeParameterWorks() {
+			AssertCorrect(
+@"public interface I {}
+public void M<T>() {
+	I i = null;
+	// BEGIN
+	T t = (T)i;
+	// END
+}",
+@"	var $t = $Cast($i, $T);
+");
+
+			AssertCorrect(
+@"public interface I {}
+public void M<T>() where T : class {
+	I i = null;
+	// BEGIN
+	T t = (T)i;
+	// END
+}",
+@"	var $t = $Cast($i, $T);
+");
+		}
+
+		[Test]
+		public void ExplicitConversionToInterfaceFromTypeParameterWorks() {
+			AssertCorrect(
+@"public interface I {}
+public void M<T>() {
+	T t = default(T);
+	// BEGIN
+	I i = (I)t;
+	// END
+}",
+@"	var $i = $Cast($t, {I});
+");
+
+			AssertCorrect(
+@"public interface I {}
+public void M<T>() where T : class {
+	T t = default(T);
+	// BEGIN
+	I i = (I)t;
+	// END
+}",
+@"	var $i = $Cast($t, {I});
+");
+		}
+
+		[Test, Ignore("NRefactory bug")]
+		public void TypeParameterCanBeConvertedToOtherTypeParameterWhichDependsOnIt() {
+			AssertCorrect(
+@"public void M<T, U>() where U : T {
+	T t = default(T);
+	// BEGIN
+	U u = (U)t;
+	// END
+}",
+@"	var $u = $Cast($t, {U});
+");
+
+			AssertCorrect(
+@"public void M<T, U>() where U : class, T {
+	T t = default(T);
+	// BEGIN
+	U u = (U)t;
+	// END
+}",
+@"	var $u = $Cast($t, {U});
+");
+
+			AssertCorrect(
+@"public void M<T, U>() where U : T where T : class {
+	T t = default(T);
+	// BEGIN
+	U u = (U)t;
+	// END
+}",
+@"	var $u = $Cast($t, {U});
 ");
 		}
 	}

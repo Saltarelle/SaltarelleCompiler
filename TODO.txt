@@ -7,7 +7,6 @@ Metadata importer
 Reference importer
 Output writer
 User-defined operators
-Conversions
 User-defined conversions
 Runtime library
 Anonymous objects
