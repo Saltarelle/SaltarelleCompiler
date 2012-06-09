@@ -1,0 +1,20 @@
+Add IList + IList<T> methods to Array (perhaps already exists).
+Remove IEnumerator.GetEnumerator
+Add type Int32. typeof(double) == Number, number.__typeName should be 'Double'
+Support generic types
+Unboxing to Int32
+Improve exception structure.
+typeof(string), etc. should return valid types with interfaces.
+Remove class System.Number (should be System.Double)
+Implmeneted interfaces on Dictionary<TKey, TValue>
+Dictionary (and Dictionary<,>) params object[] nameValuePairs constructor
+Dictionary.TryGetValue()
+ICollection needs to be redesigned
+IEnumerator<T> should inherit IEnumerator
+IReadOnlyCollection<T> needs to be redesigned (or removed)
+List should probably be redesigned (many methods belong in LINQ).
+ArrayGrouping, ListGrouping (and types used only for this): Should probably be removed (belongs in LINQ).
+Dictionary and Dictionary<,> will probably need to be own classes. Probably should introduce JsDictionary as an equivalent to Script# dictionary.
+
+ScriptName("") must work
+IntrinsicProperty must work for indexers.

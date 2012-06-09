@@ -9,11 +9,11 @@ Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
 Const fields
+User-defined operators (probably needed for the runtime library to work as intended).
 
 v2:
 yield
 async
 goto
-User-defined operators
 User-defined conversions
 Query comprehension

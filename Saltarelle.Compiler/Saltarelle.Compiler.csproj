@@ -53,33 +53,34 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeBuilder.cs" />
-    <Compile Include="CombinedAstAndResolveResultVisitor.cs" />
-    <Compile Include="ConstructorImplOptions.cs" />
-    <Compile Include="EventImplOptions.cs" />
-    <Compile Include="ExpressionCompiler.cs" />
-    <Compile Include="ExpressionOrderer.cs" />
-    <Compile Include="FieldImplOptions.cs" />
+    <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
+    <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
+    <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />
+    <Compile Include="Compiler\ExpressionCompiler.cs" />
+    <Compile Include="Compiler\ExpressionOrderer.cs" />
+    <Compile Include="ScriptSemantics\FieldScriptSemantics.cs" />
     <Compile Include="IErrorReporter.cs" />
-    <Compile Include="INamingConventionResolver.cs" />
-    <Compile Include="IResolveResultVisitor.cs" />
+    <Compile Include="MetadataImporter\INamingConventionResolver.cs" />
+    <Compile Include="Compiler\IResolveResultVisitor.cs" />
     <Compile Include="IRuntimeLibrary.cs" />
     <Compile Include="ISourceFile.cs" />
-    <Compile Include="SharedValue.cs" />
-    <Compile Include="SimpleVariable.cs" />
-    <Compile Include="StatementCompiler.cs" />
-    <Compile Include="MethodCompiler.cs" />
-    <Compile Include="MethodImplOptions.cs" />
-    <Compile Include="NestedFunctionData.cs" />
-    <Compile Include="NestedFunctionGatherer.cs" />
+    <Compile Include="Compiler\SharedValue.cs" />
+    <Compile Include="Compiler\SimpleVariable.cs" />
+    <Compile Include="Compiler\StatementCompiler.cs" />
+    <Compile Include="Compiler\MethodCompiler.cs" />
+    <Compile Include="ScriptSemantics\MethodScriptSemantics.cs" />
+    <Compile Include="Compiler\NestedFunctionData.cs" />
+    <Compile Include="Compiler\NestedFunctionGatherer.cs" />
+    <Compile Include="MetadataImporter\ScriptSharpMetadataImporter.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Compiler.cs" />
-    <Compile Include="PropertyImplOptions.cs" />
+    <Compile Include="Compiler\Compiler.cs" />
+    <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />
     <Compile Include="ReadOnlySet.cs" />
-    <Compile Include="ResolveResultVisitor.cs" />
+    <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="VariableData.cs" />
-    <Compile Include="VariableGatherer.cs" />
+    <Compile Include="Compiler\VariableData.cs" />
+    <Compile Include="Compiler\VariableGatherer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JSModel\JSModel.csproj">
