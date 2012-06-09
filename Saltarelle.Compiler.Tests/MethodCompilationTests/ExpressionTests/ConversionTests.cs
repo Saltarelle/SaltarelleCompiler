@@ -1345,7 +1345,7 @@ public void M<T>() where T : class, D {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void ExplicitConversionFromInterfaceToTypeParameterWorks() {
 			AssertCorrect(
 @"public interface I {}
