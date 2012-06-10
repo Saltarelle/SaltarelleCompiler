@@ -5,12 +5,12 @@ using System.Text;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
     public abstract class JsType : IFreezable {
-        public ScopedName Name { get; private set; }
+        public string Name { get; private set; }
 
         protected bool Frozen { get; private set; }
 
-        protected JsType(ScopedName name) {
-            Require.NotNull(name, "name");
+        protected JsType(string name) {
+            Require.ValidJavaScriptNestedIdentifier(name, "name");
             Name = name;
         }
 

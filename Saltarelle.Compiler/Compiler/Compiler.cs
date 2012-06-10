@@ -52,23 +52,6 @@ namespace Saltarelle.Compiler.Compiler {
         	_runtimeLibrary   = runtimeLibrary;
         }
 
-        private ScopedName ConvertName(ITypeDefinition type) {
-            var name = _namingConvention.GetTypeName(type);
-            if (name == null) {
-                return null;
-            }
-            else if (type.DeclaringType == null) {
-                return ScopedName.Global(!string.IsNullOrEmpty(type.Namespace) ? type.Namespace : null, name);
-            }
-            else {
-                var declaringName = ConvertName(type.DeclaringType.GetDefinition());
-                if (declaringName == null)
-                    return null;
-                else
-                    return ScopedName.Nested(declaringName, name);
-            }
-        }
-
         private JsClass.ClassTypeEnum ConvertClassType(TypeKind typeKind) {
             switch (typeKind) {
                 case TypeKind.Class:     return JsClass.ClassTypeEnum.Class;
@@ -92,7 +75,7 @@ namespace Saltarelle.Compiler.Compiler {
         private JsClass GetJsClass(ITypeDefinition typeDefinition) {
             JsClass result;
             if (!_types.TryGetValue(typeDefinition, out result)) {
-                var name = ConvertName(typeDefinition);
+                var name = _namingConvention.GetTypeName(typeDefinition);
                 if (name != null) {
                     var baseTypes    = typeDefinition.GetAllBaseTypes().ToList();
                     var baseClass    = typeDefinition.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
@@ -124,7 +107,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private JsEnum ConvertEnum(ITypeDefinition type) {
-            var name = ConvertName(type);
+            var name = _namingConvention.GetTypeName(type);
             var values = new List<JsEnumValue>();
             foreach (var f in type.Fields) {
                 if (f.ConstantValue != null) {
@@ -162,6 +145,8 @@ namespace Saltarelle.Compiler.Compiler {
             project = project.AddAssemblyReferences(references);
 
             _compilation = project.CreateCompilation();
+
+			_namingConvention.Prepare(_compilation.GetAllTypeDefinitions());
 
             _types = new Dictionary<ITypeDefinition, JsClass>();
             _constructorDeclarations = new HashSet<ConstructorDeclaration>();

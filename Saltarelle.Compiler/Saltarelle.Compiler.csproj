@@ -60,7 +60,7 @@
     <Compile Include="Compiler\ExpressionOrderer.cs" />
     <Compile Include="ScriptSemantics\FieldScriptSemantics.cs" />
     <Compile Include="IErrorReporter.cs" />
-    <Compile Include="MetadataImporter\INamingConventionResolver.cs" />
+    <Compile Include="INamingConventionResolver.cs" />
     <Compile Include="Compiler\IResolveResultVisitor.cs" />
     <Compile Include="IRuntimeLibrary.cs" />
     <Compile Include="ISourceFile.cs" />

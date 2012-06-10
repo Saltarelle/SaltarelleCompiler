@@ -1,16 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
     public interface INamingConventionResolver {
-        /// <summary>
+		void Prepare(IEnumerable<ITypeDefinition> allTypes);
+
+		/// <summary>
         /// Returns the name of a type as it should appear in the script. If null is included the class, and any nested class, will not appear in the output.
         /// </summary>
+        [Obsolete("Must create a TypeScriptSemantics type for this. Properties should include GenerateCode, IsGlobal, etc.")]
         string GetTypeName(ITypeDefinition typeDefinition);
+
         string GetTypeParameterName(ITypeParameter typeParameter);
 
         /// <summary>

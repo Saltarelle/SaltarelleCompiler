@@ -10,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void EmptyGlobalClassIsCorrectlyReturned() {
             Compile(@"class TestClass { }");
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.Should().Be(ScopedName.Global(null, "TestClass"));
+            CompiledTypes[0].Name.Should().Be("TestClass");
             CompiledTypes[0].Should().BeAssignableTo<JsClass>();
         }
 
@@ -18,10 +18,10 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void NestedClassesWork() {
             Compile(@"class TestClass1 { class TestClass2 { class TestClass3 { } } class TestClass4 {} }");
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] {
-                                                                              ScopedName.Global(null, "TestClass1"),
-                                                                              ScopedName.Nested(ScopedName.Global(null, "TestClass1"), "TestClass2"),
-                                                                              ScopedName.Nested(ScopedName.Nested(ScopedName.Global(null, "TestClass1"), "TestClass2"), "TestClass3"),
-                                                                              ScopedName.Nested(ScopedName.Global(null, "TestClass1"), "TestClass4"),
+                                                                              "TestClass1",
+                                                                              "TestClass1$TestClass2",
+                                                                              "TestClass1$TestClass2$TestClass3",
+                                                                              "TestClass1$TestClass4",
                                                                             });
             CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
         }
@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void PartialClassesAreOnlyReturnedOnce() {
             Compile(@"partial class TestClass { }", @"partial class TestClass { }");
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.Should().Be(ScopedName.Global(null, "TestClass"));
+            CompiledTypes[0].Name.Should().Be("TestClass");
             CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
         }
 
@@ -63,16 +63,16 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                       class Test10 {}
                     ");
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] {
-                                                                                ScopedName.Global(null, "Test1"),
-                                                                                ScopedName.Global("Nmspace1.Nmspace2.Nmspace3", "Test2"),
-                                                                                ScopedName.Global("Nmspace1.Nmspace2", "Test3"),
-                                                                                ScopedName.Global("Nmspace4", "Test4"),
-                                                                                ScopedName.Global("Nmspace4.Nmspace5", "Test5"),
-                                                                                ScopedName.Global("Nmspace4.Nmspace5", "Test6"),
-                                                                                ScopedName.Global("Nmspace4", "Test7"),
-                                                                                ScopedName.Global(null, "Test8"),
-                                                                                ScopedName.Global("Nmspace1.Nmspace2", "Test9"),
-                                                                                ScopedName.Global(null, "Test10"),
+                                                                                "Test1",
+                                                                                "Nmspace1.Nmspace2.Nmspace3.Test2",
+                                                                                "Nmspace1.Nmspace2.Test3",
+                                                                                "Nmspace4.Test4",
+                                                                                "Nmspace4.Nmspace5.Test5",
+                                                                                "Nmspace4.Nmspace5.Test6",
+                                                                                "Nmspace4.Test7",
+                                                                                "Test8",
+                                                                                "Nmspace1.Nmspace2.Test9",
+                                                                                "Test10",
                                                                             });
             CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
         }
@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             Compile(@"enum Test1 {}");
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Should().BeAssignableTo<JsEnum>();
-            CompiledTypes[0].Name.Should().Be(ScopedName.Global(null, "Test1"));
+            CompiledTypes[0].Name.Should().Be("Test1");
         }
 
         [Test]
@@ -211,9 +211,9 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void ClassTypeIsSetCorrectly() {
             Compile("class Test1{} struct Test2{} interface Test3{}");
             CompiledTypes.Should().HaveCount(3);
-            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name.UnqualifiedName == "Test1")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Class));
-            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name.UnqualifiedName == "Test2")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Struct));
-            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name.UnqualifiedName == "Test3")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Interface));
+            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test1")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Class));
+            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test2")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Struct));
+            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test3")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Interface));
         }
 
         [Test]
@@ -315,8 +315,8 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void NestedTypesInheritTheGenericParametersOfTheirParents() {
             Compile("class Test1<T1> { class Test2<T2, T3> { class Test3<T4> {} } }");
             var test1 = FindClass("Test1");
-            var test2 = FindClass("Test1+Test2");
-            var test3 = FindClass("Test1+Test2+Test3");
+            var test2 = FindClass("Test1$Test2");
+            var test3 = FindClass("Test1$Test2$Test3");
             test1.TypeArgumentNames.Should().Equal(new[] { "$T1" });
             test2.TypeArgumentNames.Should().Equal(new[] { "$T1", "$T2", "$T3" });
             test3.TypeArgumentNames.Should().Equal(new[] { "$T1", "$T2", "$T3", "$T4" });
@@ -326,7 +326,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void NonGenericTypeNestedInGenericTypeWorks() {
             Compile("class Test1<T1> { class Test2 {} }");
             var test1 = FindClass("Test1");
-            var test2 = FindClass("Test1+Test2");
+            var test2 = FindClass("Test1$Test2");
             test1.TypeArgumentNames.Should().Equal(new[] { "$T1" });
             test2.Should().NotBeNull();
         }
@@ -387,8 +387,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         public void ClassesForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
             var namingConvention = new MockNamingConventionResolver { GetTypeName = type => type.Name == "C2" ? null : type.Name };
             Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
-            CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.ToString().Should().Be("C1");
+            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
         }
 
         [Test]
@@ -396,7 +395,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             var namingConvention = new MockNamingConventionResolver { GetTypeName = type => type.Name == "C2" ? null : type.Name };
             Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.ToString().Should().Be("C1");
+            CompiledTypes[0].Name.Should().Be("C1");
         }
 
         [Test]

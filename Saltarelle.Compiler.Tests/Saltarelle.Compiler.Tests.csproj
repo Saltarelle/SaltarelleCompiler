@@ -125,11 +125,13 @@
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\WhileStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\YieldStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\VariableGatheringTests.cs" />
+    <Compile Include="MockErrorReporter.cs" />
+    <Compile Include="MockSourceFile.cs" />
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScopedNameTests.cs" />
     <Compile Include="Compiler\TypeConversionTests.cs" />
-    <Compile Include="ScriptSharpMetdataImporter\ScriptSharpMetadataImporterTestBase.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\TypeNameTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\ScriptSharpMetadataImporterTestBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

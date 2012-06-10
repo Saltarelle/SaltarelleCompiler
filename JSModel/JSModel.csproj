@@ -107,7 +107,6 @@
     <Compile Include="TypeSystem\JsEnum.cs" />
     <Compile Include="TypeSystem\JsEnumValue.cs" />
     <Compile Include="TypeSystem\JsMethod.cs" />
-    <Compile Include="TypeSystem\ScopedName.cs" />
     <Compile Include="TypeSystem\JsType.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
