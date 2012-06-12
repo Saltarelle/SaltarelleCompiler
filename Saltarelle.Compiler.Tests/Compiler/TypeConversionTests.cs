@@ -337,32 +337,6 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         }
 
         [Test]
-        public void IsPublicFlagIsCorrectlySetForClasses() {
-            Assert.Inconclusive("TODO: Move somewhere else");
-/*            Compile(@"class C1 {}
-                      internal class C2 {}
-                      public class C3 {}
-                      public class C4 { internal class C5 { public class C6 {} } }
-                      internal class C7 { public class C8 { public class C9 {} } }
-                      public class C10 { private class C11 {} protected class C12 {} protected internal class C13 {} }
-                     ");
-                                 
-            FindClass("C1").IsPublic.Should().BeFalse();
-            FindClass("C2").IsPublic.Should().BeFalse();
-            FindClass("C3").IsPublic.Should().BeTrue();
-            FindClass("C4").IsPublic.Should().BeTrue();
-            FindClass("C4+C5").IsPublic.Should().BeFalse();
-            FindClass("C4+C5+C6").IsPublic.Should().BeFalse();
-            FindClass("C7").IsPublic.Should().BeFalse();
-            FindClass("C7+C8").IsPublic.Should().BeFalse();
-            FindClass("C7+C8+C9").IsPublic.Should().BeFalse();
-            FindClass("C10").IsPublic.Should().BeTrue();
-            FindClass("C10+C11").IsPublic.Should().BeFalse();
-            FindClass("C10+C12").IsPublic.Should().BeTrue();
-            FindClass("C10+C13").IsPublic.Should().BeTrue();*/
-        }
-
-        [Test]
         public void IsPublicFlagIsCorrectlySetForEnums() {
             Assert.Inconclusive("TODO: Move");
 /*            Compile(@"enum C1 {}

@@ -24,8 +24,7 @@ namespace Saltarelle.Compiler.JSModel {
                     throw new ArgumentNullException(name);
                 return;
             }
-            if (arg == "") throw new ArgumentException(name);
-            if (arg.Split('.').Any(p => !p.IsValidJavaScriptIdentifier())) throw new ArgumentException(name);
+			if (!arg.IsValidNestedJavaScriptIdentifier()) throw new ArgumentException(name);
         }
     }
 }

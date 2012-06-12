@@ -146,7 +146,7 @@ namespace Saltarelle.Compiler.Compiler {
 
             _compilation = project.CreateCompilation();
 
-			_namingConvention.Prepare(_compilation.GetAllTypeDefinitions());
+			_namingConvention.Prepare(_compilation.GetAllTypeDefinitions(), _compilation.MainAssembly, _errorReporter);
 
             _types = new Dictionary<ITypeDefinition, JsClass>();
             _constructorDeclarations = new HashSet<ConstructorDeclaration>();

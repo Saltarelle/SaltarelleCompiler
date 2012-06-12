@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -23,7 +24,11 @@ namespace Saltarelle.Compiler.JSModel {
         private static readonly Regex _jsIdentifierRegex = new Regex("^[_$a-z][_$a-z0-9]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         public static bool IsValidJavaScriptIdentifier(this string s) {
-            return _jsIdentifierRegex.IsMatch(s);
+            return s != null && _jsIdentifierRegex.IsMatch(s);
+        }
+
+        public static bool IsValidNestedJavaScriptIdentifier(this string s) {
+			return !string.IsNullOrEmpty(s) && s.Split('.').All(IsValidJavaScriptIdentifier);
         }
 
         public static string EscapeJavascriptStringLiteral(this string s, bool isRegexp = false) {

@@ -9,7 +9,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
     public interface INamingConventionResolver {
-		void Prepare(IEnumerable<ITypeDefinition> allTypes);
+		bool Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
 
 		/// <summary>
         /// Returns the name of a type as it should appear in the script. If null is included the class, and any nested class, will not appear in the output.

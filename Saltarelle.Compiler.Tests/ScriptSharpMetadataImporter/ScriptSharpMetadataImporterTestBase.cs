@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using FluentAssertions;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -17,7 +18,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			return new[] { def }.Concat(def.NestedTypes.SelectMany(SelfAndNested));
 		}
 
-        protected IDictionary<string, ITypeDefinition> Process(INamingConventionResolver namingConvention, string source) {
+        protected IDictionary<string, ITypeDefinition> Process(INamingConventionResolver namingConvention, string source, IErrorReporter errorReporter = null) {
             IProjectContent project = new CSharpProjectContent();
             var parser = new CSharpParser();
 
@@ -31,7 +32,14 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 			var compilation = project.CreateCompilation();
 
-			namingConvention.Prepare(compilation.GetAllTypeDefinitions());
+			bool defaultErrorHandling = (errorReporter == null);
+			errorReporter = errorReporter ?? new MockErrorReporter(true);
+
+			namingConvention.Prepare(compilation.GetAllTypeDefinitions(), compilation.MainAssembly, errorReporter);
+
+            if (defaultErrorHandling) {
+                ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
+            }
 
 			return compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
         }

@@ -72,7 +72,8 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			public Func<int, string> GetTemporaryVariableName { get; set; }
 			public string ThisAlias { get; set; }
 
-            void INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes) {
+            bool INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
+				return true;
             }
 
             string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
