@@ -15,11 +15,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [IgnoreNamespace] (Type)
 	// [ScriptNamespaceAttribute] (Type)
 	// [PreserveName] (Type | Method)
-	// [PreserveCase] (Property | Event | Field)
+	// [PreserveCase] (Method)
 	// [ScriptSkip] (Method)
 	// [AlternateSignature] (Method)
 	// [ScriptAlias] (Method)
 	// [InlineCode] (Method)
+	// [InstanceMethodOnFirstArgument] (Method)
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor | Method | Property | Event) (event missed in ScriptSharp)
@@ -39,8 +40,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [PreserveName] (Property | Event | Field)
 	// [ScriptAlias] (Property)
 	// Record
-	// New attributes:
-	// [InstanceMethodOnFirstArgument]
+	// [IgnoreGenericArguments] (Method)
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
 		/// <summary>
@@ -298,11 +298,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var pca = GetAttributePositionalArgs(member, "PreserveCaseAttribute");
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
-			var pna = GetAttributePositionalArgs(member, "PreserveNameAttribute");
-			if (pna != null)
+			bool preserveName = GetAttributePositionalArgs(member, "PreserveNameAttribute") != null || GetAttributePositionalArgs(member, "InstanceMethodOnFirstArgumentAttribute") != null;
+			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
-			// Handle [AlternateSignature]
 			bool minimize = _minimizeNames && !IsPublic(member);
 
 			return Tuple.Create(minimize ? null : MakeCamelCase(member.Name), false);
@@ -335,6 +334,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							var ssa = GetAttributePositionalArgs(m.Member, "ScriptSkipAttribute");
 							var saa = GetAttributePositionalArgs(m.Member, "ScriptAliasAttribute");
 							var ica = GetAttributePositionalArgs(m.Member, "InlineCodeAttribute");
+							var ifa = GetAttributePositionalArgs(m.Member, "InstanceMethodOnFirstArgumentAttribute");
 							if (ssa != null) {
 								// [ScriptSkip] - Skip invocation of the method entirely.
 								if (typeDefinition.Kind == TypeKind.Interface) {
@@ -393,6 +393,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 									}
 
 									_methodSemantics[method] = MethodScriptSemantics.InlineCode(code);
+								}
+							}
+							else if (ifa != null) {
+								if (m.Member.IsStatic) {
+									_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(current.Name);
+								}
+								else {
+									_errors[GetQualifiedMemberName(m.Member) + ":InstanceMethodOnFirstArgument"] = "The method " + GetQualifiedMemberName(m.Member) + " cannot have an [InstanceMethodOnFirstArgumentAttribute] because it is not static.";
+									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
 								}
 							}
 							else {

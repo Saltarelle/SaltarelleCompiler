@@ -1084,5 +1084,58 @@ class C1<T1> {
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overridable"));
 		}
+
+		[Test]
+		public void InstanceMethodOnFirstArgumentAttributeWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[InstanceMethodOnFirstArgument]
+	[PreserveCase]
+	public static void SomeMethod() {
+	}
+
+	[InstanceMethodOnFirstArgument]
+	[ScriptName(""RenamedMethod"")]
+	public static void SomeMethod2() {
+	}
+
+	[InstanceMethodOnFirstArgument]
+	public static void SomeMethod3() {
+	}
+
+	[InstanceMethodOnFirstArgument]
+	[PreserveName]
+	public static void SomeMethod4() {
+	}
+}
+");
+
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
+			Assert.That(impl.Name, Is.EqualTo("SomeMethod"));
+
+			impl = FindMethod(types, "C1.SomeMethod2", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
+			Assert.That(impl.Name, Is.EqualTo("RenamedMethod"));
+
+			impl = FindMethod(types, "C1.SomeMethod3", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
+			Assert.That(impl.Name, Is.EqualTo("someMethod3"));
+
+			impl = FindMethod(types, "C1.SomeMethod4", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
+			Assert.That(impl.Name, Is.EqualTo("someMethod4"));
+		}
+
+		[Test]
+		public void InstanceMethodOnFirstArgumentAttributeCannotBeSpecifiedOnInstanceMember() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InstanceMethodOnFirstArgumentAttribute") && er.AllMessages[0].Contains("static"));
+		}
 	}
 }
