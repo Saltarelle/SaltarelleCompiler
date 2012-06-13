@@ -10,10 +10,12 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
 	// Done:
-	// [ScriptName] (Type)
+	// [ScriptName] (Type | Method)
 	// [IgnoreNamespace] (Type)
 	// [ScriptNamespaceAttribute] (Type)
-	// [PreserveName] (Type)
+	// [PreserveName] (Type | Method)
+	// [PreserveCase] (Property | Event | Field)
+	// [ScriptSkip] (Method)
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor | Method | Property | Event) (event missed in ScriptSharp)
@@ -28,11 +30,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NumericValues] (Enum)
 	// [AlternateSignature] (Constructor | Method)
 	// [IntrinsicProperty] (Property (/indexer))
-	// [ScriptName] (Field | Property | Method | Event)
-	// [PreserveCase] (Method | Property | Event | Field)
-	// [PreserveName] (Method | Property | Event | Field)
+	// [ScriptName] (Field | Property | Event)
+	// [PreserveCase] (Property | Event | Field)
+	// [PreserveName] (Property | Event | Field)
 	// [ScriptAlias] (Method | Property) = Literal code ?
-	// [ScriptSkip] (Method) ?
 	// Record
 	// New attributes:
 	// [InstanceMethodOnFirstArgument]
@@ -271,8 +272,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
 			var sna = GetAttributePositionalArgs(member, "ScriptNameAttribute");
-			if (sna != null)
-				return Tuple.Create((string)sna[0], true);
+			if (sna != null) {
+				string name = (string)sna[0];
+				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
+					_errors.Add(GetQualifiedMemberName(member) + ":InvalidName", "The name specified in the [ScriptName] attribute for type method " + GetQualifiedMemberName(member) + " must be a valid JavaScript identifier, or be blank.");
+				}
+				return Tuple.Create(name, true);
+			}
 			var pca = GetAttributePositionalArgs(member, "PreserveCaseAttribute");
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
@@ -283,7 +289,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			// Handle [AlternateSignature]
 			bool minimize = _minimizeNames && !IsPublic(member);
 
-			return Tuple.Create(minimize ? "" : MakeCamelCase(member.Name), false);
+			return Tuple.Create(minimize ? null : MakeCamelCase(member.Name), false);
 		}
 
 		public string GetQualifiedMemberName(IMember member) {
@@ -310,52 +316,95 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							// TODO
 						}
 						else {
-							if (m.Member.IsOverride) {
-								if (m.NameSpecified) {
-									_errors.Add(GetQualifiedMemberName(m.Member) + ":CannotSpecifyName", "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method " + GetQualifiedMemberName(m.Member) + " because it overrides a base member. Specify the attribute on the base member instead.");
+							var ssa = GetAttributePositionalArgs(m.Member, "ScriptSkipAttribute");
+							if (ssa != null) {
+								// [ScriptSkip] - Skip invocation of the method entirely.
+								if (typeDefinition.Kind == TypeKind.Interface) {
+									_errors.Add(GetQualifiedMemberName(m.Member) + ":ScriptSkipOnInterfaceMember", "The member " + GetQualifiedMemberName(m.Member) + " cannot have a [ScriptSkipAttribute] because it is an interface method.");
+									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
 								}
-
-								var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
-								_methodSemantics[method] = semantics;
-								var errorMethod = m.Member.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name != semantics.Name);
-								if (errorMethod != null) {
-									_errors.Add(GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations", "The overriding member " + GetQualifiedMemberName(m.Member) + " cannot implement the interface method " + GetQualifiedMemberName(errorMethod) + " because it has a different script name. Consider using explicit interface implementation");
+								else if (method.IsOverridable) {
+									_errors.Add(GetQualifiedMemberName(m.Member) + ":ScriptSkipOnOverridable", "The member " + GetQualifiedMemberName(m.Member) + " cannot have a [ScriptSkipAttribute] because it is overridable.");
+									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
 								}
-							}
-							else if (m.Member.ImplementedInterfaceMembers.Count > 0) {
-								if (m.NameSpecified) {
-									_errors.Add(GetQualifiedMemberName(m.Member) + ":CannotSpecifyName", "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on the method " + GetQualifiedMemberName(m.Member) + "because it implements an interface member. Specify the attribute on the interface member instead, or consider using explicit interface implementation.");
-								}
-
-								if (m.Member.ImplementedInterfaceMembers.Select(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name).Distinct().Count() > 1) {
-									_errors.Add(GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations", "The member " + GetQualifiedMemberName(m.Member) + " cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.");
-								}
-
-								_methodSemantics[method] = _methodSemantics[(IMethod)method.ImplementedInterfaceMembers[0].MemberDefinition];
-							}
-							else {
-								string name = current.Name;
-								if (!m.NameSpecified) {
-									// The name was not explicitly specified, so ensure that we have a unique name.
-									if (name == "" && typeDefinition.Kind == TypeKind.Interface) {
-										// Minimized interface names need to be unique within the assembly, otherwise we have a very high risk of collisions (100% when a type implements more than one internal interface).
-										name = "$I" + EncodeNumber(_internalInterfaceMemberCount++);
+								else {
+									if (method.IsStatic) {
+										if (method.Parameters.Count != 1)
+											_errors.Add(GetQualifiedMemberName(m.Member) + ":ScriptSkipParameterCount", "The static method " + GetQualifiedMemberName(m.Member) + " must have exactly one parameter in order to have a [ScriptSkipAttribute].");
+										_methodSemantics[method] = MethodScriptSemantics.InlineCode("{0}");
 									}
 									else {
-										int i = (name == "" ? 0 : 1);
-										while (name == "" || allMembers.ContainsKey(name)) {
-											name = current.Name + "$" + EncodeNumber(i);
-											i++;
-										}
+										if (method.Parameters.Count != 0)
+											_errors.Add(GetQualifiedMemberName(m.Member) + ":ScriptSkipParameterCount", "The instance method " + GetQualifiedMemberName(m.Member) + " must have no parameters in order to have a [ScriptSkipAttribute].");
+										_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}");
 									}
 								}
+							}
+							else {
+								if (m.Member.IsOverride) {
+									if (m.NameSpecified) {
+										_errors.Add(GetQualifiedMemberName(m.Member) + ":CannotSpecifyName", "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method " + GetQualifiedMemberName(m.Member) + " because it overrides a base member. Specify the attribute on the base member instead.");
+									}
 
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name);
+									var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
+									_methodSemantics[method] = semantics;
+									var errorMethod = m.Member.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name != semantics.Name);
+									if (errorMethod != null) {
+										_errors.Add(GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations", "The overriding member " + GetQualifiedMemberName(m.Member) + " cannot implement the interface method " + GetQualifiedMemberName(errorMethod) + " because it has a different script name. Consider using explicit interface implementation");
+									}
+								}
+								else if (m.Member.ImplementedInterfaceMembers.Count > 0) {
+									if (m.NameSpecified) {
+										_errors.Add(GetQualifiedMemberName(m.Member) + ":CannotSpecifyName", "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on the method " + GetQualifiedMemberName(m.Member) + " because it implements an interface member. Specify the attribute on the interface member instead, or consider using explicit interface implementation.");
+									}
 
-								if (allMembers.ContainsKey(name))
-									allMembers[name].Add(m.Member);
-								else
-									allMembers[name] = new List<IMember> { m.Member };
+									if (m.Member.ImplementedInterfaceMembers.Select(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name).Distinct().Count() > 1) {
+										_errors.Add(GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations", "The member " + GetQualifiedMemberName(m.Member) + " cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.");
+									}
+
+									_methodSemantics[method] = _methodSemantics[(IMethod)method.ImplementedInterfaceMembers[0].MemberDefinition];
+								}
+								else {
+									if (current.Name == "") {
+										// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
+										if (typeDefinition.Kind == TypeKind.Interface) {
+											_errors.Add(GetQualifiedMemberName(m.Member) + ":InterfaceMethodWithEmptyName", "The member " + GetQualifiedMemberName(m.Member) + " cannot have an empty name specified in its [ScriptName] because it is an interface method.");
+											_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
+										}
+										else if (method.IsOverridable) {
+											_errors.Add(GetQualifiedMemberName(m.Member) + ":OverridableWithEmptyName", "The member " + GetQualifiedMemberName(m.Member) + " cannot have an empty name specified in its [ScriptName] because it is overridable.");
+											_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
+										}
+										else {
+											_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
+										}
+									}
+									else {
+										string name = current.Name;
+
+										if (!m.NameSpecified) {
+											// The name was not explicitly specified, so ensure that we have a unique name.
+											if (name == null && typeDefinition.Kind == TypeKind.Interface) {
+												// Minimized interface names need to be unique within the assembly, otherwise we have a very high risk of collisions (100% when a type implements more than one internal interface).
+												name = "$I" + EncodeNumber(_internalInterfaceMemberCount++);
+											}
+											else {
+												int i = (name == null ? 0 : 1);
+												while (name == null || allMembers.ContainsKey(name)) {
+													name = current.Name + "$" + EncodeNumber(i);
+													i++;
+												}
+											}
+										}
+
+										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name);
+
+										if (allMembers.ContainsKey(name))
+											allMembers[name].Add(m.Member);
+										else
+											allMembers[name] = new List<IMember> { m.Member };
+									}
+								}
 							}
 						}
 					}

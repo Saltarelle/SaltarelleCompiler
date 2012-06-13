@@ -750,6 +750,155 @@ public interface I4 {
 
 			Assert.Inconclusive("TODO: Test properties, events, constructors");
 		}
+
+		[Test]
+		public void ScriptNameOnMethodMustBeValidIdentifierOrBeEmpty() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("must be a valid JavaScript identifier"));
+
+			er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("must be a valid JavaScript identifier"));
+		}
+
+		[Test]
+		public void EmptyScriptNameOnMethodResultsInLiteralCodeImplementation() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ScriptName("""")]
+	public void SomeMethod() {
 	}
 }
+class C2 {
+	[ScriptName("""")]
+	public void SomeMethod(int x) {
+	}
+}
+class C3 {
+	[ScriptName("""")]
+	public void SomeMethod(int x, string y) {
+	}
+}");
 
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}()"));
+
+			impl = FindMethod(types, "C2.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}({x})"));
+
+			impl = FindMethod(types, "C3.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}({x}, {y})"));
+		}
+
+		[Test]
+		public void EmptyScriptNameCannotBeSpecifiedOnInterfaceMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [ScriptName("""")] void M(); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("I1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("interface method") && er.AllMessages[0].Contains("empty name"));
+		}
+
+		[Test]
+		public void EmptyScriptNameCannotBeSpecifiedOnVirtualOrAbstractMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public virtual void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("overridable") && er.AllMessages[0].Contains("empty name"));
+
+			er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public abstract void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("overridable") && er.AllMessages[0].Contains("empty name"));
+		}
+
+		[Test]
+		public void ScriptSkipAttributeCannotBeSpecifiedOnInterfaceMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [ScriptSkip] void M(); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("I1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("interface method"));
+		}
+
+		[Test]
+		public void ScriptSkipAttributeCannotBeSpecifiedOnVirtualOrAbstractMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public virtual void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overridable"));
+
+			er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overridable"));
+		}
+
+		[Test]
+		public void StaticMethodWithScriptSkipAttributeMustHaveExactlyOneParameter() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("one parameter"));
+
+			er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("one parameter"));
+		}
+
+		[Test]
+		public void InstanceMethodWithScriptSkipAttributeCannotHaveParameters() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("no parameters"));
+
+			er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("no parameters"));
+		}
+
+		[Test]
+		public void ScriptSkipOnStaticMethodWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ScriptSkip]
+	public static void SomeMethod(int x) {
+	}
+}");
+
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{0}"));
+		}
+
+		[Test]
+		public void ScriptSkipOnInstanceMethodWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ScriptSkip]
+	public void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}"));
+		}
+	}
+}
