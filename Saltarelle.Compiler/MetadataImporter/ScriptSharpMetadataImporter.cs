@@ -38,12 +38,128 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [InstanceMethodOnFirstArgument]
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
+		/// <summary>
+		/// Used to deterministically order members. It is assumed that all members belong to the same type.
+		/// </summary>
+		private class MemberOrderer : IComparer<IMember> {
+			public static readonly MemberOrderer Instance = new MemberOrderer();
+
+			private MemberOrderer() {
+			}
+
+			private int CompareMethods(IMethod x, IMethod y) {
+				int result = string.CompareOrdinal(x.Name, y.Name);
+				if (result != 0)
+					return result;
+				if (x.Parameters.Count > y.Parameters.Count)
+					return 1;
+				else if (x.Parameters.Count < y.Parameters.Count)
+					return -1;
+
+				var xparms = string.Join(",", x.Parameters.Select(p => p.Type.FullName));
+				var yparms = string.Join(",", y.Parameters.Select(p => p.Type.FullName));
+
+				return string.CompareOrdinal(xparms, yparms);
+			}
+
+			public int Compare(IMember x, IMember y) {
+				if (x is IField) {
+					if (y is IField) {
+						return string.CompareOrdinal(x.Name, y.Name);
+					}
+					else 
+						return -1;
+				}
+				else if (y is IField) {
+					return 1;
+				}
+
+				if (x is IProperty) {
+					if (y is IProperty) {
+						return string.CompareOrdinal(x.Name, y.Name);
+					}
+					else 
+						return -1;
+				}
+				else if (y is IProperty) {
+					return 1;
+				}
+
+				if (x is IEvent) {
+					if (y is IEvent) {
+						return string.CompareOrdinal(x.Name, y.Name);
+					}
+					else 
+						return -1;
+				}
+				else if (y is IEvent) {
+					return 1;
+				}
+
+				if (x is IMethod) {
+					if (y is IMethod) {
+						return CompareMethods((IMethod)x, (IMethod)y);
+					}
+					else
+						return -1;
+				}
+				else if (y is IMethod) {
+					return 1;
+				}
+
+				throw new ArgumentException("Invalid member type" + x.GetType().FullName);
+			}
+		}
+
 		private Dictionary<ITypeDefinition, string> _typeNames;
+		private Dictionary<ITypeDefinition, Dictionary<string, List<IMember>>> _memberNamesByType;
+		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<string, string> _errors;
+		private int _internalInterfaceMemberCount;
 		private bool _minimizeNames;
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
 			_minimizeNames = minimizeNames;
+		}
+
+		private string MakeCamelCase(string s) {
+			if (string.IsNullOrEmpty(s))
+				return s;
+			if (s.Equals("ID", StringComparison.Ordinal))
+				return "id";
+
+			bool hasNonUppercase = false;
+			int numUppercaseChars = 0;
+			for (int index = 0; index < s.Length; index++) {
+				if (char.IsUpper(s, index)) {
+					numUppercaseChars++;
+				}
+				else {
+					hasNonUppercase = true;
+					break;
+				}
+			}
+
+			if ((!hasNonUppercase && s.Length != 1) || numUppercaseChars == 0)
+				return s;
+			else if (numUppercaseChars > 1)
+				return s.Substring(0, numUppercaseChars - 1).ToLower(CultureInfo.InvariantCulture) + s.Substring(numUppercaseChars - 1);
+			else if (s.Length == 1)
+				return s.ToLower(CultureInfo.InvariantCulture);
+			else
+				return char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
+		}
+
+		private static readonly string encodeNumberTable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		private string EncodeNumber(int i) {
+			if (encodeNumberTable.Length != 62 || encodeNumberTable.Distinct().Count() != 62)
+				throw new ArgumentException("X");
+			string result = encodeNumberTable.Substring(i % encodeNumberTable.Length, 1);
+			while (i >= encodeNumberTable.Length) {
+				i /= encodeNumberTable.Length;
+				result = encodeNumberTable.Substring(i % encodeNumberTable.Length, 1) + result;
+			}
+			return result;
 		}
 
 		private string GetDefaultTypeName(ITypeDefinition def) {
@@ -138,12 +254,127 @@ namespace Saltarelle.Compiler.MetadataImporter {
             return true;
 		}
 
+		private bool IsPublic(IMember member) {
+			return IsPublic(member.DeclaringType.GetDefinition()) && (member.Accessibility == Accessibility.Public || member.Accessibility == Accessibility.Protected || member.Accessibility == Accessibility.ProtectedOrInternal);
+		}
+
+		private Dictionary<string, List<IMember>> GetMemberNames(ITypeDefinition typeDefinition) {
+			Dictionary<string, List<IMember>> result;
+			if (!_memberNamesByType.TryGetValue(typeDefinition, out result))
+				_memberNamesByType[typeDefinition] = result = DetermineMemberNames(typeDefinition);
+			return result;
+		}
+
+		private Dictionary<string, List<IMember>> GetMemberNames(IEnumerable<ITypeDefinition> typeDefinitions) {
+			return (from def in typeDefinitions from m in GetMemberNames(def) group m by m.Key into g select new { g.Key, Value = g.SelectMany(x => x.Value).ToList() }).ToDictionary(x => x.Key, x => x.Value);
+		}
+
+		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
+			var sna = GetAttributePositionalArgs(member, "ScriptNameAttribute");
+			if (sna != null)
+				return Tuple.Create((string)sna[0], true);
+			var pca = GetAttributePositionalArgs(member, "PreserveCaseAttribute");
+			if (pca != null)
+				return Tuple.Create(member.Name, true);
+			var pna = GetAttributePositionalArgs(member, "PreserveNameAttribute");
+			if (pna != null)
+				return Tuple.Create(MakeCamelCase(member.Name), true);
+
+			// Handle [AlternateSignature]
+			bool minimize = _minimizeNames && !IsPublic(member);
+
+			return Tuple.Create(minimize ? "" : MakeCamelCase(member.Name), false);
+		}
+
+		public string GetQualifiedMemberName(IMember member) {
+			return member.DeclaringType.FullName + "." + member.Name;
+		}
+
+		private Dictionary<string, List<IMember>> DetermineMemberNames(ITypeDefinition typeDefinition) {
+			var allMembers = GetMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition));
+			foreach (var m in allMembers.Where(kvp => kvp.Value.Count > 1)) {
+				// TODO: Determine if we need to raise an error here.
+			}
+
+			var membersByName =   from m in typeDefinition.GetMembers(options: GetMemberOptions.IgnoreInheritedMembers)
+			                       let name = DeterminePreferredMemberName(m)
+			                     group new { m, name } by name.Item1 into g
+			                    select new { Name = g.Key, Members = g.Select(x => new { Member = x.m, NameSpecified = x.name.Item2 }).ToList() };
+
+			foreach (var current in membersByName) {
+				foreach (var m in current.Members.OrderByDescending(x => x.NameSpecified).ThenBy(x => x.Member, MemberOrderer.Instance)) {
+					if (m.Member is IMethod) {
+						var method = (IMethod)m.Member;
+
+						if (method.IsConstructor) {
+							// TODO
+						}
+						else {
+							if (m.Member.IsOverride) {
+								if (m.NameSpecified) {
+									_errors.Add(GetQualifiedMemberName(m.Member) + ":CannotSpecifyName", "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method " + GetQualifiedMemberName(m.Member) + " because it overrides a base member. Specify the attribute on the base member instead.");
+								}
+
+								var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
+								_methodSemantics[method] = semantics;
+								var errorMethod = m.Member.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name != semantics.Name);
+								if (errorMethod != null) {
+									_errors.Add(GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations", "The overriding member " + GetQualifiedMemberName(m.Member) + " cannot implement the interface method " + GetQualifiedMemberName(errorMethod) + " because it has a different script name. Consider using explicit interface implementation");
+								}
+							}
+							else if (m.Member.ImplementedInterfaceMembers.Count > 0) {
+								if (m.NameSpecified) {
+									_errors.Add(GetQualifiedMemberName(m.Member) + ":CannotSpecifyName", "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on the method " + GetQualifiedMemberName(m.Member) + "because it implements an interface member. Specify the attribute on the interface member instead, or consider using explicit interface implementation.");
+								}
+
+								if (m.Member.ImplementedInterfaceMembers.Select(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name).Distinct().Count() > 1) {
+									_errors.Add(GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations", "The member " + GetQualifiedMemberName(m.Member) + " cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.");
+								}
+
+								_methodSemantics[method] = _methodSemantics[(IMethod)method.ImplementedInterfaceMembers[0].MemberDefinition];
+							}
+							else {
+								string name = current.Name;
+								if (!m.NameSpecified) {
+									// The name was not explicitly specified, so ensure that we have a unique name.
+									if (name == "" && typeDefinition.Kind == TypeKind.Interface) {
+										// Minimized interface names need to be unique within the assembly, otherwise we have a very high risk of collisions (100% when a type implements more than one internal interface).
+										name = "$I" + EncodeNumber(_internalInterfaceMemberCount++);
+									}
+									else {
+										int i = (name == "" ? 0 : 1);
+										while (name == "" || allMembers.ContainsKey(name)) {
+											name = current.Name + "$" + EncodeNumber(i);
+											i++;
+										}
+									}
+								}
+
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name);
+
+								if (allMembers.ContainsKey(name))
+									allMembers[name].Add(m.Member);
+								else
+									allMembers[name] = new List<IMember> { m.Member };
+							}
+						}
+					}
+				}
+			}
+
+			return allMembers;
+		}
+
 		public bool Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
+			_internalInterfaceMemberCount = 0;
 			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
 			_typeNames = new Dictionary<ITypeDefinition, string>();
+			_memberNamesByType = new Dictionary<ITypeDefinition, Dictionary<string, List<IMember>>>();
+			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || IsPublic(t))) {
 				_typeNames[t] = DetermineTypeName(t);
+				GetMemberNames(t);
 			}
 
 			foreach (var e in _errors.Values)
@@ -160,7 +391,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public MethodScriptSemantics GetMethodImplementation(IMethod method) {
-			throw new NotImplementedException();
+			return _methodSemantics[method];
 		}
 
 		public ConstructorScriptSemantics GetConstructorImplementation(IMethod method) {

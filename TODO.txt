@@ -9,11 +9,13 @@ Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
 Const fields
-User-defined operators (probably needed for the runtime library to work as intended).
+User-defined conversions (probably needed for the runtime library to work as intended).
+Improve error handling (error numbers, error positions)
+Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/user-defined operators).
 
 v2:
 yield
 async
 goto
-User-defined conversions
+User-defined operators
 Query comprehension

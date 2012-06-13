@@ -11,7 +11,7 @@ using ICSharpCode.NRefactory.TypeSystem.Implementation;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
     public class ScriptSharpMetadataImporterTestBase {
-        private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader().LoadAssemblyFile(@"..\..\..\ScriptSharp\bin\Debug\mscorlib.dll"));
+        private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(@"..\..\..\ScriptSharp\bin\Debug\mscorlib.dll"));
         protected IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
 		private IEnumerable<ITypeDefinition> SelfAndNested(ITypeDefinition def) {

@@ -255,7 +255,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			}
 		}
 
-        private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location));
+        private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(typeof(object).Assembly.Location));
         protected IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
