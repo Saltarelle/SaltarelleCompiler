@@ -1137,5 +1137,59 @@ class C1 {
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InstanceMethodOnFirstArgumentAttribute") && er.AllMessages[0].Contains("static"));
 		}
+
+		[Test]
+		public void NonScriptableAttributeCausesAMethodToBeNotUsableFromScript() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[NonScriptable]
+	public static void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
+		public void IgnoreGenericArgumentsAttributeWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[IgnoreGenericArguments]
+	public void SomeMethod<T>() {
+	}
+}");
+
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void IgnoreGenericArgumentsCannotBeSpecifiedOnOverridingMethod() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+
+class B {
+	public virtual void SomeMethod<T>(T t) {}
+}
+
+class D : B {
+	[IgnoreGenericArguments]
+	public override void SomeMethod<T>(T t) {}
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("IgnoreGenericArgumentsAttribute") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("overrides"));
+		}
 	}
 }

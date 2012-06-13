@@ -21,9 +21,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [ScriptAlias] (Method)
 	// [InlineCode] (Method)
 	// [InstanceMethodOnFirstArgument] (Method)
+	// [IgnoreGenericArguments] (Method)
+	// [NonScriptable] (Method)
 
 	// To handle:
-	// [NonScriptable] (Type | Constructor | Method | Property | Event) (event missed in ScriptSharp)
+	// [NonScriptable] (Type | Constructor | Property | Event)
 	// [Imported] (Type | Struct)
 	// [ScriptAssembly] (Assembly) ?
 	// [ScriptQualifier] (Assembly)
@@ -40,7 +42,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [PreserveName] (Property | Event | Field)
 	// [ScriptAlias] (Property)
 	// Record
-	// [IgnoreGenericArguments] (Method)
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
 		/// <summary>
@@ -335,7 +336,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							var saa = GetAttributePositionalArgs(m.Member, "ScriptAliasAttribute");
 							var ica = GetAttributePositionalArgs(m.Member, "InlineCodeAttribute");
 							var ifa = GetAttributePositionalArgs(m.Member, "InstanceMethodOnFirstArgumentAttribute");
-							if (ssa != null) {
+							var nsa = GetAttributePositionalArgs(m.Member, "NonScriptableAttribute");
+							var iga = GetAttributePositionalArgs(m.Member, "IgnoreGenericArgumentsAttribute");
+							if (nsa != null) {
+								_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
+							}
+							else if (ssa != null) {
 								// [ScriptSkip] - Skip invocation of the method entirely.
 								if (typeDefinition.Kind == TypeKind.Interface) {
 									_errors[GetQualifiedMemberName(m.Member) + ":ScriptSkipOnInterfaceMember"] = "The member " + GetQualifiedMemberName(m.Member) + " cannot have a [ScriptSkipAttribute] because it is an interface method.";
@@ -409,12 +415,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 									if (m.NameSpecified) {
 										_errors[GetQualifiedMemberName(m.Member) + ":CannotSpecifyName"] = "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method " + GetQualifiedMemberName(m.Member) + " because it overrides a base member. Specify the attribute on the base member instead.";
 									}
+									if (iga != null) {
+										_errors[GetQualifiedMemberName(m.Member) + ":CannotSpecifyIgnoreGenericArguments"] = "The [IgnoreGenericArgumentsAttribute] attribute cannot be specified on the method " + GetQualifiedMemberName(m.Member) + " because it overrides a base member. Specify the attribute on the base member instead.";
+									}
 
 									var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
 									_methodSemantics[method] = semantics;
-									var errorMethod = m.Member.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name != semantics.Name);
-									if (errorMethod != null) {
-										_errors[GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations"] = "The overriding member " + GetQualifiedMemberName(m.Member) + " cannot implement the interface method " + GetQualifiedMemberName(errorMethod) + " because it has a different script name. Consider using explicit interface implementation";
+									if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
+										var errorMethod = m.Member.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodImplementation((IMethod)im.MemberDefinition).Name != semantics.Name);
+										if (errorMethod != null) {
+											_errors[GetQualifiedMemberName(m.Member) + ":MultipleInterfaceImplementations"] = "The overriding member " + GetQualifiedMemberName(m.Member) + " cannot implement the interface method " + GetQualifiedMemberName(errorMethod) + " because it has a different script name. Consider using explicit interface implementation";
+										}
 									}
 								}
 								else if (m.Member.ImplementedInterfaceMembers.Count > 0) {
@@ -465,7 +476,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 											}
 										}
 
-										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(m.Member, "AlternateSignatureAttribute") == null);
+										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(m.Member, "AlternateSignatureAttribute") == null, ignoreGenericArguments: iga != null);
 
 										if (allMembers.ContainsKey(name))
 											allMembers[name].Add(m.Member);
