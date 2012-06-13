@@ -900,5 +900,74 @@ class C1 {
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("{this}"));
 		}
+
+		[Test]
+		public void AlternateSignatureAttributeWorksOnMethods() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[AlternateSignature]
+	public void SomeMethod() {
+	}
+
+
+	[AlternateSignature]
+	public void SomeMethod(int x) {
+	}
+
+	[ScriptName(""RenamedMethod"")]
+	public void SomeMethod(int x, int y) {
+	}
+}");
+
+			var methods = FindMethods(types, "C1.SomeMethod", md);
+			Assert.That(methods.All(m => m.Item2.Name == "RenamedMethod"));
+		}
+
+		[Test]
+		public void IfAnyMethodInAMethodGroupHasAnAlternateSignatureAttributeThenExactlyOneMethodMustNotHaveIt() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[AlternateSignature]
+	public void SomeMethod() {
+	}
+
+	public void SomeMethod(int x) {
+	}
+
+	public void SomeMethod(int x, int y) {
+	}
+}", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("AlternateSignatureAttribute") && er.AllMessages[0].Contains("same name"));
+
+
+			md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[AlternateSignature]
+	public void SomeMethod() {
+	}
+
+	[AlternateSignature]
+	public void SomeMethod(int x) {
+	}
+
+	[AlternateSignature]
+	public void SomeMethod(int x, int y) {
+	}
+}", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("AlternateSignatureAttribute") && er.AllMessages[0].Contains("same name"));
+		}
 	}
 }
