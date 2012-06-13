@@ -89,24 +89,6 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
         }
 
         [Test]
-        public void AdditionalNamesWorkForInstanceMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("X", additionalNames: new[] { "X1", "X2" } ) };
-            Compile(new[] { "class C { public void X() {} }" }, namingConvention: namingConvention);
-            var cls = FindClass("C");
-            cls.InstanceMethods.Should().HaveCount(1);
-            FindInstanceMethod("C.X").AdditionalNames.Should().BeEquivalentTo(new[] { "X1", "X2" });
-        }
-
-        [Test]
-        public void AdditionalNamesWorkForStaticMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("X", additionalNames: new[] { "X1", "X2" } ) };
-            Compile(new[] { "class C { public static void X() {} }" }, namingConvention: namingConvention);
-            var cls = FindClass("C");
-            cls.StaticMethods.Should().HaveCount(1);
-            FindStaticMethod("C.X").AdditionalNames.Should().BeEquivalentTo(new[] { "X1", "X2" });
-        }
-
-        [Test]
         public void OperatorsWork() {
             Compile(new[] { "class C { public static bool operator==(C a, C b) {} }" });
             FindStaticMethod("C.op_Equality").Should().NotBeNull();

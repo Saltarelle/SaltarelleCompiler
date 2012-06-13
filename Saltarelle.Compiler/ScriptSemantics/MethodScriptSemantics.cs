@@ -79,24 +79,15 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         /// </summary>
         public bool GenerateCode { get; private set; }
 
-        private ReadOnlyCollection<string> _additionalNames;
-        public ReadOnlyCollection<string> AdditionalNames {
-            get {
-                if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument)
-                    throw new InvalidOperationException();
-                return _additionalNames;
-            }
-        }
-
         private MethodScriptSemantics() {
         }
 
-        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, IEnumerable<string> additionalNames = null) {
-            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, _additionalNames = additionalNames.AsReadOnly() };
+        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
         }
 
-        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, IEnumerable<string> additionalNames = null) {
-            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, _additionalNames = additionalNames.AsReadOnly() };
+        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
         }
 
         public static MethodScriptSemantics InstanceMethodOnFirstArgument(string name) {
