@@ -924,6 +924,7 @@ class C1 {
 
 			var methods = FindMethods(types, "C1.SomeMethod", md);
 			Assert.That(methods.All(m => m.Item2.Name == "RenamedMethod"));
+			Assert.That(methods.All(m => m.Item2.GenerateCode == (m.Item1.Parameters.Count == 2)));
 		}
 
 		[Test]
@@ -947,7 +948,6 @@ class C1 {
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("AlternateSignatureAttribute") && er.AllMessages[0].Contains("same name"));
 
-
 			md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			er = new MockErrorReporter(false);
 
@@ -968,6 +968,57 @@ class C1 {
 }", er);
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("AlternateSignatureAttribute") && er.AllMessages[0].Contains("same name"));
+		}
+
+		[Test]
+		public void ScriptAliasAttributeWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ScriptAlias(""Some.Thing.Somewhere"")]
+	public static void SomeMethod() {
+	}
+}
+class C2 {
+	[ScriptAlias(""global[x].abc"")]
+	public static void SomeMethod(int x) {
+	}
+}
+class C3 {
+	[ScriptAlias(""x.y"")]
+	public static void SomeMethod(int x, string y) {
+	}
+}");
+
+			var impl = FindMethod(types, "C1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("Some.Thing.Somewhere()"));
+
+			impl = FindMethod(types, "C2.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("global[x].abc({x})"));
+
+			impl = FindMethod(types, "C3.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("x.y({x}, {y})"));
+		}
+
+		[Test]
+		public void ScriptAliasAttributeCanOnlyBeSpecifiedOnStaticMethods() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ScriptAlias(""x.y"")]
+	public void SomeMethod() {
+	}
+}", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("ScriptAliasAttribute") && er.AllMessages[0].Contains("must be static"));
 		}
 	}
 }

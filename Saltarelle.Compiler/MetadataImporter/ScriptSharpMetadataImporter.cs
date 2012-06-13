@@ -17,6 +17,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [PreserveCase] (Property | Event | Field)
 	// [ScriptSkip] (Method)
 	// [AlternateSignature] (Method)
+	// [ScriptAlias] (Method)
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor | Method | Property | Event) (event missed in ScriptSharp)
@@ -34,7 +35,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [ScriptName] (Field | Property | Event)
 	// [PreserveCase] (Property | Event | Field)
 	// [PreserveName] (Property | Event | Field)
-	// [ScriptAlias] (Method | Property) = Literal code ?
+	// [ScriptAlias] (Property)
 	// Record
 	// New attributes:
 	// [InstanceMethodOnFirstArgument]
@@ -330,6 +331,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 						else {
 							var ssa = GetAttributePositionalArgs(m.Member, "ScriptSkipAttribute");
+							var saa = GetAttributePositionalArgs(m.Member, "ScriptAliasAttribute");
 							if (ssa != null) {
 								// [ScriptSkip] - Skip invocation of the method entirely.
 								if (typeDefinition.Kind == TypeKind.Interface) {
@@ -351,6 +353,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 											_errors[GetQualifiedMemberName(m.Member) + ":ScriptSkipParameterCount"] = "The instance method " + GetQualifiedMemberName(m.Member) + " must have no parameters in order to have a [ScriptSkipAttribute].";
 										_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}");
 									}
+								}
+							}
+							else if (saa != null) {
+								if (method.IsStatic) {
+									_methodSemantics[method] = MethodScriptSemantics.InlineCode((string)saa[0] + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
+								}
+								else {
+									_errors[GetQualifiedMemberName(m.Member) + ":NonStaticWithAlias"] = "The method " + GetQualifiedMemberName(m.Member) + " must be static in order to have a [ScriptAliasAttribute].";
+									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
 								}
 							}
 							else {
@@ -410,7 +421,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 											}
 										}
 
-										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name);
+										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(m.Member, "AlternateSignatureAttribute") == null);
 
 										if (allMembers.ContainsKey(name))
 											allMembers[name].Add(m.Member);
