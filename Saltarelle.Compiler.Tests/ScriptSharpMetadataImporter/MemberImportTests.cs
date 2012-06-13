@@ -821,6 +821,14 @@ class C3 {
 		}
 
 		[Test]
+		public void EmptyScriptNameCannotBeSpecifiedOnStaticMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public static void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("static") && er.AllMessages[0].Contains("empty name"));
+		}
+
+		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnInterfaceMethod() {
 			var er = new MockErrorReporter(false);
 			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [ScriptSkip] void M(); }", er);
@@ -1019,6 +1027,62 @@ class C1 {
 }", er);
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("ScriptAliasAttribute") && er.AllMessages[0].Contains("must be static"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1<T1> {
+	class C2<T2> {
+		[InlineCode(""Some.[].Strange{ }'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"")]
+		public void SomeMethod<T3, T4>(int x, string y) {}
+	}
+}");
+
+			var impl = FindMethod(types, "C1`1+C2`1.SomeMethod", md);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("Some.[].Strange{ }'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(false);
+
+			Process(md, @"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("inline code") && er.AllMessages[0].Contains("{this}"));
+
+			md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			er = new MockErrorReporter(false);
+
+			Process(md, @"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("inline code") && er.AllMessages[0].Contains("{x}"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotBeSpecifiedOnInterfaceMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [InlineCode(""X"")] void M(); }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("I1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("interface method"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotBeSpecifiedOnOverridableMethod() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public virtual void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overridable"));
+
+			er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public abstract void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overridable"));
 		}
 	}
 }

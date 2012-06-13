@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.TypeSystem;
@@ -18,6 +19,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [ScriptSkip] (Method)
 	// [AlternateSignature] (Method)
 	// [ScriptAlias] (Method)
+	// [InlineCode] (Method)
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor | Method | Property | Event) (event missed in ScriptSharp)
@@ -332,6 +334,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						else {
 							var ssa = GetAttributePositionalArgs(m.Member, "ScriptSkipAttribute");
 							var saa = GetAttributePositionalArgs(m.Member, "ScriptAliasAttribute");
+							var ica = GetAttributePositionalArgs(m.Member, "InlineCodeAttribute");
 							if (ssa != null) {
 								// [ScriptSkip] - Skip invocation of the method entirely.
 								if (typeDefinition.Kind == TypeKind.Interface) {
@@ -362,6 +365,34 @@ namespace Saltarelle.Compiler.MetadataImporter {
 								else {
 									_errors[GetQualifiedMemberName(m.Member) + ":NonStaticWithAlias"] = "The method " + GetQualifiedMemberName(m.Member) + " must be static in order to have a [ScriptAliasAttribute].";
 									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
+								}
+							}
+							else if (ica != null) {
+								if (typeDefinition.Kind == TypeKind.Interface) {
+									_errors[GetQualifiedMemberName(m.Member) + ":InlineCodeOnInterfaceMember"] = "The member " + GetQualifiedMemberName(m.Member) + " cannot have an [InlineCodeAttribute] because it is an interface method.";
+									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
+								}
+								else if (method.IsOverridable) {
+									_errors[GetQualifiedMemberName(m.Member) + ":InlineCodeOnOverridable"] = "The member " + GetQualifiedMemberName(m.Member) + " cannot have an [InlineCodeAttribute] because it is overridable.";
+									_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
+								}
+								else {
+									string code = (string)ica[0];
+
+									foreach (var ph in new Regex("\\{([a-zA-Z_][a-zA-Z0-9]*)\\}").Matches(code).Cast<Match>().Select(x => x.Groups[1].Value)) {
+										if (ph == "this") {
+											if (method.IsStatic) {
+												_errors[GetQualifiedMemberName(m.Member) + ":InlineCodeInvalidPlaceholder"] = "Cannot use the placeholder {this} in inline code for the static method " + GetQualifiedMemberName(m.Member) + ".";
+												code = "X";
+											}
+										}
+										else if (!method.Parameters.Any(p => p.Name == ph) && !method.TypeParameters.Any(p => p.Name == ph) && !method.DeclaringType.GetDefinition().TypeParameters.Any(p => p.Name == ph)) {
+											_errors[GetQualifiedMemberName(m.Member) + ":InlineCodeInvalidPlaceholder"] = "Invalid placeholder {" + ph + "} in inline code for method " + GetQualifiedMemberName(m.Member) + ".";
+											code = "X";
+										}
+									}
+
+									_methodSemantics[method] = MethodScriptSemantics.InlineCode(code);
 								}
 							}
 							else {
@@ -397,6 +428,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 										}
 										else if (method.IsOverridable) {
 											_errors[GetQualifiedMemberName(m.Member) + ":OverridableWithEmptyName"] = "The member " + GetQualifiedMemberName(m.Member) + " cannot have an empty name specified in its [ScriptName] because it is overridable.";
+											_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
+										}
+										else if (method.IsStatic) {
+											_errors[GetQualifiedMemberName(m.Member) + ":StaticWithEmptyName"] = "The member " + GetQualifiedMemberName(m.Member) + " cannot have an empty name specified in its [ScriptName] because it is static.";
 											_methodSemantics[method] = MethodScriptSemantics.NormalMethod(m.Member.Name);
 										}
 										else {
