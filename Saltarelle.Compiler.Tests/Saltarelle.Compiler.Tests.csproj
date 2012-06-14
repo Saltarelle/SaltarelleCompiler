@@ -124,7 +124,7 @@
     <Compile Include="ScriptSharpMetadataImporter\MiscTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\PropertyTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\MethodTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporter\TypeNameTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\TypeTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\ScriptSharpMetadataImporterTestBase.cs" />
   </ItemGroup>
   <ItemGroup>

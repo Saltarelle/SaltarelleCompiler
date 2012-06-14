@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	[TestFixture]
-	public class TypeNameTests : ScriptSharpMetadataImporterTestBase {
+	public class TypeTests : ScriptSharpMetadataImporterTestBase {
 		[Test]
 		public void TopLevelClassWithoutAttributesWorks() {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
@@ -447,6 +448,91 @@ namespace X.Y {
 			Assert.That(md.GetTypeName(result["C10+C11"]), Is.EqualTo("C10$C11"));
 			Assert.That(md.GetTypeName(result["C10+C12"]), Is.EqualTo("C10$C12"));
 			Assert.That(md.GetTypeName(result["C10+C13"]), Is.EqualTo("C10$C13"));
+		}
+
+		[Test]
+		public void GlobalMethodsAttributeCausesAllMethodsToBeGlobalAndPreventsMinimization() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+[GlobalMethods]
+static class C1 {
+	[PreserveName]
+	static void Method1() {
+	}
+
+	[PreserveCase]
+	static void Method2() {
+	}
+
+	[ScriptName(""Renamed"")]
+	static void Method3() {
+	}
+
+	static void Method4() {
+	}
+}");
+
+			var m1 = FindMethod(types, "C1.Method1", md);
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("method1"));
+			Assert.That(m1.IsGlobal, Is.True);
+
+			var m2 = FindMethod(types, "C1.Method2", md);
+			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m2.Name, Is.EqualTo("Method2"));
+			Assert.That(m2.IsGlobal, Is.True);
+
+			var m3 = FindMethod(types, "C1.Method3", md);
+			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m3.Name, Is.EqualTo("Renamed"));
+			Assert.That(m3.IsGlobal, Is.True);
+
+			var m4 = FindMethod(types, "C1.Method4", md);
+			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m4.Name, Is.EqualTo("method4"));
+			Assert.That(m4.IsGlobal, Is.True);
+		}
+
+		[Test]
+		public void FieldOrPropertyOrEventInGlobalMethodsClassGivesAnError() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+			Process(md, @"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int i; }", er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("GlobalMethodsAttribute") && er.AllMessages[0].Contains("fields"));
+
+			md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			er = new MockErrorReporter(false);
+			Process(md, @"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static event System.EventHandler e; }", er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("GlobalMethodsAttribute") && er.AllMessages[0].Contains("events"));
+
+			md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			er = new MockErrorReporter(false);
+			Process(md, @"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int P { get; set; } }", er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("GlobalMethodsAttribute") && er.AllMessages[0].Contains("properties"));
+		}
+
+		[Test]
+		public void GlobalMethodsAttributeCannotBeAppliedToNonStaticClass() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+			Process(md, @"using System.Runtime.CompilerServices; [GlobalMethods] class C1 { static int i; }", er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("GlobalMethodsAttribute") && er.AllMessages[0].Contains("must be static"));
+		}
+
+		[Test]
+		public void GlobalMethodsAttributeCannotBeAppliedToNestedClass() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+			Process(md, @"using System.Runtime.CompilerServices; static class C1 { [GlobalMethods] static class C2 {} }", er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.C2") && er.AllMessages[0].Contains("GlobalMethodsAttribute") && er.AllMessages[0].Contains("nested"));
 		}
 	}
 }

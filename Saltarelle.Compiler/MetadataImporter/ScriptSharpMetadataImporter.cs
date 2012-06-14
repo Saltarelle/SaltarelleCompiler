@@ -24,6 +24,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [IgnoreGenericArguments] (Method)
 	// [NonScriptable] (Method | Property | Field | Event)
 	// [IntrinsicProperty] (Property (/indexer))
+	// [GlobalMethods] (Class)
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor)
@@ -32,7 +33,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [ScriptQualifier] (Assembly)
 	// [ScriptNamespaceAttribute] (Assembly)
 	// [Resources] (Class) ?
-	// [GlobalMethods] (Class) - Needs better support in the compiler
 	// [Mixin] (Class) ?
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
@@ -54,6 +54,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string PreserveNameAttribute = "PreserveNameAttribute";
 		private const string PreserveCaseAttribute = "PreserveCaseAttribute";
 		private const string IntrinsicPropertyAttribute = "IntrinsicPropertyAttribute";
+		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
 
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
@@ -128,7 +129,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private Dictionary<ITypeDefinition, string> _typeNames;
+		private class TypeSemantics {
+			public string Name { get; private set; }
+			public bool GlobalMethods { get; private set; }
+
+			public TypeSemantics(string name, bool globalMethods) {
+				Name = name;
+				GlobalMethods = globalMethods;
+			}
+		}
+
+		private Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
 		private Dictionary<ITypeDefinition, Dictionary<string, List<IMember>>> _memberNamesByType;
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
@@ -225,7 +236,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return dot > 0 ? Tuple.Create(typeName.Substring(0, dot), typeName.Substring(dot + 1)) : Tuple.Create("", typeName);
 		}
 
-		private string DetermineTypeName(ITypeDefinition typeDefinition) {
+		private void DetermineTypeSemantics(ITypeDefinition typeDefinition) {
+			if (_typeSemantics.ContainsKey(typeDefinition))
+				return;
+
 			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
 			string typeName, nmspace;
 			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
@@ -239,7 +253,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 				if (_minimizeNames && !IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) == null) {
 					nmspace = DetermineNamespace(typeDefinition);
-					int index = _typeNames.Values.Select(tn => SplitName(tn)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
+					int index = _typeSemantics.Values.Select(ts => SplitName(ts.Name)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
 				}
 				else {
@@ -258,7 +272,25 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			return !string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName;
+			bool globalMethods = false;
+			var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
+			if (globalMethodsAttr != null) {
+				if (!typeDefinition.IsStatic) {
+					_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [GlobalMethodsAttribute]";
+				}
+				else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
+					_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]";
+				}
+				else if (typeDefinition.DeclaringTypeDefinition != null) {
+					_errors[typeDefinition.FullName + ":GlobalMethods"] = "[GlobalMethodsAttribute] cannot be applied to the nested type " + typeDefinition.FullName + ".";
+				}
+				else {
+					nmspace = "";
+					globalMethods = true;
+				}
+			}
+
+			_typeSemantics[typeDefinition] = new TypeSemantics(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, globalMethods);
 		}
 
 		private bool IsPublic(ITypeDefinition type) {
@@ -277,6 +309,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Dictionary<string, List<IMember>> GetMemberNames(ITypeDefinition typeDefinition) {
+			DetermineTypeSemantics(typeDefinition);
 			Dictionary<string, List<IMember>> result;
 			if (!_memberNamesByType.TryGetValue(typeDefinition, out result))
 				_memberNamesByType[typeDefinition] = result = ProcessType(typeDefinition);
@@ -311,7 +344,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
-			bool preserveName = GetAttributePositionalArgs(member, PreserveNameAttribute) != null || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null;
+			bool preserveName =    GetAttributePositionalArgs(member, PreserveNameAttribute) != null
+			                    || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
+			                    || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
+			                    || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods;
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
@@ -495,8 +531,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var ifa = GetAttributePositionalArgs(method, InstanceMethodOnFirstArgumentAttribute);
 			var nsa = GetAttributePositionalArgs(method, NonScriptableAttribute);
 			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
+
 			if (nsa != null) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
+				return;
+			}
+			else if (_typeSemantics[method.DeclaringTypeDefinition].GlobalMethods) {
+				_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true);
 				return;
 			}
 			else if (ssa != null) {
@@ -715,14 +756,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
 			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
-			_typeNames = new Dictionary<ITypeDefinition, string>();
+			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
 			_memberNamesByType = new Dictionary<ITypeDefinition, Dictionary<string, List<IMember>>>();
 			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
 			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
 			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
 			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || IsPublic(t))) {
-				_typeNames[t] = DetermineTypeName(t);
+				DetermineTypeSemantics(t);
 				GetMemberNames(t);
 			}
 
@@ -732,7 +773,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string GetTypeName(ITypeDefinition typeDefinition) {
-			return _typeNames[typeDefinition];
+			return _typeSemantics[typeDefinition].Name;
 		}
 
 		public string GetTypeParameterName(ITypeParameter typeParameter) {
