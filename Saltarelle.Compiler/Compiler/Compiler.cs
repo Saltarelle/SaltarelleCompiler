@@ -225,7 +225,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private void MaybeAddDefaultConstructorToType(JsClass jsClass, IMethod constructor) {
-            var options = _namingConvention.GetConstructorImplementation(constructor);
+            var options = _namingConvention.GetConstructorSemantics(constructor);
             if (options.GenerateCode) {
                 var mc = CreateMethodCompiler();
                 var compiled = mc.CompileDefaultConstructor(constructor, TryGetInstanceInitStatements(jsClass), options);
@@ -311,7 +311,7 @@ namespace Saltarelle.Compiler.Compiler {
                 return;
 
             if (!methodDeclaration.Body.IsNull) {
-                MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _namingConvention.GetMethodImplementation(method));
+                MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _namingConvention.GetMethodSemantics(method));
             }
         }
 
@@ -331,7 +331,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _namingConvention.GetMethodImplementation(method));
+            MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _namingConvention.GetMethodSemantics(method));
         }
 
         private void HandleConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
@@ -354,7 +354,7 @@ namespace Saltarelle.Compiler.Compiler {
                 jsClass.StaticInitStatements.AddRange(CompileMethod(constructorDeclaration, constructorDeclaration.Body, method, MethodScriptSemantics.NormalMethod("X")).Body.Statements);
             }
             else {
-                MaybeCompileAndAddConstructorToType(jsClass, constructorDeclaration, method, _namingConvention.GetConstructorImplementation(method));
+                MaybeCompileAndAddConstructorToType(jsClass, constructorDeclaration, method, _namingConvention.GetConstructorSemantics(method));
             }
         }
 
@@ -380,7 +380,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            var impl = _namingConvention.GetPropertyImplementation(property);
+            var impl = _namingConvention.GetPropertySemantics(property);
 
             switch (impl.Type) {
                 case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
@@ -434,7 +434,7 @@ namespace Saltarelle.Compiler.Compiler {
                 if (jsClass == null)
                     return;
 
-                var impl = _namingConvention.GetEventImplementation(evt);
+                var impl = _namingConvention.GetEventSemantics(evt);
                 switch (impl.Type) {
                     case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
                         if ((impl.AddMethod != null && impl.AddMethod.GenerateCode) || (impl.RemoveMethod != null && impl.RemoveMethod.GenerateCode)) {
@@ -479,7 +479,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            var impl = _namingConvention.GetEventImplementation(evt);
+            var impl = _namingConvention.GetEventSemantics(evt);
 
             switch (impl.Type) {
                 case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
@@ -519,7 +519,7 @@ namespace Saltarelle.Compiler.Compiler {
                 if (jsClass == null)
                     return;
 
-                var impl = _namingConvention.GetFieldImplementation(field);
+                var impl = _namingConvention.GetFieldSemantics(field);
 
                 switch (impl.Type) {
                     case FieldScriptSemantics.ImplType.Field:
@@ -557,7 +557,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            var impl = _namingConvention.GetPropertyImplementation(prop);
+            var impl = _namingConvention.GetPropertySemantics(prop);
 
             switch (impl.Type) {
                 case PropertyScriptSemantics.ImplType.GetAndSetMethods: {

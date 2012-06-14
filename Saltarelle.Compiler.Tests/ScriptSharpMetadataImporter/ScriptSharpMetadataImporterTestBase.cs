@@ -51,7 +51,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		protected List<Tuple<IMethod, MethodScriptSemantics>> FindMethods(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMembers(types, name).Cast<IMethod>().Select(m => Tuple.Create(m, md.GetMethodImplementation(m))).ToList();
+			return FindMembers(types, name).Cast<IMethod>().Select(m => Tuple.Create(m, md.GetMethodSemantics(m))).ToList();
 		}
 
 		protected MethodScriptSemantics FindMethod(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
@@ -59,11 +59,11 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		protected PropertyScriptSemantics FindProperty(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMembers(types, name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => md.GetPropertyImplementation(p)).Single();
+			return FindMembers(types, name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => md.GetPropertySemantics(p)).Single();
 		}
 
 		protected PropertyScriptSemantics FindIndexer(IDictionary<string, ITypeDefinition> types, string typeName, int parameterCount, INamingConventionResolver md) {
-			return types[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => md.GetPropertyImplementation(p)).Single();
+			return types[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => md.GetPropertySemantics(p)).Single();
 		}
     }
 }

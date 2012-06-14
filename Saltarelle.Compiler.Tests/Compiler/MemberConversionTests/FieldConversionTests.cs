@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
     public class FieldConversionTests : CompilerTestBase {
         [Test]
         public void InstanceFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldScriptSemantics.Field("$SomeProp") };
+            var namingConvention = new MockNamingConventionResolver { GetFieldSemantics = f => FieldScriptSemantics.Field("$SomeProp") };
             Compile(new[] { "class C { public int SomeField; }" }, namingConvention: namingConvention);
             FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
             FindClass("C").StaticInitStatements.Should().BeEmpty();
@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void StaticFieldsAreCorrectlyImported() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldScriptSemantics.Field("$SomeProp") };
+            var namingConvention = new MockNamingConventionResolver { GetFieldSemantics = f => FieldScriptSemantics.Field("$SomeProp") };
             Compile(new[] { "class C { public static int SomeField; }" }, namingConvention: namingConvention);
             FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
             FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void FieldsThatAreNotUsableFromScriptAreNotImported() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldScriptSemantics.NotUsableFromScript() };
+            var namingConvention = new MockNamingConventionResolver { GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C { public int SomeField; }" }, namingConvention: namingConvention);
             FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
             FindClass("C").StaticInitStatements.Should().BeEmpty();
@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ImportingMultipleFieldsInTheSameDeclarationWorks() {
-            var namingConvention = new MockNamingConventionResolver { GetFieldImplementation = f => FieldScriptSemantics.Field("$" + f.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetFieldSemantics = f => FieldScriptSemantics.Field("$" + f.Name) };
             Compile(new[] { "class C { public int Field1, Field2; }" }, namingConvention: namingConvention);
             FindInstanceFieldInitializer("C.$Field1").Should().NotBeNull();
             FindInstanceFieldInitializer("C.$Field2").Should().NotBeNull();

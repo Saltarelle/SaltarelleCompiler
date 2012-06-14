@@ -308,7 +308,7 @@ public void M() {
 	// END
 }",
 @"	set_this_$i_$j_(get_this_$i_$j_) + $k_;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}_"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}_")) : PropertyScriptSemantics.Field(p.Name) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}_"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}_")) : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -322,7 +322,7 @@ public void M() {
 	// END
 }",
 @"	$l = this[$i] += $k;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -336,7 +336,7 @@ public void M() {
 	// END
 }",
 @"	set_this_(get_this_) + $i_;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_"), MethodScriptSemantics.InlineCode("set_{this}_{value}_")) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_"), MethodScriptSemantics.InlineCode("set_{this}_{value}_")) });
 		}
 
 		[Test]
@@ -507,7 +507,7 @@ public void M() {
 }
 ".Replace("type", type),
 @"	this[$i] = $IntDiv(this[$i], $j);
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
 		}
 
 		[Test]
@@ -526,7 +526,7 @@ public void M() {
 ".Replace("type", type),
 @"	var $tmp1 = this.F1();
 	$tmp1[$i] = $IntDiv($tmp1[$i], $j);
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
 		}
 
 		[Test]
@@ -543,7 +543,7 @@ public void M() {
 }
 ".Replace("type", type),
 @"	this[$i] /= $j;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
 		}
 
 		[Test]
@@ -922,7 +922,7 @@ public void M() {
 		[Test]
 		public void UsingPropertyThatIsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty += 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty += 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
 		}
 

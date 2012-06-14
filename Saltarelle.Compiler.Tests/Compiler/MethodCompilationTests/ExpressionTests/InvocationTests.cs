@@ -134,7 +134,7 @@ public void M() {
 	// END
 }",
 @"	this.$F($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
 		}
 
 		[Test]
@@ -314,7 +314,7 @@ public void M() {
 	// END
 }",
 @"	var $i = this[$a];
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -368,7 +368,7 @@ public void M() {
 	// END
 }",
 @"	{C}.$F(this, $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -384,7 +384,7 @@ public void M() {
 	// END
 }",
 @"	$InstantiateGenericType({X}, {Int32}).$F(this.$FX(), $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -399,7 +399,7 @@ public void M() {
 	// END
 }",
 @"	$InstantiateGenericMethod({C}.$F, {Int32}, {String}).call(null, this, $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -420,7 +420,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	{C}.$F(this, 1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -437,7 +437,7 @@ public void M() {
 	// END
 }",
 @"	$a.$F($b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -458,7 +458,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	this.$F4().$F(2, 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -475,7 +475,7 @@ public void M() {
 	// END
 }",
 @"	_{Int32}_{Byte}_{String}_$o_$a_$b_$c_;
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{T1}_{T2}_{T3}_{this}_{x}_{y}_{z}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{T1}_{T2}_{T3}_{this}_{x}_{y}_{z}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -496,13 +496,13 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2_;
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{a}_{b}_{c}_{d}_{e}_{f}_{g}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{a}_{b}_{c}_{d}_{e}_{f}_{g}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
 		public void InvokingMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
 		}
 

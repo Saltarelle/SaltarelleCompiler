@@ -311,7 +311,7 @@ public void M() {
 @"	var $f = function() {
 		return $this.$x;
 	};
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 
 		[Test]
@@ -326,7 +326,7 @@ public void M() {
 @"	var $f = function() {
 		return $this.$x;
 	};
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 	}
 }

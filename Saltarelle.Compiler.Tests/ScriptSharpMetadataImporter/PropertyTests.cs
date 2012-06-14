@@ -487,6 +487,88 @@ class C {
 		}
 
 		[Test]
+		public void NonScriptableAttributeCausesPropertyToNotBeUsableFromScript() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[NonScriptable]
+	public int Prop1 { get; set; }
+}
+");
+
+			var impl = FindProperty(types, "C1.Prop1", md);
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
+		public void ScriptAliasAttributeCannotBeSpecifiedOnInstanceProperty() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	[ScriptAlias(""$"")]
+	public int Prop { get; set; }
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.Prop") && er.AllMessages[0].Contains("instance member") && er.AllMessages[0].Contains("ScriptAliasAttribute"));
+		}
+
+		[Test]
+		public void ScriptAliasAttributeWorksOnStaticProperty() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	[ScriptAlias(""$"")]
+	public static int Prop1 { get; set; }
+
+	[ScriptAlias(""$(this)"")]
+	public static int Prop2 { get; }
+
+	[ScriptAlias(""$3"")]
+	public static int Prop3 { set; }
+
+	[ScriptAlias(""$4"")]
+	[IntrinsicProperty]
+	public static int Prop4 { get; set; }
+}");
+
+			var p1 = FindProperty(types, "C1.Prop1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("$"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p1.SetMethod.LiteralCode, Is.EqualTo("$"));
+
+			var p2 = FindProperty(types, "C1.Prop2", md);
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p2.GetMethod.LiteralCode, Is.EqualTo("$(this)"));
+			Assert.That(p2.SetMethod, Is.Null);
+
+			var p3 = FindProperty(types, "C1.Prop3", md);
+			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p3.GetMethod, Is.Null);
+			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p3.SetMethod.LiteralCode, Is.EqualTo("$3"));
+
+			var p4 = FindProperty(types, "C1.Prop4", md);
+			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p4.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p4.GetMethod.LiteralCode, Is.EqualTo("$4"));
+			Assert.That(p4.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p4.SetMethod.LiteralCode, Is.EqualTo("$4"));
+		}
+
+		[Test]
 		public void NonPublicPropertiesArePrefixedWithADollarIfSymbolsAreNotMinimized() {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 

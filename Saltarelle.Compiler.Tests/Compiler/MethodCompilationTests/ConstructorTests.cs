@@ -61,7 +61,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 @"function() {
 	var $this = {};
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("ctor") });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -80,7 +80,7 @@ class D : B {
 @"function() {
 	var $this = {B}.ctor();
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("ctor") });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -99,7 +99,7 @@ class D : B {
 @"function() {
 	var $this = {B}.ctor();
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("ctor") });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -147,7 +147,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	{C}.call(this, 1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -184,7 +184,7 @@ class D : B {
 
 	public C(int x, string s) {
 	}
-}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
 			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -205,7 +205,7 @@ class D : B {
 @"function() {
 	var $this = __Literal_0_'X'__;
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
 		}
 
 		[Test]
@@ -233,7 +233,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	var $this = {C}.ctor$7(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
 		}
 
 		[Test]
@@ -245,7 +245,7 @@ class D : B {
 	}
 	public C(int x) {
 	}
-}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -258,7 +258,7 @@ class D : B {
 }
 class D : B {
 	public D() {}
-}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -292,7 +292,7 @@ class D : B {
 	}
 	public C(int x) {
 	}
-}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
 			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -305,7 +305,7 @@ class D : B {
 }
 class D : B {
 	public D() {}
-}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
+}" }, errorReporter: rpt, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
 			Assert.That(rpt.AllMessages.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -334,7 +334,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	var $this = new {C}(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -383,7 +383,7 @@ class D : B {
 	var $tmp3 = {D}.F3();
 	{B}.call(this, 1, {D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.Unnamed() });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -452,7 +452,7 @@ class D : B {
 	var $this = {};
 	$this.$x = 1;
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("ctor") });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -473,7 +473,7 @@ class D : B {
 	var $this = {B}.ctor();
 	$this.$x = 1;
 	$this.M();
-}", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("ctor") });
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]

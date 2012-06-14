@@ -22,42 +22,42 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void MethodImplementedAsInlineCodeDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodScriptSemantics.InlineCode("X") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = method => MethodScriptSemantics.InlineCode("X") };
             Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void MethodImplementedAsInstanceMethodOnFirstArgumentDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodScriptSemantics.InstanceMethodOnFirstArgument("X") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = method => MethodScriptSemantics.InstanceMethodOnFirstArgument("X") };
             Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void MethodImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodScriptSemantics.NotUsableFromScript() };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = method => MethodScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void InstanceMethodWithGenerateCodeSetToFalseDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodScriptSemantics.NormalMethod("X", generateCode: false) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = method => MethodScriptSemantics.NormalMethod("X", generateCode: false) };
             Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void StaticMethodWithGenerateCodeSetToFalseDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodScriptSemantics.NormalMethod("X", generateCode: false) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = method => MethodScriptSemantics.NormalMethod("X", generateCode: false) };
             Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
         }
 
         [Test]
         public void StaticMethodWithThisAsFirstArgumentAppearsOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = method => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("X") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = method => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("X") };
             Compile(new[] { "class C { public static void M() {} }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindStaticMethod("C.X").Should().NotBeNull();
@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ShadowingMethodsAreIncluded() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
             Compile(new[] { "class B { public void X(); } class C : B { public new void X() {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.InstanceMethods.Should().HaveCount(1);
@@ -96,7 +96,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void PartialMethodWithoutDefinitionIsNotImported() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => { throw new InvalidOperationException(); } };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => { throw new InvalidOperationException(); } };
             Compile(new[] { "partial class C { private partial void M(); }" }, namingConvention: namingConvention);
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
@@ -104,7 +104,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void OverloadedPartialMethodsWork() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$M_" + m.Parameters.Count) };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$M_" + m.Parameters.Count) };
             Compile(new[] { "partial class C { partial void M(); partial void M(int i); }", "partial class C { partial void M(int i) {} }" }, namingConvention: namingConvention);
             Assert.That(FindInstanceMethod("C.$M_0"), Is.Null);
             Assert.That(FindInstanceMethod("C.$M_1"), Is.Not.Null);
@@ -112,7 +112,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void PartialMethodWithDeclarationAndDefinitionIsImported() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$M") };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$M") };
             Compile(new[] { "partial class C { partial void M(); }", "partial class C { partial void M() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.$M").Should().NotBeNull();
             FindClass("C").StaticMethods.Should().BeEmpty();
@@ -120,28 +120,28 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForInstanceMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForInstanceMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindInstanceMethod("C.X").TypeParameterNames.Should().BeEmpty();
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForStaticMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForStaticMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
             Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().BeEmpty();
         }

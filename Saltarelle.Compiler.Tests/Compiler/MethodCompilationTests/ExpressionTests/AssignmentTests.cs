@@ -235,7 +235,7 @@ public void M() {
 	// END
 }",
 @"	set_this_$i_$j_$k;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -249,7 +249,7 @@ public void M() {
 	// END
 }",
 @"	$l = this[$i] = $k;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -263,7 +263,7 @@ public void M() {
 	// END
 }",
 @"	set_this_$i;
-", namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
+", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
 		}
 
 		[Test]
@@ -297,7 +297,7 @@ public void M() {
 		[Test]
 		public void UsingPropertyThatIsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty = 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty = 0; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
 		}
 

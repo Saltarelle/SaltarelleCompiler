@@ -71,7 +71,7 @@ public void M() {
 	// END
 }",
 @"	var $c = new ({X}.$ctor2)();
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.Named("$ctor2") });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ public void M() {
 	// END
 }",
 @"	var $t = new ({X}.$ctor2)($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.Named("$ctor2") });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
 		[Test]
@@ -111,7 +111,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	var $x = new ({X}.$ctor2)(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -125,7 +125,7 @@ public void M() {
 	// END
 }",
 @"	var $c = {X}.create_X();
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
 		[Test]
@@ -141,7 +141,7 @@ public void M() {
 	// END
 }",
 @"	var $t = {X}.create_X($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
 		[Test]
@@ -165,7 +165,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	var $x = {X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -189,13 +189,13 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	var $x = __CreateX_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2__;
-", namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.InlineCode("__CreateX_{a}_{b}_{c}_{d}_{e}_{f}_{g}__"), GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_{a}_{b}_{c}_{d}_{e}_{f}_{g}__"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
 		public void UsingConstructorMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, namingConvention: new MockNamingConventionResolver { GetConstructorImplementation = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("constructor")));
 		}
 

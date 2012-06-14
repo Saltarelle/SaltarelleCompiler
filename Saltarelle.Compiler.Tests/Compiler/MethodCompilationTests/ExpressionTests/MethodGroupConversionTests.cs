@@ -59,7 +59,7 @@ public void M() {
 	// END
 }",
 @"	$f = $Bind(this.F_Int32, this);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
 		}
 
 		[Test]
@@ -75,7 +75,7 @@ public void M() {
 }
 ",
 @"	$f = $Bind($x.F_Int32, $x);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
 		}
 
 		[Test]
@@ -93,7 +93,7 @@ public void M() {
 ",
 @"	var $tmp1 = this.F2();
 	$f = $Bind($tmp1.F_Int32, $tmp1);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
 		}
 
 		[Test]
@@ -135,7 +135,7 @@ public void M() {
 	// END
 }",
 @"	$f = $Bind(this.$F, this);
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
 		}
 
 
@@ -156,7 +156,7 @@ public void M() {
 		[Test]
 		public void UsingAMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { System.Func<int> f; f = UnusableMethod; } }" }, namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { System.Func<int> f; f = UnusableMethod; } }" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
 		}
 

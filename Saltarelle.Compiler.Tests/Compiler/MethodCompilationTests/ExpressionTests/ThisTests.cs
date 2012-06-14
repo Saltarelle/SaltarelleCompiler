@@ -64,7 +64,7 @@ public void M() {
 	// END
 }",
 @"	var $i = $this.$x;
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 
 		[Test]
@@ -80,7 +80,7 @@ public void M() {
 	};
 }",
 @"		var $i = $this.$x;
-", namingConvention: new MockNamingConventionResolver { GetMethodImplementation = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 	}
 }

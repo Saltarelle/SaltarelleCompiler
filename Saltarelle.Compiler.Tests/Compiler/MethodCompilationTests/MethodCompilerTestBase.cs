@@ -27,14 +27,14 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
 
 		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
-				GetPropertyImplementation = p => {
+				GetPropertySemantics = p => {
 					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name))
 						return PropertyScriptSemantics.Field("$" + p.Name);
 					else
 				        return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + p.Name), MethodScriptSemantics.NormalMethod("set_$" + p.Name));
 				},
-				GetMethodImplementation = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
-				GetEventImplementation  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
+				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
+				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
 			}, addSkeleton: addSkeleton);
 			string actual = OutputFormatter.Format(CompiledMethod, true);
 

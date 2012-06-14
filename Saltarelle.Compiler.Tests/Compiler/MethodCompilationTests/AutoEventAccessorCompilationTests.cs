@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 		[Test]
 		public void InstanceAutoEventAccessorsImplementedAsStaticMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" }, namingConvention: new MockNamingConventionResolver { GetEventImplementation = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("add_" + e.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("remove_" + e.Name)) });
+            Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" }, namingConvention: new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("add_" + e.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("remove_" + e.Name)) });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");

@@ -23,19 +23,19 @@ namespace Saltarelle.Compiler {
         /// Gets the implementation of a method. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        MethodScriptSemantics GetMethodImplementation(IMethod method);
+        MethodScriptSemantics GetMethodSemantics(IMethod method);
 
         /// <summary>
         /// Returns the implementation of a constructor. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        ConstructorScriptSemantics GetConstructorImplementation(IMethod method);
+        ConstructorScriptSemantics GetConstructorSemantics(IMethod method);
 
         /// <summary>
         /// Returns the implementation of an auto-implemented property. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        PropertyScriptSemantics GetPropertyImplementation(IProperty property);
+        PropertyScriptSemantics GetPropertySemantics(IProperty property);
 
         /// <summary>
         /// Returns the name of the backing field for the specified property. Must not return null.
@@ -45,12 +45,12 @@ namespace Saltarelle.Compiler {
         /// <summary>
         /// Returns how a field is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// </summary>
-        FieldScriptSemantics GetFieldImplementation(IField property);
+        FieldScriptSemantics GetFieldSemantics(IField property);
 
         /// <summary>
         /// Returns how an event is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// </summary>
-        EventScriptSemantics GetEventImplementation(IEvent evt);
+        EventScriptSemantics GetEventSemantics(IEvent evt);
         
         /// <summary>
         /// Returns the name of the backing field for the specified property. Must not return null.

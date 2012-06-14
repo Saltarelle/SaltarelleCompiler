@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void DefaultConstructorImplementedAsStaticMethodWorks() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorScriptSemantics.StaticMethod("X") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.StaticMethod("X") };
             Compile(new[] { "class C { }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindNamedConstructor("C.X").Should().BeNull();
@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void DefaultConstructorIsNotInsertedIfOtherConstructorIsDefined() {
-			var namingConvention = new MockNamingConventionResolver() { GetConstructorImplementation = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
+			var namingConvention = new MockNamingConventionResolver() { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
             Compile(new[] { "class C { C(int i) {} }" }, namingConvention: namingConvention);
             var cls = FindClass("C");
             cls.UnnamedConstructor.Should().BeNull();
@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor") };
             Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, namingConvention: namingConvention);
             FindClass("C").NamedConstructors.Should().HaveCount(1);
             FindClass("C").StaticMethods.Should().HaveCount(1);
@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ConstructorImplementedAsStaticMethodGetsAddedToTheStaticMethodsCollectionAndNotTheConstructors() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorScriptSemantics.StaticMethod("X") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.StaticMethod("X") };
             Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindNamedConstructor("C.X").Should().BeNull();
@@ -55,28 +55,28 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ConstructorImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorScriptSemantics.NotUsableFromScript() };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]
         public void ConstructorImplementedAsInlineCodeDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorScriptSemantics.InlineCode("X") };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.InlineCode("X") };
             Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]
         public void ConstructorImplementedAsJsonDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => ConstructorScriptSemantics.Json() };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json() };
             Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]
         public void StaticConstructorBodyGetsAddedLastInTheStaticInitStatements() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorImplementation = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
             Compile(new[] {
 @"class C {
     static int x = 0;

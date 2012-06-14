@@ -25,8 +25,8 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 						return GetTypeName(t.DeclaringTypeDefinition) + "$" + t.Name;
 				};
                 GetTypeParameterName            = t => "$" + t.Name;
-                GetMethodImplementation         = m => MethodScriptSemantics.NormalMethod(m.Name);
-                GetConstructorImplementation    = c => {
+                GetMethodSemantics         = m => MethodScriptSemantics.NormalMethod(m.Name);
+                GetConstructorSemantics    = c => {
 					if (c.DeclaringType.Kind == TypeKind.Anonymous)
 						return ConstructorScriptSemantics.Json();
 					else if (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0)
@@ -34,15 +34,15 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 					else
 						return ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name)));
 				};
-                GetPropertyImplementation       = p => {
+                GetPropertySemantics       = p => {
 					if (p.DeclaringType.Kind == TypeKind.Anonymous)
 						return PropertyScriptSemantics.Field("$" + p.Name);
 					else
 						return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name));
 				};
                 GetAutoPropertyBackingFieldName = p => "$" + p.Name;
-                GetFieldImplementation          = f => FieldScriptSemantics.Field("$" + f.Name);
-                GetEventImplementation          = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
+                GetFieldSemantics          = f => FieldScriptSemantics.Field("$" + f.Name);
+                GetEventSemantics          = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
                 GetAutoEventBackingFieldName    = e => "$" + e.Name;
                 GetEnumValueName                = f => "$" + f.Name;
                 GetVariableName                 = (v, used) => {
@@ -60,12 +60,12 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 
             public Func<ITypeDefinition, string> GetTypeName { get; set; }
             public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
-            public Func<IMethod, MethodScriptSemantics> GetMethodImplementation { get; set; }
-            public Func<IMethod, ConstructorScriptSemantics> GetConstructorImplementation { get; set; }
-            public Func<IProperty, PropertyScriptSemantics> GetPropertyImplementation { get; set; }
+            public Func<IMethod, MethodScriptSemantics> GetMethodSemantics { get; set; }
+            public Func<IMethod, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
+            public Func<IProperty, PropertyScriptSemantics> GetPropertySemantics { get; set; }
             public Func<IProperty, string> GetAutoPropertyBackingFieldName { get; set; }
-            public Func<IField, FieldScriptSemantics> GetFieldImplementation { get; set; }
-            public Func<IEvent, EventScriptSemantics> GetEventImplementation { get; set; }
+            public Func<IField, FieldScriptSemantics> GetFieldSemantics { get; set; }
+            public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
             public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
             public Func<IField, string> GetEnumValueName { get; set; }
             public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
@@ -84,28 +84,28 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                 return GetTypeParameterName(typeDefinition);
             }
 
-            MethodScriptSemantics INamingConventionResolver.GetMethodImplementation(IMethod method) {
-                return GetMethodImplementation(method);
+            MethodScriptSemantics INamingConventionResolver.GetMethodSemantics(IMethod method) {
+                return GetMethodSemantics(method);
             }
 
-            ConstructorScriptSemantics INamingConventionResolver.GetConstructorImplementation(IMethod method) {
-                return GetConstructorImplementation(method);
+            ConstructorScriptSemantics INamingConventionResolver.GetConstructorSemantics(IMethod method) {
+                return GetConstructorSemantics(method);
             }
 
-            PropertyScriptSemantics INamingConventionResolver.GetPropertyImplementation(IProperty property) {
-                return GetPropertyImplementation(property);
+            PropertyScriptSemantics INamingConventionResolver.GetPropertySemantics(IProperty property) {
+                return GetPropertySemantics(property);
             }
 
             string INamingConventionResolver.GetAutoPropertyBackingFieldName(IProperty property) {
                 return GetAutoPropertyBackingFieldName(property);
             }
 
-            FieldScriptSemantics INamingConventionResolver.GetFieldImplementation(IField field) {
-                return GetFieldImplementation(field);
+            FieldScriptSemantics INamingConventionResolver.GetFieldSemantics(IField field) {
+                return GetFieldSemantics(field);
             }
 
-            EventScriptSemantics INamingConventionResolver.GetEventImplementation(IEvent evt) {
-                return GetEventImplementation(evt);
+            EventScriptSemantics INamingConventionResolver.GetEventSemantics(IEvent evt) {
+                return GetEventSemantics(evt);
             }
 
             string INamingConventionResolver.GetAutoEventBackingFieldName(IEvent evt) {

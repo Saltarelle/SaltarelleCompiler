@@ -273,8 +273,8 @@ class C : I, I2<int> {
 	int I2<int>.this[int x] { get { return 0; } set {} }
 }");
 
-			var p1 = md.GetPropertyImplementation(types["C"].Members.OfType<IProperty>().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
-			var p2 = md.GetPropertyImplementation(types["C"].Members.OfType<IProperty>().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
+			var p1 = md.GetPropertySemantics(types["C"].Members.OfType<IProperty>().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
+			var p2 = md.GetPropertySemantics(types["C"].Members.OfType<IProperty>().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
 			
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
@@ -288,6 +288,23 @@ class C : I, I2<int> {
 			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
 		}
+
+		[Test]
+		public void NonScriptableAttributeCausesIndexerToNotBeUsableFromScript() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[NonScriptable]
+	public int this[int x] { get { return 0; } set {} }
+}
+");
+
+			var impl = FindIndexer(types, "C1", 1, md);
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
 
 		[Test]
 		public void IntrinsicPropertyAttributeWorksForIndexers() {
@@ -468,6 +485,23 @@ public class C2 {
 			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_$item$1"));
 			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_$item$1"));
+		}
+
+		[Test]
+		public void ScriptAliasAttributeCannotBeSpecifiedOnIndexer() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	[ScriptAlias(""$"")]
+	public int this[int x] { get { return 0; } set {} }
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("indexer") && er.AllMessages[0].Contains("ScriptAliasAttribute"));
 		}
 	}
 }

@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 		[Test]
 		public void InstanceAutoPropertyAccessorsImplementedAsStaticMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertyImplementation = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name)) });
+            Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name)) });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
