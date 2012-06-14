@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NonScriptable] (Method)
 
 	// To handle:
-	// [NonScriptable] (Type | Constructor | Property | Event)
+	// [NonScriptable] (Type | Constructor | Property | Event | Field)
 	// [Imported] (Type | Struct)
 	// [ScriptAssembly] (Assembly) ?
 	// [ScriptQualifier] (Assembly)
@@ -42,8 +42,22 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [PreserveName] (Property | Event | Field)
 	// [ScriptAlias] (Property)
 	// Record
+	// Anonymous types
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
+		private const string ScriptSkipAttribute = "ScriptSkipAttribute";
+		private const string ScriptAliasAttribute = "ScriptAliasAttribute";
+		private const string InlineCodeAttribute = "InlineCodeAttribute";
+		private const string InstanceMethodOnFirstArgumentAttribute = "InstanceMethodOnFirstArgumentAttribute";
+		private const string NonScriptableAttribute = "NonScriptableAttribute";
+		private const string IgnoreGenericArgumentsAttribute = "IgnoreGenericArgumentsAttribute";
+		private const string IgnoreNamespaceAttribute = "IgnoreNamespaceAttribute";
+		private const string ScriptNamespaceAttribute = "ScriptNamespaceAttribute";
+		private const string AlternateSignatureAttribute = "AlternateSignatureAttribute";
+		private const string ScriptNameAttribute = "ScriptNameAttribute";
+		private const string PreserveNameAttribute = "PreserveNameAttribute";
+		private const string PreserveCaseAttribute = "PreserveCaseAttribute";
+
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
 		/// </summary>
@@ -158,8 +172,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		private static readonly string encodeNumberTable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		private string EncodeNumber(int i) {
-			if (encodeNumberTable.Length != 62 || encodeNumberTable.Distinct().Count() != 62)
-				throw new ArgumentException("X");
 			string result = encodeNumberTable.Substring(i % encodeNumberTable.Length, 1);
 			while (i >= encodeNumberTable.Length) {
 				i /= encodeNumberTable.Length;
@@ -184,8 +196,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				typeDefinition = typeDefinition.DeclaringTypeDefinition;
 			}
 
-			var ina = GetAttributePositionalArgs(typeDefinition, "IgnoreNamespaceAttribute");
-			var sna = GetAttributePositionalArgs(typeDefinition, "ScriptNamespaceAttribute");
+			var ina = GetAttributePositionalArgs(typeDefinition, IgnoreNamespaceAttribute);
+			var sna = GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute);
 			if (ina != null) {
 				if (sna != null) {
 					_errors[typeDefinition.FullName + ":Namespace"] = "The type " + typeDefinition.FullName + " has both [IgnoreNamespace] and [ScriptNamespace] specified. At most one of these attributes can be specified for a type.";
@@ -214,7 +226,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private string DetermineTypeName(ITypeDefinition typeDefinition) {
-			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, "ScriptNameAttribute");
+			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
 			string typeName, nmspace;
 			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
 				typeName = (string)scriptNameAttr[0];
@@ -225,7 +237,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_errors[typeDefinition.FullName + ":Name"] = typeDefinition.FullName + ": The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.";
 				}
 
-				if (_minimizeNames && !IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, "PreserveNameAttribute") == null) {
+				if (_minimizeNames && !IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) == null) {
 					nmspace = DetermineNamespace(typeDefinition);
 					int index = _typeNames.Values.Select(tn => SplitName(tn)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
@@ -233,7 +245,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				else {
 					typeName = GetDefaultTypeName(typeDefinition);
 					if (typeDefinition.DeclaringTypeDefinition != null) {
-						if (GetAttributePositionalArgs(typeDefinition, "IgnoreNamespaceAttribute") != null || GetAttributePositionalArgs(typeDefinition, "ScriptNamespaceAttribute") != null) {
+						if (GetAttributePositionalArgs(typeDefinition, IgnoreNamespaceAttribute) != null || GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute) != null) {
 							_errors[typeDefinition.FullName + ":Namespace"] = "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type " + typeDefinition.FullName + ".";
 						}
 
@@ -276,9 +288,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
-			var asa = GetAttributePositionalArgs(member, "AlternateSignatureAttribute");
+			var asa = GetAttributePositionalArgs(member, AlternateSignatureAttribute);
 			if (asa != null) {
-				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, "AlternateSignatureAttribute") == null).ToList();
+				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null).ToList();
 				if (otherMembers.Count == 1) {
 					return DeterminePreferredMemberName(otherMembers[0]);
 				}
@@ -288,7 +300,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			var sna = GetAttributePositionalArgs(member, "ScriptNameAttribute");
+			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
 				string name = (string)sna[0];
 				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
@@ -296,16 +308,22 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				return Tuple.Create(name, true);
 			}
-			var pca = GetAttributePositionalArgs(member, "PreserveCaseAttribute");
+			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
-			bool preserveName = GetAttributePositionalArgs(member, "PreserveNameAttribute") != null || GetAttributePositionalArgs(member, "InstanceMethodOnFirstArgumentAttribute") != null;
+			bool preserveName = GetAttributePositionalArgs(member, PreserveNameAttribute) != null || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null;
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
-			bool minimize = _minimizeNames && !IsPublic(member);
-
-			return Tuple.Create(minimize ? null : MakeCamelCase(member.Name), false);
+			if (IsPublic(member)) {
+				return Tuple.Create(MakeCamelCase(member.Name), false);
+			}
+			else {
+				if (_minimizeNames)
+					return Tuple.Create((string)null, false);
+				else
+					return Tuple.Create("$" + MakeCamelCase(member.Name), false);
+			}
 		}
 
 		public string GetQualifiedMemberName(IMember member) {
@@ -332,12 +350,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							// TODO
 						}
 						else {
-							var ssa = GetAttributePositionalArgs(m.Member, "ScriptSkipAttribute");
-							var saa = GetAttributePositionalArgs(m.Member, "ScriptAliasAttribute");
-							var ica = GetAttributePositionalArgs(m.Member, "InlineCodeAttribute");
-							var ifa = GetAttributePositionalArgs(m.Member, "InstanceMethodOnFirstArgumentAttribute");
-							var nsa = GetAttributePositionalArgs(m.Member, "NonScriptableAttribute");
-							var iga = GetAttributePositionalArgs(m.Member, "IgnoreGenericArgumentsAttribute");
+							var ssa = GetAttributePositionalArgs(m.Member, ScriptSkipAttribute);
+							var saa = GetAttributePositionalArgs(m.Member, ScriptAliasAttribute);
+							var ica = GetAttributePositionalArgs(m.Member, InlineCodeAttribute);
+							var ifa = GetAttributePositionalArgs(m.Member, InstanceMethodOnFirstArgumentAttribute);
+							var nsa = GetAttributePositionalArgs(m.Member, NonScriptableAttribute);
+							var iga = GetAttributePositionalArgs(m.Member, IgnoreGenericArgumentsAttribute);
 							if (nsa != null) {
 								_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 							}
@@ -476,7 +494,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 											}
 										}
 
-										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(m.Member, "AlternateSignatureAttribute") == null, ignoreGenericArguments: iga != null);
+										_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(m.Member, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
 
 										if (allMembers.ContainsKey(name))
 											allMembers[name].Add(m.Member);

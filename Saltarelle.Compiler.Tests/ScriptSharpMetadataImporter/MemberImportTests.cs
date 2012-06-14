@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 
 			var types = Process(md,
-@"class C {
+@"public class C {
 	public void SomeMethod() {
 	}
 }");
@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 
 			var types = Process(md,
-@"class C {
+@"public class C {
 	public void SomeMethod() {
 	}
 	public void SomeMethod(int x) {
@@ -86,16 +86,16 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 
 			var types = Process(md,
-@"class A {
+@"public class A {
 	public void SomeMethod() {
 	}
 }
-class B : A {
+public class B : A {
 	public void SomeMethod(int x) {
 	}
 }
 
-class C : B {
+public class C : B {
 	public new void SomeMethod() {
 	}
 }");
@@ -143,7 +143,7 @@ class C {
 			var types = Process(md,
 @"using System.Runtime.CompilerServices;
 
-class C {
+public class C {
 	[ScriptName(""Renamed1"")]
 	public void SomeMethod() {
 	}
@@ -182,11 +182,11 @@ class C {
 			var types = Process(md,
 @"using System.Runtime.CompilerServices;
 
-class C {
+public class C {
 	public void SomeMethod() {
 	}
 	[PreserveName]
-	public void SomeMethod(int x) {
+	void SomeMethod(int x) {
 	}
 	[PreserveName]
 	public void SomeMethod(int a, int b) {
@@ -214,11 +214,11 @@ class C {
 			var types = Process(md,
 @"using System.Runtime.CompilerServices;
 
-class C {
+public class C {
 	public void SomeMethod() {
 	}
 	[PreserveCase]
-	public void SomeMethod(int x) {
+	void SomeMethod(int x) {
 	}
 	[PreserveCase]
 	public void SomeMethod(int a, int b) {
@@ -1190,6 +1190,27 @@ class D : B {
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("IgnoreGenericArgumentsAttribute") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("overrides"));
+		}
+
+		[Test]
+		public void NonPublicMethodsArePrefixedWithADollarIfSymbolsAreNotMinimized() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	public void SomeMethod() {}
+}
+
+public class C2 {
+	private void SomeMethod1() {}
+	internal void SomeMethod2() {}
+}");
+
+			Assert.That(FindMethod(types, "C1.SomeMethod", md).Name, Is.EqualTo("$someMethod"));
+			Assert.That(FindMethod(types, "C2.SomeMethod1", md).Name, Is.EqualTo("$someMethod1"));
+			Assert.That(FindMethod(types, "C2.SomeMethod2", md).Name, Is.EqualTo("$someMethod2"));
 		}
 	}
 }
