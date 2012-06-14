@@ -21,6 +21,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		private MethodScriptSemantics FindMethod(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
 			return FindMethods(types, name, md).Single().Item2;
 		}
+
+		private PropertyScriptSemantics FindProperty(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
+			return FindMembers(types, name).Cast<IProperty>().Select(p => md.GetPropertyImplementation(p)).Single();
+		}
 		
 		[Test]
 		public void NonOverloadedMethodIsCamelCased() {
@@ -255,7 +259,7 @@ class B : A {
 	public override void SomeMethod() {}
 }
 class C : B {
-	public override void SomeMethod() {}
+	public sealed override void SomeMethod() {}
 }");
 
 			var mb = FindMethod(types, "B.SomeMethod", md);
@@ -378,7 +382,7 @@ class B {
 }
 
 class D : B, I {
-	public override void SomeMethod(int i) {}
+	public sealed override void SomeMethod(int i) {}
 }");
 
 			var m = FindMethod(types, "D.SomeMethod", md);
@@ -432,7 +436,7 @@ class B {
 }
 
 class D : B, I {
-	public override void SomeMethod(int i) {
+	public sealed override void SomeMethod(int i) {
 	}
 }", er);
 
@@ -565,7 +569,7 @@ class B {
 
 class D : B {
 	[ScriptName(""RenamedMethod"")]
-	public override void SomeMethod(int i) {}
+	public sealed override void SomeMethod(int i) {}
 }", er);
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
@@ -586,7 +590,7 @@ class B {
 
 class D : B {
 	[PreserveName]
-	public override void SomeMethod(int i) {}
+	public sealed override void SomeMethod(int i) {}
 }", er);
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
@@ -607,7 +611,7 @@ class B {
 
 class D : B {
 	[PreserveCase]
-	public override void SomeMethod(int i) {}
+	public sealed override void SomeMethod(int i) {}
 }", er);
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
@@ -685,7 +689,7 @@ class B : A {
 class C : B {
 	public void OtherMethodC() {}
 	public new void SomeMethod() {}
-	public override void VirtualMethod() {}
+	public sealed override void VirtualMethod() {}
 }
 
 public class D {
@@ -847,6 +851,22 @@ class C3 {
 			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", er);
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overridable"));
+		}
+
+		[Test]
+		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [ScriptSkip] public void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("implements"));
+		}
+
+		[Test]
+		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [ScriptSkip] public sealed override void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("D.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -1086,6 +1106,22 @@ class C1<T1> {
 		}
 
 		[Test]
+		public void InlineCodeAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [InlineCode(""X"")] public void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("implements"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
+			var er = new MockErrorReporter(false);
+			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [InlineCode(""X"")] public sealed override void M() {} }", er);
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("D.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overrides"));
+		}
+
+		[Test]
 		public void InstanceMethodOnFirstArgumentAttributeWorks() {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
 
@@ -1185,7 +1221,7 @@ class B {
 
 class D : B {
 	[IgnoreGenericArguments]
-	public override void SomeMethod<T>(T t) {}
+	public sealed override void SomeMethod<T>(T t) {}
 }", er);
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
@@ -1211,6 +1247,344 @@ public class C2 {
 			Assert.That(FindMethod(types, "C1.SomeMethod", md).Name, Is.EqualTo("$someMethod"));
 			Assert.That(FindMethod(types, "C2.SomeMethod1", md).Name, Is.EqualTo("$someMethod1"));
 			Assert.That(FindMethod(types, "C2.SomeMethod2", md).Name, Is.EqualTo("$someMethod2"));
+		}
+
+		[Test]
+		public void PropertiesImplementedAsGetAndSetMethodsWork() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+public class C1 {
+	public int Prop1 { get { return 0; } set {} }
+	public int Prop2 { get { return 0; } }
+	public int Prop3 { set {} }
+}");
+
+			var p1 = FindProperty(types, "C1.Prop1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_prop1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_prop1"));
+
+			var p2 = FindProperty(types, "C1.Prop2", md);
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_prop2"));
+			Assert.That(p2.SetMethod, Is.Null);
+
+			var p3 = FindProperty(types, "C1.Prop3", md);
+			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p3.GetMethod, Is.Null);
+			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_prop3"));
+		}
+
+		[Test]
+		public void PropertyHidingBaseMemberGetsAUniqueName() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+public class B {
+	public int Prop { get; set; }
+}
+
+public class D : B {
+	public new int Prop { get; set; }
+}");
+
+			var p1 = FindProperty(types, "D.Prop", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_prop$1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_prop$1"));
+		}
+
+		[Test]
+		public void RenamingPropertiesWithGetAndSetMethodsWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	[ScriptName(""Renamed"")]
+	public int Prop1 { get { return 0; } set {} }
+	[PreserveName]
+	public int Prop2 { get { return 0; } set {} }
+	[PreserveCase]
+	public int Prop3 { get { return 0; } set {} }
+}");
+
+			var p1 = FindProperty(types, "C1.Prop1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_Renamed"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_Renamed"));
+
+			var p2 = FindProperty(types, "C1.Prop2", md);
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_prop2"));
+			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_prop2"));
+
+			var p3 = FindProperty(types, "C1.Prop3", md);
+			Assert.That(p3.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_Prop3"));
+			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_Prop3"));
+		}
+
+		[Test]
+		public void RenamingPropertyGettersAndSettersWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	public int Prop1 { [ScriptName(""Renamed1"")] get { return 0; } [ScriptName(""Renamed2"")] set {} }
+}");
+
+			var p1 = FindProperty(types, "C1.Prop1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("Renamed1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("Renamed2"));
+		}
+
+		[Test]
+		public void SpecifyingInlineCodeForPropertyGettersAndSettersWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	public int Prop1 { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
+}");
+
+			var p1 = FindProperty(types, "C1.Prop1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("|some code|"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p1.SetMethod.LiteralCode, Is.EqualTo("|setter|{value}"));
+		}
+
+		[Test]
+		public void SpecifyingScriptSkipForPropertyGetterWorks() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	public int Prop1 { [ScriptSkip] get { return 0; } }
+}");
+
+			var p1 = FindProperty(types, "C1.Prop1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("{this}"));
+			Assert.That(p1.SetMethod, Is.Null);
+		}
+
+		[Test]
+		public void CannotSpecifyInlineCodeOnPropertyAccessorsImplementingInterfaceMembers() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+interface I {
+	int Prop { get; set; }
+}
+
+class C : I {
+	public int Prop { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(2));
+			Assert.That(er.AllMessages.Any(m => m.Contains("C.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(er.AllMessages.Any(m => m.Contains("C.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+		}
+
+		[Test]
+		public void CannotSpecifyScriptSkipOnPropertyAccessorsImplementingInterfaceMembers() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+interface I {
+	int Prop { get; set; }
+}
+
+class C : I {
+	public int Prop { [ScriptSkip] get { return 0; } [ScriptSkip] set {} }
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(2));
+			Assert.That(er.AllMessages.Any(m => m.Contains("C.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("interface member")));
+			Assert.That(er.AllMessages.Any(m => m.Contains("C.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("interface member")));
+		}
+
+		[Test]
+		public void CannotSpecifyInlineCodeOnPropertyAccessorsThatOverrideBaseMembers() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+class B {
+	public virtual int Prop { get; set; }
+}
+
+class D : B {
+	public sealed override int Prop { [InlineCode(""X"")] get { return 0; } [InlineCode(""X"")] set {} }
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(2));
+			Assert.That(er.AllMessages.Any(m => m.Contains("D.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(er.AllMessages.Any(m => m.Contains("D.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+		}
+
+		[Test]
+		public void CannotSpecifyScriptSkipOnPropertyAccessorsThatOverrideBaseMembers() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
+			var er = new MockErrorReporter(false);
+
+			Process(md,
+@"using System.Runtime.CompilerServices;
+class B {
+	public virtual int Prop { get; set; }
+}
+
+class D : B {
+	public sealed override int Prop { [ScriptSkip] get { return 0; } [ScriptSkip] set {} }
+}", er);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(2));
+			Assert.That(er.AllMessages.Any(m => m.Contains("D.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overrides")));
+			Assert.That(er.AllMessages.Any(m => m.Contains("D.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overrides")));
+		}
+
+
+
+
+
+
+
+		[Test]
+		public void OverridingPropertyAccessorsGetTheirNameFromTheDefiningMember() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+class A {
+	public virtual int P { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
+}
+
+class B : A {
+	public override int P { get; set; }
+}
+class C : B {
+	public sealed override int P { get; set; }
+}");
+
+			var pb = FindProperty(types, "B.P", md);
+			Assert.That(pb.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(pb.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pb.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
+			Assert.That(pb.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pb.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
+
+			var pc = FindProperty(types, "C.P", md);
+			Assert.That(pc.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(pc.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
+			Assert.That(pc.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
+		}
+
+
+		[Test]
+		public void ImplicitInterfaceImplementationPropertyAccessorsGetTheirNameFromTheInterface() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
+}
+
+interface I2<T> {
+	int P2 { [ScriptName(""RenamedMethod3"")] get; [ScriptName(""RenamedMethod4"")] set; }
+}
+
+class C : I, I2<int> {
+	int P1 { get; set; }
+	int P2 { get; set; }
+}");
+
+			var p1 = FindProperty(types, "C.P1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
+
+			var p2 = FindProperty(types, "C.P2", md);
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
+			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
+		}
+
+		[Test]
+		public void ExplicitInterfaceImplementationPropertyAccessorsGetTheirNameFromTheInterface() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+
+			var types = Process(md,
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
+}
+
+interface I2<T> {
+	int P2 { [ScriptName(""RenamedMethod3"")] get; [ScriptName(""RenamedMethod4"")] set; }
+}
+
+class C : I, I2<int> {
+	int I.P1 { get; set; }
+	int I2<int>.P2 { get; set; }
+}");
+
+			var p1 = FindProperty(types, "C.P1", md);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
+
+			var p2 = FindProperty(types, "C.P2", md);
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
+			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
 		}
 	}
 }
