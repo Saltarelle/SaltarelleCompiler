@@ -11,22 +11,22 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
 	// Done:
-	// [ScriptName] (Type | Method | Property | Field)
+	// [ScriptName] (Type | Method | Property | Field | Event)
 	// [IgnoreNamespace] (Type)
 	// [ScriptNamespaceAttribute] (Type)
-	// [PreserveName] (Type | Method | Property | Field)
-	// [PreserveCase] (Method | Property | Field)
+	// [PreserveName] (Type | Method | Property | Field | Event)
+	// [PreserveCase] (Method | Property | Field | Event)
 	// [ScriptSkip] (Method)
 	// [AlternateSignature] (Method)
 	// [ScriptAlias] (Method | Property)
 	// [InlineCode] (Method)
 	// [InstanceMethodOnFirstArgument] (Method)
 	// [IgnoreGenericArguments] (Method)
-	// [NonScriptable] (Method | Property | Field)
+	// [NonScriptable] (Method | Property | Field | Event)
 	// [IntrinsicProperty] (Property (/indexer))
 
 	// To handle:
-	// [NonScriptable] (Type | Constructor | Event)
+	// [NonScriptable] (Type | Constructor)
 	// [Imported] (Type | Struct)
 	// [ScriptAssembly] (Assembly) ?
 	// [ScriptQualifier] (Assembly)
@@ -37,9 +37,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
 	// [AlternateSignature] (Constructor)
-	// [ScriptName] (Event)
-	// [PreserveCase] (Event)
-	// [PreserveName] (Event)
 	// Record
 	// Anonymous types
 
@@ -136,6 +133,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
 		private Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
+		private Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
 		private Dictionary<string, string> _errors;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private bool _minimizeNames;
@@ -360,6 +358,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 					else if (m.Member is IField) {
 						DetermineFieldSemantics((IField)m.Member, current.Name, m.NameSpecified, allMembers);
+					}
+					else if (m.Member is IEvent) {
+						DetermineEventSemantics((IEvent)m.Member, current.Name, m.NameSpecified, allMembers);
 					}
 				}
 			}
@@ -663,6 +664,41 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
+		private void DetermineEventSemantics(IEvent evt, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
+			var nsa = GetAttributePositionalArgs(evt, NonScriptableAttribute);
+			if (nsa != null) {
+				_eventSemantics[evt] = EventScriptSemantics.NotUsableFromScript();
+				return;
+			}
+
+			MethodScriptSemantics adder, remover;
+			if (evt.CanAdd) {
+				var getterName = DeterminePreferredMemberName(evt.AddAccessor);
+				if (!getterName.Item2)
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName(evt, "add_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+
+				DetermineMethodSemantics(evt.AddAccessor, getterName.Item1, getterName.Item2, allMembers);
+				adder = _methodSemantics[evt.AddAccessor];
+			}
+			else {
+				adder = null;
+			}
+
+			if (evt.CanRemove) {
+				var setterName = DeterminePreferredMemberName(evt.RemoveAccessor);
+				if (!setterName.Item2)
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName(evt, "remove_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+
+				DetermineMethodSemantics(evt.RemoveAccessor, setterName.Item1, setterName.Item2, allMembers);
+				remover = _methodSemantics[evt.RemoveAccessor];
+			}
+			else {
+				remover = null;
+			}
+
+			_eventSemantics[evt] = EventScriptSemantics.AddAndRemoveMethods(adder, remover);
+		}
+
 		private void DetermineFieldSemantics(IField field, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
 			var nsa = GetAttributePositionalArgs(field, NonScriptableAttribute);
 			if (nsa != null) {
@@ -684,6 +720,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
 			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
 			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
+			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || IsPublic(t))) {
 				_typeNames[t] = DetermineTypeName(t);
 				GetMemberNames(t);
@@ -723,7 +760,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public EventScriptSemantics GetEventSemantics(IEvent evt) {
-			throw new NotImplementedException();
+			return _eventSemantics[evt];
 		}
 
 		public string GetAutoEventBackingFieldName(IEvent evt) {
