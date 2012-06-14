@@ -8,6 +8,7 @@ using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
     public class ScriptSharpMetadataImporterTestBase {
@@ -43,5 +44,26 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 			return compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
         }
+
+		protected IEnumerable<IMember> FindMembers(IDictionary<string, ITypeDefinition> types, string name) {
+            var lastDot = name.LastIndexOf('.');
+			return types[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));
+		}
+
+		protected List<Tuple<IMethod, MethodScriptSemantics>> FindMethods(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
+			return FindMembers(types, name).Cast<IMethod>().Select(m => Tuple.Create(m, md.GetMethodImplementation(m))).ToList();
+		}
+
+		protected MethodScriptSemantics FindMethod(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
+			return FindMethods(types, name, md).Single().Item2;
+		}
+
+		protected PropertyScriptSemantics FindProperty(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
+			return FindMembers(types, name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => md.GetPropertyImplementation(p)).Single();
+		}
+
+		protected PropertyScriptSemantics FindIndexer(IDictionary<string, ITypeDefinition> types, string typeName, int parameterCount, INamingConventionResolver md) {
+			return types[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => md.GetPropertyImplementation(p)).Single();
+		}
     }
 }

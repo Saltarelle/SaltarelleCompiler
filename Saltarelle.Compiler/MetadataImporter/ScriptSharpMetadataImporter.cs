@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [InstanceMethodOnFirstArgument] (Method)
 	// [IgnoreGenericArguments] (Method)
 	// [NonScriptable] (Method)
+	// [IntrinsicProperty] (Property (/indexer))
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor | Property | Event | Field)
@@ -36,7 +37,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
 	// [AlternateSignature] (Constructor)
-	// [IntrinsicProperty] (Property (/indexer))
 	// [ScriptName] (Field | Event)
 	// [PreserveCase] (Event | Field)
 	// [PreserveName] (Event | Field)
@@ -84,6 +84,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			public int Compare(IMember x, IMember y) {
+				if (x is IMethod) {
+					if (y is IMethod) {
+						return CompareMethods((IMethod)x, (IMethod)y);
+					}
+					else
+						return -1;
+				}
+				else if (y is IMethod) {
+					return 1;
+				}
+
 				if (x is IField) {
 					if (y is IField) {
 						return string.CompareOrdinal(x.Name, y.Name);
@@ -117,17 +128,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return 1;
 				}
 
-				if (x is IMethod) {
-					if (y is IMethod) {
-						return CompareMethods((IMethod)x, (IMethod)y);
-					}
-					else
-						return -1;
-				}
-				else if (y is IMethod) {
-					return 1;
-				}
-
 				throw new ArgumentException("Invalid member type" + x.GetType().FullName);
 			}
 		}
@@ -137,7 +137,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
 		private Dictionary<string, string> _errors;
-		private int _internalInterfaceMemberCount;
+		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private bool _minimizeNames;
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
@@ -313,7 +313,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
-			bool preserveName = GetAttributePositionalArgs(member, PreserveNameAttribute) != null || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null;
+			bool preserveName = GetAttributePositionalArgs(member, PreserveNameAttribute) != null || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null;
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
@@ -375,7 +375,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			// The name was not explicitly specified, so ensure that we have a unique name.
 			if (preferredName == null && member.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
 				// Minimized interface names need to be unique within the assembly, otherwise we have a very high risk of collisions (100% when a type implements more than one internal interface).
-				return "$I" + EncodeNumber(_internalInterfaceMemberCount++);
+				int c;
+				_internalInterfaceMemberCountPerAssembly.TryGetValue(member.ParentAssembly, out c);
+				_internalInterfaceMemberCountPerAssembly[member.ParentAssembly] = ++c;
+				return "$I" + EncodeNumber(c);
 			}
 			else {
 				string name = preferredName;
@@ -391,45 +394,70 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private PropertyScriptSemantics DeterminePropertySemantics(IProperty property, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
 			var ipa = GetAttributePositionalArgs(property, IntrinsicPropertyAttribute);
 			if (ipa != null) {
-				if (property.IsOverride) {
+				if (property.DeclaringType.Kind == TypeKind.Interface) {
+					if (property.IsIndexer)
+						_errors[GetQualifiedMemberName(property) + ":InterfacePropertyCannotBeIntrinsic"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it is an interface member.";
+					else
+						_errors[GetQualifiedMemberName(property) + ":InterfacePropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it is an interface member.";
+				}
+				else if (property.IsOverride) {
+					if (property.IsIndexer)
+						_errors[GetQualifiedMemberName(property) + ":OverridingPropertyCannotBeIntrinsic"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it overrides a base member.";
+					else
+						_errors[GetQualifiedMemberName(property) + ":OverridingPropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it overrides a base member.";
 				}
 				else if (property.IsOverridable) {
+					if (property.IsIndexer)
+						_errors[GetQualifiedMemberName(property) + ":OverridablePropertyCannotBeIntrinsic"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it is overridable.";
+					else
+						_errors[GetQualifiedMemberName(property) + ":OverridablePropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it is overridable.";
 				}
 				else if (property.ImplementedInterfaceMembers.Count > 0) {
+					if (property.IsIndexer)
+						_errors[GetQualifiedMemberName(property) + ":ImplementingPropertyCannotBeIntrinsic"] = "The indexer on type" + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it implements an interface member.";
+					else
+						_errors[GetQualifiedMemberName(property) + ":ImplementingPropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it implements an interface member.";
 				}
+				else if (property.IsIndexer) {
+					if (property.Parameters.Count == 1) {
+						return PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NativeIndexer() : null, property.CanSet ? MethodScriptSemantics.NativeIndexer() : null);
+					}
+					else {
+						_errors[GetQualifiedMemberName(property) + ":NativeIndexerArgument"] = "The indexer for type " + property.DeclaringType.FullName + " must have exactly one parameter in order to have an [IntrinsicPropertyAttribute].";
+					}
+				}
+				else {
+					AddMember(allMembers, preferredName, property);
+					return PropertyScriptSemantics.Field(preferredName);
+				}
+			}
 
-				return PropertyScriptSemantics.Field(preferredName);
+			MethodScriptSemantics getter, setter;
+			if (property.CanGet) {
+				var getterName = DeterminePreferredMemberName(property.Getter);
+				if (!getterName.Item2)
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName(property, "get_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+
+				getter = DetermineMethodSemantics(property.Getter, getterName.Item1, getterName.Item2, allMembers);
+				_methodSemantics[property.Getter] = getter;
 			}
 			else {
-				string name = (nameSpecified ? preferredName : GetUniqueName(property, preferredName, allMembers));
-				AddMember(allMembers, name, property);
-				MethodScriptSemantics getter, setter;
-				if (property.CanGet) {
-					var getterName = DeterminePreferredMemberName(property.Getter);
-					if (!getterName.Item2)
-						getterName = Tuple.Create(!nameSpecified && _minimizeNames && !IsPublic(property) ? null : "get_" + name, false);	// If the name was not specified, generate one.
-
-					getter = DetermineMethodSemantics(property.Getter, getterName.Item1, getterName.Item2, allMembers);
-					_methodSemantics[property.Getter] = getter;
-				}
-				else {
-					getter = null;
-				}
-
-				if (property.CanSet) {
-					var setterName = DeterminePreferredMemberName(property.Setter);
-					if (!setterName.Item2)
-						setterName = Tuple.Create(!nameSpecified && _minimizeNames && !IsPublic(property) ? null : "set_" + name, false);	// If the name was not specified, generate one.
-
-					setter = DetermineMethodSemantics(property.Setter, setterName.Item1, setterName.Item2, allMembers);
-					_methodSemantics[property.Setter] = setter;
-				}
-				else {
-					setter = null;
-				}
-
-				return PropertyScriptSemantics.GetAndSetMethods(getter, setter);
+				getter = null;
 			}
+
+			if (property.CanSet) {
+				var setterName = DeterminePreferredMemberName(property.Setter);
+				if (!setterName.Item2)
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName(property, "set_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+
+				setter = DetermineMethodSemantics(property.Setter, setterName.Item1, setterName.Item2, allMembers);
+				_methodSemantics[property.Setter] = setter;
+			}
+			else {
+				setter = null;
+			}
+
+			return PropertyScriptSemantics.GetAndSetMethods(getter, setter);
 		}
 
 		private MethodScriptSemantics DetermineMethodSemantics(IMethod method, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
@@ -586,7 +614,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public bool Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
-			_internalInterfaceMemberCount = 0;
+			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
 			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
 			_typeNames = new Dictionary<ITypeDefinition, string>();
