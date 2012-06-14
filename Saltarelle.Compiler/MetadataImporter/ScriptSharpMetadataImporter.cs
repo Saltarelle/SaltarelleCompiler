@@ -11,22 +11,22 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
 	// Done:
-	// [ScriptName] (Type | Method | Property)
+	// [ScriptName] (Type | Method | Property | Field)
 	// [IgnoreNamespace] (Type)
 	// [ScriptNamespaceAttribute] (Type)
-	// [PreserveName] (Type | Method | Property)
-	// [PreserveCase] (Method | Property)
+	// [PreserveName] (Type | Method | Property | Field)
+	// [PreserveCase] (Method | Property | Field)
 	// [ScriptSkip] (Method)
 	// [AlternateSignature] (Method)
 	// [ScriptAlias] (Method | Property)
 	// [InlineCode] (Method)
 	// [InstanceMethodOnFirstArgument] (Method)
 	// [IgnoreGenericArguments] (Method)
-	// [NonScriptable] (Method | Property)
+	// [NonScriptable] (Method | Property | Field)
 	// [IntrinsicProperty] (Property (/indexer))
 
 	// To handle:
-	// [NonScriptable] (Type | Constructor | Event | Field)
+	// [NonScriptable] (Type | Constructor | Event)
 	// [Imported] (Type | Struct)
 	// [ScriptAssembly] (Assembly) ?
 	// [ScriptQualifier] (Assembly)
@@ -37,9 +37,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
 	// [AlternateSignature] (Constructor)
-	// [ScriptName] (Field | Event)
-	// [PreserveCase] (Event | Field)
-	// [PreserveName] (Event | Field)
+	// [ScriptName] (Event)
+	// [PreserveCase] (Event)
+	// [PreserveName] (Event)
 	// Record
 	// Anonymous types
 
@@ -94,17 +94,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return 1;
 				}
 
-				if (x is IField) {
-					if (y is IField) {
-						return string.CompareOrdinal(x.Name, y.Name);
-					}
-					else 
-						return -1;
-				}
-				else if (y is IField) {
-					return 1;
-				}
-
 				if (x is IProperty) {
 					if (y is IProperty) {
 						return string.CompareOrdinal(x.Name, y.Name);
@@ -113,6 +102,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						return -1;
 				}
 				else if (y is IProperty) {
+					return 1;
+				}
+
+				if (x is IField) {
+					if (y is IField) {
+						return string.CompareOrdinal(x.Name, y.Name);
+					}
+					else 
+						return -1;
+				}
+				else if (y is IField) {
 					return 1;
 				}
 
@@ -357,6 +357,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 					else if (m.Member is IProperty) {
 						DeterminePropertySemantics((IProperty)m.Member, current.Name, m.NameSpecified, allMembers);
+					}
+					else if (m.Member is IField) {
+						DetermineFieldSemantics((IField)m.Member, current.Name, m.NameSpecified, allMembers);
 					}
 				}
 			}
@@ -657,6 +660,18 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						return;
 					}
 				}
+			}
+		}
+
+		private void DetermineFieldSemantics(IField field, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
+			var nsa = GetAttributePositionalArgs(field, NonScriptableAttribute);
+			if (nsa != null) {
+				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();
+			}
+			else {
+				string name = nameSpecified ? preferredName : GetUniqueName(field, preferredName, allMembers);
+				AddMember(allMembers, name, field);
+				_fieldSemantics[field] = FieldScriptSemantics.Field(name);
 			}
 		}
 

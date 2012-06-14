@@ -62,6 +62,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			return FindMembers(types, name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => md.GetPropertySemantics(p)).Single();
 		}
 
+		protected FieldScriptSemantics FindField(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
+			return FindMembers(types, name).Cast<IField>().Select(f => md.GetFieldSemantics(f)).Single();
+		}
+
 		protected PropertyScriptSemantics FindIndexer(IDictionary<string, ITypeDefinition> types, string typeName, int parameterCount, INamingConventionResolver md) {
 			return types[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => md.GetPropertySemantics(p)).Single();
 		}

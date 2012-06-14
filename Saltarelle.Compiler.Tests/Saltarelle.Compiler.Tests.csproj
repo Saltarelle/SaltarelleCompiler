@@ -118,6 +118,7 @@
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\TypeConversionTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\FieldTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\IndexerTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\MiscTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\PropertyTests.cs" />

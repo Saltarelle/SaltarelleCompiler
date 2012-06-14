@@ -22,6 +22,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	public int Prop2 { get; set; }
 
 	public int this[int x] { get { return 0; } set {} }
+
+	public int Field1;
+	public int Field2;
 }
 
 class B : A {
@@ -30,6 +33,8 @@ class B : A {
 	public override void VirtualMethod();
 
 	public int Prop3 { get; set; }
+
+	public int Field3;
 }
 
 class C : B {
@@ -41,6 +46,8 @@ class C : B {
 	public new int Prop2 { get; set; }
 
 	public new int this[int x] { get { return 0; } set {} }
+
+	public new int Field1;
 }
 
 public class D {
@@ -53,6 +60,9 @@ public class D {
 	private int Prop2 { get; set; }
 
 	public int this[int x] { get { return 0; } set {} }
+
+	public int Field1;
+	public int Field2;
 }
 ");
 
@@ -66,19 +76,23 @@ public class D {
 			Assert.That(FindProperty(types, "A.Prop1", md).SetMethod.Name, Is.EqualTo("$7"));
 			Assert.That(FindProperty(types, "A.Prop2", md).GetMethod.Name, Is.EqualTo("$8"));
 			Assert.That(FindProperty(types, "A.Prop2", md).SetMethod.Name, Is.EqualTo("$9"));
-			Assert.That(FindMethod(types, "B.OtherMethodB", md).Name, Is.EqualTo("$A"));
+			Assert.That(FindField(types, "A.Field1", md).Name, Is.EqualTo("$A"));
+			Assert.That(FindField(types, "A.Field2", md).Name, Is.EqualTo("$B"));
+			Assert.That(FindMethod(types, "B.OtherMethodB", md).Name, Is.EqualTo("$C"));
 			Assert.That(FindMethod(types, "B.VirtualMethod", md).Name, Is.EqualTo("$3"));
-			Assert.That(FindProperty(types, "B.Prop3", md).GetMethod.Name, Is.EqualTo("$B"));
-			Assert.That(FindProperty(types, "B.Prop3", md).SetMethod.Name, Is.EqualTo("$C"));
-			Assert.That(FindMethod(types, "C.OtherMethodC", md).Name, Is.EqualTo("$D"));
-			Assert.That(FindMethod(types, "C.SomeMethod", md).Name, Is.EqualTo("$E"));
+			Assert.That(FindProperty(types, "B.Prop3", md).GetMethod.Name, Is.EqualTo("$D"));
+			Assert.That(FindProperty(types, "B.Prop3", md).SetMethod.Name, Is.EqualTo("$E"));
+			Assert.That(FindField(types, "B.Field3", md).Name, Is.EqualTo("$F"));
+			Assert.That(FindMethod(types, "C.OtherMethodC", md).Name, Is.EqualTo("$G"));
+			Assert.That(FindMethod(types, "C.SomeMethod", md).Name, Is.EqualTo("$H"));
 			Assert.That(FindMethod(types, "C.VirtualMethod", md).Name, Is.EqualTo("$3"));
-			Assert.That(FindIndexer(types, "C", 1, md).GetMethod.Name, Is.EqualTo("$F"));
-			Assert.That(FindIndexer(types, "C", 1, md).SetMethod.Name, Is.EqualTo("$G"));
+			Assert.That(FindIndexer(types, "C", 1, md).GetMethod.Name, Is.EqualTo("$I"));
+			Assert.That(FindIndexer(types, "C", 1, md).SetMethod.Name, Is.EqualTo("$J"));
 			Assert.That(FindProperty(types, "C.Prop1", md).GetMethod.Name, Is.EqualTo("$6"));
 			Assert.That(FindProperty(types, "C.Prop1", md).SetMethod.Name, Is.EqualTo("$7"));
-			Assert.That(FindProperty(types, "C.Prop2", md).GetMethod.Name, Is.EqualTo("$H"));
-			Assert.That(FindProperty(types, "C.Prop2", md).SetMethod.Name, Is.EqualTo("$I"));
+			Assert.That(FindProperty(types, "C.Prop2", md).GetMethod.Name, Is.EqualTo("$K"));
+			Assert.That(FindProperty(types, "C.Prop2", md).SetMethod.Name, Is.EqualTo("$L"));
+			Assert.That(FindField(types, "C.Field1", md).Name, Is.EqualTo("$M"));
 			Assert.That(FindMethod(types, "D.PublicMethod", md).Name, Is.EqualTo("publicMethod"));
 			Assert.That(FindMethod(types, "D.ProtectedMethod", md).Name, Is.EqualTo("protectedMethod"));
 			Assert.That(FindMethod(types, "D.ProtectedInternalMethod", md).Name, Is.EqualTo("protectedInternalMethod"));
@@ -89,8 +103,10 @@ public class D {
 			Assert.That(FindProperty(types, "D.Prop2", md).SetMethod.Name, Is.EqualTo("$2"));
 			Assert.That(FindIndexer(types, "D", 1, md).GetMethod.Name, Is.EqualTo("get_item"));
 			Assert.That(FindIndexer(types, "D", 1, md).SetMethod.Name, Is.EqualTo("set_item"));
+			Assert.That(FindField(types, "D.Field1", md).Name, Is.EqualTo("field1"));
+			Assert.That(FindField(types, "D.Field2", md).Name, Is.EqualTo("field2"));
 
-			Assert.Inconclusive("TODO: Test events, constructors, fields");
+			Assert.Inconclusive("TODO: Test events, constructors");
 		}
 
 		[Test]
