@@ -79,15 +79,31 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         /// </summary>
         public bool GenerateCode { get; private set; }
 
+		private bool _isGlobal;
+		/// <summary>
+		/// Whether a static method is global (eg. transform <c>"Script.Alert()"</c> to just <c>"alert()"</c>).
+		/// Applies to methods of tyep <see cref="ImplType.StaticMethodWithThisAsFirstArgument"/>, and normal methods that are static.
+		/// </summary>
+		public bool IsGlobal {
+			get {
+				if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument)
+					throw new InvalidOperationException();
+				return _isGlobal;
+			}
+			private set {
+				_isGlobal = value;
+			}
+		}
+
         private MethodScriptSemantics() {
         }
 
-        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
-            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false) {
+            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal };
         }
 
-        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
-            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false) {
+            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal };
         }
 
         public static MethodScriptSemantics InstanceMethodOnFirstArgument(string name) {

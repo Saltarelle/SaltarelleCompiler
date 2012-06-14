@@ -932,7 +932,8 @@ namespace Saltarelle.Compiler.Compiler {
 							return _runtimeLibrary.CallBase(GetJsType(method.DeclaringType), impl.Name, jsTypeArguments, thisAndArguments);
 						}
 						else {
-							var jsMethod = JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
+							var jsMethod = method.IsStatic && impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
+
 							if (jsTypeArguments.Count > 0) {
 								var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
 								if (method.IsStatic)
@@ -946,7 +947,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 
 					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-						var jsMethod = JsExpression.MemberAccess(GetJsType(method.DeclaringType), impl.Name);
+						var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(GetJsType(method.DeclaringType), impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
 							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
@@ -1042,7 +1043,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						constructorCall = JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+						constructorCall = JsExpression.Invocation(impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:

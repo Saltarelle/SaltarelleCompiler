@@ -75,6 +75,20 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         /// </summary>
         public bool GenerateCode { get; private set; }
 
+		private bool _isGlobal;
+
+		/// <summary>
+		/// Whether the static method constructing the type is global (not type-qualified).
+		/// </summary>
+		public bool IsGlobal {
+			get {
+				if (Type != ImplType.StaticMethod)
+					throw new InvalidOperationException();
+				return _isGlobal;
+			}
+			set { _isGlobal = value; }
+		}
+
         public static ConstructorScriptSemantics Unnamed(bool generateCode = true) {
             return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode };
         }
@@ -83,8 +97,8 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode };
         }
 
-        public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true) {
-            return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode };
+        public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool isGlobal = false) {
+            return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, IsGlobal = isGlobal };
         }
 
         public static ConstructorScriptSemantics InlineCode(string literalCode) {
