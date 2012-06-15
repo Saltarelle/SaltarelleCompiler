@@ -304,24 +304,8 @@ namespace Saltarelle.Compiler.Compiler {
 			    && Equals(GetNonNullableType(type), _compilation.FindType(KnownTypeCode.Boolean));
 		}
 
-		public JsExpression GetJsType(IType type) {
-			if (type is ParameterizedType) {
-				var pt = (ParameterizedType)type;
-				return _runtimeLibrary.InstantiateGenericType(new JsTypeReferenceExpression(pt.GetDefinition()), pt.TypeArguments.Select(GetJsType));
-			}
-			else if (type is ITypeDefinition) {
-				var td = (ITypeDefinition)type;
-				if (td.TypeParameterCount > 0)
-					return _runtimeLibrary.InstantiateGenericType(new JsTypeReferenceExpression(td), td.TypeParameters.Select(p => JsExpression.Identifier(_namingConvention.GetTypeParameterName(p))));
-				else
-					return new JsTypeReferenceExpression((ITypeDefinition)type);
-			}
-			else if (type is ITypeParameter)
-				return JsExpression.Identifier(_namingConvention.GetTypeParameterName(((ITypeParameter)type)));
-			else if (type is ArrayType)
-				return _runtimeLibrary.GetArrayType(GetJsType(((ArrayType)type).ElementType));
-			else
-				throw new NotSupportedException("Unsupported type " + type.ToString());
+		private JsExpression GetJsType(IType type) {
+			return _runtimeLibrary.GetScriptType(type, _namingConvention.GetTypeParameterName);
 		}
 
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {

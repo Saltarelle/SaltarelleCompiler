@@ -62,14 +62,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private JsExpression ConvertPotentiallyGenericType(IType type) {
-            if (type is ITypeParameter)
-				return JsExpression.Identifier(_namingConvention.GetTypeParameterName((ITypeParameter)type));
-
-            var unconstructed = new JsTypeReferenceExpression(type.GetDefinition());
-            if (type is ParameterizedType)
-                return _runtimeLibrary.InstantiateGenericType(unconstructed, ((ParameterizedType)type).TypeArguments.Select(ConvertPotentiallyGenericType));
-            else
-                return unconstructed;
+			return _runtimeLibrary.GetScriptType(type, _namingConvention.GetTypeParameterName);
         }
 
         private JsClass GetJsClass(ITypeDefinition typeDefinition) {

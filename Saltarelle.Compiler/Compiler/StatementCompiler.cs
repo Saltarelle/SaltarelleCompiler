@@ -120,7 +120,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public JsExpression GetJsType(IType type) {
-			return _expressionCompiler.GetJsType(type);
+			return _runtimeLibrary.GetScriptType(type, _namingConvention.GetTypeParameterName);
 		}
 
 		private StatementCompiler CreateInnerCompiler() {

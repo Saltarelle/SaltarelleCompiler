@@ -130,12 +130,32 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 
 		public class MockRuntimeLibrary : IRuntimeLibrary {
 			public MockRuntimeLibrary() {
-				GetArrayType                = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Array"), e);
+				GetScriptType = (t, gtpn) => {
+					if (t is ArrayType) {
+						return JsExpression.Invocation(JsExpression.Identifier("$Array"), GetScriptType(((ArrayType)t).ElementType, gtpn));
+					}
+					else if (t is ParameterizedType) {
+						var pt = (ParameterizedType)t;
+						return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(pt.GetDefinition()) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, gtpn))));
+					}
+					else if (t is ITypeDefinition) {
+						var td = (ITypeDefinition)t;
+						if (td.TypeParameterCount > 0)
+							return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(td) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, gtpn))));
+						else
+							return new JsTypeReferenceExpression(td);
+					}
+					else if (t is ITypeParameter) {
+						return JsExpression.Identifier(gtpn((ITypeParameter)t));
+					}
+					else {
+						throw new ArgumentException("Unsupported type + " + t.ToString());
+					}
+				};
 				TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
 				TryDowncast                 = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
 				Downcast                    = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
 				ImplicitReferenceConversion = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
-				InstantiateGenericType      = (t, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { t }.Concat(a));
 				InstantiateGenericMethod    = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
 				MakeException               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 				IntegerDivision             = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
@@ -152,11 +172,10 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 				BindBaseCall                = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
 			}
 
-			public Func<JsExpression, JsExpression> GetArrayType { get; set; }
+			public Func<IType, Func<ITypeParameter, string>, JsExpression> GetScriptType { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> TryDowncast { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> Downcast { get; set; }
-			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericType { get; set; }
 			public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
 			public Func<JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
 			public Func<JsExpression, JsExpression> MakeException { get; set; }
@@ -173,8 +192,8 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 			public Func<JsExpression, string, IEnumerable<JsExpression>, JsExpression, JsExpression> BindBaseCall { get; set; }
 
-			JsExpression IRuntimeLibrary.GetArrayType(JsExpression elementType) {
-				return GetArrayType(elementType);
+			JsExpression IRuntimeLibrary.GetScriptType(IType type, Func<ITypeParameter, string> getTypeParameterName) {
+				return GetScriptType(type, getTypeParameterName);
 			}
 			
 			JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
@@ -191,10 +210,6 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 
 			JsExpression IRuntimeLibrary.ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
 				return ImplicitReferenceConversion(expression, targetType);
-			}
-
-			JsExpression IRuntimeLibrary.InstantiateGenericType(JsExpression type, IEnumerable<JsExpression> typeArguments) {
-				return InstantiateGenericType(type, typeArguments);
 			}
 
 			JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<JsExpression> typeArguments) {

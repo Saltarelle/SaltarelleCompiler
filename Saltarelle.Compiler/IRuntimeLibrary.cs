@@ -8,10 +8,12 @@ using Saltarelle.Compiler.JSModel.Expressions;
 namespace Saltarelle.Compiler {
 	public interface IRuntimeLibrary {
 		/// <summary>
-		/// Returns the type of an array with the specified element type.
+		/// Returns an expression that references a type. This might mean a simple name, a generic instantiation, or something else.
 		/// </summary>
-		/// <param name="elementType">Element in the array.</param>
-		JsExpression GetArrayType(JsExpression elementType);
+		/// <param name="type">Type to return an expression for.</param>
+		/// <param name="getTypeParameterName">Delegate to invoke in order to retrieve the name for a type parameter.</param>
+		/// <returns></returns>
+		JsExpression GetScriptType(IType type, Func<ITypeParameter, string> getTypeParameterName);
 
 		/// <summary>
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").
@@ -35,11 +37,6 @@ namespace Saltarelle.Compiler {
 		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List). Note that this might also represent a generic variance conversion.
 		/// </summary>
 		JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType);
-
-		/// <summary>
-		/// Returns an expression that will instantiate a generic type.
-		/// </summary>
-		JsExpression InstantiateGenericType(JsExpression type, IEnumerable<JsExpression> typeArguments);
 
 		/// <summary>
 		/// Returns an expression that will instantiate a generic method.
