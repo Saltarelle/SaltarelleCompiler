@@ -239,29 +239,33 @@ namespace X {
 			Assert.That(FindType("X.C4+C5").Name, Is.EqualTo("X.Renamed5"));
 		}
 
-		[Test, Ignore("TODO")]
-		public void InternalTypesArePrefixedWithADollarSignIfTheMinimizeFlagIsNotSet() {
+		[Test]
+		public void InternalTypesWithoutPreserveNameAttributeArePrefixedWithADollarSignIfTheMinimizeFlagIsNotSet() {
 			Prepare(
-@"class C1 {}
+@"using System.Runtime.CompilerServices;
+
+class C1 {}
 internal class C2 {}
 public class C3 {}
 public class C4 { internal class C5 { public class C6 {} } }
 internal class C7 { public class C8 { public class C9 {} } }
 public class C10 { private class C11 {} protected class C12 {} protected internal class C13 {} }
+[PreserveName] internal class C14 {}
 ", false);
 
-			Assert.That(FindType("C1").Name, Is.EqualTo(""));
-			Assert.That(FindType("C2").Name, Is.EqualTo(""));
+			Assert.That(FindType("C1").Name, Is.EqualTo("$C1"));
+			Assert.That(FindType("C2").Name, Is.EqualTo("$C2"));
 			Assert.That(FindType("C3").Name, Is.EqualTo("C3"));
 			Assert.That(FindType("C4").Name, Is.EqualTo("C4"));
-			Assert.That(FindType("C4+C5").Name, Is.EqualTo(""));
-			Assert.That(FindType("C4+C5+C6").Name, Is.EqualTo(""));
-			Assert.That(FindType("C7").Name, Is.EqualTo(""));
-			Assert.That(FindType("C7+C8").Name, Is.EqualTo(""));
-			Assert.That(FindType("C7+C8+C9").Name, Is.EqualTo(""));
-			Assert.That(FindType("C10+C11").Name, Is.EqualTo(""));
+			Assert.That(FindType("C4+C5").Name, Is.EqualTo("$C4$C5"));
+			Assert.That(FindType("C4+C5+C6").Name, Is.EqualTo("$C4$C5$C6"));
+			Assert.That(FindType("C7").Name, Is.EqualTo("$C7"));
+			Assert.That(FindType("C7+C8").Name, Is.EqualTo("$C7$C8"));
+			Assert.That(FindType("C7+C8+C9").Name, Is.EqualTo("$C7$C8$C9"));
+			Assert.That(FindType("C10+C11").Name, Is.EqualTo("$C10$C11"));
 			Assert.That(FindType("C10+C12").Name, Is.EqualTo("C10$C12"));
 			Assert.That(FindType("C10+C13").Name, Is.EqualTo("C10$C13"));
+			Assert.That(FindType("C14").Name, Is.EqualTo("C14"));
 		}
 
 		[Test]

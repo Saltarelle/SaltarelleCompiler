@@ -274,6 +274,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else {
 						nmspace = DetermineNamespace(typeDefinition);
 					}
+
+					if (!IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) == null && !typeName.StartsWith("$")) {
+						typeName = "$" + typeName;
+					}
 				}
 			}
 
