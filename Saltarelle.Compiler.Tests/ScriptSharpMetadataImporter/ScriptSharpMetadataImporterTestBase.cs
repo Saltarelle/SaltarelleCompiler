@@ -19,7 +19,13 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			return new[] { def }.Concat(def.NestedTypes.SelectMany(SelfAndNested));
 		}
 
-        protected IDictionary<string, ITypeDefinition> Process(INamingConventionResolver namingConvention, string source, IErrorReporter errorReporter = null) {
+		private MockErrorReporter errorReporter;
+
+		protected Dictionary<string, ITypeDefinition> AllTypes { get; private set; }
+		protected INamingConventionResolver Metadata { get; private set; }
+		protected IList<string> AllErrors { get; private set; }
+
+        protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
             IProjectContent project = new CSharpProjectContent();
             var parser = new CSharpParser();
 
@@ -33,49 +39,53 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 			var compilation = project.CreateCompilation();
 
-			bool defaultErrorHandling = (errorReporter == null);
-			errorReporter = errorReporter ?? new MockErrorReporter(true);
+			errorReporter = new MockErrorReporter(!expectErrors);
+			Metadata = new MetadataImporter.ScriptSharpMetadataImporter(minimizeNames);
 
-			namingConvention.Prepare(compilation.GetAllTypeDefinitions(), compilation.MainAssembly, errorReporter);
+			Metadata.Prepare(compilation.GetAllTypeDefinitions(), compilation.MainAssembly, errorReporter);
 
-            if (defaultErrorHandling) {
-                ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
+			AllErrors = errorReporter.AllMessages.ToList().AsReadOnly();
+            if (expectErrors) {
+                AllErrors.Should().NotBeEmpty("Compile should have generated errors");
             }
+			else {
+                AllErrors.Should().BeEmpty("Compile should not generate errors");
+			}
 
-			return compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
+			AllTypes = compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
         }
 
-		protected TypeScriptSemantics FindType(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return md.GetTypeSemantics(types[name]);
+		protected TypeScriptSemantics FindType(string name) {
+			return Metadata.GetTypeSemantics(AllTypes[name]);
 		}
 
-		protected IEnumerable<IMember> FindMembers(IDictionary<string, ITypeDefinition> types, string name) {
+		protected IEnumerable<IMember> FindMembers(string name) {
             var lastDot = name.LastIndexOf('.');
-			return types[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));
+			return AllTypes[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));
 		}
 
-		protected List<Tuple<IMethod, MethodScriptSemantics>> FindMethods(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMembers(types, name).Cast<IMethod>().Select(m => Tuple.Create(m, md.GetMethodSemantics(m))).ToList();
+		protected List<Tuple<IMethod, MethodScriptSemantics>> FindMethods(string name) {
+			return FindMembers(name).Cast<IMethod>().Select(m => Tuple.Create(m, Metadata.GetMethodSemantics(m))).ToList();
 		}
 
-		protected MethodScriptSemantics FindMethod(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMethods(types, name, md).Single().Item2;
+		protected MethodScriptSemantics FindMethod(string name) {
+			return FindMethods(name).Single().Item2;
 		}
 
-		protected PropertyScriptSemantics FindProperty(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMembers(types, name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => md.GetPropertySemantics(p)).Single();
+		protected PropertyScriptSemantics FindProperty(string name) {
+			return FindMembers(name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => Metadata.GetPropertySemantics(p)).Single();
 		}
 
-		protected FieldScriptSemantics FindField(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMembers(types, name).Cast<IField>().Select(f => md.GetFieldSemantics(f)).Single();
+		protected FieldScriptSemantics FindField(string name) {
+			return FindMembers(name).Cast<IField>().Select(f => Metadata.GetFieldSemantics(f)).Single();
 		}
 
-		protected PropertyScriptSemantics FindIndexer(IDictionary<string, ITypeDefinition> types, string typeName, int parameterCount, INamingConventionResolver md) {
-			return types[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => md.GetPropertySemantics(p)).Single();
+		protected PropertyScriptSemantics FindIndexer(string typeName, int parameterCount) {
+			return AllTypes[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => Metadata.GetPropertySemantics(p)).Single();
 		}
 
-		protected EventScriptSemantics FindEvent(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
-			return FindMembers(types, name).Cast<IEvent>().Select(p => md.GetEventSemantics(p)).Single();
+		protected EventScriptSemantics FindEvent(string name) {
+			return FindMembers(name).Cast<IEvent>().Select(p => Metadata.GetEventSemantics(p)).Single();
 		}
     }
 }

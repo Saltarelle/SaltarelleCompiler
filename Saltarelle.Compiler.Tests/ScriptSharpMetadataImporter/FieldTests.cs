@@ -11,25 +11,21 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	public class FieldTests : ScriptSharpMetadataImporterTestBase {
 		[Test]
 		public void FieldsWork() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class C1 {
 	public int Field1;
 }");
 
-			var f1 = FindField(types, "C1.Field1", md);
+			var f1 = FindField("C1.Field1");
 			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f1.Name, Is.EqualTo("field1"));
 		}
 
 		[Test]
 		public void FieldHidingBaseMemberGetsAUniqueName() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class B {
@@ -40,16 +36,14 @@ public class D : B {
 	public new int Field;
 }");
 
-			var f1 = FindField(types, "D.Field", md);
+			var f1 = FindField("D.Field");
 			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f1.Name, Is.EqualTo("field$1"));
 		}
 
 		[Test]
 		public void RenamingFieldWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
@@ -61,24 +55,22 @@ class C1 {
 	public int Field3;
 }");
 
-			var f1 = FindField(types, "C1.Field1", md);
+			var f1 = FindField("C1.Field1");
 			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f1.Name, Is.EqualTo("Renamed"));
 
-			var f2 = FindField(types, "C1.Field2", md);
+			var f2 = FindField("C1.Field2");
 			Assert.That(f2.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f2.Name, Is.EqualTo("field2"));
 
-			var f3 = FindField(types, "C1.Field3", md);
+			var f3 = FindField("C1.Field3");
 			Assert.That(f3.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f3.Name, Is.EqualTo("Field3"));
 		}
 
 		[Test]
 		public void NonPublicFieldsArePrefixedWithADollarIfSymbolsAreNotMinimized() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
@@ -88,26 +80,24 @@ class C1 {
 public class C2 {
 	private int Field2;
 	internal int Field3;
-}");
+}", minimizeNames: false);
 
-			var f1 = FindField(types, "C1.Field1", md);
+			var f1 = FindField("C1.Field1");
 			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f1.Name, Is.EqualTo("$field1"));
 
-			var f2 = FindField(types, "C2.Field2", md);
+			var f2 = FindField("C2.Field2");
 			Assert.That(f2.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f2.Name, Is.EqualTo("$field2"));
 
-			var f3 = FindField(types, "C2.Field3", md);
+			var f3 = FindField("C2.Field3");
 			Assert.That(f3.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f3.Name, Is.EqualTo("$field3"));
 		}
 
 		[Test]
 		public void NonScriptableAttributeCausesFieldToNotBeUsableFromScript() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[NonScriptable]
@@ -115,7 +105,7 @@ class C1 {
 }
 ");
 
-			var impl = FindField(types, "C1.Field1", md);
+			var impl = FindField("C1.Field1");
 			Assert.That(impl.Type, Is.EqualTo(FieldScriptSemantics.ImplType.NotUsableFromScript));
 		}
 	}

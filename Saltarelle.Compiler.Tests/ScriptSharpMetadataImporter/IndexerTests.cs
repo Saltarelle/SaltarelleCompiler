@@ -11,9 +11,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	public class IndexerTests : ScriptSharpMetadataImporterTestBase {
 		[Test]
 		public void IndexersImplementedAsGetAndSetMethodsWork() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class C1 {
@@ -22,21 +20,21 @@ public class C1 {
 	public int this[int x, int y, int z] { get { return 0; } set {} }
 }");
 
-			var p1 = FindIndexer(types, "C1", 1, md);
+			var p1 = FindIndexer("C1", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_item"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_item"));
 
-			var p2 = FindIndexer(types, "C1", 2, md);
+			var p2 = FindIndexer("C1", 2);
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_item$1"));
 			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_item$1"));
 
-			var p3 = FindIndexer(types, "C1", 3, md);
+			var p3 = FindIndexer("C1", 3);
 			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p3.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_item$2"));
@@ -46,9 +44,7 @@ public class C1 {
 
 		[Test]
 		public void IndexerHidingBaseMemberGetsAUniqueName() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class B {
@@ -59,7 +55,7 @@ public class D : B {
 	public int this[int x] { get { return 0; } set {} }
 }");
 
-			var p1 = FindIndexer(types, "D", 1, md);
+			var p1 = FindIndexer("D", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_item$1"));
@@ -72,9 +68,7 @@ public class D : B {
 
 		[Test]
 		public void RenamingIndexersWithGetAndSetMethodsWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
@@ -86,20 +80,20 @@ class C1 {
 	public int this[int x, int y, int z] { get { return 0; } set {} }
 }");
 
-			var p1 = FindIndexer(types, "C1", 1, md);
+			var p1 = FindIndexer("C1", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_Renamed"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_Renamed"));
 
-			var p2 = FindIndexer(types, "C1", 2, md);
+			var p2 = FindIndexer("C1", 2);
 			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_item"));
 			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_item"));
 
-			var p3 = FindIndexer(types, "C1", 3, md);
+			var p3 = FindIndexer("C1", 3);
 			Assert.That(p3.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_Item"));
 			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
@@ -108,16 +102,14 @@ class C1 {
 
 		[Test]
 		public void RenamingIndexerGettersAndSettersWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
 	public int this[int x] { [ScriptName(""Renamed1"")] get { return 0; } [ScriptName(""Renamed2"")] set {} }
 }");
 
-			var p1 = FindIndexer(types, "C1", 1, md);
+			var p1 = FindIndexer("C1", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("Renamed1"));
@@ -127,16 +119,14 @@ class C1 {
 
 		[Test]
 		public void SpecifyingInlineCodeForIndexerGettersAndSettersWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
 	public int this[int x] { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
 }");
 
-			var p1 = FindIndexer(types, "C1", 1, md);
+			var p1 = FindIndexer("C1", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("|some code|"));
@@ -146,10 +136,7 @@ class C1 {
 
 		[Test]
 		public void CannotSpecifyInlineCodeOnIndexerAccessorsImplementingInterfaceMembers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 interface I {
 	int this[int x] { get; set; }
@@ -157,19 +144,16 @@ interface I {
 
 class C : I {
 	public int this[int x] { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(2));
-			Assert.That(er.AllMessages.Any(m => m.Contains("C.get_Item") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-			Assert.That(er.AllMessages.Any(m => m.Contains("C.set_Item") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrors, Has.Count.EqualTo(2));
+			Assert.That(AllErrors.Any(m => m.Contains("C.get_Item") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrors.Any(m => m.Contains("C.set_Item") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
 		public void CannotSpecifyInlineCodeOnIndexerAccessorsThatOverrideBaseMembers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class B {
 	public virtual int this[int x] { get { return 0; } set {} }
@@ -177,18 +161,16 @@ class B {
 
 class D : B {
 	public sealed override int this[int x] { [InlineCode(""X"")] get { return 0; } [InlineCode(""X"")] set {} }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(2));
-			Assert.That(er.AllMessages.Any(m => m.Contains("D.get_Item") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
-			Assert.That(er.AllMessages.Any(m => m.Contains("D.set_Item") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrors, Has.Count.EqualTo(2));
+			Assert.That(AllErrors.Any(m => m.Contains("D.get_Item") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrors.Any(m => m.Contains("D.set_Item") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
 		public void OverridingIndexerAccessorsGetTheirNameFromTheDefiningMember() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class A {
@@ -202,14 +184,14 @@ class C : B {
 	public sealed override int this[int x] { get { return 0; } set {} }
 }");
 
-			var pb = FindIndexer(types, "B", 1, md);
+			var pb = FindIndexer("B", 1);
 			Assert.That(pb.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(pb.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(pb.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
 			Assert.That(pb.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(pb.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
 
-			var pc = FindIndexer(types, "C", 1, md);
+			var pc = FindIndexer("C", 1);
 			Assert.That(pc.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(pc.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(pc.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
@@ -220,9 +202,7 @@ class C : B {
 
 		[Test]
 		public void ImplicitInterfaceImplementationIndexerAccessorsGetTheirNameFromTheInterface() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -238,14 +218,14 @@ class C : I, I2<int> {
 	int this[int x, int y] { get { return 0; } set; }
 }");
 
-			var p1 = FindIndexer(types, "C", 1, md);
+			var p1 = FindIndexer("C", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
 
-			var p2 = FindIndexer(types, "C", 2, md);
+			var p2 = FindIndexer("C", 2);
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
@@ -255,9 +235,7 @@ class C : I, I2<int> {
 
 		[Test]
 		public void ExplicitInterfaceImplementationIndexerAccessorsGetTheirNameFromTheInterface() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -273,8 +251,8 @@ class C : I, I2<int> {
 	int I2<int>.this[int x] { get { return 0; } set {} }
 }");
 
-			var p1 = md.GetPropertySemantics(types["C"].Members.OfType<IProperty>().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
-			var p2 = md.GetPropertySemantics(types["C"].Members.OfType<IProperty>().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
+			var p1 = Metadata.GetPropertySemantics(AllTypes["C"].Members.OfType<IProperty>().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
+			var p2 = Metadata.GetPropertySemantics(AllTypes["C"].Members.OfType<IProperty>().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
 			
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
@@ -291,9 +269,7 @@ class C : I, I2<int> {
 
 		[Test]
 		public void NonScriptableAttributeCausesIndexerToNotBeUsableFromScript() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[NonScriptable]
@@ -301,16 +277,14 @@ class C1 {
 }
 ");
 
-			var impl = FindIndexer(types, "C1", 1, md);
+			var impl = FindIndexer("C1", 1);
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
 		}
 
 
 		[Test]
 		public void IntrinsicPropertyAttributeWorksForIndexers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[IntrinsicProperty]
@@ -318,7 +292,7 @@ class C1 {
 }
 ");
 
-			var impl = FindIndexer(types, "C1", 1, md);
+			var impl = FindIndexer("C1", 1);
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(impl.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
 			Assert.That(impl.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
@@ -326,9 +300,7 @@ class C1 {
 
 		[Test]
 		public void IntrinsicPropertyAttributeWorksForReadOnlyIndexers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[IntrinsicProperty]
@@ -336,7 +308,7 @@ class C1 {
 }
 ");
 
-			var impl = FindIndexer(types, "C1", 1, md);
+			var impl = FindIndexer("C1", 1);
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(impl.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
 			Assert.That(impl.SetMethod, Is.Null);
@@ -344,9 +316,7 @@ class C1 {
 
 		[Test]
 		public void IntrinsicPropertyAttributeWorksForWriteOnlyIndexers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[IntrinsicProperty]
@@ -354,7 +324,7 @@ class C1 {
 }
 ");
 
-			var impl = FindIndexer(types, "C1", 1, md);
+			var impl = FindIndexer("C1", 1);
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(impl.GetMethod, Is.Null);
 			Assert.That(impl.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
@@ -362,27 +332,21 @@ class C1 {
 
 		[Test]
 		public void IndexerWithIntrinsicPropertyAttributeMustHaveExactlyOneArgument() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[IntrinsicProperty]
 	public int this[int x, int y] { set {} }
 }
-", er);
+", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("IntrinsicPropertyAttribute") && er.AllMessages[0].Contains("indexer") && er.AllMessages[0].Contains("exactly one parameter"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("IntrinsicPropertyAttribute") && AllErrors[0].Contains("indexer") && AllErrors[0].Contains("exactly one parameter"));
 		}
 
 		[Test]
 		public void CannotSpecifyIntrinsicPropertyAttributeOnPropertiesImplementingInterfaceMembers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 interface I {
 	int this[int x] { get; set; }
@@ -391,18 +355,15 @@ interface I {
 class C1 : I {
 	[IntrinsicProperty]
 	public int this[int x] { get { return 0; } set {} }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Contains("C1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
 		public void CannotSpecifyIntrinsicPropertyAttributeOnPropertiesThatOverrideBaseMembers() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class B {
 	public virtual int this[int x] { get { return 0; } set {} }
@@ -411,49 +372,41 @@ class B {
 class D1 : B {
 	[IntrinsicProperty]
 	public sealed override int this[int x] { get { return 0; } set {} }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Contains("D1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("D1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
 		public void CannotSpecifyIntrinsicPropertyAttributeOnInterfaceProperties() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 interface I1 {
 	[IntrinsicProperty]
 	int this[int x] { get; set; }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Contains("I1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("I1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
 		public void CannotSpecifyIntrinsicPropertyAttributeOnOverridableProperties() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[IntrinsicProperty]
 	public virtual int this[int x] { get { return 0; } set {} }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Contains("C1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
 		}
 
 		[Test]
 		public void NonPublicIndexersArePrefixedWithADollarIfSymbolsAreNotMinimized() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
@@ -463,23 +416,23 @@ class C1 {
 public class C2 {
 	private int this[int x] { get { return 0; } set {} }
 	internal int this[int x, int y] { get { return 0; } set {} }
-}");
+}", minimizeNames: false);
 
-			var p1 = FindIndexer(types, "C1", 1, md);
+			var p1 = FindIndexer("C1", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_$item"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_$item"));
 
-			var p2 = FindIndexer(types, "C2", 1, md);
+			var p2 = FindIndexer("C2", 1);
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_$item"));
 			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_$item"));
 
-			var p3 = FindIndexer(types, "C2", 2, md);
+			var p3 = FindIndexer("C2", 2);
 			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p3.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_$item$1"));
@@ -489,19 +442,16 @@ public class C2 {
 
 		[Test]
 		public void ScriptAliasAttributeCannotBeSpecifiedOnIndexer() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
 	[ScriptAlias(""$"")]
 	public int this[int x] { get { return 0; } set {} }
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("indexer") && er.AllMessages[0].Contains("ScriptAliasAttribute"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("indexer") && AllErrors[0].Contains("ScriptAliasAttribute"));
 		}
 	}
 }

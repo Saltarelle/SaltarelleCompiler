@@ -11,15 +11,13 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	public class MethodTests : ScriptSharpMetadataImporterTestBase {
 		[Test]
 		public void NonOverloadedMethodIsCamelCased() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"public class C {
 	public void SomeMethod() {
 	}
 }");
 
-			var impl = FindMethod(types, "C.SomeMethod", md);
+			var impl = FindMethod("C.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
@@ -28,9 +26,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 		[Test]
 		public void OverloadedMethodsGetDifferentNames() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"public class C {
 	public void SomeMethod() {
 	}
@@ -42,7 +38,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	}
 }");
 
-			var methods = FindMethods(types, "C.SomeMethod", md);
+			var methods = FindMethods("C.SomeMethod");
 			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
@@ -70,9 +66,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 		[Test]
 		public void MethodShadowingBaseMethodGetsANewName() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"public class A {
 	public void SomeMethod() {
 	}
@@ -87,19 +81,19 @@ public class C : B {
 	}
 }");
 
-			var impl = FindMethod(types, "A.SomeMethod", md);
+			var impl = FindMethod("A.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
 			Assert.That(impl.GenerateCode, Is.True);
 
-			impl = FindMethod(types, "B.SomeMethod", md);
+			impl = FindMethod("B.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod$1"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
 			Assert.That(impl.GenerateCode, Is.True);
 
-			impl = FindMethod(types, "C.SomeMethod", md);
+			impl = FindMethod("C.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod$2"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
@@ -108,9 +102,7 @@ public class C : B {
 
 		[Test]
 		public void ScriptNameAttributeWorksOnMethods() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C {
 	[ScriptName(""Renamed"")]
@@ -118,16 +110,14 @@ class C {
 	}
 }");
 
-			var impl = FindMethod(types, "C.SomeMethod", md);
+			var impl = FindMethod("C.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("Renamed"));
 		}
 
 		[Test]
 		public void SameScriptNameCanBeSpecifiedOnManyOverloads() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class C {
@@ -144,7 +134,7 @@ public class C {
 	}
 }");
 
-			var methods = FindMethods(types, "C.SomeMethod", md);
+			var methods = FindMethods("C.SomeMethod");
 			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("Renamed1"));
@@ -164,9 +154,7 @@ public class C {
 
 		[Test]
 		public void PreserveNameWorksOnMethods() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class C {
@@ -180,7 +168,7 @@ public class C {
 	}
 }");
 
-			var methods = FindMethods(types, "C.SomeMethod", md);
+			var methods = FindMethods("C.SomeMethod");
 			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod$1"));
@@ -196,9 +184,7 @@ public class C {
 
 		[Test]
 		public void PreserveCaseWorksOnMethods() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 public class C {
@@ -212,7 +198,7 @@ public class C {
 	}
 }");
 
-			var methods = FindMethods(types, "C.SomeMethod", md);
+			var methods = FindMethods("C.SomeMethod");
 			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
@@ -228,9 +214,7 @@ public class C {
 
 		[Test]
 		public void OverridingMembersGetTheirNameFromTheDefiningMember() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class A {
@@ -245,11 +229,11 @@ class C : B {
 	public sealed override void SomeMethod() {}
 }");
 
-			var mb = FindMethod(types, "B.SomeMethod", md);
+			var mb = FindMethod("B.SomeMethod");
 			Assert.That(mb.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(mb.Name, Is.EqualTo("RenamedMethod"));
 
-			var mc = FindMethod(types, "C.SomeMethod", md);
+			var mc = FindMethod("C.SomeMethod");
 			Assert.That(mc.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(mc.Name, Is.EqualTo("RenamedMethod"));
 		}
@@ -257,9 +241,7 @@ class C : B {
 
 		[Test]
 		public void ImplicitInterfaceImplementationMethodsGetTheirNameFromTheInterface() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -278,20 +260,18 @@ class C : I, I2<int> {
 	public void SomeMethod2() {}
 }");
 
-			var m = FindMethod(types, "C.SomeMethod", md);
+			var m = FindMethod("C.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 
-			var m2 = FindMethod(types, "C.SomeMethod2", md);
+			var m2 = FindMethod("C.SomeMethod2");
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("RenamedMethod2"));
 		}
 
 		[Test]
 		public void ExplicitInterfaceImplementationMethodsGetTheirNameFromTheInterface() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -312,20 +292,18 @@ class C : I, I2<int> {
 	}
 }");
 
-			var m = FindMethod(types, "C.SomeMethod", md);
+			var m = FindMethod("C.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 
-			var m2 = FindMethod(types, "C.SomeMethod2", md);
+			var m2 = FindMethod("C.SomeMethod2");
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("RenamedMethod2"));
 		}
 
 		[Test]
 		public void MethodCanImplementTwoInterfaceMethodsWithTheSameName() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -342,16 +320,14 @@ class C : I, I2<int> {
 	public void SomeMethod(int i) {}
 }");
 
-			var m = FindMethod(types, "C.SomeMethod", md);
+			var m = FindMethod("C.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 		}
 
 		[Test]
 		public void OverridingMethodCanImplementInterfaceMethodWithTheSameName() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -368,17 +344,14 @@ class D : B, I {
 	public sealed override void SomeMethod(int i) {}
 }");
 
-			var m = FindMethod(types, "D.SomeMethod", md);
+			var m = FindMethod("D.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 		}
 
 		[Test]
 		public void MethodCannotImplementTwoInterfaceMethodsIfTheNamesAreDifferent() {
-			var er = new MockErrorReporter(false);
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -394,18 +367,15 @@ interface I2<T> {
 class C : I, I2<int> {
 	public void SomeMethod(int i) {
 	}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("implement") && er.AllMessages[0].Contains("differing script names") && er.AllMessages[0].Contains("C.SomeMethod"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("implement") && AllErrors[0].Contains("differing script names") && AllErrors[0].Contains("C.SomeMethod"));
 		}
 
 		[Test]
 		public void OverridingMethodCannotImplementInterfaceMethodIfTheNamesDiffer() {
-			var er = new MockErrorReporter(false);
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -421,17 +391,15 @@ class B {
 class D : B, I {
 	public sealed override void SomeMethod(int i) {
 	}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("implement") && er.AllMessages[0].Contains("different script name") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("I.SomeMethod"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("implement") && AllErrors[0].Contains("different script name") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("I.SomeMethod"));
 		}
 
 		[Test]
 		public void BaseMethodCanImplementInterfaceMemberIfTheNamesAreTheSame() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -452,10 +420,7 @@ class D : B, I {
 
 		[Test, Ignore("No NRefactory support")]
 		public void BaseMethodCannotImplementInterfaceMemberIfTheNamesDiffer() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -469,18 +434,15 @@ class B {
 }
 
 class D : B, I {
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
 			Assert.Fail("TODO: Assert message");
 		}
 
 		[Test]
 		public void CannotSpecifyScriptNameAttributeOnMethodImplementingInterfaceMember() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -490,18 +452,15 @@ interface I {
 class C : I {
 	[ScriptName(""RenamedMethod2"")]
 	public void SomeMethod(int i) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("C.SomeMethod") && er.AllMessages[0].Contains("interface member"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("C.SomeMethod") && AllErrors[0].Contains("interface member"));
 		}
 
 		[Test]
 		public void CannotSpecifyPreserveNameAttributeOnMethodImplementingInterfaceMember() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -511,18 +470,15 @@ interface I {
 class C : I {
 	[PreserveName]
 	public void SomeMethod(int i) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("PreserveName") && er.AllMessages[0].Contains("C.SomeMethod") && er.AllMessages[0].Contains("interface member"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("PreserveName") && AllErrors[0].Contains("C.SomeMethod") && AllErrors[0].Contains("interface member"));
 		}
 
 		[Test]
 		public void CannotSpecifyPreserveCaseAttributeOnMethodImplementingInterfaceMember() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -532,18 +488,15 @@ interface I {
 class C : I {
 	[PreserveCase]
 	public void SomeMethod(int i) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("PreserveCase") && er.AllMessages[0].Contains("C.SomeMethod") && er.AllMessages[0].Contains("interface member"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("PreserveCase") && AllErrors[0].Contains("C.SomeMethod") && AllErrors[0].Contains("interface member"));
 		}
 
 		[Test]
 		public void CannotSpecifyScriptNameAttributeOnOverridingMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class B {
@@ -553,18 +506,15 @@ class B {
 class D : B {
 	[ScriptName(""RenamedMethod"")]
 	public sealed override void SomeMethod(int i) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("overrides"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void CannotSpecifyPreserveNameAttributeOnOverridingMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class B {
@@ -574,18 +524,15 @@ class B {
 class D : B {
 	[PreserveName]
 	public sealed override void SomeMethod(int i) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("overrides"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void CannotSpecifyPreserveCaseAttributeOnOverridingMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class B {
@@ -595,17 +542,15 @@ class B {
 class D : B {
 	[PreserveCase]
 	public sealed override void SomeMethod(int i) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("PreserveCase") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("overrides"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("PreserveCase") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void ScriptNameCanBeSpecifiedOnInterfaceMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -613,16 +558,14 @@ interface I {
 	void SomeMethod();
 }");
 
-			var m = FindMethod(types, "I.SomeMethod", md);
+			var m = FindMethod("I.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 		}
 
 		[Test]
 		public void PreserveNameCanBeSpecifiedOnInterfaceMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -630,16 +573,14 @@ interface I {
 	void SomeMethod();
 }");
 
-			var m = FindMethod(types, "I.SomeMethod", md);
+			var m = FindMethod("I.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("someMethod"));
 		}
 
 		[Test]
 		public void PreserveCaseCanBeSpecifiedOnInterfaceMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
@@ -647,29 +588,25 @@ interface I {
 	void SomeMethod();
 }");
 
-			var m = FindMethod(types, "I.SomeMethod", md);
+			var m = FindMethod("I.SomeMethod");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("SomeMethod"));
 		}
 
 		[Test]
 		public void ScriptNameOnMethodMustBeValidIdentifierOrBeEmpty() {
-			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("must be a valid JavaScript identifier"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
 
-			er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("must be a valid JavaScript identifier"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
 		}
 
 		[Test]
 		public void EmptyScriptNameOnMethodResultsInLiteralCodeImplementation() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[ScriptName("""")]
@@ -687,15 +624,15 @@ class C3 {
 	}
 }");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("{this}()"));
 
-			impl = FindMethod(types, "C2.SomeMethod", md);
+			impl = FindMethod("C2.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("{this}({x})"));
 
-			impl = FindMethod(types, "C3.SomeMethod", md);
+			impl = FindMethod("C3.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("{this}({x}, {y})"));
 		}
@@ -703,100 +640,98 @@ class C3 {
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnInterfaceMethod() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [ScriptName("""")] void M(); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("I1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("interface method") && er.AllMessages[0].Contains("empty name"));
+			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptName("""")] void M(); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("I1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("interface method") && AllErrors[0].Contains("empty name"));
 		}
 
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnVirtualOrAbstractMethod() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public virtual void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("overridable") && er.AllMessages[0].Contains("empty name"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public virtual void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("overridable") && AllErrors[0].Contains("empty name"));
 
 			er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public abstract void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("overridable") && er.AllMessages[0].Contains("empty name"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public abstract void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("overridable") && AllErrors[0].Contains("empty name"));
 		}
 
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnStaticMethod() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public static void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptName") && er.AllMessages[0].Contains("static") && er.AllMessages[0].Contains("empty name"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public static void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("static") && AllErrors[0].Contains("empty name"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnInterfaceMethod() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [ScriptSkip] void M(); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("I1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("interface method"));
+			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptSkip] void M(); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("I1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("interface method"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnVirtualOrAbstractMethod() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public virtual void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overridable"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public virtual void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("overridable"));
 
 			er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overridable"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("overridable"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [ScriptSkip] public void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("implements"));
+			Prepare(@"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [ScriptSkip] public void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("implements"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [ScriptSkip] public sealed override void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("D.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("overrides"));
+			Prepare(@"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [ScriptSkip] public sealed override void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("D.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void StaticMethodWithScriptSkipAttributeMustHaveExactlyOneParameter() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("one parameter"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("one parameter"));
 
 			er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("one parameter"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("one parameter"));
 		}
 
 		[Test]
 		public void InstanceMethodWithScriptSkipAttributeCannotHaveParameters() {
 			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("no parameters"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("no parameters"));
 
 			er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("ScriptSkipAttribute") && er.AllMessages[0].Contains("no parameters"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("no parameters"));
 		}
 
 		[Test]
 		public void ScriptSkipOnStaticMethodWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[ScriptSkip]
@@ -804,16 +739,14 @@ class C1 {
 	}
 }");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("{0}"));
 		}
 
 		[Test]
 		public void ScriptSkipOnInstanceMethodWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[ScriptSkip]
@@ -821,16 +754,14 @@ class C1 {
 	}
 }");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("{this}"));
 		}
 
 		[Test]
 		public void AlternateSignatureAttributeWorksOnMethods() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[AlternateSignature]
@@ -847,17 +778,14 @@ class C1 {
 	}
 }");
 
-			var methods = FindMethods(types, "C1.SomeMethod", md);
+			var methods = FindMethods("C1.SomeMethod");
 			Assert.That(methods.All(m => m.Item2.Name == "RenamedMethod"));
 			Assert.That(methods.All(m => m.Item2.GenerateCode == (m.Item1.Parameters.Count == 2)));
 		}
 
 		[Test]
 		public void IfAnyMethodInAMethodGroupHasAnAlternateSignatureAttributeThenExactlyOneMethodMustNotHaveIt() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[AlternateSignature]
@@ -869,14 +797,11 @@ class C1 {
 
 	public void SomeMethod(int x, int y) {
 	}
-}", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("AlternateSignatureAttribute") && er.AllMessages[0].Contains("same name"));
+}", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("AlternateSignatureAttribute") && AllErrors[0].Contains("same name"));
 
-			md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[AlternateSignature]
@@ -890,16 +815,14 @@ class C1 {
 	[AlternateSignature]
 	public void SomeMethod(int x, int y) {
 	}
-}", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("AlternateSignatureAttribute") && er.AllMessages[0].Contains("same name"));
+}", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("AlternateSignatureAttribute") && AllErrors[0].Contains("same name"));
 		}
 
 		[Test]
 		public void ScriptAliasAttributeWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[ScriptAlias(""Some.Thing.Somewhere"")]
@@ -917,40 +840,35 @@ class C3 {
 	}
 }");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("Some.Thing.Somewhere()"));
 
-			impl = FindMethod(types, "C2.SomeMethod", md);
+			impl = FindMethod("C2.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("global[x].abc({x})"));
 
-			impl = FindMethod(types, "C3.SomeMethod", md);
+			impl = FindMethod("C3.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("x.y({x}, {y})"));
 		}
 
 		[Test]
 		public void ScriptAliasAttributeCanOnlyBeSpecifiedOnStaticMethods() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[ScriptAlias(""x.y"")]
 	public void SomeMethod() {
 	}
-}", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("ScriptAliasAttribute") && er.AllMessages[0].Contains("must be static"));
+}", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("ScriptAliasAttribute") && AllErrors[0].Contains("must be static"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1<T1> {
 	class C2<T2> {
@@ -959,70 +877,57 @@ class C1<T1> {
 	}
 }");
 
-			var impl = FindMethod(types, "C1`1+C2`1.SomeMethod", md);
+			var impl = FindMethod("C1`1+C2`1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("Some.[].Strange{ }'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{this}"));
 
-			Process(md, @"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("inline code") && er.AllMessages[0].Contains("{this}"));
-
-			md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			er = new MockErrorReporter(false);
-
-			Process(md, @"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.SomeMethod") && er.AllMessages[0].Contains("inline code") && er.AllMessages[0].Contains("{x}"));
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{x}"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnInterfaceMethod() {
-			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I1 { [InlineCode(""X"")] void M(); }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("I1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("interface method"));
+			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [InlineCode(""X"")] void M(); }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("I1.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("interface method"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnOverridableMethod() {
-			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public virtual void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overridable"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public virtual void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("overridable"));
 
-			er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public abstract void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overridable"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public abstract void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("overridable"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
-			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [InlineCode(""X"")] public void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("implements"));
+			Prepare(@"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [InlineCode(""X"")] public void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("implements"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
-			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [InlineCode(""X"")] public sealed override void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("D.M") && er.AllMessages[0].Contains("InlineCodeAttribute") && er.AllMessages[0].Contains("overrides"));
+			Prepare(@"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [InlineCode(""X"")] public sealed override void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("D.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void InstanceMethodOnFirstArgumentAttributeWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[InstanceMethodOnFirstArgument]
@@ -1046,36 +951,33 @@ class C1 {
 }
 ");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
 			Assert.That(impl.Name, Is.EqualTo("SomeMethod"));
 
-			impl = FindMethod(types, "C1.SomeMethod2", md);
+			impl = FindMethod("C1.SomeMethod2");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
 			Assert.That(impl.Name, Is.EqualTo("RenamedMethod"));
 
-			impl = FindMethod(types, "C1.SomeMethod3", md);
+			impl = FindMethod("C1.SomeMethod3");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
 			Assert.That(impl.Name, Is.EqualTo("someMethod3"));
 
-			impl = FindMethod(types, "C1.SomeMethod4", md);
+			impl = FindMethod("C1.SomeMethod4");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
 			Assert.That(impl.Name, Is.EqualTo("someMethod4"));
 		}
 
 		[Test]
 		public void InstanceMethodOnFirstArgumentAttributeCannotBeSpecifiedOnInstanceMember() {
-			var er = new MockErrorReporter(false);
-			Process(new MetadataImporter.ScriptSharpMetadataImporter(true), @"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public void M() {} }", er);
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1.M") && er.AllMessages[0].Contains("InstanceMethodOnFirstArgumentAttribute") && er.AllMessages[0].Contains("static"));
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public void M() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("InstanceMethodOnFirstArgumentAttribute") && AllErrors[0].Contains("static"));
 		}
 
 		[Test]
 		public void NonScriptableAttributeCausesAMethodToBeNotUsableFromScript() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[NonScriptable]
@@ -1083,15 +985,13 @@ class C1 {
 	}
 }");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
 		}
 
 		[Test]
 		public void IgnoreGenericArgumentsAttributeWorks() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
 	[IgnoreGenericArguments]
@@ -1099,17 +999,14 @@ class C1 {
 	}
 }");
 
-			var impl = FindMethod(types, "C1.SomeMethod", md);
+			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]
 		public void IgnoreGenericArgumentsCannotBeSpecifiedOnOverridingMethod() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var er = new MockErrorReporter(false);
-
-			Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class B {
@@ -1119,17 +1016,15 @@ class B {
 class D : B {
 	[IgnoreGenericArguments]
 	public sealed override void SomeMethod<T>(T t) {}
-}", er);
+}", expectErrors: true);
 
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("IgnoreGenericArgumentsAttribute") && er.AllMessages[0].Contains("D.SomeMethod") && er.AllMessages[0].Contains("overrides"));
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("IgnoreGenericArgumentsAttribute") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void NonPublicMethodsArePrefixedWithADollarIfSymbolsAreNotMinimized() {
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-
-			var types = Process(md,
+			Prepare(
 @"using System.Runtime.CompilerServices;
 
 class C1 {
@@ -1139,11 +1034,11 @@ class C1 {
 public class C2 {
 	private void SomeMethod1() {}
 	internal void SomeMethod2() {}
-}");
+}", minimizeNames: false);
 
-			Assert.That(FindMethod(types, "C1.SomeMethod", md).Name, Is.EqualTo("$someMethod"));
-			Assert.That(FindMethod(types, "C2.SomeMethod1", md).Name, Is.EqualTo("$someMethod1"));
-			Assert.That(FindMethod(types, "C2.SomeMethod2", md).Name, Is.EqualTo("$someMethod2"));
+			Assert.That(FindMethod("C1.SomeMethod").Name, Is.EqualTo("$someMethod"));
+			Assert.That(FindMethod("C2.SomeMethod1").Name, Is.EqualTo("$someMethod1"));
+			Assert.That(FindMethod("C2.SomeMethod2").Name, Is.EqualTo("$someMethod2"));
 		}
 	}
 }
