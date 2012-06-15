@@ -282,15 +282,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         }
 
         protected string Stringify(JsExpression expression) {
-            switch (expression.NodeType) {
-                case ExpressionNodeType.Identifier: return ((JsIdentifierExpression)expression).Name;
-                case ExpressionNodeType.TypeReference: return "{" + ((JsTypeReferenceExpression)expression).TypeDefinition.ReflectionName + "}";
-                default: throw new ArgumentException("expression");
-            }
-        }
-
-        protected string Stringify(JsConstructedType tp) {
-            return Stringify(tp.UnboundType) + (tp.TypeArguments.Count > 0 ? "<" + string.Join(",", tp.TypeArguments.Select(x => Stringify(x))) + ">" : "");
+			return OutputFormatter.Format(expression, allowIntermediates: true);
         }
 
         protected JsClass FindClass(string name) {

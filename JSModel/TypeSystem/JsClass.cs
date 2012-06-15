@@ -17,9 +17,9 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         public enum ClassTypeEnum { Struct, Class, Interface }
 
         public ClassTypeEnum ClassType { get; private set; }
-        public JsConstructedType BaseClass { get; private set; }
+        public JsExpression BaseClass { get; private set; }
         public IList<string> TypeArgumentNames { get; private set; }
-        public IList<JsConstructedType> ImplementedInterfaces { get; private set; }
+        public IList<JsExpression> ImplementedInterfaces { get; private set; }
         public IList<JsNamedConstructor> NamedConstructors { get; private set; }
         public IList<JsMethod> InstanceMethods { get; private set; }
         public IList<JsMethod> StaticMethods { get; private set; }
@@ -36,11 +36,11 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             }
         }
 
-        public JsClass(string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsConstructedType baseClass, IEnumerable<JsConstructedType> implementedInterfaces) : base(name) {
+        public JsClass(string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(name) {
             BaseClass             = baseClass;
             ClassType             = classType;
             TypeArgumentNames     = new List<string>(typeArgumentNames ?? new string[0]);
-            ImplementedInterfaces = new List<JsConstructedType>(implementedInterfaces ?? new JsConstructedType[0]);
+            ImplementedInterfaces = new List<JsExpression>(implementedInterfaces ?? new JsExpression[0]);
             NamedConstructors     = new List<JsNamedConstructor>();
             InstanceMethods       = new List<JsMethod>();
             StaticMethods         = new List<JsMethod>();

@@ -98,15 +98,15 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             Compile(@"class Test1 : object {}
                       class Test2 {}");
             CompiledTypes.Should().HaveCount(2);
-            Stringify(FindClass("Test1").BaseClass).Should().Be("{System.Object}");
-            Stringify(FindClass("Test2").BaseClass).Should().Be("{System.Object}");
+            Stringify(FindClass("Test1").BaseClass).Should().Be("{Object}");
+            Stringify(FindClass("Test2").BaseClass).Should().Be("{Object}");
         }
 
         [Test]
         public void StructsShouldInheritValueObject() {
             Compile(@"struct Test {}");
             CompiledTypes.Should().HaveCount(1);
-            Stringify(FindClass("Test").BaseClass).Should().Be("{System.ValueType}");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{ValueType}");
         }
 
         [Test]
@@ -121,7 +121,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                       interface ITest2 {}
                       class Test : ITest1, ITest2 { }");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{System.Object}");
+            Stringify(cls.BaseClass).Should().Be("{Object}");
             cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}" });
         }
 
@@ -139,43 +139,43 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         [Test]
         public void ClassCanInheritGenericClass() {
             Compile("class Base<T> {} class Test : Base<int> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{System.Int32}>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, {Int32})");
         }
 
         [Test]
         public void ClassCanImplementGenericInterface() {
             Compile("class Test : System.Collections.Generic.IEqualityComparer<int> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<{System.Int32}>");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("$InstantiateGenericType({IEqualityComparer}, {Int32})");
         }
 
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithTypeParameter() {
             Compile("class Test<T> : System.Collections.Generic.IEqualityComparer<T> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<$T>");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("$InstantiateGenericType({IEqualityComparer}, $T)");
         }
 
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithSelf() {
             Compile("class Test : System.Collections.Generic.IEqualityComparer<Test> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("{System.Collections.Generic.IEqualityComparer`1}<{Test}>");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("$InstantiateGenericType({IEqualityComparer}, {Test})");
         }
 
         [Test]
         public void ClassCanUseOwnTypeParameterInBaseClass() {
             Compile("class Base<T> {} class Test<U> : Base<U> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<$U>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, $U)");
         }
 
         [Test]
         public void ClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test : Base<Test> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{Test}>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, {Test})");
         }
 
         [Test]
         public void GenericClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test<T> : Base<Test<T>> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{Base`1}<{Test`1}<$T>>");
+            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, $InstantiateGenericType({Test}, $T))");
         }
 
         [Test]
@@ -194,7 +194,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                       interface ITest2 {}
                       struct Test : ITest1, ITest2 { }");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{System.ValueType}");
+            Stringify(cls.BaseClass).Should().Be("{ValueType}");
             cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}" });
         }
 
@@ -205,7 +205,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                               class Test<T> : List<T>, IEnumerable<string>, IList<float> { }" }, namingConvention: namingConvention);
             var cls = FindClass("$Test");
             cls.TypeArgumentNames.Should().Equal(new[] { "$$T" });
-            Stringify(cls.BaseClass).Should().Be("{System.Collections.Generic.List`1}<$$T>");
+            Stringify(cls.BaseClass).Should().Be("$InstantiateGenericType({List}, $$T)");
         }
 
         [Test]
@@ -222,12 +222,12 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             Compile(@"partial class TestClass : System.Collections.ArrayList, System.Runtime.Serialization.ISerializable { }", @"partial class TestClass : System.Collections.IEnumarator { }");
             CompiledTypes.Should().HaveCount(1);
             var cls = FindClass("TestClass");
-            Stringify(cls.BaseClass).Should().Be("{System.Collections.ArrayList}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.IList}",
-                                                                                        "{System.Collections.ICollection}",
-                                                                                        "{System.Collections.IEnumerable}",
-                                                                                        "{System.ICloneable}",
-                                                                                        "{System.Runtime.Serialization.ISerializable}" });
+            Stringify(cls.BaseClass).Should().Be("{ArrayList}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{IList}",
+                                                                                        "{ICollection}",
+                                                                                        "{IEnumerable}",
+                                                                                        "{ICloneable}",
+                                                                                        "{ISerializable}" });
         }
 
         [Test]
@@ -235,14 +235,14 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             Compile(@"partial class TestClass : System.Collections.ArrayList, System.Collections.IEnumerable { }", @"partial class TestClass : System.Collections.List, System.Collections.Generic.IList<string> { }");
             CompiledTypes.Should().HaveCount(1);
             var cls = FindClass("TestClass");
-            Stringify(cls.BaseClass).Should().Be("{System.Collections.ArrayList}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.IList}",
-                                                                                        "{System.Collections.ICollection}",
-                                                                                        "{System.Collections.IEnumerable}",
-                                                                                        "{System.ICloneable}",
-                                                                                        "{System.Collections.Generic.IList`1}<{System.String}>",
-                                                                                        "{System.Collections.Generic.ICollection`1}<{System.String}>",
-                                                                                        "{System.Collections.Generic.IEnumerable`1}<{System.String}>" });
+            Stringify(cls.BaseClass).Should().Be("{ArrayList}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{IList}",
+                                                                                        "{ICollection}",
+                                                                                        "{IEnumerable}",
+                                                                                        "{ICloneable}",
+                                                                                        "$InstantiateGenericType({IList}, {String})",
+                                                                                        "$InstantiateGenericType({ICollection}, {String})",
+                                                                                        "$InstantiateGenericType({IEnumerable}, {String})" });
         }
 
         [Test]
@@ -263,52 +263,52 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                       interface ITest3<T1, T2> : ITest1<T1>, ITest2<T2> {}
                       class Test : ITest3<int, string> {}
                       interface ITest<T> : ITest3<T, T> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1`1}<{System.Int32}>", "{ITest2`1}<{System.String}>", "{ITest3`2}<{System.Int32},{System.String}>" });
-            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1`1}<$T>", "{ITest2`1}<$T>", "{ITest3`2}<$T,$T>" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({ITest1}, {Int32})", "$InstantiateGenericType({ITest2}, {String})", "$InstantiateGenericType({ITest3}, {Int32}, {String})" });
+            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({ITest1}, $T)", "$InstantiateGenericType({ITest2}, $T)", "$InstantiateGenericType({ITest3}, $T, $T)" });
         }
 
         [Test]
         public void InheritedImportedInterfacesAreRecordedInTheInterfaceListForClasses() {
             Compile("class Test<T> : System.Collections.Generic.Dictionary<T, int> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<$T,{System.Int32}>",
-                                                                                                      "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
-                                                                                                      "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
-                                                                                                      "{System.Collections.IDictionary}",
-                                                                                                      "{System.Collections.ICollection}",
-                                                                                                      "{System.Collections.IEnumerable}",
-                                                                                                      "{System.Runtime.Serialization.ISerializable}",
-                                                                                                      "{System.Runtime.Serialization.IDeserializationCallback}" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IDictionary}, $T, {Int32})",
+                                                                                                      "$InstantiateGenericType({ICollection}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
+                                                                                                      "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
+                                                                                                      "{IDictionary}",
+                                                                                                      "{ICollection}",
+                                                                                                      "{IEnumerable}",
+                                                                                                      "{ISerializable}",
+                                                                                                      "{IDeserializationCallback}" });
         }
 
         [Test]
         public void IndirectlyImplementedInterfacesAreRecordedInTheInterfaceListForClasses() {
             Compile("class Test<T> : System.Collections.Generic.IDictionary<T, int> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<$T,{System.Int32}>",
-                                                                                                      "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
-                                                                                                      "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<$T,{System.Int32}>>",
-                                                                                                      "{System.Collections.IEnumerable}" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IDictionary}, $T, {Int32})",
+                                                                                                      "$InstantiateGenericType({ICollection}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
+                                                                                                      "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
+                                                                                                      "{IEnumerable}" });
         }
 
         [Test]
         public void IndirectlyImplementedInterfacesAreRecordedInTheInterfaceListForInterfaces() {
             Compile("interface ITest : System.Collections.Generic.IDictionary<string, int> {}");
-            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IDictionary`2}<{System.String},{System.Int32}>",
-                                                                                                              "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.KeyValuePair`2}<{System.String},{System.Int32}>>",
-                                                                                                              "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.KeyValuePair`2}<{System.String},{System.Int32}>>",
-                                                                                                              "{System.Collections.IEnumerable}" });
+            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IDictionary}, {String}, {Int32})",
+                                                                                                       "$InstantiateGenericType({ICollection}, $InstantiateGenericType({KeyValuePair}, {String}, {Int32}))",
+                                                                                                       "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({KeyValuePair}, {String}, {Int32}))",
+                                                                                                       "{IEnumerable}" });
         }
 
         [Test]
         public void InheritingNestedGenericTypesWorks() {
             Compile("using System.Collections.Generic; class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{System.Collections.Generic.List`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{System.Collections.Generic.IList`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>",
-                                                                                        "{System.Collections.Generic.ICollection`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>",
-                                                                                        "{System.Collections.Generic.IEnumerable`1}<{System.Collections.Generic.Dictionary`2}<$T1,$T2>>",
-                                                                                        "{System.Collections.IList}",
-                                                                                        "{System.Collections.ICollection}",
-                                                                                        "{System.Collections.IEnumerable}" });
+            Stringify(cls.BaseClass).Should().Be("$InstantiateGenericType({List}, $InstantiateGenericType({Dictionary}, $T1, $T2))");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IList}, $InstantiateGenericType({Dictionary}, $T1, $T2))",
+                                                                                        "$InstantiateGenericType({ICollection}, $InstantiateGenericType({Dictionary}, $T1, $T2))",
+                                                                                        "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({Dictionary}, $T1, $T2))",
+                                                                                        "{IList}",
+                                                                                        "{ICollection}",
+                                                                                        "{IEnumerable}" });
             
         }
 
