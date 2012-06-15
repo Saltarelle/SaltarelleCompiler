@@ -18,13 +18,13 @@ namespace Saltarelle.Compiler.Tests.Compiler {
     public class CompilerTestBase {
         protected class MockNamingConventionResolver : INamingConventionResolver {
             public MockNamingConventionResolver() {
-                GetTypeName                     = t => {
+                GetTypeSemantics           = t => {
 					if (t.DeclaringTypeDefinition == null)
-						return t.FullName;
+						return TypeScriptSemantics.NormalType(t.FullName);
 					else
-						return GetTypeName(t.DeclaringTypeDefinition) + "$" + t.Name;
+						return TypeScriptSemantics.NormalType(GetTypeSemantics(t.DeclaringTypeDefinition).Name + "$" + t.Name);
 				};
-                GetTypeParameterName            = t => "$" + t.Name;
+                GetTypeParameterName       = t => "$" + t.Name;
                 GetMethodSemantics         = m => MethodScriptSemantics.NormalMethod(m.Name);
                 GetConstructorSemantics    = c => {
 					if (c.DeclaringType.Kind == TypeKind.Anonymous)
@@ -58,7 +58,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 				ThisAlias                       = "$this";
             }
 
-            public Func<ITypeDefinition, string> GetTypeName { get; set; }
+            public Func<ITypeDefinition, TypeScriptSemantics> GetTypeSemantics { get; set; }
             public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
             public Func<IMethod, MethodScriptSemantics> GetMethodSemantics { get; set; }
             public Func<IMethod, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
@@ -72,12 +72,11 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			public Func<int, string> GetTemporaryVariableName { get; set; }
 			public string ThisAlias { get; set; }
 
-            bool INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
-				return true;
+            void INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
             }
 
-            string INamingConventionResolver.GetTypeName(ITypeDefinition typeDefinition) {
-                return GetTypeName(typeDefinition);
+            TypeScriptSemantics INamingConventionResolver.GetTypeSemantics(ITypeDefinition typeDefinition) {
+                return GetTypeSemantics(typeDefinition);
             }
 
             string INamingConventionResolver.GetTypeParameterName(ITypeParameter typeDefinition) {

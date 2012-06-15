@@ -66,6 +66,7 @@
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Compiler\ResolveResultVisitor.cs" />
+    <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />
     <Compile Include="Compiler\VariableGatherer.cs" />

@@ -130,11 +130,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private class TypeSemantics {
-			public string Name { get; private set; }
+			public TypeScriptSemantics Semantics { get; private set; }
 			public bool GlobalMethods { get; private set; }
 
-			public TypeSemantics(string name, bool globalMethods) {
-				Name = name;
+			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods) {
+				Semantics     = semantics;
 				GlobalMethods = globalMethods;
 			}
 		}
@@ -240,6 +240,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (_typeSemantics.ContainsKey(typeDefinition))
 				return;
 
+			if (typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false);
+				return;
+			}
+
 			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
 			string typeName, nmspace;
 			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
@@ -253,7 +258,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 				if (_minimizeNames && !IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) == null) {
 					nmspace = DetermineNamespace(typeDefinition);
-					int index = _typeSemantics.Values.Select(ts => SplitName(ts.Name)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
+					int index = _typeSemantics.Values.Where(ts => ts.Semantics.Type == TypeScriptSemantics.ImplType.NormalType).Select(ts => SplitName(ts.Semantics.Name)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
 				}
 				else {
@@ -263,7 +268,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							_errors[typeDefinition.FullName + ":Namespace"] = "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type " + typeDefinition.FullName + ".";
 						}
 
-						typeName = GetTypeName(typeDefinition.DeclaringTypeDefinition) + "$" + typeName;
+						typeName = GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Name + "$" + typeName;
 						nmspace = "";
 					}
 					else {
@@ -290,7 +295,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, globalMethods);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName), globalMethods);
 		}
 
 		private bool IsPublic(ITypeDefinition type) {
@@ -752,7 +757,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		public bool Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
+		public void Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
 			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
 			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
@@ -769,11 +774,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			foreach (var e in _errors.Values)
 				errorReporter.Error(e);
-			return _errors.Count == 0;
 		}
 
-		public string GetTypeName(ITypeDefinition typeDefinition) {
-			return _typeSemantics[typeDefinition].Name;
+		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
+			return _typeSemantics[typeDefinition].Semantics;
 		}
 
 		public string GetTypeParameterName(ITypeParameter typeParameter) {

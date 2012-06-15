@@ -45,6 +45,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			return compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
         }
 
+		protected TypeScriptSemantics FindType(IDictionary<string, ITypeDefinition> types, string name, INamingConventionResolver md) {
+			return md.GetTypeSemantics(types[name]);
+		}
+
 		protected IEnumerable<IMember> FindMembers(IDictionary<string, ITypeDefinition> types, string name) {
             var lastDot = name.LastIndexOf('.');
 			return types[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));

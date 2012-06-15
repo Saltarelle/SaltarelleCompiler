@@ -19,8 +19,9 @@ namespace TestNamespace {
 	public class SomeType {
 	}
 }");
-			var type = result["TestNamespace.SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("TestNamespace.SomeType"));
+			var type = FindType(result, "TestNamespace.SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.SomeType"));
 		}
 
 		[Test]
@@ -36,8 +37,9 @@ namespace TestNamespace {
 		}
 	}
 }");
-			var type = result["TestNamespace.Outer+SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("TestNamespace.Outer$SomeType"));
+			var type = FindType(result, "TestNamespace.Outer+SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$SomeType"));
 		}
 
 		[Test]
@@ -55,8 +57,9 @@ namespace TestNamespace {
 		}
 	}
 }");
-			var type = result["TestNamespace.Outer+Inner+SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("TestNamespace.Outer$Inner$SomeType"));
+			var type = FindType(result, "TestNamespace.Outer+Inner+SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$Inner$SomeType"));
 		}
 
 		[Test]
@@ -71,8 +74,10 @@ namespace TestNamespace {
 	public class SomeType {
 	}
 }");
-			var type = result["TestNamespace.SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("TestNamespace.Renamed"));
+
+			var type = FindType(result, "TestNamespace.SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.Renamed"));
 		}
 
 		[Test]
@@ -90,8 +95,10 @@ namespace TestNamespace {
 		}
 	}
 }");
-			var type = result["TestNamespace.Outer+SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("TestNamespace.Renamed"));
+			
+			var type = FindType(result, "TestNamespace.Outer+SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.Renamed"));
 		}
 
 		[Test]
@@ -104,8 +111,10 @@ namespace TestNamespace {
 public class SomeType {
 }
 ");
-			var type = result["SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("SomeType"));
+
+			var type = FindType(result, "SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("SomeType"));
 		}
 
 		[Test]
@@ -119,8 +128,10 @@ public class SomeType {
 public class SomeType {
 }
 ");
-			var type = result["SomeType"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("Renamed"));
+
+			var type = FindType(result, "SomeType", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("Renamed"));
 		}
 
 		[Test]
@@ -133,8 +144,10 @@ public class SomeType {
 public class SomeType<T1, T2> {
 }
 ");
-			var type = result["SomeType`2"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("SomeType$2"));
+
+			var type = FindType(result, "SomeType`2", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("SomeType$2"));
 		}
 
 		[Test]
@@ -148,8 +161,10 @@ public class SomeType<T1, T2> {
 public class SomeType<T1, T2> {
 }
 ");
-			var type = result["SomeType`2"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("Renamed"));
+
+			var type = FindType(result, "SomeType`2", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("Renamed"));
 		}
 
 		[Test]
@@ -167,8 +182,10 @@ namespace TestNamespace {
 		}
 	}
 }");
-			var type = result["TestNamespace.Outer`2+Inner`1+SomeType`2"];
-			Assert.That(md.GetTypeName(type), Is.EqualTo("TestNamespace.Outer$2$Inner$1$SomeType$2"));
+
+			var type = FindType(result, "TestNamespace.Outer`2+Inner`1+SomeType`2", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$2$Inner$1$SomeType$2"));
 		}
 
 		[Test]
@@ -184,7 +201,7 @@ internal class C7 { public class C8 { public class C9 {} } }
 public class C10 { private class C11 {} protected class C12 {} protected internal class C13 {} }
 ");
 
-			var names = new[] { "C1", "C2", "C3", "C4", "C4+C5", "C4+C5+C6", "C7", "C7+C8", "C7+C8+C9", "C10+C11", "C10+C12", "C10+C13" }.ToDictionary(s => s, s => md.GetTypeName(result[s]));
+			var names = new[] { "C1", "C2", "C3", "C4", "C4+C5", "C4+C5+C6", "C7", "C7+C8", "C7+C8+C9", "C10+C11", "C10+C12", "C10+C13" }.ToDictionary(s => s, s => FindType(result, s, md).Name);
 
 			Assert.That(names["C1"], Is.StringMatching("^\\$[0-9]+$"));
 			Assert.That(names["C2"], Is.StringMatching("^\\$[0-9]+$"));
@@ -218,9 +235,9 @@ namespace X.Y {
 	class C8 { class C9 {} }
 }");
 
-			Assert.That(new[] { "C1", "C2", "C2+C3" }.Select(s => md.GetTypeName(result[s])).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
-			Assert.That(new[] { "X.C4", "X.C5", "X.C5+C6" }.Select(s => md.GetTypeName(result[s])).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
-			Assert.That(new[] { "X.Y.C7", "X.Y.C8", "X.Y.C8+C9" }.Select(s => md.GetTypeName(result[s])).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
+			Assert.That(new[] { "C1", "C2", "C2+C3" }.Select(s => FindType(result, s, md).Name).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
+			Assert.That(new[] { "X.C4", "X.C5", "X.C5+C6" }.Select(s => FindType(result, s, md).Name).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
+			Assert.That(new[] { "X.Y.C7", "X.Y.C8", "X.Y.C8+C9" }.Select(s => FindType(result, s, md).Name).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
 		}
 
 		[Test]
@@ -243,11 +260,11 @@ namespace X {
 	}
 }");
 
-			Assert.That(md.GetTypeName(result["C1"]), Is.EqualTo("Renamed1"));
-			Assert.That(md.GetTypeName(result["X.C2"]), Is.EqualTo("X.Renamed2"));
-			Assert.That(md.GetTypeName(result["X.C2+C3"]), Is.EqualTo("X.Renamed3"));
-			Assert.That(md.GetTypeName(result["X.C4"]), Is.EqualTo("X.$0"));
-			Assert.That(md.GetTypeName(result["X.C4+C5"]), Is.EqualTo("X.Renamed5"));
+			Assert.That(FindType(result, "C1", md), Is.EqualTo("Renamed1"));
+			Assert.That(FindType(result, "X.C2", md), Is.EqualTo("X.Renamed2"));
+			Assert.That(FindType(result, "X.C2+C3", md), Is.EqualTo("X.Renamed3"));
+			Assert.That(FindType(result, "X.C4", md), Is.EqualTo("X.$0"));
+			Assert.That(FindType(result, "X.C4+C5", md), Is.EqualTo("X.Renamed5"));
 		}
 
 		[Test]
@@ -256,7 +273,9 @@ namespace X {
 
 			var result = Process(md, "internal class C1 {}");
 
-			Assert.That(md.GetTypeName(result["C1"]), Is.EqualTo("C1"));
+			var type = FindType(result, "C1", md);
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("C1"));
 		}
 
 		[Test]
@@ -271,8 +290,13 @@ namespace X {
 	class C2 {}
 }");
 
-			Assert.That(md.GetTypeName(result["C1"]), Is.EqualTo("Some.Namespace.C1"));
-			Assert.That(md.GetTypeName(result["X.C2"]), Is.EqualTo("OtherNamespace.C2"));
+			var t1 = FindType(result, "C1", md);
+			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t1.Name, Is.EqualTo("Some.Namespace.C1"));
+
+			var t2 = FindType(result, "X.C2", md);
+			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t2.Name, Is.EqualTo("OtherNamespace.C2"));
 		}
 
 		[Test]
@@ -287,8 +311,13 @@ namespace X {
 	public class C2 {}
 }");
 
-			Assert.That(md.GetTypeName(result["C1"]), Is.EqualTo("C1"));
-			Assert.That(md.GetTypeName(result["X.C2"]), Is.EqualTo("C2"));
+			var t1 = FindType(result, "C1", md);
+			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+
+			var t2 = FindType(result, "X.C2", md);
+			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t2.Name, Is.EqualTo("C2"));
 		}
 
 		[Test]
@@ -303,8 +332,13 @@ namespace X {
 	public class C2 {}
 }");
 
-			Assert.That(md.GetTypeName(result["C1"]), Is.EqualTo("C1"));
-			Assert.That(md.GetTypeName(result["X.C2"]), Is.EqualTo("C2"));
+			var t1 = FindType(result, "C1", md);
+			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+
+			var t2 = FindType(result, "X.C2", md);
+			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t2.Name, Is.EqualTo("C2"));
 		}
 
 		[Test]
@@ -415,9 +449,9 @@ namespace X.Y {
 	[ScriptNamespace(""X"")] class C9 {}
 }");
 
-			Assert.That(new[] { "C1", "X.C4", "X.Y.C7" }.Select(s => md.GetTypeName(result[s])).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
-			Assert.That(new[] { "C2", "X.C5", "X.Y.C9" }.Select(s => md.GetTypeName(result[s])).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
-			Assert.That(new[] { "C3", "X.C6", "X.Y.C8" }.Select(s => md.GetTypeName(result[s])).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
+			Assert.That(new[] { "C1", "X.C4", "X.Y.C7" }.Select(s => FindType(result, s, md).Name).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
+			Assert.That(new[] { "C2", "X.C5", "X.Y.C9" }.Select(s => FindType(result, s, md).Name).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
+			Assert.That(new[] { "C3", "X.C6", "X.Y.C8" }.Select(s => FindType(result, s, md).Name).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
 		}
 
 		[Test]
@@ -434,20 +468,20 @@ namespace X.Y {
 [PreserveName] public class C10 { [PreserveName] private class C11 {} [PreserveName] protected class C12 {} [PreserveName] protected internal class C13 {} }
 ");
 
-			var names = new[] { "C1", "C2", "C3", "C4", "C4+C5", "C4+C5+C6", "C7", "C7+C8", "C7+C8+C9", "C10+C11", "C10+C12", "C10+C13" }.ToDictionary(s => s, s => md.GetTypeName(result[s]));
+			var names = new[] { "C1", "C2", "C3", "C4", "C4+C5", "C4+C5+C6", "C7", "C7+C8", "C7+C8+C9", "C10+C11", "C10+C12", "C10+C13" }.ToDictionary(s => s, s => FindType(result, s, md).Name);
 
-			Assert.That(md.GetTypeName(result["C1"]), Is.EqualTo("C1"));
-			Assert.That(md.GetTypeName(result["C2"]), Is.EqualTo("C2"));
-			Assert.That(md.GetTypeName(result["C3"]), Is.EqualTo("C3"));
-			Assert.That(md.GetTypeName(result["C4"]), Is.EqualTo("C4"));
-			Assert.That(md.GetTypeName(result["C4+C5"]), Is.EqualTo("C4$C5"));
-			Assert.That(md.GetTypeName(result["C4+C5+C6"]), Is.EqualTo("C4$C5$C6"));
-			Assert.That(md.GetTypeName(result["C7"]), Is.EqualTo("C7"));
-			Assert.That(md.GetTypeName(result["C7+C8"]), Is.EqualTo("C7$C8"));
-			Assert.That(md.GetTypeName(result["C7+C8+C9"]), Is.EqualTo("C7$C8$C9"));
-			Assert.That(md.GetTypeName(result["C10+C11"]), Is.EqualTo("C10$C11"));
-			Assert.That(md.GetTypeName(result["C10+C12"]), Is.EqualTo("C10$C12"));
-			Assert.That(md.GetTypeName(result["C10+C13"]), Is.EqualTo("C10$C13"));
+			Assert.That(names["C1"], Is.EqualTo("C1"));
+			Assert.That(names["C2"], Is.EqualTo("C2"));
+			Assert.That(names["C3"], Is.EqualTo("C3"));
+			Assert.That(names["C4"], Is.EqualTo("C4"));
+			Assert.That(names["C4+C5"], Is.EqualTo("C4$C5"));
+			Assert.That(names["C4+C5+C6"], Is.EqualTo("C4$C5$C6"));
+			Assert.That(names["C7"], Is.EqualTo("C7"));
+			Assert.That(names["C7+C8"], Is.EqualTo("C7$C8"));
+			Assert.That(names["C7+C8+C9"], Is.EqualTo("C7$C8$C9"));
+			Assert.That(names["C10+C11"], Is.EqualTo("C10$C11"));
+			Assert.That(names["C10+C12"], Is.EqualTo("C10$C12"));
+			Assert.That(names["C10+C13"], Is.EqualTo("C10$C13"));
 		}
 
 		[Test]

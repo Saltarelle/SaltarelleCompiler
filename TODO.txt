@@ -12,6 +12,7 @@ Const fields
 User-defined conversions (probably needed for the runtime library to work as intended).
 Improve error handling (error numbers, error positions)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/user-defined operators).
+Verify that all directly or indirectly dependent assemblies are referenced.
 
 v2:
 yield

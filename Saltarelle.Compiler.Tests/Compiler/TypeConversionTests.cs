@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using FluentAssertions;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.Compiler {
     [TestFixture]
@@ -199,7 +200,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 
         [Test]
         public void NamingConventionIsCorrectlyApplied() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeName = def => "$" + def.Name, GetTypeParameterName = def => "$$" + def.Name };
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = def => TypeScriptSemantics.NormalType("$" + def.Name), GetTypeParameterName = def => "$$" + def.Name };
             Compile(new[] { @"using System.Collections.Generic;
                               class Test<T> : List<T>, IEnumerable<string>, IList<float> { }" }, namingConvention: namingConvention);
             var cls = FindClass("$Test");
@@ -357,16 +358,31 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C13").IsPublic.Should().BeTrue();*/
         }
 
-        [Test]
-        public void ClassesForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeName = type => type.Name == "C2" ? null : type.Name };
+        [Test, Ignore("TODO")]
+        public void ImportedClassesAndTheirNestedClassesAreNotInTheOutput() {
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.Imported(type.Name) : TypeScriptSemantics.NormalType(null) };
+            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
+            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
+        }
+
+        [Test, Ignore("TODO")]
+        public void ClassesThatAreNotUsableFromScriptAndTheirNestedClassesAreNotInTheOutput() {
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(null) };
             Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
         }
 
         [Test]
-        public void EnumsForWhichTheNamingConventionReturnsNulllAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeName = type => type.Name == "C2" ? null : type.Name };
+        public void ImportedEnumsAreNotInTheOutput() {
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.Imported(type.Name) : TypeScriptSemantics.NormalType(type.Name) };
+            Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
+            CompiledTypes.Should().HaveCount(1);
+            CompiledTypes[0].Name.Should().Be("C1");
+        }
+
+        [Test]
+        public void EnumsThatAreNotUsableFromScriptAreNotInTheOutput() {
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(type.Name) };
             Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.Should().Be("C1");

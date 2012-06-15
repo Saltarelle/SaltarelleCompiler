@@ -9,13 +9,18 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
     public interface INamingConventionResolver {
-		bool Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
+		/// <summary>
+		/// Prepare to handle the specified types.
+		/// </summary>
+		/// <param name="allTypes">All types in the compilation.</param>
+		/// <param name="mainAssembly">Main assembly for the compilation.</param>
+		/// <param name="errorReporter">Error reporter to use to report errors.</param>
+		void Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
 
 		/// <summary>
         /// Returns the name of a type as it should appear in the script. If null is included the class, and any nested class, will not appear in the output.
         /// </summary>
-        [Obsolete("Must create a TypeScriptSemantics type for this. Properties should include GenerateCode, IsGlobal, etc.")]
-        string GetTypeName(ITypeDefinition typeDefinition);
+        TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition);
 
         string GetTypeParameterName(ITypeParameter typeParameter);
 

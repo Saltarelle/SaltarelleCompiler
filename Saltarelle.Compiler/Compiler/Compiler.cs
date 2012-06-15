@@ -75,13 +75,13 @@ namespace Saltarelle.Compiler.Compiler {
         private JsClass GetJsClass(ITypeDefinition typeDefinition) {
             JsClass result;
             if (!_types.TryGetValue(typeDefinition, out result)) {
-                var name = _namingConvention.GetTypeName(typeDefinition);
-                if (name != null) {
+                var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
+                if (semantics.Type == TypeScriptSemantics.ImplType.NormalType) {
                     var baseTypes    = typeDefinition.GetAllBaseTypes().ToList();
                     var baseClass    = typeDefinition.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
                     var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
                     var typeArgNames = typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
-                    result = new JsClass(name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
+                    result = new JsClass(semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
                 }
                 else {
                     result = null;
@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private JsEnum ConvertEnum(ITypeDefinition type) {
-            var name = _namingConvention.GetTypeName(type);
+            var semantics = _namingConvention.GetTypeSemantics(type);
             var values = new List<JsEnumValue>();
             foreach (var f in type.Fields) {
                 if (f.ConstantValue != null) {
@@ -118,7 +118,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
             }
 
-            return name != null ? new JsEnum(name, values) : null;
+            return semantics.Type == TypeScriptSemantics.ImplType.NormalType ? new JsEnum(semantics.Name, values) : null;
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {
