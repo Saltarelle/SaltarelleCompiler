@@ -92,7 +92,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{C}.$MyProperty = 0;" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("$InstantiateGenericType({C}, $T).$MyProperty = 0;" + Environment.NewLine));
 		}
 	}
 }

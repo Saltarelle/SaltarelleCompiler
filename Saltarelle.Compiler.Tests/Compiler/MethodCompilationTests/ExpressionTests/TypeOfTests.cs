@@ -27,7 +27,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = {X};
+@"	var $x = {C$X};
 ");
 		}
 
@@ -42,7 +42,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $InstantiateGenericType({X}, {C}, {D});
+@"	var $x = $InstantiateGenericType({C$X}, {C}, {C$D});
 ");
 		}
 
@@ -57,7 +57,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $InstantiateGenericType({X}, $InstantiateGenericType({X}, {C}, {D}), $InstantiateGenericType({X}, {D}, {C}));
+@"	var $x = $InstantiateGenericType({C$X}, $InstantiateGenericType({C$X}, {C}, {C$D}), $InstantiateGenericType({C$X}, {C$D}, {C}));
 ");
 		}
 
@@ -123,7 +123,7 @@ class Y : X<C> {
 	}
 }
 ",
-@"	var $x = $InstantiateGenericType({X2}, {C}, {D});
+@"	var $x = $InstantiateGenericType({C$X$X2}, {C}, {C$D});
 ");
 		}
 	}

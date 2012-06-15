@@ -6,11 +6,13 @@ using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
     public class JsTypeReferenceExpression : JsExpression {
-        public ITypeDefinition TypeDefinition { get; set; }
+        public IAssembly Assembly { get; private set; }
+		public string TypeName { get; private set; }
 
-        public JsTypeReferenceExpression(ITypeDefinition typeDefinition) : base(ExpressionNodeType.TypeReference) {
-            Require.NotNull(typeDefinition, "typeDefinition");
-            TypeDefinition = typeDefinition;
+        public JsTypeReferenceExpression(IAssembly assembly, string typeName) : base(ExpressionNodeType.TypeReference) {
+            Require.ValidJavaScriptNestedIdentifier(typeName, "typeName");
+			Assembly = assembly;
+			TypeName = typeName;
         }
 
         [System.Diagnostics.DebuggerStepThrough]

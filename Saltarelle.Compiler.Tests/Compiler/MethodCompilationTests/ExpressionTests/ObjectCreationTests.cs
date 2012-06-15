@@ -16,7 +16,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new {X}();
+@"	var $c = new {C$X}();
 ");
 		}
 
@@ -32,7 +32,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new {X}($a, $b, $c);
+@"	var $t = new {C$X}($a, $b, $c);
 ");
 		}
 
@@ -56,7 +56,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new {X}(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new {C$X}(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ");
 		}
 
@@ -70,7 +70,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new ({X}.$ctor2)();
+@"	var $c = new ({C$X}.$ctor2)();
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -86,7 +86,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new ({X}.$ctor2)($a, $b, $c);
+@"	var $t = new ({C$X}.$ctor2)($a, $b, $c);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -110,7 +110,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new ({X}.$ctor2)(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new ({C$X}.$ctor2)(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -124,7 +124,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = {X}.create_X();
+@"	var $c = {C$X}.create_X();
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
@@ -140,7 +140,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = {X}.create_X($a, $b, $c);
+@"	var $t = {C$X}.create_X($a, $b, $c);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
@@ -164,7 +164,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = {X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = {C$X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -219,44 +219,44 @@ public void M() {
 		[Test]
 		public void CanUseObjectInitializers() {
 			AssertCorrect(
-@"class C { public int x; public int P { get; set; } }
+@"class X { public int x; public int P { get; set; } }
 public void M() {
 	int i = 0, j = 0;
 	// BEGIN
-	var c = new C { x = i, P = j };
+	var x = new X { x = i, P = j };
 	// END
 }",
-@"	var $tmp1 = new {C}();
+@"	var $tmp1 = new {C$X}();
 	$tmp1.$x = $i;
 	$tmp1.set_$P($j);
-	var $c = $tmp1;
+	var $x = $tmp1;
 ");
 		}
 
 		[Test]
 		public void CanUseCollectionInitializers1() {
 			AssertCorrect(
-@"class C : System.Collections.IEnumerable {
+@"class X : System.Collections.IEnumerable {
 	public void Add(int a) {}
 	public IEnumerator GetEnumerator() { return null; }
 }
 public void M() {
 	int i = 0, j = 0;
 	// BEGIN
-	var c = new C { i, j };
+	var x = new X { i, j };
 	// END
 }",
-@"	var $tmp1 = new {C}();
+@"	var $tmp1 = new {C$X}();
 	$tmp1.$Add($i);
 	$tmp1.$Add($j);
-	var $c = $tmp1;
+	var $x = $tmp1;
 ");
 		}
 
 		[Test]
 		public void CanUseCollectionInitializers2() {
 			AssertCorrect(
-@"class C : System.Collections.IEnumerable {
+@"class X : System.Collections.IEnumerable {
 	public void Add(int a, string b) {}
 	public IEnumerator GetEnumerator() { return null; }
 }
@@ -264,13 +264,13 @@ public void M() {
 	int i = 0, j = 0;
 	string s = null, t = null;
 	// BEGIN
-	var c = new C { { i, s }, { j, t } };
+	var x = new X { { i, s }, { j, t } };
 	// END
 }",
-@"	var $tmp1 = new {C}();
+@"	var $tmp1 = new {C$X}();
 	$tmp1.$Add($i, $s);
 	$tmp1.$Add($j, $t);
-	var $c = $tmp1;
+	var $x = $tmp1;
 ");
 		}
 

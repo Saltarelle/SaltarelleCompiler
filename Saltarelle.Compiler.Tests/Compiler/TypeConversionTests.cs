@@ -205,7 +205,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                               class Test<T> : List<T>, IEnumerable<string>, IList<float> { }" }, namingConvention: namingConvention);
             var cls = FindClass("$Test");
             cls.TypeArgumentNames.Should().Equal(new[] { "$$T" });
-            Stringify(cls.BaseClass).Should().Be("$InstantiateGenericType({List}, $$T)");
+            Stringify(cls.BaseClass).Should().Be("$InstantiateGenericType({$List}, $$T)");
         }
 
         [Test]

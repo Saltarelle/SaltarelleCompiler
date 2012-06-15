@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -16,7 +17,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
 
         public enum ClassTypeEnum { Struct, Class, Interface }
 
-        public ClassTypeEnum ClassType { get; private set; }
+        public ITypeDefinition CSharpTypeDefinition { get; private set; }
+		public ClassTypeEnum ClassType { get; private set; }
         public JsExpression BaseClass { get; private set; }
         public IList<string> TypeArgumentNames { get; private set; }
         public IList<JsExpression> ImplementedInterfaces { get; private set; }
@@ -36,7 +38,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             }
         }
 
-        public JsClass(string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(name) {
+        public JsClass(ITypeDefinition csharpTypeDefinition, string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(name) {
+			CSharpTypeDefinition  = csharpTypeDefinition;
             BaseClass             = baseClass;
             ClassType             = classType;
             TypeArgumentNames     = new List<string>(typeArgumentNames ?? new string[0]);

@@ -794,7 +794,7 @@ public void M() {
 	D d = (D)b;
 	// END
 }",
-@"	var $d = $Cast($b, {D});
+@"	var $d = $Cast($b, {C$D});
 ");
 		}
 
@@ -838,8 +838,8 @@ public void M() {
 	B b2 = (B)d;
 	// END
 }",
-@"	var $b1 = $Upcast($d, {B});
-	var $b2 = $Upcast($d, {B});
+@"	var $b1 = $Upcast($d, {C$B});
+	var $b2 = $Upcast($d, {C$B});
 ");
 		}
 
@@ -862,28 +862,28 @@ public void M() {
 		[Test]
 		public void CastingInterfaceToUnrelatedTypeWorks() {
 			AssertCorrect(
-@"public class C : System.Collections.Generic.IEnumerable<object> {}
+@"public class D : System.Collections.Generic.IEnumerable<object> {}
 public void M() {
 	System.Collections.Generic.IEnumerable<object> i = null;
 	// BEGIN
-	C c = (C)i;
+	D d = (D)i;
 	// END
 }",
-@"	var $c = $Cast($i, {C});
+@"	var $d = $Cast($i, {C$D});
 ");
 		}
 
 		[Test]
 		public void CastingInterfaceToTypeThatImplementsTheInterfaceWorks() {
 			AssertCorrect(
-@"public class C {}
+@"public class D {}
 public void M() {
 	System.Collections.Generic.IEnumerable<object> i = null;
 	// BEGIN
-	C c = (C)i;
+	D d = (D)i;
 	// END
 }",
-@"	var $c = $Cast($i, {C});
+@"	var $d = $Cast($i, {C$D});
 ");
 		}
 
@@ -909,15 +909,15 @@ public void M() {
 		[Test]
 		public void CastingFromObjectWorks() {
 			AssertCorrect(
-@"public class C {}
+@"public class D {}
 public void M() {
 	object o;
 	// BEGIN
-	C c = (C)o;
+	D d = (D)o;
 	object[] arr = (object[])o;
 	// END
 }",
-@"	var $c = $Cast($o, {C});
+@"	var $d = $Cast($o, {C$D});
 	var $arr = $Cast($o, $Array({Object}));
 ");
 		}
@@ -989,21 +989,21 @@ public void M() {
 		[Test]
 		public void ConvertingSystemArrayToArrayTypeIsADowncast() {
 			AssertCorrect(
-@"public class C {}
+@"public class D {}
 public void M() {
 	Array a = null;
 	// BEGIN
-	C[] c = (C[])a;
+	D[] d = (D[])a;
 	// END
 }",
-@"	var $c = $Cast($a, $Array({C}));
+@"	var $d = $Cast($a, $Array({C$D}));
 ");
 		}
 
 		[Test]
 		public void GenericVarianceConversionIsAnUpcast() {
 			AssertCorrect(
-@"class C {}
+@"class D {}
 public void M() {
 	System.Collections.Generic.IEnumerable<C> c1 = null;
 	System.Collections.Generic.List<C> c2 = null;
@@ -1160,10 +1160,10 @@ public void M() {
 	System.Collections.Generic.IList<D> l4 = (System.Collections.Generic.IList<D>)src;
 	// END
 }",
-@"	var $l1 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
-	var $l2 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
-	var $l3 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
-	var $l4 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
+@"	var $l1 = $Upcast($src, $InstantiateGenericType({IList}, {C$B}));
+	var $l2 = $Upcast($src, $InstantiateGenericType({IList}, {C$B}));
+	var $l3 = $Upcast($src, $InstantiateGenericType({IList}, {C$D}));
+	var $l4 = $Upcast($src, $InstantiateGenericType({IList}, {C$D}));
 ");
 		}
 
@@ -1179,7 +1179,7 @@ public void M() {
 	System.Collections.Generic.IList<D> l = (System.Collections.Generic.IList<D>)src;
 	// END
 }",
-@"	var $l = $Cast($src, $InstantiateGenericType({IList}, {D}));
+@"	var $l = $Cast($src, $InstantiateGenericType({IList}, {C$D}));
 ");
 		}
 
@@ -1210,7 +1210,7 @@ public void M() {
 	Func<D, B> f2 = f;
 	// END
 }",
-@"	var $f2 = $Upcast($f, $InstantiateGenericType({Func}, {D}, {B}));
+@"	var $f2 = $Upcast($f, $InstantiateGenericType({Func}, {C$D}, {C$B}));
 ");
 		}
 
@@ -1231,47 +1231,47 @@ public void M() {
 		[Test]
 		public void TypeParameterCanBeConvertedToConcreteBaseType() {
 			AssertCorrect(
-@"public class C {}
+@"public class D {}
 public interface I {}
-public void M<T>() where T : C, I {
+public void M<T>() where T : D, I {
 	T t = default(T);
 	// BEGIN
 	object o1 = (object)t;
 	object o2 = t;
-	C c1 = (C)t;
-	C c2 = t;
+	D d1 = (D)t;
+	D d2 = t;
 	I i1 = (I)t;
 	I i2 = t;
 	// END
 }",
 @"	var $o1 = $Upcast($t, {Object});
 	var $o2 = $Upcast($t, {Object});
-	var $c1 = $Upcast($t, {C});
-	var $c2 = $Upcast($t, {C});
-	var $i1 = $Upcast($t, {I});
-	var $i2 = $Upcast($t, {I});
+	var $d1 = $Upcast($t, {C$D});
+	var $d2 = $Upcast($t, {C$D});
+	var $i1 = $Upcast($t, {C$I});
+	var $i2 = $Upcast($t, {C$I});
 ");
 
 			AssertCorrect(
-@"public class C {}
+@"public class D {}
 public interface I {}
-public void M<T>() where T : class, C, I {
+public void M<T>() where T : class, D, I {
 	T t = default(T);
 	// BEGIN
 	object o1 = (object)t;
 	object o2 = t;
-	C c1 = (C)t;
-	C c2 = t;
+	D d1 = (D)t;
+	D d2 = t;
 	I i1 = (I)t;
 	I i2 = t;
 	// END
 }",
 @"	var $o1 = $Upcast($t, {Object});
 	var $o2 = $Upcast($t, {Object});
-	var $c1 = $Upcast($t, {C});
-	var $c2 = $Upcast($t, {C});
-	var $i1 = $Upcast($t, {I});
-	var $i2 = $Upcast($t, {I});
+	var $d1 = $Upcast($t, {C$D});
+	var $d2 = $Upcast($t, {C$D});
+	var $i1 = $Upcast($t, {C$I});
+	var $i2 = $Upcast($t, {C$I});
 ");
 		}
 
@@ -1376,7 +1376,7 @@ public void M<T>() {
 	I i = (I)t;
 	// END
 }",
-@"	var $i = $Cast($t, {I});
+@"	var $i = $Cast($t, {C$I});
 ");
 
 			AssertCorrect(
@@ -1387,7 +1387,7 @@ public void M<T>() where T : class {
 	I i = (I)t;
 	// END
 }",
-@"	var $i = $Cast($t, {I});
+@"	var $i = $Cast($t, {C$I});
 ");
 		}
 

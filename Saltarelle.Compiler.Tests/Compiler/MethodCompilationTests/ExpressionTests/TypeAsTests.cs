@@ -16,7 +16,7 @@ void M() {
 	// END
 }
 ",
-@"	var $r = $TryCast($o, $InstantiateGenericType({X}, {Int32}));
+@"	var $r = $TryCast($o, $InstantiateGenericType({C$X}, {Int32}));
 ");
 		}
 
@@ -99,7 +99,7 @@ public void M<T>() {
 	I i = t as I;
 	// END
 }",
-@"	var $i = $TryCast($t, {I});
+@"	var $i = $TryCast($t, {C$I});
 ");
 
 			AssertCorrect(
@@ -110,7 +110,7 @@ public void M<T>() where T : class {
 	I i = t as I;
 	// END
 }",
-@"	var $i = $TryCast($t, {I});
+@"	var $i = $TryCast($t, {C$I});
 ");
 		}
 

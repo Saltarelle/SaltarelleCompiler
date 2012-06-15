@@ -412,7 +412,7 @@ public void M() {
 	FX().F(a, b, c);
 	// END
 }",
-@"	$InstantiateGenericType({X}, {Int32}).$F(this.$FX(), $a, $b, $c);
+@"	$InstantiateGenericType({C$X}, {Int32}).$F(this.$FX(), $a, $b, $c);
 ", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 

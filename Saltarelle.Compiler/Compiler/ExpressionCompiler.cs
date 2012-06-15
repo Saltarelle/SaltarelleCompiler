@@ -304,8 +304,8 @@ namespace Saltarelle.Compiler.Compiler {
 			    && Equals(GetNonNullableType(type), _compilation.FindType(KnownTypeCode.Boolean));
 		}
 
-		private JsExpression GetJsType(IType type) {
-			return _runtimeLibrary.GetScriptType(type, _namingConvention.GetTypeParameterName);
+		private JsExpression GetJsType(IType type, bool returnOpenType = false) {
+			return _runtimeLibrary.GetScriptType(type, returnOpenType, _namingConvention);
 		}
 
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
@@ -536,7 +536,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(combine);
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0], false), returnValueIsImportant, false);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { GetJsType(del), a, b }, new IType[0], false), returnValueIsImportant, false);
 					}
 					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, rr.IsLiftedOperator);
@@ -588,7 +588,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(remove);
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0], false), returnValueIsImportant, false);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { GetJsType(del), a, b }, new IType[0], false), returnValueIsImportant, false);
 					}
 					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, rr.IsLiftedOperator);
@@ -614,7 +614,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(combine);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0], false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { GetJsType(del), a, b }, new IType[0], false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
@@ -689,7 +689,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(remove);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { new JsTypeReferenceExpression(del), a, b }, new IType[0], false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { GetJsType(del), a, b }, new IType[0], false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
@@ -904,7 +904,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, IList<IType> typeArguments, bool isNonVirtualInvocationOfVirtualMethod) {
-			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(GetJsType).ToList() : new List<JsExpression>());
+			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => GetJsType(a, false)).ToList() : new List<JsExpression>());
 
 			if (impl == null) {
 				return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));	// Used for delegate invocations.
@@ -1215,10 +1215,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
-			if (rr.ReferencedType.TypeParameterCount > 0 && !(rr.ReferencedType is ParameterizedType))
-				return new JsTypeReferenceExpression(rr.ReferencedType.GetDefinition());	// This handles open generic types ( typeof(C<,>) )
-			else
-				return GetJsType(rr.ReferencedType);
+			return GetJsType(rr.ReferencedType, returnOpenType: true);
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
@@ -1338,7 +1335,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Number(0);
 				}
 
-				var jsTypeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(GetJsType).ToList() : new List<JsExpression>();
+				var jsTypeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(a => GetJsType(a, false)).ToList() : new List<JsExpression>();
 
 				if (rr.Conversion.Method.IsVirtual && !rr.Conversion.IsVirtualMethodLookup) {
 					// base.Method

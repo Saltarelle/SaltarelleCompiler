@@ -61,8 +61,8 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-        private JsExpression ConvertPotentiallyGenericType(IType type) {
-			return _runtimeLibrary.GetScriptType(type, _namingConvention.GetTypeParameterName);
+        private JsExpression GetJsType(IType type) {
+			return _runtimeLibrary.GetScriptType(type, false, _namingConvention);
         }
 
         private JsClass GetJsClass(ITypeDefinition typeDefinition) {
@@ -71,10 +71,10 @@ namespace Saltarelle.Compiler.Compiler {
                 var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
                     var baseTypes    = typeDefinition.GetAllBaseTypes().ToList();
-                    var baseClass    = typeDefinition.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
-                    var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
+                    var baseClass    = typeDefinition.Kind != TypeKind.Interface ? GetJsType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
+                    var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(GetJsType).ToList();
                     var typeArgNames = typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
-                    result = new JsClass(semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
+                    result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
                 }
                 else {
                     result = null;
@@ -258,7 +258,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IType fieldType, ITypeDefinition owningType, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), fieldType));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(GetJsType(owningType), fieldName), fieldType));
             }
             else {
                 AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
@@ -267,7 +267,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(new JsTypeReferenceExpression(owningType), fieldName), initializer));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(GetJsType(owningType), fieldName), initializer));
             }
             else {
                 AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
