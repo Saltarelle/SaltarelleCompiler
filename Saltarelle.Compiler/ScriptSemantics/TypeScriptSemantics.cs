@@ -12,11 +12,6 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             NormalType,
 
             /// <summary>
-            /// This type is imported. All members can be used, but no code will be generated.
-            /// </summary>
-            Imported,
-
-            /// <summary>
             /// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
             /// However, its members might still be used (but care must be taken to specify attributes on the members to ensure that they work even when the type does not exist.
             /// </summary>
@@ -37,7 +32,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public string Name {
 			get {
-				if (Type != ImplType.NormalType && Type != ImplType.Imported)
+				if (Type != ImplType.NormalType)
 					throw new InvalidOperationException();
 				return _name;
 			}
@@ -50,23 +45,24 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool IgnoreGenericArguments {
 			get {
-				if (Type != ImplType.NormalType && Type != ImplType.Imported)
+				if (Type != ImplType.NormalType)
 					throw new InvalidOperationException();
 				return _ignoreGenericArguments;
 			}
 			private set { _ignoreGenericArguments = value; }
 		}
 
-		public static TypeScriptSemantics NormalType(string name, bool ignoreGenericArguments = false) {
-			return new TypeScriptSemantics { Type = ImplType.NormalType, Name = name, IgnoreGenericArguments = ignoreGenericArguments };
-		}
+		/// <summary>
+		/// Whether code should be generated for the type
+		/// </summary>
+		public bool GenerateCode { get; set; }
 
-		public static TypeScriptSemantics Imported(string name, bool ignoreGenericArguments = false) {
-			return new TypeScriptSemantics { Type = ImplType.Imported, Name = name, IgnoreGenericArguments = ignoreGenericArguments };
+		public static TypeScriptSemantics NormalType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+			return new TypeScriptSemantics { Type = ImplType.NormalType, Name = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
 		}
 
 		public static TypeScriptSemantics NotUsableFromScript() {
-			return new TypeScriptSemantics { Type = ImplType.NotUsableFromScript };
+			return new TypeScriptSemantics { Type = ImplType.NotUsableFromScript, GenerateCode = false };
 		}
 	}
 }

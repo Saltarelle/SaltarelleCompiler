@@ -25,10 +25,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NonScriptable] (Method | Property | Field | Event)
 	// [IntrinsicProperty] (Property (/indexer))
 	// [GlobalMethods] (Class)
+	// [Imported] (Type)
 
 	// To handle:
 	// [NonScriptable] (Type | Constructor)
-	// [Imported] (Type | Struct)
 	// [ScriptAssembly] (Assembly) ?
 	// [ScriptQualifier] (Assembly)
 	// [ScriptNamespaceAttribute] (Assembly)
@@ -55,6 +55,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string PreserveCaseAttribute = "PreserveCaseAttribute";
 		private const string IntrinsicPropertyAttribute = "IntrinsicPropertyAttribute";
 		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
+		private const string ImportedAttribute = "ImportedAttribute";
 
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
@@ -246,6 +247,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
+			bool isImported = GetAttributePositionalArgs(typeDefinition, ImportedAttribute) != null;
+			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
+
 			string typeName, nmspace;
 			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
 				typeName = (string)scriptNameAttr[0];
@@ -256,7 +260,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_errors[typeDefinition.FullName + ":Name"] = typeDefinition.FullName + ": The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.";
 				}
 
-				if (_minimizeNames && !IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) == null) {
+				if (_minimizeNames && !IsPublic(typeDefinition) && !preserveName) {
 					nmspace = DetermineNamespace(typeDefinition);
 					int index = _typeSemantics.Values.Where(ts => ts.Semantics.Type == TypeScriptSemantics.ImplType.NormalType).Select(ts => SplitName(ts.Semantics.Name)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
@@ -275,7 +279,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						nmspace = DetermineNamespace(typeDefinition);
 					}
 
-					if (!IsPublic(typeDefinition) && GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) == null && !typeName.StartsWith("$")) {
+					if (!IsPublic(typeDefinition) && !preserveName && !typeName.StartsWith("$")) {
 						typeName = "$" + typeName;
 					}
 				}
@@ -299,7 +303,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName), globalMethods);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, generateCode: !isImported), globalMethods);
 		}
 
 		private bool IsPublic(ITypeDefinition type) {

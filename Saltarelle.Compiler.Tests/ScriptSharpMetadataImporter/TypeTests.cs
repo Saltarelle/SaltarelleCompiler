@@ -132,6 +132,7 @@ public class SomeType<T1, T2> {
 			var type = FindType("SomeType`2");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("SomeType$2"));
+			Assert.That(type.IgnoreGenericArguments, Is.False);
 		}
 
 		[Test]
@@ -147,6 +148,7 @@ public class SomeType<T1, T2> {
 			var type = FindType("SomeType`2");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("Renamed"));
+			Assert.That(type.IgnoreGenericArguments, Is.False);
 		}
 
 		[Test]
@@ -166,6 +168,7 @@ namespace TestNamespace {
 			var type = FindType("TestNamespace.Outer`2+Inner`1+SomeType`2");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$2$Inner$1$SomeType$2"));
+			Assert.That(type.IgnoreGenericArguments, Is.False);
 		}
 
 		[Test]
@@ -524,6 +527,31 @@ static class C1 {
 			Prepare(@"using System.Runtime.CompilerServices; static class C1 { [GlobalMethods] static class C2 {} }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Contains("C1.C2") && AllErrors[0].Contains("GlobalMethodsAttribute") && AllErrors[0].Contains("nested"));
+		}
+
+		[Test]
+		public void ImportedAttributeCausesCodeNotToBeGeneratedForATypeAndActsAsPreserveName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+class C1 {
+}");
+
+			var t = FindType("C1");
+			Assert.That(t.Type == TypeScriptSemantics.ImplType.NormalType);
+			Assert.That(t.Name, Is.EqualTo("C1"));
+			Assert.That(t.GenerateCode, Is.False);
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+class C1 {
+}", minimizeNames: false);
+
+			t = FindType("C1");
+			Assert.That(t.Type == TypeScriptSemantics.ImplType.NormalType);
+			Assert.That(t.Name, Is.EqualTo("C1"));
+			Assert.That(t.GenerateCode, Is.False);
 		}
 	}
 }

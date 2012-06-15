@@ -338,51 +338,24 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         }
 
         [Test]
-        public void IsPublicFlagIsCorrectlySetForEnums() {
-            Assert.Inconclusive("TODO: Move");
-/*            Compile(@"enum C1 {}
-                      internal enum C2 {}
-                      public enum C3 {}
-                      public class C4 { internal class C5 { public enum C6 {} } }
-                      internal class C7 { public class C8 { public enum C9 {} } }
-                      public class C10 { private enum C11 {} protected enum C12 {} protected internal enum C13 {} }
-                     ");
-                                 
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C1").IsPublic.Should().BeFalse();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C2").IsPublic.Should().BeFalse();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C3").IsPublic.Should().BeTrue();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C4+C5+C6").IsPublic.Should().BeFalse();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C7+C8+C9").IsPublic.Should().BeFalse();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C11").IsPublic.Should().BeFalse();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C12").IsPublic.Should().BeTrue();
-            CompiledTypes.Single(tp => tp.Name.ToString() == "C10+C13").IsPublic.Should().BeTrue();*/
-        }
-
-        [Test, Ignore("TODO")]
-        public void ImportedClassesAndTheirNestedClassesAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.Imported(type.Name) : TypeScriptSemantics.NormalType(null) };
+        public void ClassesWithGenerateCodeSetToFalseAndTheirNestedClassesAreNotInTheOutput() {
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
             Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
-        }
 
-        [Test, Ignore("TODO")]
-        public void ClassesThatAreNotUsableFromScriptAndTheirNestedClassesAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(null) };
+            namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
         }
 
         [Test]
-        public void ImportedEnumsAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.Imported(type.Name) : TypeScriptSemantics.NormalType(type.Name) };
+        public void EnumsWithGenerateCodeSetToFalseAreNotInTheOutput() {
+            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
             Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.Should().Be("C1");
-        }
 
-        [Test]
-        public void EnumsThatAreNotUsableFromScriptAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name == "C2" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(type.Name) };
+            namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.Should().Be("C1");

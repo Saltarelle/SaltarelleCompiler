@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler.Compiler {
             JsClass result;
             if (!_types.TryGetValue(typeDefinition, out result)) {
                 var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
-                if (semantics.Type == TypeScriptSemantics.ImplType.NormalType) {
+                if (semantics.GenerateCode) {
                     var baseTypes    = typeDefinition.GetAllBaseTypes().ToList();
                     var baseClass    = typeDefinition.Kind != TypeKind.Interface ? ConvertPotentiallyGenericType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
                     var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(ConvertPotentiallyGenericType).ToList();
@@ -118,7 +118,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
             }
 
-            return semantics.Type == TypeScriptSemantics.ImplType.NormalType ? new JsEnum(semantics.Name, values) : null;
+            return semantics.GenerateCode ? new JsEnum(semantics.Name, values) : null;
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {
