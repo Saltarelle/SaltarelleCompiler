@@ -108,5 +108,18 @@ class C1 {
 			var impl = FindField("C1.Field1");
 			Assert.That(impl.Type, Is.EqualTo(FieldScriptSemantics.ImplType.NotUsableFromScript));
 		}
+
+		[Test]
+		public void ScriptNameCannotBeBlank() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName("""")]
+	public int Field;
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C.Field") && m.Contains("ScriptNameAttribute") && m.Contains("field") && m.Contains("cannot be empty")));
+		}
 	}
 }

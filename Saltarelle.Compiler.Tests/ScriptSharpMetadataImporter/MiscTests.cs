@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
@@ -13,7 +14,8 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			Prepare(
 @"class A {
 	public void SomeMethod() {}
-	public static void SomeMethod2() {}
+	public static void SomeStaticMethod() {}
+	public void SomeMethod2() {}
 	private void SomeMethod(int x) {}
 	public virtual void VirtualMethod() {}
 
@@ -24,6 +26,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 	public int Field1;
 	internal int Field2;
+
+	public A() {}
+	public A(int i) {}
+	public A(int i, int j) {}
 
 	public event System.EventHandler Evt1;
 	public virtual event System.EventHandler Evt2;
@@ -40,6 +46,13 @@ class B : A {
 
 	private event System.EventHandler Evt3;
 	public override event System.EventHandler Evt2;
+
+	public static void SomeStaticMethod2() {}
+	public static void SomeStaticMethod3() {}
+
+	public B() {}
+	public B(int i) {}
+	public B(int i, int j) {}
 }
 
 class C : B {
@@ -56,6 +69,12 @@ class C : B {
 
 	public new event System.EventHandler Evt1;
 	public override event System.EventHandler Evt2;
+
+	public static void SomeStaticMethod4() {}
+
+	public C() {}
+	public C(int i) {}
+	public C(int i, int j) {}
 }
 
 public class D {
@@ -73,6 +92,11 @@ public class D {
 	public int Field2;
 
 	public event System.EventHandler Evt1;
+
+	public D() {}
+	internal D(int i) {}
+	private D(int i, int j) {}
+	public A(int i, int j, int k) {}
 }
 ");
 
@@ -130,7 +154,24 @@ public class D {
 			Assert.That(FindEvent("D.Evt1").AddMethod.Name, Is.EqualTo("add_evt1"));
 			Assert.That(FindEvent("D.Evt1").RemoveMethod.Name, Is.EqualTo("remove_evt1"));
 
-			Assert.Inconclusive("TODO: Test constructors");
+			Assert.That(FindConstructor("A", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(FindMethod("A.SomeStaticMethod").Name, Is.EqualTo("$0"));
+			Assert.That(FindConstructor("A", 1).Name, Is.EqualTo("$1"));
+			Assert.That(FindConstructor("A", 2).Name, Is.EqualTo("$2"));
+			Assert.That(FindConstructor("B", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(FindMethod("B.SomeStaticMethod2").Name, Is.EqualTo("$0"));
+			Assert.That(FindMethod("B.SomeStaticMethod3").Name, Is.EqualTo("$1"));
+			Assert.That(FindConstructor("B", 1).Name, Is.EqualTo("$2"));
+			Assert.That(FindConstructor("B", 2).Name, Is.EqualTo("$3"));
+			Assert.That(FindConstructor("C", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(FindMethod("C.SomeStaticMethod4").Name, Is.EqualTo("$0"));
+			Assert.That(FindConstructor("C", 1).Name, Is.EqualTo("$1"));
+			Assert.That(FindConstructor("C", 2).Name, Is.EqualTo("$2"));
+
+			Assert.That(FindConstructor("D", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(FindConstructor("D", 1).Name, Is.EqualTo("$0"));
+			Assert.That(FindConstructor("D", 2).Name, Is.EqualTo("$1"));
+			Assert.That(FindConstructor("D", 3).Name, Is.EqualTo("$ctor1"));
 		}
 
 		[Test]

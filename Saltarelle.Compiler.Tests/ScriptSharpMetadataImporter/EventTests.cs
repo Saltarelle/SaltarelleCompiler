@@ -242,5 +242,18 @@ public class C2 {
 			Assert.That(e3.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(e3.RemoveMethod.Name, Is.EqualTo("remove_$evt3"));
 		}
+
+		[Test]
+		public void ScriptNameCannotBeBlank() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName("""")]
+	public event System.EventHandler Evt;
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C.Evt") && m.Contains("ScriptNameAttribute") && m.Contains("event") && m.Contains("cannot be empty")));
+		}
 	}
 }

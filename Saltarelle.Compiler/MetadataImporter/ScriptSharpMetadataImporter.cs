@@ -17,18 +17,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [PreserveName] (Type | Method | Property | Field | Event)
 	// [PreserveCase] (Method | Property | Field | Event)
 	// [ScriptSkip] (Method)
-	// [AlternateSignature] (Method)
+	// [AlternateSignature] (Method | Constructor)
 	// [ScriptAlias] (Method | Property)
-	// [InlineCode] (Method)
+	// [InlineCode] (Method | Constructor)
 	// [InstanceMethodOnFirstArgument] (Method)
 	// [IgnoreGenericArguments] (Type | Method)
-	// [NonScriptable] (Type | Method | Property | Field | Event)
+	// [NonScriptable] (Type | Method | Property | Field | Event | Constructor)
 	// [IntrinsicProperty] (Property (/indexer))
 	// [GlobalMethods] (Class)
 	// [Imported] (Type)
 
 	// To handle:
-	// [NonScriptable] (Constructor)
 	// [ScriptAssembly] (Assembly) ?
 	// [ScriptQualifier] (Assembly)
 	// [ScriptNamespaceAttribute] (Assembly)
@@ -36,9 +35,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [Mixin] (Class) ?
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
-	// [AlternateSignature] (Constructor)
 	// Record
 	// Anonymous types
+	// Prevent introducing multiple base members with the same name
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
 		private const string ScriptSkipAttribute = "ScriptSkipAttribute";
@@ -141,11 +140,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
-		private Dictionary<ITypeDefinition, Dictionary<string, List<IMember>>> _memberNamesByType;
+		private Dictionary<ITypeDefinition, HashSet<string>> _instanceMemberNamesByType;
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
 		private Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
 		private Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
+		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
 		private Dictionary<string, string> _errors;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private bool _minimizeNames;
@@ -308,16 +308,20 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArgsAttr != null, generateCode: !isImported), globalMethods);
 		}
 
-		private Dictionary<string, List<IMember>> GetMemberNames(ITypeDefinition typeDefinition) {
+		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
 			ProcessType(typeDefinition);
-			Dictionary<string, List<IMember>> result;
-			if (!_memberNamesByType.TryGetValue(typeDefinition, out result))
-				_memberNamesByType[typeDefinition] = result = ProcessTypeMembers(typeDefinition);
-			return result;
+			HashSet<string> result;
+			if (!_instanceMemberNamesByType.TryGetValue(typeDefinition, out result))
+				ProcessTypeMembers(typeDefinition);
+			return _instanceMemberNamesByType[typeDefinition];
 		}
 
-		private Dictionary<string, List<IMember>> GetMemberNames(IEnumerable<ITypeDefinition> typeDefinitions) {
-			return (from def in typeDefinitions from m in GetMemberNames(def) group m by m.Key into g select new { g.Key, Value = g.SelectMany(x => x.Value).ToList() }).ToDictionary(x => x.Key, x => x.Value);
+		private HashSet<string> GetInstanceMemberNames(IEnumerable<ITypeDefinition> typeDefinitions) {
+			var result = new HashSet<string>();
+			foreach (var n in typeDefinitions.SelectMany(GetInstanceMemberNames)) {
+				result.Add(n);
+			}
+			return result;
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
@@ -333,12 +337,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
+			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
+
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
-				string name = (string)sna[0];
+				string name = (string)sna[0] ?? "";
 				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
-					_errors[GetQualifiedMemberName(member) + ":InvalidName"] = "The name specified in the [ScriptName] attribute for type method " + GetQualifiedMemberName(member) + " must be a valid JavaScript identifier, or be blank.";
+					_errors[GetQualifiedMemberName(member) + ":InvalidName"] = "The name specified in the [ScriptName] attribute for member " + GetQualifiedMemberName(member) + " must be a valid JavaScript identifier, or be blank.";
 				}
+				if (name == "" && isConstructor)
+					name = "$ctor";
 				return Tuple.Create(name, true);
 			}
 			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
@@ -351,6 +359,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
+			if (isConstructor) {
+				return Tuple.Create("$ctor", false);
+			}
 			if (Utils.IsPublic(member)) {
 				return Tuple.Create(MakeCamelCase(member.Name), false);
 			}
@@ -366,11 +377,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return member.DeclaringType.FullName + "." + member.Name;
 		}
 
-		private Dictionary<string, List<IMember>> ProcessTypeMembers(ITypeDefinition typeDefinition) {
-			var allMembers = GetMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition));
-			foreach (var m in allMembers.Where(kvp => kvp.Value.Count > 1)) {
-				// TODO: Determine if we need to raise an error here.
-			}
+		private void ProcessTypeMembers(ITypeDefinition typeDefinition) {
+			var instanceMembers = GetInstanceMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition));
+			var staticMembers = new HashSet<string>();
 
 			var membersByName =   from m in typeDefinition.GetMembers(options: GetMemberOptions.IgnoreInheritedMembers)
 			                       let name = DeterminePreferredMemberName(m)
@@ -383,36 +392,28 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						var method = (IMethod)m.Member;
 
 						if (method.IsConstructor) {
-							// TODO
-							ProcessConstructor(method, current.Name, m.NameSpecified, allMembers);
+							ProcessConstructor(method, current.Name, m.NameSpecified, staticMembers);
 						}
 						else {
-							ProcessMethod(method, current.Name, m.NameSpecified, allMembers);
+							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
 						}
 					}
 					else if (m.Member is IProperty) {
-						ProcessProperty((IProperty)m.Member, current.Name, m.NameSpecified, allMembers);
+						ProcessProperty((IProperty)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
 					}
 					else if (m.Member is IField) {
-						ProcessField((IField)m.Member, current.Name, m.NameSpecified, allMembers);
+						ProcessField((IField)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
 					}
 					else if (m.Member is IEvent) {
-						ProcessEvent((IEvent)m.Member, current.Name, m.NameSpecified, allMembers);
+						ProcessEvent((IEvent)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
 					}
 				}
 			}
 
-			return allMembers;
+			_instanceMemberNamesByType[typeDefinition] = instanceMembers;
 		}
 
-		private static void AddMember(Dictionary<string, List<IMember>> allMembers, string name, IMember member) {
-			if (allMembers.ContainsKey(name))
-				allMembers[name].Add(member);
-			else
-				allMembers[name] = new List<IMember> { member };
-		}
-
-		private string GetUniqueName(IMember member, string preferredName, Dictionary<string, List<IMember>> allMembers) {
+		private string GetUniqueName(IMember member, string preferredName, HashSet<string> usedNames) {
 			// The name was not explicitly specified, so ensure that we have a unique name.
 			if (preferredName == null && member.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
 				// Minimized interface names need to be unique within the assembly, otherwise we have a very high risk of collisions (100% when a type implements more than one internal interface).
@@ -424,7 +425,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			else {
 				string name = preferredName;
 				int i = (name == null ? 0 : 1);
-				while (name == null || allMembers.ContainsKey(name)) {
+				while (name == null || usedNames.Contains(name)) {
 					name = preferredName + "$" + EncodeNumber(i);
 					i++;
 				}
@@ -432,13 +433,80 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
-			// TODO
+		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
+			var nsa = GetAttributePositionalArgs(constructor, NonScriptableAttribute);
+			var asa = GetAttributePositionalArgs(constructor, AlternateSignatureAttribute);
+
+			if (nsa != null || _typeSemantics[constructor.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
+				return;
+			}
+
+			var ica = GetAttributePositionalArgs(constructor, InlineCodeAttribute);
+			if (ica != null) {
+				string code = (string)ica[0] ?? "";
+
+				foreach (var ph in new Regex("\\{([a-zA-Z_][a-zA-Z0-9]*)\\}").Matches(code).Cast<Match>().Select(x => x.Groups[1].Value)) {
+					if (ph == "this") {
+						_errors[GetQualifiedMemberName(constructor) + ":InlineCodeInvalidPlaceholder"] = "Cannot use the placeholder {this} in inline code for the constructor for type " + constructor.DeclaringType.FullName + ".";
+					}
+					else if (!constructor.Parameters.Any(p => p.Name == ph) && !constructor.DeclaringType.GetDefinition().TypeParameters.Any(p => p.Name == ph)) {
+						_errors[GetQualifiedMemberName(constructor) + ":InlineCodeInvalidPlaceholder"] = "Invalid placeholder {" + ph + "} in inline code for the constructor for " + constructor.DeclaringType.FullName + ".";
+						code = "X";
+					}
+				}
+
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(code);
+				return;
+			}
+			else if (asa != null) {
+				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false) : ConstructorScriptSemantics.Named(preferredName, generateCode: false);
+				return;
+			}
+			else if (nameSpecified) {
+				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named(preferredName);
+				usedNames.Add(preferredName);
+				return;
+			}
+			else {
+				if (!usedNames.Contains("$ctor")) {
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
+					usedNames.Add("$ctor");
+					return;
+				}
+				else {
+					string name;
+					if (_minimizeNames && !Utils.IsPublic(constructor)) {
+						name = GetUniqueName(constructor, null, usedNames);
+					}
+					else {
+						int i = 1;
+						do {
+							name = "$ctor" + EncodeNumber(i);
+							i++;
+						} while (usedNames.Contains(name));
+					}
+
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.Named(name);
+					usedNames.Add(name);
+					return;
+				}
+			}
 		}
 
-		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
+		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
 			if (_typeSemantics[property.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(property, NonScriptableAttribute) != null) {
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
+				return;
+			}
+			else if (preferredName == "") {
+				if (property.IsIndexer) {
+					_errors[GetQualifiedMemberName(property) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the indexer of type " + property.DeclaringType.FullName + " cannot be empty.";
+				}
+				else {
+					_errors[GetQualifiedMemberName(property) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the property " + GetQualifiedMemberName(property) + " cannot be empty.";
+				}
+				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
 			}
 
@@ -494,7 +562,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 				}
 				else {
-					AddMember(allMembers, preferredName, property);
+					usedNames.Add(preferredName);
 					_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
 					return;
 				}
@@ -504,9 +572,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (property.CanGet) {
 				var getterName = DeterminePreferredMemberName(property.Getter);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName(property, "get_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName(property, "get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, allMembers);
+				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames);
 				getter = _methodSemantics[property.Getter];
 			}
 			else {
@@ -516,9 +584,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (property.CanSet) {
 				var setterName = DeterminePreferredMemberName(property.Setter);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName(property, "set_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName(property, "set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, allMembers);
+				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames);
 				setter = _methodSemantics[property.Setter];
 			}
 			else {
@@ -528,7 +596,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(getter, setter);
 		}
 
-		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
+		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
 			var saa = GetAttributePositionalArgs(method, ScriptAliasAttribute);
 			var ica = GetAttributePositionalArgs(method, InlineCodeAttribute);
@@ -536,11 +604,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var nsa = GetAttributePositionalArgs(method, NonScriptableAttribute);
 			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
 
-			if (nsa != null) {
-				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
-				return;
-			}
-			else if (_typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -704,8 +768,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 					}
 					else {
-						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, allMembers);
-						AddMember(allMembers, name, method);
+						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, usedNames);
+						usedNames.Add(name);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
 						return;
 					}
@@ -713,9 +777,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
+		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
 			if (_typeSemantics[evt.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(evt, NonScriptableAttribute) != null) {
 				_eventSemantics[evt] = EventScriptSemantics.NotUsableFromScript();
+				return;
+			}
+			else if (preferredName == "") {
+				_errors[GetQualifiedMemberName(evt) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the event " + GetQualifiedMemberName(evt) + " cannot be empty.";
+				_eventSemantics[evt] = EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add"), MethodScriptSemantics.NormalMethod("remove"));
 				return;
 			}
 
@@ -723,9 +792,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (evt.CanAdd) {
 				var getterName = DeterminePreferredMemberName(evt.AddAccessor);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName(evt, "add_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName(evt, "add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, allMembers);
+				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
 				adder = _methodSemantics[evt.AddAccessor];
 			}
 			else {
@@ -735,9 +804,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (evt.CanRemove) {
 				var setterName = DeterminePreferredMemberName(evt.RemoveAccessor);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName(evt, "remove_" + preferredName, allMembers)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName(evt, "remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, allMembers);
+				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
 				remover = _methodSemantics[evt.RemoveAccessor];
 			}
 			else {
@@ -747,13 +816,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_eventSemantics[evt] = EventScriptSemantics.AddAndRemoveMethods(adder, remover);
 		}
 
-		private void ProcessField(IField field, string preferredName, bool nameSpecified, Dictionary<string, List<IMember>> allMembers) {
+		private void ProcessField(IField field, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
 			if (_typeSemantics[field.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(field, NonScriptableAttribute) != null) {
 				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();
 			}
+			else if (preferredName == "") {
+				_errors[GetQualifiedMemberName(field) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the field " + GetQualifiedMemberName(field) + " cannot be empty.";
+				_fieldSemantics[field] = FieldScriptSemantics.Field("X");
+			}
 			else {
-				string name = nameSpecified ? preferredName : GetUniqueName(field, preferredName, allMembers);
-				AddMember(allMembers, name, field);
+				string name = nameSpecified ? preferredName : GetUniqueName(field, preferredName, usedNames);
+				usedNames.Add(name);
 				_fieldSemantics[field] = FieldScriptSemantics.Field(name);
 			}
 		}
@@ -763,14 +836,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
-			_memberNamesByType = new Dictionary<ITypeDefinition, Dictionary<string, List<IMember>>>();
+			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
 			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
 			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
 			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
 			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
+			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || Utils.IsPublic(t))) {
 				ProcessType(t);
-				GetMemberNames(t);
+				ProcessTypeMembers(t);
 			}
 
 			foreach (var e in _errors.Values)
@@ -790,7 +864,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
-			throw new NotImplementedException();
+			return _constructorSemantics[method];
 		}
 
 		public PropertyScriptSemantics GetPropertySemantics(IProperty property) {

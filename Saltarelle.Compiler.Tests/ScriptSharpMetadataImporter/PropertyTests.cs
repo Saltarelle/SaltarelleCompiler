@@ -546,5 +546,18 @@ public class C2 {
 			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_$prop3"));
 		}
+
+		[Test]
+		public void ScriptNameCannotBeBlank() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName("""")]
+	public int Prop { get; set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C.Prop") && m.Contains("ScriptNameAttribute") && m.Contains("property") && m.Contains("cannot be empty")));
+		}
 	}
 }

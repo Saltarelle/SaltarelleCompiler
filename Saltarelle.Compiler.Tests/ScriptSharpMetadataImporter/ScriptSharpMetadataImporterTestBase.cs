@@ -87,5 +87,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		protected EventScriptSemantics FindEvent(string name) {
 			return FindMembers(name).Cast<IEvent>().Select(p => Metadata.GetEventSemantics(p)).Single();
 		}
+
+		protected ConstructorScriptSemantics FindConstructor(string typeName, int parameterCount) {
+			return Metadata.GetConstructorSemantics(AllTypes[typeName].Methods.Single(m => m.IsConstructor && m.Parameters.Count == parameterCount));
+		}
     }
 }

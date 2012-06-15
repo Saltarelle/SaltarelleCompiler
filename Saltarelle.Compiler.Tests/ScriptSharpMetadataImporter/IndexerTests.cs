@@ -453,5 +453,18 @@ class C1 {
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
 			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("indexer") && AllErrors[0].Contains("ScriptAliasAttribute"));
 		}
+
+		[Test]
+		public void ScriptNameCannotBeBlank() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName("""")]
+	public int this[int x] { get { return 0; } set {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C") && m.Contains("ScriptNameAttribute") && m.Contains("indexer") && m.Contains("cannot be empty")));
+		}
 	}
 }
