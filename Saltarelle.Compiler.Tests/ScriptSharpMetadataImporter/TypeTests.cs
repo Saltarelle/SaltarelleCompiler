@@ -595,5 +595,12 @@ class C1 {
 
 			Assert.Inconclusive("TODO: Test constructors");
 		}
+
+		[Test]
+		public void IgnoreGenericArgumentsAttributeOnTypeCausesGenericArgumentsToBeIgnored() {
+			Prepare(@"using System.Runtime.CompilerServices; [IgnoreGenericArguments] class C1<T1, T2> {}");
+			var t = FindType("C1`2");
+			Assert.That(t.IgnoreGenericArguments, Is.True);
+		}
 	}
 }
