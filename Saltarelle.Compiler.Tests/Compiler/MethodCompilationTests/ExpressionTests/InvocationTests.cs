@@ -697,5 +697,36 @@ class D2 : D {
 	$CallBase({D}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void CannotUseNotUsableTypeAsAGenericArgument() {
+			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {}
+class C {
+	public void F1<T>() {}
+	public void M() {
+		F1<C1>();
+	}
+}" }, namingConvention: nc, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("generic argument") && er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("F1"));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {}
+interface I1<T> {}
+class C {
+	public void F1<T>() {}
+	public void M() {
+		F1<I1<I1<C1>>>();
+	}
+}" }, namingConvention: nc, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("generic argument") && er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("F1"));
+		}
 	}
 }

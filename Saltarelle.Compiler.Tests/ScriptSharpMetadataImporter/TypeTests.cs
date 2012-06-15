@@ -553,5 +553,47 @@ class C1 {
 			Assert.That(t.Name, Is.EqualTo("C1"));
 			Assert.That(t.GenerateCode, Is.False);
 		}
+
+		[Test]
+		public void NonScriptableOnATypeCausesTheTypeAndAnyNestedTypesAndAllMembersToBeNotUsableFromScript() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[NonScriptable]
+class C1 {
+	class C2 {
+		int F;
+		int P { get; set; }
+		event System.EventHandler E;
+		int this[int x] { get { return 0; } set {} }
+		void M() {}
+		C2() {}
+	}
+
+	int F;
+	int P { get; set; }
+	event System.EventHandler E;
+	int this[int x] { get { return 0; } set {} }
+	void M() {}
+	C2() {}
+}");
+
+			Assert.That(FindType("C1").Type == TypeScriptSemantics.ImplType.NotUsableFromScript);
+			Assert.That(FindField("C1.F").Type, Is.EqualTo(FieldScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindProperty("C1.P").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindEvent("C1.E").Type, Is.EqualTo(EventScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindIndexer("C1", 1).Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindMethod("C1.M").Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+//			Assert.That(FindConstructor("C1").Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+
+			Assert.That(FindType("C1+C2").Type == TypeScriptSemantics.ImplType.NotUsableFromScript);
+			Assert.That(FindField("C1+C2.F").Type, Is.EqualTo(FieldScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindProperty("C1+C2.P").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindEvent("C1+C2.E").Type, Is.EqualTo(EventScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindIndexer("C1+C2", 1).Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindMethod("C1+C2.M").Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+//			Assert.That(FindConstructor("C1+C2").Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+
+			Assert.Inconclusive("TODO: Test constructors");
+		}
 	}
 }

@@ -144,7 +144,10 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 						var pt = (ParameterizedType)t;
 						var def = pt.GetDefinition();
 						var sem = n.GetTypeSemantics(def);
-						return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type") }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, o, n))));
+						if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
+							return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type") }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, o, n))));
+						else
+							return new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
 					}
 					else if (t is ITypeDefinition) {
 						var td = (ITypeDefinition)t;

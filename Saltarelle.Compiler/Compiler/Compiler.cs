@@ -71,10 +71,19 @@ namespace Saltarelle.Compiler.Compiler {
                 var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
                     var baseTypes    = typeDefinition.GetAllBaseTypes().ToList();
-                    var baseClass    = typeDefinition.Kind != TypeKind.Interface ? GetJsType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
-                    var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(GetJsType).ToList();
-                    var typeArgNames = typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
-                    result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
+					var unusableTypes = Utils.FindUsedUnusableTypes(baseTypes, _namingConvention).ToList();
+					if (unusableTypes.Count > 0) {
+						foreach (var ut in unusableTypes)
+							_errorReporter.Error("Cannot use the type " + ut.FullName + " in the inheritance list for type " + typeDefinition.FullName + " because it is marked as not usable from script.");
+
+						result = new JsClass(typeDefinition, "X", ConvertClassType(typeDefinition.Kind), new string[0], null, null);
+					}
+					else {
+						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? GetJsType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class)) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
+						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(GetJsType).ToList();
+						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
+						result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
+					}
                 }
                 else {
                     result = null;

@@ -376,5 +376,34 @@ public void M() {
 	}, this);
 ");
 		}
+
+		[Test]
+		public void CannotUseNotUsableTypeAsATypeArgument() {
+			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {}
+class C {
+	public void M() {
+		var c = new C1();
+	}
+}" }, namingConvention: nc, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("instance") && er.AllMessages[0].Contains("C1"));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {}
+class C2<T> {}
+class C {
+	public void M() {
+		var x = new C2<C2<C1>>();
+	}
+}" }, namingConvention: nc, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("type argument") && er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("C2"));
+		}
 	}
 }

@@ -904,6 +904,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, IList<IType> typeArguments, bool isNonVirtualInvocationOfVirtualMethod) {
+			var unusableTypes = Utils.FindUsedUnusableTypes(typeArguments, _namingConvention).ToList();
+			if (unusableTypes.Count > 0) {
+				foreach (var ut in unusableTypes)
+					_errorReporter.Error("Cannot use the type " + ut.FullName + " in as a generic argument to the method " + method.DeclaringType.FullName + "." + method.Name + " because it is marked as not usable from script.");
+				return JsExpression.Number(0);
+			}
+
 			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => GetJsType(a, false)).ToList() : new List<JsExpression>());
 
 			if (impl == null) {
@@ -1009,6 +1016,21 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileConstructorInvocation(ConstructorScriptSemantics impl, IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
+			var typeToConstruct = method.DeclaringType;
+			var typeToConstructDef = typeToConstruct.GetDefinition();
+			if (typeToConstructDef != null && _namingConvention.GetTypeSemantics(typeToConstructDef).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+				_errorReporter.Error("Cannot create an instance of the type " + typeToConstruct.FullName + " because it is marked as not usable from script.");
+				return JsExpression.Number(0);
+			}
+			if (typeToConstruct is ParameterizedType) {
+				var unusableTypes = Utils.FindUsedUnusableTypes(((ParameterizedType)typeToConstruct).TypeArguments, _namingConvention).ToList();
+				if (unusableTypes.Count > 0) {
+					foreach (var ut in unusableTypes)
+						_errorReporter.Error("Cannot use the type " + ut.FullName + " in as a type argument for the class " + typeToConstruct.GetDefinition().FullName + " because it is marked as not usable from script.");
+					return JsExpression.Number(0);
+				}
+			}
+
 			if (impl.Type == ConstructorScriptSemantics.ImplType.Json) {
 				return CompileJsonConstructorCall(method, argumentsForCall, argumentToParameterMap, initializerStatements);
 			}
@@ -1215,7 +1237,14 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
-			return GetJsType(rr.ReferencedType, returnOpenType: true);
+			var unusableTypes = Utils.FindUsedUnusableTypes(new[] { rr.ReferencedType }, _namingConvention).ToList();
+			if (unusableTypes.Count > 0) {
+				foreach (var ut in unusableTypes)
+					_errorReporter.Error("Cannot use the type " + ut.FullName + " in a typeof expression because it is marked as not usable from script.");
+				return JsExpression.Number(0);
+			}
+			else
+				return GetJsType(rr.ReferencedType, returnOpenType: true);
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
