@@ -1,8 +1,6 @@
 TODO:
 v1:
 params
-Reference importer
-Output writer
 Runtime library
 Parameters using byref semantics
 Dynamic
@@ -21,6 +19,7 @@ async
 goto
 User-defined operators
 Query comprehension
+Other reference importers.
 
 
 Script# features to handle:
@@ -31,3 +30,4 @@ ResourcesAttribute.
 MixinAttribute.
 NamedValuesAttribute and NumericValuesAttribute.
 [Flags] on enums represented as "true" for the last parameter to registerEnum.
+QUnit tests
