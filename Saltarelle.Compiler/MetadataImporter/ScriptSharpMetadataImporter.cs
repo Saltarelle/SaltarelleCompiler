@@ -983,7 +983,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string ThisAlias {
-			get { throw new NotImplementedException(); }
+			get { return _minimizeNames ? "$_" : "$this"; }
 		}
 	}
 }
