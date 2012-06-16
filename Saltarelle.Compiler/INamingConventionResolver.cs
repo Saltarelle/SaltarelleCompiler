@@ -18,13 +18,14 @@ namespace Saltarelle.Compiler {
 		void Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
 
 		/// <summary>
-        /// Returns the name of a type as it should appear in the script. If null is included the class, and any nested class, will not appear in the output.
+        /// Returns how a type should be implemented in script.
         /// </summary>
         TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition);
 
         /// <summary>
-        /// Gets the name by which a type parameter should be known.
+        /// Gets the name by which a type parameter should be known. This method must not return null.
         /// </summary>
+        /// <param name="typeParameter">Type parameter to get the name for.</param>
 		string GetTypeParameterName(ITypeParameter typeParameter);
 
         /// <summary>

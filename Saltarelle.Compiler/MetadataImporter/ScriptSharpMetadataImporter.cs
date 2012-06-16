@@ -25,6 +25,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [GlobalMethods] (Class)
 	// [Imported] (Type)
 	// Anonymous types
+	// Record
 
 	// To handle:
 	// [ScriptAssembly] (Assembly) ?
@@ -34,7 +35,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [Mixin] (Class) ?
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
-	// Record
 	// Prevent introducing multiple base members with the same name
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
@@ -53,6 +53,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string IntrinsicPropertyAttribute = "IntrinsicPropertyAttribute";
 		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
 		private const string ImportedAttribute = "ImportedAttribute";
+		private const string RecordAttribute = "RecordAttribute";
 
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
@@ -130,10 +131,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private class TypeSemantics {
 			public TypeScriptSemantics Semantics { get; private set; }
 			public bool GlobalMethods { get; private set; }
+			public bool IsRecord { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods, bool isRecord) {
 				Semantics     = semantics;
 				GlobalMethods = globalMethods;
+				IsRecord      = isRecord;
 			}
 		}
 
@@ -146,6 +149,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
 		private Dictionary<string, string> _errors;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
+		private IType _systemObject;
+		private IType _systemRecord;
 
 		private readonly bool _minimizeNames;
 
@@ -241,7 +246,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false);
 				return;
 			}
 
@@ -284,27 +289,51 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			bool globalMethods = false;
-			var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
-			if (globalMethodsAttr != null) {
-				if (!typeDefinition.IsStatic) {
-					_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [GlobalMethodsAttribute]";
+			bool hasRecordAttr = GetAttributePositionalArgs(typeDefinition, RecordAttribute) != null;
+			bool inheritsRecord = typeDefinition.GetAllBaseTypeDefinitions().Any(td => td == _systemRecord) && typeDefinition != _systemRecord;
+			
+			bool globalMethods = false, isRecord = hasRecordAttr || inheritsRecord;
+
+			if (isRecord) {
+				if (!typeDefinition.IsSealed) {
+					_errors[typeDefinition.FullName + ":RecordMustBeSealed"] = "The record type " + typeDefinition.FullName + " must be sealed.";
+					isRecord = false;
 				}
-				else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
-					_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]";
+				if (!typeDefinition.DirectBaseTypes.Contains(_systemObject) && !typeDefinition.DirectBaseTypes.Contains(_systemRecord)) {
+					_errors[typeDefinition.FullName + ":MustInheritFromObject"] = "The record type " + typeDefinition.FullName + " must inherit from either System.Object or System.Record.";
+					isRecord = false;
 				}
-				else if (typeDefinition.DeclaringTypeDefinition != null) {
-					_errors[typeDefinition.FullName + ":GlobalMethods"] = "[GlobalMethodsAttribute] cannot be applied to the nested type " + typeDefinition.FullName + ".";
+				if (typeDefinition.DirectBaseTypes.Any(b => b.Kind == TypeKind.Interface)) {
+					_errors[typeDefinition.FullName + ":RecordCannotImplementInterface"] = "The record type " + typeDefinition.FullName + " cannot implement interfaces.";
+					isRecord = false;
 				}
-				else {
-					nmspace = "";
-					globalMethods = true;
+				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
+					_errors[typeDefinition.FullName + ":RecordCannotImplementInterface"] = "The record type " + typeDefinition.FullName + " cannot declare instance events.";
+					isRecord = false;
+				}
+			}
+			else {
+				var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
+				if (globalMethodsAttr != null) {
+					if (!typeDefinition.IsStatic) {
+						_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [GlobalMethodsAttribute]";
+					}
+					else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
+						_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]";
+					}
+					else if (typeDefinition.DeclaringTypeDefinition != null) {
+						_errors[typeDefinition.FullName + ":GlobalMethods"] = "[GlobalMethodsAttribute] cannot be applied to the nested type " + typeDefinition.FullName + ".";
+					}
+					else {
+						nmspace = "";
+						globalMethods = true;
+					}
 				}
 			}
 
 			var ignoreGenericArgsAttr = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute);
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArgsAttr != null, generateCode: !isImported), globalMethods);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArgsAttr != null, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -354,7 +383,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool preserveName =    GetAttributePositionalArgs(member, PreserveNameAttribute) != null
 			                    || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
 			                    || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
-			                    || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods;
+			                    || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods
+			                    || (_typeSemantics[member.DeclaringTypeDefinition].IsRecord && !member.IsStatic && (member is IProperty || member is IField));
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
@@ -385,6 +415,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                     group new { m, name } by name.Item1 into g
 			                    select new { Name = g.Key, Members = g.Select(x => new { Member = x.m, NameSpecified = x.name.Item2 }).ToList() };
 
+			bool isRecord = _typeSemantics[typeDefinition].IsRecord;
 			foreach (var current in membersByName) {
 				foreach (var m in current.Members.OrderByDescending(x => x.NameSpecified).ThenBy(x => x.Member, MemberOrderer.Instance)) {
 					if (m.Member is IMethod) {
@@ -394,7 +425,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							ProcessConstructor(method, current.Name, m.NameSpecified, staticMembers);
 						}
 						else {
-							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
+							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic || isRecord ? staticMembers : instanceMembers);
 						}
 					}
 					else if (m.Member is IProperty) {
@@ -441,6 +472,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 
+			bool isRecord = _typeSemantics[constructor.DeclaringTypeDefinition].IsRecord;
+
 			var ica = GetAttributePositionalArgs(constructor, InlineCodeAttribute);
 			if (ica != null) {
 				string code = (string)ica[0] ?? "";
@@ -463,13 +496,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else if (nameSpecified) {
-				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named(preferredName);
+				if (isRecord)
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName);
+				else
+					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named(preferredName);
 				usedNames.Add(preferredName);
 				return;
 			}
 			else {
-				if (!usedNames.Contains("$ctor")) {
-					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
+				if (!usedNames.Contains("$ctor") && !(isRecord && _minimizeNames && !Utils.IsPublic(constructor))) {	// The last part ensures that the first constructor of a record type can have its name minimized. 
+					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod("$ctor") : ConstructorScriptSemantics.Unnamed();
 					usedNames.Add("$ctor");
 					return;
 				}
@@ -486,7 +522,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						} while (usedNames.Contains(name));
 					}
 
-					_constructorSemantics[constructor] = ConstructorScriptSemantics.Named(name);
+					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod(name) : ConstructorScriptSemantics.Named(name);
 					usedNames.Add(name);
 					return;
 				}
@@ -506,6 +542,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_errors[GetQualifiedMemberName(property) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the property " + GetQualifiedMemberName(property) + " cannot be empty.";
 				}
 				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
+				return;
+			}
+			else if (_typeSemantics[property.DeclaringTypeDefinition].IsRecord && !property.IsStatic) {
+				usedNames.Add(preferredName);
+				_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
 				return;
 			}
 
@@ -769,8 +810,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else {
 						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, usedNames);
 						usedNames.Add(name);
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
-						return;
+						MethodScriptSemantics result;
+						if (_typeSemantics[method.DeclaringTypeDefinition].IsRecord && !method.IsStatic)
+							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
+						else
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
 					}
 				}
 			}
@@ -831,6 +875,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public void Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
+			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
+			_systemRecord = ReflectionHelper.ParseReflectionName("System.Record").Resolve(mainAssembly.Compilation.TypeResolveContext);
 			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
 			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
