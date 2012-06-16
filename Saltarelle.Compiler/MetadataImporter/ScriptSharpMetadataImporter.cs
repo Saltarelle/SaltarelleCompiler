@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
-using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
@@ -148,7 +146,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
 		private Dictionary<string, string> _errors;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
-		private bool _minimizeNames;
+
+		private readonly bool _minimizeNames;
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
 			_minimizeNames = minimizeNames;
@@ -182,12 +181,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
-		private static readonly string encodeNumberTable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		private static readonly string _encodeNumberTable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		private string EncodeNumber(int i) {
-			string result = encodeNumberTable.Substring(i % encodeNumberTable.Length, 1);
-			while (i >= encodeNumberTable.Length) {
-				i /= encodeNumberTable.Length;
-				result = encodeNumberTable.Substring(i % encodeNumberTable.Length, 1) + result;
+			string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
+			while (i >= _encodeNumberTable.Length) {
+				i /= _encodeNumberTable.Length;
+				result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
 			}
 			return result;
 		}
