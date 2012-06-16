@@ -135,6 +135,7 @@
     <Compile Include="ScriptSharpMetadataImporter\TypeTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\ScriptSharpMetadataImporterTestBase.cs" />
     <Compile Include="ScriptSharpOOPEmulator\ClassTests.cs" />
+    <Compile Include="ScriptSharpOOPEmulator\EnumTests.cs" />
     <Compile Include="ScriptSharpOOPEmulator\ScriptSharpOOPEmulatorTestBase.cs" />
     <Compile Include="ScriptSharpOOPEmulator\OverallStructureTests.cs" />
   </ItemGroup>

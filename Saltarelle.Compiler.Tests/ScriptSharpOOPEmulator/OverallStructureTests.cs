@@ -86,7 +86,7 @@ x = 1;
 				StaticMethods = { new JsMethod("otherStaticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("y"), JsExpression.Number(1))) }
 			},
-			new JsEnum("OuterNamespace.InnerNamespace.SomeEnum", new[] {
+			new JsEnum(CreateMockType(), "OuterNamespace.InnerNamespace.SomeEnum", new[] {
 				new JsEnumValue("Value1", 1),
 				new JsEnumValue("Value2", 2),
 				new JsEnumValue("Value3", 3),

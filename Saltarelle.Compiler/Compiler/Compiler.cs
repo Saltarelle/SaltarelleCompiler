@@ -123,7 +123,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
             }
 
-            return semantics.GenerateCode ? new JsEnum(semantics.Name, values) : null;
+            return semantics.GenerateCode ? new JsEnum(type, semantics.Name, values) : null;
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {

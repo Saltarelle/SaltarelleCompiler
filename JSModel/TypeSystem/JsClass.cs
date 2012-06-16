@@ -17,8 +17,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
 
         public enum ClassTypeEnum { Struct, Class, Interface }
 
-        public ITypeDefinition CSharpTypeDefinition { get; private set; }
-		public ClassTypeEnum ClassType { get; private set; }
+    	public ClassTypeEnum ClassType { get; private set; }
         public JsExpression BaseClass { get; private set; }
         public IList<string> TypeArgumentNames { get; private set; }
         public IList<JsExpression> ImplementedInterfaces { get; private set; }
@@ -38,8 +37,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             }
         }
 
-        public JsClass(ITypeDefinition csharpTypeDefinition, string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(name) {
-			CSharpTypeDefinition  = csharpTypeDefinition;
+        public JsClass(ITypeDefinition csharpTypeDefinition, string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(csharpTypeDefinition, name) {
             BaseClass             = baseClass;
             ClassType             = classType;
             TypeArgumentNames     = new List<string>(typeArgumentNames ?? new string[0]);
