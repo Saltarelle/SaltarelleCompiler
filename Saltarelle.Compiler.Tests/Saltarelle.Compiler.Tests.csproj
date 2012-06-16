@@ -122,7 +122,9 @@
     <Compile Include="ScriptSharpMetadataImporter\ConstructorTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\EventTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\FieldTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\GetTypeParameterNameTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\IndexerTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\MinimizedNamesTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\MiscTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\PropertyTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\MethodTests.cs" />

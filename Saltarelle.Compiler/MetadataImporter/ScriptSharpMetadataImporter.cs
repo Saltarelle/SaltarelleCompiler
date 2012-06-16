@@ -147,6 +147,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
 		private Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
 		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
+		private Dictionary<ITypeParameter, string> _typeParameterNames;
 		private Dictionary<string, string> _errors;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private IType _systemObject;
@@ -186,14 +187,25 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
-		private static readonly string _encodeNumberTable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		private string EncodeNumber(int i) {
-			string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
-			while (i >= _encodeNumberTable.Length) {
-				i /= _encodeNumberTable.Length;
-				result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
+		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+		public static string EncodeNumber(int i, bool allowDigitFirst) {
+			if (allowDigitFirst) {
+				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
+				while (i >= _encodeNumberTable.Length) {
+					i /= _encodeNumberTable.Length;
+					result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
+				}
+				return result;
 			}
-			return result;
+			else {
+				string result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1);
+				while (i >= _encodeNumberTable.Length - 10) {
+					i /= _encodeNumberTable.Length - 10;
+					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
+				}
+				return result;
+			}
 		}
 
 		private string GetDefaultTypeName(ITypeDefinition def) {
@@ -331,9 +343,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			var ignoreGenericArgsAttr = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute);
+			for (int i = 0; i < typeDefinition.TypeParameterCount; i++) {
+				var tp = typeDefinition.TypeParameters[i];
+				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, false) : tp.Name;
+			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArgsAttr != null, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord);
+			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null;
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -450,13 +466,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				int c;
 				_internalInterfaceMemberCountPerAssembly.TryGetValue(member.ParentAssembly, out c);
 				_internalInterfaceMemberCountPerAssembly[member.ParentAssembly] = ++c;
-				return "$I" + EncodeNumber(c);
+				return "$I" + EncodeNumber(c, true);
 			}
 			else {
 				string name = preferredName;
 				int i = (name == null ? 0 : 1);
 				while (name == null || usedNames.Contains(name)) {
-					name = preferredName + "$" + EncodeNumber(i);
+					name = preferredName + "$" + EncodeNumber(i, true);
 					i++;
 				}
 				return name;
@@ -517,7 +533,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else {
 						int i = 1;
 						do {
-							name = "$ctor" + EncodeNumber(i);
+							name = "$ctor" + EncodeNumber(i, true);
 							i++;
 						} while (usedNames.Contains(name));
 					}
@@ -637,6 +653,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
+			for (int i = 0; i < method.TypeParameters.Count; i++) {
+				var tp = method.TypeParameters[i];
+				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, false) : tp.Name;
+			}
+
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
 			var saa = GetAttributePositionalArgs(method, ScriptAliasAttribute);
 			var ica = GetAttributePositionalArgs(method, InlineCodeAttribute);
@@ -810,7 +831,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else {
 						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, usedNames);
 						usedNames.Add(name);
-						MethodScriptSemantics result;
 						if (_typeSemantics[method.DeclaringTypeDefinition].IsRecord && !method.IsStatic)
 							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
 						else
@@ -887,6 +907,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
 			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
 			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
+			_typeParameterNames = new Dictionary<ITypeParameter, string>();
+
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || Utils.IsPublic(t))) {
 				ProcessType(t);
 				ProcessTypeMembers(t);
@@ -901,7 +923,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string GetTypeParameterName(ITypeParameter typeParameter) {
-			throw new NotImplementedException();
+			return _typeParameterNames[typeParameter];
 		}
 
 		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
