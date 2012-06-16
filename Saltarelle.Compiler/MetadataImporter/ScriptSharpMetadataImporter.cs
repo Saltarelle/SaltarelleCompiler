@@ -959,7 +959,27 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string GetVariableName(IVariable variable, ISet<string> usedNames) {
-			throw new NotImplementedException();
+			if (_minimizeNames) {
+				// We know that (as long as all used names come from us), all names are generated in sequence. Therefore, the number of used name is a good starting guess for a unique name.
+				int i = usedNames.Count;
+				string name;
+				do {
+					name = EncodeNumber(i++, false);
+				} while (usedNames.Contains(name));
+				return name;
+			}
+			else {
+                string baseName = (variable != null ? variable.Name : "$t");
+                if (variable != null && !usedNames.Contains(baseName))
+                    return baseName;
+                int i = 1;
+				string name;
+				do {
+					name = baseName + (i++).ToString(CultureInfo.InvariantCulture);
+				} while (usedNames.Contains(name));
+
+                return name;
+			}
 		}
 
 		public string ThisAlias {

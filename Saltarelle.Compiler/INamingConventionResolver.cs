@@ -68,6 +68,7 @@ namespace Saltarelle.Compiler {
 
         /// <summary>
         /// Gets the name of a variable, constrained to not used any of the names in the supplied set. Must not return null.
+        /// This method can assume that it will only be called once for each variable.
         /// </summary>
         /// <param name="variable">Variable to get the name for. Can be null in order to get a name for a temporary variable.</param>
         /// <param name="usedNames">All names that are used, and thus not possible to use as the variable name.</param>
