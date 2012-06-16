@@ -8,35 +8,6 @@ using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
-	// Done:
-	// [ScriptName] (Type | Method | Property | Field | Event)
-	// [IgnoreNamespace] (Type)
-	// [ScriptNamespaceAttribute] (Type)
-	// [PreserveName] (Type | Method | Property | Field | Event)
-	// [PreserveCase] (Method | Property | Field | Event)
-	// [ScriptSkip] (Method)
-	// [AlternateSignature] (Method | Constructor)
-	// [ScriptAlias] (Method | Property)
-	// [InlineCode] (Method | Constructor)
-	// [InstanceMethodOnFirstArgument] (Method)
-	// [IgnoreGenericArguments] (Type | Method)
-	// [NonScriptable] (Type | Method | Property | Field | Event | Constructor)
-	// [IntrinsicProperty] (Property (/indexer))
-	// [GlobalMethods] (Class)
-	// [Imported] (Type)
-	// Anonymous types
-	// Record
-
-	// To handle:
-	// [ScriptAssembly] (Assembly) ?
-	// [ScriptQualifier] (Assembly)
-	// [ScriptNamespaceAttribute] (Assembly)
-	// [Resources] (Class) ?
-	// [Mixin] (Class) ?
-	// [NamedValues] (Enum) - Needs better support in the compiler
-	// [NumericValues] (Enum)
-	// Prevent introducing multiple base members with the same name
-
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
 		private const string ScriptSkipAttribute = "ScriptSkipAttribute";
 		private const string ScriptAliasAttribute = "ScriptAliasAttribute";

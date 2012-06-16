@@ -13,6 +13,8 @@ User-defined conversions (probably needed for the runtime library to work as int
 Improve error handling (error numbers, error positions)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/user-defined operators).
 Verify that all directly or indirectly dependent assemblies are referenced.
+The metadata importer should be allowed to write attributes to the output reference assembly.
+Prevent creating a class that inherits/implements types with members with the same names.
 
 v2:
 yield
@@ -20,3 +22,12 @@ async
 goto
 User-defined operators
 Query comprehension
+
+
+Script# features to handle:
+ScriptAssemblyAttribute.
+ScriptQualifierAttribute.
+ScriptNamespaceAttribute specified on assembly.
+ResourcesAttribute.
+MixinAttribute.
+NamedValuesAttribute and NumericValuesAttribute.
