@@ -39,6 +39,37 @@ namespace TestNamespace {
 		}
 
 		[Test]
+		public void EnumWithoutAttributesWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+namespace TestNamespace {
+	public enum SomeEnum {
+	}
+}");
+			var type = FindType("TestNamespace.SomeEnum");
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.SomeEnum"));
+			Assert.That(type.GenerateCode, Is.True);
+		}
+
+		[Test]
+		public void ImportedAttributeWorksOnEnum() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+namespace TestNamespace {
+	[Imported]
+	public enum SomeEnum {
+	}
+}");
+			var type = FindType("TestNamespace.SomeEnum");
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.SomeEnum"));
+			Assert.That(type.GenerateCode, Is.False);
+		}
+
+		[Test]
 		public void MultipleNestingWorks() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
