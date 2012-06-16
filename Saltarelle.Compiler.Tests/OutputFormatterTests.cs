@@ -515,6 +515,21 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
+        public void ObjectLiteralWithFunctionValuesAreOutputOnMultipleLines() {
+            Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
+                                                                        new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], new JsReturnStatement())),
+                                                                        new JsObjectLiteralProperty("z", JsExpression.Number(3)))
+                       ), Is.EqualTo(
+@"{
+	x: 1,
+	y: function() {
+		return;
+	},
+	z: 3
+}"));
+        }
+
+        [Test]
         public void ObjectLiteralWithNumericPropertyWorks() {
             Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("1", JsExpression.Number(2)))), Is.EqualTo("{ '1': 2 }"));
         }

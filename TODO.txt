@@ -1,7 +1,6 @@
 TODO:
 v1:
 params
-Metadata importer
 Reference importer
 Output writer
 Runtime library
@@ -31,3 +30,4 @@ ScriptNamespaceAttribute specified on assembly.
 ResourcesAttribute.
 MixinAttribute.
 NamedValuesAttribute and NumericValuesAttribute.
+[Flags] on enums represented as "true" for the last parameter to registerEnum.

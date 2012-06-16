@@ -19,6 +19,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
         }
 
         [Test]
+        public void InterfaceEventAccessorsHaveNullDefinition() {
+            Compile(new[] { "interface I { event System.EventHandler E; }" });
+            FindInstanceMethod("I.add_E").Definition.Should().BeNull();
+            FindInstanceMethod("I.remove_E").Definition.Should().BeNull();
+        }
+
+        [Test]
         public void InstanceAutoEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + e.Name, generateCode: false)),
                                                                       GetAutoEventBackingFieldName = e => { throw new InvalidOperationException(); }

@@ -14,6 +14,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
         }
 
         [Test]
+        public void InterfaceMethodHasNullDefinition() {
+            Compile(new[] { "interface I { void M(); }" });
+            var m = FindInstanceMethod("I.M");
+            m.Definition.Should().BeNull();
+        }
+
+        [Test]
         public void SimpleStaticMethodCanBeConverted() {
             Compile(new[] { "class C { public static void M() {} }" });
             var m = FindStaticMethod("C.M");

@@ -194,8 +194,14 @@ namespace Saltarelle.Compiler.Compiler {
         private void MaybeCompileAndAddMethodToType(JsClass jsClass, EntityDeclaration node, Statement body, IMethod method, MethodScriptSemantics options) {
             if (options.GenerateCode) {
                 var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(tp)).ToList();
-                var compiled = CompileMethod(node, body, method, options);
-                var jsMethod = new JsMethod(options.Name, typeParamNames, compiled);
+				JsMethod jsMethod;
+				if (jsClass.ClassType == JsClass.ClassTypeEnum.Interface) {
+					jsMethod = new JsMethod(options.Name, typeParamNames, null);
+				}
+				else {
+	                var compiled = CompileMethod(node, body, method, options);
+		            jsMethod = new JsMethod(options.Name, typeParamNames, compiled);
+				}
                 AddCompiledMethodToType(jsClass, method, options, jsMethod);
             }
         }
@@ -315,7 +321,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            if (!methodDeclaration.Body.IsNull) {
+            if (method.DeclaringType.Kind == TypeKind.Interface || !methodDeclaration.Body.IsNull) {
                 MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _namingConvention.GetMethodSemantics(method));
             }
         }
@@ -389,8 +395,8 @@ namespace Saltarelle.Compiler.Compiler {
 
             switch (impl.Type) {
                 case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-                    if (propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
-                        // Auto-property.
+                    if (property.DeclaringTypeDefinition.Kind != TypeKind.Interface && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
+                        // Auto-property
                         if ((impl.GetMethod != null && impl.GetMethod.GenerateCode) || (impl.SetMethod != null && impl.SetMethod.GenerateCode)) {
                             var fieldName = _namingConvention.GetAutoPropertyBackingFieldName(property);
                             AddDefaultFieldInitializerToType(jsClass, fieldName, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
@@ -443,15 +449,23 @@ namespace Saltarelle.Compiler.Compiler {
                 switch (impl.Type) {
                     case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
                         if ((impl.AddMethod != null && impl.AddMethod.GenerateCode) || (impl.RemoveMethod != null && impl.RemoveMethod.GenerateCode)) {
-                            var fieldName = _namingConvention.GetAutoEventBackingFieldName(evt);
-                            if (singleEvt.Initializer.IsNull) {
-                                AddDefaultFieldInitializerToType(jsClass, fieldName, evt.ReturnType, evt.DeclaringTypeDefinition, evt.IsStatic);
-                            }
-                            else {
-                                CompileAndAddFieldInitializerToType(jsClass, fieldName, evt.DeclaringTypeDefinition, singleEvt.Initializer, evt.IsStatic);
-                            }
+							if (evt.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
+								if (impl.AddMethod.GenerateCode)
+									AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(impl.AddMethod.Name, null, null));
+								if (impl.RemoveMethod.GenerateCode)
+									AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(impl.RemoveMethod.Name, null, null));
+							}
+							else {
+	                            var fieldName = _namingConvention.GetAutoEventBackingFieldName(evt);
+		                        if (singleEvt.Initializer.IsNull) {
+			                        AddDefaultFieldInitializerToType(jsClass, fieldName, evt.ReturnType, evt.DeclaringTypeDefinition, evt.IsStatic);
+				                }
+								else {
+					                CompileAndAddFieldInitializerToType(jsClass, fieldName, evt.DeclaringTypeDefinition, singleEvt.Initializer, evt.IsStatic);
+						        }
 
-                            CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
+	                            CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
+							}
                         }
                         break;
                     }

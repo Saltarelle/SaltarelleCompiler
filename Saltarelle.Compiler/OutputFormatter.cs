@@ -162,17 +162,29 @@ namespace Saltarelle.Compiler
                 _cb.Append("{}");
             }
             else {
-                _cb.Append("{ ");
+				bool multiline = expression.Values.Any(p => p.Value is JsFunctionDefinitionExpression);
+				if (multiline)
+					_cb.AppendLine("{").Indent();
+				else
+					_cb.Append("{ ");
+
                 bool first = true;
                 foreach (var v in expression.Values) {
-                    if (!first)
-                        _cb.Append(", ");
+                    if (!first) {
+						if (multiline)
+							_cb.AppendLine(",");
+						else
+							_cb.Append(", ");
+					}
                     _cb.Append(v.Name.IsValidJavaScriptIdentifier() ? v.Name : ("'" + v.Name.EscapeJavascriptStringLiteral() + "'"))
                        .Append(": ");
                     Visit(v.Value, GetPrecedence(v.Value.NodeType) >= PrecedenceComma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
                     first = false;
                 }
-                _cb.Append(" }");
+				if (multiline)
+					_cb.AppendLine().Outdent().Append("}");
+				else
+	                _cb.Append(" }");
             }
             return null;
         }
@@ -381,6 +393,7 @@ namespace Saltarelle.Compiler
                 case ExpressionNodeType.String:
                 case ExpressionNodeType.Regexp:
                 case ExpressionNodeType.Null:
+				case ExpressionNodeType.Boolean:
                     return PrecedenceTerminal;
 
                 case ExpressionNodeType.FunctionDefinition:

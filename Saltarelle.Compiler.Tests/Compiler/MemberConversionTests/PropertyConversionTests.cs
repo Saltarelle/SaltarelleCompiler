@@ -19,6 +19,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
         }
 
         [Test]
+        public void InterfacePropertyAccessorsHaveNullDefinition() {
+            Compile(new[] { "interface I { int P { get; set; } }" });
+            FindInstanceMethod("I.get_P").Definition.Should().BeNull();
+            FindInstanceMethod("I.get_P").Definition.Should().BeNull();
+        }
+
+        [Test]
         public void InstanceAutoPropertiesWithGetSetMethodsWithNoCodeAreCorrectlyImported() {
             var namingConvention = new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name, generateCode: false), MethodScriptSemantics.NormalMethod("set_" + p.Name, generateCode: false)),
                                                                       GetAutoPropertyBackingFieldName = p => { throw new InvalidOperationException("Shouldn't be called"); }
