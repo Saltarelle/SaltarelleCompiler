@@ -113,7 +113,10 @@ namespace Saltarelle.Compiler.Compiler {
             var values = new List<JsEnumValue>();
             foreach (var f in type.Fields) {
                 if (f.ConstantValue != null) {
-                    values.Add(new JsEnumValue(_namingConvention.GetEnumValueName(f), Convert.ToInt64(f.ConstantValue)));
+					var sem = _namingConvention.GetFieldSemantics(f);
+					if (sem.Type == FieldScriptSemantics.ImplType.Field) {
+						values.Add(new JsEnumValue(sem.Name, Convert.ToInt64(f.ConstantValue)));
+					}
                 }
                 else {
                     _errorReporter.Error("Enum field " + type.FullName + "." + f.Name + " is not a DefaultResolvedField");

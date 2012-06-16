@@ -22,7 +22,10 @@ namespace Saltarelle.Compiler {
         /// </summary>
         TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition);
 
-        string GetTypeParameterName(ITypeParameter typeParameter);
+        /// <summary>
+        /// Gets the name by which a type parameter should be known.
+        /// </summary>
+		string GetTypeParameterName(ITypeParameter typeParameter);
 
         /// <summary>
         /// Gets the implementation of a method. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
@@ -63,20 +66,11 @@ namespace Saltarelle.Compiler {
         string GetAutoEventBackingFieldName(IEvent evt);
 
         /// <summary>
-        /// Returns the name by which an enum field is to be known in script. May not return null.
-        /// </summary>
-        string GetEnumValueName(IField value);
-
-        /// <summary>
         /// Gets the name of a variable, constrained to not used any of the names in the supplied set. Must not return null.
         /// </summary>
+        /// <param name="variable">Variable to get the name for. Can be null in order to get a name for a temporary variable.</param>
+        /// <param name="usedNames">All names that are used, and thus not possible to use as the variable name.</param>
         string GetVariableName(IVariable variable, ISet<string> usedNames);
-
-		/// <summary>
-		/// Gets the name of a temporary variable.
-		/// </summary>
-		/// <param name="index">The first temporary variable in a method will have index 0, the second will have index 1, and so on.</param>
-		string GetTemporaryVariableName(int index);
 
 		/// <summary>
 		/// Returns the alias for "this" whenever it has to be aliased, eg. inside a static method with this as first argument.

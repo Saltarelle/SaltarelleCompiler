@@ -890,15 +890,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			throw new NotImplementedException();
 		}
 
-		public string GetEnumValueName(IField value) {
-			throw new NotImplementedException();
-		}
-
 		public string GetVariableName(IVariable variable, ISet<string> usedNames) {
-			throw new NotImplementedException();
-		}
-
-		public string GetTemporaryVariableName(int index) {
 			throw new NotImplementedException();
 		}
 

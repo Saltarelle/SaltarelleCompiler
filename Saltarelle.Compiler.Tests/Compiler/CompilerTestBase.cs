@@ -41,20 +41,18 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 						return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name));
 				};
                 GetAutoPropertyBackingFieldName = p => "$" + p.Name;
-                GetFieldSemantics          = f => FieldScriptSemantics.Field("$" + f.Name);
-                GetEventSemantics          = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
+                GetFieldSemantics               = f => FieldScriptSemantics.Field("$" + f.Name);
+                GetEventSemantics               = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
                 GetAutoEventBackingFieldName    = e => "$" + e.Name;
-                GetEnumValueName                = f => "$" + f.Name;
                 GetVariableName                 = (v, used) => {
-                                                                   string baseName = "$" + v.Name;
-                                                                   if (!used.Contains(baseName))
+                                                                   string baseName = "$" + (v != null ? v.Name : "tmp");
+                                                                   if (v != null && !used.Contains(baseName))
                                                                        return baseName;
-                                                                   int i = 2;
+                                                                   int i = (v == null ? 1 : 2);
                                                                    while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
                                                                       i++;
                                                                    return baseName + i.ToString(CultureInfo.InvariantCulture);
                                                                };
-				GetTemporaryVariableName        = index => string.Format(CultureInfo.InvariantCulture, "$tmp{0}", index + 1);
 				ThisAlias                       = "$this";
             }
 
@@ -67,9 +65,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             public Func<IField, FieldScriptSemantics> GetFieldSemantics { get; set; }
             public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
             public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
-            public Func<IField, string> GetEnumValueName { get; set; }
             public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
-			public Func<int, string> GetTemporaryVariableName { get; set; }
 			public string ThisAlias { get; set; }
 
             void INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
@@ -111,17 +107,9 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                 return GetAutoEventBackingFieldName(evt);
             }
 
-            string INamingConventionResolver.GetEnumValueName(IField value) {
-                return GetEnumValueName(value);
-            }
-
             string INamingConventionResolver.GetVariableName(IVariable variable, ISet<string> usedNames) {
                 return GetVariableName(variable, usedNames);
             }
-
-			string INamingConventionResolver.GetTemporaryVariableName(int index) {
-				return GetTemporaryVariableName(index);
-			}
 
 			string INamingConventionResolver.ThisAlias {
 				get { return ThisAlias; }
