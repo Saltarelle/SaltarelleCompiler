@@ -148,6 +148,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
 		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
 		private Dictionary<ITypeParameter, string> _typeParameterNames;
+		private Dictionary<IProperty, string> _propertyBackingFieldNames;
+		private Dictionary<IEvent, string> _eventBackingFieldNames;
+		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
 		private Dictionary<string, string> _errors;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private IType _systemObject;
@@ -908,6 +911,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
 			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
 			_typeParameterNames = new Dictionary<ITypeParameter, string>();
+			_propertyBackingFieldNames = new Dictionary<IProperty, string>();
+			_eventBackingFieldNames = new Dictionary<IEvent, string>();
+			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
 
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || Utils.IsPublic(t))) {
 				ProcessType(t);
@@ -942,8 +948,28 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _propertySemantics[property];
 		}
 
+		private string GetBackingFieldName(ITypeDefinition declaringTypeDefinition, string memberName) {
+			int inheritanceDepth = declaringTypeDefinition.GetAllBaseTypes().Count(b => b.Kind != TypeKind.Interface) - 1;
+
+			if (_minimizeNames) {
+				int count;
+				_backingFieldCountPerType.TryGetValue(declaringTypeDefinition, out count);
+				count++;
+				_backingFieldCountPerType[declaringTypeDefinition] = count;
+				return string.Format(CultureInfo.InvariantCulture, "${0}${1}", inheritanceDepth, count);
+			}
+			else {
+				return string.Format(CultureInfo.InvariantCulture, "${0}${1}Field", inheritanceDepth, memberName);
+			}
+		}
+
 		public string GetAutoPropertyBackingFieldName(IProperty property) {
-			throw new NotImplementedException();
+			string result;
+			if (_propertyBackingFieldNames.TryGetValue(property, out result))
+				return result;
+			result = GetBackingFieldName(property.DeclaringTypeDefinition, property.Name);
+			_propertyBackingFieldNames[property] = result;
+			return result;
 		}
 
 		public FieldScriptSemantics GetFieldSemantics(IField field) {
@@ -955,7 +981,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string GetAutoEventBackingFieldName(IEvent evt) {
-			throw new NotImplementedException();
+			string result;
+			if (_eventBackingFieldNames.TryGetValue(evt, out result))
+				return result;
+			result = GetBackingFieldName(evt.DeclaringTypeDefinition, evt.Name);
+			_eventBackingFieldNames[evt] = result;
+			return result;
 		}
 
 		public string GetVariableName(IVariable variable, ISet<string> usedNames) {
