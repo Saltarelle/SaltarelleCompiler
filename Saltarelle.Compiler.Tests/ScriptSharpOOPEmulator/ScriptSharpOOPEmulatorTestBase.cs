@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.CSharp;
-using Mono.CSharp;
+using ICSharpCode.NRefactory.TypeSystem;
+using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 	public class ScriptSharpOOPEmulatorTestBase {
+		protected ITypeDefinition CreateMockType() {
+			var typeDef = new Mock<ICSharpCode.NRefactory.TypeSystem.ITypeDefinition>(MockBehavior.Strict);
+			typeDef.SetupGet(_ => _.Attributes).Returns(new IAttribute[0]);
+			return typeDef.Object;
+		}
+
 		protected string Process(IEnumerable<JsType> types) {
 			var proj = new CSharpProjectContent();
 			var comp = proj.CreateCompilation();

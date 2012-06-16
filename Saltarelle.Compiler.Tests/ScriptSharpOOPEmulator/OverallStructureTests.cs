@@ -12,25 +12,7 @@ using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 	[TestFixture]
-	public class OverallStructureTests {
-		private string Process(IEnumerable<JsType> types) {
-			var proj = new CSharpProjectContent();
-			var comp = proj.CreateCompilation();
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator();
-			var rewritten = obj.Rewrite(types, tr => new JsTypeReferenceExpression(comp.MainAssembly, tr.ToString()), comp.MainAssembly);
-			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
-		}
-
-		private void AssertCorrect(string expected, IEnumerable<JsType> types) {
-			var actual = Process(types);
-
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
-		}
-
-		private void AssertCorrect(string expected, params JsType[] types) {
-			AssertCorrect(expected, (IEnumerable<JsType>)types);
-		}
-
+	public class OverallStructureTests : ScriptSharpOOPEmulatorTestBase {
 		[Test]
 		public void TheOverallStructureIsCorrect() {
 			AssertCorrect(
@@ -91,14 +73,14 @@ y = 1;
 x = 1;
 ",
 
-			new JsClass(null, "OuterNamespace.InnerNamespace.SomeType", JsClass.ClassTypeEnum.Class, null, null, null) {
+			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace.SomeType", JsClass.ClassTypeEnum.Class, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, "a"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod("method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))),
 				                    new JsMethod("method2", null, JsExpression.FunctionDefinition(new[] { "x", "y" }, new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))))
 				                  },
 				StaticMethods = { new JsMethod("staticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 			},
-			new JsClass(null, "OuterNamespace.InnerNamespace.SomeType2", JsClass.ClassTypeEnum.Class, null, null, null) {
+			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace.SomeType2", JsClass.ClassTypeEnum.Class, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, "b"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod("method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))) },
 				StaticMethods = { new JsMethod("otherStaticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
@@ -109,12 +91,12 @@ x = 1;
 				new JsEnumValue("Value2", 2),
 				new JsEnumValue("Value3", 3),
 			}),
-			new JsClass(null, "OuterNamespace.InnerNamespace2.OtherType", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(null, "OuterNamespace.InnerNamespace.SomeType2"), null) {
+			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace2.OtherType", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(null, "OuterNamespace.InnerNamespace.SomeType2"), null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod("method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))), },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("x"), JsExpression.Number(1))) }
 			},
-			new JsClass(null, "OuterNamespace.InnerNamespace2.OtherInterface", JsClass.ClassTypeEnum.Interface, null, null, null) {
+			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace2.OtherInterface", JsClass.ClassTypeEnum.Interface, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod("interfaceMethod", null, null) },
 				StaticInitStatements = {}
@@ -138,7 +120,7 @@ x = 1;
 			var rnd = new Random(3);
 			var unorderedNames = names.Select(n => new { n = n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
 			
-			var output = Process(names.Select(n => new JsClass(null, n, JsClass.ClassTypeEnum.Class, null, null, null)));
+			var output = Process(names.Select(n => new JsClass(CreateMockType(), n, JsClass.ClassTypeEnum.Class, null, null, null)));
 
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("// ")).Select(l => l.Substring(3)).ToList();
 
