@@ -24,6 +24,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [IntrinsicProperty] (Property (/indexer))
 	// [GlobalMethods] (Class)
 	// [Imported] (Type)
+	// Anonymous types
 
 	// To handle:
 	// [ScriptAssembly] (Assembly) ?
@@ -34,7 +35,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	// [NamedValues] (Enum) - Needs better support in the compiler
 	// [NumericValues] (Enum)
 	// Record
-	// Anonymous types
 	// Prevent introducing multiple base members with the same name
 
 	public class ScriptSharpMetadataImporter : INamingConventionResolver {
@@ -863,10 +863,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
+			if (method.DeclaringType.Kind == TypeKind.Anonymous)
+				return ConstructorScriptSemantics.Json();
 			return _constructorSemantics[method];
 		}
 
 		public PropertyScriptSemantics GetPropertySemantics(IProperty property) {
+			if (property.DeclaringType.Kind == TypeKind.Anonymous)
+				return PropertyScriptSemantics.Field(property.Name);
 			return _propertySemantics[property];
 		}
 
