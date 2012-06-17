@@ -175,7 +175,7 @@ R;
 {IMyInterface} = function() {
 };
 {IMyInterface}.prototype = { m1: null, m2: null };
-{IMyInterface}.registerInterface('IMyInterface');
+{IMyInterface}.registerInterface('IMyInterface', [Interface1, Interface2, Interface3]);
 ",			new JsClass(CreateMockType(), "IMyInterface", JsClass.ClassTypeEnum.Interface, null, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
 				InstanceMethods = { new JsMethod("m1", null, null),
 				                    new JsMethod("m2", null, null),
@@ -261,7 +261,9 @@ R;
 	var $type = function() {
 	};
 	$type.prototype = { m1: null, m2: null };
-	$type.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2]);
+	$type.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2], function() {
+		return [Interface1, Interface2, Interface3];
+	});
 	return $type;
 };
 {IMyInterface}.registerGenericInterface('IMyInterface', 2);

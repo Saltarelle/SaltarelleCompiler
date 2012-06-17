@@ -13,8 +13,8 @@ using System.Linq;
 
 namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
-		private const bool WriteGeneratedScriptToConsole = true;
-		private const bool WriteHtmlToConsole = false;
+		private bool WriteGeneratedScriptToConsole = true;
+		private bool WriteHtmlToConsole = false;
 
 		private HtmlPage GeneratePage(string script) {
 			WebClient client = new WebClient();

@@ -277,22 +277,22 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IProperty property, PropertyScriptSemantics options, string backingFieldName) {
-            if (options.GetMethod.GenerateCode) {
+            if (options.GetMethod != null && options.GetMethod.GenerateCode) {
                 var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, property.Getter, options.GetMethod, new JsMethod(options.GetMethod.Name, new string[0], compiled));
             }
-            if (options.SetMethod.GenerateCode) {
+            if (options.SetMethod != null && options.SetMethod.GenerateCode) {
                 var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, property.Setter, options.SetMethod, new JsMethod(options.SetMethod.Name, new string[0], compiled));
             }
         }
 
         private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, EventDeclaration node, IEvent evt, EventScriptSemantics options, string backingFieldName) {
-            if (options.AddMethod.GenerateCode) {
+            if (options.AddMethod != null && options.AddMethod.GenerateCode) {
                 var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, evt.AddAccessor, options.AddMethod, new JsMethod(options.AddMethod.Name, new string[0], compiled));
             }
-            if (options.RemoveMethod.GenerateCode) {
+            if (options.RemoveMethod != null && options.RemoveMethod.GenerateCode) {
                 var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName);
                 AddCompiledMethodToType(jsClass, evt.RemoveAccessor, options.RemoveMethod, new JsMethod(options.RemoveMethod.Name, new string[0], compiled));
             }

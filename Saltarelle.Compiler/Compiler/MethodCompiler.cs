@@ -137,7 +137,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, false);
 				return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 			}
-			else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+			else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
 				return JsExpression.FunctionDefinition(new[] { _namingConvention.ThisAlias, valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.Identifier(_namingConvention.ThisAlias), backingFieldName), JsExpression.Identifier(valueName))));
 			}
 			else {

@@ -56,7 +56,6 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 {OtherInterface} = function() {
 };
 {OtherInterface}.prototype = { interfaceMethod: null };
-{OtherInterface}.registerInterface('OuterNamespace.InnerNamespace2.OtherInterface');
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherType
 {OtherType} = function() {
@@ -68,6 +67,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 };
 {SomeType}.registerClass('OuterNamespace.InnerNamespace.SomeType');
 {SomeType2}.registerClass('OuterNamespace.InnerNamespace.SomeType2');
+{OtherInterface}.registerInterface('OuterNamespace.InnerNamespace2.OtherInterface', []);
 {OtherType}.registerClass('OuterNamespace.InnerNamespace2.OtherType', {SomeType2});
 y = 1;
 x = 1;

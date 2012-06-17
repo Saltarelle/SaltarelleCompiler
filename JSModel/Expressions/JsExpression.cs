@@ -285,6 +285,10 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             return new JsConstantExpression(value);
         }
 
+		public static JsConstantExpression Boolean(bool value) {
+			return value ? True : False;
+		}
+
         public static JsConstantExpression Null { get { return JsConstantExpression.Null; } }
         public static JsConstantExpression True { get { return JsConstantExpression.True; } }
         public static JsConstantExpression False { get { return JsConstantExpression.False; } }
