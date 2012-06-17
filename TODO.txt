@@ -12,6 +12,7 @@ Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/user-d
 Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.
 Prevent creating a class that inherits/implements types with members with the same names.
+Cannot declare a static field called Name.
 
 v2:
 yield

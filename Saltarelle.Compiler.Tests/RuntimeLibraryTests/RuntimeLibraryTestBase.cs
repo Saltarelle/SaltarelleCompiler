@@ -13,9 +13,10 @@ using System.Linq;
 
 namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
-		private const bool WriteScriptsToConsole = true;
+		private const bool WriteGeneratedScriptToConsole = true;
+		private const bool WriteHtmlToConsole = false;
 
-		private HtmlPage GeneratePage() {
+		private HtmlPage GeneratePage(string script) {
 			WebClient client = new WebClient();
 			try {
 				var html =
@@ -24,10 +25,14 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 		<title>Test</title>
 	</head>
 	<body>
-		<script type=""text/javascript"">" + Common.SSMscorlibScript + @"</script>
+		<script type=""text/javascript"">" + Environment.NewLine + Common.SSMscorlibScript + @"</script>
+		<script type=""text/javascript"">" + Environment.NewLine + script + @"</script>
 	</body>
 </html>
 ";
+				if (WriteHtmlToConsole)
+					Console.Write(html);
+
 				var response = new StringWebResponse(html, new URL("http://localhost/test.htm"));
 				return HTMLParser.parseHtml(response, client.getCurrentWindow());
 			}
@@ -36,16 +41,28 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			}
 		}
 
-		protected object ExecuteScript(string script) {
-			var page = GeneratePage();
-			var result = page.executeJavaScript(script).getJavaScriptResult();
-			if (result is IEnumerable) {
+		private object ConvertResult(object result) {
+			if (result is IEnumerable && !(result is string)) {
 				var l = new ArrayList();
 				foreach (var i in (IEnumerable)result)
-					l.Add(i);
-				result = l;
+					l.Add(ConvertResult(i));
+				return l;
 			}
-			return result;
+			else if (result is java.lang.Boolean) {
+				return ((java.lang.Boolean)result).booleanValue();
+			}
+			else if (result is java.lang.Double) {
+				return ((java.lang.Double)result).doubleValue();
+			}
+			else {
+				return result;
+			}
+		}
+
+		protected object ExecuteScript(string generatedScript, string scriptToReturn) {
+			var page = GeneratePage(generatedScript);
+			var result = page.executeJavaScript(scriptToReturn).getJavaScriptResult();
+			return ConvertResult(result);
 		}
 
 		protected object ExecuteCSharp(string source, string methodName) {
@@ -66,7 +83,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 
-			if (WriteScriptsToConsole)
+			if (WriteGeneratedScriptToConsole)
 				Console.WriteLine(script);
 
 			int lastDot = methodName.LastIndexOf(".", System.StringComparison.Ordinal);
@@ -74,9 +91,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			var method = type.Methods.Single(m => m.Name == methodName.Substring(lastDot + 1));
 			string scriptMethod = nc.GetTypeSemantics(type).Name + "." + nc.GetMethodSemantics(method).Name;
 
-			script += script + Environment.NewLine + scriptMethod + "()";
-
-			return ExecuteScript(script);
+			return ExecuteScript(script, scriptMethod + "()");
 		}
 	}
 }

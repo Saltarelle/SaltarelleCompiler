@@ -225,9 +225,11 @@ R;
 	$type.s2 = function(t) {
 		T;
 	};
-	var $name = 'SomeNamespace.InnerNamespace.MyClass$' + T1.__typeName + '$' + T2.__typeName;
-	$type.registerClass($name, $InstantiateGenericType(TheBaseClass, T1), Interface1, $InstantiateGenericType(Interface2, T2, Int32), Interface3);
-	$type.registerGenericInstance($name, $type);
+	$type.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
+		return $InstantiateGenericType(TheBaseClass, T1);
+	}, function() {
+		return [Interface1, $InstantiateGenericType(Interface2, T2, Int32), Interface3];
+	});
 	Q;
 	R;
 	return $type;
@@ -259,9 +261,7 @@ R;
 	var $type = function() {
 	};
 	$type.prototype = { m1: null, m2: null };
-	var $name = 'IMyInterface$' + T1.__typeName + '$' + T2.__typeName;
-	$type.registerInterface($name);
-	$type.registerGenericInstance($name, $type);
+	$type.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2]);
 	return $type;
 };
 {IMyInterface}.registerGenericInterface('IMyInterface', 2);

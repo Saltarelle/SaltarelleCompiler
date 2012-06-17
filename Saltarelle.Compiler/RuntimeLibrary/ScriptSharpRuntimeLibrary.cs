@@ -17,18 +17,35 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression GetScriptType(IType type, bool returnOpenType) {
-			if (type.Kind == TypeKind.Array) {
+			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && returnOpenType) {
+				// This handles open generic types ( typeof(C<,>) )
+				var sem = _namingConvention.GetTypeSemantics(type.GetDefinition());
+				return new JsTypeReferenceExpression(type.GetDefinition().ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
+			}
+			else if (type.Kind == TypeKind.Array) {
 				return _createTypeReferenceExpression(KnownTypeReference.Array);
 			}
 			else if (type.Kind == TypeKind.Delegate) {
 				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
+			}
+			else if (type is ITypeParameter) {
+				return JsExpression.Identifier(_namingConvention.GetTypeParameterName((ITypeParameter)type));
+			}
+			else if (type is ParameterizedType) {
+				var pt = (ParameterizedType)type;
+				var def = pt.GetDefinition();
+				var sem = _namingConvention.GetTypeSemantics(def);
+				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
+					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), new JsTypeReferenceExpression(type.GetDefinition().ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type"), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, returnOpenType))));
+				else
+					return new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
 				var sem = _namingConvention.GetTypeSemantics(td);
 				var jsref = new JsTypeReferenceExpression(td.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
 				if (td.TypeParameterCount > 0) {
-					throw new NotImplementedException();
+					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), new JsTypeReferenceExpression(type.GetDefinition().ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type"), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, returnOpenType))));
 				}
 				else {
 					return jsref;
@@ -52,7 +69,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
-			throw new NotImplementedException();
+			return expression;
 		}
 
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<JsExpression> typeArguments) {
@@ -100,7 +117,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression CreateArray(JsExpression size) {
-			throw new NotImplementedException();
+			return JsExpression.New(_createTypeReferenceExpression(KnownTypeReference.Array), size);
 		}
 
 		public JsExpression CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
@@ -112,38 +129,3 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 	}
 }
-/* Old mock implementation of GetScriptType:
-	if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && o) {
-		// This handles open generic types ( typeof(C<,>) )
-		var def = t.GetDefinition();
-		return new JsTypeReferenceExpression(def.ParentAssembly, def.FullName);
-	}
-	else if (t is ArrayType) {
-		return JsExpression.Invocation(JsExpression.Identifier("$Array"), GetScriptType(((ArrayType)t).ElementType, o));
-	}
-	else if (t is ParameterizedType) {
-		var pt = (ParameterizedType)t;
-		var def = pt.GetDefinition();
-		var sem = n.GetTypeSemantics(def);
-		if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type") }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, o, n))));
-		else
-			return new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
-	}
-	else if (t is ITypeDefinition) {
-		var td = (ITypeDefinition)t;
-		var sem = n.GetTypeSemantics(td);
-		var jsref = new JsTypeReferenceExpression(td.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
-		if (td.TypeParameterCount > 0)
-			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { jsref }.Concat(td.TypeParameters.Select(p => GetScriptType(p, o, n))));
-		else {
-			return jsref;
-		}
-	}
-	else if (t is ITypeParameter) {
-		return JsExpression.Identifier(n.GetTypeParameterName((ITypeParameter)t));
-	}
-	else {
-		throw new ArgumentException("Unsupported type + " + t.ToString());
-	}
-*/

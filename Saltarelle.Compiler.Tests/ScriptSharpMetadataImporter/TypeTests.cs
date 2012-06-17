@@ -631,5 +631,19 @@ class C1 {
 			var t = FindType("C1`2");
 			Assert.That(t.IgnoreGenericArguments, Is.True);
 		}
+
+		[Test]
+		public void DelegateTypesAreReturnedAsFunction() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+	delegate int MyDelegate(int a);
+	delegate TResult Func<T1, T2, TResult>(T1 t1, T2 t2);
+}");
+			
+			Assert.That(FindType("MyDelegate").Type == TypeScriptSemantics.ImplType.NormalType);
+			Assert.That(FindType("MyDelegate").Name == "Function");
+			Assert.That(FindType("Func`3").Type == TypeScriptSemantics.ImplType.NormalType);
+			Assert.That(FindType("Func`3").Name == "Function");
+		}
 	}
 }

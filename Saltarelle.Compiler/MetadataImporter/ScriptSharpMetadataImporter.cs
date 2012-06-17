@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -26,6 +27,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
 		private const string ImportedAttribute = "ImportedAttribute";
 		private const string RecordAttribute = "RecordAttribute";
+		private const string Function = "Function";
+		private const string Array = "Array";
 
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
@@ -897,6 +900,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
+			if (typeDefinition.Kind == TypeKind.Delegate)
+				return TypeScriptSemantics.NormalType(Function);
+			else if (typeDefinition.Kind == TypeKind.Array)
+				return TypeScriptSemantics.NormalType(Array);
 			return _typeSemantics[typeDefinition].Semantics;
 		}
 
