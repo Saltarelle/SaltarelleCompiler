@@ -466,6 +466,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 
+			if (constructor.DeclaringType.Kind == TypeKind.Delegate) {
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
+				return;
+			}
+
 			bool isRecord = _typeSemantics[constructor.DeclaringTypeDefinition].IsRecord;
 
 			var ica = GetAttributePositionalArgs(constructor, InlineCodeAttribute);
@@ -634,6 +639,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			for (int i = 0; i < method.TypeParameters.Count; i++) {
 				var tp = method.TypeParameters[i];
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, false) : tp.Name;
+			}
+
+			if (method.DeclaringType.Kind == TypeKind.Delegate && method.Name != "Invoke") {
+				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
+				return;
 			}
 
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);

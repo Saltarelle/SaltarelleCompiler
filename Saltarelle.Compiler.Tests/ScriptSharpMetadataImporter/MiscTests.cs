@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	[TestFixture]
-	public class MiscTests {
+	public class MiscTests : ScriptSharpMetadataImporterTestBase {
 		[Test]
 		public void EncodeNumberWorksWhenAllowingDigitFirst() {
 			Assert.That(Enumerable.Range(0, 190).Select(i => MetadataImporter.ScriptSharpMetadataImporter.EncodeNumber(i, true)).ToList(), Is.EqualTo(new[] {

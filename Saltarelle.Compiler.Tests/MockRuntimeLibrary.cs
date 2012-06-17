@@ -38,9 +38,9 @@ namespace Saltarelle.Compiler.Tests {
 			                		throw new ArgumentException("Unsupported type + " + t.ToString());
 			                	}
 			                };
-			TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, t);
+			TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, false));
 			TryDowncast                 = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
-			Downcast                    = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, t);
+			Downcast                    = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, false));
 			ImplicitReferenceConversion = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
 			InstantiateGenericMethod    = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
 			MakeException               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
@@ -59,9 +59,9 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		public Func<IType, bool, JsExpression> GetScriptType { get; set; }
-		public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
+		public Func<JsExpression, IType, JsExpression> TypeIs { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> TryDowncast { get; set; }
-		public Func<JsExpression, JsExpression, JsExpression> Downcast { get; set; }
+		public Func<JsExpression, IType, IType, JsExpression> Downcast { get; set; }
 		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
 		public Func<JsExpression, JsExpression> MakeException { get; set; }
@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests {
 			return GetScriptType(type, returnOpenType);
 		}
 			
-		JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {
+		JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, IType targetType) {
 			return TypeIs(expression, targetType);
 		}
 
@@ -90,8 +90,8 @@ namespace Saltarelle.Compiler.Tests {
 			return TryDowncast(expression, targetType);
 		}
 
-		JsExpression IRuntimeLibrary.Downcast(JsExpression expression, JsExpression targetType) {
-			return Downcast(expression, targetType);
+		JsExpression IRuntimeLibrary.Downcast(JsExpression expression, IType sourceType, IType targetType) {
+			return Downcast(expression, sourceType, targetType);
 		}
 
 		JsExpression IRuntimeLibrary.ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {

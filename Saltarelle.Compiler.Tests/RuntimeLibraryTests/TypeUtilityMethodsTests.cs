@@ -106,5 +106,20 @@ public class C {
 		public void InvokeMethodWorks() {
 			Assert.Fail("TODO: Implement and test");
 		}
+
+		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+		public void RemoveHandler(object instance, string name, Delegate handler) {
+			Assert.Fail("TODO: Implement and test");
+        }
+
+		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+        public void SetField() {
+			Assert.Fail("TODO: Implement and test (2 overloads, if possible)");
+        }
+
+		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+        public static void SetProperty(object instance, string name, object value) {
+			Assert.Fail("TODO: Implement and test");
+        }
 	}
 }

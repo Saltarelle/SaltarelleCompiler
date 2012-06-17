@@ -1282,7 +1282,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
 			var targetType = IsNullableType(rr.TargetType) ? GetNonNullableType(rr.TargetType) : rr.TargetType;
-			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), _runtimeLibrary.GetScriptType(targetType, false));
+			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), targetType);
         }
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
@@ -1316,7 +1316,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.Conversion.IsImplicit)
 					return _runtimeLibrary.ImplicitReferenceConversion(input, _runtimeLibrary.GetScriptType(rr.Type, false));
 				else
-					return _runtimeLibrary.Downcast(input, _runtimeLibrary.GetScriptType(rr.Type, false));
+					return _runtimeLibrary.Downcast(input, rr.Input.Type, rr.Type);
 			}
 			else if (rr.Conversion.IsNumericConversion) {
 				var result = VisitResolveResult(rr.Input, true);
@@ -1336,15 +1336,15 @@ namespace Saltarelle.Compiler.Compiler {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(GetNonNullableType(rr.Type), false));
+					return _runtimeLibrary.Downcast(result, rr.Input.Type, GetNonNullableType(rr.Type));
 				}
 				else if (rr.Type.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(rr.Type, false)));
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type));
 				}
 				else {
 					// Converting to a boring reference type.
-					return _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(rr.Type, false));
+					return _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
 				}
 			}
 			else if (rr.Conversion.IsNullableConversion) {
@@ -1396,10 +1396,10 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsUnboxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
-					return _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(GetNonNullableType(rr.Type), false));
+					return _runtimeLibrary.Downcast(result, rr.Input.Type, GetNonNullableType(rr.Type));
 				}
 				else {
-					result = _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(rr.Type, false));
+					result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
 					if (rr.Type.Kind == TypeKind.Struct)
 						result = _runtimeLibrary.FromNullable(result);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
 					return result;

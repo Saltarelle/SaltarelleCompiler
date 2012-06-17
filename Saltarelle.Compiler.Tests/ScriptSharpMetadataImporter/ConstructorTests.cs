@@ -177,5 +177,13 @@ class C1<T1> {
 			Assert.That(c3.Name, Is.EqualTo("$1"));
 			Assert.That(c3.GenerateCode, Is.True);
 		}
+
+		[Test]
+		public void DelegateTypeConstructorCannotBeUsed() {
+			Prepare("public delegate void Del();");
+			var del = AllTypes["Del"];
+
+			Assert.That(del.GetConstructors().Select(c => Metadata.GetConstructorSemantics(c).Type), Has.All.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+		}
 	}
 }

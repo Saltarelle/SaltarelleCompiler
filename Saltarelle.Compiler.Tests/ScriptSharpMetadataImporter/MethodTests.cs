@@ -1040,5 +1040,13 @@ public class C2 {
 			Assert.That(FindMethod("C2.SomeMethod1").Name, Is.EqualTo("$someMethod1"));
 			Assert.That(FindMethod("C2.SomeMethod2").Name, Is.EqualTo("$someMethod2"));
 		}
+
+		[Test]
+		public void MethodsOtherThanInvokeCannotBeUsedOnDelegateTypes() {
+			Prepare("public delegate void Del();");
+			var del = AllTypes["Del"];
+
+			Assert.That(del.Methods.Where(m => !m.IsConstructor).Select(m => new { m.Name, Impl = Metadata.GetMethodSemantics(m) }).All(m => m.Impl.Type == (m.Name == "Invoke" ? MethodScriptSemantics.ImplType.NormalMethod : MethodScriptSemantics.ImplType.NotUsableFromScript)));
+		}
 	}
 }

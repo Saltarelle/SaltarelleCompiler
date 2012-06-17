@@ -56,7 +56,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 		}
 
-		public JsExpression TypeIs(JsExpression expression, JsExpression targetType) {
+		public JsExpression TypeIs(JsExpression expression, IType targetType) {
 			throw new NotImplementedException();
 		}
 
@@ -64,8 +64,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			throw new NotImplementedException();
 		}
 
-		public JsExpression Downcast(JsExpression expression, JsExpression targetType) {
-			throw new NotImplementedException();
+		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
+			return expression; // TODO: Not too good
 		}
 
 		public JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
@@ -109,7 +109,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), target, function);
 		}
 
 		public JsExpression Default(JsExpression type) {

@@ -143,13 +143,6 @@ namespace Saltarelle.Compiler.Compiler {
 			return _expressionCompiler.Compile(ResolveWithConversion(expr), returnValueIsImportant);
 		}
 
-		private JsExpression GetJsType(AstType type) {
-			var result = _expressionCompiler.Compile(_resolver.Resolve(type), true);
-			if (result.AdditionalStatements.Count > 0)
-				_errorReporter.Error("Type reference cannot return additional statements.");
-			return result.Expression;
-		}
-
 		public override void VisitComment(Comment comment) {
 			switch (comment.CommentType) {
 				case CommentType.SingleLine: {
@@ -523,7 +516,7 @@ namespace Saltarelle.Compiler.Compiler {
 			JsStatement variableDeclaration = null;
 			if (!catchClause.VariableNameToken.IsNull) {
 				var compiledAssignment = isCatchAll ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name))
-				                                    : _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), GetJsType(catchClause.Type));
+				                                    : _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type);
 
 				variableDeclaration = new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment));
 			}
@@ -553,7 +546,7 @@ namespace Saltarelle.Compiler.Compiler {
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
-					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), GetJsType(catchClauses[i].Type));
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _resolver.Resolve(catchClauses[i].Type).Type);
 					current = new JsIfStatement(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false), current);
 				}
 

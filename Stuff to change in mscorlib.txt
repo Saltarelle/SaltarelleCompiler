@@ -18,3 +18,4 @@ Dictionary and Dictionary<,> will probably need to be own classes. Probably shou
 
 Delegate is removed as a type, aliased to Function.
 Stop pretending that all functions are types (eg typeof(Type).FullName will return 'Function', as will typeof(Func<int, int>).)
+string += char;
