@@ -1304,7 +1304,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
 			}
 			else if (rr.Conversion.IsTryCast) {
-				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), _runtimeLibrary.GetScriptType(IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type, false));
+				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type);
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
 				var input = VisitResolveResult(rr.Input, true);
@@ -1314,7 +1314,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.Type.Kind == TypeKind.Dynamic)
 					return input;
 				if (rr.Conversion.IsImplicit)
-					return _runtimeLibrary.ImplicitReferenceConversion(input, _runtimeLibrary.GetScriptType(rr.Type, false));
+					return _runtimeLibrary.Upcast(input, rr.Input.Type, rr.Type);
 				else
 					return _runtimeLibrary.Downcast(input, rr.Input.Type, rr.Type);
 			}
@@ -1390,7 +1390,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsBoxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (rr.Type.GetDefinition().KnownTypeCode == KnownTypeCode.ValueType)
-					result = _runtimeLibrary.ImplicitReferenceConversion(result, _runtimeLibrary.GetScriptType(rr.Type, false));
+					result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
 				return result;
 			}
 			else if (rr.Conversion.IsUnboxingConversion) {

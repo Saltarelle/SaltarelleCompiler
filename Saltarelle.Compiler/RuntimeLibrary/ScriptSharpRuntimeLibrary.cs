@@ -57,18 +57,18 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType targetType) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(targetType, false), "isInstanceOfType"), expression);
 		}
 
-		public JsExpression TryDowncast(JsExpression expression, JsExpression targetType) {
-			throw new NotImplementedException();
+		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, GetScriptType(targetType, false));
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
-			return expression; // TODO: Not too good
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, GetScriptType(targetType, false));
 		}
 
-		public JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
+		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
 			return expression;
 		}
 

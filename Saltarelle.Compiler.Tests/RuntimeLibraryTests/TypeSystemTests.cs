@@ -496,7 +496,7 @@ public class X {
 		}
 
 		[Test]
-		public void IsInstanceOfTypeWorks() {
+		public void IsInstanceOfTypeWorksForReferenceTypes() {
 			var result = ExecuteCSharp(
 @"public class C1 {}
 public class C2<T> {}

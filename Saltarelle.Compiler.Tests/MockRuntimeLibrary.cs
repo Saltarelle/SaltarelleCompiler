@@ -38,32 +38,32 @@ namespace Saltarelle.Compiler.Tests {
 			                		throw new ArgumentException("Unsupported type + " + t.ToString());
 			                	}
 			                };
-			TypeIs                      = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, false));
-			TryDowncast                 = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, t);
-			Downcast                    = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, false));
-			ImplicitReferenceConversion = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, t);
-			InstantiateGenericMethod    = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
-			MakeException               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
-			IntegerDivision             = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-			FloatToInt                  = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
-			Coalesce                    = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-			Lift                        = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
-			FromNullable                = (e)           => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
-			LiftedBooleanAnd            = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
-			LiftedBooleanOr             = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
-			Bind                        = (f, t)        => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
-			Default                     = (t)           => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
-			CreateArray                 = (s)           => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
-			CallBase                    = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), JsExpression.ArrayLiteral(a) });
-			BindBaseCall                = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
+			TypeIs                   = (e, t)        => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, false));
+			TryDowncast              = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, false));
+			Downcast                 = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, false));
+			Upcast                   = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, false));
+			InstantiateGenericMethod = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
+			MakeException            = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+			IntegerDivision          = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+			FloatToInt               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
+			Coalesce                 = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+			Lift                     = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+			FromNullable             = (e)           => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
+			LiftedBooleanAnd         = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
+			LiftedBooleanOr          = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
+			Bind                     = (f, t)        => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+			Default                  = (t)           => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
+			CreateArray              = (s)           => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
+			CallBase                 = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), JsExpression.ArrayLiteral(a) });
+			BindBaseCall             = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
 		}
 
 		public Func<IType, bool, JsExpression> GetScriptType { get; set; }
 		public Func<JsExpression, IType, JsExpression> TypeIs { get; set; }
-		public Func<JsExpression, JsExpression, JsExpression> TryDowncast { get; set; }
+		public Func<JsExpression, IType, IType, JsExpression> TryDowncast { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> Downcast { get; set; }
 		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
-		public Func<JsExpression, JsExpression, JsExpression> ImplicitReferenceConversion { get; set; }
+		public Func<JsExpression, IType, IType, JsExpression> Upcast { get; set; }
 		public Func<JsExpression, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
 		public Func<JsExpression, JsExpression> FloatToInt { get; set; }
@@ -86,16 +86,16 @@ namespace Saltarelle.Compiler.Tests {
 			return TypeIs(expression, targetType);
 		}
 
-		JsExpression IRuntimeLibrary.TryDowncast(JsExpression expression, JsExpression targetType) {
-			return TryDowncast(expression, targetType);
+		JsExpression IRuntimeLibrary.TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
+			return TryDowncast(expression, sourceType, targetType);
 		}
 
 		JsExpression IRuntimeLibrary.Downcast(JsExpression expression, IType sourceType, IType targetType) {
 			return Downcast(expression, sourceType, targetType);
 		}
 
-		JsExpression IRuntimeLibrary.ImplicitReferenceConversion(JsExpression expression, JsExpression targetType) {
-			return ImplicitReferenceConversion(expression, targetType);
+		JsExpression IRuntimeLibrary.Upcast(JsExpression expression, IType sourceType, IType targetType) {
+			return Upcast(expression, sourceType, targetType);
 		}
 
 		JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<JsExpression> typeArguments) {

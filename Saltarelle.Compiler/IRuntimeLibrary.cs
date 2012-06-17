@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler {
 		/// Returns an expression that casts an expression to a specified type, or returns null if the expression is not of that type (equivalent to C# "as").
 		/// This might also represent an unboxing, in which null should be returned if the object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
 		/// </summary>
-		JsExpression TryDowncast(JsExpression expression, JsExpression targetType);
+		JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType);
 
 		/// <summary>
 		/// Returns an expression that casts a class to a derived class, or throws an exception if the cast is not possible.
@@ -33,9 +33,9 @@ namespace Saltarelle.Compiler {
 		JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType);
 
 		/// <summary>
-		/// Returns an expression that performs an implicit reference conversion (equivalent to (IList)list, where list is a List). Note that this might also represent a generic variance conversion.
+		/// Returns an expression that performs an upcast (equivalent to (IList)list, where list is a List). Note that this might also represent a generic variance conversion.
 		/// </summary>
-		JsExpression ImplicitReferenceConversion(JsExpression expression, JsExpression targetType);
+		JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType);
 
 		/// <summary>
 		/// Returns an expression that will instantiate a generic method.
