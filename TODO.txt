@@ -13,6 +13,7 @@ Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.
 Prevent creating a class that inherits/implements types with members with the same names.
 Cannot declare a static field called Name.
+Need to support type references in InlineCode. Also need to support param arrays and the possibility to transform the string "XYZ" to add_XYZ.
 
 v2:
 yield

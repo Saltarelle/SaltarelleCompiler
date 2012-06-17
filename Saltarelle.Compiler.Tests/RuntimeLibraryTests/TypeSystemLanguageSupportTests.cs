@@ -234,9 +234,52 @@ public class C {
 			Assert.That(result, Is.EqualTo(new[] { false, false, false, true }));
 		}
 
-		[Test, Ignore("Needs improvement to InlineCode")]
+		[Test, Ignore("Need to support type references in inline code.")]
 		public void GetTypeWorksOnObjects() {
-			Assert.Fail("TODO: Implement and test");
+			var result = ExecuteCSharp(@"
+using System;
+public class C1 {}
+public class C2<T> {}
+public class C {
+	public static string[] M() {
+		Action a = () => {};
+		return new[] { new C1().GetType().FullName,
+		               new C2<int>().GetType().FullName,
+		               new C2<string>().GetType().FullName,
+		               (1).GetType().FullName,
+		               ""X"".GetType().FullName,
+		               a.GetType().FullName,
+		               new object().GetType().FullName,
+		               new[] { 1, 2 }.GetType().FullName
+		             };
+	}
+}", "C.M");
+
+			Assert.That(result, Is.EqualTo(new[] { "C1", "C2$1[Int32]", "C2$1[String]", "Number", "String", "Function", "Object", "Array" }));
+
+			Assert.Fail("TODO: Needs improvement");
+		}
+
+		[Test]
+		public void GetTypeOnNullInstanceThrowsException() {
+			var result = ExecuteCSharp(@"
+using System;
+public class C1 {}
+public class C2<T> {}
+public class C {
+	public static bool M() {
+		bool result = false;
+		try {
+			((object)null).GetType();
+		}
+		catch {
+			result = true;
+		}
+		return result;
+	}
+}", "C.M");
+
+			Assert.That(result, Is.True);
 		}
 	}
 }
