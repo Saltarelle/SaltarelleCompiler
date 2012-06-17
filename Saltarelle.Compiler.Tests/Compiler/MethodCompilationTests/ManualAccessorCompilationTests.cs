@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
-	[TestFixture, Ignore("NRefactory returns different instances of the 'value' parameter")]
+	[TestFixture]
 	public class ManualAccessorCompilationTests : CompilerTestBase {
 		[Test]
 		public void InstanceManualPropertyAccessorsCanBeCompiled() {
@@ -16,13 +16,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var setter = FindInstanceMethod("C.set_MyProperty");
 
 			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
-@"function($value) {
+@"function() {
 	return this.$myField;
 }"));
 
 			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
-@"function() {
-	this.$myField = value;
+@"function($value) {
+	this.$myField = $value;
 }"));
 		}
 
@@ -40,7 +40,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
 @"function($value) {
-	{C}.$myField = value;
+	{C}.$myField = $value;
 }"));
 		}
 
@@ -52,13 +52,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var setter = FindInstanceMethod("C.set_Item");
 
 			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
-@"function() {
+@"function($i, $j) {
 	return $i + $j;
 }"));
 
 			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
-@"function() {
-	this.this.x = $i + $j + $value;
+@"function($i, $j, $value) {
+	this.$x = $i + $j + $value;
 }"));
 		}
 
