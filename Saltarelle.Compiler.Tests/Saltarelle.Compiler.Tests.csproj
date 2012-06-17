@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.cs" />
     <Compile Include="Compiler\CompilerTestBase.cs" />
     <Compile Include="Compiler\MemberConversionTests\ConstructorConversionTests.cs" />
     <Compile Include="Compiler\MemberConversionTests\EnumValuesConversionTests.cs" />
@@ -114,6 +115,8 @@
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\YieldStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\VariableGatheringTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
+    <Compile Include="MockNamingConventionResolver.cs" />
+    <Compile Include="MockRuntimeLibrary.cs" />
     <Compile Include="MockSourceFile.cs" />
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

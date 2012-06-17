@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler

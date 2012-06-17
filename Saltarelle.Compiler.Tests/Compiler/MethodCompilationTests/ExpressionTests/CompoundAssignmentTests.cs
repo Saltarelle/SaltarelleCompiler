@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.Tests.Compiler;
 using Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {

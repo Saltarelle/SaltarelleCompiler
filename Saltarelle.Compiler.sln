@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saltarelle.Compiler", "Salt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saltarelle.Compiler.Tests", "Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj", "{4EAA8F82-B663-4DE6-AD09-A5BBE625AF55}"
 	ProjectSection(ProjectDependencies) = postProject
+		{8780581F-7C26-4B64-9235-BA1C458DF36E} = {8780581F-7C26-4B64-9235-BA1C458DF36E}
 		{36D4B098-A21C-4725-ACD3-400922885F38} = {36D4B098-A21C-4725-ACD3-400922885F38}
 	EndProjectSection
 EndProject

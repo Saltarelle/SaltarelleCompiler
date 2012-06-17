@@ -17,8 +17,7 @@ namespace Saltarelle.Compiler {
 		/// Rewrite the specified "Objective JS" types to normal JS.
 		/// </summary>
 		/// <param name="types">Types to rewrute.</param>
-		/// <param name="createTypeReferenceExpression">Delegate that can be used to create a <see cref="TypeReferenceExpression"/> for a given type reference.</param>
-		/// <param name="currentAssembly">Assembly that is being compiled.</param>
-		IList<JsStatement> Rewrite(IEnumerable<JsType> types, Func<ITypeReference, JsTypeReferenceExpression> createTypeReferenceExpression, IAssembly currentAssembly);
+		/// <param name="compilation">The current compilation.</param>
+		IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation);
 	}
 }

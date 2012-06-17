@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
@@ -7,14 +8,37 @@ using ICSharpCode.NRefactory.CSharp.TypeSystem;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
+	public class PreparedCompilation {
+		public ICompilation Compilation { get; set; }
+
+		internal class ParsedSourceFile {
+			public CompilationUnit CompilationUnit { get; private set; }
+			public CSharpParsedFile ParsedFile { get; private set; }
+
+			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile) {
+				CompilationUnit = compilationUnit;
+				ParsedFile      = parsedFile;
+			}
+		}
+
+		internal ReadOnlyCollection<ParsedSourceFile> SourceFiles { get; private set; }
+
+		internal PreparedCompilation(ICompilation compilation, IEnumerable<ParsedSourceFile> sourceFiles) {
+			Compilation = compilation;
+			SourceFiles = sourceFiles.AsReadOnly();
+		}
+	}
+
     public interface ICompiler {
-        IEnumerable<JsType> Compile(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references);
+		PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references);
+        IEnumerable<JsType> Compile(PreparedCompilation compilation);
     }
 
     public class Compiler : DepthFirstAstVisitor, ICompiler {
@@ -133,12 +157,12 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-        public IEnumerable<JsType> Compile(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references) {
+		public PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references) {
             IProjectContent project = new CSharpProjectContent();
             var parser = new CSharpParser();
             var files = sourceFiles.Select(f => { 
                                                     using (var rdr = f.Open()) {
-                                                        return new { CompilationUnit = parser.Parse(rdr, f.FileName), ParsedFile = new CSharpParsedFile(f.FileName, new UsingScope()) };
+                                                        return new PreparedCompilation.ParsedSourceFile(parser.Parse(rdr, f.FileName), new CSharpParsedFile(f.FileName, new UsingScope()));
                                                     }
                                                 }).ToList();
 
@@ -149,7 +173,11 @@ namespace Saltarelle.Compiler.Compiler {
             }
             project = project.AddAssemblyReferences(references);
 
-            _compilation = project.CreateCompilation();
+            return new PreparedCompilation(project.CreateCompilation(), files);
+		}
+
+        public IEnumerable<JsType> Compile(PreparedCompilation compilation) {
+			_compilation = compilation.Compilation;
 
 			_namingConvention.Prepare(_compilation.GetAllTypeDefinitions(), _compilation.MainAssembly, _errorReporter);
 
@@ -157,7 +185,7 @@ namespace Saltarelle.Compiler.Compiler {
             _constructorDeclarations = new HashSet<ConstructorDeclaration>();
             _instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
-            foreach (var f in files) {
+            foreach (var f in compilation.SourceFiles) {
                 _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
                 _resolver.ApplyNavigator(new ResolveAllNavigator());
                 f.CompilationUnit.AcceptVisitor(this);

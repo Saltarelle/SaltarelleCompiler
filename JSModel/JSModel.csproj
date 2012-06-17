@@ -43,6 +43,7 @@
     <Compile Include="Expressions\JsLiteralExpression.cs" />
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
+    <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />
     <Compile Include="Statements\JsLabelStatement.cs" />
@@ -51,7 +52,6 @@
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />
     <Compile Include="Expressions\JsObjectLiteralProperty.cs" />
-    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Expressions\JsArrayLiteralExpression.cs" />
     <Compile Include="Expressions\JsBinaryExpression.cs" />
     <Compile Include="IExpressionVisitor.cs" />

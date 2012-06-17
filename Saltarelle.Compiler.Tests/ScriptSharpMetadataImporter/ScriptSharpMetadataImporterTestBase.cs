@@ -12,9 +12,6 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
     public class ScriptSharpMetadataImporterTestBase {
-        private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(@"..\..\..\ScriptSharp\bin\Debug\mscorlib.dll"));
-        protected IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
-
 		private IEnumerable<ITypeDefinition> SelfAndNested(ITypeDefinition def) {
 			return new[] { def }.Concat(def.NestedTypes.SelectMany(SelfAndNested));
 		}
@@ -35,7 +32,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 				cu.AcceptVisitor(new TypeSystemConvertVisitor(pf));
 				project = project.UpdateProjectContent(null, pf);
             }
-            project = project.AddAssemblyReferences(new[] { Mscorlib });
+            project = project.AddAssemblyReferences(new[] { Common.SSMscorlib });
 
 			var compilation = project.CreateCompilation();
 

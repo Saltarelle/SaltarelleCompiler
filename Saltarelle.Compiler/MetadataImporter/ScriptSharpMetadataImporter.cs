@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {

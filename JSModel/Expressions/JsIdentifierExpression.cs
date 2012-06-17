@@ -1,4 +1,5 @@
 using System;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
     [Serializable]

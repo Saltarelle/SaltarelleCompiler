@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Saltarelle.Compiler.JSModel {
+namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
     public static class ExtensionMethods {
         public static ReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> source) {
             if (source == null)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
@@ -39,6 +40,13 @@ namespace Saltarelle.Compiler {
 			var s = new HashSet<ITypeDefinition>();
 			FindUsedUnusableTypes(types, namingConvention, s);
 			return s;
+		}
+
+		public static JsTypeReferenceExpression CreateJsTypeReferenceExpression(ITypeDefinition type, INamingConventionResolver namingConvention) {
+			var sem = namingConvention.GetTypeSemantics(type);
+			if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
+				throw new InvalidOperationException("Cannot create a reference to the type " + type.FullName);
+			return new JsTypeReferenceExpression(type.ParentAssembly, sem.Name);
 		}
     }
 }

@@ -19,10 +19,11 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 		}
 
 		protected string Process(IEnumerable<JsType> types) {
-			var proj = new CSharpProjectContent();
+			IProjectContent proj = new CSharpProjectContent();
+			proj = proj.AddAssemblyReferences(new[] { Common.SSMscorlib });
 			var comp = proj.CreateCompilation();
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator();
-			var rewritten = obj.Rewrite(types, tr => new JsTypeReferenceExpression(comp.MainAssembly, tr.ToString()), comp.MainAssembly);
+			var obj = new OOPEmulator.ScriptSharpOOPEmulator(new MockNamingConventionResolver());
+			var rewritten = obj.Rewrite(types, comp);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}
 
