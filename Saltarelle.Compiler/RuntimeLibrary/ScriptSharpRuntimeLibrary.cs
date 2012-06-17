@@ -9,13 +9,21 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.RuntimeLibrary {
 	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
 		private readonly INamingConventionResolver _namingConvention;
+		private readonly Func<ITypeReference, JsExpression> _createTypeReferenceExpression;
 
-		public ScriptSharpRuntimeLibrary(INamingConventionResolver namingConvention) {
+		public ScriptSharpRuntimeLibrary(INamingConventionResolver namingConvention, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
 			_namingConvention = namingConvention;
+			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
 
 		public JsExpression GetScriptType(IType type, bool returnOpenType) {
-			if (type is ITypeDefinition) {
+			if (type.Kind == TypeKind.Array) {
+				return _createTypeReferenceExpression(KnownTypeReference.Array);
+			}
+			else if (type.Kind == TypeKind.Delegate) {
+				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
+			}
+			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
 				var sem = _namingConvention.GetTypeSemantics(td);
 				var jsref = new JsTypeReferenceExpression(td.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
@@ -48,7 +56,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<JsExpression> typeArguments) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(method, typeArguments);
 		}
 
 		public JsExpression MakeException(JsExpression operand) {

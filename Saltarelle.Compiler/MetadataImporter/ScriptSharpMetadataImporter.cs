@@ -905,19 +905,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
-			return _methodSemantics[method];
+			return _methodSemantics[(IMethod)method.MemberDefinition];
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
 			if (method.DeclaringType.Kind == TypeKind.Anonymous)
 				return ConstructorScriptSemantics.Json();
-			return _constructorSemantics[method];
+			return _constructorSemantics[(IMethod)method.MemberDefinition];
 		}
 
 		public PropertyScriptSemantics GetPropertySemantics(IProperty property) {
 			if (property.DeclaringType.Kind == TypeKind.Anonymous)
 				return PropertyScriptSemantics.Field(property.Name);
-			return _propertySemantics[property];
+			return _propertySemantics[(IProperty)property.MemberDefinition];
 		}
 
 		private string GetBackingFieldName(ITypeDefinition declaringTypeDefinition, string memberName) {
@@ -936,6 +936,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string GetAutoPropertyBackingFieldName(IProperty property) {
+			property = (IProperty)property.MemberDefinition;
 			string result;
 			if (_propertyBackingFieldNames.TryGetValue(property, out result))
 				return result;
@@ -945,14 +946,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public FieldScriptSemantics GetFieldSemantics(IField field) {
-			return _fieldSemantics[field];
+			return _fieldSemantics[(IField)field.MemberDefinition];
 		}
 
 		public EventScriptSemantics GetEventSemantics(IEvent evt) {
-			return _eventSemantics[evt];
+			return _eventSemantics[(IEvent)evt.MemberDefinition];
 		}
 
 		public string GetAutoEventBackingFieldName(IEvent evt) {
+			evt = (IEvent)evt.MemberDefinition;
 			string result;
 			if (_eventBackingFieldNames.TryGetValue(evt, out result))
 				return result;

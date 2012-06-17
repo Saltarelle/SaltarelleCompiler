@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using FluentAssertions;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;
 using com.gargoylesoftware.htmlunit;
@@ -36,19 +38,27 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 		protected object ExecuteScript(string script) {
 			var page = GeneratePage();
-			return page.executeJavaScript(script).getJavaScriptResult();
+			var result = page.executeJavaScript(script).getJavaScriptResult();
+			if (result is IEnumerable) {
+				var l = new ArrayList();
+				foreach (var i in (IEnumerable)result)
+					l.Add(i);
+				result = l;
+			}
+			return result;
 		}
 
 		protected object ExecuteCSharp(string source, string methodName) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
             var er = new MockErrorReporter(true);
-			var rtl = new ScriptSharpRuntimeLibrary(nc);
+			PreparedCompilation compilation = null;
+			var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
             var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
 
             er.AllMessages.Should().BeEmpty("Compile should not generate errors");
 
-            var compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib });
+            compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib });
 			var compiledTypes = compiler.Compile(compilation);
 
 			var js = new OOPEmulator.ScriptSharpOOPEmulator(nc).Rewrite(compiledTypes, compilation.Compilation);

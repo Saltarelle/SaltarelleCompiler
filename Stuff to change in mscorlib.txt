@@ -16,5 +16,5 @@ List should probably be redesigned (many methods belong in LINQ).
 ArrayGrouping, ListGrouping (and types used only for this): Should probably be removed (belongs in LINQ).
 Dictionary and Dictionary<,> will probably need to be own classes. Probably should introduce JsDictionary as an equivalent to Script# dictionary.
 
-ScriptName("") must work
-IntrinsicProperty must work for indexers.
+Delegate is removed as a type, aliased to Function.
+Stop pretending that all functions are types (eg typeof(Type).FullName will return 'Function', as will typeof(Func<int, int>).)
