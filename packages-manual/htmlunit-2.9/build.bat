@@ -1,0 +1,1 @@
+..\..\packages\IKVM.NET.7.0.4335.1\lib\ikvmc -target:library -version:2.9 -out:HtmlUnit.dll lib\*.jar
