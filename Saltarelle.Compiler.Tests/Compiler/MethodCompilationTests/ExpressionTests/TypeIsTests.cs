@@ -16,7 +16,7 @@ void M() {
 	// END
 }
 ",
-@"	var $b = $TypeIs($o, $InstantiateGenericType({C$X}, {Int32}));
+@"	var $b = $TypeIs($o, $InstantiateGenericType({X}, {Int32}));
 ");
 		}
 
@@ -126,7 +126,7 @@ public void M<T>() {
 	bool b = t is I;
 	// END
 }",
-@"	var $b = $TypeIs($t, {C$I});
+@"	var $b = $TypeIs($t, {I});
 ");
 
 			AssertCorrect(
@@ -137,7 +137,7 @@ public void M<T>() where T : class {
 	bool b = t is I;
 	// END
 }",
-@"	var $b = $TypeIs($t, {C$I});
+@"	var $b = $TypeIs($t, {I});
 ");
 		}
 

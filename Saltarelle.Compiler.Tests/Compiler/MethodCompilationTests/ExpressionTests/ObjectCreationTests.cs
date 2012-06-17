@@ -16,7 +16,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new {C$X}();
+@"	var $c = new {X}();
 ");
 		}
 
@@ -32,7 +32,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new {C$X}($a, $b, $c);
+@"	var $t = new {X}($a, $b, $c);
 ");
 		}
 
@@ -56,7 +56,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new {C$X}(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new {X}(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ");
 		}
 
@@ -70,7 +70,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new ({C$X}.$ctor2)();
+@"	var $c = new ({X}.$ctor2)();
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -86,7 +86,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new ({C$X}.$ctor2)($a, $b, $c);
+@"	var $t = new ({X}.$ctor2)($a, $b, $c);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -110,7 +110,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new ({C$X}.$ctor2)(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new ({X}.$ctor2)(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -124,7 +124,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = {C$X}.create_X();
+@"	var $c = {X}.create_X();
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
@@ -140,7 +140,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = {C$X}.create_X($a, $b, $c);
+@"	var $t = {X}.create_X($a, $b, $c);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
@@ -164,7 +164,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = {C$X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = {X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -226,7 +226,7 @@ public void M() {
 	var x = new X { x = i, P = j };
 	// END
 }",
-@"	var $tmp1 = new {C$X}();
+@"	var $tmp1 = new {X}();
 	$tmp1.$x = $i;
 	$tmp1.set_$P($j);
 	var $x = $tmp1;
@@ -246,7 +246,7 @@ public void M() {
 	var x = new X { i, j };
 	// END
 }",
-@"	var $tmp1 = new {C$X}();
+@"	var $tmp1 = new {X}();
 	$tmp1.$Add($i);
 	$tmp1.$Add($j);
 	var $x = $tmp1;
@@ -267,7 +267,7 @@ public void M() {
 	var x = new X { { i, s }, { j, t } };
 	// END
 }",
-@"	var $tmp1 = new {C$X}();
+@"	var $tmp1 = new {X}();
 	$tmp1.$Add($i, $s);
 	$tmp1.$Add($j, $t);
 	var $x = $tmp1;

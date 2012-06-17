@@ -8,37 +8,31 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests {
 	public class MockRuntimeLibrary : IRuntimeLibrary {
 		public MockRuntimeLibrary() {
-			GetScriptType = (t, o, n) => {
+			GetScriptType = (t, o) => {
 			                	if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && o) {
 			                		// This handles open generic types ( typeof(C<,>) )
 			                		var def = t.GetDefinition();
-			                		var sem = n.GetTypeSemantics(def);
-			                		return new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
+			                		return new JsTypeReferenceExpression(def.ParentAssembly, def.FullName);
 			                	}
 			                	else if (t is ArrayType) {
-			                		return JsExpression.Invocation(JsExpression.Identifier("$Array"), GetScriptType(((ArrayType)t).ElementType, o, n));
+			                		return JsExpression.Invocation(JsExpression.Identifier("$Array"), GetScriptType(((ArrayType)t).ElementType, o));
 			                	}
 			                	else if (t is ParameterizedType) {
 			                		var pt = (ParameterizedType)t;
 			                		var def = pt.GetDefinition();
-			                		var sem = n.GetTypeSemantics(def);
-			                		if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-			                			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type") }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, o, n))));
-			                		else
-			                			return new JsTypeReferenceExpression(def.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
+		                			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, t.Name) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, o))));
 			                	}
 			                	else if (t is ITypeDefinition) {
 			                		var td = (ITypeDefinition)t;
-			                		var sem = n.GetTypeSemantics(td);
-			                		var jsref = new JsTypeReferenceExpression(td.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
+			                		var jsref = new JsTypeReferenceExpression(td.ParentAssembly, t.Name);
 			                		if (td.TypeParameterCount > 0)
-			                			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { jsref }.Concat(td.TypeParameters.Select(p => GetScriptType(p, o, n))));
+			                			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { jsref }.Concat(td.TypeParameters.Select(p => GetScriptType(p, o))));
 			                		else {
 			                			return jsref;
 			                		}
 			                	}
 			                	else if (t is ITypeParameter) {
-			                		return JsExpression.Identifier(n.GetTypeParameterName((ITypeParameter)t));
+			                		return JsExpression.Identifier("$" + ((ITypeParameter)t).Name);
 			                	}
 			                	else {
 			                		throw new ArgumentException("Unsupported type + " + t.ToString());
@@ -64,7 +58,7 @@ namespace Saltarelle.Compiler.Tests {
 			BindBaseCall                = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
 		}
 
-		public Func<IType, bool, INamingConventionResolver, JsExpression> GetScriptType { get; set; }
+		public Func<IType, bool, JsExpression> GetScriptType { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> TypeIs { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> TryDowncast { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> Downcast { get; set; }
@@ -84,8 +78,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<JsExpression, string, IEnumerable<JsExpression>, JsExpression, JsExpression> BindBaseCall { get; set; }
 
-		JsExpression IRuntimeLibrary.GetScriptType(IType type, bool returnOpenType, INamingConventionResolver namingConvention) {
-			return GetScriptType(type, returnOpenType, namingConvention);
+		JsExpression IRuntimeLibrary.GetScriptType(IType type, bool returnOpenType) {
+			return GetScriptType(type, returnOpenType);
 		}
 			
 		JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, JsExpression targetType) {

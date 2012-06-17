@@ -12,8 +12,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
 		/// <param name="returnOpenType">If this flag is true, and the type is a generic type definition, return the open type. Otherwise, return the type instantiated with its own type arguments.</param>
-		/// <param name="namingConvention">Naming convention.</param>
-		JsExpression GetScriptType(IType type, bool returnOpenType, INamingConventionResolver namingConvention);
+		JsExpression GetScriptType(IType type, bool returnOpenType);
 
 		/// <summary>
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").

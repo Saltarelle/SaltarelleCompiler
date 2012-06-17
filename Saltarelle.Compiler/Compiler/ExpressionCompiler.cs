@@ -305,10 +305,6 @@ namespace Saltarelle.Compiler.Compiler {
 			    && Equals(GetNonNullableType(type), _compilation.FindType(KnownTypeCode.Boolean));
 		}
 
-		private JsExpression GetJsType(IType type, bool returnOpenType = false) {
-			return _runtimeLibrary.GetScriptType(type, returnOpenType, _namingConvention);
-		}
-
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var jsTarget = InnerCompile(target.TargetResult, compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
@@ -537,7 +533,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(combine);
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { GetJsType(del), a, b }, new IType[0], false), returnValueIsImportant, false);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.GetScriptType(del, false), a, b }, new IType[0], false), returnValueIsImportant, false);
 					}
 					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, rr.IsLiftedOperator);
@@ -589,7 +585,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(remove);
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { GetJsType(del), a, b }, new IType[0], false), returnValueIsImportant, false);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.GetScriptType(del, false), a, b }, new IType[0], false), returnValueIsImportant, false);
 					}
 					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, rr.IsLiftedOperator);
@@ -615,7 +611,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(combine);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { GetJsType(del), a, b }, new IType[0], false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.GetScriptType(del, false), a, b }, new IType[0], false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
@@ -690,7 +686,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _namingConvention.GetMethodSemantics(remove);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { GetJsType(del), a, b }, new IType[0], false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.GetScriptType(del, false), a, b }, new IType[0], false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
@@ -728,7 +724,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 			var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 			var impl = _namingConvention.GetMethodSemantics(combine);
-			var thisAndArguments = (combine.IsStatic ? new[] { GetJsType(del), a, b } : new[] { a, b });
+			var thisAndArguments = (combine.IsStatic ? new[] { _runtimeLibrary.GetScriptType(del, false), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, combine, thisAndArguments, new IType[0], false);
 		}
 
@@ -736,7 +732,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 			var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 			var impl = _namingConvention.GetMethodSemantics(remove);
-			var thisAndArguments = (remove.IsStatic ? new[] { GetJsType(del), a, b } : new[] { a, b });
+			var thisAndArguments = (remove.IsStatic ? new[] { _runtimeLibrary.GetScriptType(del, false), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, remove, thisAndArguments, new IType[0], false);
 		}
 
@@ -871,13 +867,13 @@ namespace Saltarelle.Compiler.Compiler {
 			if (parameterizedType != null) {
 				var def = parameterizedType.GetDefinition();
 				for (int i = 0; i < def.TypeParameters.Count; i++)
-					allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, GetJsType(parameterizedType.TypeArguments[i])));
+					allSubstitutions.Add(Tuple.Create(def.TypeParameters[i].Name, _runtimeLibrary.GetScriptType(parameterizedType.TypeArguments[i], false)));
 			}
 
 			var specializedMethod = method as SpecializedMethod;
 			if (method is SpecializedMethod) {
 				for (int i = 0; i < specializedMethod.TypeArguments.Count; i++)
-					allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, GetJsType(specializedMethod.TypeArguments[i])));
+					allSubstitutions.Add(Tuple.Create(specializedMethod.TypeParameters[i].Name, _runtimeLibrary.GetScriptType(specializedMethod.TypeArguments[i], false)));
 			}
 			if (!method.IsStatic)
 				allSubstitutions.Add(Tuple.Create("this", thisAndArguments[0]));
@@ -912,7 +908,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Number(0);
 			}
 
-			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => GetJsType(a, false)).ToList() : new List<JsExpression>());
+			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => _runtimeLibrary.GetScriptType(a, false)).ToList() : new List<JsExpression>());
 
 			if (impl == null) {
 				return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));	// Used for delegate invocations.
@@ -921,7 +917,7 @@ namespace Saltarelle.Compiler.Compiler {
 				switch (impl.Type) {
 					case MethodScriptSemantics.ImplType.NormalMethod: {
 						if (isNonVirtualInvocationOfVirtualMethod) {
-							return _runtimeLibrary.CallBase(GetJsType(method.DeclaringType), impl.Name, jsTypeArguments, thisAndArguments);
+							return _runtimeLibrary.CallBase(_runtimeLibrary.GetScriptType(method.DeclaringType, false), impl.Name, jsTypeArguments, thisAndArguments);
 						}
 						else {
 							var jsMethod = method.IsStatic && impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
@@ -939,7 +935,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 
 					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-						var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(GetJsType(method.DeclaringType), impl.Name);
+						var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(method.DeclaringType, false), impl.Name);
 						if (jsTypeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
 							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
@@ -1155,7 +1151,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.Type.IsReferenceType == true)
 					return JsExpression.Null;
 				else
-					return _runtimeLibrary.Default(GetJsType(rr.Type));
+					return _runtimeLibrary.Default(_runtimeLibrary.GetScriptType(rr.Type, false));
 			}
 			else
 				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");
@@ -1245,11 +1241,11 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Number(0);
 			}
 			else
-				return GetJsType(rr.ReferencedType, returnOpenType: true);
+				return _runtimeLibrary.GetScriptType(rr.ReferencedType, true);
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
-			return GetJsType(rr.Type);
+			return _runtimeLibrary.GetScriptType(rr.Type, false);
 		}
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
@@ -1286,7 +1282,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
 			var targetType = IsNullableType(rr.TargetType) ? GetNonNullableType(rr.TargetType) : rr.TargetType;
-			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), GetJsType(targetType));
+			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), _runtimeLibrary.GetScriptType(targetType, false));
         }
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
@@ -1308,7 +1304,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
 			}
 			else if (rr.Conversion.IsTryCast) {
-				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), GetJsType(IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type));
+				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), _runtimeLibrary.GetScriptType(IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type, false));
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
 				var input = VisitResolveResult(rr.Input, true);
@@ -1318,9 +1314,9 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.Type.Kind == TypeKind.Dynamic)
 					return input;
 				if (rr.Conversion.IsImplicit)
-					return _runtimeLibrary.ImplicitReferenceConversion(input, GetJsType(rr.Type));
+					return _runtimeLibrary.ImplicitReferenceConversion(input, _runtimeLibrary.GetScriptType(rr.Type, false));
 				else
-					return _runtimeLibrary.Downcast(input, GetJsType(rr.Type));
+					return _runtimeLibrary.Downcast(input, _runtimeLibrary.GetScriptType(rr.Type, false));
 			}
 			else if (rr.Conversion.IsNumericConversion) {
 				var result = VisitResolveResult(rr.Input, true);
@@ -1340,15 +1336,15 @@ namespace Saltarelle.Compiler.Compiler {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(result, GetJsType(GetNonNullableType(rr.Type)));
+					return _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(GetNonNullableType(rr.Type), false));
 				}
 				else if (rr.Type.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, GetJsType(rr.Type)));
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(rr.Type, false)));
 				}
 				else {
 					// Converting to a boring reference type.
-					return _runtimeLibrary.Downcast(result, GetJsType(rr.Type));
+					return _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(rr.Type, false));
 				}
 			}
 			else if (rr.Conversion.IsNullableConversion) {
@@ -1365,19 +1361,19 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Number(0);
 				}
 
-				var jsTypeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(a => GetJsType(a, false)).ToList() : new List<JsExpression>();
+				var jsTypeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(a => _runtimeLibrary.GetScriptType(a, false)).ToList() : new List<JsExpression>();
 
 				if (rr.Conversion.Method.IsVirtual && !rr.Conversion.IsVirtualMethodLookup) {
 					// base.Method
 					var jsTarget = InnerCompile(mgrr.TargetResult, true);
-					return _runtimeLibrary.BindBaseCall(GetJsType(rr.Conversion.Method.DeclaringType), impl.Name, jsTypeArguments, jsTarget);
+					return _runtimeLibrary.BindBaseCall(_runtimeLibrary.GetScriptType(rr.Conversion.Method.DeclaringType, false), impl.Name, jsTypeArguments, jsTarget);
 				}
 				else {
 					JsExpression jsTarget, jsMethod;
 
 					if (rr.Conversion.Method.IsStatic) {
 						jsTarget = null;
-						jsMethod = JsExpression.MemberAccess(GetJsType(mgrr.TargetResult.Type), impl.Name);
+						jsMethod = JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, false), impl.Name);
 					}
 					else {
 						jsTarget = InnerCompile(mgrr.TargetResult, true);
@@ -1394,16 +1390,16 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsBoxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (rr.Type.GetDefinition().KnownTypeCode == KnownTypeCode.ValueType)
-					result = _runtimeLibrary.ImplicitReferenceConversion(result, GetJsType(rr.Type));
+					result = _runtimeLibrary.ImplicitReferenceConversion(result, _runtimeLibrary.GetScriptType(rr.Type, false));
 				return result;
 			}
 			else if (rr.Conversion.IsUnboxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Type)) {
-					return _runtimeLibrary.Downcast(result, GetJsType(GetNonNullableType(rr.Type)));
+					return _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(GetNonNullableType(rr.Type), false));
 				}
 				else {
-					result = _runtimeLibrary.Downcast(result, GetJsType(rr.Type));
+					result = _runtimeLibrary.Downcast(result, _runtimeLibrary.GetScriptType(rr.Type, false));
 					if (rr.Type.Kind == TypeKind.Struct)
 						result = _runtimeLibrary.FromNullable(result);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
 					return result;

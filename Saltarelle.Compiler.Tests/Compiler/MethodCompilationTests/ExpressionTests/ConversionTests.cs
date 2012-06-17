@@ -794,7 +794,7 @@ public void M() {
 	D d = (D)b;
 	// END
 }",
-@"	var $d = $Cast($b, {C$D});
+@"	var $d = $Cast($b, {D});
 ");
 		}
 
@@ -838,8 +838,8 @@ public void M() {
 	B b2 = (B)d;
 	// END
 }",
-@"	var $b1 = $Upcast($d, {C$B});
-	var $b2 = $Upcast($d, {C$B});
+@"	var $b1 = $Upcast($d, {B});
+	var $b2 = $Upcast($d, {B});
 ");
 		}
 
@@ -869,7 +869,7 @@ public void M() {
 	D d = (D)i;
 	// END
 }",
-@"	var $d = $Cast($i, {C$D});
+@"	var $d = $Cast($i, {D});
 ");
 		}
 
@@ -883,7 +883,7 @@ public void M() {
 	D d = (D)i;
 	// END
 }",
-@"	var $d = $Cast($i, {C$D});
+@"	var $d = $Cast($i, {D});
 ");
 		}
 
@@ -917,7 +917,7 @@ public void M() {
 	object[] arr = (object[])o;
 	// END
 }",
-@"	var $d = $Cast($o, {C$D});
+@"	var $d = $Cast($o, {D});
 	var $arr = $Cast($o, $Array({Object}));
 ");
 		}
@@ -996,7 +996,7 @@ public void M() {
 	D[] d = (D[])a;
 	// END
 }",
-@"	var $d = $Cast($a, $Array({C$D}));
+@"	var $d = $Cast($a, $Array({D}));
 ");
 		}
 
@@ -1160,10 +1160,10 @@ public void M() {
 	System.Collections.Generic.IList<D> l4 = (System.Collections.Generic.IList<D>)src;
 	// END
 }",
-@"	var $l1 = $Upcast($src, $InstantiateGenericType({IList}, {C$B}));
-	var $l2 = $Upcast($src, $InstantiateGenericType({IList}, {C$B}));
-	var $l3 = $Upcast($src, $InstantiateGenericType({IList}, {C$D}));
-	var $l4 = $Upcast($src, $InstantiateGenericType({IList}, {C$D}));
+@"	var $l1 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
+	var $l2 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
+	var $l3 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
+	var $l4 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
 ");
 		}
 
@@ -1179,7 +1179,7 @@ public void M() {
 	System.Collections.Generic.IList<D> l = (System.Collections.Generic.IList<D>)src;
 	// END
 }",
-@"	var $l = $Cast($src, $InstantiateGenericType({IList}, {C$D}));
+@"	var $l = $Cast($src, $InstantiateGenericType({IList}, {D}));
 ");
 		}
 
@@ -1210,7 +1210,7 @@ public void M() {
 	Func<D, B> f2 = f;
 	// END
 }",
-@"	var $f2 = $Upcast($f, $InstantiateGenericType({Func}, {C$D}, {C$B}));
+@"	var $f2 = $Upcast($f, $InstantiateGenericType({Func}, {D}, {B}));
 ");
 		}
 
@@ -1246,10 +1246,10 @@ public void M<T>() where T : D, I {
 }",
 @"	var $o1 = $Upcast($t, {Object});
 	var $o2 = $Upcast($t, {Object});
-	var $d1 = $Upcast($t, {C$D});
-	var $d2 = $Upcast($t, {C$D});
-	var $i1 = $Upcast($t, {C$I});
-	var $i2 = $Upcast($t, {C$I});
+	var $d1 = $Upcast($t, {D});
+	var $d2 = $Upcast($t, {D});
+	var $i1 = $Upcast($t, {I});
+	var $i2 = $Upcast($t, {I});
 ");
 
 			AssertCorrect(
@@ -1268,10 +1268,10 @@ public void M<T>() where T : class, D, I {
 }",
 @"	var $o1 = $Upcast($t, {Object});
 	var $o2 = $Upcast($t, {Object});
-	var $d1 = $Upcast($t, {C$D});
-	var $d2 = $Upcast($t, {C$D});
-	var $i1 = $Upcast($t, {C$I});
-	var $i2 = $Upcast($t, {C$I});
+	var $d1 = $Upcast($t, {D});
+	var $d2 = $Upcast($t, {D});
+	var $i1 = $Upcast($t, {I});
+	var $i2 = $Upcast($t, {I});
 ");
 		}
 
@@ -1376,7 +1376,7 @@ public void M<T>() {
 	I i = (I)t;
 	// END
 }",
-@"	var $i = $Cast($t, {C$I});
+@"	var $i = $Cast($t, {I});
 ");
 
 			AssertCorrect(
@@ -1387,7 +1387,7 @@ public void M<T>() where T : class {
 	I i = (I)t;
 	// END
 }",
-@"	var $i = $Cast($t, {C$I});
+@"	var $i = $Cast($t, {I});
 ");
 		}
 

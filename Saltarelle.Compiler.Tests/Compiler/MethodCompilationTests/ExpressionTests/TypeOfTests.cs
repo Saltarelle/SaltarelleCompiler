@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTe
 		}
 
 		[Test]
-		public void TypeOfUninstantiatedGenericTypesWorks() {
+		public void TypeOfOpenGenericTypesWorks() {
 			AssertCorrect(
 @"class X<T1, T2> {}
 public void M() {
@@ -28,7 +28,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = {C$X};
+@"	var $x = {X};
 ");
 		}
 
@@ -43,7 +43,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $InstantiateGenericType({C$X}, {C}, {C$D});
+@"	var $x = $InstantiateGenericType({X}, {C}, {D});
 ");
 		}
 
@@ -58,7 +58,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $InstantiateGenericType({C$X}, $InstantiateGenericType({C$X}, {C}, {C$D}), $InstantiateGenericType({C$X}, {C$D}, {C}));
+@"	var $x = $InstantiateGenericType({X}, $InstantiateGenericType({X}, {C}, {D}), $InstantiateGenericType({X}, {D}, {C}));
 ");
 		}
 
@@ -124,7 +124,7 @@ class Y : X<C> {
 	}
 }
 ",
-@"	var $x = $InstantiateGenericType({C$X$X2}, {C}, {C$D});
+@"	var $x = $InstantiateGenericType({X2}, {C}, {D});
 ");
 		}
 

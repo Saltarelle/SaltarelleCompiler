@@ -119,10 +119,6 @@ namespace Saltarelle.Compiler.Compiler {
 			return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
 		}
 
-		public JsExpression GetJsType(IType type) {
-			return _runtimeLibrary.GetScriptType(type, false, _namingConvention);
-		}
-
 		private StatementCompiler CreateInnerCompiler() {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}

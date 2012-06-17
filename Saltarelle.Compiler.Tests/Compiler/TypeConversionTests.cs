@@ -199,16 +199,6 @@ namespace Saltarelle.Compiler.Tests.Compiler {
         }
 
         [Test]
-        public void NamingConventionIsCorrectlyApplied() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = def => TypeScriptSemantics.NormalType("$" + def.Name), GetTypeParameterName = def => "$$" + def.Name };
-            Compile(new[] { @"using System.Collections.Generic;
-                              class Test<T> : List<T>, IEnumerable<string>, IList<float> { }" }, namingConvention: namingConvention);
-            var cls = FindClass("$Test");
-            cls.TypeArgumentNames.Should().Equal(new[] { "$$T" });
-            Stringify(cls.BaseClass).Should().Be("$InstantiateGenericType({$List}, $$T)");
-        }
-
-        [Test]
         public void ClassTypeIsSetCorrectly() {
             Compile("class Test1{} struct Test2{} interface Test3{}");
             CompiledTypes.Should().HaveCount(3);
