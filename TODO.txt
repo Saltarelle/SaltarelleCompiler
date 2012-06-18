@@ -41,27 +41,20 @@ Add type Int32. typeof(double) == Number, number.__typeName should be 'Double'
 Improve exception structure.
 typeof(string), etc. should return valid types with interfaces.
 Remove class System.Number (should be System.Double)
-Implmeneted interfaces on Dictionary<TKey, TValue>
-Dictionary refactoring
 
-KeyValuePair: IgnoreGenericArguments
 ObservableCollection: Inherit IList<T>, ensure works.
 Queue, Queue<T>: Ensure works
 Stack, Stack<T>: Ensure works
-DictionaryEntry: Remove
-DependencyAttribute: ?
 Arguments: Ensure works
 Date: Ensure operators work (requires user-defined operators in the compiler)
 Function: Move members to Delegate
-Nullable: Ensure works (why are there op_Implicit and op_Explicit?)
-Record: op_Implicit/Explicit should use JsDictionary
+Record: Ensure works
 Script: Ensure works
 String: Operators, ensure methods with character arguments work (eg. + )
 StringBuilder: Add Append(char)
-Tuple: Add more, rename to Item1, Item2, etc.
 XmlNodeList
 
-Number refactoring
+Number refactoring, incl. integer division, truncation
 Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
 
 Exception refactoring

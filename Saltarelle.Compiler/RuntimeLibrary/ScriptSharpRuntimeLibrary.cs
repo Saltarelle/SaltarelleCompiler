@@ -81,7 +81,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator) {
-			throw new NotImplementedException();
+			// TODO: Obviously not...
+			return JsExpression.Binary(ExpressionNodeType.Divide, numerator, denominator);
 		}
 
 		public JsExpression FloatToInt(JsExpression operand) {
@@ -93,21 +94,66 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Lift(JsExpression expression) {
-			throw new NotImplementedException();
+			if (expression is JsUnaryExpression) {
+				string methodName = null;
+				switch (expression.NodeType) {
+					case ExpressionNodeType.LogicalNot: methodName = "not"; goto default;
+					case ExpressionNodeType.Negate:     methodName = "neg"; goto default;
+					case ExpressionNodeType.Positive:   methodName = "pos"; goto default;
+					case ExpressionNodeType.BitwiseNot: methodName = "cpl"; goto default;
+
+					default:
+						if (methodName == null)
+							throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
+						return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsUnaryExpression)expression).Operand);
+				}
+			}
+			else if (expression is JsBinaryExpression) {
+				string methodName = null;
+				switch (expression.NodeType) {
+					case ExpressionNodeType.Equal:
+					case ExpressionNodeType.Same:
+					case ExpressionNodeType.NotEqual:
+					case ExpressionNodeType.NotSame:
+						return expression;
+
+					case ExpressionNodeType.LesserOrEqual:      methodName = "le";   goto default;
+					case ExpressionNodeType.GreaterOrEqual:     methodName = "ge";   goto default;
+					case ExpressionNodeType.Lesser:             methodName = "lt";   goto default;
+					case ExpressionNodeType.Greater:            methodName = "gt";   goto default;
+					case ExpressionNodeType.Subtract:           methodName = "sub";  goto default;
+					case ExpressionNodeType.Add:                methodName = "add";  goto default;
+					case ExpressionNodeType.Modulo:             methodName = "mod";  goto default;
+					case ExpressionNodeType.Divide:             methodName = "divf"; goto default;
+					case ExpressionNodeType.Multiply:           methodName = "mul";  goto default;
+					case ExpressionNodeType.BitwiseAnd:         methodName = "band"; goto default;
+					case ExpressionNodeType.BitwiseOr:          methodName = "bor";  goto default;
+					case ExpressionNodeType.BitwiseXor:         methodName = "xor";  goto default;
+					case ExpressionNodeType.LeftShift:          methodName = "shl";  goto default;
+					case ExpressionNodeType.RightShiftSigned:   methodName = "srs";  goto default;
+					case ExpressionNodeType.RightShiftUnsigned: methodName = "sru";  goto default;
+
+					default:
+						if (methodName == null)
+							throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
+						return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
+				}
+			}
+			else {
+				throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
+			}
 		}
 
 		public JsExpression FromNullable(JsExpression expression) {
-			// TODO: Obviously not good...
-			return expression;
-//			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), "unbox"), expression);
 		}
 
 		public JsExpression LiftedBooleanAnd(JsExpression a, JsExpression b) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), "and"), a, b);
 		}
 
 		public JsExpression LiftedBooleanOr(JsExpression a, JsExpression b) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), "or"), a, b);
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target) {

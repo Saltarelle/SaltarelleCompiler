@@ -209,7 +209,7 @@ public class C {
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, false, true, false }));
+			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, false, true, true }));
 		}
 
 		[Test]
@@ -231,7 +231,7 @@ public class C {
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { false, false, false, true }));
+			Assert.That(result, Is.EqualTo(new[] { true, false, false, true }));
 		}
 
 		[Test, Ignore("Need to support type references in inline code.")]
