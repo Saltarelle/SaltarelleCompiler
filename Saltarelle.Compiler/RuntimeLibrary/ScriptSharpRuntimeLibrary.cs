@@ -81,12 +81,11 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator) {
-			// TODO: Obviously not...
-			return JsExpression.Binary(ExpressionNodeType.Divide, numerator, denominator);
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Int32), "div"), numerator, denominator);
 		}
 
 		public JsExpression FloatToInt(JsExpression operand) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Int32), "trunc"), operand);
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b) {
@@ -94,6 +93,18 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Lift(JsExpression expression) {
+			if (expression is JsInvocationExpression) {
+				var int32 = (JsTypeReferenceExpression)_createTypeReferenceExpression(KnownTypeReference.Int32);
+
+				var ie = (JsInvocationExpression)expression;
+				if (ie.Method is JsMemberAccessExpression) {
+					var mae = (JsMemberAccessExpression)ie.Method;
+					if (mae.Target is JsTypeReferenceExpression && ((JsTypeReferenceExpression)mae.Target).Assembly == int32.Assembly && ((JsTypeReferenceExpression)mae.Target).TypeName == int32.TypeName) {
+						if (mae.Member == "div" || mae.Member == "trunc")
+							return expression;
+					}
+				}
+			}
 			if (expression is JsUnaryExpression) {
 				string methodName = null;
 				switch (expression.NodeType) {
@@ -103,9 +114,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 					case ExpressionNodeType.BitwiseNot: methodName = "cpl"; goto default;
 
 					default:
-						if (methodName == null)
-							throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
-						return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsUnaryExpression)expression).Operand);
+						if (methodName != null)
+							return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsUnaryExpression)expression).Operand);
+						break;
 				}
 			}
 			else if (expression is JsBinaryExpression) {
@@ -124,7 +135,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 					case ExpressionNodeType.Subtract:           methodName = "sub";  goto default;
 					case ExpressionNodeType.Add:                methodName = "add";  goto default;
 					case ExpressionNodeType.Modulo:             methodName = "mod";  goto default;
-					case ExpressionNodeType.Divide:             methodName = "divf"; goto default;
+					case ExpressionNodeType.Divide:             methodName = "div";  goto default;
 					case ExpressionNodeType.Multiply:           methodName = "mul";  goto default;
 					case ExpressionNodeType.BitwiseAnd:         methodName = "band"; goto default;
 					case ExpressionNodeType.BitwiseOr:          methodName = "bor";  goto default;
@@ -134,14 +145,13 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 					case ExpressionNodeType.RightShiftUnsigned: methodName = "sru";  goto default;
 
 					default:
-						if (methodName == null)
-							throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
-						return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
+						if (methodName != null)
+							return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
+						break;
 				}
 			}
-			else {
-				throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
-			}
+
+			throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
 		}
 
 		public JsExpression FromNullable(JsExpression expression) {

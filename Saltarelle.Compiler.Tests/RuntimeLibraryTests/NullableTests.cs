@@ -179,7 +179,7 @@ public class C {
 			Assert.That(result, Is.EqualTo(7));
 		}
 
-		[Test, Ignore("TODO: Fails because integer division is not implemented")]
+		[Test]
 		public void LiftedOperatorsWork() {
 			var result = ExecuteCSharp(@"
 public class C {

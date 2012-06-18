@@ -218,6 +218,7 @@
     <Compile Include="ReferenceImporterTests\GlobalNamespaceReferenceImporterTests.cs" />
     <Compile Include="RuntimeLibraryTests\ArrayTests.cs" />
     <Compile Include="RuntimeLibraryTests\ExceptionTests.cs" />
+    <Compile Include="RuntimeLibraryTests\NumberTests.cs" />
     <Compile Include="RuntimeLibraryTests\MiscTests.cs" />
     <Compile Include="RuntimeLibraryTests\DictionaryTests.cs" />
     <Compile Include="RuntimeLibraryTests\DelegateTests.cs" />
