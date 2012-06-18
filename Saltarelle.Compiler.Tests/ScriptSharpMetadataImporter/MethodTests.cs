@@ -786,7 +786,7 @@ class C1 {
 
 			var impl = FindMethod("C1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(impl.LiteralCode, Is.EqualTo("{0}"));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{x}"));
 		}
 
 		[Test]

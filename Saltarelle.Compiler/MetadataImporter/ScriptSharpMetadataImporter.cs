@@ -689,9 +689,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				else {
 					if (method.IsStatic) {
-						if (method.Parameters.Count != 1)
+						if (method.Parameters.Count != 1) {
 							_errors[GetQualifiedMemberName(method) + ":ScriptSkipParameterCount"] = "The static method " + GetQualifiedMemberName(method) + " must have exactly one parameter in order to have a [ScriptSkipAttribute].";
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{0}");
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+							return;
+						}
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}");
 						return;
 					}
 					else {

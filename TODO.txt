@@ -51,7 +51,6 @@ Stack, Stack<T>: Ensure works
 DictionaryEntry: Remove
 DependencyAttribute: ?
 Arguments: Ensure works
-Array: Implement IList, ICollection, IEnumerable, (generic and non-generic), remove grouping
 Date: Ensure operators work (requires user-defined operators in the compiler)
 Function: Move members to Delegate
 Nullable: Ensure works (why are there op_Implicit and op_Explicit?)
@@ -66,3 +65,4 @@ Number refactoring
 Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
 
 Exception refactoring
+Inline code reference issues in JsDictionary and JsDictionary<,>
