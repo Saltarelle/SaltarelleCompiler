@@ -38,24 +38,15 @@ QUnit tests
 
 Runtime library:
 
-Add type Int32. typeof(double) == Number, number.__typeName should be 'Double'
-Improve exception structure.
-typeof(string), etc. should return valid types with interfaces.
-Remove class System.Number (should be System.Double)
-
 ObservableCollection: Inherit IList<T>, ensure works.
 Queue, Queue<T>: Ensure works
 Stack, Stack<T>: Ensure works
-Arguments: Ensure works
 Date: Ensure operators work (requires user-defined operators in the compiler)
-Function: Move members to Delegate
+Decimal: Ensure operators work.
+Function: Should be convertible to Delegate.
 Record: Ensure works
-Script: Ensure works
 String: Operators, ensure methods with character arguments work (eg. + )
-StringBuilder: Add Append(char)
 XmlNodeList
-
-Number refactoring, incl. integer division, truncation
-Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
+Math, esp. max(param array) and min(param array)
 
 Inline code reference issues in JsDictionary and JsDictionary<,>

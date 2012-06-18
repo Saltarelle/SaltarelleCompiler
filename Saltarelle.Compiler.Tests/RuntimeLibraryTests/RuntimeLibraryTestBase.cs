@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
 		private enum OutputType { None, GeneratedScript, Html };
 
-		private OutputType Output = OutputType.Html;
+		private OutputType Output = OutputType.GeneratedScript;
 
 		private HtmlPage GeneratePage(string script) {
 			WebClient client = new WebClient();
@@ -54,6 +54,9 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			}
 			else if (result is java.lang.Double) {
 				return ((java.lang.Double)result).doubleValue();
+			}
+			else if (result is java.lang.Integer) {
+				return ((java.lang.Integer)result).intValue();
 			}
 			else {
 				return result;

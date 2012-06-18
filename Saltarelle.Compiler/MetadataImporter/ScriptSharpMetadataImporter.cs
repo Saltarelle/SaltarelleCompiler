@@ -667,10 +667,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 				return;
 			}
-			else if (_typeSemantics[method.DeclaringTypeDefinition].GlobalMethods) {
-				_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true);
-				return;
-			}
 			else if (ssa != null) {
 				// [ScriptSkip] - Skip invocation of the method entirely.
 				if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
@@ -828,6 +824,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
 							return;
 						}
+					}
+					else if (_typeSemantics[method.DeclaringTypeDefinition].GlobalMethods) {
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true);
+						return;
 					}
 					else {
 						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, usedNames);
