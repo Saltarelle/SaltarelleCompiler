@@ -1151,7 +1151,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.Type.IsReferenceType == true)
 					return JsExpression.Null;
 				else
-					return _runtimeLibrary.Default(_runtimeLibrary.GetScriptType(rr.Type, false));
+					return _runtimeLibrary.Default(rr.Type);
 			}
 			else
 				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");

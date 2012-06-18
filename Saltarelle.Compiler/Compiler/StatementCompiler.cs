@@ -94,11 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
 				value = JsExpression.Null;
 			}
 			else if (type.IsReferenceType == null) {
-				var jsType = _expressionCompiler.Compile(new TypeResolveResult(type), true);
-				if (jsType.AdditionalStatements.Count > 0)
-					_errorReporter.Error("Type reference cannot return additional statements.");
-
-				value = _runtimeLibrary.Default(jsType.Expression);
+				value = _runtimeLibrary.Default(type);
 			}
 			else {
 				var code = type.GetDefinition().KnownTypeCode;

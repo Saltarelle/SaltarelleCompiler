@@ -567,7 +567,38 @@ public class C {
 
 		[Test]
 		public void DefaultValuesWork() {
-			Assert.Fail("TODO");
+			var result = ExecuteCSharp(@"
+using System.Collections.Generic;
+public class C {
+	static string s;
+	static T F<T>() {
+		return default(T);
+	}
+
+	public static object[] M() {
+		return new object[] {
+			F<sbyte>(),
+			F<byte>(),
+			F<short>(),
+			F<ushort>(),
+			F<int>(),
+			F<uint>(),
+			F<long>(),
+			F<ulong>(),
+			F<float>(),
+			F<double>(),
+			F<decimal>(),
+			F<bool>(),
+			F<object>(),
+			F<C>(),
+			F<IDictionary<string, int>>(),
+			F<Dictionary<string, int>>(),
+			F<int?>(),
+		};
+	}
+}", "C.M");
+
+			Assert.That(result, Is.EqualTo(new object[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, null, null, null, null, null }));
 		}
 	}
 }

@@ -92,7 +92,7 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Generates an expression that returns the default value for a type (C#: default(T)).
 		/// </summary>
-		JsExpression Default(JsExpression type);
+		JsExpression Default(IType type);
 
 		/// <summary>
 		/// Generates an expression that creates an array of a specified size, with all elements uninitialized.

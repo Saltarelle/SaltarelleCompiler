@@ -627,8 +627,9 @@ class C1 {
 
 		[Test]
 		public void IgnoreGenericArgumentsAttributeOnTypeCausesGenericArgumentsToBeIgnored() {
-			Prepare(@"using System.Runtime.CompilerServices; [IgnoreGenericArguments] class C1<T1, T2> {}");
+			Prepare(@"using System.Runtime.CompilerServices; [IgnoreGenericArguments] public class C1<T1, T2> {}");
 			var t = FindType("C1`2");
+			Assert.That(t.Name, Is.EqualTo("C1"));
 			Assert.That(t.IgnoreGenericArguments, Is.True);
 		}
 

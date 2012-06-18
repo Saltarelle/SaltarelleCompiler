@@ -52,7 +52,7 @@ namespace Saltarelle.Compiler.Tests {
 			LiftedBooleanAnd         = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
 			LiftedBooleanOr          = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
 			Bind                     = (f, t)        => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
-			Default                  = (t)           => JsExpression.Invocation(JsExpression.Identifier("$Default"), t);
+			Default                  = (t)           => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, false));
 			CreateArray              = (s)           => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
 			CallBase                 = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), JsExpression.ArrayLiteral(a) });
 			BindBaseCall             = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanAnd { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanOr { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
-		public Func<JsExpression, JsExpression> Default { get; set; }
+		public Func<IType, JsExpression> Default { get; set; }
 		public Func<JsExpression, JsExpression> CreateArray { get; set; }
 		public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<JsExpression, string, IEnumerable<JsExpression>, JsExpression, JsExpression> BindBaseCall { get; set; }
@@ -138,7 +138,7 @@ namespace Saltarelle.Compiler.Tests {
 			return Bind(function, target);
 		}
 
-		JsExpression IRuntimeLibrary.Default(JsExpression type) {
+		JsExpression IRuntimeLibrary.Default(IType type) {
 			return Default(type);
 		}
 

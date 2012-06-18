@@ -186,9 +186,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private string GetDefaultTypeName(ITypeDefinition def) {
-			int outerCount = (def.DeclaringTypeDefinition != null ? def.DeclaringTypeDefinition.TypeParameters.Count : 0);
-			return def.Name + (def.TypeParameterCount != outerCount ? "$" + (def.TypeParameterCount - outerCount).ToString(CultureInfo.InvariantCulture) : "");
+		private string GetDefaultTypeName(ITypeDefinition def, bool ignoreGenericArguments) {
+			if (ignoreGenericArguments) {
+				return def.Name;
+			}
+			else {
+				int outerCount = (def.DeclaringTypeDefinition != null ? def.DeclaringTypeDefinition.TypeParameters.Count : 0);
+				return def.Name + (def.TypeParameterCount != outerCount ? "$" + (def.TypeParameterCount - outerCount).ToString(CultureInfo.InvariantCulture) : "");
+			}
 		}
 
 		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName) {
@@ -244,6 +249,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool isImported = GetAttributePositionalArgs(typeDefinition, ImportedAttribute) != null;
 			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
 
+			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null;
+
 			string typeName, nmspace;
 			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
 				typeName = (string)scriptNameAttr[0];
@@ -260,7 +267,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
 				}
 				else {
-					typeName = GetDefaultTypeName(typeDefinition);
+					typeName = GetDefaultTypeName(typeDefinition, ignoreGenericArguments);
 					if (typeDefinition.DeclaringTypeDefinition != null) {
 						if (GetAttributePositionalArgs(typeDefinition, IgnoreNamespaceAttribute) != null || GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute) != null) {
 							_errors[typeDefinition.FullName + ":Namespace"] = "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type " + typeDefinition.FullName + ".";
@@ -326,7 +333,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, false) : tp.Name;
 			}
 
-			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null;
 			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord);
 		}
 

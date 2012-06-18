@@ -114,8 +114,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), target, function);
 		}
 
-		public JsExpression Default(JsExpression type) {
-			throw new NotImplementedException();
+		public JsExpression Default(IType type) {
+			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(type, false), "getDefaultValue"));
 		}
 
 		public JsExpression CreateArray(JsExpression size) {
