@@ -59,5 +59,3 @@ Number refactoring, incl. integer division, truncation
 Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
 
 Inline code reference issues in JsDictionary and JsDictionary<,>
-
-Base calls, chaining constructors, binding base calls.

@@ -177,8 +177,13 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return JsExpression.Invocation(JsExpression.MemberAccess(method, "call"), thisAndArguments);
 		}
 
-		public JsExpression BindBaseCall(IType baseType, string methodName, IEnumerable<IType> typeArguments, JsExpression @this) {
-			throw new NotImplementedException();
+		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, false), "prototype"), methodName);
+			
+			if (typeArguments != null && typeArguments.Count > 0)
+				method = InstantiateGenericMethod(method, typeArguments);
+
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), @this, method);
 		}
 	}
 }

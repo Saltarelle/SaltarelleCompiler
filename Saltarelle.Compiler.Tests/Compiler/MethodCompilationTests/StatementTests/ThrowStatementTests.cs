@@ -72,6 +72,7 @@ public void M() {
 			}
 		}
 		catch ($tmp2) {
+			$tmp2 = $MakeException($tmp2);
 			if ($TypeIs($tmp2, {ArgumentException})) {
 				throw $tmp2;
 			}

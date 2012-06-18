@@ -600,5 +600,338 @@ public class C {
 
 			Assert.That(result, Is.EqualTo(new object[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, null, null, null, null, null }));
 		}
+
+		[Test]
+		public void InvokingBaseUnnamedConstructorWithoutArgumentsWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+public class B {
+	public string messageB;
+
+	public B() {
+		messageB = ""X"";
+	}
+}
+
+public class D : B {
+	public string messageD;
+
+	public D() {
+		messageD = ""Y"";
+	}
+}
+
+
+public class C {
+	public static string M() {
+		var d = new D();
+		return d.messageB + ""|"" + d.messageD;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("X|Y"));
+		}
+
+		[Test]
+		public void InvokingBaseUnnamedConstructorWithArgumentsWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public string messageB;
+
+	public B(int x, int y) {
+		messageB = x + "" "" + y;
+	}
+}
+
+public class D : B {
+	public string messageD;
+
+	public D(int x, int y) : base(x + 1, y + 1) {
+		messageD = x + "" "" + y;
+	}
+}
+
+
+public class C {
+	public static string M() {
+		var d = new D(5, 8);
+		return d.messageB + ""|"" + d.messageD;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("6 9|5 8"));
+		}
+
+		[Test]
+		public void InvokingBaseNamedConstructorWithoutArgumentsWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public string messageB;
+
+	[ScriptName(""myCtor"")]
+	public B() {
+		messageB = ""X"";
+	}
+}
+
+public class D : B {
+	public string messageD;
+
+	public D() {
+		messageD = ""Y"";
+	}
+}
+
+
+public class C {
+	public static string M() {
+		var d = new D();
+		return d.messageB + ""|"" + d.messageD;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("X|Y"));
+		}
+
+		[Test]
+		public void InvokingBaseNamedConstructorWithArgumentsWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public string messageB;
+
+	[ScriptName(""myCtor"")]
+	public B(int x, int y) {
+		messageB = x + "" "" + y;
+	}
+}
+
+public class D : B {
+	public string messageD;
+
+	public D(int x, int y) : base(x + 1, y + 1) {
+		messageD = x + "" "" + y;
+	}
+}
+
+
+public class C {
+	public static string M() {
+		var d = new D(5, 8);
+		return d.messageB + ""|"" + d.messageD;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("6 9|5 8"));
+		}
+
+		[Test]
+		public void ConstructingInstanceWithNamedConstructorWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class D {
+	public string GetMessage() { return ""The message "" + f; }
+
+	private string f;
+
+	[ScriptName(""myCtor"")]
+	public D() {
+		f = ""from ctor"";
+	}
+}
+
+
+public class C {
+	public static string M() {
+		return new D().GetMessage();
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("The message from ctor"));
+		}
+
+		[Test]
+		public void InvokingBaseMethodWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public virtual int F(int x, int y) { return x - y; }
+}
+
+public class D : B {
+	public override int F(int x, int y) { return x + y; }
+
+	public int DoIt(int x, int y) {
+		return base.F(x, y);
+	}
+}
+
+public class C {
+	public static int M() {
+		return new D().DoIt(5, 3);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void InvokingGenericBaseMethodWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public virtual int F<T>(int x, int y) { return x - y; }
+}
+
+public class D : B {
+	public override int F<T>(int x, int y) { return x + y; }
+
+	public int DoIt(int x, int y) {
+		return base.F<string>(x, y);
+	}
+}
+
+public class C {
+	public static int M() {
+		return new D().DoIt(5, 3);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void ConvertingAMethodToADelegateWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class D  {
+	private int m;
+
+	public int F(int x, int y) { return x + y + m; }
+
+	public D(int m) {
+		this.m = m;
+	}
+
+	public Func<int, int, int> GetF() {
+		return F;
+	}
+}
+
+public class C {
+	public static int M() {
+		return new D(5).GetF()(5, 3);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(13));
+		}
+
+		[Test]
+		public void ConvertingAGenericMethodToADelegateWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class D  {
+	private int m;
+
+	public int F<T>(int x, int y) { return x + y + m; }
+
+	public D(int m) {
+		this.m = m;
+	}
+
+	public Func<int, int, int> GetF() {
+		return F<string>;
+	}
+}
+
+public class C {
+	public static int M() {
+		return new D(5).GetF()(5, 3);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(13));
+		}
+
+		[Test]
+		public void ConvertingABaseMethodToADelegateWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public int m;
+
+	public virtual int F(int x, int y) { return x + y + m; }
+
+	public B(int m) {
+		this.m = m;
+	}
+}
+
+public class D : B {
+	public override int F(int x, int y) { return x - y - m; }
+
+	public Func<int, int, int> GetF() {
+		return base.F;
+	}
+
+	public D(int m) : base(m) {
+	}
+}
+
+public class C {
+	public static int M() {
+		return new D(5).GetF()(5, 3);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(13));
+		}
+
+		[Test]
+		public void ConvertingAGenericBaseMethodToADelegateWorks() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class B {
+	public int m;
+
+	public virtual int F<T>(int x, int y) { return x + y + m; }
+
+	public B(int m) {
+		this.m = m;
+	}
+}
+
+public class D : B {
+	public override int F<T>(int x, int y) { return x - y - m; }
+
+	public Func<int, int, int> GetF() {
+		return base.F<string>;
+	}
+
+	public D(int m) : base(m) {
+	}
+}
+
+public class C {
+	public static int M() {
+		return new D(5).GetF()(5, 3);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(13));
+		}
 	}
 }

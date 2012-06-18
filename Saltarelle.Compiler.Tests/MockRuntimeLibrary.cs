@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IType, JsExpression> Default { get; set; }
 		public Func<JsExpression, JsExpression> CreateArray { get; set; }
 		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
-		public Func<IType, string, IEnumerable<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
+		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
 
 		JsExpression IRuntimeLibrary.GetScriptType(IType type, bool returnOpenType) {
 			return GetScriptType(type, returnOpenType);
@@ -150,7 +150,7 @@ namespace Saltarelle.Compiler.Tests {
 			return CallBase(baseType, methodName, typeArguments, thisAndArguments);
 		}
 
-		JsExpression IRuntimeLibrary.BindBaseCall(IType baseType, string methodName, IEnumerable<IType> typeArguments, JsExpression @this) {
+		JsExpression IRuntimeLibrary.BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
 			return BindBaseCall(baseType, methodName, typeArguments, @this);
 		}
 	}

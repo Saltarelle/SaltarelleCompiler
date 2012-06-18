@@ -115,6 +115,6 @@ namespace Saltarelle.Compiler {
 		/// <param name="methodName">Name of the method to bind.</param>
 		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
 		/// <param name="@this">Expression to use for "this" (target of the method call).</param>
-		JsExpression BindBaseCall(IType baseType, string methodName, IEnumerable<IType> typeArguments, JsExpression @this);
+		JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this);
 	}
 }
