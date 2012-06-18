@@ -508,11 +508,14 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsBlockStatement CompileCatchClause(LocalResolveResult catchVariable, CatchClause catchClause, bool isCatchAll) {
+		private JsBlockStatement CompileCatchClause(LocalResolveResult catchVariable, CatchClause catchClause, bool isCatchAll, bool isOnly) {
 			JsStatement variableDeclaration = null;
 			if (!catchClause.VariableNameToken.IsNull) {
-				var compiledAssignment = isCatchAll ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name))
-				                                    : _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type);
+				JsExpression compiledAssignment;
+				if (isCatchAll)	// If this is the only handler we need to construct the exception
+					compiledAssignment = isOnly ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name)) : JsExpression.Identifier(_variables[catchVariable.Variable].Name);
+				else
+					compiledAssignment = _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type);
 
 				variableDeclaration = new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment));
 			}
@@ -538,12 +541,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type == systemException);
 				JsStatement current = lastIsCatchall
-					                ? CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[catchClauses.Count - 1], true)
+					                ? CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[catchClauses.Count - 1], true, catchClauses.Count == 1)
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
 					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _resolver.Resolve(catchClauses[i].Type).Type);
-					current = new JsIfStatement(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false), current);
+					current = new JsIfStatement(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false, catchClauses.Count == 1), current);
+				}
+
+				if (!lastIsCatchall || catchClauses.Count > 1) {
+					// We need to wrap the exception.
+					current = new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(catchVariableName), _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName)))), current);
 				}
 
 				catchClause = new JsCatchClause(catchVariableName, current);

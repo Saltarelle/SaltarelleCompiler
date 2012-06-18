@@ -22,6 +22,7 @@ goto
 User-defined operators
 Query comprehension
 Other reference importers.
+Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 
 
 Script# features to handle:
@@ -57,5 +58,6 @@ XmlNodeList
 Number refactoring, incl. integer division, truncation
 Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
 
-Exception refactoring
 Inline code reference issues in JsDictionary and JsDictionary<,>
+
+Base calls, chaining constructors, binding base calls.

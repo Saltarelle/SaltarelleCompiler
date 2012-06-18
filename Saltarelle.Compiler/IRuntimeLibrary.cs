@@ -40,7 +40,7 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Returns an expression that will instantiate a generic method.
 		/// </summary>
-		JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<JsExpression> typeArguments);
+		JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments);
 
 		/// <summary>
 		/// Returns an expression that will convert a given expression to an exception. This is used to be able to throw a JS string and catch it as an Exception.
@@ -106,7 +106,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="methodName">Name of the method to invoke.</param>
 		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
 		/// <param name="thisAndArguments">Arguments to the method, including "this" as the first element.</param>
-		JsExpression CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments);
+		JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments);
 
 		/// <summary>
 		/// Generates an expression to bind a base implementation of an overridden method. Used when converting a method group to a delegate.
@@ -115,6 +115,6 @@ namespace Saltarelle.Compiler {
 		/// <param name="methodName">Name of the method to bind.</param>
 		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
 		/// <param name="@this">Expression to use for "this" (target of the method call).</param>
-		JsExpression BindBaseCall(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, JsExpression @this);
+		JsExpression BindBaseCall(IType baseType, string methodName, IEnumerable<IType> typeArguments, JsExpression @this);
 	}
 }

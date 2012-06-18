@@ -908,7 +908,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Number(0);
 			}
 
-			var jsTypeArguments = (impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 ? typeArguments.Select(a => _runtimeLibrary.GetScriptType(a, false)).ToList() : new List<JsExpression>());
+			typeArguments = (impl != null && !impl.IgnoreGenericArguments ? typeArguments : new List<IType>());
 
 			if (impl == null) {
 				return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));	// Used for delegate invocations.
@@ -917,13 +917,13 @@ namespace Saltarelle.Compiler.Compiler {
 				switch (impl.Type) {
 					case MethodScriptSemantics.ImplType.NormalMethod: {
 						if (isNonVirtualInvocationOfVirtualMethod) {
-							return _runtimeLibrary.CallBase(_runtimeLibrary.GetScriptType(method.DeclaringType, false), impl.Name, jsTypeArguments, thisAndArguments);
+							return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments);
 						}
 						else {
 							var jsMethod = method.IsStatic && impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
 
-							if (jsTypeArguments.Count > 0) {
-								var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
+							if (typeArguments.Count > 0) {
+								var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
 								if (method.IsStatic)
 									thisAndArguments[0] = JsExpression.Null;
 								return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), thisAndArguments);
@@ -936,8 +936,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
 						var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(method.DeclaringType, false), impl.Name);
-						if (jsTypeArguments.Count > 0) {
-							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
+						if (typeArguments.Count > 0) {
+							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
 							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
 						}
 						else {
@@ -1361,12 +1361,12 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Number(0);
 				}
 
-				var jsTypeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments.Select(a => _runtimeLibrary.GetScriptType(a, false)).ToList() : new List<JsExpression>();
+				var typeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments : new List<IType>();
 
 				if (rr.Conversion.Method.IsVirtual && !rr.Conversion.IsVirtualMethodLookup) {
 					// base.Method
 					var jsTarget = InnerCompile(mgrr.TargetResult, true);
-					return _runtimeLibrary.BindBaseCall(_runtimeLibrary.GetScriptType(rr.Conversion.Method.DeclaringType, false), impl.Name, jsTypeArguments, jsTarget);
+					return _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, impl.Name, typeArguments, jsTarget);
 				}
 				else {
 					JsExpression jsTarget, jsMethod;
@@ -1380,8 +1380,8 @@ namespace Saltarelle.Compiler.Compiler {
 						jsMethod = JsExpression.MemberAccess(jsTarget, impl.Name);
 					}
 
-					if (jsTypeArguments.Count > 0) {
-						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, jsTypeArguments);
+					if (typeArguments.Count > 0) {
+						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
 					}
 
 					return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;

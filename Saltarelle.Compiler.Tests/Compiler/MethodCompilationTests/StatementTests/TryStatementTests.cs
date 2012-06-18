@@ -43,6 +43,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentException})) {
 			var $ex = $Cast($tmp1, {ArgumentException});
 			var $y = 0;
@@ -71,6 +72,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentException})) {
 			var $y = 0;
 		}
@@ -194,6 +196,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentNullException})) {
 			var $ex = $Cast($tmp1, {ArgumentNullException});
 			var $y = 0;
@@ -231,6 +234,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentNullException})) {
 			var $y = 0;
 		}
@@ -239,6 +243,45 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 			var $z = 0;
 		}
 		else {
+			var $z2 = 0;
+		}
+	}
+");
+		}
+
+		[Test]
+		public void TryCatchBlockThatCatchesSpecificExceptionTypesAndNamedSystemExceptionWorks() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	try {
+		int x = 0;
+	}
+	catch (System.ArgumentNullException) {
+		int y = 0;
+	}
+	catch (System.ArgumentException ex) {
+		int z = 0;
+	}
+	catch (System.Exception ex2) {
+		int z2 = 0;
+	}
+	// END
+}",
+@"	try {
+		var $x = 0;
+	}
+	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
+		if ($TypeIs($tmp1, {ArgumentNullException})) {
+			var $y = 0;
+		}
+		else if ($TypeIs($tmp1, {ArgumentException})) {
+			var $ex = $Cast($tmp1, {ArgumentException});
+			var $z = 0;
+		}
+		else {
+			var $ex2 = $tmp1;
 			var $z2 = 0;
 		}
 	}
@@ -268,6 +311,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentNullException})) {
 			var $y = 0;
 		}
@@ -308,6 +352,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentNullException})) {
 			var $y = 0;
 		}
@@ -369,6 +414,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		var $x = 0;
 	}
 	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
 		if ($TypeIs($tmp1, {ArgumentException})) {
 			var $y = 0;
 		}

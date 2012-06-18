@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Tests {
 			TryDowncast              = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, false));
 			Downcast                 = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, false));
 			Upcast                   = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, false));
-			InstantiateGenericMethod = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a));
+			InstantiateGenericMethod = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, false))));
 			MakeException            = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 			IntegerDivision          = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
 			FloatToInt               = (e)           => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
@@ -54,15 +54,15 @@ namespace Saltarelle.Compiler.Tests {
 			Bind                     = (f, t)        => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
 			Default                  = (t)           => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, false));
 			CreateArray              = (s)           => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
-			CallBase                 = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), JsExpression.ArrayLiteral(a) });
-			BindBaseCall             = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { t, JsExpression.String(n), JsExpression.ArrayLiteral(ta), a });
+			CallBase                 = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, false), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, false))), JsExpression.ArrayLiteral(a) });
+			BindBaseCall             = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, false), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, false))), a });
 		}
 
 		public Func<IType, bool, JsExpression> GetScriptType { get; set; }
 		public Func<JsExpression, IType, JsExpression> TypeIs { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> TryDowncast { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> Downcast { get; set; }
-		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
+		public Func<JsExpression, IEnumerable<IType>, JsExpression> InstantiateGenericMethod { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> Upcast { get; set; }
 		public Func<JsExpression, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
@@ -75,8 +75,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
 		public Func<IType, JsExpression> Default { get; set; }
 		public Func<JsExpression, JsExpression> CreateArray { get; set; }
-		public Func<JsExpression, string, IEnumerable<JsExpression>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
-		public Func<JsExpression, string, IEnumerable<JsExpression>, JsExpression, JsExpression> BindBaseCall { get; set; }
+		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
+		public Func<IType, string, IEnumerable<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
 
 		JsExpression IRuntimeLibrary.GetScriptType(IType type, bool returnOpenType) {
 			return GetScriptType(type, returnOpenType);
@@ -98,7 +98,7 @@ namespace Saltarelle.Compiler.Tests {
 			return Upcast(expression, sourceType, targetType);
 		}
 
-		JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<JsExpression> typeArguments) {
+		JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<IType> typeArguments) {
 			return InstantiateGenericMethod(type, typeArguments);
 		}
 
@@ -146,11 +146,11 @@ namespace Saltarelle.Compiler.Tests {
 			return CreateArray(size);
 		}
 
-		JsExpression IRuntimeLibrary.CallBase(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
+		JsExpression IRuntimeLibrary.CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
 			return CallBase(baseType, methodName, typeArguments, thisAndArguments);
 		}
 
-		JsExpression IRuntimeLibrary.BindBaseCall(JsExpression baseType, string methodName, IEnumerable<JsExpression> typeArguments, JsExpression @this) {
+		JsExpression IRuntimeLibrary.BindBaseCall(IType baseType, string methodName, IEnumerable<IType> typeArguments, JsExpression @this) {
 			return BindBaseCall(baseType, methodName, typeArguments, @this);
 		}
 	}
