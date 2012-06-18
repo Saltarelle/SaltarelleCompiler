@@ -360,6 +360,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
+			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
 
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
@@ -374,11 +375,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
-			bool preserveName =    GetAttributePositionalArgs(member, PreserveNameAttribute) != null
-			                    || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
-			                    || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
-			                    || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods
-			                    || (_typeSemantics[member.DeclaringTypeDefinition].IsRecord && !member.IsStatic && (member is IProperty || member is IField));
+
+			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
+			                                                       || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
+			                                                       || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
+			                                                       || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods
+								                                   || (!_typeSemantics[member.DeclaringTypeDefinition].Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
+			                                                       || (_typeSemantics[member.DeclaringTypeDefinition].IsRecord && !member.IsStatic && (member is IProperty || member is IField))));
+
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 

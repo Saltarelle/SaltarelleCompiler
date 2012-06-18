@@ -13,7 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Saltarelle.Compiler.Tests",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{960B2991-27DA-4D76-A771-5E97946D0074}"
 	ProjectSection(SolutionItems) = preProject
-		Stuff to change in mscorlib.txt = Stuff to change in mscorlib.txt
 		TODO.txt = TODO.txt
 	EndProjectSection
 EndProject

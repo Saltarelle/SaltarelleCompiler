@@ -97,7 +97,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression FromNullable(JsExpression expression) {
-			throw new NotImplementedException();
+			// TODO: Obviously not good...
+			return expression;
+//			throw new NotImplementedException();
 		}
 
 		public JsExpression LiftedBooleanAnd(JsExpression a, JsExpression b) {

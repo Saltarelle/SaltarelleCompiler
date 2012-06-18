@@ -27,6 +27,24 @@ public class C1 {
 		}
 
 		[Test]
+		public void NameIsPreservedForImportedTypes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[Imported]
+class C1 {
+	event System.EventHandler Evt1;
+}");
+
+			var e1 = FindEvent("C1.Evt1");
+			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e1.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.AddMethod.Name, Is.EqualTo("add_evt1"));
+			Assert.That(e1.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.RemoveMethod.Name, Is.EqualTo("remove_evt1"));
+		}
+
+		[Test]
 		public void EventHidingBaseMemberGetsAUniqueName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

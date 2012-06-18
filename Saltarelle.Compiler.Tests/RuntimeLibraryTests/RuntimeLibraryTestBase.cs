@@ -13,8 +13,9 @@ using System.Linq;
 
 namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
-		private bool WriteGeneratedScriptToConsole = true;
-		private bool WriteHtmlToConsole = false;
+		private enum OutputType { None, GeneratedScript, Html };
+
+		private OutputType Output = OutputType.GeneratedScript;
 
 		private HtmlPage GeneratePage(string script) {
 			WebClient client = new WebClient();
@@ -30,7 +31,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	</body>
 </html>
 ";
-				if (WriteHtmlToConsole)
+				if (Output == OutputType.Html)
 					Console.Write(html);
 
 				var response = new StringWebResponse(html, new URL("http://localhost/test.htm"));
@@ -83,7 +84,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 
-			if (WriteGeneratedScriptToConsole)
+			if (Output == OutputType.GeneratedScript)
 				Console.WriteLine(script);
 
 			int lastDot = methodName.LastIndexOf(".", System.StringComparison.Ordinal);

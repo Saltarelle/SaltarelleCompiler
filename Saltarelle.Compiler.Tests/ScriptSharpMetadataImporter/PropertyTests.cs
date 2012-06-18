@@ -41,6 +41,30 @@ public class C1 {
 		}
 
 		[Test]
+		public void NameIsPreservedForImportedTypes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[Imported]
+class C1 {
+	int Prop1 { get; set; }
+	[IntrinsicProperty]
+	int Prop2 { get; set; }
+}");
+			
+			var p1 = FindProperty("C1.Prop1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_prop1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_prop1"));
+
+			var p2 = FindProperty("C1.Prop2");
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p2.FieldName, Is.EqualTo("prop2"));
+		}
+
+		[Test]
 		public void PropertyHidingBaseMemberGetsAUniqueName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

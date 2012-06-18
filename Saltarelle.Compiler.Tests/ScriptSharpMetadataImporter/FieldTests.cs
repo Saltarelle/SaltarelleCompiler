@@ -24,6 +24,21 @@ public class C1 {
 		}
 
 		[Test]
+		public void NameIsPreservedForImportedTypes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[Imported]
+class C1 {
+	int Field1;
+}");
+
+			var f1 = FindField("C1.Field1");
+			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f1.Name, Is.EqualTo("field1"));
+		}
+
+		[Test]
 		public void FieldHidingBaseMemberGetsAUniqueName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

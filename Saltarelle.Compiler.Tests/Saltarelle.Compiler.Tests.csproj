@@ -216,6 +216,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\TypeConversionTests.cs" />
     <Compile Include="ReferenceImporterTests\GlobalNamespaceReferenceImporterTests.cs" />
+    <Compile Include="RuntimeLibraryTests\ArrayTests.cs" />
     <Compile Include="RuntimeLibraryTests\DelegateTests.cs" />
     <Compile Include="RuntimeLibraryTests\TypeSystemLanguageSupportTests.cs" />
     <Compile Include="RuntimeLibraryTests\TypeSystemTests.cs" />

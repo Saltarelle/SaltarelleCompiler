@@ -65,6 +65,51 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
+		public void NameIsPreservedForImportedTypes() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[Imported]
+class C {
+	void SomeMethod() {
+	}
+	[PreserveName]
+	void SomeMethod(int x) {
+	}
+	[PreserveCase]
+	void SomeMethod(int x, int y) {
+	}
+	[ScriptName(""Renamed"")]
+	void SomeMethod(int x, int y, int z) {
+	}
+}");
+
+			var methods = FindMethods("C.SomeMethod");
+			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("someMethod"));
+			Assert.That(m1.IgnoreGenericArguments, Is.False);
+			Assert.That(m1.GenerateCode, Is.True);
+
+			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1).Item2;
+			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m2.Name, Is.EqualTo("someMethod"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			Assert.That(m2.GenerateCode, Is.True);
+
+			var m3 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m3.Name, Is.EqualTo("SomeMethod"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			Assert.That(m3.GenerateCode, Is.True);
+
+			var m4 = methods.Single(x => x.Item1.Parameters.Count == 3).Item2;
+			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m4.Name, Is.EqualTo("Renamed"));
+			Assert.That(m4.IgnoreGenericArguments, Is.False);
+			Assert.That(m4.GenerateCode, Is.True);
+		}
+
+		[Test]
 		public void MethodShadowingBaseMethodGetsANewName() {
 			Prepare(
 @"public class A {

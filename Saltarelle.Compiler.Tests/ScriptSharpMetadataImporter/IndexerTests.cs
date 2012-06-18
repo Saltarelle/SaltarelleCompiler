@@ -43,6 +43,24 @@ public class C1 {
 		}
 
 		[Test]
+		public void NameIsPreservedForImportedTypes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[Imported]
+class C1 {
+	int this[int x] { get { return 0; } set {} }
+}");
+
+			var p1 = FindIndexer("C1", 1);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_item"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_item"));
+		}
+
+		[Test]
 		public void IndexerHidingBaseMemberGetsAUniqueName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
