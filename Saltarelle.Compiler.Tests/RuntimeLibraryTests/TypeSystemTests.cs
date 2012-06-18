@@ -564,5 +564,10 @@ public class C {
 
 			Assert.That(result, Is.EqualTo(new[] { false, false, false, true }));
 		}
+
+		[Test]
+		public void DefaultValuesWork() {
+			Assert.Fail("TODO");
+		}
 	}
 }

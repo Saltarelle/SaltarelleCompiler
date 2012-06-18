@@ -144,7 +144,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsVariableDeclaration Visit(JsVariableDeclaration declaration, TData data) {
-            var after = Visit(declaration.Initializer, data);
+            var after = (declaration.Initializer != null ? Visit(declaration.Initializer, data) : null);
             return ReferenceEquals(after, declaration.Initializer) ? declaration : new JsVariableDeclaration(declaration.Name, after);
         }
 
