@@ -139,6 +139,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly string _thisAlias;
 		private NestedFunctionContext _nestedFunctionContext;
 		private IVariable _objectBeingInitialized;
+		private IMethod _methodBeingCompiled;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -150,7 +151,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -164,6 +165,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_thisAlias = thisAlias;
 			_nestedFunctionContext = nestedFunctionContext;
 			_objectBeingInitialized = objectBeingInitialized;
+			_methodBeingCompiled = methodBeingCompiled;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -182,7 +184,11 @@ namespace Saltarelle.Compiler.Compiler {
 				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, method, argumentsForCall, argumentToParameterMap, initializerStatements, isExpandedForm)));
 			}
 			else {
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap);
+				if (impl.ExpandParams && !isExpandedForm) {
+					_errorReporter.Error("The constructor for type " + method.DeclaringType.FullName + " must be invoked in expanded form for its its param array.");
+				}
+
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 
@@ -215,7 +221,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -392,7 +398,7 @@ namespace Saltarelle.Compiler.Compiler {
 							else {
 								List<JsExpression> thisAndArguments;
 								if (property.IsIndexer) {
-									thisAndArguments = CompileThisAndArgumentListForMethodCall((CSharpInvocationResolveResult)target, oldValueIsImportant, oldValueIsImportant);
+									thisAndArguments = CompileThisAndArgumentListForMethodCall((CSharpInvocationResolveResult)target, oldValueIsImportant, oldValueIsImportant, false);
 								}
 								else {
 									thisAndArguments = new List<JsExpression> { InnerCompile(mrr.TargetResult, oldValueIsImportant) };
@@ -838,8 +844,8 @@ namespace Saltarelle.Compiler.Compiler {
 				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(CSharpInvocationResolveResult invocation, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes) {
-			return CompileThisAndArgumentListForMethodCall(invocation.TargetResult, targetUsedMultipleTimes, argumentsUsedMultipleTimes, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(CSharpInvocationResolveResult invocation, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, bool expandParams) {
+			return CompileThisAndArgumentListForMethodCall(invocation.TargetResult, targetUsedMultipleTimes, argumentsUsedMultipleTimes, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), expandParams);
 		}
 
 		private static readonly ConcurrentDictionary<int, IList<int>> argumentToParameterMapCache = new ConcurrentDictionary<int, IList<int>>();
@@ -852,7 +858,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(ResolveResult target, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(ResolveResult target, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool expandParams) {
 			argumentToParameterMap = argumentToParameterMap ?? CreateIdentityArgumentToParameterMap(argumentsForCall.Count);
 
 			var expressions = new List<JsExpression>();
@@ -903,12 +909,21 @@ namespace Saltarelle.Compiler.Compiler {
 				expressions = newExpressions;
 			}
 
+			if (expandParams && expressions[expressions.Count - 1] is JsArrayLiteralExpression) {
+				var arr = (JsArrayLiteralExpression)expressions[expressions.Count - 1];
+				expressions.RemoveAt(expressions.Count - 1);
+				expressions.AddRange(arr.Elements);
+			}
+
 			return expressions;
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall, bool isExpandedForm) {
 			var typeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : new IType[0];
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap);
+			if (impl != null && impl.ExpandParams && !isExpandedForm) {
+				_errorReporter.Error("The method " + method.DeclaringType.FullName + "." + method.Name + " must be invoked in expanded form for its its param array.");
+			}
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
 			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsVirtual && !isVirtualCall, isExpandedForm);
 		}
 
@@ -1043,7 +1058,10 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileJsonConstructorCall(method, argumentsForCall, argumentToParameterMap, initializerStatements);
 			}
 			else {
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap);
+				if (impl.ExpandParams && !isExpandedForm) {
+					_errorReporter.Error("The constructor for type " + method.DeclaringType.FullName + " must be invoked in expanded form for its its param array.");
+				}
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 
 				JsExpression constructorCall;
 
@@ -1241,6 +1259,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
+			if (rr.Variable is IParameter && ((IParameter)rr.Variable).IsParams && _methodBeingCompiled != null) {
+				var impl = _namingConvention.GetMethodSemantics(_methodBeingCompiled);
+				if (impl.ExpandParams) {
+					_errorReporter.Error("Cannot use the variable " + rr.Variable.Name + " because it is an expanded param array.");
+				}
+			}
+
 			return CompileLocal(rr.Variable, false);
 		}
 
@@ -1369,6 +1394,10 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _namingConvention.GetMethodSemantics(rr.Conversion.Method);
 				if (impl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
 					_errorReporter.Error("Cannot perform method group conversion on " + rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name + " because it is not a normal method.");
+					return JsExpression.Number(0);
+				}
+				else if (impl.ExpandParams) {
+					_errorReporter.Error("Cannot perform method group conversion on " + rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name + " because it expands its param array in script.");
 					return JsExpression.Number(0);
 				}
 

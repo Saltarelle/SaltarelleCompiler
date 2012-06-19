@@ -103,17 +103,10 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
-		private bool _expandParams;
-		public bool ExpandParams {
-			get {
-				if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument && Type != ImplType.InstanceMethodOnFirstArgument)
-					throw new InvalidOperationException();
-				return _expandParams;
-			}
-			set {
-				_expandParams = value;
-			}
-		}
+		/// <summary>
+		/// Whether the param array to this method is output to script in expanded form. Methods that use this option can only be invoked in expanded form.
+		/// </summary>
+		public bool ExpandParams { get; set; }
 
         private MethodScriptSemantics() {
         }

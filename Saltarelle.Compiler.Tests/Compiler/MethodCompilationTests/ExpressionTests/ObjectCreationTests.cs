@@ -409,7 +409,7 @@ class C {
 		[Test]
 		public void InvokingParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
 			AssertCorrect(
-@"class C1 { public C(int x, int y, params int[] args) {} }
+@"class C1 { public C1(int x, int y, params int[] args) {} }
 public void M() {
 	// BEGIN
 	var c = new C1(4, 8, 59, 12, 4);
@@ -422,7 +422,7 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
 			AssertCorrect(
-@"class C1 { public C(int x, int y, params int[] args) {} }
+@"class C1 { public C1(int x, int y, params int[] args) {} }
 public void M() {
 	// BEGIN
 	var c = new C1(4, 8, new[] { 59, 12, 4 });
@@ -435,19 +435,32 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
 			AssertCorrect(
-@"class C1 { public C(int x, int y, params int[] args) {} }
+@"class C1 { public C1(int x, int y, params int[] args) {} }
 public void M() {
 	// BEGIN
 	var c = new C1(4, 8, 59, 12, 4);
 	// END
 }",
 @"	var $c = new {C1}(4, 8, 59, 12, 4);
-");
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
 		[Test]
 		public void InvokingParamArrayConstructorThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			Assert.Fail("TODO");
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+	public void M() {
+	// BEGIN
+	var c = new C1(4, 8, new[] { 59, 12, 4 });
+	// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("constructor") && er.AllMessages[0].Contains("expanded form"));
 		}
 	}
 }

@@ -85,7 +85,17 @@ public void M() {
 
 		[Test]
 		public void CannotAccessExpandedParamsParameter() {
-			Assert.Fail("TODO");
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void M(int i, int j, params int[] myParamArray) {
+		int x = myParamArray[3];
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("myParamArray") && er.AllMessages[0].Contains("expand") && er.AllMessages[0].Contains("param array"));
 		}
 	}
 }

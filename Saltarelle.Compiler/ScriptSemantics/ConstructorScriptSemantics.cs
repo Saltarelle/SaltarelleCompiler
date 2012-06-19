@@ -76,7 +76,6 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         public bool GenerateCode { get; private set; }
 
 		private bool _isGlobal;
-
 		/// <summary>
 		/// Whether the static method constructing the type is global (not type-qualified).
 		/// </summary>
@@ -89,16 +88,21 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			set { _isGlobal = value; }
 		}
 
-        public static ConstructorScriptSemantics Unnamed(bool generateCode = true) {
-            return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode };
+		/// <summary>
+		/// Whether the param array to this method is output to script in expanded form. Methods that use this option can only be invoked in expanded form.
+		/// </summary>
+		public bool ExpandParams { get; set; }
+
+        public static ConstructorScriptSemantics Unnamed(bool generateCode = true, bool expandParams = false) {
+            return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode, ExpandParams = expandParams };
         }
 
-        public static ConstructorScriptSemantics Named(string name, bool generateCode = true) {
-            return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode };
+        public static ConstructorScriptSemantics Named(string name, bool generateCode = true, bool expandParams = false) {
+            return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode, ExpandParams = expandParams };
         }
 
-        public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool isGlobal = false) {
-            return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, IsGlobal = isGlobal };
+        public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool isGlobal = false, bool expandParams = false) {
+            return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, IsGlobal = isGlobal, ExpandParams = expandParams };
         }
 
         public static ConstructorScriptSemantics InlineCode(string literalCode) {

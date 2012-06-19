@@ -324,8 +324,18 @@ class D2 : D {
 
 		[Test]
 		public void CannotPerformMethodGroupConversionOnMethodThatExpandsParams() {
-			Assert.Fail("TODO");
-		}
+			var er = new MockErrorReporter(false);
 
+			Compile(new[] {
+@"class C1 {
+	public void F(int x, int y, params int[] args) {}
+	public void M() {
+		System.Action<int, int, int[]> a = F;
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.F") && er.AllMessages[0].Contains("expand") && er.AllMessages[0].Contains("param array"));
+		}
 	}
 }

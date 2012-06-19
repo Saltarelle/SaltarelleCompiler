@@ -769,7 +769,18 @@ public void M() {
 
 		[Test]
 		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			Assert.Fail("TODO");
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void F(int x, int y, params int[] args) {}
+	public void M() {
+		F(4, 8, new[] { 59, 12, 4 });
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1.F") && er.AllMessages[0].Contains("expanded form"));
 		}
 	}
 }

@@ -658,5 +658,63 @@ class C {
 	};
 }", useFirstConstructor: true);
         }
+
+		[Test]
+		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	{C1}.x.call(this, 4, 8, [59, 12, 4]);
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+		}
+
+		[Test]
+		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	{C1}.x.call(this, 4, 8, [59, 12, 4]);
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+		}
+
+		[Test]
+		public void ChainingToParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	{C1}.x.call(this, 4, 8, 59, 12, 4);
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToParamArrayConstructorThatExpandsArgumentsInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("constructor") && er.AllMessages[0].Contains("expanded form"));
+		}
 	}
 }
