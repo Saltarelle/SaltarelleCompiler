@@ -405,5 +405,49 @@ class C {
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("type argument") && er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("C2"));
 		}
+
+		[Test]
+		public void InvokingParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, 59, 12, 4);
+	// END
+}",
+@"	var $c = new {C1}(4, 8, [59, 12, 4]);
+");
+		}
+
+		[Test]
+		public void InvokingParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $c = new {C1}(4, 8, [59, 12, 4]);
+");
+		}
+
+		[Test]
+		public void InvokingParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, 59, 12, 4);
+	// END
+}",
+@"	var $c = new {C1}(4, 8, 59, 12, 4);
+");
+		}
+
+		[Test]
+		public void InvokingParamArrayConstructorThatExpandsArgumentsInNonExpandedFormIsAnError() {
+			Assert.Fail("TODO");
+		}
 	}
 }

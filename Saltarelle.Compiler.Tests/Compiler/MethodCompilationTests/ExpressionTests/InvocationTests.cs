@@ -34,7 +34,6 @@ public void M() {
 ");
 		}
 
-
 		[Test]
 		public void ExtensionMethodInvocationWorks() {
 			AssertCorrect(
@@ -727,6 +726,50 @@ class C {
 }" }, namingConvention: nc, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("generic argument") && er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("F1"));
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	// BEGIN
+	F(4, 8, 59, 12, 4);
+	// END
+}",
+@"	this.$F(4, 8, [59, 12, 4]);
+");
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	// BEGIN
+	F(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	this.$F(4, 8, [59, 12, 4]);
+");
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	// BEGIN
+	F(4, 8, 59, 12, 4);
+	// END
+}",
+@"	this.$F(4, 8, 59, 12, 4);
+", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormIsAnError() {
+			Assert.Fail("TODO");
 		}
 	}
 }

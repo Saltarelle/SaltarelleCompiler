@@ -322,5 +322,10 @@ class D2 : D {
 ", addSkeleton: false);
 		}
 
+		[Test]
+		public void CannotPerformMethodGroupConversionOnMethodThatExpandsParams() {
+			Assert.Fail("TODO");
+		}
+
 	}
 }

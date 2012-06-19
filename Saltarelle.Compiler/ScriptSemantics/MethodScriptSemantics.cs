@@ -103,19 +103,31 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
+		private bool _expandParams;
+		public bool ExpandParams {
+			get {
+				if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument && Type != ImplType.InstanceMethodOnFirstArgument)
+					throw new InvalidOperationException();
+				return _expandParams;
+			}
+			set {
+				_expandParams = value;
+			}
+		}
+
         private MethodScriptSemantics() {
         }
 
-        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false) {
-            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal };
+        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false, bool expandParams = false) {
+            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal, ExpandParams = expandParams };
         }
 
-        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false) {
-            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal };
+        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false, bool expandParams = false) {
+            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal, ExpandParams = expandParams };
         }
 
-        public static MethodScriptSemantics InstanceMethodOnFirstArgument(string name) {
-            return new MethodScriptSemantics { Type = ImplType.InstanceMethodOnFirstArgument, _text = name, IgnoreGenericArguments = true, GenerateCode = false };
+        public static MethodScriptSemantics InstanceMethodOnFirstArgument(string name, bool expandParams = false) {
+            return new MethodScriptSemantics { Type = ImplType.InstanceMethodOnFirstArgument, _text = name, IgnoreGenericArguments = true, GenerateCode = false, ExpandParams = expandParams };
         }
 
         public static MethodScriptSemantics InlineCode(string literalCode) {

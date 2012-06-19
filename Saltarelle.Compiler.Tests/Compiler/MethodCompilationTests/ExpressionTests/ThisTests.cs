@@ -82,5 +82,10 @@ public void M() {
 @"		var $i = $this.$x;
 ", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
+
+		[Test]
+		public void CannotAccessExpandedParamsParameter() {
+			Assert.Fail("TODO");
+		}
 	}
 }
