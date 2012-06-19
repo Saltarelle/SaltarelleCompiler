@@ -1423,5 +1423,101 @@ public void M<T>() where T : class {
 @"	var $u = $Cast($t, {U});
 ");
 		}
+
+		[Test]
+		public void UsingOpImplicitWorks() {
+			AssertCorrect(@"
+class C1 {}
+class C2 {
+	public static implicit operator C1(C2 c2) {
+		return null;
+	}
+}
+public void M() {
+	var c2 = new C2();
+	// BEGIN
+	C1 c11 = c2;
+	C1 c12 = (C1)c2;
+	// END
+}",
+@"	var $c11 = {C2}.$op_Implicit($c2);
+	var $c12 = {C2}.$op_Implicit($c2);
+");
+		}
+
+		[Test]
+		public void UsingOpExplicitWorks() {
+			AssertCorrect(@"
+class C1 {}
+class C2 {
+	public static explicit operator C1(C2 c2) {
+		return null;
+	}
+}
+public void M() {
+	var c2 = new C2();
+	// BEGIN
+	C1 c1 = (C1)c2;
+	// END
+}",
+@"	var $c1 = {C2}.$op_Explicit($c2);
+");
+		}
+
+		[Test]
+		public void NullableConversionsWorkWithOpImplicit() {
+			AssertCorrect(@"
+class C1 {
+	public static implicit operator C1(int? i) {
+		return null;
+	}
+
+	public static implicit operator int(C1 c) {
+		return 0;
+	}
+}
+
+public void M() {
+	C1 c1 = null;
+	int i = 0;
+	// BEGIN
+	int? ni1 = c1;
+	int? ni2 = (int?)c1;
+	C1 c2 = i;
+	C1 c3 = (C1)i;
+	// END
+}",
+@"	var $ni1 = {C1}.$op_Implicit($c1);
+	var $ni2 = {C1}.$op_Implicit($c1);
+	var $c2 = {C1}.$op_Implicit($i);
+	var $c3 = {C1}.$op_Implicit($i);
+");
+		}
+
+		[Test]
+		public void NullableConversionsWorkWithOpExplicit() {
+			AssertCorrect(@"
+class C1 {
+	public static explicit operator C1(int? i) {
+		return null;
+	}
+
+	public static explicit operator int(C1 c) {
+		return 0;
+	}
+}
+
+public void M() {
+	C1 c1 = null;
+	int i = 0;
+	// BEGIN
+	int? ni = (int?)c1;
+	C1 c2 = (C1)i;
+	// END
+}",
+@"	var $ni = {C1}.$op_Explicit($c1);
+	var $c2 = {C1}.$op_Explicit($i);
+");
+		}
 	}
 }

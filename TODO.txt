@@ -1,25 +1,26 @@
 TODO:
 v1:
 params
-Runtime library
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
 Const fields
-User-defined conversions (probably needed for the runtime library to work as intended).
 Improve error handling (error numbers, error positions)
-Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/user-defined operators).
+Scan for unsupported constructs (yield/async/goto (incl. goto case)/query).
 Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.
 Prevent creating a class that inherits/implements types with members with the same names.
 Cannot declare a static field called Name.
 Need to support type references in InlineCode. Also need to support param arrays and the possibility to transform the string "XYZ" to add_XYZ.
+Driver
+Exe
+MSBuild task
+User-defined operators
 
 v2:
 yield
 async
 goto
-User-defined operators
 Query comprehension
 Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
@@ -32,7 +33,6 @@ ScriptNamespaceAttribute specified on assembly.
 ResourcesAttribute.
 MixinAttribute.
 NamedValuesAttribute and NumericValuesAttribute.
-[Flags] on enums represented as "true" for the last parameter to registerEnum.
 QUnit tests
 
 

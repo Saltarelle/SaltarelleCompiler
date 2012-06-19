@@ -56,6 +56,26 @@ public void M() {
 		}
 
 		[Test]
+		public void CallToExternMethodIsNotRemoved() {
+			AssertCorrect(
+@"class C {
+	extern void Method();
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	this.$Method();
+	var $y = 0;
+");
+		}
+
+		[Test]
 		public void CallToPartialMethodWithDefinitionIsNotRemoved() {
 			AssertCorrect(
 @"partial class C {

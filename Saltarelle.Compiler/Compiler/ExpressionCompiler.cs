@@ -1405,6 +1405,10 @@ namespace Saltarelle.Compiler.Compiler {
 					return result;
 				}
 			}
+			else if (rr.Conversion.IsUserDefined) {
+				var impl = _namingConvention.GetMethodSemantics(rr.Conversion.Method);
+				return CompileMethodInvocation(impl, rr.Conversion.Method, new TypeResolveResult(rr.Conversion.Method.DeclaringType), new[] { rr.Input }, null, false);
+			}
 			else if (rr.Conversion.IsImplicit) {
 				// Null literal conversion have no property, should report this
 				return VisitResolveResult(rr.Input, true);
