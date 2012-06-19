@@ -15,7 +15,6 @@ Need to support type references in InlineCode. Also need to support param arrays
 Driver
 Exe
 MSBuild task
-User-defined operators
 
 v2:
 yield
@@ -24,6 +23,7 @@ goto
 Query comprehension
 Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
+operator true + operator false.
 
 
 Script# features to handle:

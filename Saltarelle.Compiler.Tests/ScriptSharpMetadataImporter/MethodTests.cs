@@ -1093,5 +1093,48 @@ public class C2 {
 
 			Assert.That(del.Methods.Where(m => !m.IsConstructor).Select(m => new { m.Name, Impl = Metadata.GetMethodSemantics(m) }).All(m => m.Impl.Type == (m.Name == "Invoke" ? MethodScriptSemantics.ImplType.NormalMethod : MethodScriptSemantics.ImplType.NotUsableFromScript)));
 		}
+
+		[Test]
+		public void IntrinsicOperatorAttributeWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	[IntrinsicOperator]
+	public static C1 operator+(C1 a, C1 b) { return null; }
+}");
+
+			Assert.That(FindMethod("C1.op_Addition").Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeOperator));
+		}
+
+		[Test]
+		public void IntrinsicOperatorAttributeCannotBeAppliedToNonOperatorMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	[IntrinsicOperator]
+	public static void M() {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("IntrinsicOperatorAttribute") && AllErrors[0].Contains("operator method"));
+		}
+
+		[Test]
+		public void IntrinsicOperatorAttributeCannotBeAppliedToConversionOperator() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C2 {}
+class C3 {}
+class C1 {
+	[IntrinsicOperator]
+	public static implicit operator C2(C1 c) { return null; }
+	[IntrinsicOperator]
+	public static explicit operator C3(C1 c) { return null; }
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(2));
+			Assert.That(AllErrors.Any(m => m.Contains("C1.operator C2") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
+			Assert.That(AllErrors.Any(m => m.Contains("C1.operator C3") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
+		}
 	}
 }

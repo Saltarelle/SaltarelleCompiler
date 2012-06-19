@@ -182,6 +182,7 @@
     <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\TypeIsTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\TypeOfTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\UnaryOperatorTests.cs" />
+    <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\UserDefinedOperatorTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ManualAccessorCompilationTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\BlockStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\BreakTests.cs" />

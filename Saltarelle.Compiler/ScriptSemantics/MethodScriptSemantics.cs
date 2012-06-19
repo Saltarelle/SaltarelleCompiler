@@ -35,6 +35,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             NativeIndexer,
 
             /// <summary>
+            /// The method is implemented as a native operator. Can only be used with (non-conversion) operator methods.
+            /// </summary>
+			NativeOperator,
+
+            /// <summary>
             /// The method can not be used from script. No code is generated, and any usage of it will give an error.
             /// </summary>
             NotUsableFromScript,
@@ -116,6 +121,10 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 
         public static MethodScriptSemantics NativeIndexer() {
             return new MethodScriptSemantics { Type = ImplType.NativeIndexer, GenerateCode = false };
+        }
+
+        public static MethodScriptSemantics NativeOperator() {
+            return new MethodScriptSemantics { Type = ImplType.NativeOperator, GenerateCode = false };
         }
 
         public static MethodScriptSemantics NotUsableFromScript() {

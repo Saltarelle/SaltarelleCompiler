@@ -305,6 +305,24 @@ namespace Saltarelle.Compiler.Compiler {
 			    && Equals(GetNonNullableType(type), _compilation.FindType(KnownTypeCode.Boolean));
 		}
 
+		private bool IsAssignmentOperator(ExpressionType operatorType) {
+			return operatorType == ExpressionType.AddAssign
+                || operatorType == ExpressionType.AndAssign
+                || operatorType == ExpressionType.DivideAssign
+                || operatorType == ExpressionType.ExclusiveOrAssign
+                || operatorType == ExpressionType.LeftShiftAssign
+                || operatorType == ExpressionType.ModuloAssign
+                || operatorType == ExpressionType.MultiplyAssign
+                || operatorType == ExpressionType.OrAssign
+                || operatorType == ExpressionType.PowerAssign
+                || operatorType == ExpressionType.RightShiftAssign
+                || operatorType == ExpressionType.SubtractAssign
+                || operatorType == ExpressionType.AddAssignChecked
+                || operatorType == ExpressionType.MultiplyAssignChecked
+                || operatorType == ExpressionType.SubtractAssignChecked;
+		}
+
+
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var jsTarget = InnerCompile(target.TargetResult, compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
@@ -518,6 +536,40 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
+			if (rr.UserDefinedOperatorMethod != null) {
+				var impl = _namingConvention.GetMethodSemantics(rr.UserDefinedOperatorMethod);
+				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
+					switch (rr.Operands.Count) {
+						case 1: {
+							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, false), a }, new IType[0], false);
+							switch (rr.OperatorType) {
+								case ExpressionType.PreIncrementAssign:
+									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
+								case ExpressionType.PreDecrementAssign:
+									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
+								case ExpressionType.PostIncrementAssign:
+									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
+								case ExpressionType.PostDecrementAssign:
+									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
+
+								default:
+									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, false), a }, new IType[0], false), rr.IsLiftedOperator);
+							}
+						}
+
+						case 2: {
+							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, false), a, b }, new IType[0], false);
+							if (IsAssignmentOperator(rr.OperatorType))
+								return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
+							else
+								return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], invocation, rr.IsLiftedOperator);
+						}
+					}
+					_errorReporter.Error("Could not compile call to user-defined operator " + rr.UserDefinedOperatorMethod.DeclaringType.FullName + "." + rr.UserDefinedOperatorMethod.Name);
+					return JsExpression.Number(0);
+				}
+			}
+
 			switch (rr.OperatorType) {
 				case ExpressionType.Assign:
 					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.Assign, (a, b) => b, returnValueIsImportant, false, oldValueIsImportant: false);

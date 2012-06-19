@@ -177,7 +177,7 @@ public void M() {
 	var b = MyEvent != null;
 	// END
 }",
-@"	var $b = $Upcast(this.$MyEvent, {MulticastDelegate}) !== null;
+@"	var $b = {MulticastDelegate}.$op_Inequality($Upcast(this.$MyEvent, {MulticastDelegate}), null);
 ");
 		}
 

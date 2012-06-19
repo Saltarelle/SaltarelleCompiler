@@ -27,6 +27,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
 		private const string ImportedAttribute = "ImportedAttribute";
 		private const string RecordAttribute = "RecordAttribute";
+		private const string IntrinsicOperatorAttribute = "IntrinsicOperatorAttribute";
 		private const string Function = "Function";
 		private const string Array = "Array";
 
@@ -662,9 +663,24 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var ifa = GetAttributePositionalArgs(method, InstanceMethodOnFirstArgumentAttribute);
 			var nsa = GetAttributePositionalArgs(method, NonScriptableAttribute);
 			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
+			var noa = GetAttributePositionalArgs(method, IntrinsicOperatorAttribute);
 
 			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
+				return;
+			}
+			if (noa != null) {
+				if (!method.IsOperator) {
+					_errors[GetQualifiedMemberName(method) + ":IntrinsicOperator"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [IntrinsicOperatorAttribute] because it is not an operator method.";
+					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+				}
+				if (method.Name == "op_Implicit" || method.Name == "op_Explicit") {
+					_errors[GetQualifiedMemberName(method) + ":IntrinsicOperator"] = "The [IntrinsicOperatorAttribute] cannot be applied to the operator " + method.DeclaringType.FullName + ".operator " + method.ReturnType.FullName + " because it is a conversion operator.";
+					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+				}
+				else {
+					_methodSemantics[method] = MethodScriptSemantics.NativeOperator();
+				}
 				return;
 			}
 			else if (ssa != null) {
