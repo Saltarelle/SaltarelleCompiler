@@ -131,9 +131,45 @@ x,y
 ".Replace("\r\n", "\n")));
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ConversionBetweenGenericAndNonGenericDictionariesWorks() {
-			Assert.Fail("TODO: op_Implicit is not supported in the compiler");
+			var result = ExecuteCSharp(@"
+using System;
+using System.Collections;
+using System.Collections.Generic;
+public class C {
+	static void Print<T>(ICollection<T> c) {
+		var l = new List<T>();
+		foreach (var e in c) {
+			l.Add(e);
+		}
+		l.Sort();
+		s += l.Join("","");
+		s += ""\n"";
+	}
+
+	static string s;
+	public static string M() {
+		s = """";
+
+		var d1 = new JsDictionary<string, object>();
+		d[""a""] = ""va"";
+		d[""b""] = ""vb"";
+		d[""c""] = ""vc"";
+		var d2 = (JsDictionary)d1;
+		var d3 = (JsDictionary<string, object>)d2;
+		Print(d1.Keys);
+		Print(d2.Keys);
+		Print(d3.Keys);
+
+		return s;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(
+@"a,b,c
+a,b,c
+a,b,c
+".Replace("\r\n", "\n")));
 		}
 	}
 }

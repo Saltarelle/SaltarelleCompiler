@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -337,17 +338,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord);
 		}
 
-		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
+		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition, ICompilation compilation) {
 			ProcessType(typeDefinition);
 			HashSet<string> result;
 			if (!_instanceMemberNamesByType.TryGetValue(typeDefinition, out result))
-				ProcessTypeMembers(typeDefinition);
+				ProcessTypeMembers(typeDefinition, compilation);
 			return _instanceMemberNamesByType[typeDefinition];
 		}
 
-		private HashSet<string> GetInstanceMemberNames(IEnumerable<ITypeDefinition> typeDefinitions) {
+		private HashSet<string> GetInstanceMemberNames(IEnumerable<ITypeDefinition> typeDefinitions, ICompilation compilation) {
 			var result = new HashSet<string>();
-			foreach (var n in typeDefinitions.SelectMany(GetInstanceMemberNames)) {
+			foreach (var n in typeDefinitions.SelectMany(t => GetInstanceMemberNames(t, compilation))) {
 				result.Add(n);
 			}
 			return result;
@@ -411,8 +412,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return member.DeclaringType.FullName + "." + member.Name;
 		}
 
-		private void ProcessTypeMembers(ITypeDefinition typeDefinition) {
-			var instanceMembers = GetInstanceMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition));
+		private void ProcessTypeMembers(ITypeDefinition typeDefinition, ICompilation compilation) {
+			var instanceMembers = GetInstanceMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition), compilation);
 			var staticMembers = new HashSet<string>();
 
 			var membersByName =   from m in typeDefinition.GetMembers(options: GetMemberOptions.IgnoreInheritedMembers)
@@ -427,20 +428,20 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						var method = (IMethod)m.Member;
 
 						if (method.IsConstructor) {
-							ProcessConstructor(method, current.Name, m.NameSpecified, staticMembers);
+							ProcessConstructor(method, current.Name, m.NameSpecified, staticMembers, compilation);
 						}
 						else {
-							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic || isRecord ? staticMembers : instanceMembers);
+							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic || isRecord ? staticMembers : instanceMembers, compilation);
 						}
 					}
 					else if (m.Member is IProperty) {
-						ProcessProperty((IProperty)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
+						ProcessProperty((IProperty)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers, compilation);
 					}
 					else if (m.Member is IField) {
 						ProcessField((IField)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
 					}
 					else if (m.Member is IEvent) {
-						ProcessEvent((IEvent)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
+						ProcessEvent((IEvent)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers, compilation);
 					}
 				}
 			}
@@ -468,7 +469,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
+		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, HashSet<string> usedNames, ICompilation compilation) {
 			var nsa = GetAttributePositionalArgs(constructor, NonScriptableAttribute);
 			var asa = GetAttributePositionalArgs(constructor, AlternateSignatureAttribute);
 
@@ -488,14 +489,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (ica != null) {
 				string code = (string)ica[0] ?? "";
 
-				foreach (var ph in new Regex("\\{([a-zA-Z_][a-zA-Z0-9]*)\\}").Matches(code).Cast<Match>().Select(x => x.Groups[1].Value)) {
-					if (ph == "this") {
-						_errors[GetQualifiedMemberName(constructor) + ":InlineCodeInvalidPlaceholder"] = "Cannot use the placeholder {this} in inline code for the constructor for type " + constructor.DeclaringType.FullName + ".";
-					}
-					else if (!constructor.Parameters.Any(p => p.Name == ph) && !constructor.DeclaringType.GetDefinition().TypeParameters.Any(p => p.Name == ph)) {
-						_errors[GetQualifiedMemberName(constructor) + ":InlineCodeInvalidPlaceholder"] = "Invalid placeholder {" + ph + "} in inline code for the constructor for " + constructor.DeclaringType.FullName + ".";
-						code = "X";
-					}
+				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(constructor, code, t => t.Resolve(compilation).Kind != TypeKind.Unknown);
+				if (errors.Count > 0) {
+					_errors[GetQualifiedMemberName(constructor) + ":ErrorInInlineCode"] = "The inline code for the constructor for " + constructor.DeclaringType.FullName + " contained errors: " + string.Join(", ", errors);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
+					return;
 				}
 
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(code);
@@ -539,7 +537,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
+		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, HashSet<string> usedNames, ICompilation compilation) {
 			if (_typeSemantics[property.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(property, NonScriptableAttribute) != null) {
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
 				return;
@@ -624,7 +622,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (!getterName.Item2)
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName(property, "get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames);
+				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames, compilation);
 				getter = _methodSemantics[property.Getter];
 			}
 			else {
@@ -636,7 +634,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (!setterName.Item2)
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName(property, "set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames);
+				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames, compilation);
 				setter = _methodSemantics[property.Setter];
 			}
 			else {
@@ -646,7 +644,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(getter, setter);
 		}
 
-		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
+		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, HashSet<string> usedNames, ICompilation compilation) {
 			for (int i = 0; i < method.TypeParameters.Count; i++) {
 				var tp = method.TypeParameters[i];
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, false) : tp.Name;
@@ -758,17 +756,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				else {
 					string code = (string) ica[0];
 
-					foreach (var ph in new Regex("\\{([a-zA-Z_][a-zA-Z0-9]*)\\}").Matches(code).Cast<Match>().Select(x => x.Groups[1].Value)) {
-						if (ph == "this") {
-							if (method.IsStatic) {
-								_errors[GetQualifiedMemberName(method) + ":InlineCodeInvalidPlaceholder"] = "Cannot use the placeholder {this} in inline code for the static method " + GetQualifiedMemberName(method) + ".";
-								code = "X";
-							}
-						}
-						else if (!method.Parameters.Any(p => p.Name == ph) && !method.TypeParameters.Any(p => p.Name == ph) && !method.DeclaringType.GetDefinition().TypeParameters.Any(p => p.Name == ph)) {
-							_errors[GetQualifiedMemberName(method) + ":InlineCodeInvalidPlaceholder"] = "Invalid placeholder {" + ph + "} in inline code for method " + GetQualifiedMemberName(method) + ".";
-							code = "X";
-						}
+					var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(compilation).Kind != TypeKind.Unknown);
+					if (errors.Count > 0) {
+						_errors[GetQualifiedMemberName(method) + ":ErrorInInlineCode"] = "The inline code for the method " + GetQualifiedMemberName(method) + " contained errors: " + string.Join(", ", errors);
+						code = "X";
 					}
 
 					_methodSemantics[method] = MethodScriptSemantics.InlineCode(code);
@@ -857,7 +848,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
+		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, HashSet<string> usedNames, ICompilation compilation) {
 			if (_typeSemantics[evt.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(evt, NonScriptableAttribute) != null) {
 				_eventSemantics[evt] = EventScriptSemantics.NotUsableFromScript();
 				return;
@@ -874,7 +865,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (!getterName.Item2)
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName(evt, "add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
+				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames, compilation);
 				adder = _methodSemantics[evt.AddAccessor];
 			}
 			else {
@@ -886,7 +877,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (!setterName.Item2)
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName(evt, "remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
+				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames, compilation);
 				remover = _methodSemantics[evt.RemoveAccessor];
 			}
 			else {
@@ -931,7 +922,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || Utils.IsPublic(t))) {
 				ProcessType(t);
-				ProcessTypeMembers(t);
+				ProcessTypeMembers(t, mainAssembly.Compilation);
 			}
 
 			foreach (var e in _errors.Values)

@@ -300,6 +300,7 @@ public class C {
 		Print(l);
 		l.RemoveRange(3, 4);
 		Print(l);
+		Print((Array)l);
 		l.Clear();
 		Print(l.Count);
 
@@ -355,10 +356,11 @@ false
 4,3,20,10,21,22,11,23,24,12,13,14
 4,3,20,10,21,22,11,24,12,13,14
 4,3,20,24,12,13,14
+4,3,20,24,12,13,14
 0
 ".Replace("\r\n", "\n")));
 
-			Assert.Fail("TODO: Fix the params constructor, conversion to array, concat with param array");
+			Assert.Fail("TODO: Fix the params constructor, concat with param array");
 		}
 
 

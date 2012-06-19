@@ -130,14 +130,14 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 @"using System.Runtime.CompilerServices;
 class C1<T1> {
 	class C2<T2> {
-		[InlineCode(""Some.[].Strange{ }'thing' {T1} {T2} {x} {y}"")]
+		[InlineCode(""Some.[].Strange{{ }}'thing' {T1} {T2} {x} {y}"")]
 		public C(int x, string y) {}
 	}
 }");
 
 			var c = FindConstructor("C1`1+C2`1", 2);
 			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
-			Assert.That(c.LiteralCode, Is.EqualTo("Some.[].Strange{ }'thing' {T1} {T2} {x} {y}"));
+			Assert.That(c.LiteralCode, Is.EqualTo("Some.[].Strange{{ }}'thing' {T1} {T2} {x} {y}"));
 		}
 
 		[Test]

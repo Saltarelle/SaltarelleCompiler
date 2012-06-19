@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				var td = (ITypeDefinition)type;
 				var sem = _namingConvention.GetTypeSemantics(td);
 				var jsref = new JsTypeReferenceExpression(td.ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type");
-				if (td.TypeParameterCount > 0) {
+				if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
 					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), new JsTypeReferenceExpression(type.GetDefinition().ParentAssembly, sem.Type == TypeScriptSemantics.ImplType.NormalType ? sem.Name : "Unusable_type"), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, returnOpenType))));
 				}
 				else {

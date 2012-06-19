@@ -67,12 +67,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public IList<JsStatement> CompileConstructorInitializer(ConstructorInitializer initializer, bool currentIsStaticMethod) {
 			var rr = (CSharpInvocationResolveResult)_resolver.Resolve(initializer);
-			return _expressionCompiler.CompileConstructorInitializer((IMethod)rr.Member, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, currentIsStaticMethod);
+			return _expressionCompiler.CompileConstructorInitializer((IMethod)rr.Member, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, currentIsStaticMethod, rr.IsExpandedForm);
 		}
 
 		public IList<JsStatement> CompileImplicitBaseConstructorCall(IType type, bool currentIsStaticMethod) {
 			var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
-			return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod);
+			return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod, false);
 		}
 
         public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {

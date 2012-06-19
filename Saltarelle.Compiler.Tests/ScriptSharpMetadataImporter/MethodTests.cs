@@ -917,14 +917,14 @@ class C1 {
 @"using System.Runtime.CompilerServices;
 class C1<T1> {
 	class C2<T2> {
-		[InlineCode(""Some.[].Strange{ }'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"")]
+		[InlineCode(""Some.[].Strange{{ }}'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"")]
 		public void SomeMethod<T3, T4>(int x, string y) {}
 	}
 }");
 
 			var impl = FindMethod("C1`1+C2`1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(impl.LiteralCode, Is.EqualTo("Some.[].Strange{ }'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"));
+			Assert.That(impl.LiteralCode, Is.EqualTo("Some.[].Strange{{ }}'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"));
 		}
 
 		[Test]
@@ -936,6 +936,13 @@ class C1<T1> {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
 			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{x}"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeReferencingUnknownTypeIsAnError() {
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{$Some.Nonexistent.Type}"")] public static void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("Some.Nonexistent.Type"));
 		}
 
 		[Test]
