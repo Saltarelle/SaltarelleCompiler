@@ -563,23 +563,14 @@ namespace Saltarelle.Compiler.Compiler {
                     return;
 
                 var impl = _namingConvention.GetFieldSemantics(field);
-
-                switch (impl.Type) {
-                    case FieldScriptSemantics.ImplType.Field:
-                        if (v.Initializer.IsNull) {
-                            AddDefaultFieldInitializerToType(jsClass, impl.Name, field.ReturnType, field.DeclaringTypeDefinition, field.IsStatic);
-                        }
-                        else {
-                            CompileAndAddFieldInitializerToType(jsClass, impl.Name, field.DeclaringTypeDefinition, v.Initializer, field.IsStatic);
-                        }
-                        break;
-
-                    case FieldScriptSemantics.ImplType.NotUsableFromScript:
-                        break;
-
-                    default:
-                        throw new InvalidOperationException("Invalid field implementation type " + impl.Type);
-                }
+				if (impl.GenerateCode) {
+                    if (v.Initializer.IsNull) {
+                        AddDefaultFieldInitializerToType(jsClass, impl.Name, field.ReturnType, field.DeclaringTypeDefinition, field.IsStatic);
+                    }
+                    else {
+                        CompileAndAddFieldInitializerToType(jsClass, impl.Name, field.DeclaringTypeDefinition, v.Initializer, field.IsStatic);
+                    }
+				}
             }
         }
 

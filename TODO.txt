@@ -42,5 +42,4 @@ ObservableCollection: Inherit IList<T>, ensure works.
 Queue, Queue<T>: Ensure works
 Stack, Stack<T>: Ensure works
 Function: Should be convertible to Delegate.
-String: Operators, ensure methods with character arguments work (eg. + )
 XmlNodeList

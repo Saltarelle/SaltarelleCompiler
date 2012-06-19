@@ -452,12 +452,15 @@ namespace Saltarelle.Compiler.Compiler {
 				else if (mrr.Member is IField) {
 					var field = (IField)mrr.Member;
 					var impl = _namingConvention.GetFieldSemantics(field);
-					if (impl.Type == FieldScriptSemantics.ImplType.Field) {
-						return CompileCompoundFieldAssignment(mrr, otherOperand, impl.Name, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
-					}
-					else {
-						_errorReporter.Error("Field " + field.DeclaringType.FullName + "." + field.Name + " is not usable from script.");
-						return JsExpression.Number(0);
+					switch (impl.Type) {
+						case FieldScriptSemantics.ImplType.Field:
+							return CompileCompoundFieldAssignment(mrr, otherOperand, impl.Name, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+						case FieldScriptSemantics.ImplType.Constant:
+							_errorReporter.Error("The field " + field.DeclaringType.FullName + "." + field.Name + " is constant in script and cannot be assigned to.");
+							return JsExpression.Number(0);
+						default:
+							_errorReporter.Error("Field " + field.DeclaringType.FullName + "." + field.Name + " is not usable from script.");
+							return JsExpression.Number(0);
 					}
 				}
 				else {
@@ -822,12 +825,14 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Member is IField) {
 				var impl = _namingConvention.GetFieldSemantics((IField)rr.Member);
-				if (impl.Type == FieldScriptSemantics.ImplType.Field) {
-					return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
-				}
-				else {
-					_errorReporter.Error("Cannot use field " + rr.Member.DeclaringType.Name + "." + rr.Member.Name + " from script.");
-					return JsExpression.Number(0);
+				switch (impl.Type) {
+					case FieldScriptSemantics.ImplType.Field:
+						return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
+					case FieldScriptSemantics.ImplType.Constant:
+						return MakeConstantExpression(impl.Value);
+					default:
+						_errorReporter.Error("Cannot use field " + rr.Member.DeclaringType.Name + "." + rr.Member.Name + " from script.");
+						return JsExpression.Number(0);
 				}
 			}
 			else if (rr.Member is IEvent) {
@@ -1147,43 +1152,46 @@ namespace Saltarelle.Compiler.Compiler {
 			return HandleInvocation(rr.Member, rr.TargetResult, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, rr.IsVirtualCall, rr.IsExpandedForm);
 		}
 
-		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
-			if (rr.ConstantValue is bool)
-				return (bool)rr.ConstantValue ? JsExpression.True : JsExpression.False;
-			else if (rr.ConstantValue is sbyte)
-				return JsExpression.Number((sbyte)rr.ConstantValue);
-			else if (rr.ConstantValue is byte)
-				return JsExpression.Number((byte)rr.ConstantValue);
-			else if (rr.ConstantValue is char)
-				return JsExpression.Number((char)rr.ConstantValue);
-			else if (rr.ConstantValue is short)
-				return JsExpression.Number((short)rr.ConstantValue);
-			else if (rr.ConstantValue is ushort)
-				return JsExpression.Number((ushort)rr.ConstantValue);
-			else if (rr.ConstantValue is int)
-				return JsExpression.Number((int)rr.ConstantValue);
-			else if (rr.ConstantValue is uint)
-				return JsExpression.Number((uint)rr.ConstantValue);
-			else if (rr.ConstantValue is long)
-				return JsExpression.Number((long)rr.ConstantValue);
-			else if (rr.ConstantValue is ulong)
-				return JsExpression.Number((ulong)rr.ConstantValue);
-			else if (rr.ConstantValue is float)
-				return JsExpression.Number((float)rr.ConstantValue);
-			else if (rr.ConstantValue is double)
-				return JsExpression.Number((double)rr.ConstantValue);
-			else if (rr.ConstantValue is decimal)
-				return JsExpression.Number((double)(decimal)rr.ConstantValue);
-			if (rr.ConstantValue is string)
-				return JsExpression.String((string)rr.ConstantValue);
-			else if (rr.ConstantValue == null) {
-				if (rr.Type.IsReferenceType == true)
-					return JsExpression.Null;
-				else
-					return _runtimeLibrary.Default(rr.Type);
-			}
+		private JsExpression MakeConstantExpression(object value) {
+			if (value is bool)
+				return (bool)value ? JsExpression.True : JsExpression.False;
+			else if (value is sbyte)
+				return JsExpression.Number((sbyte)value);
+			else if (value is byte)
+				return JsExpression.Number((byte)value);
+			else if (value is char)
+				return JsExpression.Number((char)value);
+			else if (value is short)
+				return JsExpression.Number((short)value);
+			else if (value is ushort)
+				return JsExpression.Number((ushort)value);
+			else if (value is int)
+				return JsExpression.Number((int)value);
+			else if (value is uint)
+				return JsExpression.Number((uint)value);
+			else if (value is long)
+				return JsExpression.Number((long)value);
+			else if (value is ulong)
+				return JsExpression.Number((ulong)value);
+			else if (value is float)
+				return JsExpression.Number((float)value);
+			else if (value is double)
+				return JsExpression.Number((double)value);
+			else if (value is decimal)
+				return JsExpression.Number((double)(decimal)value);
+			if (value is string)
+				return JsExpression.String((string)value);
+			else if (value == null)
+				return JsExpression.Null;
 			else
-				throw new NotSupportedException("Unsupported constant " + rr.ConstantValue.ToString() + "(" + rr.ConstantValue.GetType().ToString() + ")");
+				throw new NotSupportedException("Unsupported constant " + value.ToString() + "(" + value.GetType().ToString() + ")");
+		}
+
+		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
+			if (rr.ConstantValue == null && rr.Type.IsReferenceType != true)
+				return _runtimeLibrary.Default(rr.Type);
+			else
+				return MakeConstantExpression(rr.ConstantValue);
 		}
 
 		private JsExpression CompileThis() {

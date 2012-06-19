@@ -291,6 +291,61 @@ class D : B {
 		}
 
 		[Test]
+		public void ReadingFieldImplementedAsConstantWorks() {
+			AssertCorrect(
+@"
+public int F1;
+public int F2;
+public int F3;
+public int F4;
+
+public void M() {
+	// BEGIN
+	var f1 = F1;
+	var f2 = F2;
+	var f3 = F3;
+	var f4 = F4;
+	// END
+}",
+@"	var $f1 = null;
+	var $f2 = 'abcd';
+	var $f3 = 1234.5;
+	var $f4 = true;
+", namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : (f.Name == "F2" ? FieldScriptSemantics.StringConstant("abcd") : (f.Name == "F3" ? FieldScriptSemantics.NumericConstant(1234.5) : (f.Name == "F4" ? FieldScriptSemantics.BooleanConstant(true) : FieldScriptSemantics.Field(f.Name)))) });
+		}
+
+		[Test]
+		public void AssigningToFieldImplementedAsConstantIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public int F1;
+	public void M() {
+		// BEGIN
+		F1 = 1;
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
+			
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public int F1;
+	public void M() {
+		// BEGIN
+		F1 += 1;
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
+			
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
+		}
+
+		[Test]
 		public void AccessingDynamicMemberWorks() {
 			Assert.Inconclusive("Not supported in NRefactory");
 		}

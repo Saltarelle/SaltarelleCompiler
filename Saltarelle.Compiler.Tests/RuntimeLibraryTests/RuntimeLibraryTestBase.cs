@@ -58,6 +58,9 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			else if (result is java.lang.Integer) {
 				return ((java.lang.Integer)result).intValue();
 			}
+			else if (result != null && result.GetType().FullName == "net.sourceforge.htmlunit.corejs.javascript.NativeString") {
+				return result.ToString();
+			}
 			else {
 				return result;
 			}
