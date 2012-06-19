@@ -650,11 +650,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, false) : tp.Name;
 			}
 
-			if (method.DeclaringType.Kind == TypeKind.Delegate && method.Name != "Invoke") {
-				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
-				return;
-			}
-
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
 			var saa = GetAttributePositionalArgs(method, ScriptAliasAttribute);
 			var ica = GetAttributePositionalArgs(method, InlineCodeAttribute);
@@ -810,6 +805,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return;
 				}
 				else {
+					if (method.DeclaringType.Kind == TypeKind.Delegate && method.Name != "Invoke") {
+						_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
+						return;
+					}
 					if (preferredName == "") {
 						// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
 						if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {

@@ -153,9 +153,9 @@ public class C {
 		s = """";
 
 		var d1 = new JsDictionary<string, object>();
-		d[""a""] = ""va"";
-		d[""b""] = ""vb"";
-		d[""c""] = ""vc"";
+		d1[""a""] = ""va"";
+		d1[""b""] = ""vb"";
+		d1[""c""] = ""vc"";
 		var d2 = (JsDictionary)d1;
 		var d3 = (JsDictionary<string, object>)d2;
 		Print(d1.Keys);

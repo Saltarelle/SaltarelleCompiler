@@ -9,9 +9,8 @@ Improve error handling (error numbers, error positions)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query).
 Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.
-Prevent creating a class that inherits/implements types with members with the same names.
+Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 Cannot declare a static field called Name.
-Need to support type references in InlineCode. Also need to support param arrays and the possibility to transform the string "XYZ" to add_XYZ.
 Driver
 Exe
 MSBuild task
@@ -43,12 +42,8 @@ Array: Test concat(param array)
 ObservableCollection: Inherit IList<T>, ensure works.
 Queue, Queue<T>: Ensure works
 Stack, Stack<T>: Ensure works
-Date: Ensure operators work (requires user-defined operators in the compiler)
-Decimal: Ensure operators work.
 Function: Should be convertible to Delegate, ensure works.
-Record: Ensure works
 String: Operators, ensure methods with character arguments work (eg. + )
 XmlNodeList
 Math, esp. max(param array) and min(param array)
 
-Inline code reference issues in JsDictionary and JsDictionary<,>

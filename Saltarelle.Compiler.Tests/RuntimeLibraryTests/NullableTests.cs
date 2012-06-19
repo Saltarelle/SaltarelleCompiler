@@ -324,10 +324,5 @@ public class C {
 				39,
 			}));
 		}
-
-		[Test, Ignore("User-defined conversions not yet supported")]
-		public void UserDefinedConversionsAreLifted() {
-			Assert.Fail("TODO: Implement and test");
-		}
 	}
 }

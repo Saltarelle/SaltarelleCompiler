@@ -7,28 +7,78 @@ using NUnit.Framework;
 namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	[TestFixture]
 	public class TypeUtilityMethodsTests : RuntimeLibraryTestBase {
-		[Test, Ignore("TODO, Requires an improvement of the InlineCode method implementation")]
+		[Test]
 		public void AddHandlerWorks() {
-			Assert.Fail("TODO: Implement and test");
+			var result = ExecuteCSharp(
+@"using System;
+using System.Runtime.CompilerServices;
+
+public class C {
+	[PreserveCase]
+	public event EventHandler Evt;
+
+	void Raise() { if (Evt != null) Evt(this, null); }
+
+	public static bool M() {
+		bool invoked = false;
+		var c = new C();
+		Type.AddHandler(c, ""Evt"", (EventHandler)((s, e) => invoked = true));
+		c.Raise();
+		return invoked;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(true));
 		}
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
-		public void CreateInstanceWorks() {
-			Assert.Fail("TODO: Implement and test");
-		}
-
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+		[Test]
 		public void DeleteFieldWorks() {
-			Assert.Fail("TODO: Implement and test");
+			var result = ExecuteCSharp(
+@"using System;
+public class C {
+	public int i;
+
+	public static string[] M() {
+		var c = new C();
+		var s1 = Type.GetScriptType(c.i);
+		Type.DeleteField(c, ""i"");
+		return new[] { s1, Type.GetScriptType(c.i) };
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(new[] { "number", "undefined" }));
 		}
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+		[Test]
 		public void GetFieldWorks() {
-			Assert.Fail("TODO: Implement and test, both overloads");
+			var result = ExecuteCSharp(
+@"using System;
+public class C {
+	public int i;
+
+	public static int M() {
+		var c = new C();
+		c.i = 438;
+		return (int)Type.GetField(c, ""i"");
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(438));
 		}
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+		[Test]
 		public void GetPropertyWorks() {
+			var result = ExecuteCSharp(
+@"using System;
+using System.Runtime.CompilerServices;
+public class C {
+	[PreserveCase]
+	public int P { get; set; }
+
+	public static int M() {
+		var c = new C();
+		c.P = 456;
+		return (int)Type.GetProperty(c, ""P"");
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(456));
 		}
 
 		[Test]
@@ -102,24 +152,88 @@ public class C {
 			Assert.That(result, Is.EqualTo(new[] { true, true, true, false }));
 		}
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
+		[Test]
 		public void InvokeMethodWorks() {
-			Assert.Fail("TODO: Implement and test");
+			var result = ExecuteCSharp(
+@"using System;
+using System.Runtime.CompilerServices;
+
+public class C {
+	[PreserveCase]
+	public int F1() { return 42; }
+	[PreserveCase]
+	public int F2(int i) { return i + 10; }
+	[PreserveCase]
+	public int F3(int i, int j) { return i + j; }
+
+	public static int[] M() {
+		var c = new C();
+		return new[] { (int)Type.InvokeMethod(c, ""F1""), (int)Type.InvokeMethod(c, ""F2"", 17), (int)Type.InvokeMethod(c, ""F3"", 19, 2) };
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(new[] { 42, 27, 21 }));
 		}
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
-		public void RemoveHandler(object instance, string name, Delegate handler) {
-			Assert.Fail("TODO: Implement and test");
+		[Test]
+		public void RemoveHandlerWorks() {
+			var result = ExecuteCSharp(
+@"using System;
+using System.Runtime.CompilerServices;
+
+public class C {
+	[PreserveCase]
+	public event EventHandler Evt;
+
+	void Raise() { if (Evt != null) Evt(this, null); }
+
+	public static bool[] M() {
+		bool invoked = false;
+		var handler = (EventHandler)((s, e) => invoked = true);
+		var c = new C();
+		c.Evt += handler;
+		c.Raise();
+		bool b = invoked;
+		invoked = false;
+		Type.RemoveHandler(c, ""Evt"", handler);
+		c.Raise();
+		return new[] { b, invoked };
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(new[] { true, false }));
         }
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
-        public void SetField() {
-			Assert.Fail("TODO: Implement and test (2 overloads, if possible)");
+		[Test]
+        public void SetFieldWorks() {
+			var result = ExecuteCSharp(
+@"using System;
+public class C {
+	public int i;
+
+	public static int M() {
+		var c = new C();
+		Type.SetField(c, ""i"", 546);
+		return c.i;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(546));
         }
 
-		[Test, Ignore("TODO: Requires improvement of InlineCode")]
-        public static void SetProperty(object instance, string name, object value) {
-			Assert.Fail("TODO: Implement and test");
+		[Test]
+        public void SetPropertyWorks() {
+			var result = ExecuteCSharp(
+@"using System;
+using System.Runtime.CompilerServices;
+public class C {
+	[PreserveCase]
+	public int P { get; set; }
+
+	public static int M() {
+		var c = new C();
+		Type.SetProperty(c, ""P"", 543);
+		return c.P;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(543));
         }
 	}
 }

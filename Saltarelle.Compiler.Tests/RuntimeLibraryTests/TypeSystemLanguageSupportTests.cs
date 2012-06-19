@@ -234,7 +234,7 @@ public class C {
 			Assert.That(result, Is.EqualTo(new[] { true, false, false, true }));
 		}
 
-		[Test, Ignore("Need to support type references in inline code.")]
+		[Test]
 		public void GetTypeWorksOnObjects() {
 			var result = ExecuteCSharp(@"
 using System;
@@ -256,8 +256,6 @@ public class C {
 }", "C.M");
 
 			Assert.That(result, Is.EqualTo(new[] { "C1", "C2$1[Int32]", "C2$1[String]", "Number", "String", "Function", "Object", "Array" }));
-
-			Assert.Fail("TODO: Needs improvement");
 		}
 
 		[Test]
