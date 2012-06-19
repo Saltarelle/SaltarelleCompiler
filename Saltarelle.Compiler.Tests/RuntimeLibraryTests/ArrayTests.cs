@@ -181,6 +181,7 @@ public class C {
 		Print(arr);
 		arr.Sort((a, b) => (int)b - (int)a);
 		Print(arr);
+		Print(arr.Concat(56, 57, 58));
 
 		return s;
 	}
@@ -222,10 +223,11 @@ true
 false
 1,3,4
 4,3,1
+4,3,1,56,57,58
 ".Replace("\r\n", "\n")));
 		}
 
-		[Test, Ignore("TODO, need some more fixes")]
+		[Test]
 		public void ListMethodsWork() {
 			var result = ExecuteCSharp(@"
 using System;
@@ -239,7 +241,7 @@ public class C {
 
 	public static void M() {
 		s = """";
-		var l = (List<int>)(object)new[] { 1, 2, 3 };
+		var l = new List<int>(1, 2, 3);
 		var i = (IList<int>)l;
 
 		Print(l[1]);
@@ -301,6 +303,7 @@ public class C {
 		l.RemoveRange(3, 4);
 		Print(l);
 		Print((Array)l);
+		Print(l.Concat(67, 68, 69));
 		l.Clear();
 		Print(l.Count);
 
@@ -357,13 +360,9 @@ false
 4,3,20,10,21,22,11,24,12,13,14
 4,3,20,24,12,13,14
 4,3,20,24,12,13,14
+4,3,20,24,12,13,14,67,68,69
 0
 ".Replace("\r\n", "\n")));
-
-			Assert.Fail("TODO: Fix the params constructor, concat with param array");
 		}
-
-
-
 	}
 }
