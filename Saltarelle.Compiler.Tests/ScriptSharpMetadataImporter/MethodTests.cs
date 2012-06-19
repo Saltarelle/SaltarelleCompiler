@@ -1143,5 +1143,32 @@ class C1 {
 			Assert.That(AllErrors.Any(m => m.Contains("C1.operator C2") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
 			Assert.That(AllErrors.Any(m => m.Contains("C1.operator C3") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
 		}
+
+		[Test]
+		public void ExpandParamsAttributeCausesMethodToUseExpandParamsOption() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	public void M1(int a, int b, params int[] c) {}
+	[ExpandParams]
+	public void M2(int a, int b, params int[] c) {}
+}");
+
+			Assert.That(FindMethod("C1.M1").ExpandParams, Is.False);
+			Assert.That(FindMethod("C1.M2").ExpandParams, Is.True);
+		}
+
+		[Test]
+		public void ExpandParamsAttributeCanOnlyBeAppliedToMethodWithParamArray() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ExpandParams]
+	public void M2(int a, int b, int[] c) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C1.M2") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
+		}
 	}
 }

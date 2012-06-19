@@ -29,6 +29,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ImportedAttribute = "ImportedAttribute";
 		private const string RecordAttribute = "RecordAttribute";
 		private const string IntrinsicOperatorAttribute = "IntrinsicOperatorAttribute";
+		private const string ExpandParamsAttribute = "ExpandParamsAttribute";
 		private const string Function = "Function";
 		private const string Array = "Array";
 
@@ -472,6 +473,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, HashSet<string> usedNames, ICompilation compilation) {
 			var nsa = GetAttributePositionalArgs(constructor, NonScriptableAttribute);
 			var asa = GetAttributePositionalArgs(constructor, AlternateSignatureAttribute);
+			var epa = GetAttributePositionalArgs(constructor, ExpandParamsAttribute);
 
 			if (nsa != null || _typeSemantics[constructor.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
@@ -481,6 +483,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (constructor.DeclaringType.Kind == TypeKind.Delegate) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
 				return;
+			}
+
+			if (epa != null && !constructor.Parameters.Any(p => p.IsParams)) {
+				_errors[GetQualifiedMemberName(constructor) + ":ExpandParamsOnMethodWithoutParamArray"] = "The constructor for type " + constructor.DeclaringType.FullName + " cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.";
 			}
 
 			bool isRecord = _typeSemantics[constructor.DeclaringTypeDefinition].IsRecord;
@@ -500,20 +506,20 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else if (asa != null) {
-				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false) : ConstructorScriptSemantics.Named(preferredName, generateCode: false);
+				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null);
 				return;
 			}
 			else if (nameSpecified) {
 				if (isRecord)
-					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, expandParams: epa != null);
 				else
-					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named(preferredName);
+					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, expandParams: epa != null);
 				usedNames.Add(preferredName);
 				return;
 			}
 			else {
 				if (!usedNames.Contains("$ctor") && !(isRecord && _minimizeNames && !Utils.IsPublic(constructor))) {	// The last part ensures that the first constructor of a record type can have its name minimized. 
-					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod("$ctor") : ConstructorScriptSemantics.Unnamed();
+					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
 					usedNames.Add("$ctor");
 					return;
 				}
@@ -530,7 +536,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						} while (usedNames.Contains(name));
 					}
 
-					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod(name) : ConstructorScriptSemantics.Named(name);
+					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod(name, expandParams: epa != null) : ConstructorScriptSemantics.Named(name, expandParams: epa != null);
 					usedNames.Add(name);
 					return;
 				}
@@ -657,6 +663,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var nsa = GetAttributePositionalArgs(method, NonScriptableAttribute);
 			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
 			var noa = GetAttributePositionalArgs(method, IntrinsicOperatorAttribute);
+			var epa = GetAttributePositionalArgs(method, ExpandParamsAttribute);
 
 			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
@@ -744,7 +751,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return;
 				}
 				else if (method.ImplementedInterfaceMembers.Count > 0) {
-					_errors[GetQualifiedMemberName(method) + ":ScriptSkipOnInterfaceImplementation"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [InlineCodeAttribute] because it implements an interface member.";
+					_errors[GetQualifiedMemberName(method) + ":InlineCodeOnInterfaceImplementation"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [InlineCodeAttribute] because it implements an interface member.";
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
@@ -763,7 +770,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else if (ifa != null) {
 				if (method.IsStatic) {
-					_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(preferredName);
+					_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(preferredName, expandParams: epa != null);
 					return;
 				}
 				else {
@@ -801,7 +808,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_errors[GetQualifiedMemberName(method) + ":MultipleInterfaceImplementations"] = "The member " + GetQualifiedMemberName(method) + " cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.";
 					}
 
-					_methodSemantics[method] = _methodSemantics[(IMethod) method.ImplementedInterfaceMembers[0].MemberDefinition];
+					_methodSemantics[method] = _methodSemantics[(IMethod)method.ImplementedInterfaceMembers[0].MemberDefinition];
 					return;
 				}
 				else {
@@ -809,6 +816,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 						return;
 					}
+					if (epa != null) {
+						if (!method.Parameters.Any(p => p.IsParams)) {
+							_errors[GetQualifiedMemberName(method) + ":ExpandParamsOnMethodWithoutParamArray"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.";
+						}
+					}
+
 					if (preferredName == "") {
 						// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
 						if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
@@ -832,16 +845,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 					}
 					else if (_typeSemantics[method.DeclaringTypeDefinition].GlobalMethods) {
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, expandParams: epa != null);
 						return;
 					}
 					else {
 						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, usedNames);
 						usedNames.Add(name);
 						if (_typeSemantics[method.DeclaringTypeDefinition].IsRecord && !method.IsStatic)
-							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
+							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
 						else
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
 					}
 				}
 			}

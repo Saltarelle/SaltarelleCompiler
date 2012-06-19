@@ -1,6 +1,5 @@
 TODO:
 v1:
-params
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
@@ -24,6 +23,8 @@ Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.
 
+v3:
+Source mapping
 
 Script# features to handle:
 ScriptAssemblyAttribute.
@@ -46,4 +47,3 @@ Function: Should be convertible to Delegate, ensure works.
 String: Operators, ensure methods with character arguments work (eg. + )
 XmlNodeList
 Math, esp. max(param array) and min(param array)
-

@@ -185,5 +185,32 @@ class C1<T1> {
 
 			Assert.That(del.GetConstructors().Select(c => Metadata.GetConstructorSemantics(c).Type), Has.All.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
 		}
+
+		[Test]
+		public void ExpandParamsAttributeCausesConstructorToUseExpandParamsOption() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+class C1 {
+	public C1(int a, int b, params int[] c) {}
+	[ExpandParams]
+	public C1(int a, params int[] c) {}
+}");
+
+			Assert.That(FindConstructor("C1", 3).ExpandParams, Is.False);
+			Assert.That(FindConstructor("C1", 2).ExpandParams, Is.True);
+		}
+
+		[Test]
+		public void ExpandParamsAttributeCanOnlyBeAppliedToConstructorWithParamArray() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ExpandParams]
+	public C1(int a, int b, int[] c) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("constructor") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
+		}
 	}
 }
