@@ -147,12 +147,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void Message(int code, ITypeDefinition t, params object[] additionalArgs) {
-			_errorReporter.Message(code, t.Region, new object[] { t.FullName }.Concat(additionalArgs));
+			_errorReporter.Message(code, t.Region, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
 		}
 
 		private void Message(int code, IMember m, params object[] additionalArgs) {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
-			_errorReporter.Message(code, m.Region, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs));
+			_errorReporter.Message(code, m.Region, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
 		}
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
@@ -982,6 +982,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		public void Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
 			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
 			_systemRecord = ReflectionHelper.ParseReflectionName("System.Record").Resolve(mainAssembly.Compilation.TypeResolveContext);
+			_errorReporter = errorReporter;
 			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
 			var l = types.ToList();
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();

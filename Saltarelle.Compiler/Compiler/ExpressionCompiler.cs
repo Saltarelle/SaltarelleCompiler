@@ -228,7 +228,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _filename, _location).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled).Compile(_filename, _location, expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -451,7 +451,7 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 
 						default: {
-							_errorReporter.Message(7507, _filename, _location);
+							_errorReporter.Message(7507, _filename, _location, property.DeclaringType.FullName + "." + property.Name);
 							return JsExpression.Number(0);
 						}
 					}
@@ -994,7 +994,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
 
 					case MethodScriptSemantics.ImplType.InlineCode:
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), t => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), false), isExpandedForm, _errorReporter);
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), t => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), false), isExpandedForm, s => _errorReporter.Message(7525, _filename, _location, s));
 
 					case MethodScriptSemantics.ImplType.NativeIndexer:
 						return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
@@ -1097,7 +1097,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), t => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), false), isExpandedForm, _errorReporter);
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), t => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), false), isExpandedForm, s => _errorReporter.Message(7525, _filename, _location, s));
 
 					default:
 						_errorReporter.Message(7505, _filename, _location);

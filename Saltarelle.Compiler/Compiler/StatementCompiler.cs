@@ -451,22 +451,23 @@ namespace Saltarelle.Compiler.Compiler {
 
 			bool isDynamic = resource.Type.Kind == TypeKind.Dynamic;
 
+			string filename = aquisitionExpression.GetRegion().FileName;
 			if (isDynamic) {
 				var newResource = CreateTemporaryVariable(systemIDisposable);
-				var castExpr = _expressionCompiler.Compile(new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
+				var castExpr = _expressionCompiler.Compile(filename, aquisitionExpression.StartLocation, new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
 				stmts.AddRange(castExpr.AdditionalStatements);
 				stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[newResource].Name, castExpr.Expression)));
 				resource = new LocalResolveResult(newResource);
 			}
 
-			var compiledDisposeCall = _expressionCompiler.Compile(
+			var compiledDisposeCall = _expressionCompiler.Compile(filename, aquisitionExpression.StartLocation,
 			                              new CSharpInvocationResolveResult(
 			                                  new ConversionResolveResult(systemIDisposable, resource, conversions.ImplicitConversion(resource, systemIDisposable)),
 			                                  disposeMethod,
 			                                  new ResolveResult[0]
 			                              ), false);
 			if (compiledDisposeCall.AdditionalStatements.Count > 0)
-				_errorReporter.Error("Type test cannot return additional statements.");
+				_errorReporter.InternalError("Type test cannot return additional statements.", filename, aquisitionExpression.StartLocation);
 
 			JsStatement releaseStmt;
 			if (isDynamic) {
@@ -474,9 +475,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				// if (d != null) ((IDisposable)d).Dispose()
-				var compiledTest = _expressionCompiler.Compile(new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
+				var compiledTest = _expressionCompiler.Compile(filename, aquisitionExpression.StartLocation, new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
 				if (compiledTest.AdditionalStatements.Count > 0)
-					_errorReporter.Error("Null test cannot return additional statements.");
+					_errorReporter.InternalError("Null test cannot return additional statements.", filename, aquisitionExpression.StartLocation);
 				releaseStmt = new JsIfStatement(compiledTest.Expression, new JsExpressionStatement(compiledDisposeCall.Expression), null);
 			}
 

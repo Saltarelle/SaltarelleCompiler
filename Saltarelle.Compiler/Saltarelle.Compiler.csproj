@@ -41,7 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeBuilder.cs" />
-    <Compile Include="DefaultErrorReporter.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />

@@ -861,8 +861,8 @@ class C1 {
 	public void SomeMethod(int x, int y) {
 	}
 }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("AlternateSignatureAttribute") && AllErrors[0].Contains("same name"));
+			Assert.That(AllErrors, Has.Count.EqualTo(3));
+			Assert.That(AllErrors.All(m => m.Contains("C1.SomeMethod") && m.Contains("AlternateSignatureAttribute") && m.Contains("same name")));
 		}
 
 		[Test]
@@ -1140,8 +1140,8 @@ class C1 {
 	public static explicit operator C3(C1 c) { return null; }
 }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C1.operator C2") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
-			Assert.That(AllErrors.Any(m => m.Contains("C1.operator C3") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
+			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
+			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
 		}
 
 		[Test]

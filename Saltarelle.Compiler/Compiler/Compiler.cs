@@ -309,10 +309,10 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, false), fieldName), initializer));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, false), fieldName), initializer));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
             }
         }
 

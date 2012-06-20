@@ -359,7 +359,7 @@ class C1 {
 ", expectErrors: true);
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("IntrinsicPropertyAttribute") && AllErrors[0].Contains("indexer") && AllErrors[0].Contains("exactly one parameter"));
+			Assert.That(AllErrors[0].Contains("IntrinsicPropertyAttribute") && AllErrors[0].Contains("indexer") && AllErrors[0].Contains("exactly one parameter"));
 		}
 
 		[Test]
@@ -376,7 +376,7 @@ class C1 : I {
 }", expectErrors: true);
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrors.Any(m => m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -393,7 +393,7 @@ class D1 : B {
 }", expectErrors: true);
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("D1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrors.Any(m => m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
@@ -406,7 +406,7 @@ interface I1 {
 }", expectErrors: true);
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("I1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrors.Any(m => m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -419,7 +419,7 @@ class C1 {
 }", expectErrors: true);
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrors.Any(m => m.Contains("indexer") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
 		}
 
 		[Test]
@@ -469,7 +469,7 @@ class C1 {
 }", expectErrors: true);
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("indexer") && AllErrors[0].Contains("ScriptAliasAttribute"));
+			Assert.That(AllErrors[0].Contains("Indexer") && AllErrors[0].Contains("ScriptAliasAttribute"));
 		}
 
 		[Test]
