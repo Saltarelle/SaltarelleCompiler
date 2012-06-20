@@ -210,6 +210,7 @@
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\WhileStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\YieldStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\VariableGatheringTests.cs" />
+    <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />

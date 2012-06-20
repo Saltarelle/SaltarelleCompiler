@@ -7,7 +7,9 @@ using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler.Tests {
 	internal class Common {
-        private static readonly Lazy<IAssemblyReference> _ssMscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(@"..\..\..\ScriptSharp\bin\Debug\mscorlib.dll"));
+		public static readonly string SSMscorlibPath = Path.GetFullPath(@"..\..\..\ScriptSharp\bin\Debug\mscorlib.dll");
+
+        private static readonly Lazy<IAssemblyReference> _ssMscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(SSMscorlibPath));
         internal static IAssemblyReference SSMscorlib { get { return _ssMscorlibLazy.Value; } }
 
     	private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(typeof(object).Assembly.Location));
