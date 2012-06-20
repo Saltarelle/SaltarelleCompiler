@@ -80,7 +80,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
             var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
 
-            er.AllMessages.Should().BeEmpty("Compile should not generate errors");
+            er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
             compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib });
 			var compiledTypes = compiler.Compile(compilation);

@@ -141,8 +141,8 @@ class C {
 	}
 }" }, namingConvention: nc, errorReporter: er);
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("typeof") && er.AllMessages[0].Contains("C1"));
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("typeof") && er.AllMessagesText[0].Contains("C1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -153,8 +153,8 @@ class C {
 		var t= typeof(I1<I1<C1>>);
 	}
 }" }, namingConvention: nc, errorReporter: er);
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("typeof") && er.AllMessages[0].Contains("C1"));
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("typeof") && er.AllMessagesText[0].Contains("C1"));
 		}
 	}
 }

@@ -171,7 +171,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return s.Replace("{", "{{").Replace("}", "}}");
 		}
 
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, JsExpression> getType, bool isParamArrayExpanded, IErrorReporter errorReporter) {
+		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, JsExpression> getType, bool isParamArrayExpanded, Action<string> errorReporter) {
 			List<string> typeParameterNames = new List<string>();
 			List<IType>  typeArguments      = new List<IType>();
 			var parameterizedType = method.DeclaringType as ParameterizedType;
@@ -186,7 +186,7 @@ namespace Saltarelle.Compiler.Compiler {
 				typeArguments.AddRange(specializedMethod.TypeArguments);
 			}
 
-			var tokens = Tokenize(literalCode, method.Parameters.Select(p => p.Name).ToList(), typeParameterNames, s => errorReporter.Error("Error in literal code pattern: " + s));
+			var tokens = Tokenize(literalCode, method.Parameters.Select(p => p.Name).ToList(), typeParameterNames, s => errorReporter("Error in literal code pattern: " + s));
 
 			var fmt = new StringBuilder();
 			var fmtargs = new List<JsExpression>();
@@ -198,7 +198,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 					case InlineCodeToken.TokenType.This:
 						if (@this == null) {
-							errorReporter.Error("Cannot use {this} in the literal code for a static method");
+							errorReporter("Cannot use {this} in the literal code for a static method");
 						}
 						else {
 							fmt.Append(CreatePlaceholder(fmtargs.Count));
@@ -219,7 +219,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeRef:
 						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text));
 						if (typeRef == null) {
-							errorReporter.Error("Unknown type '" + token.Text + "' specified in inline implementation.");
+							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation.");
 						}
 						else {
 							fmt.Append(CreatePlaceholder(fmtargs.Count));
@@ -233,7 +233,7 @@ namespace Saltarelle.Compiler.Compiler {
 							fmt.Append(Escape(jce.StringValue));
 						}
 						else {
-							errorReporter.Error("The argument specified for parameter " + method.Parameters[token.Index].Name + " must be a literal string.");
+							errorReporter("The argument specified for parameter " + method.Parameters[token.Index].Name + " must be a literal string.");
 						}
 						break;
 					}
@@ -241,7 +241,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.ExpandedParamArrayParameter:
 					case InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore: {
 						if (!isParamArrayExpanded) {
-							errorReporter.Error("The method " + method.DeclaringType.FullName + "." + method.FullName + " can only be invoked with its params parameter expanded.");
+							errorReporter("The method " + method.DeclaringType.FullName + "." + method.FullName + " can only be invoked with its params parameter expanded.");
 						}
 						else {
 							var arr = (JsArrayLiteralExpression)arguments[token.Index];

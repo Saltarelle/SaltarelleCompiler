@@ -79,14 +79,14 @@ public void M() {
 		public void DeclaringAMultiDimensionalArrayIsAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { public void M() { var arr = new int[2, 2]; } }" }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
 		}
 
 		[Test]
 		public void DeclaringAMultiDimensionalArrayIsAnError2() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { public void M() { var arr = new int[,] {}; } }" }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
 		}
 	}
 }

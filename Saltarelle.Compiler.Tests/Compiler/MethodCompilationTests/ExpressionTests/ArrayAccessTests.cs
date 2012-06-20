@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTe
 		public void AccessingAMultiDimensionalArrayIsAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { public void M(int[,] arr) { var x = arr[0, 0]; } }" }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
 		}
 
 		[Test]

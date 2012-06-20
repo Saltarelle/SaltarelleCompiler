@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
@@ -140,6 +141,8 @@ namespace Saltarelle.Compiler.Compiler {
 		private NestedFunctionContext _nestedFunctionContext;
 		private IVariable _objectBeingInitialized;
 		private IMethod _methodBeingCompiled;
+		private string _filename;
+		private TextLocation _location;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -170,13 +173,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsStatement> _additionalStatements;
 
-		public Result Compile(ResolveResult expression, bool returnValueIsImportant) {
+		public Result Compile(string filename, TextLocation location, ResolveResult expression, bool returnValueIsImportant) {
+			_filename = filename;
+			_location = location;
 			_additionalStatements = new List<JsStatement>();
 			var expr = VisitResolveResult(expression, returnValueIsImportant);
 			return new Result(expr, _additionalStatements);
 		}
 
-		public IList<JsStatement> CompileConstructorInitializer(IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool currentIsStaticMethod, bool isExpandedForm) {
+		public IList<JsStatement> CompileConstructorInitializer(string filename, TextLocation location, IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool currentIsStaticMethod, bool isExpandedForm) {
+			_filename = filename;
+			_location = location;
 			_additionalStatements = new List<JsStatement>();
 			var impl = _namingConvention.GetConstructorSemantics(method);
 
@@ -185,7 +192,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				if (impl.ExpandParams && !isExpandedForm) {
-					_errorReporter.Error("The constructor for type " + method.DeclaringType.FullName + " must be invoked in expanded form for its its param array.");
+					_errorReporter.Message(7502, _filename, _location, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 
 				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
@@ -202,15 +209,15 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						_errorReporter.Error("Chaining from a normal constructor to a static method constructor is not supported.");
+						_errorReporter.Message(7503, _filename, _location);
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						_errorReporter.Error("Chaining from a normal constructor to a constructor implemented as inline code is not supported.");
+						_errorReporter.Message(7504, _filename, _location);
 						break;
 
 					default:
-						_errorReporter.Error("This constructor cannot be used from script.");
+						_errorReporter.Message(7505, _filename, _location);
 						break;
 				}
 			}
@@ -221,7 +228,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _filename, _location).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -390,7 +397,7 @@ namespace Saltarelle.Compiler.Compiler {
 						case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
 							if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.NativeIndexer) {
 								if (!property.IsIndexer || property.Getter.Parameters.Count != 1) {
-									_errorReporter.Error("Property " + property.DeclaringType.FullName + "." + property.Name + ", declared as being a native indexer, is not an indexer with exactly one argument.");
+									_errorReporter.Message(7506, _filename, _location);
 									return JsExpression.Number(0);
 								}
 								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
@@ -444,7 +451,7 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 
 						default: {
-							_errorReporter.Error("Cannot use property " + property.DeclaringType.FullName + "." + property.Name + " from script.");
+							_errorReporter.Message(7507, _filename, _location);
 							return JsExpression.Number(0);
 						}
 					}
@@ -456,15 +463,16 @@ namespace Saltarelle.Compiler.Compiler {
 						case FieldScriptSemantics.ImplType.Field:
 							return CompileCompoundFieldAssignment(mrr, otherOperand, impl.Name, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 						case FieldScriptSemantics.ImplType.Constant:
-							_errorReporter.Error("The field " + field.DeclaringType.FullName + "." + field.Name + " is constant in script and cannot be assigned to.");
+							_errorReporter.Message(7508, _filename, _location, field.DeclaringType.FullName + "." + field.Name);
 							return JsExpression.Number(0);
 						default:
-							_errorReporter.Error("Field " + field.DeclaringType.FullName + "." + field.Name + " is not usable from script.");
+							_errorReporter.Message(7509, _filename, _location, field.DeclaringType.FullName + "." + field.Name);
 							return JsExpression.Number(0);
 					}
 				}
 				else {
-					throw new InvalidOperationException("Target " + mrr.Member.DeclaringType.FullName + "." + mrr.Member.Name + " of compound assignment is neither a property nor a field.");
+					_errorReporter.InternalError("Target " + mrr.Member.DeclaringType.FullName + "." + mrr.Member.Name + " of compound assignment is neither a property nor a field.", _filename, _location);
+					return JsExpression.Number(0);
 				}
 			}
 			else if (target is LocalResolveResult) {
@@ -489,13 +497,13 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (target is ArrayAccessResolveResult) {
 				var arr = (ArrayAccessResolveResult)target;
 				if (arr.Indexes.Count != 1) {
-					_errorReporter.Error("Arrays have to be one-dimensional.");
+					_errorReporter.Message(7510, _filename, _location);
 					return JsExpression.Number(0);
 				}
 				return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 			}
 			else {
-				_errorReporter.Error("Unsupported target of compound assignment: " + target.ToString());
+				_errorReporter.InternalError("Unsupported target of compound assignment: " + target, _filename, _location);
 				return JsExpression.Number(0);
 			}
 		}
@@ -539,7 +547,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, target.TargetResult, new[] { value }, new[] { 0 }, false, false);
 				}
 				default:
-					_errorReporter.Error("Cannot use event " + target.Member.DeclaringType.FullName + "." + target.Member.Name + " from script.");
+					_errorReporter.Message(7511, _filename, _location, evt.DeclaringType.FullName + "." + evt.Name);
 					return JsExpression.Number(0);
 			}
 		}
@@ -574,7 +582,7 @@ namespace Saltarelle.Compiler.Compiler {
 								return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], invocation, rr.IsLiftedOperator);
 						}
 					}
-					_errorReporter.Error("Could not compile call to user-defined operator " + rr.UserDefinedOperatorMethod.DeclaringType.FullName + "." + rr.UserDefinedOperatorMethod.Name);
+					_errorReporter.InternalError("Could not compile call to user-defined operator " + rr.UserDefinedOperatorMethod.DeclaringType.FullName + "." + rr.UserDefinedOperatorMethod.Name, _filename, _location);
 					return JsExpression.Number(0);
 				}
 			}
@@ -777,11 +785,12 @@ namespace Saltarelle.Compiler.Compiler {
 				case ExpressionType.Increment:
 				case ExpressionType.Decrement:
 				default:
-					throw new ArgumentException("Unsupported operator " + rr.OperatorType);
+					_errorReporter.InternalError("Unsupported operator " + rr.OperatorType, _filename, _location);
+					return JsExpression.Number(0);
 			}
 		}
 
-		public JsExpression CompileDelegateCombineCall(JsExpression a, JsExpression b) {
+		public JsExpression CompileDelegateCombineCall(string filename, TextLocation location, JsExpression a, JsExpression b) {
 			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 			var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 			var impl = _namingConvention.GetMethodSemantics(combine);
@@ -789,7 +798,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return CompileMethodInvocation(impl, combine, thisAndArguments, new IType[0], false, false);
 		}
 
-		public JsExpression CompileDelegateRemoveCall(JsExpression a, JsExpression b) {
+		public JsExpression CompileDelegateRemoveCall(string filename, TextLocation location, JsExpression a, JsExpression b) {
 			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 			var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 			var impl = _namingConvention.GetMethodSemantics(remove);
@@ -798,11 +807,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitMethodGroupResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.MethodGroupResolveResult rr, bool returnValueIsImportant) {
-			throw new InvalidOperationException("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there");
+			_errorReporter.InternalError("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there", _filename, _location);
+			return JsExpression.Number(0);
 		}
 
 		public override JsExpression VisitLambdaResolveResult(LambdaResolveResult rr, bool returnValueIsImportant) {
-			throw new InvalidOperationException("LambdaResolveResult should always be the target of an anonymous method conversion, and is handled there");
+			_errorReporter.InternalError("LambdaResolveResult should always be the target of an anonymous method conversion, and is handled there", _filename, _location);
+			return JsExpression.Number(0);
 		}
 
 		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, bool returnValueIsImportant) {
@@ -818,7 +829,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.MemberAccess(jsTarget, impl.FieldName);
 					}
 					default: {
-						_errorReporter.Error("Property " + rr.Member.DeclaringType + "." + rr.Member.Name + " is not usable from script.");
+						_errorReporter.Message(7512, _filename, _location, rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
 						return JsExpression.Number(0);
 					}
 				}
@@ -831,22 +842,24 @@ namespace Saltarelle.Compiler.Compiler {
 					case FieldScriptSemantics.ImplType.Constant:
 						return Utils.MakeConstantExpression(impl.Value);
 					default:
-						_errorReporter.Error("Cannot use field " + rr.Member.DeclaringType.Name + "." + rr.Member.Name + " from script.");
+						_errorReporter.Message(7509, _filename, _location, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
 						return JsExpression.Number(0);
 				}
 			}
 			else if (rr.Member is IEvent) {
 				var eimpl = _namingConvention.GetEventSemantics((IEvent)rr.Member);
                 if (eimpl.Type == EventScriptSemantics.ImplType.NotUsableFromScript) {
-					_errorReporter.Error("Cannot use event " + rr.Member.DeclaringType + "." + rr.Member.Name + " from script.");
+					_errorReporter.Message(7511, _filename, _location, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
 					return JsExpression.Number(0);
                 }
 
 				var fname = _namingConvention.GetAutoEventBackingFieldName((IEvent)rr.Member);
 				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), fname);
 			}
-			else
-				throw new InvalidOperationException("Invalid member " + rr.Member.ToString());
+			else {
+				_errorReporter.InternalError("Invalid member " + rr.Member.ToString(), _filename, _location);
+				return JsExpression.Number(0);
+			}
 		}
 
 		private List<JsExpression> CompileThisAndArgumentListForMethodCall(CSharpInvocationResolveResult invocation, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, bool expandParams) {
@@ -876,7 +889,7 @@ namespace Saltarelle.Compiler.Compiler {
 						expressions.Add(CompileLocal(((LocalResolveResult)r.ElementResult).Variable, true));
 					}
 					else {
-						_errorReporter.Error("Only locals can be passed by reference.");
+						_errorReporter.Message(7513, _filename, _location);
 						expressions.Add(JsExpression.Number(0));
 					}
 				}
@@ -926,7 +939,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall, bool isExpandedForm) {
 			var typeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : new IType[0];
 			if (impl != null && impl.ExpandParams && !isExpandedForm) {
-				_errorReporter.Error("The method " + method.DeclaringType.FullName + "." + method.Name + " must be invoked in expanded form for its its param array.");
+				_errorReporter.Message(7514, _filename, _location, method.DeclaringType.FullName + "." + method.Name);
 			}
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
 			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsVirtual && !isVirtualCall, isExpandedForm);
@@ -936,7 +949,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var unusableTypes = Utils.FindUsedUnusableTypes(typeArguments, _namingConvention).ToList();
 			if (unusableTypes.Count > 0) {
 				foreach (var ut in unusableTypes)
-					_errorReporter.Error("Cannot use the type " + ut.FullName + " in as a generic argument to the method " + method.DeclaringType.FullName + "." + method.Name + " because it is marked as not usable from script.");
+					_errorReporter.Message(7515, _filename, _location, ut.FullName, method.DeclaringType.FullName + "." + method.Name);
 				return JsExpression.Number(0);
 			}
 
@@ -987,7 +1000,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
 
 					default: {
-						_errorReporter.Error("Method " + method.DeclaringType.FullName + "." + method.Name + " cannot be used from script.");
+						_errorReporter.Message(7516, _filename, _location, method.DeclaringType.FullName + "." + method.Name);
 						return JsExpression.Number(0);
 					}
 				}
@@ -1008,7 +1021,7 @@ namespace Saltarelle.Compiler.Compiler {
 							jsName = currentImpl.FieldName;
 						}
 						else {
-							_errorReporter.Error("Cannot use the the property " + currentMember.Name + " in an anonymous object initializer.");
+							_errorReporter.Message(7517, _filename, _location, currentMember.DeclaringType.FullName + "." + currentMember.Name);
 							jsName = "X";
 						}
 					}
@@ -1018,12 +1031,12 @@ namespace Saltarelle.Compiler.Compiler {
 							jsName = currentImpl.Name;
 						}
 						else {
-							_errorReporter.Error("Cannot use the field " + currentMember.Name + " in an anonymous object initializer.");
+							_errorReporter.Message(7518, _filename, _location, currentMember.DeclaringType.FullName + "." + currentMember.Name);
 							jsName = "X";
 						}
 					}
 					else {
-						_errorReporter.Error("Cannot use the member " + currentMember.Name + " in an anonymous object initializer.");
+						_errorReporter.InternalError("Unsupported member " + currentMember + " in anonymous object initializer.", _filename, _location);
 						jsName = "X";
 					}
 
@@ -1031,7 +1044,7 @@ namespace Saltarelle.Compiler.Compiler {
 					expressions.Add(InnerCompile(orr.Operands[1], false, expressions));
 				}
 				else {
-					_errorReporter.Error("Expected an assignment to an InitializedObjectResolveResult, got " + orr);
+					_errorReporter.InternalError("Expected an assignment to an InitializedObjectResolveResult, got " + orr, _filename, _location);
 					jsPropertyNames.Add("X");
 					expressions.Add(JsExpression.Null);
 				}
@@ -1047,14 +1060,14 @@ namespace Saltarelle.Compiler.Compiler {
 			var typeToConstruct = method.DeclaringType;
 			var typeToConstructDef = typeToConstruct.GetDefinition();
 			if (typeToConstructDef != null && _namingConvention.GetTypeSemantics(typeToConstructDef).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_errorReporter.Error("Cannot create an instance of the type " + typeToConstruct.FullName + " because it is marked as not usable from script.");
+				_errorReporter.Message(7519, _filename, _location, typeToConstruct.FullName);
 				return JsExpression.Number(0);
 			}
 			if (typeToConstruct is ParameterizedType) {
 				var unusableTypes = Utils.FindUsedUnusableTypes(((ParameterizedType)typeToConstruct).TypeArguments, _namingConvention).ToList();
 				if (unusableTypes.Count > 0) {
 					foreach (var ut in unusableTypes)
-						_errorReporter.Error("Cannot use the type " + ut.FullName + " in as a type argument for the class " + typeToConstruct.GetDefinition().FullName + " because it is marked as not usable from script.");
+						_errorReporter.Message(7520, _filename, _location, ut.FullName, typeToConstruct.GetDefinition().FullName);
 					return JsExpression.Number(0);
 				}
 			}
@@ -1064,7 +1077,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				if (impl.ExpandParams && !isExpandedForm) {
-					_errorReporter.Error("The constructor for type " + method.DeclaringType.FullName + " must be invoked in expanded form for its its param array.");
+					_errorReporter.Message(7502, _filename, _location, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 				var thisAndArguments = CompileThisAndArgumentListForMethodCall(new TypeResolveResult(method.DeclaringType), false, false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 
@@ -1087,7 +1100,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), t => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), false), isExpandedForm, _errorReporter);
 
 					default:
-						_errorReporter.Error("This constructor cannot be used from script.");
+						_errorReporter.Message(7505, _filename, _location);
 						return JsExpression.Number(0);
 				}
 
@@ -1134,13 +1147,14 @@ namespace Saltarelle.Compiler.Compiler {
 				var property = (IProperty)member;
 				var impl = _namingConvention.GetPropertySemantics(property);
 				if (impl.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods) {
-					_errorReporter.Error("Cannot invoke property that does not have a get method.");
+					_errorReporter.InternalError("Cannot invoke property that does not have a get method.", _filename, _location);
 					return JsExpression.Number(0);
 				}
 				return CompileMethodInvocation(impl.GetMethod, property.Getter, targetResult, argumentsForCall, argumentToParameterMap, isVirtualCall, isExpandedForm);
 			}
 			else {
-				throw new InvalidOperationException("Invocation of unsupported member " + member.DeclaringType.FullName + "." + member.Name);
+				_errorReporter.InternalError("Invocation of unsupported member " + member.DeclaringType.FullName + "." + member.Name, _filename, _location);
+				return JsExpression.Number(0);
 			}
 		}
 
@@ -1235,7 +1249,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (rr.Variable is IParameter && ((IParameter)rr.Variable).IsParams && _methodBeingCompiled != null) {
 				var impl = _namingConvention.GetMethodSemantics(_methodBeingCompiled);
 				if (impl.ExpandParams) {
-					_errorReporter.Error("Cannot use the variable " + rr.Variable.Name + " because it is an expanded param array.");
+					_errorReporter.Message(7521, _filename, _location, rr.Variable.Name);
 				}
 			}
 
@@ -1246,7 +1260,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var unusableTypes = Utils.FindUsedUnusableTypes(new[] { rr.ReferencedType }, _namingConvention).ToList();
 			if (unusableTypes.Count > 0) {
 				foreach (var ut in unusableTypes)
-					_errorReporter.Error("Cannot use the type " + ut.FullName + " in a typeof expression because it is marked as not usable from script.");
+					_errorReporter.Message(7522, _filename, _location, ut.FullName);
 				return JsExpression.Number(0);
 			}
 			else
@@ -1259,7 +1273,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Indexes.Count != 1) {
-				_errorReporter.Error("Arrays have to be one-dimensional");
+				_errorReporter.Message(7510, _filename, _location);
 				return JsExpression.Number(0);
 			}
 			var array = InnerCompile(rr.Array, false);
@@ -1269,7 +1283,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, bool returnValueIsImportant) {
 			if (((ArrayType)rr.Type).Dimensions != 1) {
-				_errorReporter.Error("Multi-dimensional arrays are not supported.");
+				_errorReporter.Message(7510, _filename, _location);
 				return JsExpression.Number(0);
 			}
 			if (rr.SizeArguments != null) {
@@ -1295,13 +1309,15 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
-			throw new InvalidOperationException("Resolve result " + rr.ToString() + " should have been handled in method call.");
+			_errorReporter.InternalError("Resolve result " + rr.ToString() + " should have been handled in method call.", _filename, _location);
+			return JsExpression.Number(0);
 		}
 
 		public override JsExpression VisitDefaultResolveResult(ResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Type.Kind == TypeKind.Null)
 				return JsExpression.Null;
-			throw new NotImplementedException("Resolve result " + rr + " is not handled.");
+			_errorReporter.InternalError("Resolve result " + rr + " is not handled.", _filename, _location);
+			return JsExpression.Number(0);
 		}
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
@@ -1366,11 +1382,11 @@ namespace Saltarelle.Compiler.Compiler {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
 				var impl = _namingConvention.GetMethodSemantics(rr.Conversion.Method);
 				if (impl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-					_errorReporter.Error("Cannot perform method group conversion on " + rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name + " because it is not a normal method.");
+					_errorReporter.Message(7523, _filename, _location, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
 					return JsExpression.Number(0);
 				}
 				else if (impl.ExpandParams) {
-					_errorReporter.Error("Cannot perform method group conversion on " + rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name + " because it expands its param array in script.");
+					_errorReporter.Message(7524, _filename, _location, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
 					return JsExpression.Number(0);
 				}
 
@@ -1427,7 +1443,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return VisitResolveResult(rr.Input, true);
 			}
 
-			throw new NotImplementedException("Conversion " + rr.Conversion + " is not implemented");
+			_errorReporter.InternalError("Conversion " + rr.Conversion + " is not implemented", _filename, _location);
+			return JsExpression.Number(0);
 		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -134,12 +135,25 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IProperty, string> _propertyBackingFieldNames;
 		private Dictionary<IEvent, string> _eventBackingFieldNames;
 		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
-		private Dictionary<string, string> _errors;
+		private IErrorReporter _errorReporter;
 		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private IType _systemObject;
 		private IType _systemRecord;
 
 		private readonly bool _minimizeNames;
+
+		private void Message(int code, DomRegion r, params object[] additionalArgs) {
+			_errorReporter.Message(code, r, additionalArgs);
+		}
+
+		private void Message(int code, ITypeDefinition t, params object[] additionalArgs) {
+			_errorReporter.Message(code, t.Region, new object[] { t.FullName }.Concat(additionalArgs));
+		}
+
+		private void Message(int code, IMember m, params object[] additionalArgs) {
+			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
+			_errorReporter.Message(code, m.Region, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs));
+		}
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
 			_minimizeNames = minimizeNames;
@@ -219,7 +233,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var sna = GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute);
 			if (ina != null) {
 				if (sna != null) {
-					_errors[typeDefinition.FullName + ":Namespace"] = "The type " + typeDefinition.FullName + " has both [IgnoreNamespace] and [ScriptNamespace] specified. At most one of these attributes can be specified for a type.";
+					Message(7001, typeDefinition);
 					return typeDefinition.FullName;
 				}
 				else {
@@ -230,7 +244,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (sna != null) {
 					string arg = (string)sna[0];
 					if (arg == null || (arg != "" && !arg.IsValidNestedJavaScriptIdentifier()))
-						_errors[typeDefinition.FullName + ":Namespace"] = typeDefinition.FullName + ": The argument for [ScriptNamespace], when applied to a type, must be a valid JavaScript qualified identifier.";
+						Message(7002, typeDefinition);
 					return arg;
 				}
 				else {
@@ -261,13 +275,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			if (GetAttributePositionalArgs(typeDefinition, ResourcesAttribute) != null) {
 				if (!typeDefinition.IsStatic) {
-					_errors[typeDefinition.FullName + ":Name"] = "The type " + typeDefinition.FullName + " cannot have a [ResourcesAttribute] because it is not static.";
+					Message(7003, typeDefinition);
 				}
 				else if (typeDefinition.TypeParameterCount > 0) {
-					_errors[typeDefinition.FullName + ":Name"] = "The type " + typeDefinition.FullName + " cannot have a [ResourcesAttribute] because it is generic.";
+					Message(7004, typeDefinition);
 				}
 				else if (typeDefinition.Members.Any(m => !(m is IField && ((IField)m).IsConst))) {
-					_errors[typeDefinition.FullName + ":Name"] = "The type " + typeDefinition.FullName + " cannot have a [ResourcesAttribute] because it contains members that are not const fields.";
+					Message(7005, typeDefinition);
 				}
 			}
 
@@ -278,7 +292,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else {
 				if (scriptNameAttr != null) {
-					_errors[typeDefinition.FullName + ":Name"] = typeDefinition.FullName + ": The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.";
+					Message(7006, typeDefinition);
 				}
 
 				if (_minimizeNames && !Utils.IsPublic(typeDefinition) && !preserveName) {
@@ -290,7 +304,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					typeName = GetDefaultTypeName(typeDefinition, ignoreGenericArguments);
 					if (typeDefinition.DeclaringTypeDefinition != null) {
 						if (GetAttributePositionalArgs(typeDefinition, IgnoreNamespaceAttribute) != null || GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute) != null) {
-							_errors[typeDefinition.FullName + ":Namespace"] = "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type " + typeDefinition.FullName + ".";
+							Message(7007, typeDefinition);
 						}
 
 						typeName = GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Name + "$" + typeName;
@@ -313,19 +327,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			if (isRecord) {
 				if (!typeDefinition.IsSealed) {
-					_errors[typeDefinition.FullName + ":RecordMustBeSealed"] = "The record type " + typeDefinition.FullName + " must be sealed.";
+					Message(7008, typeDefinition);
 					isRecord = false;
 				}
 				if (!typeDefinition.DirectBaseTypes.Contains(_systemObject) && !typeDefinition.DirectBaseTypes.Contains(_systemRecord)) {
-					_errors[typeDefinition.FullName + ":MustInheritFromObject"] = "The record type " + typeDefinition.FullName + " must inherit from either System.Object or System.Record.";
+					Message(7009, typeDefinition);
 					isRecord = false;
 				}
 				if (typeDefinition.DirectBaseTypes.Any(b => b.Kind == TypeKind.Interface)) {
-					_errors[typeDefinition.FullName + ":RecordCannotImplementInterface"] = "The record type " + typeDefinition.FullName + " cannot implement interfaces.";
+					Message(7010, typeDefinition);
 					isRecord = false;
 				}
 				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
-					_errors[typeDefinition.FullName + ":RecordCannotImplementInterface"] = "The record type " + typeDefinition.FullName + " cannot declare instance events.";
+					Message(7011, typeDefinition);
 					isRecord = false;
 				}
 			}
@@ -334,13 +348,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				var mixinAttr = GetAttributePositionalArgs(typeDefinition, MixinAttribute);
 				if (mixinAttr != null) {
 					if (!typeDefinition.IsStatic) {
-						_errors[typeDefinition.FullName + ":Mixin"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [MixinAttribute]";
+						Message(7012, typeDefinition);
 					}
 					else if (typeDefinition.Members.Any(m => !(m is IMethod) || ((IMethod)m).IsConstructor)) {
-						_errors[typeDefinition.FullName + ":Mixin"] = "The type " + typeDefinition.FullName + " can contain only methods order to be decorated with a [MixinAttribute]";
+						Message(7013, typeDefinition);
 					}
 					else if (typeDefinition.TypeParameterCount > 0) {
-						_errors[typeDefinition.FullName + ":Mixin"] = "[MixinAttribute] cannot be applied to the generic type " + typeDefinition.FullName + ".";
+						Message(7014, typeDefinition);
 					}
 					else {
 						nmspace = "";
@@ -349,13 +363,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				else if (globalMethodsAttr != null) {
 					if (!typeDefinition.IsStatic) {
-						_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [GlobalMethodsAttribute]";
+						Message(7015, typeDefinition);
 					}
 					else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
-						_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]";
+						Message(7016, typeDefinition);
 					}
 					else if (typeDefinition.TypeParameterCount > 0) {
-						_errors[typeDefinition.FullName + ":Mixin"] = "[GlobalMethodsAttribute] cannot be applied to the generic type " + typeDefinition.FullName + ".";
+						Message(7017, typeDefinition);
 					}
 					else {
 						nmspace = "";
@@ -397,7 +411,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return DeterminePreferredMemberName(otherMembers[0]);
 				}
 				else {
-					_errors[GetQualifiedMemberName(member) + ":NoMainMethod"] = "The member " + GetQualifiedMemberName(member) + " has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.";
+					Message(7100, member);
 					return Tuple.Create(member.Name, false);
 				}
 			}
@@ -409,7 +423,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (sna != null) {
 				string name = (string)sna[0] ?? "";
 				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
-					_errors[GetQualifiedMemberName(member) + ":InvalidName"] = "The name specified in the [ScriptName] attribute for member " + GetQualifiedMemberName(member) + " must be a valid JavaScript identifier, or be blank.";
+					Message(7101, member);
 				}
 				if (name == "" && isConstructor)
 					name = "$ctor";
@@ -521,7 +535,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			if (epa != null && !constructor.Parameters.Any(p => p.IsParams)) {
-				_errors[GetQualifiedMemberName(constructor) + ":ExpandParamsOnMethodWithoutParamArray"] = "The constructor for type " + constructor.DeclaringType.FullName + " cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.";
+				Message(7102, constructor);
 			}
 
 			bool isRecord = _typeSemantics[constructor.DeclaringTypeDefinition].IsRecord;
@@ -532,7 +546,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(constructor, code, t => t.Resolve(compilation).Kind != TypeKind.Unknown);
 				if (errors.Count > 0) {
-					_errors[GetQualifiedMemberName(constructor) + ":ErrorInInlineCode"] = "The inline code for the constructor for " + constructor.DeclaringType.FullName + " contained errors: " + string.Join(", ", errors);
+					Message(7103, constructor, string.Join(", ", errors));
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
@@ -585,10 +599,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else if (preferredName == "") {
 				if (property.IsIndexer) {
-					_errors[GetQualifiedMemberName(property) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the indexer of type " + property.DeclaringType.FullName + " cannot be empty.";
+					Message(7104, property);
 				}
 				else {
-					_errors[GetQualifiedMemberName(property) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the property " + GetQualifiedMemberName(property) + " cannot be empty.";
+					Message(7105, property);
 				}
 				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
@@ -603,10 +617,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			if (saa != null) {
 				if (property.IsIndexer) {
-					_errors[GetQualifiedMemberName(property) + ":IndexerCannotHaveScriptAlias"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have a [ScriptAliasAttribute].";
+					Message(7106, property.Region);
 				}
 				else if (!property.IsStatic) {
-					_errors[GetQualifiedMemberName(property) + ":InstancePropertyCannotHaveScriptAlias"] = "The property " + GetQualifiedMemberName(property) + " cannot have a [ScriptAliasAttribute] because it is an instance member.";
+					Message(7107, property);
 				}
 				else {
 					string alias = (string)saa[0] ?? "";
@@ -619,27 +633,27 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (ipa != null) {
 				if (property.DeclaringType.Kind == TypeKind.Interface) {
 					if (property.IsIndexer)
-						_errors[GetQualifiedMemberName(property) + ":InterfacePropertyCannotBeIntrinsic"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it is an interface member.";
+						Message(7108, property.Region);
 					else
-						_errors[GetQualifiedMemberName(property) + ":InterfacePropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it is an interface member.";
+						Message(7109, property);
 				}
 				else if (property.IsOverride) {
 					if (property.IsIndexer)
-						_errors[GetQualifiedMemberName(property) + ":OverridingPropertyCannotBeIntrinsic"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it overrides a base member.";
+						Message(7110, property.Region);
 					else
-						_errors[GetQualifiedMemberName(property) + ":OverridingPropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it overrides a base member.";
+						Message(7111, property);
 				}
 				else if (property.IsOverridable) {
 					if (property.IsIndexer)
-						_errors[GetQualifiedMemberName(property) + ":OverridablePropertyCannotBeIntrinsic"] = "The indexer on type " + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it is overridable.";
+						Message(7112, property.Region);
 					else
-						_errors[GetQualifiedMemberName(property) + ":OverridablePropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it is overridable.";
+						Message(7113, property);
 				}
 				else if (property.ImplementedInterfaceMembers.Count > 0) {
 					if (property.IsIndexer)
-						_errors[GetQualifiedMemberName(property) + ":ImplementingPropertyCannotBeIntrinsic"] = "The indexer on type" + property.DeclaringType.FullName + " cannot have an [IntrinsicPropertyAttribute] because it implements an interface member.";
+						Message(7114, property.Region);
 					else
-						_errors[GetQualifiedMemberName(property) + ":ImplementingPropertyCannotBeIntrinsic"] = "The property " + GetQualifiedMemberName(property) + " cannot have an [IntrinsicPropertyAttribute] because it implements an interface member.";
+						Message(7115, property);
 				}
 				else if (property.IsIndexer) {
 					if (property.Parameters.Count == 1) {
@@ -647,7 +661,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						return;
 					}
 					else {
-						_errors[GetQualifiedMemberName(property) + ":NativeIndexerArgument"] = "The indexer for type " + property.DeclaringType.FullName + " must have exactly one parameter in order to have an [IntrinsicPropertyAttribute].";
+						Message(7116, property.Region);
 					}
 				}
 				else {
@@ -706,11 +720,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			if (noa != null) {
 				if (!method.IsOperator) {
-					_errors[GetQualifiedMemberName(method) + ":IntrinsicOperator"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [IntrinsicOperatorAttribute] because it is not an operator method.";
+					Message(7117, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 				}
 				if (method.Name == "op_Implicit" || method.Name == "op_Explicit") {
-					_errors[GetQualifiedMemberName(method) + ":IntrinsicOperator"] = "The [IntrinsicOperatorAttribute] cannot be applied to the operator " + method.DeclaringType.FullName + ".operator " + method.ReturnType.FullName + " because it is a conversion operator.";
+					Message(7118, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 				}
 				else {
@@ -721,29 +735,29 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			else if (ssa != null) {
 				// [ScriptSkip] - Skip invocation of the method entirely.
 				if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-					_errors[GetQualifiedMemberName(method) + ":ScriptSkipOnInterfaceMember"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [ScriptSkipAttribute] because it is an interface method.";
+					Message(7119, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else if (method.IsOverride) {
-					_errors[GetQualifiedMemberName(method) + ":ScriptSkipOnOverridable"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [ScriptSkipAttribute] because it overrides a base member.";
+					Message(7120, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else if (method.IsOverridable) {
-					_errors[GetQualifiedMemberName(method) + ":ScriptSkipOnOverridable"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [ScriptSkipAttribute] because it is overridable.";
+					Message(7121, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else if (method.ImplementedInterfaceMembers.Count > 0) {
-					_errors[GetQualifiedMemberName(method) + ":ScriptSkipOnInterfaceImplementation"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [ScriptSkipAttribute] because it implements an interface member.";
+					Message(7122, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else {
 					if (method.IsStatic) {
 						if (method.Parameters.Count != 1) {
-							_errors[GetQualifiedMemberName(method) + ":ScriptSkipParameterCount"] = "The static method " + GetQualifiedMemberName(method) + " must have exactly one parameter in order to have a [ScriptSkipAttribute].";
+							Message(7123, method);
 							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 							return;
 						}
@@ -752,7 +766,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 					else {
 						if (method.Parameters.Count != 0)
-							_errors[GetQualifiedMemberName(method) + ":ScriptSkipParameterCount"] = "The instance method " + GetQualifiedMemberName(method) + " must have no parameters in order to have a [ScriptSkipAttribute].";
+							Message(7124, method);
 						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}");
 						return;
 					}
@@ -764,29 +778,29 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return;
 				}
 				else {
-					_errors[GetQualifiedMemberName(method) + ":NonStaticWithAlias"] = "The method " + GetQualifiedMemberName(method) + " must be static in order to have a [ScriptAliasAttribute].";
+					Message(7125, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 			}
 			else if (ica != null) {
 				if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-					_errors[GetQualifiedMemberName(method) + ":InlineCodeOnInterfaceMember"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [InlineCodeAttribute] because it is an interface method.";
+					Message(7126, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else if (method.IsOverride) {
-					_errors[GetQualifiedMemberName(method) + ":InlineCodeOnOverridable"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [InlineCodeAttribute] because it overrides a base member.";
+					Message(7127, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else if (method.IsOverridable) {
-					_errors[GetQualifiedMemberName(method) + ":InlineCodeOnOverridable"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [InlineCodeAttribute] because it is overridable.";
+					Message(7128, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
 				else if (method.ImplementedInterfaceMembers.Count > 0) {
-					_errors[GetQualifiedMemberName(method) + ":InlineCodeOnInterfaceImplementation"] = "The member " + GetQualifiedMemberName(method) + " cannot have a [InlineCodeAttribute] because it implements an interface member.";
+					Message(7129, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
@@ -795,7 +809,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 					var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(compilation).Kind != TypeKind.Unknown);
 					if (errors.Count > 0) {
-						_errors[GetQualifiedMemberName(method) + ":ErrorInInlineCode"] = "The inline code for the method " + GetQualifiedMemberName(method) + " contained errors: " + string.Join(", ", errors);
+						Message(7130, method, string.Join(", ", errors));
 						code = "X";
 					}
 
@@ -809,7 +823,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return;
 				}
 				else {
-					_errors[GetQualifiedMemberName(method) + ":InstanceMethodOnFirstArgument"] = "The method " + GetQualifiedMemberName(method) + " cannot have an [InstanceMethodOnFirstArgumentAttribute] because it is not static.";
+					Message(7131, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
@@ -817,17 +831,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			else {
 				if (method.IsOverride) {
 					if (nameSpecified) {
-						_errors[GetQualifiedMemberName(method) + ":CannotSpecifyName"] = "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method " + GetQualifiedMemberName(method) + " because it overrides a base member. Specify the attribute on the base member instead.";
+						Message(7132, method);
 					}
 					if (iga != null) {
-						_errors[GetQualifiedMemberName(method) + ":CannotSpecifyIgnoreGenericArguments"] = "The [IgnoreGenericArgumentsAttribute] attribute cannot be specified on the method " + GetQualifiedMemberName(method) + " because it overrides a base member. Specify the attribute on the base member instead.";
+						Message(7133, method);
 					}
 
 					var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
 					if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
 						var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
 						if (errorMethod != null) {
-							_errors[GetQualifiedMemberName(method) + ":MultipleInterfaceImplementations"] = "The overriding member " + GetQualifiedMemberName(method) + " cannot implement the interface method " + GetQualifiedMemberName(errorMethod) + " because it has a different script name. Consider using explicit interface implementation";
+							Message(7134, method, GetQualifiedMemberName(errorMethod));
 						}
 					}
 
@@ -836,11 +850,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				else if (method.ImplementedInterfaceMembers.Count > 0) {
 					if (nameSpecified) {
-						_errors[GetQualifiedMemberName(method) + ":CannotSpecifyName"] = "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on the method " + GetQualifiedMemberName(method) + " because it implements an interface member. Specify the attribute on the interface member instead, or consider using explicit interface implementation.";
+						Message(7135, method);
 					}
 
 					if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name).Distinct().Count() > 1) {
-						_errors[GetQualifiedMemberName(method) + ":MultipleInterfaceImplementations"] = "The member " + GetQualifiedMemberName(method) + " cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.";
+						Message(7136, method);
 					}
 
 					_methodSemantics[method] = _methodSemantics[(IMethod)method.ImplementedInterfaceMembers[0].MemberDefinition];
@@ -853,24 +867,24 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 					if (epa != null) {
 						if (!method.Parameters.Any(p => p.IsParams)) {
-							_errors[GetQualifiedMemberName(method) + ":ExpandParamsOnMethodWithoutParamArray"] = "The member " + GetQualifiedMemberName(method) + " cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.";
+							Message(7137, method);
 						}
 					}
 
 					if (preferredName == "") {
 						// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
 						if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-							_errors[GetQualifiedMemberName(method) + ":InterfaceMethodWithEmptyName"] = "The member " + GetQualifiedMemberName(method) + " cannot have an empty name specified in its [ScriptName] because it is an interface method.";
+							Message(7138, method);
 							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 							return;
 						}
 						else if (method.IsOverridable) {
-							_errors[GetQualifiedMemberName(method) + ":OverridableWithEmptyName"] = "The member " + GetQualifiedMemberName(method) + " cannot have an empty name specified in its [ScriptName] because it is overridable.";
+							Message(7139, method);
 							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 							return;
 						}
 						else if (method.IsStatic) {
-							_errors[GetQualifiedMemberName(method) + ":StaticWithEmptyName"] = "The member " + GetQualifiedMemberName(method) + " cannot have an empty name specified in its [ScriptName] because it is static.";
+							Message(7140, method);
 							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 							return;
 						}
@@ -901,7 +915,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else if (preferredName == "") {
-				_errors[GetQualifiedMemberName(evt) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the event " + GetQualifiedMemberName(evt) + " cannot be empty.";
+				Message(7141, evt);
 				_eventSemantics[evt] = EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add"), MethodScriptSemantics.NormalMethod("remove"));
 				return;
 			}
@@ -939,7 +953,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();
 			}
 			else if (preferredName == "") {
-				_errors[GetQualifiedMemberName(field) + ":NameCannotBeEmpty"] = "The named specified in a [ScriptNameAttribute] for the field " + GetQualifiedMemberName(field) + " cannot be empty.";
+				Message(7142, field);
 				_fieldSemantics[field] = FieldScriptSemantics.Field("X");
 			}
 			else {
@@ -969,7 +983,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
 			_systemRecord = ReflectionHelper.ParseReflectionName("System.Record").Resolve(mainAssembly.Compilation.TypeResolveContext);
 			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
-			_errors = new Dictionary<string, string>();
 			var l = types.ToList();
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
 			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
@@ -987,9 +1000,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				ProcessType(t);
 				ProcessTypeMembers(t, mainAssembly.Compilation);
 			}
-
-			foreach (var e in _errors.Values)
-				errorReporter.Error(e);
 		}
 
 		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {

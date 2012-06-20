@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -69,7 +70,10 @@ namespace Saltarelle.Compiler.Compiler {
 					body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 				}
 				else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-					body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, true));
+					string filename       = ctor != null ? ctor.GetRegion().FileName : constructor.DeclaringTypeDefinition.Region.FileName;
+					TextLocation location = ctor != null ? ctor.StartLocation : new TextLocation(constructor.DeclaringTypeDefinition.Region.BeginLine, constructor.DeclaringTypeDefinition.Region.BeginColumn;
+
+					body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(filename, location, constructor.DeclaringType, true));
 				}
 				else {
 					body.Add(new JsVariableDeclarationStatement(_namingConvention.ThisAlias, JsExpression.ObjectLiteral()));
@@ -90,7 +94,10 @@ namespace Saltarelle.Compiler.Compiler {
 					body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 				}
 				else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-					body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringType, false));
+					string filename       = ctor != null ? ctor.GetRegion().FileName : constructor.DeclaringTypeDefinition.Region.FileName;
+					TextLocation location = ctor != null ? ctor.StartLocation : new TextLocation(constructor.DeclaringTypeDefinition.Region.BeginLine, constructor.DeclaringTypeDefinition.Region.BeginColumn;
+
+					body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(filename, location, constructor.DeclaringType, false));
 				}
 			}
 
@@ -105,9 +112,9 @@ namespace Saltarelle.Compiler.Compiler {
             return CompileConstructor(null, constructor, instanceInitStatements, impl);
         }
 
-        public IList<JsStatement> CompileFieldInitializer(JsExpression field, Expression expression) {
+        public IList<JsStatement> CompileFieldInitializer(string filename, TextLocation location, JsExpression field, Expression expression) {
             CreateCompilationContext(expression, null, null);
-            return _statementCompiler.CompileFieldInitializer(field, expression);
+            return _statementCompiler.CompileFieldInitializer(filename, location, field, expression);
         }
 
         public IList<JsStatement> CompileDefaultFieldInitializer(JsExpression field, IType type) {
@@ -165,7 +172,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
-			var combineCall = _statementCompiler.CompileDelegateCombineCall(bfAccessor, JsExpression.Identifier(valueName));
+			var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.AddAccessor.Region.FileName, new TextLocation(@event.AddAccessor.Region.BeginLine, @event.AddAccessor.Region.BeginColumn), bfAccessor, JsExpression.Identifier(valueName));
 			return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 		}
 
@@ -191,7 +198,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
-			var combineCall = _statementCompiler.CompileDelegateRemoveCall(bfAccessor, JsExpression.Identifier(valueName));
+			var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.RemoveAccessor.Region.FileName, new TextLocation(@event.RemoveAccessor.Region.BeginLine, @event.RemoveAccessor.Region.BeginColumn), bfAccessor, JsExpression.Identifier(valueName));
 			return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 		}
     }

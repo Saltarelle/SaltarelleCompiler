@@ -213,7 +213,7 @@ public void M() {
 		public void UsingConstructorMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(m => m.StartsWith("Error:") && m.Contains("constructor")));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("constructor")));
 		}
 
 		[Test]
@@ -390,8 +390,8 @@ class C {
 	}
 }" }, namingConvention: nc, errorReporter: er);
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("instance") && er.AllMessages[0].Contains("C1"));
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("instance") && er.AllMessagesText[0].Contains("C1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -402,8 +402,8 @@ class C {
 		var x = new C2<C2<C1>>();
 	}
 }" }, namingConvention: nc, errorReporter: er);
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("not usable from script") && er.AllMessages[0].Contains("type argument") && er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("C2"));
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("type argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("C2"));
 		}
 
 		[Test]
@@ -459,8 +459,8 @@ public void M() {
 	}
 }" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) }, errorReporter: er);
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("C1") && er.AllMessages[0].Contains("constructor") && er.AllMessages[0].Contains("expanded form"));
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("constructor") && er.AllMessagesText[0].Contains("expanded form"));
 		}
 	}
 }

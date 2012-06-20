@@ -22,6 +22,7 @@ Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.
 Don't assign a field the default value when it is always assigned before being read in the constructor.
+Multi-dimensional arrays
 
 v3:
 Source mapping

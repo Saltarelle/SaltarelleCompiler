@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			var c = compiler.CreateCompilation(sourceFiles, new[] { Common.Mscorlib });
             CompiledTypes = compiler.Compile(c).AsReadOnly();
             if (defaultErrorHandling) {
-                ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
+                ((MockErrorReporter)errorReporter).AllMessagesText.Should().BeEmpty("Compile should not generate errors");
             }
         }
 

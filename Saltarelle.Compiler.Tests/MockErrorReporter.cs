@@ -1,27 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory;
 
 namespace Saltarelle.Compiler.Tests {
+	class Message {
+		public int Code { get; private set; }
+		public string File { get; private set; }
+		public TextLocation Location { get; private set; }
+		public object[] Args { get; private set; }
+
+		public Message(int code, string file, TextLocation location, params object[] args) {
+			Code = code;
+			File = file;
+			Location = location;
+			Args = args;
+		}
+	}
+
 	class MockErrorReporter : IErrorReporter {
-        public List<string> AllMessages { get; set; }
+        public List<Message> AllMessages { get; set; }
+
+		public IEnumerable<string> AllMessagesText {
+			get {
+				return AllMessages.Select(m => string.Format(Messages.Get(m.Code).Item2, m.Args));
+			}
+		}
 
         public MockErrorReporter(bool logToConsole) {
-            AllMessages = new List<string>();
-            Error   = s => { s = "Error: " + s; if (logToConsole) Console.WriteLine(s); AllMessages.Add(s); };
-            Warning = s => { s = "Warning: " + s; if (logToConsole) Console.WriteLine(s); AllMessages.Add(s); };
+            AllMessages = new List<Message>();
         }
 
-        public Action<string> Error { get; set; }
-        public Action<string> Warning { get; set; }
-
-        void IErrorReporter.Error(string message) {
-            Error(message);
-        }
-
-        void IErrorReporter.Warning(string message) {
-            Warning(message);
-        }
-    }
+		public void Message(int code, string file, TextLocation location, params object[] args) {
+			AllMessages.Add(new Message(code, file, location, args));
+		}
+	}
 }

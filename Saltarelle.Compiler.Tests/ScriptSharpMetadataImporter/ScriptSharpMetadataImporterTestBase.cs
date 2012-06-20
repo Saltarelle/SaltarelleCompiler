@@ -41,7 +41,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 			Metadata.Prepare(compilation.GetAllTypeDefinitions(), compilation.MainAssembly, errorReporter);
 
-			AllErrors = errorReporter.AllMessages.ToList().AsReadOnly();
+			AllErrors = errorReporter.AllMessagesText.ToList().AsReadOnly();
             if (expectErrors) {
                 AllErrors.Should().NotBeEmpty("Compile should have generated errors");
             }

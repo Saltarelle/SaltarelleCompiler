@@ -94,8 +94,8 @@ public void M() {
 	}
 }" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, errorReporter: er);
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].Contains("myParamArray") && er.AllMessages[0].Contains("expand") && er.AllMessages[0].Contains("param array"));
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("myParamArray") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));
 		}
 	}
 }
