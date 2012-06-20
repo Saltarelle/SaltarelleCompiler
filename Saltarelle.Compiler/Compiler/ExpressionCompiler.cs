@@ -829,7 +829,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case FieldScriptSemantics.ImplType.Field:
 						return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
-						return MakeConstantExpression(impl.Value);
+						return Utils.MakeConstantExpression(impl.Value);
 					default:
 						_errorReporter.Error("Cannot use field " + rr.Member.DeclaringType.Name + "." + rr.Member.Name + " from script.");
 						return JsExpression.Number(0);
@@ -1152,25 +1152,11 @@ namespace Saltarelle.Compiler.Compiler {
 			return HandleInvocation(rr.Member, rr.TargetResult, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, rr.IsVirtualCall, rr.IsExpandedForm);
 		}
 
-		private JsExpression MakeConstantExpression(object value) {
-			value = Utils.ConvertToDoubleOrStringOrBoolean(value);
-			if (value is bool)
-				return (bool)value ? JsExpression.True : JsExpression.False;
-			else if (value is double)
-				return JsExpression.Number((double)value);
-			if (value is string)
-				return JsExpression.String((string)value);
-			else if (value == null)
-				return JsExpression.Null;
-			else
-				throw new ArgumentException("value");
-		}
-
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
 			if (rr.ConstantValue == null && rr.Type.IsReferenceType != true)
 				return _runtimeLibrary.Default(rr.Type);
 			else
-				return MakeConstantExpression(rr.ConstantValue);
+				return Utils.MakeConstantExpression(rr.ConstantValue);
 		}
 
 		private JsExpression CompileThis() {

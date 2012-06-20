@@ -79,5 +79,19 @@ namespace Saltarelle.Compiler {
 			else
 				throw new NotSupportedException("Unsupported constant " + value.ToString() + "(" + value.GetType().ToString() + ")");
 		}
+
+		public static JsExpression MakeConstantExpression(object value) {
+			value = Utils.ConvertToDoubleOrStringOrBoolean(value);
+			if (value is bool)
+				return (bool)value ? JsExpression.True : JsExpression.False;
+			else if (value is double)
+				return JsExpression.Number((double)value);
+			if (value is string)
+				return JsExpression.String((string)value);
+			else if (value == null)
+				return JsExpression.Null;
+			else
+				throw new ArgumentException("value");
+		}
     }
 }
