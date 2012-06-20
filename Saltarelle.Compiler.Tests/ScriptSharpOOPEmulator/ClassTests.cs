@@ -342,5 +342,34 @@ R;
 				                       }
 			});
 		}
+
+		[Test]
+		public void ResourcesAttributeCausesAResourcesClassToBeGenerated() {
+			var typeDef = new Mock<ITypeDefinition>(MockBehavior.Strict);
+			var attr = new Mock<IAttribute>(MockBehavior.Strict);
+			var attrType = new Mock<ITypeDefinition>();
+			var asm = new Mock<IAssembly>();
+			typeDef.SetupGet(_ => _.Attributes).Returns(new[] { attr.Object });
+			typeDef.SetupGet(_ => _.ParentAssembly).Returns(asm.Object);
+			attr.Setup(_ => _.AttributeType).Returns(attrType.Object);
+			attr.Setup(_ => _.PositionalArguments).Returns(new ResolveResult[0]);
+			attrType.SetupGet(_ => _.FullName).Returns("System.Runtime.CompilerServices.ResourcesAttribute");
+
+			AssertCorrect(
+@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
+////////////////////////////////////////////////////////////////////////////////
+// SomeNamespace.InnerNamespace.MyClass
+{MyClass} = { Field1: 'the value', Field2: 123, Field3: null };
+",
+			new JsClass(typeDef.Object, "SomeNamespace.InnerNamespace.MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				StaticMethods = { new JsMethod("s1", null, CreateFunction("s")),
+				                  new JsMethod("s2", null, CreateFunction("t"))
+				                },
+				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(null, "SomeNamespace.InnerNamespace.MyClass"), "Field1"), JsExpression.String("the value"))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(null, "SomeNamespace.InnerNamespace.MyClass"), "Field2"), JsExpression.Number(123))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(null, "SomeNamespace.InnerNamespace.MyClass"), "Field3"), JsExpression.Null)),
+				                       }
+			});
+		}
 	}
 }

@@ -637,14 +637,81 @@ class C1 {
 		public void DelegateTypesAreReturnedAsFunction() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-	delegate int MyDelegate(int a);
-	delegate TResult Func<T1, T2, TResult>(T1 t1, T2 t2);
+delegate int MyDelegate(int a);
+delegate TResult Func<T1, T2, TResult>(T1 t1, T2 t2);
 }");
 			
 			Assert.That(FindType("MyDelegate").Type == TypeScriptSemantics.ImplType.NormalType);
 			Assert.That(FindType("MyDelegate").Name == "Function");
 			Assert.That(FindType("Func`3").Type == TypeScriptSemantics.ImplType.NormalType);
 			Assert.That(FindType("Func`3").Name == "Function");
+		}
+
+		[Test]
+		public void ResourcesAttributeCanOnlyBeAppliedToNonGenericClassesWithOnlyConstFields() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public static class C {
+	public const int F1 = 12;
+	public const string F2 = ""X"";
+}");
+			// No error is good enough
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public class C {
+	public const int F1 = 12;
+	public const string F2 = ""X"";
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("static")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public static class C {
+	public static int F1;
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public static class C {
+	public static int P { get; set; }
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public static class C {
+	static C() {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public static class C {
+	public static void M() {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Resources]
+public static class C<T> {
+	public const string F1 = ""X"";
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("generic")));
 		}
 	}
 }

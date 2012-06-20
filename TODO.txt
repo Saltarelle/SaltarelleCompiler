@@ -26,12 +26,12 @@ Don't assign a field the default value when it is always assigned before being r
 
 v3:
 Source mapping
+Formatting options
 
 Script# features to handle:
 ScriptAssemblyAttribute.
 ScriptQualifierAttribute.
 ScriptNamespaceAttribute specified on assembly.
-ResourcesAttribute.
 MixinAttribute.
 QUnit tests
 

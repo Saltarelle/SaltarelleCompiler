@@ -31,6 +31,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string IntrinsicOperatorAttribute = "IntrinsicOperatorAttribute";
 		private const string ExpandParamsAttribute = "ExpandParamsAttribute";
 		private const string NamedValuesAttribute = "NamedValuesAttribute";
+		private const string ResourcesAttribute = "ResourcesAttribute";
 		private const string Function = "Function";
 		private const string Array = "Array";
 
@@ -256,6 +257,18 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
 
 			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null;
+
+			if (GetAttributePositionalArgs(typeDefinition, ResourcesAttribute) != null) {
+				if (!typeDefinition.IsStatic) {
+					_errors[typeDefinition.FullName + ":Name"] = "The type " + typeDefinition.FullName + " cannot have a [ResourcesAttribute] because it is not static.";
+				}
+				else if (typeDefinition.TypeParameterCount > 0) {
+					_errors[typeDefinition.FullName + ":Name"] = "The type " + typeDefinition.FullName + " cannot have a [ResourcesAttribute] because it is generic.";
+				}
+				else if (typeDefinition.Members.Any(m => !(m is IField && ((IField)m).IsConst))) {
+					_errors[typeDefinition.FullName + ":Name"] = "The type " + typeDefinition.FullName + " cannot have a [ResourcesAttribute] because it contains members that are not const fields.";
+				}
+			}
 
 			string typeName, nmspace;
 			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
