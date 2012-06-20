@@ -3,7 +3,6 @@ v1:
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
-Const fields
 Improve error handling (error numbers, error positions)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query).
 Verify that all directly or indirectly dependent assemblies are referenced.
@@ -32,7 +31,6 @@ Script# features to handle:
 ScriptAssemblyAttribute.
 ScriptQualifierAttribute.
 ScriptNamespaceAttribute specified on assembly.
-MixinAttribute.
 QUnit tests
 
 

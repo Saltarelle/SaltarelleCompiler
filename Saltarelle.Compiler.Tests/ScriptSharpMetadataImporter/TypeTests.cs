@@ -554,13 +554,6 @@ static class C1 {
 		}
 
 		[Test]
-		public void GlobalMethodsAttributeCannotBeAppliedToNestedClass() {
-			Prepare(@"using System.Runtime.CompilerServices; static class C1 { [GlobalMethods] static class C2 {} }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.C2") && AllErrors[0].Contains("GlobalMethodsAttribute") && AllErrors[0].Contains("nested"));
-		}
-
-		[Test]
 		public void ImportedAttributeCausesCodeNotToBeGeneratedForATypeAndActsAsPreserveName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -648,7 +641,7 @@ delegate TResult Func<T1, T2, TResult>(T1 t1, T2 t2);
 		}
 
 		[Test]
-		public void ResourcesAttributeCanOnlyBeAppliedToNonGenericClassesWithOnlyConstFields() {
+		public void ResourcesAttributeCanOnlyBeAppliedToNonGenericStaticClassesWithOnlyConstFields() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [Resources]
@@ -712,6 +705,77 @@ public static class C<T> {
 }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("generic")));
+		}
+
+		[Test]
+		public void MixinAttributeActsAsPerserveName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	[PreserveName]
+	static void Method1(int i) {}
+
+	[PreserveCase]
+	static void Method2(int i, int j) {}
+
+	[ScriptName(""Renamed"")]
+	static void Method3() {}
+
+	static void Method4() {}
+}");
+			Assert.That(FindMethod("C.Method1").Name, Is.EqualTo("method1"));
+			Assert.That(FindMethod("C.Method2").Name, Is.EqualTo("Method2"));
+			Assert.That(FindMethod("C.Method3").Name, Is.EqualTo("Renamed"));
+			Assert.That(FindMethod("C.Method4").Name, Is.EqualTo("method4"));
+		}
+
+		[Test]
+		public void MixinAttributeCanOnlyBeAppliedToNonGenericStaticClassesWithOnlyMethods() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public class C {
+	public static void M() {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("static")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	public static int F1;
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	public static int P { get; set; }
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	static C() {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C<T> {
+	public void M() {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("generic")));
 		}
 	}
 }

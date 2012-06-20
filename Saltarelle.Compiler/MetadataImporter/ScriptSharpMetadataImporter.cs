@@ -32,6 +32,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ExpandParamsAttribute = "ExpandParamsAttribute";
 		private const string NamedValuesAttribute = "NamedValuesAttribute";
 		private const string ResourcesAttribute = "ResourcesAttribute";
+		private const string MixinAttribute = "MixinAttribute";
 		private const string Function = "Function";
 		private const string Array = "Array";
 
@@ -330,15 +331,31 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else {
 				var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
-				if (globalMethodsAttr != null) {
+				var mixinAttr = GetAttributePositionalArgs(typeDefinition, MixinAttribute);
+				if (mixinAttr != null) {
+					if (!typeDefinition.IsStatic) {
+						_errors[typeDefinition.FullName + ":Mixin"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [MixinAttribute]";
+					}
+					else if (typeDefinition.Members.Any(m => !(m is IMethod) || ((IMethod)m).IsConstructor)) {
+						_errors[typeDefinition.FullName + ":Mixin"] = "The type " + typeDefinition.FullName + " can contain only methods order to be decorated with a [MixinAttribute]";
+					}
+					else if (typeDefinition.TypeParameterCount > 0) {
+						_errors[typeDefinition.FullName + ":Mixin"] = "[MixinAttribute] cannot be applied to the generic type " + typeDefinition.FullName + ".";
+					}
+					else {
+						nmspace = "";
+						globalMethods = true;
+					}
+				}
+				else if (globalMethodsAttr != null) {
 					if (!typeDefinition.IsStatic) {
 						_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " must be static in order to be decorated with a [GlobalMethodsAttribute]";
 					}
 					else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
 						_errors[typeDefinition.FullName + ":GlobalMethods"] = "The type " + typeDefinition.FullName + " cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]";
 					}
-					else if (typeDefinition.DeclaringTypeDefinition != null) {
-						_errors[typeDefinition.FullName + ":GlobalMethods"] = "[GlobalMethodsAttribute] cannot be applied to the nested type " + typeDefinition.FullName + ".";
+					else if (typeDefinition.TypeParameterCount > 0) {
+						_errors[typeDefinition.FullName + ":Mixin"] = "[GlobalMethodsAttribute] cannot be applied to the generic type " + typeDefinition.FullName + ".";
 					}
 					else {
 						nmspace = "";

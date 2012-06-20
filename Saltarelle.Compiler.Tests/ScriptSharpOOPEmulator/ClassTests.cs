@@ -371,5 +371,33 @@ R;
 				                       }
 			});
 		}
+
+		[Test]
+		public void MixinAttributeWorks() {
+			var typeDef = new Mock<ITypeDefinition>(MockBehavior.Strict);
+			var attr = new Mock<IAttribute>(MockBehavior.Strict);
+			var attrType = new Mock<ITypeDefinition>(MockBehavior.Strict);
+			var asm = new Mock<IAssembly>(MockBehavior.Strict);
+			var stringType = new Mock<IType>(MockBehavior.Strict);
+			typeDef.SetupGet(_ => _.Attributes).Returns(new[] { attr.Object });
+			typeDef.SetupGet(_ => _.ParentAssembly).Returns(asm.Object);
+			attr.Setup(_ => _.AttributeType).Returns(attrType.Object);
+			attr.Setup(_ => _.PositionalArguments).Returns(new[] { new ConstantResolveResult(stringType.Object, "$.fn") });
+			attrType.SetupGet(_ => _.FullName).Returns("System.Runtime.CompilerServices.MixinAttribute");
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+$.fn.method1 = function(x) {
+	X;
+};
+$.fn.method2 = function(y) {
+	Y;
+};
+",			new JsClass(typeDef.Object, "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				StaticMethods = { new JsMethod("method1", null, CreateFunction("x")),
+				                  new JsMethod("method2", null, CreateFunction("y")) }
+			});
+		}
 	}
 }

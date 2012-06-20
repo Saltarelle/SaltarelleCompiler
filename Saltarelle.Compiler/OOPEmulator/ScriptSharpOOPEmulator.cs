@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private const string NamedValuesAttribute = "NamedValuesAttribute";
 		private const string FlagsAttribute = "FlagsAttribute";
 		private const string ResourcesAttribute = "ResourcesAttribute";
+		private const string MixinAttribute = "MixinAttribute";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
 		private readonly INamingConventionResolver _namingConvention;
@@ -108,6 +109,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			string currentNs = "";
 			foreach (var t in orderedTypes) {
 				bool globalMethods = GetAttributePositionalArgs(t.CSharpTypeDefinition, GlobalMethodsAttribute) != null;
+				bool resources     = GetAttributePositionalArgs(t.CSharpTypeDefinition, ResourcesAttribute) != null;
+				var  mixinArgs     = GetAttributePositionalArgs(t.CSharpTypeDefinition, MixinAttribute);
 
 				string ns = GetNamespace(t.Name);
 				if (ns != currentNs && !globalMethods) {
@@ -122,25 +125,27 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					if (globalMethods) {
 						result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.MemberAccess(JsExpression.Identifier("window"), m.Name), m.Definition))));
 					}
+					else if (resources) {
+						result.Add(GenerateResourcesClass(c));
+					}
+					else if (mixinArgs != null) {
+						string prefix = (!string.IsNullOrEmpty((string)mixinArgs[0]) ? (string)mixinArgs[0] + "." : "");
+						result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Literal(prefix + m.Name + " = {0}", m.Definition))));	// If we are good citizens and use assignment statements, we will get ugly parentheses around the assignee.
+					}
 					else {
-						if (GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) != null) {
-							result.Add(GenerateResourcesClass(c));
+						var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+
+						if (c.TypeArgumentNames.Count == 0) {
+							result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, unnamedCtor)));
+							AddClassMembers(c, typeRef, compilation, result);
 						}
 						else {
-							var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
-
-							if (c.TypeArgumentNames.Count == 0) {
-								result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, unnamedCtor)));
-								AddClassMembers(c, typeRef, compilation, result);
-							}
-							else {
-								var stmts = new List<JsStatement> { new JsVariableDeclarationStatement(InstantiatedGenericTypeVariableName, unnamedCtor) };
-								AddClassMembers(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName), compilation, stmts);
-								stmts.AddRange(c.StaticInitStatements);
-								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
-								result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts)))));
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), JsExpression.String(c.Name), JsExpression.Number(c.TypeArgumentNames.Count))));
-							}
+							var stmts = new List<JsStatement> { new JsVariableDeclarationStatement(InstantiatedGenericTypeVariableName, unnamedCtor) };
+							AddClassMembers(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName), compilation, stmts);
+							stmts.AddRange(c.StaticInitStatements);
+							stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
+							result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts)))));
+							result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), JsExpression.String(c.Name), JsExpression.Number(c.TypeArgumentNames.Count))));
 						}
 					}
 				}
@@ -155,7 +160,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			}
 
 			result.AddRange(orderedTypes.OfType<JsClass>()
-			                            .Where(c => c.TypeArgumentNames.Count == 0 && GetAttributePositionalArgs(c.CSharpTypeDefinition, GlobalMethodsAttribute) == null && GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) == null)
+			                            .Where(c =>    c.TypeArgumentNames.Count == 0
+			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, GlobalMethodsAttribute) == null
+			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) == null
+			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, MixinAttribute) == null)
 			                            .Select(c => {
 			                                             var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, c.Name);
 			                                             if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
