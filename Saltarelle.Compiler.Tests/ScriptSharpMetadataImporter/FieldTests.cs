@@ -136,5 +136,96 @@ class C {
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Contains("C.Field") && m.Contains("ScriptNameAttribute") && m.Contains("field") && m.Contains("cannot be empty")));
 		}
+
+		[Test]
+		public void ConstantFieldIsImplementedAsFieldAccessWhenNotMinimizingCode() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	public const int MyField = 123;
+}", minimizeNames: false);
+
+			var f = FindField("C.MyField");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f.Name, Is.EqualTo("$myField"));
+		}
+
+		[Test]
+		public void ConstantFieldIsImplementedAsConstantButInTheOutputWhenMinimizingCode() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	public const int MyField1 = 123;
+	public const double MyField2 = 123.5;
+	public const string MyField3 = ""x"";
+	public const char MyField4 = 'A';
+	public const object MyField5 = null;
+	public const byte MyField6 = 13;
+}", minimizeNames: true);
+
+			var f = FindField("C.MyField1");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+			Assert.That(f.Value, Is.EqualTo(123.0));
+			Assert.That(f.Name, Is.EqualTo("myField1"));
+			Assert.That(f.GenerateCode, Is.True);
+
+			Assert.That(FindField("C.MyField2").Value, Is.EqualTo(123.5));
+			Assert.That(FindField("C.MyField3").Value, Is.EqualTo("x"));
+			Assert.That(FindField("C.MyField4").Value, Is.EqualTo(65.0));
+			Assert.That(FindField("C.MyField5").Value, Is.EqualTo(null));
+			Assert.That(FindField("C.MyField6").Value, Is.EqualTo(13.0));
+		}
+
+		[Test]
+		public void NumericValuesEnumFieldsAreTreatedAsConstants() {
+			foreach (var min in new[] { true, false }) {
+				Prepare(
+@"using System.Runtime.CompilerServices;
+public enum MyEnum {
+	MyValue1 = 0,
+	MyValue2,
+	MyValue3 = 15,
+	MyValue4,
+}", minimizeNames: min);
+
+				var f = FindField("MyEnum.MyValue1");
+				Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+				Assert.That(f.Value, Is.EqualTo(0.0));
+				Assert.That(f.Name, Is.EqualTo("myValue1"));
+				Assert.That(f.GenerateCode, Is.True);
+
+				Assert.That(FindField("MyEnum.MyValue2").Value, Is.EqualTo(1.0));
+				Assert.That(FindField("MyEnum.MyValue3").Value, Is.EqualTo(15.0));
+				Assert.That(FindField("MyEnum.MyValue4").Value, Is.EqualTo(16.0));
+			}
+		}
+
+		[Test]
+		public void NamedValuesValuesEnumFieldsAreTreatedAsConstantStringsWithTheValueFromTheScriptName() {
+			foreach (var min in new[] { true, false }) {
+				Prepare(
+@"using System.Runtime.CompilerServices;
+[NamedValues]
+public enum MyEnum {
+	MyValue1 = 0,
+	[PreserveName]
+	MyValue2,
+	[PreserveCase]
+	MyValue3 = 15,
+	[ScriptName(""Renamed"")]
+	MyValue4,
+}", minimizeNames: min);
+
+				var f = FindField("MyEnum.MyValue1");
+				Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+				Assert.That(f.Value, Is.EqualTo("myValue1"));
+				Assert.That(f.Name, Is.EqualTo("myValue1"));
+				Assert.That(f.GenerateCode, Is.True);
+
+				Assert.That(FindField("MyEnum.MyValue2").Value, Is.EqualTo("myValue2"));
+				Assert.That(FindField("MyEnum.MyValue3").Value, Is.EqualTo("MyValue3"));
+				Assert.That(FindField("MyEnum.MyValue4").Value, Is.EqualTo("Renamed"));
+			}
+		}
 	}
 }

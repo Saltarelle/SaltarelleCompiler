@@ -32,7 +32,6 @@ ScriptQualifierAttribute.
 ScriptNamespaceAttribute specified on assembly.
 ResourcesAttribute.
 MixinAttribute.
-NamedValuesAttribute and NumericValuesAttribute.
 QUnit tests
 
 

@@ -30,6 +30,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string RecordAttribute = "RecordAttribute";
 		private const string IntrinsicOperatorAttribute = "IntrinsicOperatorAttribute";
 		private const string ExpandParamsAttribute = "ExpandParamsAttribute";
+		private const string NamedValuesAttribute = "NamedValuesAttribute";
 		private const string Function = "Function";
 		private const string Array = "Array";
 
@@ -110,11 +111,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public TypeScriptSemantics Semantics { get; private set; }
 			public bool GlobalMethods { get; private set; }
 			public bool IsRecord { get; private set; }
+			public bool IsNamedValues { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods, bool isRecord) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods, bool isRecord, bool isNamedValues) {
 				Semantics     = semantics;
 				GlobalMethods = globalMethods;
 				IsRecord      = isRecord;
+				IsNamedValues = isNamedValues;
 			}
 		}
 
@@ -244,7 +247,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false);
 				return;
 			}
 
@@ -336,7 +339,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, false) : tp.Name;
 			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord);
+			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord, isNamedValues: nva != null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition, ICompilation compilation) {
@@ -389,8 +393,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                                                       || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
 			                                                       || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
 			                                                       || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods
-								                                   || (!_typeSemantics[member.DeclaringTypeDefinition].Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
-			                                                       || (_typeSemantics[member.DeclaringTypeDefinition].IsRecord && !member.IsStatic && (member is IProperty || member is IField))));
+			                                                       || (!_typeSemantics[member.DeclaringTypeDefinition].Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
+			                                                       || (_typeSemantics[member.DeclaringTypeDefinition].IsRecord && !member.IsStatic && (member is IProperty || member is IField)))
+			                                                       || (_typeSemantics[member.DeclaringTypeDefinition].IsNamedValues && member is IField));
 
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
@@ -910,7 +915,23 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			else {
 				string name = nameSpecified ? preferredName : GetUniqueName(field, preferredName, usedNames);
 				usedNames.Add(name);
-				_fieldSemantics[field] = FieldScriptSemantics.Field(name);
+				if (_typeSemantics[field.DeclaringTypeDefinition].IsNamedValues) {
+					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(name, name);
+				}
+				else if (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames)) {
+					object value = Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
+					if (value is bool)
+						_fieldSemantics[field] = FieldScriptSemantics.BooleanConstant((bool)value, name);
+					else if (value is double)
+						_fieldSemantics[field] = FieldScriptSemantics.NumericConstant((double)value, name);
+					else if (value is string)
+						_fieldSemantics[field] = FieldScriptSemantics.StringConstant((string)value, name);
+					else
+						_fieldSemantics[field] = FieldScriptSemantics.NullConstant(name);
+				}
+				else {
+					_fieldSemantics[field] = FieldScriptSemantics.Field(name);
+				}
 			}
 		}
 

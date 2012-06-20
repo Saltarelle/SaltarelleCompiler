@@ -60,5 +60,26 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 {MyEnum}.registerEnum('SomeNamespace.InnerNamespace.MyEnum', true);
 ",			new JsEnum(typeDef.Object, "SomeNamespace.InnerNamespace.MyEnum", new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
 		}
+
+		[Test]
+		public void NamedValuesAttributeWorks() {
+			var typeDef = new Mock<ITypeDefinition>(MockBehavior.Strict);
+			var attr = new Mock<IAttribute>(MockBehavior.Strict);
+			var attrType = new Mock<ITypeDefinition>();
+			typeDef.SetupGet(_ => _.Attributes).Returns(new[] { attr.Object });
+			attr.Setup(_ => _.AttributeType).Returns(attrType.Object);
+			attr.Setup(_ => _.PositionalArguments).Returns(new ResolveResult[0]);
+			attrType.SetupGet(_ => _.FullName).Returns("System.Runtime.CompilerServices.NamedValuesAttribute");
+
+			AssertCorrect(
+@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
+////////////////////////////////////////////////////////////////////////////////
+// SomeNamespace.InnerNamespace.MyEnum
+{MyEnum} = function() {
+};
+{MyEnum}.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
+{MyEnum}.registerEnum('SomeNamespace.InnerNamespace.MyEnum', false);
+",			new JsEnum(typeDef.Object, "SomeNamespace.InnerNamespace.MyEnum", new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
+		}
 	}
 }

@@ -1153,38 +1153,17 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression MakeConstantExpression(object value) {
+			value = Utils.ConvertToDoubleOrStringOrBoolean(value);
 			if (value is bool)
 				return (bool)value ? JsExpression.True : JsExpression.False;
-			else if (value is sbyte)
-				return JsExpression.Number((sbyte)value);
-			else if (value is byte)
-				return JsExpression.Number((byte)value);
-			else if (value is char)
-				return JsExpression.Number((char)value);
-			else if (value is short)
-				return JsExpression.Number((short)value);
-			else if (value is ushort)
-				return JsExpression.Number((ushort)value);
-			else if (value is int)
-				return JsExpression.Number((int)value);
-			else if (value is uint)
-				return JsExpression.Number((uint)value);
-			else if (value is long)
-				return JsExpression.Number((long)value);
-			else if (value is ulong)
-				return JsExpression.Number((ulong)value);
-			else if (value is float)
-				return JsExpression.Number((float)value);
 			else if (value is double)
 				return JsExpression.Number((double)value);
-			else if (value is decimal)
-				return JsExpression.Number((double)(decimal)value);
 			if (value is string)
 				return JsExpression.String((string)value);
 			else if (value == null)
 				return JsExpression.Null;
 			else
-				throw new NotSupportedException("Unsupported constant " + value.ToString() + "(" + value.GetType().ToString() + ")");
+				throw new ArgumentException("value");
 		}
 
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {

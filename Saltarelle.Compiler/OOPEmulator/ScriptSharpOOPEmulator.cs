@@ -19,6 +19,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private const string RegisterGenericClass = "registerGenericClass";
 		private const string RegisterGenericInterface = "registerGenericInterface";
 		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
+		private const string NamedValuesAttribute = "NamedValuesAttribute";
+		private const string FlagsAttribute = "FlagsAttribute";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
 		private readonly INamingConventionResolver _namingConvention;
@@ -126,9 +128,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				}
 				else if (t is JsEnum) {
 					var e = (JsEnum)t;
-					bool flags = GetAttributePositionalArgs(t.CSharpTypeDefinition, "FlagsAttribute", "System") != null;
+					bool flags = GetAttributePositionalArgs(t.CSharpTypeDefinition, FlagsAttribute, "System") != null;
+					bool namedValues = GetAttributePositionalArgs(t.CSharpTypeDefinition, NamedValuesAttribute) != null;
 					result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement))));
-					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, JsExpression.Number(v.Value)))))));
+					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (namedValues ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
 					result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterEnum), JsExpression.String(t.Name), JsExpression.Boolean(flags))));
 				}
 			}
