@@ -27,20 +27,20 @@ namespace Saltarelle.Compiler.Driver {
 	}
 
 	public class CompilerOptions {
-		public List<string> AdditionalLibPaths { get; private set; }
-		public bool MinimizeNames              { get; set; }
+		public List<string> AdditionalLibPaths { get; private set; }	// TODO!!!
+		public bool MinimizeScript             { get; set; }
 		public List<string> DefineConstants    { get; private set; }
 		public List<int> DisabledWarnings      { get; private set; }
 		public string DocumentationFile        { get; set; }
+		public string AssemblyName             { get; set; }
 		public string OutputAssemblyPath       { get; set; }
 		public string OutputScriptPath         { get; set; }
-		public List<Reference> References      { get; private set; }
-		public List<string> SourceFiles        { get; private set; }
+		public List<Reference> References      { get; private set; }	// TODO: No aliases, verify all references can be resolved, resolve using AdditionalLibPaths
+		public List<string> SourceFiles        { get; private set; }	// TODO: Check what happens on file errors
 		public bool TreatWarningsAsErrors      { get; set; }
 		public int WarningLevel                { get; set; }
 		public List<int> WarningsAsErrors      { get; private set; }
 		public List<int> WarningsNotAsErrors   { get; private set; }
-		public List<int> IgnoredWarnings       { get; private set; }
 
 		public CompilerOptions() {
 			AdditionalLibPaths  = new List<string>();
@@ -50,7 +50,6 @@ namespace Saltarelle.Compiler.Driver {
 			SourceFiles         = new List<string>();
 			WarningsAsErrors    = new List<int>();
 			WarningsNotAsErrors = new List<int>();
-			IgnoredWarnings     = new List<int>();
 
 			WarningLevel = 4;
 		}

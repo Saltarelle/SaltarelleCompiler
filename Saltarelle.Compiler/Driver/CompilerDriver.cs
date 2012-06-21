@@ -19,7 +19,18 @@ namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
 		private readonly IErrorReporter _errorReporter;
 
-		private CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath) {
+		private string GetAssemblyName(CompilerOptions options) {
+			if (!string.IsNullOrEmpty(options.AssemblyName))
+				return options.AssemblyName;
+			else if (options.OutputAssemblyPath != null)
+				return Path.GetFileNameWithoutExtension(options.OutputAssemblyPath);
+			else if (options.SourceFiles.Count > 0)
+				return Path.GetFileNameWithoutExtension(options.SourceFiles[0]);
+			else
+				return null;
+		}
+
+		private CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath, string outputDocFilePath) {
 			var result = new CompilerSettings();
 			result.Target                    = Target.Library;
 			result.Platform                  = Platform.AnyCPU;
@@ -37,8 +48,9 @@ namespace Saltarelle.Compiler.Driver {
 			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => new Mono.CSharp.Tuple<string, string>(r.Alias, r.Assembly)).ToList();
 			result.ReferencesLookupPaths     = options.AdditionalLibPaths;
 			result.Encoding                  = Encoding.UTF8;
-			result.DocumentationFile         = options.DocumentationFile;
+			result.DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null;
 			result.OutputFile                = outputAssemblyPath;
+			result.AssemblyName              = GetAssemblyName(options);
 			result.StdLib                    = false;
 			result.StdLibRuntimeVersion      = RuntimeVersion.v4;
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(Path.GetFileName(f), f, i + 1)));
@@ -50,8 +62,6 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddWarningAsError(w);
 			foreach (var w in options.WarningsNotAsErrors)
 				result.AddWarningOnly(w);
-			foreach (var w in options.IgnoredWarnings)
-				result.SetIgnoreWarning(w);
 
 			return result;
 		}
@@ -116,14 +126,14 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		public bool Compile(CompilerOptions options) {
-			string intermediateAssemblyFile = Path.GetTempFileName();
+			string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
 
 			try {
 				// TODO: extern alias not supported.
 
 				var er = new ErrorReporterWrapper(_errorReporter);
 				// Compile the assembly
-				var settings = MapSettings(options, intermediateAssemblyFile);
+				var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile);
 				var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
 				var d = new Mono.CSharp.Driver(ctx);
 				d.Compile();
@@ -132,7 +142,7 @@ namespace Saltarelle.Compiler.Driver {
 					return false;
 
 				// Compile the script
-				var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeNames);
+				var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 				PreparedCompilation compilation = null;
 				var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
 				var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, _errorReporter);
@@ -152,16 +162,39 @@ namespace Saltarelle.Compiler.Driver {
 
 				var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly(intermediateAssemblyFile);
 				// TODO: Metadata writeback.
-				asm.Write(options.OutputAssemblyPath);
+
+				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
+				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
+
+				try {
+					asm.Write(outputAssemblyPath);
+				}
+				catch (IOException ex) {
+					_errorReporter.Message(7950, null, TextLocation.Empty, ex.Message);
+					return false;
+				}
+				if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+					try {
+						File.Copy(intermediateDocFile, options.DocumentationFile);
+					}
+					catch (IOException ex) {
+						_errorReporter.Message(7952, null, TextLocation.Empty, ex.Message);
+						return false;
+					}
+				}
 
 				string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
-				File.WriteAllText(options.OutputScriptPath, script);
+				try {
+					File.WriteAllText(outputScriptPath, script);
+				}
+				catch (IOException ex) {
+					_errorReporter.Message(7951, null, TextLocation.Empty, ex.Message);
+					return false;
+				}
 			}
 			finally {
-				try {
-					File.Delete(intermediateAssemblyFile);
-				}
-				catch {}
+				try { File.Delete(intermediateAssemblyFile); } catch {}
+				try { File.Delete(intermediateDocFile); } catch {}
 			}
 
 			return true;

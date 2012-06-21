@@ -96,6 +96,10 @@ namespace Saltarelle.Compiler {
 			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it expands its param array in script.") },
 			{ 7525, Tuple.Create(MessageSeverity.Error, "Error in inline code compilation: {0}.") },
 
+			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
+			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },
+			{ 7952, Tuple.Create(MessageSeverity.Error, "Error writing documentation file: {0}.") },
+
 			{ 7999, Tuple.Create(MessageSeverity.Error, "INTERNAL ERROR: {0}. Please report this as an issue on https://github.com/erik-kallen/SaltarelleCompiler/") },
 		};
 
