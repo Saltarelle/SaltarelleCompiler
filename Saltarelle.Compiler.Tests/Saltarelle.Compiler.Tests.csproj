@@ -212,6 +212,7 @@
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\YieldStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\VariableGatheringTests.cs" />
     <Compile Include="DriverTests\DriverTests.cs" />
+    <Compile Include="Exe\CommandLineArgumentTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />
@@ -277,6 +278,10 @@
     <ProjectReference Include="..\Saltarelle.Compiler\Saltarelle.Compiler.csproj">
       <Project>{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}</Project>
       <Name>Saltarelle.Compiler</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SCExe\SCExe.csproj">
+      <Project>{6799A75C-6F0A-41DA-AA45-6A67587AB6C7}</Project>
+      <Name>SCExe</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

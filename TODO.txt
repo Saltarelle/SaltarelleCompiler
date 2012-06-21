@@ -8,10 +8,11 @@ Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.
 Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 Cannot declare a static field called Name.
-Exe
 MSBuild task
 Build script
 Installer
+Sign everything
+Solve the debug/release names issue. Separate metadata importer?
 
 v2:
 yield
