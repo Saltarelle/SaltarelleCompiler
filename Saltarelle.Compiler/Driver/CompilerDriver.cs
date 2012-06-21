@@ -17,12 +17,10 @@ using Saltarelle.Compiler.RuntimeLibrary;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
-		private readonly IErrorReporter _errorReporter;
+		private readonly IErrorReporter _errorReporter2;
 
 		private string GetAssemblyName(CompilerOptions options) {
-			if (!string.IsNullOrEmpty(options.AssemblyName))
-				return options.AssemblyName;
-			else if (options.OutputAssemblyPath != null)
+			if (options.OutputAssemblyPath != null)
 				return Path.GetFileNameWithoutExtension(options.OutputAssemblyPath);
 			else if (options.SourceFiles.Count > 0)
 				return Path.GetFileNameWithoutExtension(options.SourceFiles[0]);
@@ -30,7 +28,33 @@ namespace Saltarelle.Compiler.Driver {
 				return null;
 		}
 
-		private CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath, string outputDocFilePath) {
+		private string ResolveReference(string filename, IEnumerable<string> paths, IErrorReporter er) {
+			// Code taken from mcs, so it should match that behavior.
+			bool? hasExtension = null;
+			foreach (var path in paths) {
+				var file = Path.Combine(path, filename);
+
+				if (!File.Exists(file)) {
+					if (!hasExtension.HasValue)
+						hasExtension = filename.EndsWith(".dll", StringComparison.Ordinal) || filename.EndsWith(".exe", StringComparison.Ordinal);
+
+					if (hasExtension.Value)
+						continue;
+
+					file += ".dll";
+					if (!File.Exists(file))
+						continue;
+				}
+
+				return Path.GetFullPath(file);
+			}
+			er.Message(7998, null, TextLocation.Empty, filename);
+			return null;
+		}
+
+		private CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath, string outputDocFilePath, IErrorReporter er) {
+			var allPaths = options.AdditionalLibPaths.Concat(new[] { Environment.CurrentDirectory }).ToList();
+
 			var result = new CompilerSettings();
 			result.Target                    = Target.Library;
 			result.Platform                  = Platform.AnyCPU;
@@ -44,16 +68,15 @@ namespace Saltarelle.Compiler.Driver {
 			result.WarningsAreErrors         = options.TreatWarningsAsErrors;
 			result.FatalCounter              = 100;
 			result.WarningLevel              = options.WarningLevel;
-			result.AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => r.Assembly).ToList();
-			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => new Mono.CSharp.Tuple<string, string>(r.Alias, r.Assembly)).ToList();
-			result.ReferencesLookupPaths     = options.AdditionalLibPaths;
+			result.AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList();
+			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => new Mono.CSharp.Tuple<string, string>(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList();
 			result.Encoding                  = Encoding.UTF8;
 			result.DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null;
 			result.OutputFile                = outputAssemblyPath;
 			result.AssemblyName              = GetAssemblyName(options);
 			result.StdLib                    = false;
 			result.StdLibRuntimeVersion      = RuntimeVersion.v4;
-			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(Path.GetFileName(f), f, i + 1)));
+			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(f, f, i + 1)));
 			foreach (var c in options.DefineConstants)
 				result.AddConditionalSymbol(c);
 			foreach (var w in options.DisabledWarnings)
@@ -63,10 +86,13 @@ namespace Saltarelle.Compiler.Driver {
 			foreach (var w in options.WarningsNotAsErrors)
 				result.AddWarningOnly(w);
 
+			if (result.AssemblyReferencesAliases.Count > 0)	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
+				er.Message(7997, null, TextLocation.Empty);
+
 			return result;
 		}
 
-		class ConvertingReportPrinter : ReportPrinter {
+		private class ConvertingReportPrinter : ReportPrinter {
 			private readonly IErrorReporter _errorReporter;
 
 			public ConvertingReportPrinter(IErrorReporter errorReporter) {
@@ -79,7 +105,7 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		class SimpleSourceFile : ISourceFile {
+		private class SimpleSourceFile : ISourceFile {
 			private readonly string _filename;
 
 			public SimpleSourceFile(string filename) {
@@ -95,121 +121,133 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		class ErrorReporterWrapper : IErrorReporter {
+		private class ErrorReporterWrapper : IErrorReporter {
 			private readonly IErrorReporter _er;
+			private readonly TextWriter _actualConsoleOut;
 
 			public bool HasErrors { get; private set; }
 
-			public ErrorReporterWrapper(IErrorReporter er) {
+			public ErrorReporterWrapper(IErrorReporter er, TextWriter actualConsoleOut) {
 				_er = er;
+				_actualConsoleOut = actualConsoleOut;
+			}
+
+			private void WithActualOut(Action a) {
+				TextWriter old = Console.Out;
+				try {
+					Console.SetOut(_actualConsoleOut);
+					a();
+				}
+				finally {
+					Console.SetOut(old);
+				}
 			}
 
 			public void Message(MessageSeverity severity, int code, string file, TextLocation location, string message, params object[] args) {
-				_er.Message(severity, code, file, location, message, args);
+				WithActualOut(() => _er.Message(severity, code, file, location, message, args));
 				if (severity == MessageSeverity.Error)
 					HasErrors = true;
 			}
 
 			public void InternalError(string text, string file, TextLocation location) {
-				_er.InternalError(text, file, location);
+				WithActualOut(() => _er.InternalError(text, file, location));
 				HasErrors = true;
 			}
 
 			public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
-				_er.InternalError(ex, file, location, additionalText);
+				WithActualOut(() => _er.InternalError(ex, file, location, additionalText));
 				HasErrors = true;
 			}
 		}
 
 		public CompilerDriver(IErrorReporter errorReporter) {
-			_errorReporter = errorReporter;
+			_errorReporter2 = errorReporter;
 		}
 
 		public bool Compile(CompilerOptions options) {
-			string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
-
 			try {
-				// TODO: extern alias not supported.
-
-				var er = new ErrorReporterWrapper(_errorReporter);
-				// Compile the assembly
-				var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile);
-				var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
-				var d = new Mono.CSharp.Driver(ctx);
-				d.Compile();
-
-				if (er.HasErrors)
-					return false;
-
-				// Compile the script
-				var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
-				PreparedCompilation compilation = null;
-				var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
-				var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, _errorReporter);
-
-				var refs = LoadReferences(options.References.Select(r => r.Assembly), options.AdditionalLibPaths, er);
-				if (er.HasErrors)
-					return false;
-
-				compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), refs, options.DefineConstants);
-				var compiledTypes = compiler.Compile(compilation);
-
-				var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);
-				js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
-
-				if (er.HasErrors)
-					return false;
-
-				var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly(intermediateAssemblyFile);
-				// TODO: Metadata writeback.
-
-				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
-				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
-
+				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
+				var actualOut = Console.Out;
 				try {
-					asm.Write(outputAssemblyPath);
-				}
-				catch (IOException ex) {
-					_errorReporter.Message(7950, null, TextLocation.Empty, ex.Message);
-					return false;
-				}
-				if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+					Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
+
+					var er = new ErrorReporterWrapper(_errorReporter2, actualOut);
+					// Compile the assembly
+					var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile, er);
+					if (er.HasErrors)
+						return false;
+
+					var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
+					var d = new Mono.CSharp.Driver(ctx);
+					d.Compile();
+
+					if (er.HasErrors)
+						return false;
+
+					// Compile the script
+					var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
+					PreparedCompilation compilation = null;
+					var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
+					var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
+
+					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), LoadReferences(ctx.Settings.AssemblyReferences), options.DefineConstants);
+					var compiledTypes = compiler.Compile(compilation);
+
+					var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);
+					js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
+
+					if (er.HasErrors)
+						return false;
+
+					var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly(intermediateAssemblyFile);
+					// TODO: Metadata writeback.
+
+					string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
+					string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
+
 					try {
-						File.Copy(intermediateDocFile, options.DocumentationFile);
+						asm.Write(outputAssemblyPath);
 					}
 					catch (IOException ex) {
-						_errorReporter.Message(7952, null, TextLocation.Empty, ex.Message);
+						er.Message(7950, null, TextLocation.Empty, ex.Message);
+						return false;
+					}
+					if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+						try {
+							File.Copy(intermediateDocFile, options.DocumentationFile);
+						}
+						catch (IOException ex) {
+							er.Message(7952, null, TextLocation.Empty, ex.Message);
+							return false;
+						}
+					}
+
+					string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
+					try {
+						File.WriteAllText(outputScriptPath, script);
+					}
+					catch (IOException ex) {
+						er.Message(7951, null, TextLocation.Empty, ex.Message);
 						return false;
 					}
 				}
-
-				string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
-				try {
-					File.WriteAllText(outputScriptPath, script);
-				}
-				catch (IOException ex) {
-					_errorReporter.Message(7951, null, TextLocation.Empty, ex.Message);
-					return false;
+				finally {
+					try { File.Delete(intermediateAssemblyFile); } catch {}
+					try { File.Delete(intermediateDocFile); } catch {}
+					Console.SetOut(actualOut);
 				}
 			}
-			finally {
-				try { File.Delete(intermediateAssemblyFile); } catch {}
-				try { File.Delete(intermediateDocFile); } catch {}
+			catch (Exception ex) {
+				_errorReporter2.InternalError(ex, null, TextLocation.Empty);
 			}
 
 			return true;
 		}
 
-		private IList<IAssemblyReference> LoadReferences(IEnumerable<string> references, List<string> additionalLibPaths, IErrorReporter er) {
-			// TODO: Error handling, actually use the additional lib paths.
-
+		private IList<IAssemblyReference> LoadReferences(IEnumerable<string> references) {
+			// Shouldn't result in errors because mcs would have caught it.
 			var loader = new CecilLoader { IncludeInternalMembers = true };
-			var result = new List<IAssemblyReference>();
-			foreach (var reference in references) {
-				result.Add(loader.LoadAssemblyFile(reference));
-			}
-			
-			return result;
+			return references.Select(f => (IAssemblyReference)loader.LoadAssemblyFile(f)).ToList();
 		}
 	}
 }

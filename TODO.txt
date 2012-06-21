@@ -8,9 +8,10 @@ Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.
 Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 Cannot declare a static field called Name.
-Driver
 Exe
 MSBuild task
+Build script
+Installer
 
 v2:
 yield
@@ -22,10 +23,13 @@ Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.
 Don't assign a field the default value when it is always assigned before being read in the constructor.
 Multi-dimensional arrays
+NAnt task
 
 v3:
 Source mapping
 Formatting options
+
+-----
 
 Script# features to handle:
 ScriptAssemblyAttribute.
