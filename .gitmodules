@@ -1,9 +1,6 @@
-[submodule "NRefactory"]
-	path = NRefactory
+[submodule "Compiler/NRefactory"]
+	path = Compiler/NRefactory
 	url = git://github.com/erik-kallen/NRefactory.git
-[submodule "Mono.Cecil"]
-	path = Mono.Cecil
+[submodule "Compiler/Mono.Cecil"]
+	path = Compiler/Mono.Cecil
 	url = git://github.com/jbevain/cecil.git
-[submodule "ScriptSharp"]
-	path = ScriptSharp
-	url = git@github.com:erik-kallen/scriptsharp.git
