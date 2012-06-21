@@ -22,7 +22,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 			IProjectContent proj = new CSharpProjectContent();
 			proj = proj.AddAssemblyReferences(new[] { Common.SSMscorlib });
 			var comp = proj.CreateCompilation();
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator(new MockNamingConventionResolver());
+			var er = new MockErrorReporter(true);
+			var obj = new OOPEmulator.ScriptSharpOOPEmulator(new MockNamingConventionResolver(), er);
+			Assert.That(er.AllMessages, Is.Empty, "Should not have errors");
 			var rewritten = obj.Rewrite(types, comp);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}

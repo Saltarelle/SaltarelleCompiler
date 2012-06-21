@@ -85,7 +85,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
             compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib });
 			var compiledTypes = compiler.Compile(compilation);
 
-			var js = new OOPEmulator.ScriptSharpOOPEmulator(nc).Rewrite(compiledTypes, compilation.Compilation);
+			var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);
 			js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));

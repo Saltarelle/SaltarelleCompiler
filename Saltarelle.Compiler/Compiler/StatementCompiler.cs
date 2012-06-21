@@ -27,6 +27,9 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly NestedFunctionContext _nestedFunctionContext;
 		private readonly SharedValue<int> _nextLabelIndex;
 		private readonly IMethod _methodBeingCompiled;
+		private string _filename;
+		private TextLocation _location;
+
 
 		private IVariable _currentVariableForRethrow;
 		private IDictionary<object, string> _currentGotoCaseMap;
@@ -60,62 +63,105 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public JsBlockStatement Compile(Statement statement) {
-			_result = new List<JsStatement>();
-			statement.AcceptVisitor(this);
-			if (_result.Count == 1 && _result[0] is JsBlockStatement)
-				return (JsBlockStatement)_result[0];
-			else
-				return new JsBlockStatement(_result);
+			_filename = statement.GetRegion().FileName;
+			try {
+				_result = new List<JsStatement>();
+				statement.AcceptVisitor(this);
+				if (_result.Count == 1 && _result[0] is JsBlockStatement)
+					return (JsBlockStatement)_result[0];
+				else
+					return new JsBlockStatement(_result);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(), _filename, _location);
+				return new JsBlockStatement();
+			}
 		}
 
 		public IList<JsStatement> CompileConstructorInitializer(ConstructorInitializer initializer, bool currentIsStaticMethod) {
-			var rr = (CSharpInvocationResolveResult)_resolver.Resolve(initializer);
-			return _expressionCompiler.CompileConstructorInitializer(initializer.GetRegion().FileName, initializer.StartLocation, (IMethod)rr.Member, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, currentIsStaticMethod, rr.IsExpandedForm);
+			try {
+				var rr = (CSharpInvocationResolveResult)_resolver.Resolve(initializer);
+				return _expressionCompiler.CompileConstructorInitializer(initializer.GetRegion().FileName, initializer.StartLocation, (IMethod)rr.Member, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, currentIsStaticMethod, rr.IsExpandedForm);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(), initializer.GetRegion());
+				return new JsStatement[0];
+			}
 		}
 
 		public IList<JsStatement> CompileImplicitBaseConstructorCall(string filename, TextLocation location, IType type, bool currentIsStaticMethod) {
-			var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
-			return _expressionCompiler.CompileConstructorInitializer(filename, location, baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod, false);
+			try {
+				var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
+				return _expressionCompiler.CompileConstructorInitializer(filename, location, baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod, false);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(), filename, location);
+				return new JsStatement[0];
+			}
 		}
 
         public IList<JsStatement> CompileFieldInitializer(string filename, TextLocation location, JsExpression field, Expression expression) {
-            var result = _expressionCompiler.Compile(filename, location, ResolveWithConversion(expression), true);
-            return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
+			try {
+	            var result = _expressionCompiler.Compile(filename, location, ResolveWithConversion(expression), true);
+		        return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(),_filename, location);
+				return new JsStatement[0];
+			}
         }
 
 		public JsExpression CompileDelegateCombineCall(string filename, TextLocation location, JsExpression a, JsExpression b) {
-			return _expressionCompiler.CompileDelegateCombineCall(filename, location, a, b);
+			try {
+				return _expressionCompiler.CompileDelegateCombineCall(filename, location, a, b);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(), filename, location);
+				return JsExpression.Number(0);
+			}
 		}
 
 		public JsExpression CompileDelegateRemoveCall(string filename, TextLocation location, JsExpression a, JsExpression b) {
-			return _expressionCompiler.CompileDelegateRemoveCall(filename, location, a, b);
+			try {
+				return _expressionCompiler.CompileDelegateRemoveCall(filename, location, a, b);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(), filename, location);
+				return JsExpression.Number(0);
+			}
 		}
 
-		public IList<JsStatement> CompileDefaultFieldInitializer(JsExpression field, IType type) {
-			JsExpression value;
-			if (type.IsReferenceType == true) {
-				value = JsExpression.Null;
-			}
-			else if (type.IsReferenceType == null) {
-				value = _runtimeLibrary.Default(type);
-			}
-			else {
-				var code = type.GetDefinition().KnownTypeCode;
-				switch (code) {
-					case KnownTypeCode.Boolean:
-						value = JsExpression.False;
-						break;
-					case KnownTypeCode.NullableOfT:
-						value = JsExpression.Null;
-						break;
-					default:
-						// This might not hold in the future, but it does today. Since we don't support user-defined structs, we know that the only value types we have are numbers.
-						value = JsExpression.Number(0);
-						break;
+		public IList<JsStatement> CompileDefaultFieldInitializer(string filename, TextLocation location, JsExpression field, IType type) {
+			try {
+				JsExpression value;
+				if (type.IsReferenceType == true) {
+					value = JsExpression.Null;
 				}
-			}
+				else if (type.IsReferenceType == null) {
+					value = _runtimeLibrary.Default(type);
+				}
+				else {
+					var code = type.GetDefinition().KnownTypeCode;
+					switch (code) {
+						case KnownTypeCode.Boolean:
+							value = JsExpression.False;
+							break;
+						case KnownTypeCode.NullableOfT:
+							value = JsExpression.Null;
+							break;
+						default:
+							// This might not hold in the future, but it does today. Since we don't support user-defined structs, we know that the only value types we have are numbers.
+							value = JsExpression.Number(0);
+							break;
+					}
+				}
 
-			return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
+				return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex.ToString(), filename, location);
+				return new JsStatement[0];
+			}
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
@@ -140,6 +186,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {
 			return _expressionCompiler.Compile(expr.GetRegion().FileName, expr.StartLocation, ResolveWithConversion(expr), returnValueIsImportant);
+		}
+
+		protected override void VisitChildren(AstNode node) {
+			AstNode next;
+			for (var child = node.FirstChild; child != null; child = next) {
+				// Store next to allow the loop to continue
+				// if the visitor removes/replaces child.
+				next = child.NextSibling;
+				_location = child.StartLocation;
+				child.AcceptVisitor (this);
+			}
 		}
 
 		public override void VisitComment(Comment comment) {

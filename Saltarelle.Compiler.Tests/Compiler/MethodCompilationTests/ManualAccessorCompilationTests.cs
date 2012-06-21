@@ -10,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 	public class ManualAccessorCompilationTests : CompilerTestBase {
 		[Test]
 		public void InstanceManualPropertyAccessorsCanBeCompiled() {
-            Compile(new[] { "using System; class C { public int myField; public int MyProperty { get { return myField; } set { myField = value; } }" });
+            Compile(new[] { "using System; class C { public int myField; public int MyProperty { get { return myField; } set { myField = value; } } }" });
 
 			var getter = FindInstanceMethod("C.get_MyProperty");
 			var setter = FindInstanceMethod("C.set_MyProperty");
@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 		[Test]
 		public void StaticManualPropertyAccessorsCanBeCompiled() {
-            Compile(new[] { "using System; class C { public static int myField; public static int MyProperty { get { return myField; } set { myField = value; } }" });
+            Compile(new[] { "using System; class C { public static int myField; public static int MyProperty { get { return myField; } set { myField = value; } } }" });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
@@ -46,7 +46,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 		[Test]
 		public void IndexerAccessorsCanBeCompiled() {
-            Compile(new[] { "using System; class C { private int x; public int this[int i, int j] { get { return i + j; } set { x = i + j + value; } }" });
+            Compile(new[] { "using System; class C { private int x; public int this[int i, int j] { get { return i + j; } set { x = i + j + value; } } }" });
 
 			var getter = FindInstanceMethod("C.get_Item");
 			var setter = FindInstanceMethod("C.set_Item");
@@ -64,7 +64,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 		[Test]
 		public void InstanceManuaEventAccessorsCanBeCompiled() {
-            Compile(new[] { "using System; class C { private EventHandler myField; public event EventHandler MyEvent { add { myField += value; } remove { myField -= value; } }" });
+            Compile(new[] { "using System; class C { private EventHandler myField; public event EventHandler MyEvent { add { myField += value; } remove { myField -= value; } } }" });
 
 			var getter = FindInstanceMethod("C.add_MyEvent");
 			var setter = FindInstanceMethod("C.remove_MyEvent");
@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
 		[Test]
 		public void StaticManuaEventAccessorsCanBeCompiled() {
-            Compile(new[] { "using System; class C { private static EventHandler myField; public static event EventHandler MyEvent { add { myField += value; } remove { myField -= value; } }" });
+            Compile(new[] { "using System; class C { private static EventHandler myField; public static event EventHandler MyEvent { add { myField += value; } remove { myField -= value; } } }" });
 
 			var adder = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");

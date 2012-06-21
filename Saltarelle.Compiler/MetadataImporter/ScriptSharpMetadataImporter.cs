@@ -998,8 +998,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
 
 			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || Utils.IsPublic(t))) {
-				ProcessType(t);
-				ProcessTypeMembers(t, mainAssembly.Compilation);
+				try {
+					ProcessType(t);
+					ProcessTypeMembers(t, mainAssembly.Compilation);
+				}
+				catch (Exception ex) {
+					errorReporter.InternalError("Error importing type " + t.FullName + ": " + ex.ToString(), t.Region);
+				}
 			}
 		}
 

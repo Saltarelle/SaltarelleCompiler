@@ -3,7 +3,6 @@ v1:
 Parameters using byref semantics
 Dynamic
 Static constructors and fields (and field init)
-Improve error handling (error numbers, error positions)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query).
 Verify that all directly or indirectly dependent assemblies are referenced.
 The metadata importer should be allowed to write attributes to the output reference assembly.

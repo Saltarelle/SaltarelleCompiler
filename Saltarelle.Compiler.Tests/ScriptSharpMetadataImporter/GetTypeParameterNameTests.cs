@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	class C3<T3> {
 		void M2<T4, T5>(T5 a, T6 b) {}
 	}
-);", minimizeNames: false);
+}", minimizeNames: false);
 
 			var c1 = AllTypes["C1`2"];
 			Assert.That(c1.TypeParameters.Select(Metadata.GetTypeParameterName), Is.EqualTo(new[] { "T1", "T2" }));
@@ -45,7 +45,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	class C3<T3> {
 		void M2<T4, T5>(T5 a, T6 b) {}
 	}
-);", minimizeNames: true);
+}", minimizeNames: true);
 
 			var c1 = AllTypes["C1`2"];
 			Assert.That(c1.TypeParameters.Select(Metadata.GetTypeParameterName), Is.EqualTo(new[] { "a", "b" }));

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
@@ -62,6 +63,7 @@ namespace Saltarelle.Compiler.Compiler {
         private Dictionary<ITypeDefinition, JsClass> _types;
         private HashSet<ConstructorDeclaration> _constructorDeclarations;
         private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
+		private TextLocation _location;
 
         public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
 
@@ -182,24 +184,49 @@ namespace Saltarelle.Compiler.Compiler {
             _instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
             foreach (var f in compilation.SourceFiles) {
-                _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
-                _resolver.ApplyNavigator(new ResolveAllNavigator());
-                f.CompilationUnit.AcceptVisitor(this);
+				try {
+	                _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
+		            _resolver.ApplyNavigator(new ResolveAllNavigator());
+			        f.CompilationUnit.AcceptVisitor(this);
+				}
+				catch (Exception ex) {
+					_errorReporter.InternalError(ex.ToString(), f.ParsedFile.FileName, _location);
+				}
             }
 
             // Handle constructors. We must do this after we have visited all the compilation units because field initializer (which change the InstanceInitStatements and StaticInitStatements) might appear anywhere.
-            foreach (var n in _constructorDeclarations)
-                HandleConstructorDeclaration(n);
+            foreach (var n in _constructorDeclarations) {
+				try {
+					HandleConstructorDeclaration(n);
+				}
+				catch (Exception ex) {
+					_errorReporter.InternalError(ex.ToString(), n.GetRegion());
+				}
+			}
 
             // Add default constructors where needed.
-            foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.GetConstructors().Where(c => c.IsSynthetic).Select(c => new { jsClass = kvp.Value, c })))
-                MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
+            foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.GetConstructors().Where(c => c.IsSynthetic).Select(c => new { jsClass = kvp.Value, c }))) {
+				try {
+					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
+				}
+				catch (Exception ex) {
+					_errorReporter.InternalError("Error adding default constructor to type: " + ex.ToString(), toAdd.c.Region);
+				}
+			}
 
             _types.Values.Where(t => t != null).ForEach(t => t.Freeze());
 
-            var enums = _compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).Where(t => t.Kind == TypeKind.Enum).Select(t => ConvertEnum(t.GetDefinition()));
+			var enums = new List<JsType>();
+			foreach (var e in _compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).Where(t => t.Kind == TypeKind.Enum)) {
+				try {
+					enums.Add(ConvertEnum(e.GetDefinition()));
+				}
+				catch (Exception ex) {
+					_errorReporter.InternalError(ex.ToString(), e.GetDefinition().Region);
+				}
+			}
 
-            return _types.Values.Cast<JsType>().Concat(enums).Where(t => t != null);
+            return _types.Values.Concat(enums).Where(t => t != null);
         }
 
         private MethodCompiler CreateMethodCompiler() {
@@ -298,12 +325,12 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-        private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IType fieldType, ITypeDefinition owningType, bool isStatic) {
+        private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, false), fieldName), fieldType));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region.FileName, member.Region.Begin, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, false), fieldName), fieldType));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region.FileName, member.Region.Begin, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
             }
         }
 
@@ -315,6 +342,17 @@ namespace Saltarelle.Compiler.Compiler {
                 AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
             }
         }
+
+		protected override void VisitChildren(AstNode node) {
+			AstNode next;
+			for (var child = node.FirstChild; child != null; child = next) {
+				// Store next to allow the loop to continue
+				// if the visitor removes/replaces child.
+				next = child.NextSibling;
+				_location = child.StartLocation;
+				child.AcceptVisitor (this);
+			}
+		}
 
         public override void VisitTypeDeclaration(TypeDeclaration typeDeclaration) {
             if (typeDeclaration.ClassType == ClassType.Class || typeDeclaration.ClassType == ClassType.Interface || typeDeclaration.ClassType == ClassType.Struct) {
@@ -423,7 +461,7 @@ namespace Saltarelle.Compiler.Compiler {
                         // Auto-property
                         if ((impl.GetMethod != null && impl.GetMethod.GenerateCode) || (impl.SetMethod != null && impl.SetMethod.GenerateCode)) {
                             var fieldName = _namingConvention.GetAutoPropertyBackingFieldName(property);
-                            AddDefaultFieldInitializerToType(jsClass, fieldName, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
+                            AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
                             CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
                         }
                     }
@@ -439,7 +477,7 @@ namespace Saltarelle.Compiler.Compiler {
                     break;
                 }
                 case PropertyScriptSemantics.ImplType.Field: {
-                    AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
+                    AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
                     break;
                 }
                 case PropertyScriptSemantics.ImplType.NotUsableFromScript: {
@@ -482,7 +520,7 @@ namespace Saltarelle.Compiler.Compiler {
 							else {
 	                            var fieldName = _namingConvention.GetAutoEventBackingFieldName(evt);
 		                        if (singleEvt.Initializer.IsNull) {
-			                        AddDefaultFieldInitializerToType(jsClass, fieldName, evt.ReturnType, evt.DeclaringTypeDefinition, evt.IsStatic);
+			                        AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.ReturnType, evt.DeclaringTypeDefinition, evt.IsStatic);
 				                }
 								else {
 					                CompileAndAddFieldInitializerToType(jsClass, fieldName, evt.DeclaringTypeDefinition, singleEvt.Initializer, evt.IsStatic);
@@ -565,7 +603,7 @@ namespace Saltarelle.Compiler.Compiler {
                 var impl = _namingConvention.GetFieldSemantics(field);
 				if (impl.GenerateCode) {
                     if (v.Initializer.IsNull) {
-                        AddDefaultFieldInitializerToType(jsClass, impl.Name, field.ReturnType, field.DeclaringTypeDefinition, field.IsStatic);
+                        AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.ReturnType, field.DeclaringTypeDefinition, field.IsStatic);
                     }
                     else {
                         CompileAndAddFieldInitializerToType(jsClass, impl.Name, field.DeclaringTypeDefinition, v.Initializer, field.IsStatic);
