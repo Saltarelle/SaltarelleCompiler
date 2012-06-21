@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-            compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib });
+            compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib }, null);
 			var compiledTypes = compiler.Compile(compilation);
 
 			var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);

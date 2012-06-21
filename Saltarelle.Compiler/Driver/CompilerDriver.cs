@@ -17,6 +17,8 @@ using Saltarelle.Compiler.RuntimeLibrary;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
+		private readonly IErrorReporter _errorReporter;
+
 		private CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath) {
 			var result = new CompilerSettings();
 			result.Target                    = Target.Library;
@@ -42,6 +44,8 @@ namespace Saltarelle.Compiler.Driver {
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(Path.GetFileName(f), f, i + 1)));
 			foreach (var c in options.DefineConstants)
 				result.AddConditionalSymbol(c);
+			foreach (var w in options.DisabledWarnings)
+				result.SetIgnoreWarning(w);
 			foreach (var w in options.WarningsAsErrors)
 				result.AddWarningAsError(w);
 			foreach (var w in options.WarningsNotAsErrors)
@@ -60,6 +64,7 @@ namespace Saltarelle.Compiler.Driver {
 			}
 
 			public override void Print(AbstractMessage msg, bool showFullPath) {
+				base.Print(msg, showFullPath);
 				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Location.NameFullPath, new TextLocation(msg.Location.Row, msg.Location.Column), msg.Text.Replace("{", "{{").Replace("}", "}}"));
 			}
 		}
@@ -106,13 +111,17 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		public bool Compile(CompilerOptions options, IErrorReporter errorReporter) {
+		public CompilerDriver(IErrorReporter errorReporter) {
+			_errorReporter = errorReporter;
+		}
+
+		public bool Compile(CompilerOptions options) {
 			string intermediateAssemblyFile = Path.GetTempFileName();
 
 			try {
 				// TODO: extern alias not supported.
 
-				var er = new ErrorReporterWrapper(errorReporter);
+				var er = new ErrorReporterWrapper(_errorReporter);
 				// Compile the assembly
 				var settings = MapSettings(options, intermediateAssemblyFile);
 				var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
@@ -126,13 +135,13 @@ namespace Saltarelle.Compiler.Driver {
 				var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeNames);
 				PreparedCompilation compilation = null;
 				var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
-				var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, errorReporter);
+				var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, _errorReporter);
 
 				var refs = LoadReferences(options.References.Select(r => r.Assembly), options.AdditionalLibPaths, er);
 				if (er.HasErrors)
 					return false;
 
-				compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), refs);
+				compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), refs, options.DefineConstants);
 				var compiledTypes = compiler.Compile(compilation);
 
 				var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);

@@ -151,6 +151,7 @@
   <ItemGroup>
     <Compile Include="Common.cs" />
     <Compile Include="Compiler\CompilerTestBase.cs" />
+    <Compile Include="Compiler\PreprocessorTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\InlineCodeMethodCompilerTests.cs" />
     <Compile Include="Compiler\MemberConversionTests\ConstructorConversionTests.cs" />
     <Compile Include="Compiler\MemberConversionTests\EnumValuesConversionTests.cs" />

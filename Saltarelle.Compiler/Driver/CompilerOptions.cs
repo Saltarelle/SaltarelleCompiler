@@ -51,6 +51,8 @@ namespace Saltarelle.Compiler.Driver {
 			WarningsAsErrors    = new List<int>();
 			WarningsNotAsErrors = new List<int>();
 			IgnoredWarnings     = new List<int>();
+
+			WarningLevel = 4;
 		}
 	}
 }

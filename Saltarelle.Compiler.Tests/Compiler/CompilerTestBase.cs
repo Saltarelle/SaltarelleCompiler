@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
     public class CompilerTestBase {
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null) {
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IEnumerable<string> defineConstants = null) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 
-			var c = compiler.CreateCompilation(sourceFiles, new[] { Common.Mscorlib });
+			var c = compiler.CreateCompilation(sourceFiles, new[] { Common.Mscorlib }, defineConstants);
             CompiledTypes = compiler.Compile(c).AsReadOnly();
             if (defaultErrorHandling) {
                 ((MockErrorReporter)errorReporter).AllMessagesText.Should().BeEmpty("Compile should not generate errors");

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
@@ -16,33 +15,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class PreparedCompilation {
-		public ICompilation Compilation { get; set; }
-
-		internal class ParsedSourceFile {
-			public CompilationUnit CompilationUnit { get; private set; }
-			public CSharpParsedFile ParsedFile { get; private set; }
-
-			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile) {
-				CompilationUnit = compilationUnit;
-				ParsedFile      = parsedFile;
-			}
-		}
-
-		internal ReadOnlyCollection<ParsedSourceFile> SourceFiles { get; private set; }
-
-		internal PreparedCompilation(ICompilation compilation, IEnumerable<ParsedSourceFile> sourceFiles) {
-			Compilation = compilation;
-			SourceFiles = sourceFiles.AsReadOnly();
-		}
-	}
-
-    public interface ICompiler {
-		PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references);
-        IEnumerable<JsType> Compile(PreparedCompilation compilation);
-    }
-
-    public class Compiler : DepthFirstAstVisitor, ICompiler {
+	public class Compiler : DepthFirstAstVisitor, ICompiler {
         private class ResolveAllNavigator : IResolveVisitorNavigator {
             public ResolveVisitorNavigationMode Scan(AstNode node) {
                 return ResolveVisitorNavigationMode.Resolve;
@@ -155,9 +128,14 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-		public PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references) {
+		public PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references, IEnumerable<string> defineConstants) {
             IProjectContent project = new CSharpProjectContent();
             var parser = new CSharpParser();
+			if (defineConstants != null) {
+				foreach (var c in defineConstants)
+					parser.CompilerSettings.AddConditionalSymbol(c);
+			}
+
             var files = sourceFiles.Select(f => { 
                                                     using (var rdr = f.Open()) {
                                                         return new PreparedCompilation.ParsedSourceFile(parser.Parse(rdr, f.FileName), new CSharpParsedFile(f.FileName, new UsingScope()));
