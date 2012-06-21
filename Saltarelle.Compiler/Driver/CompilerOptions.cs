@@ -14,15 +14,15 @@ namespace Saltarelle.Compiler.Driver {
 		/// <summary>
 		/// Name of the file to reference.
 		/// </summary>
-		public string File { get; private set; }
+		public string Assembly { get; private set; }
 
-		public Reference(string file, string alias) {
-			File = file;
+		public Reference(string assembly, string alias) {
+			Assembly = assembly;
 			Alias = alias;
 		}
 
-		public Reference(string file) {
-			File = file;
+		public Reference(string assembly) {
+			Assembly = assembly;
 		}
 	}
 

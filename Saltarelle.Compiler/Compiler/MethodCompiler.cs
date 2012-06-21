@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), filename, location);
+				_errorReporter.InternalError(ex, filename, location);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
         }
@@ -122,7 +122,7 @@ namespace Saltarelle.Compiler.Compiler {
 		        return _statementCompiler.CompileFieldInitializer(filename, location, field, expression);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), filename, location);
+				_errorReporter.InternalError(ex, filename, location);
 				return new JsStatement[0];
 			}
         }
@@ -133,7 +133,7 @@ namespace Saltarelle.Compiler.Compiler {
 		        return _statementCompiler.CompileDefaultFieldInitializer(filename, location, field, type);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), filename, location);
+				_errorReporter.InternalError(ex, filename, location);
 				return new JsStatement[0];
 			}
         }
@@ -153,7 +153,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), property.Getter.Region);
+				_errorReporter.InternalError(ex, property.Getter.Region);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
 		}
@@ -175,7 +175,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), property.Setter.Region);
+				_errorReporter.InternalError(ex, property.Setter.Region);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
 		}
@@ -205,7 +205,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), @event.Region);
+				_errorReporter.InternalError(ex, @event.Region);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
 		}
@@ -237,7 +237,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex.ToString(), @event.Region);
+				_errorReporter.InternalError(ex, @event.Region);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
 		}

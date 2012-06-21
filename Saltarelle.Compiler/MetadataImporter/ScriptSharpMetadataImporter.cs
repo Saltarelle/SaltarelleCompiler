@@ -1003,7 +1003,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					ProcessTypeMembers(t, mainAssembly.Compilation);
 				}
 				catch (Exception ex) {
-					errorReporter.InternalError("Error importing type " + t.FullName + ": " + ex.ToString(), t.Region);
+					errorReporter.InternalError(ex, t.Region, "Error importing type " + t.FullName);
 				}
 			}
 		}

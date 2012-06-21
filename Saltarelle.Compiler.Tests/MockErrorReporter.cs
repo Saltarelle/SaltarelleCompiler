@@ -7,25 +7,24 @@ using ICSharpCode.NRefactory;
 
 namespace Saltarelle.Compiler.Tests {
 	class Message {
+		public MessageSeverity Severity { get; private set; }
 		public int Code { get; private set; }
 		public string File { get; private set; }
 		public TextLocation Location { get; private set; }
+		public string Format { get; private set; }
 		public object[] Args { get; private set; }
 
-		public Message(int code, string file, TextLocation location, params object[] args) {
-			if (Messages.Get(code) == null)
-				throw new InvalidOperationException("Invalid message code " + code);
+		public Message(MessageSeverity severity, int code, string file, TextLocation location, string format, params object[] args) {
+			Severity = severity;
 			Code = code;
 			File = file;
 			Location = location;
+			Format = format;
 			Args = args;
 		}
 
 		public override string ToString() {
-			var msg = Messages.Get(Code);
-			if (msg == null)
-				throw new InvalidOperationException();
-			return msg.Item1.ToString() + ": " + string.Format(msg.Item2, Args);
+			return Severity.ToString() + ": " + (Args.Length > 0 ? string.Format(Format, Args) : Format);
 		}
 	}
 
@@ -44,8 +43,8 @@ namespace Saltarelle.Compiler.Tests {
         	AllMessages = new List<Message>();
         }
 
-		public void Message(int code, string file, TextLocation location, params object[] args) {
-			var msg = new Message(code, file, location, args);
+		public void Message(MessageSeverity severity, int code, string file, TextLocation location, string message, params object[] args) {
+			var msg = new Message(severity, code, file, location, message, args);
 			string s = msg.ToString();	// Ensure this does not throw an exception
 			AllMessages.Add(msg);
 			if (_logToConsole)
@@ -53,7 +52,11 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		public void InternalError(string text, string file, TextLocation location) {
-			throw new Exception(text);
+			throw new NotImplementedException();
+		}
+
+		public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -24,6 +24,7 @@ namespace Saltarelle.Compiler {
 			{ 7015, Tuple.Create(MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [GlobalMethodsAttribute]") },
 			{ 7016, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]") },
 			{ 7017, Tuple.Create(MessageSeverity.Error, "[GlobalMethodsAttribute] cannot be applied to the generic type {0}.") },
+
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
 			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },
 			{ 7102, Tuple.Create(MessageSeverity.Error, "The constructor {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
@@ -44,7 +45,6 @@ namespace Saltarelle.Compiler {
 			{ 7117, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [IntrinsicOperatorAttribute] because it is not an operator method.") },
 			{ 7118, Tuple.Create(MessageSeverity.Error, "The [IntrinsicOperatorAttribute] cannot be applied to the operator {0} because it is a conversion operator.") },
 			{ 7119, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have a [ScriptSkipAttribute] because it is an interface method.") },
-
 			{ 7120, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [ScriptSkipAttribute] because it overrides a base member.") },
 			{ 7121, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [ScriptSkipAttribute] because it is overridable.") },
 			{ 7122, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [ScriptSkipAttribute] because it implements an interface member.") },
@@ -55,7 +55,6 @@ namespace Saltarelle.Compiler {
 			{ 7127, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an [InlineCodeAttribute] because it overrides a base member.") },
 			{ 7128, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an [InlineCodeAttribute] because it is overridable.") },
 			{ 7129, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [InlineCodeAttribute] because it implements an interface member.") },
-
 			{ 7130, Tuple.Create(MessageSeverity.Error, "The inline code for the method {0} contained errors: {1}.") },
 			{ 7131, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it is not static.") },
 			{ 7132, Tuple.Create(MessageSeverity.Error, "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method {0} because it overrides a base member. Specify the attribute on the base member instead.") },
@@ -66,7 +65,6 @@ namespace Saltarelle.Compiler {
 			{ 7137, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
 			{ 7138, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is an interface method.") },
 			{ 7139, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is overridable.") },
-
 			{ 7140, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is static.") },
 			{ 7141, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the event {0} cannot be empty.") },
 			{ 7142, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the field {0} cannot be empty.") },
@@ -81,7 +79,6 @@ namespace Saltarelle.Compiler {
 			{ 7507, Tuple.Create(MessageSeverity.Error, "Cannot use the property {0} from script.") },
 			{ 7508, Tuple.Create(MessageSeverity.Error, "The field {0} is constant in script and cannot be assigned to.") },
 			{ 7509, Tuple.Create(MessageSeverity.Error, "The field {0} is not usable from script.") },
-
 			{ 7510, Tuple.Create(MessageSeverity.Error, "Arrays have to be one-dimensional.") },
 			{ 7511, Tuple.Create(MessageSeverity.Error, "The event {0} is not usable from script.") },
 			{ 7512, Tuple.Create(MessageSeverity.Error, "The property {0} is not usable from script.") },
@@ -92,13 +89,14 @@ namespace Saltarelle.Compiler {
 			{ 7517, Tuple.Create(MessageSeverity.Error, "Cannot use the the property {0} in an anonymous object initializer.") },
 			{ 7518, Tuple.Create(MessageSeverity.Error, "Cannot use the field {0} in an anonymous object initializer.") },
 			{ 7519, Tuple.Create(MessageSeverity.Error, "Cannot create an instance of the type {0} because it is marked as not usable from script.") },
-
 			{ 7520, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in as a type argument for the class {1} because it is marked as not usable from script.") },
 			{ 7521, Tuple.Create(MessageSeverity.Error, "Cannot use the variable {0} because it is an expanded param array.") },
 			{ 7522, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in a typeof expression because it is marked as not usable from script.") },
 			{ 7523, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it is not a normal method.") },
 			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it expands its param array in script.") },
 			{ 7525, Tuple.Create(MessageSeverity.Error, "Error in inline code compilation: {0}.") },
+
+			{ 7999, Tuple.Create(MessageSeverity.Error, "INTERNAL ERROR: {0}. Please report this as an issue on https://github.com/erik-kallen/SaltarelleCompiler/") },
 		};
 
 		internal static Tuple<MessageSeverity, string> Get(int code) {

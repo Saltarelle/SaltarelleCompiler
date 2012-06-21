@@ -162,7 +162,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					}
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError("Error formatting type " + t.CSharpTypeDefinition.FullName + ": " + ex.ToString(), t.CSharpTypeDefinition.Region);
+					_errorReporter.InternalError(ex, t.CSharpTypeDefinition.Region, "Error formatting type " + t.CSharpTypeDefinition.FullName);
 				}
 			}
 
@@ -182,7 +182,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                                 }
 			                                             }
 			                                             catch (Exception ex) {
-			                                                 _errorReporter.InternalError("Error formatting type " + c.CSharpTypeDefinition.FullName + ": " + ex.ToString(), c.CSharpTypeDefinition.Region);
+			                                                 _errorReporter.InternalError(ex, c.CSharpTypeDefinition.Region, "Error formatting type " + c.CSharpTypeDefinition.FullName);
 															 return JsExpression.Number(0);
 			                                             }
 			                                         })

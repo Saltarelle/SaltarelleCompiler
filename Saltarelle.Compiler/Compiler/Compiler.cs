@@ -190,7 +190,7 @@ namespace Saltarelle.Compiler.Compiler {
 			        f.CompilationUnit.AcceptVisitor(this);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex.ToString(), f.ParsedFile.FileName, _location);
+					_errorReporter.InternalError(ex, f.ParsedFile.FileName, _location);
 				}
             }
 
@@ -200,7 +200,7 @@ namespace Saltarelle.Compiler.Compiler {
 					HandleConstructorDeclaration(n);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex.ToString(), n.GetRegion());
+					_errorReporter.InternalError(ex, n.GetRegion());
 				}
 			}
 
@@ -210,7 +210,7 @@ namespace Saltarelle.Compiler.Compiler {
 					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError("Error adding default constructor to type: " + ex.ToString(), toAdd.c.Region);
+					_errorReporter.InternalError(ex, toAdd.c.Region, "Error adding default constructor to type");
 				}
 			}
 
@@ -222,7 +222,7 @@ namespace Saltarelle.Compiler.Compiler {
 					enums.Add(ConvertEnum(e.GetDefinition()));
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex.ToString(), e.GetDefinition().Region);
+					_errorReporter.InternalError(ex, e.GetDefinition().Region);
 				}
 			}
 
