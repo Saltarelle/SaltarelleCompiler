@@ -7,10 +7,10 @@ using System.Text;
 using ICSharpCode.NRefactory;
 
 namespace Saltarelle.Compiler {
-	public class VisualStudioFormatErrorReporter : IErrorReporter {
+	public class ExecutableErrorReporter : IErrorReporter {
 		private readonly TextWriter _writer;
 
-		public VisualStudioFormatErrorReporter(TextWriter writer) {
+		public ExecutableErrorReporter(TextWriter writer) {
 			_writer = writer;
 		}
 

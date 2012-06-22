@@ -19,8 +19,10 @@ Task Clean {
 
 Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 	Exec { msbuild "$base_dir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
-	$exedir = "$base_dir\Compiler\SCExe\bin"
+	$exedir  = "$base_dir\Compiler\SCExe\bin"
+	$taskdir = "$base_dir\Compiler\SCTask\bin"
 	Exec { & "$buildtools_dir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\sc.exe" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" }
+	Exec { & "$buildtools_dir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\SCTask.dll" "$taskdir\SCTask.dll" "$taskdir\Saltarelle.Compiler.JSModel.dll" "$taskdir\Saltarelle.Compiler.dll" "$taskdir\ICSharpCode.NRefactory.dll" "$taskdir\ICSharpCode.NRefactory.CSharp.dll" "$taskdir\Mono.Cecil.dll" }
 }
 
 Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {

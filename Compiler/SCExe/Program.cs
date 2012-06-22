@@ -143,7 +143,7 @@ namespace Saltarelle.Compiler {
 		static int Main(string[] args) {
 			var options = ParseOptions(args, Console.Out, Console.Error);
 			if (options != null) {
-				var driver = new CompilerDriver(new VisualStudioFormatErrorReporter(Console.Out));
+				var driver = new CompilerDriver(new ExecutableErrorReporter(Console.Out));
 				bool result = driver.Compile(options);
 				return result ? 0 : 1;
 			}

@@ -87,7 +87,6 @@
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />
     <Compile Include="Compiler\VariableGatherer.cs" />
-    <Compile Include="VisualStudioFormatErrorReporter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JSModel\JSModel.csproj">
