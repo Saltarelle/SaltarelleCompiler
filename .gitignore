@@ -7,3 +7,4 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 *.user
 *.suo
+Compiler/CompilerVersion.cs

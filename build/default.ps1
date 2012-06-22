@@ -33,25 +33,12 @@ Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
 	copy "$base_dir\ScriptSharp\bin\ssloader.debug.js" "$out_dir"
 }
 
-Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests {
+Task Run-Tests {
+	$runner = (dir "$base_dir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
+	Exec { & "$runner" "$base_dir\Compiler\Compiler.sln" -nologo -xml "$out_dir\TestResults.xml" }
 }
 
-Task Run-Tests {
-@"
-	$test_assemblies_file = "$base_dir\Saltarelle\TestAssemblies.txt"
-
-	if (Test-Path "$test_assemblies_file") {
-		$testasms = @(Get-Content "$test_assemblies_file")
-	}
-	else {
-		$testasms = @()
-	}
-	
-	if ($testasms.Count -ne 0) {
-		$runner = (dir "$base_dir\Saltarelle\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
-		Exec { & "$runner" $testasms -nologo -xml "$out_dir\TestResults.xml" }
-	}
-"@ >out-null
+Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests {
 }
 
 Task Configure -Depends Generate-VersionInfo {
@@ -97,10 +84,10 @@ Task Determine-Version {
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Compiler"
 	cd "$base_dir\ScriptSharp"
 	$refs = Determine-Ref
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\ScriptSharp"
+	#$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\ScriptSharp"
 
 	"Compiler version: $script:CompilerVersion"
-	"Runtime version: $script:RuntimeVersion"
+	#"Runtime version: $script:RuntimeVersion"
 	
 	cd $olddir
 }
