@@ -40,6 +40,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CompilerVersion.cs">
+      <Link>Properties\CompilerVersion.cs</Link>
+    </Compile>
     <Compile Include="CodeBuilder.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />

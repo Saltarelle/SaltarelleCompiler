@@ -18,7 +18,22 @@ Task Clean {
 }
 
 Task Build-Compiler -Depends Clean, Generate-VersionInfo {
-	Exec { msbuild "$base_dir\Saltarelle.Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+	Exec { msbuild "$base_dir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+	$exedir = "$base_dir\Compiler\SCExe\bin"
+	Exec { & "$buildtools_dir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\sc.exe" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" }
+}
+
+Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
+	Exec { msbuild "$base_dir\ScriptSharp\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+	copy "$base_dir\ScriptSharp\bin\mscorlib.xml" "$out_dir"
+	copy "$base_dir\ScriptSharp\bin\mscorlib.dll" "$out_dir"
+	copy "$base_dir\ScriptSharp\bin\mscorlib.js" "$out_dir"
+	copy "$base_dir\ScriptSharp\bin\mscorlib.debug.js" "$out_dir"
+	copy "$base_dir\ScriptSharp\bin\ssloader.js" "$out_dir"
+	copy "$base_dir\ScriptSharp\bin\ssloader.debug.js" "$out_dir"
+}
+
+Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests {
 }
 
 Task Run-Tests {
@@ -52,7 +67,7 @@ Function Determine-PathVersion($RefCommit, $RefVersion, $Path) {
 	}
 }
 
-Task Determine-Version {
+Function Determine-Ref {
 	$refcommit = % {
 	(git log --decorate=full --simplify-by-decoration --pretty=oneline HEAD |           # Append items from the log
 		Select-String '\(' |                                                            # Only include entries with names
@@ -71,11 +86,23 @@ Task Determine-Version {
 	else {
 		$refVersion = New-Object System.Version("0.0.0")
 	}
-	$script:CompilerVersion = Determine-PathVersion -RefCommit $refCommit -RefVersion $refVersion -Path "$base_dir\Compiler"
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refCommit -RefVersion $refVersion -Path "$base_dir\Runtime"
+
+	($refcommit, $refVersion)
+}
+
+Task Determine-Version {
+	$olddir = pwd
+	cd "$base_dir\Compiler"
+	$refs = Determine-Ref
+	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Compiler"
+	cd "$base_dir\ScriptSharp"
+	$refs = Determine-Ref
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\ScriptSharp"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
+	
+	cd $olddir
 }
 
 Function Generate-VersionFile($Path, $Version) {
@@ -87,17 +114,4 @@ Function Generate-VersionFile($Path, $Version) {
 
 Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$base_dir\Compiler\CompilerVersion.cs" -Version $script:CompilerVersion
-	Generate-VersionFile -Path "$base_dir\Runtime\RuntimeVersion.cs" -Version $script:RuntimeVersion
-	Generate-VersionFile -Path "$base_dir\Saltarelle\Executables\ExecutablesVersion.cs" -Version $script:ExecutablesVersion
-	Generate-VersionFile -Path "$base_dir\Saltarelle\Saltarelle.UI\SaltarelleUIVersion.cs" -Version $script:UIVersion
-	Generate-VersionFile -Path "$base_dir\Saltarelle\Saltarelle.Mvc\Properties\SaltarelleMvcVersion.cs" -Version $script:MvcVersion
-	Generate-VersionFile -Path "$base_dir\Saltarelle\Saltarelle.CastleWindsor\Properties\SaltarelleCastleWindsorVersion.cs" -Version $script:CastleWindsorVersion
-
-@"
-<?xml version="1.0" encoding="utf-8"?>
-<Include>
-	<?define ProductVersion="$script:ProductVersion"?>
-	<?define AssemblyVersion="$script:ExecutablesVersion"?>
-</Include>
-"@ | Out-File "$base_dir\Saltarelle\VSIntegrationInstaller\Version.wxi" -Encoding UTF8
 }

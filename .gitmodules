@@ -4,3 +4,6 @@
 [submodule "Compiler/Mono.Cecil"]
 	path = Compiler/Mono.Cecil
 	url = git://github.com/jbevain/cecil.git
+[submodule "ScriptSharp"]
+	path = ScriptSharp
+	url = git@github.com:erik-kallen/scriptsharp.git
