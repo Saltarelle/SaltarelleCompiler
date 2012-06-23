@@ -1,4 +1,4 @@
-Framework "4.0x86"
+﻿Framework "4.0x86"
 
 properties {
 	$base_dir = Resolve-Path ".."
@@ -21,8 +21,8 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 	Exec { msbuild "$base_dir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 	$exedir  = "$base_dir\Compiler\SCExe\bin"
 	$taskdir = "$base_dir\Compiler\SCTask\bin"
-	Exec { & "$buildtools_dir\ilmerge.exe" "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\sc.exe" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" }
-	Exec { & "$buildtools_dir\ilmerge.exe" "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\SCTask.dll" "$taskdir\SCTask.dll" "$taskdir\Saltarelle.Compiler.JSModel.dll" "$taskdir\Saltarelle.Compiler.dll" "$taskdir\ICSharpCode.NRefactory.dll" "$taskdir\ICSharpCode.NRefactory.CSharp.dll" "$taskdir\Mono.Cecil.dll" }
+	Exec { & "$buildtools_dir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\sc.exe" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" }
+	Exec { & "$buildtools_dir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$out_dir\SCTask.dll" "$taskdir\SCTask.dll" "$taskdir\Saltarelle.Compiler.JSModel.dll" "$taskdir\Saltarelle.Compiler.dll" "$taskdir\ICSharpCode.NRefactory.dll" "$taskdir\ICSharpCode.NRefactory.CSharp.dll" "$taskdir\Mono.Cecil.dll" }
 	copy "$base_dir\Compiler\SCTask\Saltarelle.Compiler.targets" "$out_dir"
 }
 
@@ -41,7 +41,41 @@ Task Run-Tests {
 	Exec { & "$runner" "$base_dir\Compiler\Compiler.sln" -nologo -xml "$out_dir\TestResults.xml" }
 }
 
-Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests {
+Task Build-NuGetPackage -Depends Determine-Version {
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.Compiler</id>
+		<version>$script:CompilerVersion</version>
+		<title>Saltarelle C# to JavaScript compiler</title>
+		<description>Installing this package will transform the project to compile to JavaScript.</description>
+		<authors>Erik Källén</authors>
+		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+	</metadata>
+	<files>
+		<file src="$out_dir\mscorlib.dll" target="tools\Assemblies"/>
+		<file src="$out_dir\mscorlib.xml" target="tools\Assemblies"/>
+		<file src="$out_dir\mscorlib.js" target="tools\Scripts"/>
+		<file src="$out_dir\mscorlib.debug.js" target="tools\Scripts"/>
+		<file src="$out_dir\ssloader.js" target="tools\Scripts"/>
+		<file src="$out_dir\ssloader.debug.js" target="tools\Scripts"/>
+		<file src="$out_dir\dummy.txt" target="content"/>
+		<file src="$base_dir\Compiler\install.ps1" target="tools"/>
+		<file src="$out_dir\SCTask.dll" target="tools"/>
+		<file src="$out_dir\sc.exe" target="tools"/>
+		<file src="$base_dir\Compiler\SCTask\Saltarelle.Compiler.targets" target="tools"/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$out_dir\SaltarelleCompiler.nuspec"
+
+	"This file is safe to remove from the project, but NuGet requires the Saltarelle.Compiler package to install something." | Out-File -Encoding UTF8 "$out_dir\dummy.txt"
+
+	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\SaltarelleCompiler.nuspec" -OutputDirectory "$out_dir" }
+	rm "$out_dir\SaltarelleCompiler.nuspec" > $null
+	rm "$out_dir\dummy.txt" > $null
+}
+
+Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackage {
 }
 
 Task Configure -Depends Generate-VersionInfo {
