@@ -34,7 +34,7 @@ namespace Saltarelle.Compiler.Compiler {
         private ICompilation _compilation;
         private CSharpAstResolver _resolver;
         private Dictionary<ITypeDefinition, JsClass> _types;
-        private HashSet<ConstructorDeclaration> _constructorDeclarations;
+        private HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>> _constructorDeclarations;
         private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
 		private TextLocation _location;
 
@@ -158,7 +158,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_namingConvention.Prepare(_compilation.GetAllTypeDefinitions(), _compilation.MainAssembly, _errorReporter);
 
             _types = new Dictionary<ITypeDefinition, JsClass>();
-            _constructorDeclarations = new HashSet<ConstructorDeclaration>();
+            _constructorDeclarations = new HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>>();
             _instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
             foreach (var f in compilation.SourceFiles) {
@@ -175,10 +175,11 @@ namespace Saltarelle.Compiler.Compiler {
             // Handle constructors. We must do this after we have visited all the compilation units because field initializer (which change the InstanceInitStatements and StaticInitStatements) might appear anywhere.
             foreach (var n in _constructorDeclarations) {
 				try {
-					HandleConstructorDeclaration(n);
+					_resolver = n.Item2;
+					HandleConstructorDeclaration(n.Item1);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, n.GetRegion());
+					_errorReporter.InternalError(ex, n.Item1.GetRegion());
 				}
 			}
 
@@ -411,7 +412,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 
         public override void VisitConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
-            _constructorDeclarations.Add(constructorDeclaration);
+            _constructorDeclarations.Add(Tuple.Create(constructorDeclaration, _resolver));
         }
 
         public override void VisitPropertyDeclaration(PropertyDeclaration propertyDeclaration) {

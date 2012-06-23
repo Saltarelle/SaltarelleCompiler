@@ -82,11 +82,11 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		public void InternalError(string text, string file, TextLocation location) {
-			throw new NotImplementedException();
+			throw new Exception("Internal error: " + text);
 		}
 
 		public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
-			throw new NotImplementedException();
+			throw ex;
 		}
 	}
 }

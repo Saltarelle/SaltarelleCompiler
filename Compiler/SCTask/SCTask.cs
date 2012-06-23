@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -9,7 +10,7 @@ namespace Saltarelle.Compiler.SCTask {
 	public class SCTask : Task {
 		private bool HandleIntegerList(IList<int> targetCollection, string value, string itemName) {
 			if (!string.IsNullOrEmpty(value)) {
-				foreach (var s in value.Split(new[] { ',' }).Select(s => s.Trim()).Where(s => s != "")) {
+				foreach (var s in value.Split(new[] { ';', ',' }).Select(s => s.Trim()).Where(s => s != "")) {
 					int w;
 					if (!int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out w)) {
 						Log.LogError("Invalid number " + s + " in " + itemName);
@@ -71,7 +72,13 @@ namespace Saltarelle.Compiler.SCTask {
 			if (options == null)
 				return false;
 			var driver = new CompilerDriver(new TaskErrorReporter(Log));
-			return driver.Compile(options);
+			try {
+				return driver.Compile(options);
+			}
+			catch (Exception ex) {
+				Log.LogErrorFromException(ex);
+				return false;
+			}
 		}
 
 		public string[] AdditionalLibPaths { get; set; }

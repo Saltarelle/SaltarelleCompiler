@@ -81,6 +81,8 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddConditionalSymbol(c);
 			foreach (var w in options.DisabledWarnings)
 				result.SetIgnoreWarning(w);
+			result.SetIgnoreWarning(660);	// 660 and 661: class defines operator == or operator != but does not override Equals / GetHashCode. These warnings don't really apply, since we have no Equals / GetHashCode methods to override.
+			result.SetIgnoreWarning(661);
 			foreach (var w in options.WarningsAsErrors)
 				result.AddWarningAsError(w);
 			foreach (var w in options.WarningsNotAsErrors)

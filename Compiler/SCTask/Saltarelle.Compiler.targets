@@ -1,0 +1,57 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
+
+    <PropertyGroup>
+        <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+        <DefaultLanguageSourceExtension>.cs</DefaultLanguageSourceExtension>
+        <Language>C#</Language>
+    </PropertyGroup>
+   
+    <ItemGroup>
+        <DocFileItem Include="$(DocumentationFile)" Condition="'$(DocumentationFile)'!=''"/>
+        <IntermediateScript Include="$(IntermediateOutputPath)$(TargetName).js" Condition="'@(IntermediateScript)'==''"/>
+    </ItemGroup>
+
+    <Target Name="CreateManifestResourceNames" DependsOnTargets="$(CreateManifestResourceNamesDependsOn)">
+    </Target>
+
+    <Target
+        Name="CoreCompile"
+        Inputs="$(MSBuildAllProjects);
+                @(Compile);
+                @(ReferencePath);
+                @(CustomAdditionalCompileInputs)"
+        Outputs="@(DocFileItem);
+                 @(IntermediateScript);
+                 @(IntermediateAssembly);
+                 @(CustomAdditionalCompileOutputs)"
+        Returns=""
+        DependsOnTargets="$(CoreCompileDependsOn)"
+    >
+        <!-- These two compiler warnings are raised when a reference is bound to a different version
+             than specified in the assembly reference version number.  MSBuild raises the same warning in this case,
+             so the compiler warning would be redundant. -->
+        <PropertyGroup Condition="('$(TargetFrameworkVersion)' != 'v1.0') and ('$(TargetFrameworkVersion)' != 'v1.1')">
+            <NoWarn>$(NoWarn);1701;1702</NoWarn>
+        </PropertyGroup>
+
+        <SCTask  AdditionalLibPaths="$(AdditionalLibPaths)"
+                 DefineConstants="$(DefineConstants)"
+                 DisabledWarnings="$(NoWarn)"
+                 DocumentationFile="@(DocFileItem)"
+                 EmitDebugInformation="$(DebugSymbols)"
+                 OutputAssembly="@(IntermediateAssembly)"
+                 OutputScript="@(IntermediateScript)"
+                 References="@(ReferencePath)"
+                 Sources="@(Compile)"
+                 TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
+                 WarningLevel="$(WarningLevel)"
+                 WarningsAsErrors="$(WarningsAsErrors)"
+                 WarningsNotAsErrors="$(WarningsNotAsErrors)"
+                 />            
+                
+        <CallTarget Targets="$(TargetsTriggeredByCompilation)" Condition="'$(TargetsTriggeredByCompilation)' != ''"/>
+    </Target>
+    
+    <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+</Project>

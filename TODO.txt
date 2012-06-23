@@ -29,6 +29,8 @@ NAnt task
 v3:
 Source mapping
 Formatting options
+Clip smaller integer types to their range
+Checked/unchecked
 
 -----
 
