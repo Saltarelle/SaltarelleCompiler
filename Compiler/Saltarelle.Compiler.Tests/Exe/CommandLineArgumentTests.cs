@@ -181,6 +181,17 @@ namespace Saltarelle.Compiler.Tests.Exe {
 		}
 
 		[Test]
+		public void SigningWorks() {
+			ExpectSuccess(new[] { "/keyfile:MyKeyFile.snk", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.KeyFile, Is.EqualTo("MyKeyFile.snk"));
+			});
+
+			ExpectSuccess(new[] { "/keycontainer:MyKeyContainer", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.KeyContainer, Is.EqualTo("MyKeyContainer"));
+			});
+		}
+
+		[Test]
 		public void EmptyCommandLineShowsTheHelpMessage() {
 			var errorWriter = new StringWriter();
 			var infoWriter = new StringWriter();

@@ -76,6 +76,8 @@ namespace Saltarelle.Compiler.Driver {
 			result.AssemblyName              = GetAssemblyName(options);
 			result.StdLib                    = false;
 			result.StdLibRuntimeVersion      = RuntimeVersion.v4;
+			result.StrongNameKeyContainer    = options.KeyContainer;
+			result.StrongNameKeyFile         = options.KeyFile;
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(f, f, i + 1)));
 			foreach (var c in options.DefineConstants)
 				result.AddConditionalSymbol(c);
@@ -216,7 +218,7 @@ namespace Saltarelle.Compiler.Driver {
 					}
 					if (!string.IsNullOrEmpty(options.DocumentationFile)) {
 						try {
-							File.Copy(intermediateDocFile, options.DocumentationFile);
+							File.Copy(intermediateDocFile, options.DocumentationFile, true);
 						}
 						catch (IOException ex) {
 							er.Message(7952, null, TextLocation.Empty, ex.Message);

@@ -18,6 +18,7 @@
     <Target
         Name="CoreCompile"
         Inputs="$(MSBuildAllProjects);
+                $(AssemblyOriginatorKeyFile);
                 @(Compile);
                 @(ReferencePath);
                 @(CustomAdditionalCompileInputs)"
@@ -40,6 +41,8 @@
                  DisabledWarnings="$(NoWarn)"
                  DocumentationFile="@(DocFileItem)"
                  EmitDebugInformation="$(DebugSymbols)"
+                 KeyContainer="$(KeyContainerName)"
+                 KeyFile="$(KeyOriginatorFile)"
                  OutputAssembly="@(IntermediateAssembly)"
                  OutputScript="@(IntermediateScript)"
                  References="@(ReferencePath)"

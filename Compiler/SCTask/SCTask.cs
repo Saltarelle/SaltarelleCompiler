@@ -26,6 +26,8 @@ namespace Saltarelle.Compiler.SCTask {
 		private CompilerOptions GetOptions() {
 			var result = new CompilerOptions();
 
+			result.KeyContainer          =  this.KeyContainer;
+			result.KeyFile               =  this.KeyFile;
 			result.MinimizeScript        = !this.EmitDebugInformation;
 			result.DocumentationFile     =  this.DocumentationFile;
 			result.OutputAssemblyPath    =  this.OutputAssembly;
@@ -80,6 +82,10 @@ namespace Saltarelle.Compiler.SCTask {
 				return false;
 			}
 		}
+
+		public string KeyContainer { get; set; }
+
+		public string KeyFile { get; set; }
 
 		public string[] AdditionalLibPaths { get; set; }
 

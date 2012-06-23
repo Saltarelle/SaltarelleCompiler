@@ -16,6 +16,8 @@ namespace Saltarelle.Compiler {
 @"    -debug              Preserve names in the generated script.
     -define:S1[;S2]     Defines one or more conditional symbols.
     -doc:FILE           Specifies output file for XML doc comments.
+	-keycontainer:NAME  The key pair container used to sign the output assembly.
+	-keyfile:FILE       The key file used to strongname the ouput assembly.
     -lib:PATH1[,PATHn]  Specifies locations to search for referenced assemblies.
     -nowarn:W1[,Wn]     Suppress one or more compiler warnings.
     -outasm:FILE        Specifies the output assembly file (default: base name of first file).
@@ -109,18 +111,20 @@ namespace Saltarelle.Compiler {
 				bool showHelp = false;
 				var result = new CompilerOptions() { MinimizeScript = true };
 				var opts = new OptionSet {
-					{ "outasm=", "Specifies the output assembly name (default: base name of file with main class or first file).", v => result.OutputAssemblyPath = v },
-					{ "outscript=", "Specifies the output script name (default: base name of file with main class or first file).", v => result.OutputScriptPath = v },
-					{ "doc=", "Specifies an XML Documentation file to generate.", v => result.DocumentationFile = v },
-					{ "define=", "Defines conditional compilation symbols.", v => result.DefineConstants.AddRange(v.Split(new[] { ';' }).Select(s => s.Trim()).Where(s => s != "" && !result.DefineConstants.Contains(s))) },
-					{ "lib=", "Specify additional directories to search in for references.", v => result.AdditionalLibPaths.AddRange(v.Split(new[] { ',' }).Select(s => s.Trim()).Where(s => s != "" && !result.AdditionalLibPaths.Contains(s))) },
-					{ "reference=", "References metadata from the specified assembly files.", v => HandleReferences(result, v) },
-					{ "debug", "Do not minimize the output script.", f => result.MinimizeScript = f == null || f.EndsWith("-") },
-					{ "warn=", "Sets the warning level (0-4).", (int v) => { if (v < 0 || v > 4) throw new OptionException("Warning level must be between 0 and 4", "/warn"); result.WarningLevel = v; } },
-					{ "nowarn=", "Disables specific warning messages", v => DisableWarnings(result, v) },
-					{ "warnaserror:", "Reports specific warnings as errors.", v => HandleWarningsAsErrors(result, v) },
-					{ "warnaserror-:", "Reports specific warnings as errors.", v => HandleWarningsNotAsErrors(result, v) },
-					{ "?|help", "Display help", v => showHelp = true },
+					{ "outasm=",       v => result.OutputAssemblyPath = v },
+					{ "outscript=",    v => result.OutputScriptPath = v },
+					{ "doc=",          v => result.DocumentationFile = v },
+					{ "define=",       v => result.DefineConstants.AddRange(v.Split(new[] { ';' }).Select(s => s.Trim()).Where(s => s != "" && !result.DefineConstants.Contains(s))) },
+					{ "lib=",          v => result.AdditionalLibPaths.AddRange(v.Split(new[] { ',' }).Select(s => s.Trim()).Where(s => s != "" && !result.AdditionalLibPaths.Contains(s))) },
+					{ "reference=",    v => HandleReferences(result, v) },
+					{ "debug",         f => result.MinimizeScript = f == null || f.EndsWith("-") },
+					{ "warn=",         (int v) => { if (v < 0 || v > 4) throw new OptionException("Warning level must be between 0 and 4", "/warn"); result.WarningLevel = v; } },
+					{ "nowarn=",       v => DisableWarnings(result, v) },
+					{ "warnaserror:",  v => HandleWarningsAsErrors(result, v) },
+					{ "warnaserror-:", v => HandleWarningsNotAsErrors(result, v) },
+					{ "keyfile=",      v => result.KeyFile = v },
+					{ "keycontainer=", v => result.KeyContainer = v },
+					{ "?|help",        v => showHelp = true },
 				};
 
 				var extra = opts.Parse(args);

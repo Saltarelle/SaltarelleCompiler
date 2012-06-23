@@ -23,19 +23,21 @@ namespace Saltarelle.Compiler.Driver {
 	}
 
 	public class CompilerOptions {
-		public List<string> AdditionalLibPaths { get; private set; }
-		public bool MinimizeScript             { get; set; }
-		public List<string> DefineConstants    { get; private set; }
-		public List<int> DisabledWarnings      { get; private set; }
-		public string DocumentationFile        { get; set; }
-		public string OutputAssemblyPath       { get; set; }
-		public string OutputScriptPath         { get; set; }
-		public List<Reference> References      { get; private set; }
-		public List<string> SourceFiles        { get; private set; }
-		public bool TreatWarningsAsErrors      { get; set; }
-		public int WarningLevel                { get; set; }
-		public List<int> WarningsAsErrors      { get; private set; }
-		public List<int> WarningsNotAsErrors   { get; private set; }
+		public List<string> AdditionalLibPaths  { get; private set; }
+		public bool MinimizeScript              { get; set; }
+		public List<string> DefineConstants     { get; private set; }
+		public List<int> DisabledWarnings       { get; private set; }
+		public string DocumentationFile         { get; set; }
+		public string OutputAssemblyPath        { get; set; }
+		public string OutputScriptPath          { get; set; }
+		public List<Reference> References       { get; private set; }
+		public List<string> SourceFiles         { get; private set; }
+		public bool TreatWarningsAsErrors       { get; set; }
+		public int WarningLevel                 { get; set; }
+		public List<int> WarningsAsErrors       { get; private set; }
+		public List<int> WarningsNotAsErrors    { get; private set; }
+		public string KeyContainer              { get; set; }
+		public string KeyFile                   { get; set; }
 
 		public CompilerOptions() {
 			AdditionalLibPaths  = new List<string>();
