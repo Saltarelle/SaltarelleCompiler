@@ -13,12 +13,15 @@ $msbuild = [Microsoft.Build.Evaluation.ProjectCollection]::GlobalProjectCollecti
 $msbuild.SetProperty("NoStdLib", "True")
 
 # Remove default assemblies System, System.*, Microsoft.*
-$project.Object.References | ? { $_.Name.StartsWith("System.") } | % { $_.Remove() }
+$project.Object.References | ? { $_.Name.StartsWith("System.") } | % { try { $_.Remove() } catch {} }
 $project.Object.References | ? { $_.Name -eq "System" } | % { $_.Remove() }
 $project.Object.References | ? { $_.Name.StartsWith("Microsoft.") } | % { $_.Remove() }
 
 # Add a reference to our custom mscorlib.dll
-$msbuild.AddItem("Reference", "`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Assemblies"", ""mscorlib.dll"")))")
+if (-not ($msbuild.GetItems("Reference") | ? { $_.UnevaluatedInclude -eq "mscorlib" })) {
+	$mscorlib = $msbuild.AddItem("Reference", "mscorlib") | Select-Object -First 1
+	$mscorlib.SetMetadataValue("HintPath", "`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Assemblies"", ""mscorlib.dll"")))")
+}
 
 ## Swap the import for Microsoft.CSharp.targets for Saltarelle.Compiler.targets. Also remove any existing reference to Saltarelle.Compiler.targets since we might be upgrading.
 $msbuild.Xml.Imports | ? { $_.Project.EndsWith("Saltarelle.Compiler.targets") } | % { $msbuild.Xml.RemoveChild($_) }
