@@ -133,7 +133,7 @@ namespace Saltarelle.Compiler.Compiler {
             var parser = new CSharpParser();
 			if (defineConstants != null) {
 				foreach (var c in defineConstants)
-					parser.CompilerSettings.AddConditionalSymbol(c);
+					parser.CompilerSettings.ConditionalSymbols.Add(c);
 			}
 
             var files = sourceFiles.Select(f => { 
