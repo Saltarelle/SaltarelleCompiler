@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
     	private static readonly Lazy<IAssemblyReference> _currentAsmLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(typeof(MetadataWriteBackEngineTests).Assembly.Location));
         internal static IAssemblyReference CurrentAsm { get { return _currentAsmLazy.Value; } }
 
-		private Tuple<IMetadataWriteBackEngine, ICompilation> Prepare() {
+		private void RunTest(Action<IMetadataWriteBackEngine, ICompilation> asserter) {
             IProjectContent project = new CSharpProjectContent();
 
             project = project.AddAssemblyReferences(new[] { Common.Mscorlib, CurrentAsm });
@@ -24,49 +24,130 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 			var compilation = project.CreateCompilation();
 
 			var asm = AssemblyDefinition.ReadAssembly(typeof(MetadataWriteBackEngineTests).Assembly.Location);
-			var eng = new CecilMetadataWriteBackEngine(asm);
+			var eng = new CecilMetadataWriteBackEngine(asm, compilation);
 
-			return Tuple.Create((IMetadataWriteBackEngine)eng, compilation);
+			asserter(eng, compilation);
 		}
 
 		[Test]
 		public void CanGetAttributesOfType() {
-			var p = Prepare();
-			var attrs = p.Item1.GetAttributes((ITypeDefinition)ReflectionHelper.ParseReflectionName("Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests.MetadataWriteBackEngineTestCase.ClassWithAttribute").Resolve(p.Item2));
-			Assert.That(attrs.Count, Is.EqualTo(1));
-			var attr = attrs.ElementAt(0);
-			Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(ObsoleteAttribute).FullName).Resolve(p.Item2)));
-			Assert.That(attr.PositionalArguments, Is.EqualTo(new[] { "This class has an attribute" }));
+			RunTest((engine, compilation) => {
+				var attrs = engine.GetAttributes((ITypeDefinition)ReflectionHelper.ParseReflectionName("Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests.MetadataWriteBackEngineTestCase.ClassWithAttribute").Resolve(compilation));
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This class has an attribute" }));
+			});
 		}
 
 		[Test]
 		public void CanGetAttributesOfField() {
-			Assert.Fail("TODO");
+			RunTest((engine, compilation) => {
+				var fld = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedField).FullName).Resolve(compilation).GetFields().Single(f => f.Name == "MyField");
+				var attrs = engine.GetAttributes(fld);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This field has an attribute" }));
+			});
 		}
 
 		[Test]
 		public void CanGetAttributesOfProperty() {
-			Assert.Fail("TODO");
+			RunTest((engine, compilation) => {
+				var prop = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedProperty).FullName).Resolve(compilation).GetProperties().Single(f => f.Name == "MyProperty");
+				var attrs = engine.GetAttributes(prop);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This property has an attribute" }));
+			});
 		}
 
 		[Test]
 		public void CanGetAttributesOfPropertyWhichIsAnExplicitInterfaceImplementation() {
-			Assert.Fail("TODO");
+			RunTest((engine, compilation) => {
+				var prop = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedExplicitlyImplementedProperty).FullName).Resolve(compilation).GetProperties().Single(f => f.Name == "MyProperty");
+				var attrs = engine.GetAttributes(prop);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This property has an attribute" }));
+			});
 		}
 
 		[Test]
 		public void CanGetAttributesOfPropertyGetter() {
-			Assert.Fail("TODO");
+			RunTest((engine, compilation) => {
+				var prop = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedProperty).FullName).Resolve(compilation).GetProperties().Single(f => f.Name == "MyProperty").Getter;
+				var attrs = engine.GetAttributes(prop);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This getter has an attribute" }));
+			});
+		}
+
+		[Test]
+		public void CanGetAttributesOfPropertyGetterWhichIsAnExplicitInterfaceImplementation() {
+			RunTest((engine, compilation) => {
+				var prop = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedExplicitlyImplementedProperty).FullName).Resolve(compilation).GetProperties().Single(f => f.Name == "MyProperty").Getter;
+				var attrs = engine.GetAttributes(prop);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This getter has an attribute" }));
+			});
 		}
 
 		[Test]
 		public void CanGetAttributesOfPropertySetter() {
-			Assert.Fail("TODO");
+			RunTest((engine, compilation) => {
+				var prop = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedProperty).FullName).Resolve(compilation).GetProperties().Single(f => f.Name == "MyProperty").Setter;
+				var attrs = engine.GetAttributes(prop);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This setter has an attribute" }));
+			});
+		}
+
+		[Test]
+		public void CanGetAttributesOfPropertySetterWhichIsAnExplicitInterfaceImplementation() {
+			RunTest((engine, compilation) => {
+				var prop = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedExplicitlyImplementedProperty).FullName).Resolve(compilation).GetProperties().Single(f => f.Name == "MyProperty").Setter;
+				var attrs = engine.GetAttributes(prop);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "This setter has an attribute" }));
+			});
 		}
 
 		[Test]
 		public void CanGetAttributesOfIndexer() {
-			Assert.Fail("TODO, including overloads");
+			RunTest((engine, compilation) => {
+				var indexer1 = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedIndexers).FullName).Resolve(compilation).GetProperties().Single(p => p.Name == "Item" && p.Parameters.Count == 1);
+				var attrs = engine.GetAttributes(indexer1);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "Indexer(int)" }));
+
+				var indexer2 = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedIndexers).FullName).Resolve(compilation).GetProperties().Single(p => p.Name == "Item" && p.Parameters.Count == 2 && p.Parameters[1].Type.FullName == "System.Int32");
+				attrs = engine.GetAttributes(indexer2);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "Indexer(int,int)" }));
+
+				var indexer3 = ReflectionHelper.ParseReflectionName(typeof(ClassWithAttributedIndexers).FullName).Resolve(compilation).GetProperties().Single(p => p.Name == "Item" && p.Parameters.Count == 2 && p.Parameters[1].Type.FullName == "System.String");
+				attrs = engine.GetAttributes(indexer3);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(MyAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments.Select(a => a.ConstantValue), Is.EqualTo(new[] { "Indexer(int,string)" }));
+			});
 		}
 
 		[Test]
@@ -131,6 +212,11 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 
 		[Test]
 		public void NamedArgumentsWork() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void ConstructorCanBeResolved() {
 			Assert.Fail("TODO");
 		}
 	}
