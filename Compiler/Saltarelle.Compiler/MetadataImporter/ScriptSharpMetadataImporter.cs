@@ -1008,6 +1008,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
+		public void WriteBack(IMetadataWriteBackEngine engine) {
+			// TODO
+		}
+
 		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
 			if (typeDefinition.Kind == TypeKind.Delegate)
 				return TypeScriptSemantics.NormalType(Function);

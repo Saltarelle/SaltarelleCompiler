@@ -53,9 +53,11 @@
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
     <Compile Include="Driver\CompilerOptions.cs" />
+    <Compile Include="IMetadataWriteBackEngine.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="IReferenceImporter.cs" />
+    <Compile Include="MetadataWriteBackEngine\CecilMetadataWriteBackEngine.cs" />
     <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
     <Compile Include="ReferenceImporter\GlobalNamespaceReferenceImporter.cs" />
     <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />

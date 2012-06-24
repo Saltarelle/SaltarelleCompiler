@@ -8,7 +8,7 @@ using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
-    public interface INamingConventionResolver {
+	public interface INamingConventionResolver {
 		/// <summary>
 		/// Prepare to handle the specified types.
 		/// </summary>
@@ -16,6 +16,12 @@ namespace Saltarelle.Compiler {
 		/// <param name="mainAssembly">Main assembly for the compilation.</param>
 		/// <param name="errorReporter">Error reporter to use to report errors.</param>
 		void Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
+
+		/// <summary>
+		/// This method allows for adding attributes to the generated assembly.
+		/// </summary>
+		/// <param name="engine"></param>
+		void WriteBack(IMetadataWriteBackEngine engine);
 
 		/// <summary>
         /// Returns how a type should be implemented in script.

@@ -215,6 +215,8 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\MscorlibCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
+    <Compile Include="MetadataWriteBackEngineTests\MetadataWriteBackEngineTestCase.cs" />
+    <Compile Include="MetadataWriteBackEngineTests\MetadataWriteBackEngineTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />

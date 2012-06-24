@@ -61,6 +61,9 @@ namespace Saltarelle.Compiler.Tests {
 		void INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
 		}
 
+		void INamingConventionResolver.WriteBack(IMetadataWriteBackEngine engine) {
+		}
+
 		TypeScriptSemantics INamingConventionResolver.GetTypeSemantics(ITypeDefinition typeDefinition) {
 			return GetTypeSemantics(typeDefinition);
 		}
