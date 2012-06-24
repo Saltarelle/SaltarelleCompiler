@@ -140,14 +140,14 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 		public ICollection<IAttribute> GetAttributes(ITypeDefinition type) {
 			ICollection<IAttribute> result;
 			if (!_typeAttributes.TryGetValue(type, out result))
-				_typeAttributes[type] = result = new CecilBackedAttributeCollection(_compilation, _allTypes[type.FullName]);
+				_typeAttributes[type] = result = new CecilBackedAttributeCollection(_compilation, _allTypes[type.ReflectionName]);
 			return result;
 		}
 
 		public ICollection<IAttribute> GetAttributes(IMember member) {
 			ICollection<IAttribute> result;
 			if (!_memberAttributes.TryGetValue(member, out result)) {
-				var type = _allTypes[member.DeclaringTypeDefinition.FullName];
+				var type = _allTypes[member.DeclaringTypeDefinition.ReflectionName];
 				var cecilMember = FindMember(type, member);
 				_memberAttributes[member] = result = new CecilBackedAttributeCollection(_compilation, cecilMember);
 			}
@@ -168,6 +168,21 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 			}
 		}
 
+		private bool AreTypesEqual(TypeReference t1, IType t2) {
+			if (t1.IsGenericParameter) {
+				if (t2.Kind == TypeKind.TypeParameter)
+					return t1.Name != t2.Name;
+				else
+					return false;
+			}
+			else {
+				if (t2.Kind == TypeKind.TypeParameter)
+					return false;
+				else
+					return ReflectionHelper.ParseReflectionName(t1.FullName).Resolve(_compilation) == t2;
+			}
+		}
+
 		private bool AreParameterListsEqual(IEnumerable<ParameterDefinition> l1, IEnumerable<IParameter> l2) {
 			var e1 = l1.GetEnumerator();
 			var e2 = l2.GetEnumerator();
@@ -178,7 +193,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					return false;
 				if (!b1)
 					return true;
-				if (ReflectionHelper.ParseReflectionName(e1.Current.ParameterType.FullName).Resolve(_compilation) != e2.Current.Type)
+				if (!AreTypesEqual(e1.Current.ParameterType, e2.Current.Type))
 					return false;
 			}
 		}
@@ -189,6 +204,8 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					return type.Fields.Single(f => f.Name == member.Name);
 
 				case EntityType.Property: {
+					if (((IProperty)member).Parameters.Count > 0)
+						goto case EntityType.Indexer;	// TODO: Remove this code after fixing NRefactory bug.
 					string name;
 					if (member.IsExplicitInterfaceImplementation) {
 						if (member.ImplementedInterfaceMembers.Count > 1)
@@ -216,13 +233,23 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 						else
 							throw new Exception("The accessor " + member.DeclaringType.FullName + "." + member.Name + " is neither the getter nor the setter of the owning property.");
 					}
-					break;
+					else if (accessor.AccessorOwner is IEvent) {
+						var e = (IEvent)accessor.AccessorOwner;
+						if (member == e.AddAccessor)
+							return ((EventDefinition)cecilOwner).AddMethod;
+						else if (member == e.RemoveAccessor)
+							return ((EventDefinition)cecilOwner).RemoveMethod;
+						else
+							throw new Exception("The accessor " + member.DeclaringType.FullName + "." + member.Name + " is neither the adder nor the remover of the owning event.");
+					}
+					else {
+						throw new Exception("The owner of the accessor " + member.DeclaringType.FullName + "." + member.Name + " is neither a property nor an event.");
+					}
 				}
 
 				case EntityType.Indexer: {
 					string name;
 					if (member.IsExplicitInterfaceImplementation) {
-						throw new NotImplementedException("TODO...");
 						if (member.ImplementedInterfaceMembers.Count > 1)
 							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
 						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
@@ -230,22 +257,55 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					else {
 						name = member.Name;
 					}
-					var result = type.Properties.SingleOrDefault(p => AreParameterListsEqual(p.Parameters, ((IParameterizedMember)member).Parameters));
+					var result = type.Properties.SingleOrDefault(p => p.Name == name && AreParameterListsEqual(p.Parameters, ((IParameterizedMember)member).Parameters));
 					if (result == null)
 						throw new Exception("Could not find indexer " + name + ".");
 					return result;
 				}
 
-				case EntityType.Event:
+				case EntityType.Event: {
+					string name;
+					if (member.IsExplicitInterfaceImplementation) {
+						if (member.ImplementedInterfaceMembers.Count > 1)
+							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
+						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
+					}
+					else {
+						name = member.Name;
+					}
+					var result = type.Events.SingleOrDefault(p => p.Name == name);
+					if (result == null)
+						throw new Exception("Could not find event " + name + ".");
+					return result;
+				}
+
 				case EntityType.Method:
-				case EntityType.Operator:
-				case EntityType.Constructor:
-					break;
+				case EntityType.Operator: {
+					string name;
+					if (member.IsExplicitInterfaceImplementation) {
+						if (member.ImplementedInterfaceMembers.Count > 1)
+							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
+						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
+					}
+					else {
+						name = member.Name;
+					}
+					var result = type.Methods.SingleOrDefault(m => !m.IsConstructor && m.Name == name && AreParameterListsEqual(m.Parameters, ((IParameterizedMember)member).Parameters) && AreTypesEqual(m.ReturnType, member.ReturnType));
+					if (result == null)
+						throw new Exception("Could not find method " + name + ".");
+					return result;
+				}
+
+				case EntityType.Constructor: {
+					var result = type.Methods.SingleOrDefault(m => m.IsConstructor && AreParameterListsEqual(m.Parameters, ((IParameterizedMember)member).Parameters));
+					if (result == null)
+						throw new Exception("Could not find constructor.");
+					return result;
+				}
 
 				default:
 					throw new NotSupportedException("Entity type " + member.EntityType + " is not supported.");
 			}
-			throw new NotImplementedException();
 		}
 	}
 }

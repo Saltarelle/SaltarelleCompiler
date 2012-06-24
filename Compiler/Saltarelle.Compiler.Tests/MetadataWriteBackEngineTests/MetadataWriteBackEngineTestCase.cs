@@ -26,12 +26,12 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests.MetadataWriteBa
 		[MyAttribute("This property has an attribute")] public int MyProperty { [MyAttribute("This getter has an attribute")] get { return 0; } [MyAttribute("This setter has an attribute")] set {} }
 	}
 
-	public interface IMyInterface<T, T2> {
+	public interface IInterfaceWithProperty<T, T2> {
 		T MyProperty { get; set; }
 	}
 
-	public class ClassWithAttributedExplicitlyImplementedProperty : IMyInterface<int, string> {
-		[MyAttribute("This property has an attribute")] int IMyInterface<int, string>.MyProperty { [MyAttribute("This getter has an attribute")] get { return 0; } [MyAttribute("This setter has an attribute")] set {} }
+	public class ClassWithAttributedExplicitlyImplementedProperty : IInterfaceWithProperty<int, string> {
+		[MyAttribute("This property has an attribute")] int IInterfaceWithProperty<int, string>.MyProperty { [MyAttribute("This getter has an attribute")] get { return 0; } [MyAttribute("This setter has an attribute")] set {} }
 	}
 
 	public class ClassWithAttributedIndexers {
@@ -41,5 +41,124 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests.MetadataWriteBa
 		public int this[int a, int b] { [MyAttribute("Indexer(int,int) getter")] get { return 0; } [MyAttribute("Indexer(int,int) setter")] set {} }
 		[MyAttribute("Indexer(int,string)")]
 		public int this[int a, string b] { [MyAttribute("Indexer(int,string) getter")] get { return 0; } [MyAttribute("Indexer(int,string) setter")] set {} }
+	}
+
+	public interface IInterfaceWithIndexers<T1, T2, T3> {
+		int this[T1 a] { get; set; }
+		int this[T1 a, T2 b] { get; set; }
+		int this[T2 a, T3 b] { get; set; }
+	}
+
+	public class ClassWithAttributedExplicitlyImplementedIndexers : IInterfaceWithIndexers<int, int, string> {
+		[MyAttribute("Indexer(int)")]
+		int IInterfaceWithIndexers<int, int, string>.this[int a] { [MyAttribute("Indexer(int) getter")] get { return 0; } [MyAttribute("Indexer(int) setter")] set {} }
+		[MyAttribute("Indexer(int,int)")]
+		int IInterfaceWithIndexers<int, int, string>.this[int a, int b] { [MyAttribute("Indexer(int,int) getter")] get { return 0; } [MyAttribute("Indexer(int,int) setter")] set {} }
+		[MyAttribute("Indexer(int,string)")]
+		int IInterfaceWithIndexers<int, int, string>.this[int a, string b] { [MyAttribute("Indexer(int,string) getter")] get { return 0; } [MyAttribute("Indexer(int,string) setter")] set {} }
+	}
+
+	public class ClassWithAttributedEvent {
+		[MyAttribute("This event has an attribute")]
+		public event EventHandler MyEvent { [MyAttribute("This event adder has an attribute")] add {} [MyAttribute("This event remover has an attribute")] remove {} }
+	}
+
+	public interface IInterfaceWithEvent<T> {
+		event EventHandler MyEvent;
+	}
+
+	public class ClassWithAttributedExplicitlyImplementedEventAccessors : IInterfaceWithEvent<int> {
+		[MyAttribute("This event has an attribute")]
+		public event EventHandler MyEvent { [MyAttribute("This event adder has an attribute")] add {} [MyAttribute("This event remover has an attribute")] remove {} }
+	}
+
+	public class ClassWithMethods {
+		[MyAttribute("MyMethod()")]
+		public void MyMethod() {}
+
+		[MyAttribute("MyMethod(int)")]
+		public void MyMethod(int a) {}
+
+		[MyAttribute("MyMethod(int,int)")]
+		public void MyMethod(int a, int b) {}
+
+		[MyAttribute("MyMethod(int,string)")]
+		public void MyMethod(int a, string b) {}
+	}
+
+	public interface IInterfaceWithMethods<T1, T2, T3> {
+		void MyMethod();
+		void MyMethod(T1 a);
+		void MyMethod(T1 a, T2 b);
+		void MyMethod(T2 a, T3 b);
+	}
+
+	public class ClassWithAttributedExplicitlyImplementedMethods : IInterfaceWithMethods<int, int, string> {
+		[MyAttribute("MyMethod()")]
+		void IInterfaceWithMethods<int, int, string>.MyMethod() {}
+
+		[MyAttribute("MyMethod(int)")]
+		void IInterfaceWithMethods<int, int, string>.MyMethod(int a) {}
+
+		[MyAttribute("MyMethod(int,int)")]
+		void IInterfaceWithMethods<int, int, string>.MyMethod(int a, int b) {}
+
+		[MyAttribute("MyMethod(int,string)")]
+		void IInterfaceWithMethods<int, int, string>.MyMethod(int a, string b) {}
+	}
+
+	public class GenericClassWithAttributedExplicitlyImplementedMethods<T> : IInterfaceWithMethods<T, int, string> {
+		[MyAttribute("MyMethod()")]
+		void IInterfaceWithMethods<T, int, string>.MyMethod() {}
+
+		[MyAttribute("MyMethod(int)")]
+		void IInterfaceWithMethods<T, int, string>.MyMethod(T a) {}
+
+		[MyAttribute("MyMethod(int,int)")]
+		void IInterfaceWithMethods<T, int, string>.MyMethod(T a, int b) {}
+
+		[MyAttribute("MyMethod(int,string)")]
+		void IInterfaceWithMethods<T, int, string>.MyMethod(int a, string b) {}
+	}
+
+	public class ClassWithOperators {
+		[MyAttribute("Add class instances")]
+		public static ClassWithOperators operator+(ClassWithOperators a, ClassWithOperators b) {
+			return null;
+		}
+
+		[MyAttribute("Add class and int")]
+		public static ClassWithOperators operator+(ClassWithOperators a, int b) {
+			return null;
+		}
+
+		[MyAttribute("Convert to int")]
+		public static implicit operator int(ClassWithOperators a) {
+			return 0;
+		}
+
+		[MyAttribute("Convert to float")]
+		public static implicit operator float(ClassWithOperators a) {
+			return 0;
+		}
+
+		[MyAttribute("Convert to string")]
+		public static explicit operator string(ClassWithOperators a) {
+			return null;
+		}
+	}
+
+	public class ClassWithConstructors {
+		[MyAttribute("Constructor()")]
+		ClassWithConstructors() {}
+
+		[MyAttribute("Constructor(int)")]
+		ClassWithConstructors(int a) {}
+
+		[MyAttribute("Constructor(int,int)")]
+		ClassWithConstructors(int a, int b) {}
+
+		[MyAttribute("Constructor(int,string)")]
+		ClassWithConstructors(int a, string b) {}
 	}
 }
