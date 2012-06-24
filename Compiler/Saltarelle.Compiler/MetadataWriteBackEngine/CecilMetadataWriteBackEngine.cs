@@ -228,8 +228,6 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					return type.Fields.Single(f => f.Name == member.Name);
 
 				case EntityType.Property: {
-					if (((IProperty)member).Parameters.Count > 0)
-						goto case EntityType.Indexer;	// TODO: Remove this code after fixing NRefactory bug.
 					string name;
 					if (member.IsExplicitInterfaceImplementation) {
 						if (member.ImplementedInterfaceMembers.Count > 1)
