@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Create a new attribute. This attribute can then be added to the collections returned by either <c>GetAttributes</c> member.
 		/// </summary>
-		/// <param name="attributeAssembly">Assembly containing the attribute.</param>
+		/// <param name="attributeAssembly">Assembly containing the attribute. Can be null, in which case all assemblies are searched for a matching attribute.</param>
 		/// <param name="attributeTypeName">Name of the attribute type to create an instance of (reflection name).</param>
 		/// <param name="positionalArguments">Positional arguments to the constructor, and their corresponding types.</param>
 		/// <param name="namedArguments">Named arguments for the attribute.</param>

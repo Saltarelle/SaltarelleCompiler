@@ -150,7 +150,13 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 		}
 
 		public IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IList<Tuple<IType, object>> positionalArguments, IList<Tuple<string, object>> namedArguments) {
-			var attrType = attributeAssembly.GetAllTypeDefinitions().SingleOrDefault(t => t.ReflectionName == attributeTypeName);
+			IType attrType;
+			if (attributeAssembly != null) {
+				attrType = attributeAssembly.GetAllTypeDefinitions().SingleOrDefault(t => t.ReflectionName == attributeTypeName);
+			}
+			else {
+				attrType = ReflectionHelper.ParseReflectionName(attributeTypeName).Resolve(_compilation);
+			}
 			if (attrType == null)
 				throw new ArgumentException("Could not find the type " + attributeTypeName + " in the assembly " + attributeAssembly.AssemblyName + ".");
 
@@ -168,7 +174,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 			var actualNamedArgs = new List<KeyValuePair<IMember, ResolveResult>>();
 			if (namedArguments != null) {
 				foreach (var a in namedArguments) {
-					var m = (IMember)attrType.Properties.SingleOrDefault(p => p.Name == a.Item1) ?? attrType.Fields.SingleOrDefault(f => f.Name == a.Item1);
+					var m = (IMember)attrType.GetProperties().SingleOrDefault(p => p.Name == a.Item1) ?? attrType.GetFields().SingleOrDefault(f => f.Name == a.Item1);
 					if (m == null)
 						throw new ArgumentException("Could not find member " + a.Item1);
 					var sourceType = (a.Item2 != null ? _compilation.FindType(a.Item2.GetType()) : m.ReturnType);

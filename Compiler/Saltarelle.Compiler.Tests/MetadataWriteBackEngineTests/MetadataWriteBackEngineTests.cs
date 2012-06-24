@@ -617,6 +617,16 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 		}
 
 		[Test]
+		public void CreateAttributeSearchesAllAssembliesWhenTheSuppliedAssemblyIsNull() {
+			RunTest((engine, compilation) => {
+				var a = engine.CreateAttribute(null, typeof(ComplexAttribute).FullName, new Tuple<IType, object>[0], new Tuple<string, object>[0]);
+				var attrType = ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation);
+				Assert.That(a.AttributeType, Is.EqualTo(attrType));
+				Assert.That(a.Constructor, Is.EqualTo(attrType.GetConstructors().Single(c => c.Parameters.Count == 0)));
+			});
+		}
+
+		[Test]
 		public void CreateAttributeWorksWhenNamedOrPositionalArgIsNull() {
 			RunTest((engine, compilation) => {
 				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int32), (object)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)null) }, new[] { Tuple.Create("Property1", (object)null) });

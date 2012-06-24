@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler {
         /// Returns the implementation of a constructor. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
-        ConstructorScriptSemantics GetConstructorSemantics(IMethod method);
+        ConstructorScriptSemantics GetConstructorSemantics(IMethod constructor);
 
         /// <summary>
         /// Returns the implementation of an auto-implemented property. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
@@ -60,7 +60,7 @@ namespace Saltarelle.Compiler {
         /// <summary>
         /// Returns how a field is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// </summary>
-        FieldScriptSemantics GetFieldSemantics(IField property);
+        FieldScriptSemantics GetFieldSemantics(IField field);
 
         /// <summary>
         /// Returns how an event is implemented. Might store away the returned implementation in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
