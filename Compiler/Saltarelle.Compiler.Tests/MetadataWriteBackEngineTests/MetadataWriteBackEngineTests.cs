@@ -16,7 +16,11 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
     	private static readonly Lazy<IAssemblyReference> _currentAsmLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(typeof(MetadataWriteBackEngineTests).Assembly.Location));
         internal static IAssemblyReference CurrentAsm { get { return _currentAsmLazy.Value; } }
 
-		private void RunTest(Action<IMetadataWriteBackEngine, ICompilation> asserter) {
+		private void RunTest(Action<CecilMetadataWriteBackEngine, ICompilation> asserter) {
+			RunTest((e, c, a) => asserter(e, c));
+		}
+
+		private void RunTest(Action<CecilMetadataWriteBackEngine, ICompilation, AssemblyDefinition> asserter) {
             IProjectContent project = new CSharpProjectContent();
 
             project = project.AddAssemblyReferences(new[] { Common.Mscorlib, CurrentAsm });
@@ -26,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 			var asm = AssemblyDefinition.ReadAssembly(typeof(MetadataWriteBackEngineTests).Assembly.Location);
 			var eng = new CecilMetadataWriteBackEngine(asm, compilation);
 
-			asserter(eng, compilation);
+			asserter(eng, compilation, asm);
 		}
 
 		[Test]
@@ -636,7 +640,7 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 		[Test]
 		public void CreateAttributeCanLookupTheCorrectConstructorWithOverloadResolution() {
 			RunTest((engine, compilation) => {
-				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int16), (object)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)null) }, null);
+				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int16), (object)(short)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)null) }, null);
 				var attrType = ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation);
 				Assert.That(a.AttributeType, Is.EqualTo(attrType));
 				Assert.That(a.Constructor, Is.EqualTo(attrType.GetConstructors().Single(c => c.Parameters.Count == 2 && c.Parameters[0].Type == compilation.FindType(KnownTypeCode.Int32) && c.Parameters[1].Type == compilation.FindType(KnownTypeCode.String))));
@@ -664,6 +668,48 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 				Assert.That(namedArgs["Property2"].Value.ConstantValue, Is.InstanceOf<int>());
 				Assert.That(namedArgs["Property2"].Value.ConstantValue, Is.EqualTo(567));
 			});
+		}
+
+		[Test]
+		public void WritingTheModifiedAssemblyWorks() {
+			try {
+				RunTest((engine, compilation, assembly) => {
+					var a1 = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int32), (object)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)"Class attribute") }, new[] { Tuple.Create("Property2", (object)567), Tuple.Create("Field1", (object)(byte)34) });
+					var typeAttrs = engine.GetAttributes((ITypeDefinition)ReflectionHelper.ParseReflectionName(typeof(UnattributedClass).FullName).Resolve(compilation));
+					typeAttrs.Add(a1);
+
+					var a2 = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Byte), (object)(byte)34), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)"Method attribute") }, new[] { Tuple.Create("Property2", (object)2), Tuple.Create("Field2", (object)"String value") });
+					var methodAttrs = engine.GetAttributes(ReflectionHelper.ParseReflectionName(typeof(UnattributedClass).FullName).Resolve(compilation).GetMethods(options: GetMemberOptions.IgnoreInheritedMembers).Single());
+					methodAttrs.Add(a2);
+
+					engine.Apply();
+
+					assembly.Write(Path.GetFullPath("Written.dll"));
+
+					var loadedAsm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("Written.dll"));
+					var loadedClass = loadedAsm.Modules.SelectMany(m => m.Types).Single(t => t.FullName == typeof(UnattributedClass).FullName);
+					var loadedMethod = loadedClass.Methods.Single(m => !m.IsConstructor);
+
+					Assert.That(loadedClass.CustomAttributes, Has.Count.EqualTo(1));
+					var classAttr = loadedClass.CustomAttributes[0];
+					Assert.That(classAttr.AttributeType.FullName, Is.EqualTo(typeof(ComplexAttribute).FullName));
+					Assert.That(classAttr.Constructor.Parameters.Count, Is.EqualTo(2));
+					Assert.That(classAttr.ConstructorArguments.Select(arg => arg.Value), Is.EqualTo(new object[] { 352, "Class attribute" }));
+					Assert.That(classAttr.Properties.Select(arg => new { arg.Name, arg.Argument.Value }), Is.EqualTo(new[] { new { Name = "Property2", Value = (object)567 } }));
+					Assert.That(classAttr.Fields.Select(arg => new { arg.Name, arg.Argument.Value }), Is.EqualTo(new[] { new { Name = "Field1", Value = (object)(byte)34 } }));
+
+					Assert.That(loadedMethod.CustomAttributes, Has.Count.EqualTo(1));
+					var methodAttr = loadedMethod.CustomAttributes[0];
+					Assert.That(methodAttr.AttributeType.FullName, Is.EqualTo(typeof(ComplexAttribute).FullName));
+					Assert.That(methodAttr.Constructor.Parameters.Count, Is.EqualTo(2));
+					Assert.That(methodAttr.ConstructorArguments.Select(arg => arg.Value), Is.EqualTo(new object[] { 34, "Method attribute" }));
+					Assert.That(methodAttr.Properties.Select(arg => new { arg.Name, arg.Argument.Value }), Is.EqualTo(new[] { new { Name = "Property2", Value = (object)2 } }));
+					Assert.That(methodAttr.Fields.Select(arg => new { arg.Name, arg.Argument.Value }), Is.EqualTo(new[] { new { Name = "Field2", Value = (object)"String value" } }));
+				});
+			}
+			finally {
+				try { File.Delete(Path.GetFullPath("Written.dll")); } catch {}
+			}
 		}
 	}
 }

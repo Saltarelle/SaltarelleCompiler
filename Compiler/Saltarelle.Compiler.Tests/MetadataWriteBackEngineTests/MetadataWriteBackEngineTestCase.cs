@@ -181,4 +181,8 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests.MetadataWriteBa
 		[ComplexAttribute((byte)42, "Some value", Property1 = "Property 1 value", Property2 = 347, Property3 = null, Field1 = 12)]
 		public ClassWithAConstructorWithAComplexAttribute() {}
 	}
+
+	public class UnattributedClass {
+		public void SomeMethod() {}
+	}
 }

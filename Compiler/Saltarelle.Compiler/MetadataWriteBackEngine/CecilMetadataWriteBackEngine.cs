@@ -149,10 +149,14 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 			return result;
 		}
 
-		public IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IEnumerable<Tuple<IType, object>> positionalArguments, IEnumerable<Tuple<string, object>> namedArguments) {
+		public IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IList<Tuple<IType, object>> positionalArguments, IList<Tuple<string, object>> namedArguments) {
 			var attrType = attributeAssembly.GetAllTypeDefinitions().SingleOrDefault(t => t.ReflectionName == attributeTypeName);
 			if (attrType == null)
 				throw new ArgumentException("Could not find the type " + attributeTypeName + " in the assembly " + attributeAssembly.AssemblyName + ".");
+
+			var posArgWithError = (positionalArguments != null ? positionalArguments.FirstOrDefault(pa => pa.Item2 != null && _compilation.FindType(pa.Item2.GetType()) != pa.Item1) : null);
+			if (posArgWithError != null)
+				throw new ArgumentException("The value " + posArgWithError.Item2 + " is not of the type " + posArgWithError.Item1.FullName);
 
 			var or = new OverloadResolution(_compilation, positionalArguments != null ? positionalArguments.Select(a => new ConstantResolveResult(a.Item1, a.Item2)).ToArray<ResolveResult>() : new ResolveResult[0], conversions: _conversions);
 			foreach (var c in attrType.GetConstructors())
@@ -328,17 +332,80 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 			}
 		}
 
-		private CustomAttribute ConvertAttribute(IAttribute a) {
-//			var ctor = new MethodReference(".ctor", new TypeReference("System", "Void"), new TypeReference());
-//			var result = new CustomAttribute(new MethodReference(
-			return null;
+		private TypeReference CreateTypeReference(ModuleDefinition module, IType type) {
+			if (type == _compilation.FindType(KnownTypeCode.Object))
+				return module.TypeSystem.Object;
+			if (type == _compilation.FindType(KnownTypeCode.Void))
+				return module.TypeSystem.Void;
+			if (type == _compilation.FindType(KnownTypeCode.Boolean))
+				return module.TypeSystem.Boolean;
+			if (type == _compilation.FindType(KnownTypeCode.Char))
+				return module.TypeSystem.Char;
+			if (type == _compilation.FindType(KnownTypeCode.SByte))
+				return module.TypeSystem.SByte;
+			if (type == _compilation.FindType(KnownTypeCode.Byte))
+				return module.TypeSystem.Byte;
+			if (type == _compilation.FindType(KnownTypeCode.Int16))
+				return module.TypeSystem.Int16;
+			if (type == _compilation.FindType(KnownTypeCode.UInt16))
+				return module.TypeSystem.UInt16;
+			if (type == _compilation.FindType(KnownTypeCode.Int32))
+				return module.TypeSystem.Int32;
+			if (type == _compilation.FindType(KnownTypeCode.UInt32))
+				return module.TypeSystem.UInt32;
+			if (type == _compilation.FindType(KnownTypeCode.Int64))
+				return module.TypeSystem.Int64;
+			if (type == _compilation.FindType(KnownTypeCode.UInt64))
+				return module.TypeSystem.UInt64;
+			if (type == _compilation.FindType(KnownTypeCode.Single))
+				return module.TypeSystem.Single;
+			if (type == _compilation.FindType(KnownTypeCode.Double))
+				return module.TypeSystem.Double;
+			if (type == _compilation.FindType(KnownTypeCode.IntPtr))
+				return module.TypeSystem.IntPtr;
+			if (type == _compilation.FindType(KnownTypeCode.UIntPtr))
+				return module.TypeSystem.UIntPtr;
+			if (type == _compilation.FindType(KnownTypeCode.String))
+				return module.TypeSystem.String;
+
+			var name = type.GetDefinition().ParentAssembly.AssemblyName;
+			if (module.Assembly.Name.Name == name)
+				return new TypeReference(type.Namespace, type.Name, module, module);
+			var asm = module.AssemblyReferences.Where(n => n.Name == name).OrderByDescending(n => n.Version).FirstOrDefault();	// We can have two different references to mscorlib, and unfortunately NRefactory cannot distinguish them.
+			if (asm == null)
+				throw new InvalidOperationException("The processed module does not reference the assembly " + name);
+			return new TypeReference(type.Namespace, type.Name, module, asm);
+		}
+
+		private CustomAttribute ConvertAttribute(MemberReference entity, IAttribute a) {
+			var attrType = CreateTypeReference(entity.Module, a.AttributeType);
+			var ctor = new MethodReference(".ctor", entity.Module.TypeSystem.Void, attrType);
+			for (int i = 0; i < a.PositionalArguments.Count; i++) {
+				ctor.Parameters.Add(new ParameterDefinition(a.Constructor.Parameters[i].Name, ParameterAttributes.None, CreateTypeReference(entity.Module, a.Constructor.Parameters[i].Type)));
+			}
+			var result = new CustomAttribute(ctor);
+			foreach (var arg in a.PositionalArguments) {
+				result.ConstructorArguments.Add(new CustomAttributeArgument(CreateTypeReference(entity.Module, arg.Type), arg.ConstantValue));
+			}
+
+			foreach (var arg in a.NamedArguments) {
+				var na = new CustomAttributeNamedArgument(arg.Key.Name, new CustomAttributeArgument(CreateTypeReference(entity.Module, arg.Value.Type), arg.Value.ConstantValue));
+				if (arg.Key is IField)
+					result.Fields.Add(na);
+				else if (arg.Key is IProperty)
+					result.Properties.Add(na);
+				else
+					throw new Exception("Invalid named argument target " + arg.Key);
+			}
+
+			return result;
 		}
 
 		private void ApplyAttributes(ICustomAttributeProvider entity, ICollection<IAttribute> newAttributes) {
 			entity.CustomAttributes.Clear();
 			if (newAttributes != null) {
 				foreach (var a in newAttributes)
-					entity.CustomAttributes.Add(ConvertAttribute(a));
+					entity.CustomAttributes.Add(ConvertAttribute((MemberReference)entity, a));
 			}
 		}
 

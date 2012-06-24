@@ -21,6 +21,6 @@ namespace Saltarelle.Compiler {
 		/// <param name="attributeTypeName">Name of the attribute type to create an instance of (reflection name).</param>
 		/// <param name="positionalArguments">Positional arguments to the constructor, and their corresponding types.</param>
 		/// <param name="namedArguments">Named arguments for the attribute.</param>
-		IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IEnumerable<Tuple<IType, object>> positionalArguments, IEnumerable<Tuple<string, object>> namedArguments);
+		IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IList<Tuple<IType, object>> positionalArguments, IList<Tuple<string, object>> namedArguments);
 	}
 }
