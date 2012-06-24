@@ -6,11 +6,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             /// <summary>
             /// The event uses add and remove methods. The AddMethod and RemoveMethod members is valid.
             /// </summary>
-            AddAndRemoveMethods = 0,
+            AddAndRemoveMethods,
             /// <summary>
             /// The event is not usable from script. No other members are valid.
             /// </summary>
-            NotUsableFromScript = 2,
+            NotUsableFromScript,
         }
 
         /// <summary>

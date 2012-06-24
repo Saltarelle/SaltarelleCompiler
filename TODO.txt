@@ -5,11 +5,9 @@ Dynamic
 Static constructors and fields (and field init)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/struct).
 Verify that all directly or indirectly dependent assemblies are referenced.
-The metadata importer should be allowed to write attributes to the output reference assembly.
 Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 Cannot declare a static field called Name.
 Sign everything
-Solve the debug/release names issue. Separate metadata importer?
 ConditionalAttribute
 
 v2:
@@ -22,6 +20,7 @@ Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.
 Don't assign a field the default value when it is always assigned before being read in the constructor.
 Multi-dimensional arrays
+Ensure that type initializers are run in the correct order.
 NAnt task
 
 v3:
