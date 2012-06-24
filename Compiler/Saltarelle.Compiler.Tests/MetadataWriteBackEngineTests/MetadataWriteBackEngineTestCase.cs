@@ -161,4 +161,24 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests.MetadataWriteBa
 		[MyAttribute("Constructor(int,string)")]
 		ClassWithConstructors(int a, string b) {}
 	}
+
+	public class ComplexAttribute : Attribute {
+		public ComplexAttribute() {}
+		public ComplexAttribute(int a) {}
+		public ComplexAttribute(byte a) {}
+		public ComplexAttribute(int a, string b) {}
+		public ComplexAttribute(byte a, string b) {}
+
+		public string Property1 { get; set; }
+		public int Property2 { get; set; }
+		public string Property3 { get; set; }
+		public string Property4 { get; set; }
+		public byte Field1;
+		public string Field2;
+	}
+
+	public class ClassWithAConstructorWithAComplexAttribute {
+		[ComplexAttribute((byte)42, "Some value", Property1 = "Property 1 value", Property2 = 347, Property3 = null, Field1 = 12)]
+		public ClassWithAConstructorWithAComplexAttribute() {}
+	}
 }

@@ -8,121 +8,111 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Mono.Cecil;
 
 namespace Saltarelle.Compiler.MetadataWriteBackEngine {
-	internal class CecilBackedAttributeCollection : ICollection<IAttribute> {
-		private class SimpleAttribute : IAttribute {
-			private readonly IType _attributeType;
-			private readonly IMethod _constructor;
-			private readonly IList<ResolveResult> _positionalArguments;
-			private readonly IList<KeyValuePair<IMember, ResolveResult>> _namedArguments;
+	public class CecilMetadataWriteBackEngine : IMetadataWriteBackEngine {
+		private class CecilBackedAttributeCollection : ICollection<IAttribute> {
+			private class SimpleAttribute : IAttribute {
+				private readonly IType _attributeType;
+				private readonly IMethod _constructor;
+				private readonly IList<ResolveResult> _positionalArguments;
+				private readonly IList<KeyValuePair<IMember, ResolveResult>> _namedArguments;
 
-			public SimpleAttribute(IType attributeType, IMethod constructor, IList<ResolveResult> positionalArguments, IList<KeyValuePair<IMember, ResolveResult>> namedArguments) {
-				_attributeType       = attributeType;
-				_constructor         = constructor;
-				_positionalArguments = positionalArguments;
-				_namedArguments      = namedArguments;
-			}
+				public SimpleAttribute(IType attributeType, IMethod constructor, IList<ResolveResult> positionalArguments, IList<KeyValuePair<IMember, ResolveResult>> namedArguments) {
+					_attributeType       = attributeType;
+					_constructor         = constructor;
+					_positionalArguments = positionalArguments;
+					_namedArguments      = namedArguments;
+				}
 
-			public DomRegion Region { get { return DomRegion.Empty; } }
+				public DomRegion Region { get { return DomRegion.Empty; } }
 
-			public IType AttributeType {
-				get { return _attributeType; }
-			}
+				public IType AttributeType {
+					get { return _attributeType; }
+				}
 
-			public IMethod Constructor {
-				get { return _constructor; }
-			}
+				public IMethod Constructor {
+					get { return _constructor; }
+				}
 
-			public IList<ResolveResult> PositionalArguments {
-				get { return _positionalArguments; }
-			}
+				public IList<ResolveResult> PositionalArguments {
+					get { return _positionalArguments; }
+				}
 
-			public IList<KeyValuePair<IMember, ResolveResult>> NamedArguments {
-				get { return _namedArguments; }
-			}
-		}
-
-		private readonly ICustomAttributeProvider _owner;
-		private readonly IList<IAttribute> _attributes;
-		private bool _isDirty;
-
-		public CecilBackedAttributeCollection(ICompilation compilation, ICustomAttributeProvider owner) {
-			_owner      = owner;
-			_attributes = ConvertAttributes(compilation, owner.CustomAttributes);
-			_isDirty    = false;
-		}
-
-		public IEnumerator<IAttribute> GetEnumerator() {
-			return _attributes.GetEnumerator();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() {
-			return GetEnumerator();
-		}
-
-		public void Add(IAttribute item) {
-			_attributes.Add(item);
-			_isDirty = true;
-		}
-
-		public void Clear() {
-			_attributes.Clear();
-			_isDirty = true;
-		}
-
-		public bool Contains(IAttribute item) {
-			return _attributes.Contains(item);
-		}
-
-		public void CopyTo(IAttribute[] array, int arrayIndex) {
-			_attributes.CopyTo(array, arrayIndex);
-		}
-
-		public bool Remove(IAttribute item) {
-			bool result = _attributes.Remove(item);
-			_isDirty = true;
-			return result;
-		}
-
-		public int Count {
-			get { return _attributes.Count; }
-		}
-
-		public bool IsReadOnly {
-			get { return false; }
-		}
-
-		private List<IAttribute> ConvertAttributes(ICompilation compilation, IEnumerable<CustomAttribute> src) {
-/*
-			MethodReference ctor = attribute.Constructor;
-			ITypeReference attributeType = ReadTypeReference(attribute.AttributeType);
-			IList<ITypeReference> ctorParameterTypes = null;
-			if (ctor.HasParameters) {
-				ctorParameterTypes = new ITypeReference[ctor.Parameters.Count];
-				for (int i = 0; i < ctorParameterTypes.Count; i++) {
-					ctorParameterTypes[i] = ReadTypeReference(ctor.Parameters[i].ParameterType);
+				public IList<KeyValuePair<IMember, ResolveResult>> NamedArguments {
+					get { return _namedArguments; }
 				}
 			}
-			if (this.InterningProvider != null) {
-				attributeType = this.InterningProvider.Intern(attributeType);
-				ctorParameterTypes = this.InterningProvider.InternList(ctorParameterTypes);
-			}
-			return new CecilUnresolvedAttribute(attributeType, ctorParameterTypes ?? EmptyList<ITypeReference>.Instance, attribute.GetBlob());
-*/
-			var result = new List<IAttribute>();
-			foreach (var a in src) {
-				var attrType = ReflectionHelper.ParseReflectionName(a.AttributeType.FullName).Resolve(compilation);
-				IList<IType> ctorParameterTypes = a.Constructor.Parameters.Select(p => ReflectionHelper.ParseReflectionName(p.ParameterType.FullName).Resolve(compilation)).ToList();
-				var constructor = attrType.GetConstructors().Single(c => c.Parameters.Select(p => p.Type).SequenceEqual(ctorParameterTypes));
-				var positionalArgs = a.ConstructorArguments.Select((arg, i) => (ResolveResult)new ConstantResolveResult(ctorParameterTypes[i], arg.Value)).ToList();
-				var namedArgs = new List<KeyValuePair<IMember, ResolveResult>>();
 
-				result.Add(new SimpleAttribute(attrType, constructor, positionalArgs.AsReadOnly(), namedArgs.AsReadOnly()));
+			private readonly ICustomAttributeProvider _owner;
+			private readonly IList<IAttribute> _attributes;
+			private bool _isDirty;
+
+			public CecilBackedAttributeCollection(ICompilation compilation, ICustomAttributeProvider owner) {
+				_owner      = owner;
+				_attributes = ConvertAttributes(compilation, owner.CustomAttributes);
+				_isDirty    = false;
 			}
-			return result;
+
+			public IEnumerator<IAttribute> GetEnumerator() {
+				return _attributes.GetEnumerator();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() {
+				return GetEnumerator();
+			}
+
+			public void Add(IAttribute item) {
+				_attributes.Add(item);
+				_isDirty = true;
+			}
+
+			public void Clear() {
+				_attributes.Clear();
+				_isDirty = true;
+			}
+
+			public bool Contains(IAttribute item) {
+				return _attributes.Contains(item);
+			}
+
+			public void CopyTo(IAttribute[] array, int arrayIndex) {
+				_attributes.CopyTo(array, arrayIndex);
+			}
+
+			public bool Remove(IAttribute item) {
+				bool result = _attributes.Remove(item);
+				_isDirty = true;
+				return result;
+			}
+
+			public int Count {
+				get { return _attributes.Count; }
+			}
+
+			public bool IsReadOnly {
+				get { return false; }
+			}
+
+			private List<IAttribute> ConvertAttributes(ICompilation compilation, IEnumerable<CustomAttribute> src) {
+				var result = new List<IAttribute>();
+				foreach (var a in src) {
+					var attrType = ReflectionHelper.ParseReflectionName(a.AttributeType.FullName).Resolve(compilation);
+					var constructor = attrType.GetConstructors().Single(c => AreParameterListsEqual(a.Constructor.Parameters, c.Parameters, compilation));
+					var positionalArgs = a.ConstructorArguments.Select((arg, i) => (ResolveResult)new ConstantResolveResult(constructor.Parameters[i].Type, arg.Value)).ToList();
+					
+					var namedArgs = (         from pv in a.Properties
+					                           let p = attrType.GetProperties().Single(p => p.Name == pv.Name) 
+					                        select new KeyValuePair<IMember, ResolveResult>(p, new ConstantResolveResult(p.ReturnType, pv.Argument.Value)))
+					                .Concat(  from fv in a.Fields
+					                           let f = attrType.GetFields().Single(f => f.Name == fv.Name)
+					                        select new KeyValuePair<IMember, ResolveResult>(f, new ConstantResolveResult(f.ReturnType, fv.Argument.Value)))
+					                .ToList();
+
+					result.Add(new SimpleAttribute(attrType, constructor, positionalArgs.AsReadOnly(), namedArgs.AsReadOnly()));
+				}
+				return result;
+			}
 		}
-	}
 
-	public class CecilMetadataWriteBackEngine : IMetadataWriteBackEngine {
 		private readonly AssemblyDefinition _assembly;
 		private readonly ICompilation _compilation;
 		private readonly Dictionary<string, TypeDefinition> _allTypes;
@@ -168,10 +158,10 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 			}
 		}
 
-		private bool AreTypesEqual(TypeReference t1, IType t2) {
+		private static bool AreTypesEqual(TypeReference t1, IType t2, ICompilation compilation) {
 			if (t1.IsGenericParameter) {
 				if (t2.Kind == TypeKind.TypeParameter)
-					return t1.Name != t2.Name;
+					return t1.Name == t2.Name;
 				else
 					return false;
 			}
@@ -179,11 +169,11 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 				if (t2.Kind == TypeKind.TypeParameter)
 					return false;
 				else
-					return ReflectionHelper.ParseReflectionName(t1.FullName).Resolve(_compilation) == t2;
+					return ReflectionHelper.ParseReflectionName(t1.FullName).Resolve(compilation) == t2;
 			}
 		}
 
-		private bool AreParameterListsEqual(IEnumerable<ParameterDefinition> l1, IEnumerable<IParameter> l2) {
+		private static bool AreParameterListsEqual(IEnumerable<ParameterDefinition> l1, IEnumerable<IParameter> l2, ICompilation compilation) {
 			var e1 = l1.GetEnumerator();
 			var e2 = l2.GetEnumerator();
 			for (;;) {
@@ -193,7 +183,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					return false;
 				if (!b1)
 					return true;
-				if (!AreTypesEqual(e1.Current.ParameterType, e2.Current.Type))
+				if (!AreTypesEqual(e1.Current.ParameterType, e2.Current.Type, compilation))
 					return false;
 			}
 		}
@@ -257,7 +247,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					else {
 						name = member.Name;
 					}
-					var result = type.Properties.SingleOrDefault(p => p.Name == name && AreParameterListsEqual(p.Parameters, ((IParameterizedMember)member).Parameters));
+					var result = type.Properties.SingleOrDefault(p => p.Name == name && AreParameterListsEqual(p.Parameters, ((IParameterizedMember)member).Parameters, _compilation));
 					if (result == null)
 						throw new Exception("Could not find indexer " + name + ".");
 					return result;
@@ -290,14 +280,14 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					else {
 						name = member.Name;
 					}
-					var result = type.Methods.SingleOrDefault(m => !m.IsConstructor && m.Name == name && AreParameterListsEqual(m.Parameters, ((IParameterizedMember)member).Parameters) && AreTypesEqual(m.ReturnType, member.ReturnType));
+					var result = type.Methods.SingleOrDefault(m => !m.IsConstructor && m.Name == name && AreParameterListsEqual(m.Parameters, ((IParameterizedMember)member).Parameters, _compilation) && AreTypesEqual(m.ReturnType, member.ReturnType, _compilation));
 					if (result == null)
 						throw new Exception("Could not find method " + name + ".");
 					return result;
 				}
 
 				case EntityType.Constructor: {
-					var result = type.Methods.SingleOrDefault(m => m.IsConstructor && AreParameterListsEqual(m.Parameters, ((IParameterizedMember)member).Parameters));
+					var result = type.Methods.SingleOrDefault(m => m.IsConstructor && AreParameterListsEqual(m.Parameters, ((IParameterizedMember)member).Parameters, _compilation));
 					if (result == null)
 						throw new Exception("Could not find constructor.");
 					return result;

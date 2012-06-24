@@ -525,18 +525,64 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 		}
 
 		[Test]
+		public void ConstructorCanBeResolved() {
+			RunTest((engine, compilation) => {
+				var ctor1 = ReflectionHelper.ParseReflectionName(typeof(ClassWithAConstructorWithAComplexAttribute).FullName).Resolve(compilation).GetConstructors().Single();
+				var attrs = engine.GetAttributes(ctor1);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.Constructor.Parameters.Select(p => p.Type), Is.EqualTo(new[] { compilation.FindType(KnownTypeCode.Byte), compilation.FindType(KnownTypeCode.String) }));
+			});
+		}
+
+		[Test]
 		public void PositionalArgumentsWork() {
-			Assert.Fail("TODO");
+			RunTest((engine, compilation) => {
+				var ctor = ReflectionHelper.ParseReflectionName(typeof(ClassWithAConstructorWithAComplexAttribute).FullName).Resolve(compilation).GetConstructors().Single();
+				var attrs = engine.GetAttributes(ctor);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation)));
+				Assert.That(attr.PositionalArguments[0].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Byte)));
+				Assert.That(attr.PositionalArguments[0].ConstantValue, Is.InstanceOf<byte>());
+				Assert.That(attr.PositionalArguments[0].ConstantValue, Is.EqualTo(42));
+				Assert.That(attr.PositionalArguments[1].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(attr.PositionalArguments[1].ConstantValue, Is.InstanceOf<string>());
+				Assert.That(attr.PositionalArguments[1].ConstantValue, Is.EqualTo("Some value"));
+			});
 		}
 
 		[Test]
 		public void NamedArgumentsWork() {
-			Assert.Fail("TODO");
-		}
+			RunTest((engine, compilation) => {
+				var ctor = ReflectionHelper.ParseReflectionName(typeof(ClassWithAConstructorWithAComplexAttribute).FullName).Resolve(compilation).GetConstructors().Single();
+				var attrs = engine.GetAttributes(ctor);
+				Assert.That(attrs.Count, Is.EqualTo(1));
+				var attr = attrs.ElementAt(0);
+				Assert.That(attr.AttributeType, Is.EqualTo(ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation)));
+				var namedArgs = attr.NamedArguments.ToDictionary(x => x.Key.Name);
+				Assert.That(namedArgs.Keys, Is.EquivalentTo(new[] { "Property1", "Property2", "Property3", "Field1" }));
 
-		[Test]
-		public void ConstructorCanBeResolved() {
-			Assert.Fail("TODO");
+				var p1 = namedArgs["Property1"].Value;
+				Assert.That(p1.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(p1.ConstantValue, Is.InstanceOf<string>());
+				Assert.That(p1.ConstantValue, Is.EqualTo("Property 1 value"));
+
+				var p2 = namedArgs["Property2"].Value;
+				Assert.That(p2.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Int32)));
+				Assert.That(p2.ConstantValue, Is.InstanceOf<int>());
+				Assert.That(p2.ConstantValue, Is.EqualTo(347));
+
+				var p3 = namedArgs["Property3"].Value;
+				Assert.That(p3.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(p3.ConstantValue, Is.Null);
+
+				var f1 = namedArgs["Field1"].Value;
+				Assert.That(f1.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Byte)));
+				Assert.That(f1.ConstantValue, Is.InstanceOf<byte>());
+				Assert.That(f1.ConstantValue, Is.EqualTo(12));
+			});
 		}
 	}
 }
