@@ -3,53 +3,54 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Mono.Cecil;
 
 namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 	public class CecilMetadataWriteBackEngine : IMetadataWriteBackEngine {
-		private class CecilBackedAttributeCollection : ICollection<IAttribute> {
-			private class SimpleAttribute : IAttribute {
-				private readonly IType _attributeType;
-				private readonly IMethod _constructor;
-				private readonly IList<ResolveResult> _positionalArguments;
-				private readonly IList<KeyValuePair<IMember, ResolveResult>> _namedArguments;
+		private class SimpleAttribute : IAttribute {
+			private readonly IType _attributeType;
+			private readonly IMethod _constructor;
+			private readonly IList<ResolveResult> _positionalArguments;
+			private readonly IList<KeyValuePair<IMember, ResolveResult>> _namedArguments;
 
-				public SimpleAttribute(IType attributeType, IMethod constructor, IList<ResolveResult> positionalArguments, IList<KeyValuePair<IMember, ResolveResult>> namedArguments) {
-					_attributeType       = attributeType;
-					_constructor         = constructor;
-					_positionalArguments = positionalArguments;
-					_namedArguments      = namedArguments;
-				}
-
-				public DomRegion Region { get { return DomRegion.Empty; } }
-
-				public IType AttributeType {
-					get { return _attributeType; }
-				}
-
-				public IMethod Constructor {
-					get { return _constructor; }
-				}
-
-				public IList<ResolveResult> PositionalArguments {
-					get { return _positionalArguments; }
-				}
-
-				public IList<KeyValuePair<IMember, ResolveResult>> NamedArguments {
-					get { return _namedArguments; }
-				}
+			public SimpleAttribute(IType attributeType, IMethod constructor, IList<ResolveResult> positionalArguments, IList<KeyValuePair<IMember, ResolveResult>> namedArguments) {
+				_attributeType       = attributeType;
+				_constructor         = constructor;
+				_positionalArguments = positionalArguments;
+				_namedArguments      = namedArguments;
 			}
 
-			private readonly ICustomAttributeProvider _owner;
-			private readonly IList<IAttribute> _attributes;
-			private bool _isDirty;
+			public DomRegion Region { get { return DomRegion.Empty; } }
 
-			public CecilBackedAttributeCollection(ICompilation compilation, ICustomAttributeProvider owner) {
-				_owner      = owner;
-				_attributes = ConvertAttributes(compilation, owner.CustomAttributes);
-				_isDirty    = false;
+			public IType AttributeType {
+				get { return _attributeType; }
+			}
+
+			public IMethod Constructor {
+				get { return _constructor; }
+			}
+
+			public IList<ResolveResult> PositionalArguments {
+				get { return _positionalArguments; }
+			}
+
+			public IList<KeyValuePair<IMember, ResolveResult>> NamedArguments {
+				get { return _namedArguments; }
+			}
+		}
+
+		private class SimpleAttributeCollection : ICollection<IAttribute> {
+			private readonly IList<IAttribute> _attributes;
+			public bool IsDirty { get; private set; }
+			public ICustomAttributeProvider Entity { get; private set; }
+
+			public SimpleAttributeCollection(ICompilation compilation, ICustomAttributeProvider entity) {
+				Entity      = entity;
+				_attributes = ConvertAttributes(compilation, entity.CustomAttributes);
+				IsDirty     = false;
 			}
 
 			public IEnumerator<IAttribute> GetEnumerator() {
@@ -62,12 +63,12 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 
 			public void Add(IAttribute item) {
 				_attributes.Add(item);
-				_isDirty = true;
+				IsDirty = true;
 			}
 
 			public void Clear() {
 				_attributes.Clear();
-				_isDirty = true;
+				IsDirty = true;
 			}
 
 			public bool Contains(IAttribute item) {
@@ -80,7 +81,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 
 			public bool Remove(IAttribute item) {
 				bool result = _attributes.Remove(item);
-				_isDirty = true;
+				IsDirty = true;
 				return result;
 			}
 
@@ -116,42 +117,71 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 		private readonly AssemblyDefinition _assembly;
 		private readonly ICompilation _compilation;
 		private readonly Dictionary<string, TypeDefinition> _allTypes;
-		private readonly Dictionary<ITypeDefinition, ICollection<IAttribute>> _typeAttributes;
-		private readonly Dictionary<IMember, ICollection<IAttribute>> _memberAttributes;
+		private readonly Dictionary<ITypeDefinition, SimpleAttributeCollection> _typeAttributes;
+		private readonly Dictionary<IMember, SimpleAttributeCollection> _memberAttributes;
+		private readonly CSharpConversions _conversions;
+		private readonly CSharpResolver _resolver;
 
 		public CecilMetadataWriteBackEngine(AssemblyDefinition assembly, ICompilation compilation) {
 			_assembly         = assembly;
 			_compilation      = compilation;
+			_conversions      = CSharpConversions.Get(_compilation);
+			_resolver         = new CSharpResolver(_compilation);
 			_allTypes         = assembly.Modules.SelectMany(m => m.GetTypes()).ToDictionary(t => t.FullName);
-			_typeAttributes   = new Dictionary<ITypeDefinition, ICollection<IAttribute>>();
-			_memberAttributes = new Dictionary<IMember, ICollection<IAttribute>>();
+			_typeAttributes   = new Dictionary<ITypeDefinition, SimpleAttributeCollection>();
+			_memberAttributes = new Dictionary<IMember, SimpleAttributeCollection>();
 		}
 
 		public ICollection<IAttribute> GetAttributes(ITypeDefinition type) {
-			ICollection<IAttribute> result;
+			SimpleAttributeCollection result;
 			if (!_typeAttributes.TryGetValue(type, out result))
-				_typeAttributes[type] = result = new CecilBackedAttributeCollection(_compilation, _allTypes[type.ReflectionName]);
+				_typeAttributes[type] = result = new SimpleAttributeCollection(_compilation, _allTypes[type.ReflectionName]);
 			return result;
 		}
 
 		public ICollection<IAttribute> GetAttributes(IMember member) {
-			ICollection<IAttribute> result;
+			SimpleAttributeCollection result;
 			if (!_memberAttributes.TryGetValue(member, out result)) {
 				var type = _allTypes[member.DeclaringTypeDefinition.ReflectionName];
 				var cecilMember = FindMember(type, member);
-				_memberAttributes[member] = result = new CecilBackedAttributeCollection(_compilation, cecilMember);
+				_memberAttributes[member] = result = new SimpleAttributeCollection(_compilation, cecilMember);
 			}
 			return result;
 		}
 
-		public IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IEnumerable<object> positionalArguments, IEnumerable<object> namedArguments) {
-			throw new NotImplementedException();
+		public IAttribute CreateAttribute(IAssembly attributeAssembly, string attributeTypeName, IEnumerable<Tuple<IType, object>> positionalArguments, IEnumerable<Tuple<string, object>> namedArguments) {
+			var attrType = attributeAssembly.GetAllTypeDefinitions().SingleOrDefault(t => t.ReflectionName == attributeTypeName);
+			if (attrType == null)
+				throw new ArgumentException("Could not find the type " + attributeTypeName + " in the assembly " + attributeAssembly.AssemblyName + ".");
+
+			var or = new OverloadResolution(_compilation, positionalArguments != null ? positionalArguments.Select(a => new ConstantResolveResult(a.Item1, a.Item2)).ToArray<ResolveResult>() : new ResolveResult[0], conversions: _conversions);
+			foreach (var c in attrType.GetConstructors())
+				or.AddCandidate(c);
+			if (!or.FoundApplicableCandidate)
+				throw new ArgumentException("Could not find a constructor for the attribute which can be invoked with the suplied positional arguments");
+			var actualPosArgs = or.CreateResolveResult(null).Arguments.ToList();
+
+			var actualNamedArgs = new List<KeyValuePair<IMember, ResolveResult>>();
+			if (namedArguments != null) {
+				foreach (var a in namedArguments) {
+					var m = (IMember)attrType.Properties.SingleOrDefault(p => p.Name == a.Item1) ?? attrType.Fields.SingleOrDefault(f => f.Name == a.Item1);
+					if (m == null)
+						throw new ArgumentException("Could not find member " + a.Item1);
+					var sourceType = (a.Item2 != null ? _compilation.FindType(a.Item2.GetType()) : m.ReturnType);
+					var conv = _conversions.StandardImplicitConversion(sourceType, m.ReturnType);
+					if (!conv.IsValid)
+						throw new ArgumentException("Could not convert type " + sourceType.FullName + " to " + m.ReturnType.FullName + " for named argument " + a.Item1);
+					actualNamedArgs.Add(new KeyValuePair<IMember, ResolveResult>(m, _resolver.ResolveCast(m.ReturnType, new ConstantResolveResult(sourceType, a.Item2))));
+				}
+			}
+			
+			return new SimpleAttribute(attrType, (IMethod)or.BestCandidate, actualPosArgs, actualNamedArgs);
 		}
 
-		private string GetTypeName(IType type) {
+		private string GetTypeNameForExplicitImplementation(IType type) {
 			if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;
-				return GetTypeName(pt.GetDefinition()) + "<" + string.Join(",", pt.TypeArguments.Select(GetTypeName)) + ">";
+				return GetTypeNameForExplicitImplementation(pt.GetDefinition()) + "<" + string.Join(",", pt.TypeArguments.Select(GetTypeNameForExplicitImplementation)) + ">";
 			}
 			else {
 				return type.FullName;
@@ -200,7 +230,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					if (member.IsExplicitInterfaceImplementation) {
 						if (member.ImplementedInterfaceMembers.Count > 1)
 							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
-						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
+						name = GetTypeNameForExplicitImplementation(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
 					}
 					else {
 						name = member.Name;
@@ -242,7 +272,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					if (member.IsExplicitInterfaceImplementation) {
 						if (member.ImplementedInterfaceMembers.Count > 1)
 							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
-						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
+						name = GetTypeNameForExplicitImplementation(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
 					}
 					else {
 						name = member.Name;
@@ -258,7 +288,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					if (member.IsExplicitInterfaceImplementation) {
 						if (member.ImplementedInterfaceMembers.Count > 1)
 							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
-						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
+						name = GetTypeNameForExplicitImplementation(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
 					}
 					else {
 						name = member.Name;
@@ -275,7 +305,7 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 					if (member.IsExplicitInterfaceImplementation) {
 						if (member.ImplementedInterfaceMembers.Count > 1)
 							throw new NotSupportedException(type.FullName + "." + member.Name + " implements more than one member explicitly.");
-						name = GetTypeName(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
+						name = GetTypeNameForExplicitImplementation(member.ImplementedInterfaceMembers[0].DeclaringType) + "." + member.ImplementedInterfaceMembers[0].Name;
 					}
 					else {
 						name = member.Name;
@@ -296,6 +326,25 @@ namespace Saltarelle.Compiler.MetadataWriteBackEngine {
 				default:
 					throw new NotSupportedException("Entity type " + member.EntityType + " is not supported.");
 			}
+		}
+
+		private CustomAttribute ConvertAttribute(IAttribute a) {
+//			var ctor = new MethodReference(".ctor", new TypeReference("System", "Void"), new TypeReference());
+//			var result = new CustomAttribute(new MethodReference(
+			return null;
+		}
+
+		private void ApplyAttributes(ICustomAttributeProvider entity, ICollection<IAttribute> newAttributes) {
+			entity.CustomAttributes.Clear();
+			if (newAttributes != null) {
+				foreach (var a in newAttributes)
+					entity.CustomAttributes.Add(ConvertAttribute(a));
+			}
+		}
+
+		public void Apply() {
+			foreach (var v in _typeAttributes.Values.Concat(_memberAttributes.Values).Where(v => v.IsDirty))
+				ApplyAttributes(v.Entity, v);
 		}
 	}
 }

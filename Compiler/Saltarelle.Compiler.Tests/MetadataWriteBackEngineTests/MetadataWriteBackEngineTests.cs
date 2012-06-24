@@ -584,5 +584,86 @@ namespace Saltarelle.Compiler.Tests.MetadataWriteBackEngineTests {
 				Assert.That(f1.ConstantValue, Is.EqualTo(12));
 			});
 		}
+
+		[Test]
+		public void CreateAttributeCanCreateAnAttributeWithNamedAndPositionalArguments() {
+			RunTest((engine, compilation) => {
+				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int32), (object)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)"Test attribute") }, new[] { Tuple.Create("Property2", (object)567), Tuple.Create("Field1", (object)(byte)34) });
+				var attrType = ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation);
+				Assert.That(a.AttributeType, Is.EqualTo(attrType));
+				Assert.That(a.Constructor, Is.EqualTo(attrType.GetConstructors().Single(c => c.Parameters.Count == 2 && c.Parameters[0].Type == compilation.FindType(KnownTypeCode.Int32) && c.Parameters[1].Type == compilation.FindType(KnownTypeCode.String))));
+				Assert.That(a.PositionalArguments[0].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Int32)));
+				Assert.That(a.PositionalArguments[0].ConstantValue, Is.InstanceOf<int>());
+				Assert.That(a.PositionalArguments[0].ConstantValue, Is.EqualTo(352));
+				Assert.That(a.PositionalArguments[1].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(a.PositionalArguments[1].ConstantValue, Is.InstanceOf<string>());
+				Assert.That(a.PositionalArguments[1].ConstantValue, Is.EqualTo("Test attribute"));
+
+				var namedArgs = a.NamedArguments.ToDictionary(na => na.Key.Name);
+				Assert.That(namedArgs.Keys, Is.EquivalentTo(new[] { "Property2", "Field1" }));
+				Assert.That(namedArgs["Property2"].Key, Is.EqualTo(attrType.GetProperties().Single(p => p.Name == "Property2")));
+				Assert.That(namedArgs["Property2"].Value.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Int32)));
+				Assert.That(namedArgs["Property2"].Value.ConstantValue, Is.InstanceOf<int>());
+				Assert.That(namedArgs["Property2"].Value.ConstantValue, Is.EqualTo(567));
+				Assert.That(namedArgs["Field1"].Key, Is.EqualTo(attrType.GetFields().Single(p => p.Name == "Field1")));
+				Assert.That(namedArgs["Field1"].Value.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Byte)));
+				Assert.That(namedArgs["Field1"].Value.ConstantValue, Is.InstanceOf<byte>());
+				Assert.That(namedArgs["Field1"].Value.ConstantValue, Is.EqualTo(34));
+			});
+		}
+
+		[Test]
+		public void CreateAttributeWorksWhenNamedOrPositionalArgIsNull() {
+			RunTest((engine, compilation) => {
+				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int32), (object)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)null) }, new[] { Tuple.Create("Property1", (object)null) });
+				var attrType = ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation);
+				Assert.That(a.AttributeType, Is.EqualTo(attrType));
+				Assert.That(a.Constructor, Is.EqualTo(attrType.GetConstructors().Single(c => c.Parameters.Count == 2 && c.Parameters[0].Type == compilation.FindType(KnownTypeCode.Int32) && c.Parameters[1].Type == compilation.FindType(KnownTypeCode.String))));
+				Assert.That(a.PositionalArguments[0].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Int32)));
+				Assert.That(a.PositionalArguments[0].ConstantValue, Is.InstanceOf<int>());
+				Assert.That(a.PositionalArguments[0].ConstantValue, Is.EqualTo(352));
+				Assert.That(a.PositionalArguments[1].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(a.PositionalArguments[1].ConstantValue, Is.Null);
+
+				var namedArgs = a.NamedArguments.ToDictionary(na => na.Key.Name);
+				Assert.That(namedArgs.Keys, Is.EquivalentTo(new[] { "Property1" }));
+				Assert.That(namedArgs["Property1"].Key, Is.EqualTo(attrType.GetProperties().Single(p => p.Name == "Property1")));
+				Assert.That(namedArgs["Property1"].Value.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(namedArgs["Property1"].Value.ConstantValue, Is.Null);
+			});
+		}
+
+		[Test]
+		public void CreateAttributeCanLookupTheCorrectConstructorWithOverloadResolution() {
+			RunTest((engine, compilation) => {
+				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, new[] { Tuple.Create(compilation.FindType(KnownTypeCode.Int16), (object)352), Tuple.Create(compilation.FindType(KnownTypeCode.String), (object)null) }, null);
+				var attrType = ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation);
+				Assert.That(a.AttributeType, Is.EqualTo(attrType));
+				Assert.That(a.Constructor, Is.EqualTo(attrType.GetConstructors().Single(c => c.Parameters.Count == 2 && c.Parameters[0].Type == compilation.FindType(KnownTypeCode.Int32) && c.Parameters[1].Type == compilation.FindType(KnownTypeCode.String))));
+				Assert.That(a.PositionalArguments[0].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Int32)));
+				Assert.That(a.PositionalArguments[0].ConstantValue, Is.InstanceOf<int>());
+				Assert.That(a.PositionalArguments[0].ConstantValue, Is.EqualTo(352));
+				Assert.That(a.PositionalArguments[1].Type, Is.EqualTo(compilation.FindType(KnownTypeCode.String)));
+				Assert.That(a.PositionalArguments[1].ConstantValue, Is.Null);
+			});
+		}
+
+		[Test]
+		public void CreateAttributeCanPerformImplicitConversionOnNamedArguments() {
+			RunTest((engine, compilation) => {
+				var a = engine.CreateAttribute(compilation.ReferencedAssemblies[1], typeof(ComplexAttribute).FullName, null, new[] { Tuple.Create("Property2", (object)(short)567) });
+				var attrType = ReflectionHelper.ParseReflectionName(typeof(ComplexAttribute).FullName).Resolve(compilation);
+				Assert.That(a.AttributeType, Is.EqualTo(attrType));
+				Assert.That(a.Constructor, Is.EqualTo(attrType.GetConstructors().Single(c => c.Parameters.Count == 0)));
+				Assert.That(a.PositionalArguments, Is.Empty);
+
+				var namedArgs = a.NamedArguments.ToDictionary(na => na.Key.Name);
+				Assert.That(namedArgs.Keys, Is.EquivalentTo(new[] { "Property2" }));
+				Assert.That(namedArgs["Property2"].Key, Is.EqualTo(attrType.GetProperties().Single(p => p.Name == "Property2")));
+				Assert.That(namedArgs["Property2"].Value.Type, Is.EqualTo(compilation.FindType(KnownTypeCode.Int32)));
+				Assert.That(namedArgs["Property2"].Value.ConstantValue, Is.InstanceOf<int>());
+				Assert.That(namedArgs["Property2"].Value.ConstantValue, Is.EqualTo(567));
+			});
+		}
 	}
 }
