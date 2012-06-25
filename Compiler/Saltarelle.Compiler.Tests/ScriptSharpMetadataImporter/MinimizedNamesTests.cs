@@ -175,7 +175,7 @@ public class D {
 		}
 
 		[Test]
-		public void MinimizationOfInterfacesGeneratesNamesThatAreUniqueWithinTheAssemblyButDoesNotTouchPublicInterfaces() {
+		public void MinimizationHasNoEffectOnInterfaces() {
 			Prepare(
 @"interface I1 {
 	void SomeMethod();
@@ -190,16 +190,13 @@ public class D {
 	event System.EventHandler Evt2;
 }
 
-interface I2 {
+public interface I2 {
 	void SomeMethod();
-	void SomeMethod(int x);
-	void SomeMethod2();
 
 	int Prop1 { get; set; }
 	int this[int x] { get; set; }
 
 	event System.EventHandler Evt1;
-	event System.EventHandler Evt3;
 }
 
 public interface I3 {
@@ -209,36 +206,34 @@ public interface I3 {
 	int this[int x] { get; set; }
 
 	event System.EventHandler Evt1;
-}
-
-public interface I4 {
-	void SomeMethod();
-
-	int Prop1 { get; set; }
-	int this[int x] { get; set; }
-
-	event System.EventHandler Evt1;
 }");
-			var minimized =         FindMethods("I1.SomeMethod")
-			                .Concat(FindMethods("I1.SomeMethod2"))
-			                .Concat(FindMethods("I2.SomeMethod"))
-			                .Concat(FindMethods("I2.SomeMethod2"))
-			                .Select(m => m.Item2.Name)
-			                .Concat(new[] { FindProperty("I1.Prop1").GetMethod.Name, FindProperty("I1.Prop1").SetMethod.Name,
-			                                FindProperty("I1.Prop2").GetMethod.Name, FindProperty("I1.Prop2").SetMethod.Name,
-			                                FindIndexer("I1", 1).GetMethod.Name, FindIndexer("I1", 1).SetMethod.Name,
-			                                FindEvent("I1.Evt1").AddMethod.Name, FindEvent("I1.Evt1").RemoveMethod.Name,
-			                                FindEvent("I1.Evt2").AddMethod.Name, FindEvent("I1.Evt2").RemoveMethod.Name,
-			                                FindProperty("I2.Prop1").GetMethod.Name, FindProperty("I2.Prop1").SetMethod.Name,
-			                                FindIndexer("I2", 1).GetMethod.Name, FindIndexer("I2", 1).SetMethod.Name,
-			                                FindEvent("I2.Evt1").AddMethod.Name, FindEvent("I2.Evt1").RemoveMethod.Name,
-			                                FindEvent("I2.Evt3").AddMethod.Name, FindEvent("I2.Evt3").RemoveMethod.Name,
-			                        })
-			                .OrderBy(x => x)
-			                .ToList();
 
-			Assert.That(minimized, Is.EquivalentTo(new[] { "$I1", "$I2", "$I3", "$I4", "$I5", "$I6", "$I7", "$I8", "$I9", "$Ia", "$Ib", "$Ic", "$Id", "$Ie", "$If", "$Ig", "$Ih", "$Ii", "$Ij", "$Ik", "$Il", "$Im", "$In", "$Io" }));
 
+			Assert.That(FindMethod("I1.SomeMethod", 0).Name, Is.EqualTo("$someMethod"));
+			Assert.That(FindMethod("I1.SomeMethod", 1).Name, Is.EqualTo("$someMethod$1"));
+			Assert.That(FindMethod("I1.SomeMethod2").Name, Is.EqualTo("$someMethod2"));
+
+			Assert.That(FindProperty("I1.Prop1").GetMethod.Name, Is.EqualTo("get_$prop1"));
+			Assert.That(FindProperty("I1.Prop1").SetMethod.Name, Is.EqualTo("set_$prop1"));
+			Assert.That(FindProperty("I1.Prop2").GetMethod.Name, Is.EqualTo("get_$prop2"));
+			Assert.That(FindProperty("I1.Prop2").SetMethod.Name, Is.EqualTo("set_$prop2"));
+			Assert.That(FindIndexer("I1", 1).GetMethod.Name, Is.EqualTo("get_$item"));
+			Assert.That(FindIndexer("I1", 1).SetMethod.Name, Is.EqualTo("set_$item"));
+
+			Assert.That(FindEvent("I1.Evt1").AddMethod.Name, Is.EqualTo("add_$evt1"));
+			Assert.That(FindEvent("I1.Evt1").RemoveMethod.Name, Is.EqualTo("remove_$evt1"));
+			Assert.That(FindEvent("I1.Evt2").AddMethod.Name, Is.EqualTo("add_$evt2"));
+			Assert.That(FindEvent("I1.Evt2").RemoveMethod.Name, Is.EqualTo("remove_$evt2"));
+
+			Assert.That(FindMethod("I2.SomeMethod").Name, Is.EqualTo("someMethod"));
+			Assert.That(FindProperty("I2.Prop1").GetMethod.Name, Is.EqualTo("get_prop1"));
+			Assert.That(FindProperty("I2.Prop1").SetMethod.Name, Is.EqualTo("set_prop1"));
+			Assert.That(FindIndexer("I2", 1).GetMethod.Name, Is.EqualTo("get_item"));
+			Assert.That(FindIndexer("I2", 1).SetMethod.Name, Is.EqualTo("set_item"));
+			Assert.That(FindEvent("I2.Evt1").AddMethod.Name, Is.EqualTo("add_evt1"));
+			Assert.That(FindEvent("I2.Evt1").RemoveMethod.Name, Is.EqualTo("remove_evt1"));
+
+			Assert.That(FindMethod("I3.SomeMethod").Name, Is.EqualTo("someMethod"));
 			Assert.That(FindMethod("I3.SomeMethod").Name, Is.EqualTo("someMethod"));
 			Assert.That(FindProperty("I3.Prop1").GetMethod.Name, Is.EqualTo("get_prop1"));
 			Assert.That(FindProperty("I3.Prop1").SetMethod.Name, Is.EqualTo("set_prop1"));
@@ -246,15 +241,6 @@ public interface I4 {
 			Assert.That(FindIndexer("I3", 1).SetMethod.Name, Is.EqualTo("set_item"));
 			Assert.That(FindEvent("I3.Evt1").AddMethod.Name, Is.EqualTo("add_evt1"));
 			Assert.That(FindEvent("I3.Evt1").RemoveMethod.Name, Is.EqualTo("remove_evt1"));
-
-			Assert.That(FindMethod("I4.SomeMethod").Name, Is.EqualTo("someMethod"));
-			Assert.That(FindMethod("I4.SomeMethod").Name, Is.EqualTo("someMethod"));
-			Assert.That(FindProperty("I4.Prop1").GetMethod.Name, Is.EqualTo("get_prop1"));
-			Assert.That(FindProperty("I4.Prop1").SetMethod.Name, Is.EqualTo("set_prop1"));
-			Assert.That(FindIndexer("I4", 1).GetMethod.Name, Is.EqualTo("get_item"));
-			Assert.That(FindIndexer("I4", 1).SetMethod.Name, Is.EqualTo("set_item"));
-			Assert.That(FindEvent("I4.Evt1").AddMethod.Name, Is.EqualTo("add_evt1"));
-			Assert.That(FindEvent("I4.Evt1").RemoveMethod.Name, Is.EqualTo("remove_evt1"));
 		}
 	}
 }

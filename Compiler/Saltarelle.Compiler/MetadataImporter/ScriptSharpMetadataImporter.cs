@@ -136,7 +136,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IEvent, string> _eventBackingFieldNames;
 		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
 		private IErrorReporter _errorReporter;
-		private Dictionary<IAssembly, int> _internalInterfaceMemberCountPerAssembly;
 		private IType _systemObject;
 		private IType _systemRecord;
 
@@ -451,7 +450,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return Tuple.Create(MakeCamelCase(member.Name), false);
 			}
 			else {
-				if (_minimizeNames)
+				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
 					return Tuple.Create((string)null, false);
 				else
 					return Tuple.Create("$" + MakeCamelCase(member.Name), false);
@@ -499,24 +498,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_instanceMemberNamesByType[typeDefinition] = instanceMembers;
 		}
 
-		private string GetUniqueName(IMember member, string preferredName, HashSet<string> usedNames) {
+		private string GetUniqueName(string preferredName, HashSet<string> usedNames) {
 			// The name was not explicitly specified, so ensure that we have a unique name.
-			if (preferredName == null && member.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-				// Minimized interface names need to be unique within the assembly, otherwise we have a very high risk of collisions (100% when a type implements more than one internal interface).
-				int c;
-				_internalInterfaceMemberCountPerAssembly.TryGetValue(member.ParentAssembly, out c);
-				_internalInterfaceMemberCountPerAssembly[member.ParentAssembly] = ++c;
-				return "$I" + EncodeNumber(c, true);
+			string name = preferredName;
+			int i = (name == null ? 0 : 1);
+			while (name == null || usedNames.Contains(name)) {
+				name = preferredName + "$" + EncodeNumber(i, true);
+				i++;
 			}
-			else {
-				string name = preferredName;
-				int i = (name == null ? 0 : 1);
-				while (name == null || usedNames.Contains(name)) {
-					name = preferredName + "$" + EncodeNumber(i, true);
-					i++;
-				}
-				return name;
-			}
+			return name;
 		}
 
 		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, HashSet<string> usedNames, ICompilation compilation) {
@@ -575,7 +565,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				else {
 					string name;
 					if (_minimizeNames && !Utils.IsPublic(constructor)) {
-						name = GetUniqueName(constructor, null, usedNames);
+						name = GetUniqueName(null, usedNames);
 					}
 					else {
 						int i = 1;
@@ -675,7 +665,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (property.CanGet) {
 				var getterName = DeterminePreferredMemberName(property.Getter);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName(property, "get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames, compilation);
 				getter = _methodSemantics[property.Getter];
@@ -687,7 +677,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (property.CanSet) {
 				var setterName = DeterminePreferredMemberName(property.Setter);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName(property, "set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames, compilation);
 				setter = _methodSemantics[property.Setter];
@@ -898,7 +888,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						return;
 					}
 					else {
-						string name = nameSpecified ? preferredName : GetUniqueName(method, preferredName, usedNames);
+						string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 						usedNames.Add(name);
 						if (_typeSemantics[method.DeclaringTypeDefinition].IsRecord && !method.IsStatic)
 							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
@@ -924,7 +914,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (evt.CanAdd) {
 				var getterName = DeterminePreferredMemberName(evt.AddAccessor);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName(evt, "add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames, compilation);
 				adder = _methodSemantics[evt.AddAccessor];
@@ -936,7 +926,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (evt.CanRemove) {
 				var setterName = DeterminePreferredMemberName(evt.RemoveAccessor);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName(evt, "remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames, compilation);
 				remover = _methodSemantics[evt.RemoveAccessor];
@@ -957,7 +947,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_fieldSemantics[field] = FieldScriptSemantics.Field("X");
 			}
 			else {
-				string name = nameSpecified ? preferredName : GetUniqueName(field, preferredName, usedNames);
+				string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 				usedNames.Add(name);
 				if (_typeSemantics[field.DeclaringTypeDefinition].IsNamedValues) {
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(name, name);
@@ -983,7 +973,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
 			_systemRecord = ReflectionHelper.ParseReflectionName("System.Record").Resolve(mainAssembly.Compilation.TypeResolveContext);
 			_errorReporter = errorReporter;
-			_internalInterfaceMemberCountPerAssembly = new Dictionary<IAssembly, int>();
 			var l = types.ToList();
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
 			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();

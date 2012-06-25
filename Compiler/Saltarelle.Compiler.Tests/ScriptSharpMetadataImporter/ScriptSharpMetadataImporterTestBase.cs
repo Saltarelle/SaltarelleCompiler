@@ -69,6 +69,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			return FindMethods(name).Single().Item2;
 		}
 
+		protected MethodScriptSemantics FindMethod(string name, int parameterCount) {
+			return FindMethods(name).Single(m => m.Item1.Parameters.Count == parameterCount).Item2;
+		}
+
 		protected PropertyScriptSemantics FindProperty(string name) {
 			return FindMembers(name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => Metadata.GetPropertySemantics(p)).Single();
 		}
