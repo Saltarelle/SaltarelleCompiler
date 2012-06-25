@@ -1200,17 +1200,17 @@ namespace Saltarelle.Compiler.Compiler {
 			bool captureThis = (_thisAlias == null && f.DirectlyOrIndirectlyUsesThis);
 			var newContext = new NestedFunctionContext(capturedByRefVariables);
 
-			JsBlockStatement jsBody;
+			JsFunctionDefinitionExpression def;
 			if (f.BodyNode is Statement) {
-				jsBody = _createInnerCompiler(newContext).Compile((Statement)f.BodyNode);
+				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode);
 			}
 			else {
 				var result = CloneAndCompile(rr.Body, true, nestedFunctionContext: newContext);
 				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(result.Expression) : (JsStatement)new JsExpressionStatement(result.Expression));
-				jsBody = new JsBlockStatement(result.AdditionalStatements.Concat(new[] { lastStatement }));
+				var jsBody = new JsBlockStatement(MethodCompiler.FixByRefParameters(rr.Parameters, _variables).Concat(result.AdditionalStatements).Concat(new[] { lastStatement }));
+				def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
 			}
 
-			var def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
 			JsExpression captureObject;
 			if (newContext.CapturedByRefVariables.Count > 0) {
 				var toCapture = newContext.CapturedByRefVariables.Select(v => new JsObjectLiteralProperty(_variables[v].Name, CompileLocal(v, true))).ToList();

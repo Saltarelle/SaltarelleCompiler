@@ -62,6 +62,24 @@ namespace Saltarelle.Compiler.Compiler {
 			_result                     = new List<JsStatement>();
 		}
 
+		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body) {
+			_filename = body.GetRegion().FileName;
+			try {
+				_result = MethodCompiler.FixByRefParameters(parameters, variables);
+				VisitChildren(body);
+				JsBlockStatement jsbody;
+				if (_result.Count == 1 && _result[0] is JsBlockStatement)
+					jsbody = (JsBlockStatement)_result[0];
+				else
+					jsbody = new JsBlockStatement(_result);
+	            return JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), jsbody);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex, _filename, _location);
+	            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement); 
+			}
+		}
+
 		public JsBlockStatement Compile(Statement statement) {
 			_filename = statement.GetRegion().FileName;
 			try {

@@ -1,6 +1,5 @@
 TODO:
 v1:
-Parameters using byref semantics
 Static constructors and fields (and field init)
 Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/struct).
 Verify that all directly or indirectly dependent assemblies are referenced.

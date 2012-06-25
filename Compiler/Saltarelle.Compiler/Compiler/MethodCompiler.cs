@@ -56,9 +56,9 @@ namespace Saltarelle.Compiler.Compiler {
 			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, usedNames, null, method);
 		}
 
-        public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, Statement body, IMethod method, MethodScriptSemantics impl) {
+        public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
 			CreateCompilationContext(entity, method, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null));
-            return JsExpression.FunctionDefinition(method.Parameters.Select(p => variables[p].Name), _statementCompiler.Compile(body), null);
+            return _statementCompiler.CompileMethod(method.Parameters, variables, body);
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
@@ -68,6 +68,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
 				var body = new List<JsStatement>();
+				body.AddRange(FixByRefParameters(constructor.Parameters, variables));
 
 				var systemObject = _compilation.FindType(KnownTypeCode.Object);
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
@@ -240,6 +241,17 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.InternalError(ex, @event.Region);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
+		}
+
+		public static List<JsStatement> FixByRefParameters(IEnumerable<IParameter> parameters, IDictionary<IVariable, VariableData> variables) {
+			List<JsStatement> result = null;
+			foreach (var p in parameters) {
+				if (!p.IsOut && !p.IsRef && variables[p].UseByRefSemantics) {
+					result = result ?? new List<JsStatement>();
+					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(variables[p].Name), JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", JsExpression.Identifier(variables[p].Name))))));
+				}
+			}
+			return result ?? new List<JsStatement>();
 		}
     }
 }

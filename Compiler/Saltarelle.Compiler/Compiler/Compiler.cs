@@ -221,7 +221,7 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-        private void MaybeCompileAndAddMethodToType(JsClass jsClass, EntityDeclaration node, Statement body, IMethod method, MethodScriptSemantics options) {
+        private void MaybeCompileAndAddMethodToType(JsClass jsClass, EntityDeclaration node, BlockStatement body, IMethod method, MethodScriptSemantics options) {
             if (options.GenerateCode) {
                 var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(tp)).ToList();
 				JsMethod jsMethod;
@@ -275,7 +275,7 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-        private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, Statement body, IMethod method, MethodScriptSemantics options) {
+        private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, BlockStatement body, IMethod method, MethodScriptSemantics options) {
             var mc = CreateMethodCompiler();
             var result = mc.CompileMethod(node, body, method, options);
             OnMethodCompiled(method, result, mc);
