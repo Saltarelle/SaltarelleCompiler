@@ -257,5 +257,15 @@ namespace Saltarelle.Compiler.Compiler {
 			VisitChildResolveResults(rr, data);
 			return null;
 		}
+
+		public virtual object VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, object data) {
+			VisitChildResolveResults(rr, data);
+			return null;
+		}
+
+		public virtual object VisitDynamicMemberResolveResult(DynamicMemberResolveResult rr, object data) {
+			VisitChildResolveResults(rr, data);
+			return null;
+		}
     }
 }

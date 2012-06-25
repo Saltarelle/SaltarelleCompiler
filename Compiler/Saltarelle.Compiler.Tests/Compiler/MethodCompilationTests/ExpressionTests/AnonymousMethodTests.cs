@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]

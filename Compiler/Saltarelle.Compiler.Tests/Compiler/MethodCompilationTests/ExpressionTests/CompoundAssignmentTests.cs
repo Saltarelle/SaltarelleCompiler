@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
-using Saltarelle.Compiler.Tests.Compiler;
-using Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests;
 
-namespace Saltarelle.Compiler.Tests.MethodCompilationTests.ExpressionTests {
+namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
 	public class CompoundAssignmentTests : MethodCompilerTestBase {
 		protected void AssertCorrectForBulkOperators(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
@@ -365,20 +360,6 @@ public void M() {
 	// END
 }",
 @"	{C}.$a += {C}.$b += $i;
-");
-		}
-
-		[Test]
-		public void DivisionCompoundAssignmentWorksForLocalDoubles() {
-			AssertCorrectForBulkOperators(
-@"public void M() {
-	int i = 0, j = 1;
-	// BEGIN
-	i += j;
-	// END
-}
-",
-@"	$i += $j;
 ");
 		}
 
@@ -971,6 +952,105 @@ class D : B {
 }",
 @"	$CallBase({B}, 'set_$P', [], [this, $CallBase({B}, 'get_$P', [], [this]) + 10]);
 ", addSkeleton: false);
+		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicMemberWorks() {
+			AssertCorrectForBulkOperators(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d.someField += 123;
+	// END
+}",
+@"	$d.someField += 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d.someField /= 123;
+	// END
+}",
+@"	$d.someField /= 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d.someField >>= 123;
+	// END
+}",
+@"	$d.someField >>= 123;
+");
+		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicObjectWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d += 123;
+	// END
+}",
+@"	$d += 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d /= 123;
+	// END
+}",
+@"	$d /= 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d >>= 123;
+	// END
+}",
+@"	$d >>= 123;
+");
+		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicIndexingWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d[""X""] += 123;
+	// END
+}",
+@"	$d['X'] += 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d[""X""] /= 123;
+	// END
+}",
+@"	$d['X'] /= 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d[""X""] >>= 123;
+	// END
+}",
+@"	$d['X'] >>= 123;
+");
 		}
 	}
 }

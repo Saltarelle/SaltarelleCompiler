@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
@@ -365,6 +364,116 @@ public void M() {
 	// END
 }",
 @"	var $c = {Delegate}.$Remove($a, $b);
+");
+		}
+
+		[Test]
+		public void BinaryOperatorsWorkForDynamicMember() {
+			AssertCorrectForBulkOperators(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d.someField + 123;
+	// END
+}",
+@"	var $i = $d.someField + 123;
+", true);
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d.someField / 123;
+	// END
+}",
+@"	var $i = $d.someField / 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d.someField ?? 123;
+	// END
+}",
+@"	var $i = $Coalesce($d.someField, 123);
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	bool b = false;
+	// BEGIN
+	var i = d.someField && $b;
+	// END
+}",
+@"	var $i = $d.someField && $b;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	bool b = false;
+	// BEGIN
+	var i = d.someField || $b;
+	// END
+}",
+@"	var $i = $d.someField || $b;
+");
+		}
+
+		[Test]
+		public void BinaryOperatorsWorkForDynamicObject() {
+			AssertCorrectForBulkOperators(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d + 123;
+	// END
+}",
+@"	var $i = $d + 123;
+", true);
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d / 123;
+	// END
+}",
+@"	var $i = $d / 123;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d ?? 123;
+	// END
+}",
+@"	var $i = $Coalesce($d, 123);
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	bool b = false;
+	// BEGIN
+	var i = d && b;
+	// END
+}",
+@"	var $i = $d && $b;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	bool b = false;
+	// BEGIN
+	var i = d || b;
+	// END
+}",
+@"	var $i = $d || $b;
 ");
 		}
 	}

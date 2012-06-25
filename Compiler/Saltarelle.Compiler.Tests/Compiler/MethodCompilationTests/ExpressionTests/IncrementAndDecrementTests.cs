@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
@@ -35,6 +34,90 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTe
 }
 ",
 @"	$i++;
+");
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicMembers() {
+			AssertCorrectForBoth(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	++d.someMember;
+	// END
+}
+",
+@"	++$d.someMember;
+");
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicMembers() {
+			AssertCorrectForBoth(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d.someMember++;
+	// END
+}
+",
+@"	$d.someMember++;
+");
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicObjects() {
+			AssertCorrectForBoth(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	++d;
+	// END
+}
+",
+@"	++$d;
+");
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicObjects() {
+			AssertCorrectForBoth(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d++;
+	// END
+}
+",
+@"	$d++;
+");
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicIndexers() {
+			AssertCorrectForBoth(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	++d[""X""];
+	// END
+}
+",
+@"	++$d['X'];
+");
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicIndexers() {
+			AssertCorrectForBoth(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d[""X""]++;
+	// END
+}
+",
+@"	$d['X']++;
 ");
 		}
 

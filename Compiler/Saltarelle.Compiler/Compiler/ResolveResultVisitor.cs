@@ -100,5 +100,15 @@ namespace Saltarelle.Compiler.Compiler {
 			VisitChildResolveResults(rr, data);
 			return default(TResult);
 		}
+
+		public virtual TResult VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, TData data) {
+			VisitChildResolveResults(rr, data);
+			return default(TResult);
+		}
+
+		public virtual TResult VisitDynamicMemberResolveResult(DynamicMemberResolveResult rr, TData data) {
+			VisitChildResolveResults(rr, data);
+			return default(TResult);
+		}
 	}
 }

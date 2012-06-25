@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
@@ -454,6 +453,45 @@ class D : B {
 }",
 @"	$CallBase({B}, 'set_$P', [], [this, 10]);
 ", addSkeleton: false);
+		}
+
+		[Test]
+		public void AssignmentToDynamicMemberWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d.someField = 123;
+	// END
+}",
+@"	$d.someField = 123;
+");
+		}
+
+		[Test]
+		public void AssignmentToDynamicObjectWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d = 123;
+	// END
+}",
+@"	$d = 123;
+");
+		}
+
+		[Test]
+		public void AssignmentToDynamicIndexerWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	d[""X""] = 123;
+	// END
+}",
+@"	$d['X'] = 123;
+");
 		}
 	}
 }

@@ -95,6 +95,7 @@ namespace Saltarelle.Compiler {
 			{ 7523, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it is not a normal method.") },
 			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it expands its param array in script.") },
 			{ 7525, Tuple.Create(MessageSeverity.Error, "Error in inline code compilation: {0}.") },
+			{ 7526, Tuple.Create(MessageSeverity.Error, "Dynamic invocations cannot use named arguments.") },
 
 			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },

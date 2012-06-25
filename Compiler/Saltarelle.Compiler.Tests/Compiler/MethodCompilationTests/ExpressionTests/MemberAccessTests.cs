@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
@@ -16,6 +15,19 @@ public void M() {
 	// END
 }",
 @"	var $i = this.$x;
+");
+		}
+
+		[Test]
+		public void ReadingDynamicMemberWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	object o = d.someField;
+	// END
+}",
+@"	var $o = $d.someField;
 ");
 		}
 

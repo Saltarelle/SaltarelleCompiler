@@ -2,7 +2,6 @@
 using FluentAssertions;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
@@ -781,6 +780,120 @@ public void M() {
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
+		}
+
+		[Test]
+		public void InvokingDynamicMemberWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var x = d.someMember(123, ""456"");
+	// END
+}",
+@"	var $x = $d.someMember(123, '456');
+");
+		}
+
+		[Test]
+		public void InvokingDynamicObjectWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d(123, ""456"");
+	// END
+}",
+@"	var $i = $d(123, '456');
+");
+		}
+
+		[Test]
+		public void InvokingDynamicMemberEnsuresArgumentsAreEvaluatedInTheCorrectOrder() {
+			AssertCorrect(
+@"public int P { get; set; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	dynamic d;
+	// BEGIN
+	var x = d(F1(), P = F2());
+	// END
+}",
+@"	var $tmp2 = this.$F1();
+	var $tmp1 = this.$F2();
+	this.set_$P($tmp1);
+	var $x = $d($tmp2, $tmp1);
+");
+		}
+
+		[Test]
+		public void UsingNamedArgumentInInvocationOfDynamicMemberIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void M() {
+		dynamic d = null;
+		d.someMethod(a: 123, b: 465);
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
+		}
+
+		[Test]
+		public void UsingNamedArgumentInInvocationOfDynamicObjectIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void M() {
+		dynamic d = null;
+		d(a: 123, b: 465);
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
+		}
+
+		[Test, Ignore("NRefactory issue, inserts a cast")]
+		public void InvokingMemberWithDynamicArgumentWorks() {
+			AssertCorrect(
+@"class X {
+	public int F(int a, string b) { return 0; }
+	public int F(int a, int b) { return 0; }
+}
+public void M() {
+	dynamic d = null;
+	var x = new X();
+	// BEGIN
+	var a = x.F(123, d);
+	// END
+}",
+@"	var $a = $x.$F(123, $d);
+");
+		}
+
+		[Test, Ignore("NRefactory issue, inserts a cast")]
+		public void InvokingIndexerWithDynamicArgumentWorks() {
+			AssertCorrect(
+@"class X {
+	public int this[int a, string b] { get { return 0; } set {} }
+	public int this[int a, int b] { get { return 0; } set {} }
+}
+
+public void M() {
+	dynamic d = null;
+	var x = new X();
+	// BEGIN
+	var a = x[123, d];
+	// END
+}",
+@"	var $a = $this.get_Item(123, $d);
+");
 		}
 	}
 }

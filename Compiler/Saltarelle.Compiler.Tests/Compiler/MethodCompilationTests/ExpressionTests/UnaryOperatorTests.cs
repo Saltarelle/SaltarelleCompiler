@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Saltarelle.Compiler.Tests.MethodCompilationTests;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
@@ -105,6 +104,92 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTe
 	// END
 }",
 @"	var $b = $Lift(~$a);
+");
+		}
+
+		[Test]
+		public void UnaryOperatorsWorkForDynamicMembers() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = +d.someMember;
+	// END
+}",
+@"	var $i = +$d.someMember;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = -d.someMember;
+	// END
+}",
+@"	var $i = -$d.someMember;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = !d.someMember;
+	// END
+}",
+@"	var $i = !$d.someMember;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = ~d.someMember;
+	// END
+}",
+@"	var $i = ~$d.someMember;
+");
+		}
+
+		[Test]
+		public void UnaryOperatorsWorkForDynamicObjects() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = +d;
+	// END
+}",
+@"	var $i = +$d;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = -d;
+	// END
+}",
+@"	var $i = -$d;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = !d;
+	// END
+}",
+@"	var $i = !$d;
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = ~d;
+	// END
+}",
+@"	var $i = ~$d;
 ");
 		}
 	}

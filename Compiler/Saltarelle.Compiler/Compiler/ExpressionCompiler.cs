@@ -386,7 +386,25 @@ namespace Saltarelle.Compiler.Compiler {
 				valueFactory    = (a, b) => _runtimeLibrary.Lift(oldVF(a, b));
 			}
 
-			if (target is MemberResolveResult) {
+			if (target is LocalResolveResult || target.Type.Kind == TypeKind.Dynamic) {
+				var jsTarget = InnerCompile(target, compoundFactory == null);
+				var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
+				if (compoundFactory != null) {
+					return compoundFactory(jsTarget, jsOtherOperand);
+				}
+				else {
+					if (returnValueIsImportant && returnValueBeforeChange) {
+						var temp = _createTemporaryVariable(target.Type);
+						_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsTarget));
+						_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand))));
+						return JsExpression.Identifier(_variables[temp].Name);
+					}
+					else {
+						return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
+					}
+				}
+			}
+			else if (target is MemberResolveResult) {
 				var mrr = (MemberResolveResult)target;
 
 				if (mrr.Member is IProperty) {
@@ -475,25 +493,6 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Number(0);
 				}
 			}
-			else if (target is LocalResolveResult) {
-				var jsTarget = InnerCompile(target, compoundFactory == null);
-				var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
-				if (compoundFactory != null) {
-					return compoundFactory(jsTarget, jsOtherOperand);
-				}
-				else {
-					if (returnValueIsImportant && returnValueBeforeChange) {
-						var temp = _createTemporaryVariable(target.Type);
-						_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsTarget));
-						_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand))));
-						return JsExpression.Identifier(_variables[temp].Name);
-					}
-					else {
-						return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
-					}
-				}
-
-			}
 			else if (target is ArrayAccessResolveResult) {
 				var arr = (ArrayAccessResolveResult)target;
 				if (arr.Indexes.Count != 1) {
@@ -503,7 +502,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 			}
 			else {
-				_errorReporter.InternalError("Unsupported target of compound assignment: " + target, _filename, _location);
+				_errorReporter.InternalError("Unsupported target of assignment: " + target, _filename, _location);
 				return JsExpression.Number(0);
 			}
 		}
@@ -1418,7 +1417,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsBoxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Type.GetDefinition().KnownTypeCode == KnownTypeCode.ValueType)
+				if (rr.Type.Kind != TypeKind.Dynamic && rr.Type.GetDefinition().KnownTypeCode == KnownTypeCode.ValueType)
 					result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
 				return result;
 			}
@@ -1445,6 +1444,22 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_errorReporter.InternalError("Conversion " + rr.Conversion + " is not implemented", _filename, _location);
 			return JsExpression.Number(0);
+		}
+
+		public override JsExpression VisitDynamicMemberResolveResult(DynamicMemberResolveResult rr, bool data) {
+			return JsExpression.MemberAccess(VisitResolveResult(rr.Target, true), rr.Member);
+		}
+
+		public override JsExpression VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, bool data) {
+			var expressions = new List<JsExpression>() { InnerCompile(rr.Target, false) };
+			foreach (var arg in rr.Arguments) {
+				if (arg.Name != null) {
+					_errorReporter.Message(7526, _filename, _location);
+					return JsExpression.Number(0);
+				}
+				expressions.Add(InnerCompile(arg.Value, false, expressions));
+			}
+			return JsExpression.Invocation(expressions[0], expressions.Skip(1));
 		}
 	}
 }
