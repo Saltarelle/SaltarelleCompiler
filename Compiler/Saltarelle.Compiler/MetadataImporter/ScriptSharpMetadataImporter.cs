@@ -986,7 +986,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_eventBackingFieldNames = new Dictionary<IEvent, string>();
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
 
-			foreach (var t in l.Where(t => t.ParentAssembly == mainAssembly || Utils.IsPublic(t))) {
+			foreach (var t in l) {
 				try {
 					ProcessType(t);
 					ProcessTypeMembers(t, mainAssembly.Compilation);
