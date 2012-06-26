@@ -14,10 +14,11 @@ using System.Linq;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;
+using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
-		private readonly IErrorReporter _errorReporter2;
+		private readonly IErrorReporter _errorReporter;
 
 		private string GetAssemblyName(CompilerOptions options) {
 			if (options.OutputAssemblyPath != null)
@@ -165,7 +166,7 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		public CompilerDriver(IErrorReporter errorReporter) {
-			_errorReporter2 = errorReporter;
+			_errorReporter = errorReporter;
 		}
 
 		public bool Compile(CompilerOptions options) {
@@ -175,7 +176,7 @@ namespace Saltarelle.Compiler.Driver {
 				try {
 					Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
 
-					var er = new ErrorReporterWrapper(_errorReporter2, actualOut);
+					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
 					// Compile the assembly
 					var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile, er);
 					if (er.HasErrors)
@@ -194,7 +195,11 @@ namespace Saltarelle.Compiler.Driver {
 					var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
 					var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
 
-					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), LoadReferences(ctx.Settings.AssemblyReferences), options.DefineConstants);
+					var references = LoadReferences(ctx.Settings.AssemblyReferences);
+					if (references == null)
+						return false;
+
+					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
 					var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);
@@ -203,14 +208,11 @@ namespace Saltarelle.Compiler.Driver {
 					if (er.HasErrors)
 						return false;
 
-					var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly(intermediateAssemblyFile);
-					// TODO: Metadata writeback.
-
 					string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
 					string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
 
 					try {
-						asm.Write(outputAssemblyPath);
+						File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 					}
 					catch (IOException ex) {
 						er.Message(7950, null, TextLocation.Empty, ex.Message);
@@ -242,16 +244,33 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter2.InternalError(ex, null, TextLocation.Empty);
+				_errorReporter.InternalError(ex, null, TextLocation.Empty);
 			}
 
 			return true;
 		}
 
-		private IList<IAssemblyReference> LoadReferences(IEnumerable<string> references) {
-			// Shouldn't result in errors because mcs would have caught it.
+		private IEnumerable<IAssemblyReference> LoadReferences(IEnumerable<string> references) {
 			var loader = new CecilLoader { IncludeInternalMembers = true };
-			return references.Select(f => (IAssemblyReference)loader.LoadAssemblyFile(f)).ToList();
+			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
+
+			var indirectReferences = (  from a in assemblies
+			                            from m in a.Modules
+			                            from r in m.AssemblyReferences
+			                          select r.Name)
+			                         .Distinct();
+
+			var directReferences = from a in assemblies select a.Name.Name;
+
+			var missingReferences = indirectReferences.Except(directReferences).ToList();
+
+			if (missingReferences.Count > 0) {
+				foreach (var r in missingReferences)
+					_errorReporter.Message(7996, DomRegion.Empty, r);
+				return null;
+			}
+
+			return assemblies.Select(a => loader.LoadAssembly(a)).ToList();
 		}
 	}
 }

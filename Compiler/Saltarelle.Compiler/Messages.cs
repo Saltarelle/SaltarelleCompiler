@@ -101,6 +101,7 @@ namespace Saltarelle.Compiler {
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },
 			{ 7952, Tuple.Create(MessageSeverity.Error, "Error writing documentation file: {0}.") },
 
+			{ 7996, Tuple.Create(MessageSeverity.Error, "Indirectly referenced assembly {0} must be referenced.") },
 			{ 7997, Tuple.Create(MessageSeverity.Error, "Unable to resolve the assembly reference {0}.") },
 			{ 7998, Tuple.Create(MessageSeverity.Error, "Use of unsupported feature {0}.") },
 			{ 7999, Tuple.Create(MessageSeverity.Error, "INTERNAL ERROR: {0}. Please report this as an issue on https://github.com/erik-kallen/SaltarelleCompiler/") },

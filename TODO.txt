@@ -1,6 +1,5 @@
 TODO:
 v1:
-Verify that all directly or indirectly dependent assemblies are referenced.
 Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 Cannot declare a static field called Name.
 Sign everything

@@ -627,7 +627,41 @@ public class C1 {
 				var asm = AssemblyDefinition.ReadAssembly("File.dll");
 				Assert.That(asm.Name.PublicKeyToken, Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
 			}, "Key.snk", "File.cs", "File.dll", "File.js");
+		}
 
+		private Tuple<bool, List<Message>> Compile(string source, string baseName, params string[] references) {
+			var er = new MockErrorReporter();
+			var driver = new CompilerDriver(er);
+
+			File.WriteAllText(Path.GetFullPath(baseName + ".cs"), source);
+			var options = new CompilerOptions { References = { new Reference(Common.SSMscorlibPath) },
+				SourceFiles        = { Path.GetFullPath(baseName + ".cs") },
+				OutputAssemblyPath = Path.GetFullPath(baseName + ".dll"),
+				OutputScriptPath   = Path.GetFullPath(baseName + ".js"),
+			};
+			foreach (var r in references)
+				options.References.Add(new Reference(Path.GetFullPath(r + ".dll")));
+
+			bool result = driver.Compile(options);
+			return Tuple.Create(result, er.AllMessages);
+		}
+
+		[Test]
+		public void IndirectlyReferencedAssemblyMustBeReferenced() {
+			UsingFiles(() => {
+				Compile("public class Asm1 { public int M() { return 0; } }", "Asm1");
+				Compile("public class Asm2 { public Asm1 M() { return null; } }", "Asm2", "Asm1");
+
+				var result = Compile("public class Asm3 { public Asm2 M() { return null; } }", "Asm3", "Asm1", "Asm2");
+				Assert.That(result.Item1, Is.True);
+				Assert.That(result.Item2, Is.Empty);
+
+				result = Compile("public class Asm4 { public Asm2 M() { return null; } }", "Asm4", "Asm2");
+				Assert.That(result.Item1, Is.False);
+				Assert.That(result.Item2.Count, Is.EqualTo(1));
+				Assert.That(result.Item2[0].Code, Is.EqualTo(7996));
+				Assert.That(result.Item2[0].Args[0], Is.EqualTo("Asm1"));
+			}, (from name in new[] { "Asm1", "Asm2", "Asm3", "Asm4" } from ext in new[] { ".cs", ".dll", ".js" } select name + ext).ToArray());
 		}
 	}
 }
