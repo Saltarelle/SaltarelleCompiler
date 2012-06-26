@@ -5,7 +5,6 @@ Cannot declare a static field called Name.
 Sign everything
 ConditionalAttribute
 Separate package for the runtime.
-Rename ScriptSharp submodule to Runtime.
 New library for the loader.
 Package for the web library.
 Package for the jQuery library.

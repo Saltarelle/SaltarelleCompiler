@@ -27,13 +27,13 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 }
 
 Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
-	Exec { msbuild "$base_dir\ScriptSharp\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$configuration" }
-	copy "$base_dir\ScriptSharp\bin\mscorlib.xml" "$out_dir"
-	copy "$base_dir\ScriptSharp\bin\mscorlib.dll" "$out_dir"
-	copy "$base_dir\ScriptSharp\bin\mscorlib.js" "$out_dir"
-	copy "$base_dir\ScriptSharp\bin\mscorlib.debug.js" "$out_dir"
-	copy "$base_dir\ScriptSharp\bin\ssloader.js" "$out_dir"
-	copy "$base_dir\ScriptSharp\bin\ssloader.debug.js" "$out_dir"
+	Exec { msbuild "$base_dir\Runtime\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+	copy "$base_dir\Runtime\bin\mscorlib.xml" "$out_dir"
+	copy "$base_dir\Runtime\bin\mscorlib.dll" "$out_dir"
+	copy "$base_dir\Runtime\bin\mscorlib.js" "$out_dir"
+	copy "$base_dir\Runtime\bin\mscorlib.debug.js" "$out_dir"
+	copy "$base_dir\Runtime\bin\ssloader.js" "$out_dir"
+	copy "$base_dir\Runtime\bin\ssloader.debug.js" "$out_dir"
 }
 
 Task Run-Tests {
@@ -119,9 +119,9 @@ Task Determine-Version {
 	cd "$base_dir\Compiler"
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Compiler"
-	cd "$base_dir\ScriptSharp"
+	cd "$base_dir\Runtime"
 	$refs = Determine-Ref
-	#$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\ScriptSharp"
+	#$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime"
 
 	"Compiler version: $script:CompilerVersion"
 	#"Runtime version: $script:RuntimeVersion"

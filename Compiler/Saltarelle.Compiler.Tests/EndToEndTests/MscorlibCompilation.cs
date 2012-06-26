@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 	public class MscorlibCompilation {
 		[Test]
 		public void CanCompileMscorlib() {
-			string basePath = Path.GetFullPath(@"..\..\..\ScriptSharp\src\Libraries\CoreLib");
+			string basePath = Path.GetFullPath(@"..\..\..\Runtime\src\Libraries\CoreLib");
 
 			var opts = new CompilerOptions();
 
