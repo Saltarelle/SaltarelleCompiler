@@ -1,12 +1,15 @@
 TODO:
 v1:
-Static constructors and fields (and field init)
-Scan for unsupported constructs (yield/async/goto (incl. goto case)/query/struct).
 Verify that all directly or indirectly dependent assemblies are referenced.
 Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 Cannot declare a static field called Name.
 Sign everything
 ConditionalAttribute
+Separate package for the runtime.
+Rename ScriptSharp submodule to Runtime.
+New library for the loader.
+Package for the web library.
+Package for the jQuery library.
 
 v2:
 yield
@@ -20,6 +23,8 @@ Don't assign a field the default value when it is always assigned before being r
 Multi-dimensional arrays
 Ensure that type initializers are run in the correct order.
 NAnt task
+Change the INamingConventionResolver interface (should not contain methods for variable names, should be one resolver per referenced assembly).
+Optimize foreach over arrays.
 
 v3:
 Source mapping

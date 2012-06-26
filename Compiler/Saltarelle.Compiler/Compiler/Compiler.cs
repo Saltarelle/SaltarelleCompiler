@@ -51,6 +51,8 @@ namespace Saltarelle.Compiler.Compiler {
         	_runtimeLibrary   = runtimeLibrary;
         }
 
+		internal bool AllowUnsupportedConstructs { get; set; }
+
         private JsClass.ClassTypeEnum ConvertClassType(TypeKind typeKind) {
             switch (typeKind) {
                 case TypeKind.Class:     return JsClass.ClassTypeEnum.Class;
@@ -161,8 +163,18 @@ namespace Saltarelle.Compiler.Compiler {
             _constructorDeclarations = new HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>>();
             _instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
+			var unsupportedConstructsScanner = new UnsupportedConstructsScanner(_errorReporter, compilation.Compilation.ReferencedAssemblies.Count == 0);
+			bool hasUnsupported = false;
+
             foreach (var f in compilation.SourceFiles) {
 				try {
+					if (!AllowUnsupportedConstructs) {
+						if (!unsupportedConstructsScanner.ProcessAndReturnTrueIfEverythingIsSupported(f.CompilationUnit)) {
+							hasUnsupported = true;
+							continue;
+						}
+					}
+
 	                _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
 		            _resolver.ApplyNavigator(new ResolveAllNavigator());
 			        f.CompilationUnit.AcceptVisitor(this);
@@ -171,6 +183,9 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError(ex, f.ParsedFile.FileName, _location);
 				}
             }
+
+			if (hasUnsupported)
+				return new JsType[0];	// Just to be safe
 
             // Handle constructors. We must do this after we have visited all the compilation units because field initializer (which change the InstanceInitStatements and StaticInitStatements) might appear anywhere.
             foreach (var n in _constructorDeclarations) {

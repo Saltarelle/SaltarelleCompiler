@@ -512,7 +512,7 @@ public class C1 {
 		}
 
 		[Test]
-		public void AssemblyThatCanNotBeLocatedCausesError7998() {
+		public void AssemblyThatCanNotBeLocatedCausesError7997() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
@@ -527,7 +527,7 @@ public class C1 {
 				var result = driver.Compile(options);
 
 				Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-				Assert.That(er.AllMessages.Any(m => m.Code == 7998 && (string)m.Args[0] == "MyNonexistentAssembly"));
+				Assert.That(er.AllMessages.Any(m => m.Code == 7997 && (string)m.Args[0] == "MyNonexistentAssembly"));
 
 				Assert.That(result, Is.False);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False);
@@ -535,7 +535,7 @@ public class C1 {
 		}
 
 		[Test]
-		public void UsingAliasedReferenceCausesError7997() {
+		public void UsingAliasedReferenceCausesError7998() {
 			UsingFiles(() => {
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
@@ -561,7 +561,8 @@ public class C1 {
 
 				result = driver.Compile(options);
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Single().Code, Is.EqualTo(7997));
+				Assert.That(er.AllMessages.Single().Code, Is.EqualTo(7998));
+				Assert.That(er.AllMessages.Single().Args[0], Is.EqualTo("aliased reference"));
 
 			}, "Ref.cs", "Ref.dll", "Ref.js", "Out.cs", "Out.dll", "Out.js");
 		}

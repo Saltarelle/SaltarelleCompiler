@@ -356,10 +356,5 @@ public void M() {
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
 		}
-
-		[Test]
-		public void AccessingDynamicMemberWorks() {
-			Assert.Inconclusive("Not supported in NRefactory");
-		}
 	}
 }

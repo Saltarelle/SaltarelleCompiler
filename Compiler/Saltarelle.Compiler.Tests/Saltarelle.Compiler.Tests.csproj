@@ -213,6 +213,7 @@
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\WhileStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\YieldStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\VariableGatheringTests.cs" />
+    <Compile Include="Compiler\UnsupportedConstructsScannerTests.cs" />
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\MscorlibCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />

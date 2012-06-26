@@ -93,5 +93,23 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 var $z = 2;
 ");
         }
+
+        [Test]
+        public void StaticFieldsWithoutInitializersAreInitializedToDefault() {
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
+            Compile(new[] {
+@"class C<T> {
+    static T x;
+    static int y;
+	static string z;
+}" }, namingConvention: namingConvention);
+
+            var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
+        	cctor.Should().Be(
+@"$InstantiateGenericType({C}, $T).$x = $Default($T);
+$InstantiateGenericType({C}, $T).$y = 0;
+$InstantiateGenericType({C}, $T).$z = null;
+");
+        }
     }
 }

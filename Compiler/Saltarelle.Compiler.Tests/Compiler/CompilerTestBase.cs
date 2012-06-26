@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
     public class CompilerTestBase {
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IEnumerable<string> defineConstants = null) {
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IEnumerable<string> defineConstants = null, bool allowUnsupportedConstructs = true) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
@@ -25,8 +25,8 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                 errorReporter = new MockErrorReporter(true);
             }
 
-            var compiler = new Saltarelle.Compiler.Compiler.Compiler(namingConvention ?? new MockNamingConventionResolver(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter);
-            if (methodCompiled != null)
+        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(namingConvention ?? new MockNamingConventionResolver(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter) {AllowUnsupportedConstructs = allowUnsupportedConstructs};
+        	if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 
 			var c = compiler.CreateCompilation(sourceFiles, new[] { Common.Mscorlib }, defineConstants);

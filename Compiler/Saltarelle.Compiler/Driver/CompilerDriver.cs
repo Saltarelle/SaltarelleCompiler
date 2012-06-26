@@ -48,7 +48,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				return Path.GetFullPath(file);
 			}
-			er.Message(7998, null, TextLocation.Empty, filename);
+			er.Message(7997, null, TextLocation.Empty, filename);
 			return null;
 		}
 
@@ -91,7 +91,7 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddWarningOnly(w);
 
 			if (result.AssemblyReferencesAliases.Count > 0)	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
-				er.Message(7997, null, TextLocation.Empty);
+				er.Message(7998, null, TextLocation.Empty, "aliased reference");
 
 			return result;
 		}
