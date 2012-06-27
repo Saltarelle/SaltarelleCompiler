@@ -4,8 +4,6 @@ Prevent creating a class that inherits/implements types with members with the sa
 Cannot declare a static field called Name.
 Sign everything
 ConditionalAttribute
-Separate package for the runtime.
-New library for the loader.
 Package for the web library.
 Package for the jQuery library.
 
