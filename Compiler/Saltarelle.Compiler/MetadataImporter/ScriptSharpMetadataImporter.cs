@@ -403,6 +403,24 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
+			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
+			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
+
+			string defaultName;
+			if (isConstructor) {
+				defaultName = "$ctor";
+			}
+			else if (Utils.IsPublic(member)) {
+				defaultName = MakeCamelCase(member.Name);
+			}
+			else {
+				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
+					defaultName = null;
+				else
+					defaultName = "$" + MakeCamelCase(member.Name);
+			}
+
+
 			var asa = GetAttributePositionalArgs(member, AlternateSignatureAttribute);
 			if (asa != null) {
 				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null).ToList();
@@ -415,13 +433,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
-			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
+			var typeSemantics = _typeSemantics[member.DeclaringTypeDefinition];
 
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
 				string name = (string)sna[0] ?? "";
 				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
+					if (typeSemantics.IsNamedValues)
+						return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an invalid value, which will only be used as the literal value for the field, not for the name.
 					Message(7101, member);
 				}
 				if (name == "" && isConstructor)
@@ -435,26 +454,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
 			                                                       || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
 			                                                       || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
-			                                                       || _typeSemantics[member.DeclaringTypeDefinition].GlobalMethods
-			                                                       || (!_typeSemantics[member.DeclaringTypeDefinition].Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
-			                                                       || (_typeSemantics[member.DeclaringTypeDefinition].IsRecord && !member.IsStatic && (member is IProperty || member is IField)))
-			                                                       || (_typeSemantics[member.DeclaringTypeDefinition].IsNamedValues && member is IField));
+			                                                       || typeSemantics.GlobalMethods
+			                                                       || (!typeSemantics.Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
+			                                                       || (typeSemantics.IsRecord && !member.IsStatic && (member is IProperty || member is IField)))
+			                                                       || (typeSemantics.IsNamedValues && member is IField));
 
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
-			if (isConstructor) {
-				return Tuple.Create("$ctor", false);
-			}
-			if (Utils.IsPublic(member)) {
-				return Tuple.Create(MakeCamelCase(member.Name), false);
-			}
-			else {
-				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
-					return Tuple.Create((string)null, false);
-				else
-					return Tuple.Create("$" + MakeCamelCase(member.Name), false);
-			}
+			return Tuple.Create(defaultName, false);
 		}
 
 		public string GetQualifiedMemberName(IMember member) {
@@ -950,7 +958,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 				usedNames.Add(name);
 				if (_typeSemantics[field.DeclaringTypeDefinition].IsNamedValues) {
-					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(name, name);
+					string value = preferredName;
+					if (!nameSpecified) {	// This code handles the feature that it is possible to specify an invalid ScriptName for a member of a NamedValues enum, in which case that value has to be use as the constant value.
+						var sna = GetAttributePositionalArgs(field, ScriptNameAttribute);
+						if (sna != null)
+							value = (string)sna[0];
+					}
+
+					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
 				}
 				else if (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames)) {
 					object value = Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);

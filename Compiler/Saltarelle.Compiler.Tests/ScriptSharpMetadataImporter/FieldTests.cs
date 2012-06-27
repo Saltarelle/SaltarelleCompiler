@@ -227,5 +227,36 @@ public enum MyEnum {
 				Assert.That(FindField("MyEnum.MyValue4").Value, Is.EqualTo("Renamed"));
 			}
 		}
+
+		[Test]
+		public void InvalidIdentifierInNamedValuesEnumFieldCausesTheFieldToBeUnchangedButAffectsTheValue() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[NamedValues]
+enum MyEnum {
+	[ScriptName(""invalid-identifier"")]
+	MyValue1,
+}", minimizeNames: false);
+
+			var f = FindField("MyEnum.MyValue1");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+			Assert.That(f.Value, Is.EqualTo("invalid-identifier"));
+			Assert.That(f.Name, Is.EqualTo("$myValue1"));
+			Assert.That(f.GenerateCode, Is.True);
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[NamedValues]
+enum MyEnum {
+	[ScriptName(""invalid-identifier"")]
+	MyValue1,
+}", minimizeNames: true);
+
+			f = FindField("MyEnum.MyValue1");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+			Assert.That(f.Value, Is.EqualTo("invalid-identifier"));
+			Assert.That(f.Name, Is.EqualTo("$0"));
+			Assert.That(f.GenerateCode, Is.True);
+		}
 	}
 }
