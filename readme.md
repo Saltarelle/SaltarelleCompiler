@@ -14,7 +14,25 @@ The compiler currently works quite well. I still need to test it more in practic
 
 ### Supported features ###
 
-Many, hopefully everything that is not on the unsupported list (it does support things like ref parameters, generics, anonymous types, lambdas with type inference, user-defined operators, method overloads, etc.)
+Many, hopefully everything that is not on the unsupported list. For example, it does support the following C# features:
+
+* ref parameters,
+* Type inference,
+* generics,
+* anonymous types,
+* lambdas,
+* user-defined operators,
+* method and constructor overloads,
+* Object and collection initializers,
+* foreach,
+* using,
+* Exception handling (although the handling of script exceptions could be improved in the runtime library),
+* Named and default arguments,
+* C# Variable capture semantics, so if you declare a variable in an inner block and capture it, the captured variable will not be changed when the variable is changed by an outer scope,
+* Ensures that expressions are always evaluated left to right, as the C# standard specifies,
+* Automatically implemented properties (and events),
+* Nullable types (and lifted operators),
+* ... and many more.
 
 ### Unsupported features ###
 
@@ -35,7 +53,7 @@ Currently it does not support
 
 All these things are on the todo list to address, in the approximate order above, but not until after the official release.
 
-Also, it does not support things that just doesn't make sense in JavaScript, such as
+Also, it does not support things that just don't make sense in JavaScript, such as
 
 * pointers
 * lock (object) {}
