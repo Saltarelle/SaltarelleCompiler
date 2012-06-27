@@ -53,12 +53,6 @@ Task Build-NuGetPackage -Depends Determine-Version {
 		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
 	</metadata>
 	<files>
-		<file src="$out_dir\mscorlib.dll" target="tools\Assemblies"/>
-		<file src="$out_dir\mscorlib.xml" target="tools\Assemblies"/>
-		<file src="$out_dir\mscorlib.js" target="tools\Scripts"/>
-		<file src="$out_dir\mscorlib.debug.js" target="tools\Scripts"/>
-		<file src="$out_dir\ssloader.js" target="tools\Scripts"/>
-		<file src="$out_dir\ssloader.debug.js" target="tools\Scripts"/>
 		<file src="$out_dir\dummy.txt" target="content"/>
 		<file src="$base_dir\Compiler\install.ps1" target="tools"/>
 		<file src="$out_dir\SCTask.dll" target="tools"/>
@@ -68,10 +62,39 @@ Task Build-NuGetPackage -Depends Determine-Version {
 </package>
 "@ | Out-File -Encoding UTF8 "$out_dir\SaltarelleCompiler.nuspec"
 
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.Runtime</id>
+		<version>$script:RuntimeVersion</version>
+		<title>Runtime library for the Saltarelle C# to JavaScript compiler</title>
+		<description>Runtime library for projects compiled with Saltarelle.Compiler. This is a slightly modified version of the Script# runtime library by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+		<authors>Nikhil Kothari, Erik Källén</authors>
+		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<dependencies>
+			<dependency id="Saltarelle.Compiler" version="0.0"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="$out_dir\mscorlib.dll" target="tools\Assemblies"/>
+		<file src="$out_dir\mscorlib.xml" target="tools\Assemblies"/>
+		<file src="$out_dir\mscorlib.js" target="tools\Scripts"/>
+		<file src="$out_dir\mscorlib.debug.js" target="tools\Scripts"/>
+<!--		<file src="$out_dir\ssloader.js" target="tools\Scripts"/>
+		<file src="$out_dir\ssloader.debug.js" target="tools\Scripts"/>-->
+		<file src="$out_dir\dummy.txt" target="content"/>
+		<file src="$base_dir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$out_dir\SaltarelleRuntime.nuspec"
+
 	"This file is safe to remove from the project, but NuGet requires the Saltarelle.Compiler package to install something." | Out-File -Encoding UTF8 "$out_dir\dummy.txt"
 
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\SaltarelleCompiler.nuspec" -OutputDirectory "$out_dir" }
+	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\SaltarelleRuntime.nuspec" -OutputDirectory "$out_dir" }
 	rm "$out_dir\SaltarelleCompiler.nuspec" > $null
+	rm "$out_dir\SaltarelleRuntime.nuspec" > $null
 	rm "$out_dir\dummy.txt" > $null
 }
 
@@ -121,10 +144,10 @@ Task Determine-Version {
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Compiler"
 	cd "$base_dir\Runtime"
 	$refs = Determine-Ref
-	#$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime"
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime\src\Libraries\CoreLib","$base_dir\Runtime\src\Core\CoreScript"
 
 	"Compiler version: $script:CompilerVersion"
-	#"Runtime version: $script:RuntimeVersion"
+	"Runtime version: $script:RuntimeVersion"
 	
 	cd $olddir
 }
@@ -138,4 +161,5 @@ Function Generate-VersionFile($Path, $Version) {
 
 Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$base_dir\Compiler\CompilerVersion.cs" -Version $script:CompilerVersion
+	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\CoreLib\Properties\Version.cs" -Version $script:RuntimeVersion
 }

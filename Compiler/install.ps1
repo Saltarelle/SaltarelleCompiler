@@ -17,12 +17,6 @@ $project.Object.References | ? { $_.Name.StartsWith("System.") } | % { try { $_.
 $project.Object.References | ? { $_.Name -eq "System" } | % { $_.Remove() }
 $project.Object.References | ? { $_.Name.StartsWith("Microsoft.") } | % { $_.Remove() }
 
-# Add a reference to our custom mscorlib.dll
-if (-not ($msbuild.GetItems("Reference") | ? { $_.UnevaluatedInclude -eq "mscorlib" })) {
-	$mscorlib = $msbuild.AddItem("Reference", "mscorlib") | Select-Object -First 1
-	$mscorlib.SetMetadataValue("HintPath", "`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Assemblies"", ""mscorlib.dll"")))")
-}
-
 ## Swap the import for Microsoft.CSharp.targets for Saltarelle.Compiler.targets. Also remove any existing reference to Saltarelle.Compiler.targets since we might be upgrading.
 $msbuild.Xml.Imports | ? { $_.Project.EndsWith("Saltarelle.Compiler.targets") } | % { $msbuild.Xml.RemoveChild($_) }
 $msbuild.Xml.Imports | ? { $_.Project.EndsWith("Microsoft.CSharp.targets") } | % { $msbuild.Xml.RemoveChild($_) }
