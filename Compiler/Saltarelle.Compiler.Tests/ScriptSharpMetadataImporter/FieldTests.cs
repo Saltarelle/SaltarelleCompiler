@@ -258,5 +258,33 @@ enum MyEnum {
 			Assert.That(f.Name, Is.EqualTo("$0"));
 			Assert.That(f.GenerateCode, Is.True);
 		}
+
+		[Test]
+		public void StaticFieldCannotBeCalledName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	public static string Name;
+}", minimizeNames: false);
+
+			var f = FindField("C.Name");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f.Name, Is.EqualTo("name$1"));
+			Assert.That(f.GenerateCode, Is.True);
+		}
+
+		[Test]
+		public void InstanceFieldCannotBeCalledConstructor() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	public static string Constructor;
+}", minimizeNames: false);
+
+			var f = FindField("C.Constructor");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f.Name, Is.EqualTo("constructor$1"));
+			Assert.That(f.GenerateCode, Is.True);
+		}
 	}
 }

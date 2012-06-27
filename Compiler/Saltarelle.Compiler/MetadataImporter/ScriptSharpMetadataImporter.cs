@@ -37,6 +37,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string Function = "Function";
 		private const string Array = "Array";
 
+		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "toString", "valueOf" });
+		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString", "valueOf" });
+
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
 		/// </summary>
@@ -471,7 +474,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		private void ProcessTypeMembers(ITypeDefinition typeDefinition, ICompilation compilation) {
 			var instanceMembers = GetInstanceMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition), compilation);
-			var staticMembers = new HashSet<string>();
+			var staticMembers = new HashSet<string>(_unusableStaticFieldNames);
+			_unusableInstanceFieldNames.ForEach(n => instanceMembers.Add(n));
 
 			var membersByName =   from m in typeDefinition.GetMembers(options: GetMemberOptions.IgnoreInheritedMembers)
 			                       let name = DeterminePreferredMemberName(m)
@@ -503,6 +507,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
+			_unusableInstanceFieldNames.ForEach(n => instanceMembers.Remove(n));
 			_instanceMemberNamesByType[typeDefinition] = instanceMembers;
 		}
 
