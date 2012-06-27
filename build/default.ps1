@@ -47,6 +47,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
 	</metadata>
 	<files>
+		<file src="$base_dir\Compiler\License.txt" target=""/>
 		<file src="$out_dir\dummy.txt" target="content"/>
 		<file src="$base_dir\Compiler\install.ps1" target="tools"/>
 		<file src="$out_dir\SCTask.dll" target="tools"/>

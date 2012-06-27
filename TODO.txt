@@ -3,8 +3,6 @@ v1:
 Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 ConditionalAttribute
 Add support for allowing an interface to be implemented but not appear in the type system (eg. IElementEventListener)
-ScriptNamespaceAttribute specified on assembly.
-ScriptAssemblyAttribute.
 
 v2:
 yield
@@ -24,6 +22,7 @@ Optimize foreach over arrays.
 v3:
 Source mapping
 Formatting options
+Expression trees
 Clip smaller integer types to their range
 Checked/unchecked
 
@@ -31,6 +30,8 @@ Checked/unchecked
 
 Script# features to handle:
 ScriptQualifierAttribute.
+ScriptAssemblyAttribute.
+ScriptNamespaceAttribute specified on assembly.
 QUnit tests
 
 
