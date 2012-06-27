@@ -38,17 +38,18 @@ Many, hopefully everything that is not on the unsupported list. For example, it 
 
 Currently it does not support
 
-* LINQ (as in the Enumerable class that contains all extension methods). This will be solved by writing an import library for [JSLINQ](http://jslinq.codeplex.com/) or [Linq.js](http://linqjs.codeplex.com/).
-* Query expressions (eg. from a in b select a.name).
-* goto (incl. goto case).
-* yield break / yield return.
-* await (C# 5).
-* Multi-dimensional arrays.
-* Expression trees
-* operator true / operator false (does anybody use these?)
-* "extern alias"
-* Clipped integer type (short/byte). It will correctly use integers such that when you assign a double to an integer, or divide two integers, the result will be an integer, but it does not support an integer type which can only have values in the range 0-65535
-* Checked/unchecked
+* LINQ (as in the Enumerable class that contains all extension methods). This will be solved by writing an import library for [JSLINQ](http://jslinq.codeplex.com/) or [Linq.js](http://linqjs.codeplex.com/),
+* NodeJS (because the runtime library expects to be running in a browser),
+* Query expressions (eg. from a in b select a.name),
+* goto (incl. goto case),
+* yield break / yield return,
+* await (C# 5),
+* Multi-dimensional arrays,
+* Expression trees,
+* operator true / operator false (does anybody use these?),
+* "extern alias",
+* Clipped integer type (short/byte). It will correctly use integers such that when you assign a double to an integer, or divide two integers, the result will be an integer, but it does not support an integer type which can only have values in the range 0-65535,
+* Checked/unchecked,
 * User-defined value types (structs)
 
 All these things are on the todo list to address, in the approximate order above, but not until after the official release.
@@ -60,10 +61,14 @@ Also, it does not support things that just don't make sense in JavaScript, such 
 
 ## Credits ##
 
-Saltarelle builds on the tradition of compiling C# to JavaScript pioneered by Script# [https://github.com/nikhilk/scriptsharp](Script#), and also uses a modified version of that project's runtime library. The metadata used to create import libraries is also the same as in Script#.
+Saltarelle builds on the tradition of compiling C# to JavaScript pioneered by [Script#](https://github.com/nikhilk/scriptsharp), and also uses a modified version of that project's runtime library. The metadata used to create import libraries is also the same as in Script#.
 
-All analysis of the C# code is done using [https://github.com/icsharpcode/NRefactory](NRefactory), which in turn uses mcs (the compiler from the [http://www.mono-project.com](mono) project and (https://github.com/jbevain/cecil)[Mono.Cecil].
+All analysis of the C# code is done using [NRefactory](https://github.com/icsharpcode/NRefactory), which in turn uses mcs (the compiler from the [mono](http://www.mono-project.com) project and [Mono.Cecil](https://github.com/jbevain/cecil).
 
 ## License ##
 
-The entire project is licensed under the [http://www.apache.org/licenses/LICENSE-2.0.html](Apache License 2.0), which is a [http://www.apache.org/foundation/license-faq.html#WhatDoesItMEAN](very permissive) license, so there is no issue using the software in any kind of application, commercial or non-commercial. The reason for this license is that it is the one used in the runtime library (which is licensed by Nikhil Kothari, not me).
+The entire project is licensed under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html), which is a [permissive](http://www.apache.org/foundation/license-faq.html#WhatDoesItMEAN) license, so there is no issue using the software in any kind of application, commercial or non-commercial. The reason for this license is that it is the one used in the runtime library (which is licensed by Nikhil Kothari, not me).
+
+## Contributing ##
+
+Any contribution is very welcome. You can contribute by reporting an issue, by creating an import library for your favorite JavaScript library, by implementing one of the features on the unsupported list, or by just using the software.
