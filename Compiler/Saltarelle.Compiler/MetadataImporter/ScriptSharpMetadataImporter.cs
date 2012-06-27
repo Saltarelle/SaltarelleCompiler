@@ -622,7 +622,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				else {
 					string alias = (string)saa[0] ?? "";
-					_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.InlineCode(alias) : null, property.CanSet ? MethodScriptSemantics.InlineCode(alias) : null);
+					_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.InlineCode(alias) : null, property.CanSet ? MethodScriptSemantics.InlineCode(alias + " = {value}") : null);
 					return;
 				}
 			}

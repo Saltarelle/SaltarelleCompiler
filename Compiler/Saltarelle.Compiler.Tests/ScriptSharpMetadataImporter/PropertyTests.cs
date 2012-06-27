@@ -513,7 +513,7 @@ class C1 {
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("$"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(p1.SetMethod.LiteralCode, Is.EqualTo("$"));
+			Assert.That(p1.SetMethod.LiteralCode, Is.EqualTo("$ = {value}"));
 
 			var p2 = FindProperty("C1.Prop2");
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
@@ -525,14 +525,14 @@ class C1 {
 			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p3.GetMethod, Is.Null);
 			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(p3.SetMethod.LiteralCode, Is.EqualTo("$3"));
+			Assert.That(p3.SetMethod.LiteralCode, Is.EqualTo("$3 = {value}"));
 
 			var p4 = FindProperty("C1.Prop4");
 			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p4.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(p4.GetMethod.LiteralCode, Is.EqualTo("$4"));
 			Assert.That(p4.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(p4.SetMethod.LiteralCode, Is.EqualTo("$4"));
+			Assert.That(p4.SetMethod.LiteralCode, Is.EqualTo("$4 = {value}"));
 		}
 
 		[Test]
