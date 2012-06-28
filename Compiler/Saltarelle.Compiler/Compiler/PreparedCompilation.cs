@@ -7,15 +7,17 @@ using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class PreparedCompilation {
-		public ICompilation Compilation { get; set; }
+		public ICompilation Compilation { get; private set; }
 
 		internal class ParsedSourceFile {
 			public CompilationUnit CompilationUnit { get; private set; }
 			public CSharpParsedFile ParsedFile { get; private set; }
+			public ISet<string> DefinedSymbols { get; private set; }
 
-			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile) {
+			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile, ISet<string> definedSymbols) {
 				CompilationUnit = compilationUnit;
 				ParsedFile      = parsedFile;
+				DefinedSymbols  = definedSymbols;
 			}
 		}
 

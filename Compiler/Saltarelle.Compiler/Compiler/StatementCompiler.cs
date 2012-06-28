@@ -27,6 +27,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly NestedFunctionContext _nestedFunctionContext;
 		private readonly SharedValue<int> _nextLabelIndex;
 		private readonly IMethod _methodBeingCompiled;
+		private readonly ISet<string> _definedSymbols;
 		private string _filename;
 		private TextLocation _location;
 
@@ -36,12 +37,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, HashSet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled)
-			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, methodBeingCompiled, null, null, null, null)
+		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, HashSet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols)
+			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, methodBeingCompiled, definedSymbols, null, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, HashSet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, HashSet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
@@ -53,12 +54,13 @@ namespace Saltarelle.Compiler.Compiler {
 			_usedVariableNames          = usedVariableNames;
 			_nestedFunctionContext      = nestedFunctionContext;
 			_methodBeingCompiled        = methodBeingCompiled;
+			_definedSymbols             = definedSymbols;
 			_currentVariableForRethrow  = currentVariableForRethrow;
 			_currentGotoCaseMap         = currentGotoCaseMap;
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled), thisAlias, nestedFunctionContext, null, _methodBeingCompiled);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _definedSymbols), thisAlias, nestedFunctionContext, null, _methodBeingCompiled);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -183,7 +185,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _methodBeingCompiled, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
+			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _methodBeingCompiled, _definedSymbols, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
 		private IVariable CreateTemporaryVariable(IType type) {
@@ -283,12 +285,19 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
 			var resolveResult = ResolveWithConversion(expressionStatement.Expression);
-			if (   resolveResult is InvocationResolveResult
-			    && ((InvocationResolveResult)resolveResult).Member is IMethod
-				&& ((IUnresolvedMethod)((InvocationResolveResult)resolveResult).Member.UnresolvedMember).IsPartialMethodDeclaration)	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
-			{
-				// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
-				return;
+			if (resolveResult is InvocationResolveResult && ((InvocationResolveResult)resolveResult).Member is IMethod) {
+				var member = ((InvocationResolveResult)resolveResult).Member;
+				if (((IUnresolvedMethod)((InvocationResolveResult)resolveResult).Member.UnresolvedMember).IsPartialMethodDeclaration) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
+					// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
+					return;
+				}
+				var cas = member.Attributes.Where(a => a.AttributeType.FullName == "System.Diagnostics.ConditionalAttribute").Select(a => (string)a.PositionalArguments[0].ConstantValue).ToList();
+				if (cas.Count > 0) {
+					if (!cas.Any(x => _definedSymbols.Contains(x))) {
+						// Invocation of conditional method, but the symbol is not defined.
+						return;
+					}
+				}
 			}
 
 			var compiled = _expressionCompiler.Compile(expressionStatement.GetRegion().FileName, expressionStatement.StartLocation, resolveResult, false);

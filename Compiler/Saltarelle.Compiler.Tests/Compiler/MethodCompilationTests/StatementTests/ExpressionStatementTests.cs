@@ -98,7 +98,7 @@ partial class C {
 ");
 		}
 
-		[Test, Ignore("No NRefactory support")]
+		[Test]
 		public void CallToConditionalMethodIsRemovedWhenTheSymbolIsNotDefined() {
 			AssertCorrect(
 @"class C {
@@ -116,17 +116,18 @@ partial class C {
 }",
 @"	var $x = 0;
 	var $y = 0;
-");
+", addSkeleton: false);
 		}
 
 		[Test]
 		public void CallToConditionalMethodIsNotRemovedWhenTheSymbolIsDefined() {
 			AssertCorrect(
-@"class C {
+@"
+#define __TEST__
+class C {
 	[System.Diagnostics.Conditional(""__TEST__"")]
 	void Method() {
 	}
-#define __TEST__
 	public void M() {
 		// BEGIN
 		int x = 0;
@@ -138,7 +139,31 @@ partial class C {
 @"	var $x = 0;
 	this.$Method();
 	var $y = 0;
-");
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UndefCausesCallToConditionalMethodToBeRemoved() {
+			AssertCorrect(
+@"
+#define __TEST__
+#undef __TEST__
+class C {
+	[System.Diagnostics.Conditional(""__TEST__"")]
+	void Method() {
+	}
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	var $y = 0;
+", addSkeleton: false);
 		}
 	}
 }

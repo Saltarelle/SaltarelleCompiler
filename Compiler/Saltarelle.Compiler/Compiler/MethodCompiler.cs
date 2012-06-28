@@ -34,17 +34,19 @@ namespace Saltarelle.Compiler.Compiler {
         private ICompilation _compilation;
         private readonly CSharpAstResolver _resolver;
     	private readonly IRuntimeLibrary _runtimeLibrary;
+		private readonly ISet<string> _definedSymbols;
 
     	internal IDictionary<IVariable, VariableData> variables;
         internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 
-        public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
+        public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
             _namingConvention = namingConvention;
-            _errorReporter = errorReporter;
-            _compilation = compilation;
-            _resolver = resolver;
-        	_runtimeLibrary = runtimeLibrary;
+            _errorReporter    = errorReporter;
+            _compilation      = compilation;
+            _resolver         = resolver;
+        	_runtimeLibrary   = runtimeLibrary;
+			_definedSymbols   = definedSymbols;
         }
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, string thisAlias) {
@@ -53,7 +55,7 @@ namespace Saltarelle.Compiler.Compiler {
             nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
-			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, usedNames, null, method);
+			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, usedNames, null, method, _definedSymbols);
 		}
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
