@@ -341,6 +341,64 @@ namespace X {
 		}
 
 		[Test]
+		public void ScriptNamespaceOnTheAssemblySetsTheDefaultButCanBeOverridden() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[assembly: ScriptNamespace(""my.ns"")]
+
+namespace SomeNamespace { public class Class1 {} [ScriptNamespace(""otherns"")] public class Class5 {} }
+namespace SomeNamespace.Nested.Something { public class Class2 {} }
+namespace Something.Entirely.Different { public class Class3 {} }
+public class Class4 {}
+");
+
+			var t1 = FindType("SomeNamespace.Class1");
+			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t1.Name, Is.EqualTo("my.ns.Class1"));
+
+			var t2 = FindType("SomeNamespace.Nested.Something.Class2");
+			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t2.Name, Is.EqualTo("my.ns.Class2"));
+
+			var t3 = FindType("Something.Entirely.Different.Class3");
+			Assert.That(t3.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t3.Name, Is.EqualTo("my.ns.Class3"));
+
+			var t4 = FindType("Class4");
+			Assert.That(t4.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t4.Name, Is.EqualTo("my.ns.Class4"));
+
+			var t5 = FindType("SomeNamespace.Class5");
+			Assert.That(t5.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t5.Name, Is.EqualTo("otherns.Class5"));
+		}
+
+		[Test]
+		public void EmptyScriptNamespaceAttributeOnAssemblyWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[assembly: ScriptNamespace("""")]
+public class C1 {}
+namespace X { public class C2 {} }");
+
+			var t1 = FindType("C1");
+			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+
+			var t2 = FindType("X.C2");
+			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(t2.Name, Is.EqualTo("C2"));
+		}
+
+		[Test]
+		public void InvalidIdentifierInAssemblyScriptNamespaceAttributeIsAnError() {
+			Prepare(@"using System.Runtime.CompilerServices; [assembly: ScriptNamespace(""invalid-identifier"")] public class Class1 {}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code, Is.EqualTo(7002));
+			Assert.That(AllErrors[0].Args[0], Is.EqualTo("assembly"));
+		}
+
+		[Test]
 		public void IgnoreNamespaceAttributeWorks() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

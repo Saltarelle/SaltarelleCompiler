@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler {
 	internal static class Messages {
 		private static Dictionary<int, Tuple<MessageSeverity, string>> _allMessages = new Dictionary<int, Tuple<MessageSeverity, string>> {
 			{ 7001, Tuple.Create(MessageSeverity.Error, "The type {0} has both [IgnoreNamespace] and [ScriptNamespace] specified. At most one of these attributes can be specified for a type.") },
-			{ 7002, Tuple.Create(MessageSeverity.Error, "{0}: The argument for [ScriptNamespace], when applied to a type, must be a valid JavaScript qualified identifier.") },
+			{ 7002, Tuple.Create(MessageSeverity.Error, "{0}: The argument for [ScriptNamespace] must be a valid JavaScript qualified identifier, or be blank.") },
 			{ 7003, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it is not static.") },
 			{ 7004, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it is generic.") },
 			{ 7005, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it contains members that are not const fields.") },

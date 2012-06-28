@@ -30,7 +30,6 @@ Checked/unchecked
 Script# features to handle:
 ScriptQualifierAttribute.
 ScriptAssemblyAttribute.
-ScriptNamespaceAttribute specified on assembly.
 QUnit tests
 
 
