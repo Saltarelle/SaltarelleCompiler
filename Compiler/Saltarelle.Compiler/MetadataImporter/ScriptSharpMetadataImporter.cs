@@ -537,6 +537,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 
+			if (constructor.IsStatic) {
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();	// Whatever, it is not really used.
+				return;
+			}
+
 			if (epa != null && !constructor.Parameters.Any(p => p.IsParams)) {
 				Message(7102, constructor);
 			}

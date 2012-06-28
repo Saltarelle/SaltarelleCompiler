@@ -90,7 +90,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		protected ConstructorScriptSemantics FindConstructor(string typeName, int parameterCount) {
-			return Metadata.GetConstructorSemantics(AllTypes[typeName].Methods.Single(m => m.IsConstructor && m.Parameters.Count == parameterCount));
+			return Metadata.GetConstructorSemantics(AllTypes[typeName].Methods.Single(m => m.IsConstructor && !m.IsStatic && m.Parameters.Count == parameterCount));
 		}
     }
 }

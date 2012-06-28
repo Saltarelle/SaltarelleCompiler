@@ -212,5 +212,16 @@ class C1 {
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("constructor") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
 		}
+
+		[Test]
+		public void StaticConstructorDoesNotCauseOtherConstructorToBeNamed() {
+			Prepare(
+@"public class C1 {
+	static C1() {
+	}
+}");
+		
+			Assert.That(FindConstructor("C1", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+		}
 	}
 }
