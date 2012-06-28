@@ -24,6 +24,7 @@ namespace Saltarelle.Compiler {
 			{ 7015, Tuple.Create(MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [GlobalMethodsAttribute]") },
 			{ 7016, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]") },
 			{ 7017, Tuple.Create(MessageSeverity.Error, "[GlobalMethodsAttribute] cannot be applied to the generic type {0}.") },
+			{ 7018, Tuple.Create(MessageSeverity.Error, "The type {0} cannot inherit from both {1} and {2} because both those types have a member with the script name {3}. You have to rename the member on one of the base types, or refactor your code.") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
 			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },

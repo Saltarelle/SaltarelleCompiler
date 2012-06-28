@@ -20,41 +20,41 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		[Test]
 		public void RecordTypesMustBeSealed() {
 			Prepare(@"using System.Runtime.CompilerServices; [Record] class C1 {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must be sealed")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must be sealed")));
 
 			Prepare(@"class C1 : System.Record {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must be sealed")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must be sealed")));
 		}
 
 		[Test]
 		public void TypeWithRecordAttributeMustNotHaveABaseClass() {
 			Prepare(@"using System.Runtime.CompilerServices; class B {} [Record] sealed class C1 : B {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must inherit from either System.Object or System.Record")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must inherit from either System.Object or System.Record")));
 		}
 
 		[Test]
 		public void RecordTypesCannotImplementInterfacesMustBeSealed() {
 			Prepare(@"using System.Runtime.CompilerServices; interface I {} [Record] sealed class C1 : I {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
 
 			Prepare(@"interface I {} sealed class C1 : System.Record, I {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
 		}
 
 		[Test]
 		public void RecordTypesCannotDeclareInstanceEvents() {
 			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 { event System.EventHandler Evt; }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot declare instance event")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot declare instance event")));
 
 			Prepare(@"using System.Runtime.CompilerServices; sealed class C1 : System.Record { event System.EventHandler Evt; }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot declare instance event")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot declare instance event")));
 
 			// But static events are OK
 			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 { static event System.EventHandler Evt; }", expectErrors: false);

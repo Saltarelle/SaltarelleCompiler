@@ -143,12 +143,12 @@ class C1<T1> {
 		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{this}"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
 
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{x}"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 		}
 
 		[Test]
@@ -209,8 +209,8 @@ class C1 {
 	[ExpandParams]
 	public C1(int a, int b, int[] c) {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("constructor") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("constructor") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
 		}
 
 		[Test]

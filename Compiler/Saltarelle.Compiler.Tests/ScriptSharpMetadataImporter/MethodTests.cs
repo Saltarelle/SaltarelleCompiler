@@ -346,7 +346,7 @@ class C : I, I2<int> {
 			Assert.That(m2.Name, Is.EqualTo("RenamedMethod2"));
 		}
 
-		[Test]
+		[Test, Ignore("We currently don't allow this inheritance")]
 		public void MethodCanImplementTwoInterfaceMethodsWithTheSameName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -370,7 +370,7 @@ class C : I, I2<int> {
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 		}
 
-		[Test]
+		[Test, Ignore("We currently don't allow this inheritance")]
 		public void OverridingMethodCanImplementInterfaceMethodWithTheSameName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -414,8 +414,8 @@ class C : I, I2<int> {
 	}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("implement") && AllErrors[0].Contains("differing script names") && AllErrors[0].Contains("C.SomeMethod"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("implement") && AllErrorTexts[0].Contains("differing script names") && AllErrorTexts[0].Contains("C.SomeMethod"));
 		}
 
 		[Test]
@@ -438,11 +438,11 @@ class D : B, I {
 	}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("implement") && AllErrors[0].Contains("different script name") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("I.SomeMethod"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("implement") && AllErrorTexts[0].Contains("different script name") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("I.SomeMethod"));
 		}
 
-		[Test]
+		[Test, Ignore("We currently do not allow this inheritance")]
 		public void BaseMethodCanImplementInterfaceMemberIfTheNamesAreTheSame() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -481,7 +481,7 @@ class B {
 class D : B, I {
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.Fail("TODO: Assert message");
 		}
 
@@ -499,8 +499,8 @@ class C : I {
 	public void SomeMethod(int i) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("C.SomeMethod") && AllErrors[0].Contains("interface member"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("C.SomeMethod") && AllErrorTexts[0].Contains("interface member"));
 		}
 
 		[Test]
@@ -517,8 +517,8 @@ class C : I {
 	public void SomeMethod(int i) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("PreserveName") && AllErrors[0].Contains("C.SomeMethod") && AllErrors[0].Contains("interface member"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("PreserveName") && AllErrorTexts[0].Contains("C.SomeMethod") && AllErrorTexts[0].Contains("interface member"));
 		}
 
 		[Test]
@@ -535,8 +535,8 @@ class C : I {
 	public void SomeMethod(int i) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("PreserveCase") && AllErrors[0].Contains("C.SomeMethod") && AllErrors[0].Contains("interface member"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("PreserveCase") && AllErrorTexts[0].Contains("C.SomeMethod") && AllErrorTexts[0].Contains("interface member"));
 		}
 
 		[Test]
@@ -553,8 +553,8 @@ class D : B {
 	public sealed override void SomeMethod(int i) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -571,8 +571,8 @@ class D : B {
 	public sealed override void SomeMethod(int i) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -589,8 +589,8 @@ class D : B {
 	public sealed override void SomeMethod(int i) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("PreserveCase") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("PreserveCase") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -641,12 +641,12 @@ interface I {
 		[Test]
 		public void ScriptNameOnMethodMustBeValidIdentifierOrBeEmpty() {
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
 
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
 		}
 
 		[Test]
@@ -686,92 +686,92 @@ class C3 {
 		public void EmptyScriptNameCannotBeSpecifiedOnInterfaceMethod() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptName("""")] void M(); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("I1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("interface method") && AllErrors[0].Contains("empty name"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("I1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("interface method") && AllErrorTexts[0].Contains("empty name"));
 		}
 
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnVirtualOrAbstractMethod() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public virtual void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("overridable") && AllErrors[0].Contains("empty name"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("overridable") && AllErrorTexts[0].Contains("empty name"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public abstract void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("overridable") && AllErrors[0].Contains("empty name"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("overridable") && AllErrorTexts[0].Contains("empty name"));
 		}
 
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnStaticMethod() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public static void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("static") && AllErrors[0].Contains("empty name"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("static") && AllErrorTexts[0].Contains("empty name"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnInterfaceMethod() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptSkip] void M(); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("I1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("interface method"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("I1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("interface method"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnVirtualOrAbstractMethod() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public virtual void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("overridable"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overridable"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("overridable"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overridable"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [ScriptSkip] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("implements"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("implements"));
 		}
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [ScriptSkip] public sealed override void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("D.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("overrides"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("D.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
 		public void StaticMethodWithScriptSkipAttributeMustHaveExactlyOneParameter() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("one parameter"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("one parameter"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("one parameter"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("one parameter"));
 		}
 
 		[Test]
 		public void InstanceMethodWithScriptSkipAttributeCannotHaveParameters() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("no parameters"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("no parameters"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("ScriptSkipAttribute") && AllErrors[0].Contains("no parameters"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("no parameters"));
 		}
 
 		[Test]
@@ -843,8 +843,8 @@ class C1 {
 	public void SomeMethod(int x, int y) {
 	}
 }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("AlternateSignatureAttribute") && AllErrors[0].Contains("same name"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("AlternateSignatureAttribute") && AllErrorTexts[0].Contains("same name"));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -861,8 +861,8 @@ class C1 {
 	public void SomeMethod(int x, int y) {
 	}
 }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(3));
-			Assert.That(AllErrors.All(m => m.Contains("C1.SomeMethod") && m.Contains("AlternateSignatureAttribute") && m.Contains("same name")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(3));
+			Assert.That(AllErrorTexts.All(m => m.Contains("C1.SomeMethod") && m.Contains("AlternateSignatureAttribute") && m.Contains("same name")));
 		}
 
 		[Test]
@@ -907,8 +907,8 @@ class C1 {
 	public void SomeMethod() {
 	}
 }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("ScriptAliasAttribute") && AllErrors[0].Contains("must be static"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("ScriptAliasAttribute") && AllErrorTexts[0].Contains("must be static"));
 		}
 
 		[Test]
@@ -930,51 +930,51 @@ class C1<T1> {
 		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{this}"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
 
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("{x}"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeReferencingUnknownTypeIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{$Some.Nonexistent.Type}"")] public static void SomeMethod() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.SomeMethod") && AllErrors[0].Contains("inline code") && AllErrors[0].Contains("Some.Nonexistent.Type"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("Some.Nonexistent.Type"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnInterfaceMethod() {
 			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [InlineCode(""X"")] void M(); }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("I1.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("interface method"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("I1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("interface method"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnOverridableMethod() {
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public virtual void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("overridable"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
 
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public abstract void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("overridable"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
 			Prepare(@"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [InlineCode(""X"")] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("implements"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("implements"));
 		}
 
 		[Test]
 		public void InlineCodeAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
 			Prepare(@"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [InlineCode(""X"")] public sealed override void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("D.M") && AllErrors[0].Contains("InlineCodeAttribute") && AllErrors[0].Contains("overrides"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("D.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -1023,8 +1023,8 @@ class C1 {
 		[Test]
 		public void InstanceMethodOnFirstArgumentAttributeCannotBeSpecifiedOnInstanceMember() {
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("InstanceMethodOnFirstArgumentAttribute") && AllErrors[0].Contains("static"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InstanceMethodOnFirstArgumentAttribute") && AllErrorTexts[0].Contains("static"));
 		}
 
 		[Test]
@@ -1070,8 +1070,8 @@ class D : B {
 	public sealed override void SomeMethod<T>(T t) {}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("IgnoreGenericArgumentsAttribute") && AllErrors[0].Contains("D.SomeMethod") && AllErrors[0].Contains("overrides"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("IgnoreGenericArgumentsAttribute") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -1123,8 +1123,8 @@ class C1 {
 	[IntrinsicOperator]
 	public static void M() {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.M") && AllErrors[0].Contains("IntrinsicOperatorAttribute") && AllErrors[0].Contains("operator method"));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("IntrinsicOperatorAttribute") && AllErrorTexts[0].Contains("operator method"));
 		}
 
 		[Test]
@@ -1139,9 +1139,9 @@ class C1 {
 	[IntrinsicOperator]
 	public static explicit operator C3(C1 c) { return null; }
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
-			Assert.That(AllErrors.Any(m => m.Contains("C1") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("IntrinsicOperatorAttribute") && m.Contains("conversion operator")));
 		}
 
 		[Test]
@@ -1167,8 +1167,8 @@ class C1 {
 	[ExpandParams]
 	public void M2(int a, int b, int[] c) {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C1.M2") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1.M2") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
 		}
 	}
 }

@@ -473,7 +473,20 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessTypeMembers(ITypeDefinition typeDefinition, ICompilation compilation) {
-			var instanceMembers = GetInstanceMemberNames(typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition), compilation);
+			var baseMembersByType = typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition).Select(t => new { Type = t, MemberNames = GetInstanceMemberNames(t, compilation) }).ToList();
+			for (int i = 0; i < baseMembersByType.Count; i++) {
+				var b = baseMembersByType[i];
+				for (int j = i + 1; j < baseMembersByType.Count; j++) {
+					var b2 = baseMembersByType[j];
+					if (!b.Type.GetAllBaseTypeDefinitions().Contains(b2.Type) && !b2.Type.GetAllBaseTypeDefinitions().Contains(b.Type)) {
+						foreach (var dup in b.MemberNames.Where(x => b2.MemberNames.Contains(x))) {
+							Message(7018, typeDefinition, b.Type.FullName, b2.Type.FullName, dup);
+						}
+					}
+				}
+			}
+
+			var instanceMembers = new HashSet<string>(baseMembersByType.SelectMany(m => m.MemberNames).Distinct());
 			var staticMembers = new HashSet<string>(_unusableStaticFieldNames);
 			_unusableInstanceFieldNames.ForEach(n => instanceMembers.Add(n));
 

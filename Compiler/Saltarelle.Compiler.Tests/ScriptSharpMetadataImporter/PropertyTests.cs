@@ -181,9 +181,9 @@ class C : I {
 	public int Prop { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-			Assert.That(AllErrors.Any(m => m.Contains("C.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -198,9 +198,9 @@ class C : I {
 	public int Prop { [ScriptSkip] get { return 0; } [ScriptSkip] set {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("interface member")));
-			Assert.That(AllErrors.Any(m => m.Contains("C.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -215,9 +215,9 @@ class D : B {
 	public sealed override int Prop { [InlineCode(""X"")] get { return 0; } [InlineCode(""X"")] set {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("D.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
-			Assert.That(AllErrors.Any(m => m.Contains("D.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
@@ -232,9 +232,9 @@ class D : B {
 	public sealed override int Prop { [ScriptSkip] get { return 0; } [ScriptSkip] set {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("D.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overrides")));
-			Assert.That(AllErrors.Any(m => m.Contains("D.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
@@ -245,9 +245,9 @@ class C {
 	public virtual int Prop { [InlineCode(""X"")] get; [InlineCode(""X"")] set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
-			Assert.That(AllErrors.Any(m => m.Contains("C.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.get_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.set_Prop") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
 		}
 
 		[Test]
@@ -258,9 +258,9 @@ class C {
 	public virtual int Prop { [ScriptSkip] get; [ScriptSkip] set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overridable")));
-			Assert.That(AllErrors.Any(m => m.Contains("C.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.get_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.set_Prop") && m.Contains("ScriptSkipAttribute") && m.Contains("overridable")));
 		}
 
 		[Test]
@@ -413,8 +413,8 @@ class C : I {
 	public int Prop { get; set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -430,8 +430,8 @@ class D : B {
 	public sealed override int Prop { get; set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("D.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
@@ -443,8 +443,8 @@ interface I {
 	int Prop { get; set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("I.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("I.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -456,8 +456,8 @@ class C {
 	public virtual int Prop { get; set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
 		}
 
 		[Test]
@@ -484,8 +484,8 @@ class C1 {
 	public int Prop { get; set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1.Prop") && AllErrors[0].Contains("instance member") && AllErrors[0].Contains("ScriptAliasAttribute"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.Prop") && AllErrorTexts[0].Contains("instance member") && AllErrorTexts[0].Contains("ScriptAliasAttribute"));
 		}
 
 		[Test]
@@ -580,8 +580,8 @@ class C {
 	public int Prop { get; set; }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C.Prop") && m.Contains("ScriptNameAttribute") && m.Contains("property") && m.Contains("cannot be empty")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Prop") && m.Contains("ScriptNameAttribute") && m.Contains("property") && m.Contains("cannot be empty")));
 		}
 	}
 }

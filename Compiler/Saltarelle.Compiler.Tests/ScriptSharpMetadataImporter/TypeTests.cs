@@ -370,8 +370,8 @@ namespace X {
 	}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("nested type") && AllErrors[0].Contains("X.C1.C2") && AllErrors[0].Contains("ScriptNamespace"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("nested type") && AllErrorTexts[0].Contains("X.C1.C2") && AllErrorTexts[0].Contains("ScriptNamespace"));
 		}
 
 		[Test]
@@ -385,8 +385,8 @@ namespace X {
 	}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("nested type") && AllErrors[0].Contains("X.C1.C2") && AllErrors[0].Contains("IgnoreNamespace"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("nested type") && AllErrorTexts[0].Contains("X.C1.C2") && AllErrorTexts[0].Contains("IgnoreNamespace"));
 		}
 
 		[Test]
@@ -400,39 +400,39 @@ namespace X {
 	}
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("X.C1") && AllErrors[0].Contains("IgnoreNamespace") && AllErrors[0].Contains("ScriptNamespace"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("X.C1") && AllErrorTexts[0].Contains("IgnoreNamespace") && AllErrorTexts[0].Contains("ScriptNamespace"));
 		}
 
 		[Test]
 		public void ScriptNameAttributeOnTypeMustBeAValidJSIdentifier() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; [ScriptName("""")] public class C1 {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; [ScriptName(""X.Y"")] public class C1 {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; [ScriptName(""a b"")] public class C1 {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptName") && AllErrors[0].Contains("must be a valid JavaScript identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
 		}
 
 		[Test]
 		public void ScriptNamespaceAttributeArgumentMustBeAValidJSQualifiedIdentifierOrBeEmpty() {
 			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; [ScriptNamespace(""a b"")] public class C1 {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptNamespace") && AllErrors[0].Contains("must be a valid JavaScript qualified identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptNamespace") && AllErrorTexts[0].Contains("must be a valid JavaScript qualified identifier"));
 
 			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; [ScriptNamespace("" "")] public class C1 {}", expectErrors: true);
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("ScriptNamespace") && AllErrors[0].Contains("must be a valid JavaScript qualified identifier"));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptNamespace") && AllErrorTexts[0].Contains("must be a valid JavaScript qualified identifier"));
 		}
 
 		[Test]
@@ -534,23 +534,23 @@ static class C1 {
 		[Test]
 		public void FieldOrPropertyOrEventInGlobalMethodsClassGivesAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int i; }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("GlobalMethodsAttribute") && AllErrors[0].Contains("fields"));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("fields"));
 
 			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static event System.EventHandler e; }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("GlobalMethodsAttribute") && AllErrors[0].Contains("events"));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("events"));
 
 			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int P { get; set; } }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("GlobalMethodsAttribute") && AllErrors[0].Contains("properties"));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("properties"));
 		}
 
 		[Test]
 		public void GlobalMethodsAttributeCannotBeAppliedToNonStaticClass() {
 			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] class C1 { static int i; }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Contains("C1") && AllErrors[0].Contains("GlobalMethodsAttribute") && AllErrors[0].Contains("must be static"));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("must be static"));
 		}
 
 		[Test]
@@ -658,8 +658,8 @@ public class C {
 	public const int F1 = 12;
 	public const string F2 = ""X"";
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("static")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("ResourcesAttribute") && m.Contains("static")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -667,8 +667,8 @@ public class C {
 public static class C {
 	public static int F1;
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -676,8 +676,8 @@ public static class C {
 public static class C {
 	public static int P { get; set; }
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -685,8 +685,8 @@ public static class C {
 public static class C {
 	static C() {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -694,8 +694,8 @@ public static class C {
 public static class C {
 	public static void M() {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("ResourcesAttribute") && m.Contains("not const fields")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -703,8 +703,8 @@ public static class C {
 public static class C<T> {
 	public const string F1 = ""X"";
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("ResourcesAttribute") && m.Contains("generic")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("ResourcesAttribute") && m.Contains("generic")));
 		}
 
 		[Test]
@@ -738,8 +738,8 @@ public static class C {
 public class C {
 	public static void M() {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("static")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("MixinAttribute") && m.Contains("static")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -747,8 +747,8 @@ public class C {
 public static class C {
 	public static int F1;
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -756,8 +756,8 @@ public static class C {
 public static class C {
 	public static int P { get; set; }
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -765,8 +765,8 @@ public static class C {
 public static class C {
 	static C() {}
 }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("MixinAttribute") && m.Contains("only methods")));
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -774,8 +774,56 @@ public static class C {
 public static class C<T> {
 	public void M() {}
 }", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("MixinAttribute") && m.Contains("generic")));
+		}
+
+		[Test]
+		public void CannotImplementTwoInterfacesWithTheSameMethodName() {
+			Prepare(@"
+public interface I1 { void SomeMethod(); }
+public interface I2 { void SomeMethod(int x); }
+public class C1 : I1, I2 {}", expectErrors: true);
+
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("MixinAttribute") && m.Contains("generic")));
+			Assert.That(AllErrors[0].Code, Is.EqualTo(7018));
+			Assert.That(AllErrors[0].Args[0], Is.EqualTo("C1"));
+			Assert.That(new[] { AllErrors[0].Args[1], AllErrors[0].Args[2] }, Is.EquivalentTo(new[] { "I1", "I2" }));
+			Assert.That(AllErrors[0].Args[3], Is.EqualTo("someMethod"));
+		}
+
+		[Test]
+		public void CanImplementInterfaceThatDerivesFromAnotherInterface() {
+			Prepare(@"
+public interface I1 { void SomeMethod(); }
+public interface I2 : I1 { void SomeMethod(int x); }
+public class C1 : I1, I2 {}", expectErrors: false);
+
+			// No errors is good enough.
+		}
+
+		[Test]
+		public void CannotDeriveFromBaseClassAndImplementInterfaceWithTheSameMethodName() {
+			Prepare(@"
+public class B1 { public void SomeMethod(); }
+public interface I1 { void SomeMethod(int x); }
+public class C1 : B1, I1 {}", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code, Is.EqualTo(7018));
+			Assert.That(AllErrors[0].Args[0], Is.EqualTo("C1"));
+			Assert.That(new[] { AllErrors[0].Args[1], AllErrors[0].Args[2] }, Is.EquivalentTo(new[] { "B1", "I1" }));
+			Assert.That(AllErrors[0].Args[3], Is.EqualTo("someMethod"));
+		}
+
+		[Test]
+		public void CanDeriveFromBaseClassAndImplementInterfaceWhichTheBaseClassImplements() {
+			Prepare(@"
+public interface I1 { void SomeMethod(int x); }
+public class B1 : I1 { void SomeMethod(); }
+public class C1 : B1, I1 {}", expectErrors: false);
+
+			// No errors is good enough.
 		}
 	}
 }

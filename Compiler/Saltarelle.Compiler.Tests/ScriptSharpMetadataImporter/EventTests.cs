@@ -145,9 +145,9 @@ class C : I {
 	public event System.EventHandler Evt { [InlineCode(""|some code|"")] add {} [InlineCode(""|some code|"")] remove {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-			Assert.That(AllErrors.Any(m => m.Contains("C.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
 		}
 
 		[Test]
@@ -162,9 +162,9 @@ class D : B {
 	public sealed override event System.EventHandler Evt { [InlineCode(""X"")] add {} [InlineCode(""X"")] remove {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("D.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
-			Assert.That(AllErrors.Any(m => m.Contains("D.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("D.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overrides")));
 		}
 
 		[Test]
@@ -175,9 +175,9 @@ class C {
 	public virtual event System.EventHandler Evt { [InlineCode(""X"")] add {} [InlineCode(""X"")] remove {} }
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(2));
-			Assert.That(AllErrors.Any(m => m.Contains("C.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
-			Assert.That(AllErrors.Any(m => m.Contains("C.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("overridable")));
 		}
 
 		[Test]
@@ -270,8 +270,8 @@ class C {
 	public event System.EventHandler Evt;
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C.Evt") && m.Contains("ScriptNameAttribute") && m.Contains("event") && m.Contains("cannot be empty")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Evt") && m.Contains("ScriptNameAttribute") && m.Contains("event") && m.Contains("cannot be empty")));
 		}
 	}
 }

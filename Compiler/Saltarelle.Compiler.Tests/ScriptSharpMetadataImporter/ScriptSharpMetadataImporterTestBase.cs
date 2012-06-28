@@ -20,7 +20,8 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 		protected Dictionary<string, ITypeDefinition> AllTypes { get; private set; }
 		protected INamingConventionResolver Metadata { get; private set; }
-		protected IList<string> AllErrors { get; private set; }
+		protected IList<string> AllErrorTexts { get; private set; }
+		protected IList<Message> AllErrors { get; private set; }
 
         protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
             IProjectContent project = new CSharpProjectContent();
@@ -41,12 +42,13 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 			Metadata.Prepare(compilation.GetAllTypeDefinitions(), compilation.MainAssembly, errorReporter);
 
-			AllErrors = errorReporter.AllMessagesText.ToList().AsReadOnly();
+			AllErrors = errorReporter.AllMessages.ToList().AsReadOnly();
+			AllErrorTexts = errorReporter.AllMessagesText.ToList().AsReadOnly();
             if (expectErrors) {
-                AllErrors.Should().NotBeEmpty("Compile should have generated errors");
+                AllErrorTexts.Should().NotBeEmpty("Compile should have generated errors");
             }
 			else {
-                AllErrors.Should().BeEmpty("Compile should not generate errors");
+                AllErrorTexts.Should().BeEmpty("Compile should not generate errors");
 			}
 
 			AllTypes = compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);

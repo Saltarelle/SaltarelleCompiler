@@ -133,8 +133,8 @@ class C {
 	public int Field;
 }", expectErrors: true);
 
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Contains("C.Field") && m.Contains("ScriptNameAttribute") && m.Contains("field") && m.Contains("cannot be empty")));
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Field") && m.Contains("ScriptNameAttribute") && m.Contains("field") && m.Contains("cannot be empty")));
 		}
 
 		[Test]

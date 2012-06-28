@@ -6,7 +6,7 @@ using System.Text;
 using ICSharpCode.NRefactory;
 
 namespace Saltarelle.Compiler.Tests {
-	class Message {
+	public class Message {
 		public MessageSeverity Severity { get; private set; }
 		public int Code { get; private set; }
 		public string File { get; private set; }
