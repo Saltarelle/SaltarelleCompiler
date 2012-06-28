@@ -208,10 +208,10 @@ Task Determine-Version {
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Compiler"
 	cd "$base_dir\Runtime"
 	$refs = Determine-Ref
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime\src\Libraries\CoreLib","$base_dir\Runtime\src\Core\CoreScript"
-	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime\src\Libraries\LoaderLib","$base_dir\Runtime\src\Core\LoaderScript"
-	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime\src\Libraries\Web"
-	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Runtime\src\Libraries\jQuery\jQuery.Core"
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
+	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
+	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\Web"
+	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
