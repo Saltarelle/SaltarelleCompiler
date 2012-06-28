@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.CSharp;
+using ICSharpCode.NRefactory.TypeSystem;
 using Mono.CSharp;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.RuntimeLibrary;
 using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
@@ -120,11 +122,52 @@ x = 1;
 			var rnd = new Random(3);
 			var unorderedNames = names.Select(n => new { n = n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
 			
-			var output = Process(names.Select(n => new JsClass(CreateMockType(), n, JsClass.ClassTypeEnum.Class, null, null, null)));
+			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockType(), n, JsClass.ClassTypeEnum.Class, null, null, null)));
 
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("// ")).Select(l => l.Substring(3)).ToList();
 
 			Assert.That(actual, Is.EqualTo(names));
+		}
+
+		[Test]
+		public void BaseTypesAreRegisteredBeforeDerivedTypes() {
+			var sourceFile = new MockSourceFile("file.cs", @"
+class C3 {}
+interface I1 {}
+class C2 : C3 {}
+class C1 : C2, I1 {}
+");
+			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
+            var er = new MockErrorReporter(true);
+			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, new MockRuntimeLibrary(), er).CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib }, new string[0]);
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// C1
+{C1} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// C2
+{C2} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// C3
+{C3} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// I1
+{I1} = function() {
+};
+{C3}.registerClass('C3');
+{I1}.registerInterface('I1', []);
+{C2}.registerClass('C2', {C3});
+{C1}.registerClass('C1', {C2}, {I1});
+",			
+			
+				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), "C1", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C2"), new JsExpression[] { new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "I1") }),
+				new JsClass(ReflectionHelper.ParseReflectionName("C2").Resolve(compilation.Compilation).GetDefinition(), "C2", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C3"), new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("C3").Resolve(compilation.Compilation).GetDefinition(), "C3", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("I1").Resolve(compilation.Compilation).GetDefinition(), "I1", JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
 		}
 	}
 }

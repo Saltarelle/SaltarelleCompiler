@@ -1,6 +1,5 @@
 TODO:
 v1:
-Prevent creating a class that inherits/implements types with members with the same names (metadata importer).
 ConditionalAttribute
 Add support for allowing an interface to be implemented but not appear in the type system (eg. IElementEventListener)
 

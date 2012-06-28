@@ -102,6 +102,27 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return new JsExpressionStatement(JsExpression.Assign(new JsTypeReferenceExpression(c.CSharpTypeDefinition.ParentAssembly, c.Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value)))));
 		}
 
+		private IList<JsClass> TopologicalSortTypesByInheritance(IList<JsClass> types) {
+			types = new List<JsClass>(types);
+			var result = new List<JsClass>();
+			int iterationsLeft = types.Count;
+			while (types.Count > 0) {
+				if (iterationsLeft <= 0)
+					throw new Exception("Circular inheritance chain involving types " + string.Join(", ", types.Select(t => t.CSharpTypeDefinition.FullName)));
+
+				for (int i = 0; i < types.Count; i++) {
+					var type = types[i];
+					if (!type.CSharpTypeDefinition.DirectBaseTypes.Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
+						result.Add(type);
+						types.RemoveAt(i);
+						i--;
+					}
+				}
+				iterationsLeft--;
+			}
+			return result;
+		}
+
 		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
 			var systemType = Utils.CreateJsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Type).GetDefinition(), _namingConvention);
 
@@ -166,27 +187,30 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				}
 			}
 
-			result.AddRange(orderedTypes.OfType<JsClass>()
+			var typesToRegister = orderedTypes.OfType<JsClass>()
 			                            .Where(c =>    c.TypeArgumentNames.Count == 0
 			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, GlobalMethodsAttribute) == null
 			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) == null
 			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, MixinAttribute) == null)
-			                            .Select(c => {
-			                                             try {
-			                                                 var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, c.Name);
-			                                                 if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-			                                                     return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterInterface), JsExpression.String(c.Name), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
-			                                                 }
-			                                                 else {
-			                                                     return CreateRegisterClassCall(JsExpression.String(c.Name), c.BaseClass, c.ImplementedInterfaces, typeRef);
-			                                                 }
-			                                             }
-			                                             catch (Exception ex) {
-			                                                 _errorReporter.InternalError(ex, c.CSharpTypeDefinition.Region, "Error formatting type " + c.CSharpTypeDefinition.FullName);
-															 return JsExpression.Number(0);
-			                                             }
-			                                         })
-			                            .Select(expr => new JsExpressionStatement(expr)));
+			                            .ToList();
+
+			result.AddRange(TopologicalSortTypesByInheritance(typesToRegister)
+			                .Select(c => {
+			                                 try {
+			                                     var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, c.Name);
+			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
+			                                         return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterInterface), JsExpression.String(c.Name), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
+			                                     }
+			                                     else {
+			                                         return CreateRegisterClassCall(JsExpression.String(c.Name), c.BaseClass, c.ImplementedInterfaces, typeRef);
+			                                     }
+			                                 }
+			                                 catch (Exception ex) {
+			                                     _errorReporter.InternalError(ex, c.CSharpTypeDefinition.Region, "Error formatting type " + c.CSharpTypeDefinition.FullName);
+												 return JsExpression.Number(0);
+			                                 }
+			                             })
+			                .Select(expr => new JsExpressionStatement(expr)));
 			result.AddRange(orderedTypes.OfType<JsClass>().Where(c => c.TypeArgumentNames.Count == 0 && GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) == null).SelectMany(t => t.StaticInitStatements));
 
 			return result;

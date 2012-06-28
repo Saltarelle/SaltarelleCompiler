@@ -15,6 +15,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 		protected ITypeDefinition CreateMockType() {
 			var typeDef = new Mock<ICSharpCode.NRefactory.TypeSystem.ITypeDefinition>(MockBehavior.Strict);
 			typeDef.SetupGet(_ => _.Attributes).Returns(new IAttribute[0]);
+			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
 			return typeDef.Object;
 		}
 
