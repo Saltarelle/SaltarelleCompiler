@@ -390,7 +390,7 @@ namespace X { public class C2 {} }");
 			Assert.That(t2.Name, Is.EqualTo("C2"));
 		}
 
-		[Test]
+		[Test, Ignore("NRefactory bug, adds assembly attribute to type")]
 		public void InvalidIdentifierInAssemblyScriptNamespaceAttributeIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; [assembly: ScriptNamespace(""invalid-identifier"")] public class Class1 {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
@@ -882,6 +882,14 @@ public class B1 : I1 { void SomeMethod(); }
 public class C1 : B1, I1 {}", expectErrors: false);
 
 			// No errors is good enough.
+		}
+
+		[Test]
+		public void ImportedInterfaceBecomesVirtualInterface() {
+			Prepare(@"[System.Runtime.CompilerServices.Imported] public interface I1<T> {}");
+			var i1 = FindType("I1`1");
+			Assert.That(i1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.VirtualInterface));
+			Assert.That(i1.IgnoreGenericArguments, Is.True);
 		}
 	}
 }

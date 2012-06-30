@@ -68,7 +68,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (!_types.TryGetValue(typeDefinition, out result)) {
                 var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
-                    var baseTypes    = typeDefinition.GetAllBaseTypes().ToList();
+                    var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _namingConvention.GetTypeSemantics(t.GetDefinition()).Type != TypeScriptSemantics.ImplType.VirtualInterface).ToList();
 					var unusableTypes = Utils.FindUsedUnusableTypes(baseTypes, _namingConvention).ToList();
 					if (unusableTypes.Count > 0) {
 						foreach (var ut in unusableTypes)
@@ -108,6 +108,9 @@ namespace Saltarelle.Compiler.Compiler {
 
         private JsEnum ConvertEnum(ITypeDefinition type) {
             var semantics = _namingConvention.GetTypeSemantics(type);
+			if (!semantics.GenerateCode)
+				return null;
+
             var values = new List<JsEnumValue>();
             foreach (var f in type.Fields) {
                 if (f.ConstantValue != null) {
@@ -121,7 +124,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
             }
 
-            return semantics.GenerateCode ? new JsEnum(type, semantics.Name, values) : null;
+            return new JsEnum(type, semantics.Name, values);
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {

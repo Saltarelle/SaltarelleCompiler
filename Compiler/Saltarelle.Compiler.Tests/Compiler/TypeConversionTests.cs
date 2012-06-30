@@ -415,5 +415,12 @@ namespace Saltarelle.Compiler.Tests.Compiler {
             Compile(new[] { "class C1<T1, T2> {}" }, namingConvention: nc);
             FindClass("C1").TypeArgumentNames.Should().BeEmpty();
 		}
+
+		[Test]
+		public void VirtualInterfaceDoesNotAppearInTheImplementedInterfaces() {
+			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "I1" || t.Name == "I3" ? TypeScriptSemantics.VirtualInterface() : TypeScriptSemantics.NormalType(t.Name) };
+            Compile(new[] { "interface I1 {} interface I2 {} interface I3<T> {} class C1 : I1, I2, I3<int> {}" }, namingConvention: nc);
+            FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I2}" });
+		}
     }
 }

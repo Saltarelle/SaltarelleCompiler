@@ -307,6 +307,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 				if (_minimizeNames && !Utils.IsPublic(typeDefinition) && !preserveName) {
 					nmspace = DetermineNamespace(typeDefinition);
+					#warning TODO: This doesn't really work, we need to do this by assembly (and should also order types deterministically)
 					int index = _typeSemantics.Values.Where(ts => ts.Semantics.Type == TypeScriptSemantics.ImplType.NormalType).Select(ts => SplitName(ts.Semantics.Name)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
 				}
@@ -352,6 +353,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7011, typeDefinition);
 					isRecord = false;
 				}
+			}
+			else if (typeDefinition.Kind == TypeKind.Interface && isImported) {
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.VirtualInterface(), globalMethods: false, isRecord: false, isNamedValues: false);
+				return;
 			}
 			else {
 				var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);

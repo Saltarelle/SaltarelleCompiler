@@ -44,9 +44,15 @@ namespace Saltarelle.Compiler {
 
 		public static JsTypeReferenceExpression CreateJsTypeReferenceExpression(ITypeDefinition type, INamingConventionResolver namingConvention) {
 			var sem = namingConvention.GetTypeSemantics(type);
-			if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
-				throw new InvalidOperationException("Cannot create a reference to the type " + type.FullName);
-			return new JsTypeReferenceExpression(type.ParentAssembly, sem.Name);
+			switch (sem.Type) {
+				case TypeScriptSemantics.ImplType.NormalType:
+					return new JsTypeReferenceExpression(type.ParentAssembly, sem.Name);
+				case TypeScriptSemantics.ImplType.VirtualInterface:
+					var o = type.ParentAssembly.Compilation.FindType(KnownTypeCode.Object).GetDefinition();
+					return new JsTypeReferenceExpression(o.ParentAssembly, namingConvention.GetTypeSemantics(o).Name);
+				default:
+					throw new InvalidOperationException("Cannot create a reference to the type " + type.FullName);
+			}
 		}
 
 		public static object ConvertToDoubleOrStringOrBoolean(object value) {

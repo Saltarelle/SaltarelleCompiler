@@ -958,5 +958,26 @@ public class C {
 }", "C.M");
 			Assert.That(result, Is.EqualTo(new[] { 3, 7, 9, 10, 11, 12 }));
 		}
+
+		[Test]
+		public void VirtualInterfaceAppearsAsObjectWhenUsedWithTypeOfAndAsGenericArgument() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+[Imported] public interface I1 {}
+public class C1<T> {}
+
+public class C {
+	public static bool[] M() {
+		var tobj = typeof(object);
+		var ti1  = typeof(I1);
+		var tcofo = typeof(C1<object>);
+		var tcofi = typeof(C1<I1>);
+		return new[] { tobj == ti1, tcofo == tcofi };
+	}
+}", "C.M");
+			Assert.That(result, Has.All.True);
+		}
 	}
 }

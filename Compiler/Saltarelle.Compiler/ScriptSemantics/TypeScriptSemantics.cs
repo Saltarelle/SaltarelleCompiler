@@ -11,6 +11,12 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             /// </summary>
             NormalType,
 
+			/// <summary>
+			/// The type is a virtual interface (only applicable to interfaces). Virtual interfaces do not appear in the implemented interface list on types that implement them, and whenever they are used as generic arguments, System.Object will be used instead.
+			/// This is useful for import libraries, where it is known that an object is supposed to have some methods.
+			/// </summary>
+			VirtualInterface,
+
             /// <summary>
             /// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
             /// However, its members might still be used (but care must be taken to specify attributes on the members to ensure that they work even when the type does not exist.
@@ -36,7 +42,6 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 					throw new InvalidOperationException();
 				return _name;
 			}
-			private set { _name = value; }
 		}
 
 		private bool _ignoreGenericArguments;
@@ -45,11 +50,10 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool IgnoreGenericArguments {
 			get {
-				if (Type != ImplType.NormalType)
+				if (Type != ImplType.NormalType && Type != ImplType.VirtualInterface)
 					throw new InvalidOperationException();
 				return _ignoreGenericArguments;
 			}
-			private set { _ignoreGenericArguments = value; }
 		}
 
 		/// <summary>
@@ -58,7 +62,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		public bool GenerateCode { get; set; }
 
 		public static TypeScriptSemantics NormalType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
-			return new TypeScriptSemantics { Type = ImplType.NormalType, Name = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+			return new TypeScriptSemantics { Type = ImplType.NormalType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+		}
+
+		public static TypeScriptSemantics VirtualInterface() {
+			return new TypeScriptSemantics { Type = ImplType.VirtualInterface, _ignoreGenericArguments = true, GenerateCode = false };
 		}
 
 		public static TypeScriptSemantics NotUsableFromScript() {

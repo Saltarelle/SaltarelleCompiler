@@ -1,6 +1,7 @@
 TODO:
 v1:
-Add support for allowing an interface to be implemented but not appear in the type system (eg. IElementEventListener)
+Fix NRefactory bug that causes assembly attributes to be added to types.
+Implement the improved JSON constructor options.
 
 v2:
 yield
