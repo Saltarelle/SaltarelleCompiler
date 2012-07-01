@@ -1,6 +1,5 @@
 TODO:
 v1:
-Fix NRefactory bug that causes assembly attributes to be added to types.
 Implement the improved JSON constructor options.
 
 v2:

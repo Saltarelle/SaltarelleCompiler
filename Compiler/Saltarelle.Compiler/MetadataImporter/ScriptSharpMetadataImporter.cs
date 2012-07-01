@@ -139,6 +139,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IProperty, string> _propertyBackingFieldNames;
 		private Dictionary<IEvent, string> _eventBackingFieldNames;
 		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
+		private Dictionary<Tuple<IAssembly, string>, int> _internalTypeCountPerAssemblyAndNamespace;
 		private IErrorReporter _errorReporter;
 		private IType _systemObject;
 		private IType _systemRecord;
@@ -307,8 +308,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 				if (_minimizeNames && !Utils.IsPublic(typeDefinition) && !preserveName) {
 					nmspace = DetermineNamespace(typeDefinition);
-					#warning TODO: This doesn't really work, we need to do this by assembly (and should also order types deterministically)
-					int index = _typeSemantics.Values.Where(ts => ts.Semantics.Type == TypeScriptSemantics.ImplType.NormalType).Select(ts => SplitName(ts.Semantics.Name)).Count(tn => tn.Item1 == nmspace && tn.Item2.StartsWith("$"));
+					var key = Tuple.Create(typeDefinition.ParentAssembly, nmspace);
+					int index;
+					_internalTypeCountPerAssemblyAndNamespace.TryGetValue(key, out index);
+					_internalTypeCountPerAssemblyAndNamespace[key] = index + 1;
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
 				}
 				else {
@@ -1036,6 +1039,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_propertyBackingFieldNames = new Dictionary<IProperty, string>();
 			_eventBackingFieldNames = new Dictionary<IEvent, string>();
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
+			_internalTypeCountPerAssemblyAndNamespace = new Dictionary<Tuple<IAssembly, string>, int>();
 
 			var sna = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptNamespaceAttribute);
 			if (sna != null) {
@@ -1045,7 +1049,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			foreach (var t in types) {
+			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
 					ProcessType(t);
 					ProcessTypeMembers(t);
