@@ -461,5 +461,124 @@ public void M() {
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("constructor") && er.AllMessagesText[0].Contains("expanded form"));
 		}
+
+		[Test]
+		public void CreatingObjectWithJsonConstructorWorks() {
+			AssertCorrect(
+@"class C1 { public int a; public string b; }
+public int F() { return 0; }
+public int P { get; set; }
+
+public void M() {
+	// BEGIN
+	var c = new C1 { a = (P = F()), b = ""X"" };
+	// END
+}",
+@"	var $tmp1 = this.F();
+	this.set_P($tmp1);
+	var $c = { $a: $tmp1, $b: 'X' };
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json() });
+		}
+
+		[Test]
+		public void JsonConstructorWithParameterToMemberMapWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int a, int b) {} public int a2, int b2; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public int P { get; set; }
+
+public void M() {
+	// BEGIN
+	var c = new C1(F1(), P = F2());
+	// END
+}",
+@"	var $tmp2 = this.F1();
+	var $tmp1 = this.F2();
+	this.set_P($tmp1);
+	var $c = { $a2: $tmp2, $b2: $tmp1 };
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.DeclaringType.Name == "C1" ? ConstructorScriptSemantics.Json(new[] { c.DeclaringType.GetFields().Single(f => f.Name == "a2"), c.DeclaringType.GetFields().Single(f => f.Name == "b2") }) : ConstructorScriptSemantics.Unnamed() });
+		}
+
+		[Test]
+		public void JsonConstructorWithParameterToMemberMapWorksWithReorderedAndDefaultArguments() {
+			AssertCorrect(
+@"class X {
+	public int a2, b2, c2, d2, e2, f2, g2, h2;
+	public X(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+}
+int P { get; set; }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	var x = new X(d: F1(), g: (P = F2()), f: F3(), b: F4());
+	// END
+}",
+@"	var $tmp2 = this.F1();
+	var $tmp1 = this.F2();
+	this.set_P($tmp1);
+	var $x = { $d2: $tmp2, $g2: $tmp1, $f2: this.F3(), $b2: this.F4(), $a2: 1, $c2: 3, $e2: 5 };
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
+		}
+
+		[Test]
+		public void JsonConstructorWithParameterToMemberMapWorksWithObjectInitializers() {
+			AssertCorrect(
+@"class X {
+	public int a2, b2, c2, d2;
+	public X(int a, int b) {}
+}
+
+public void M() {
+	// BEGIN
+	var x = new X(123, 456) { c2 = 789, d2 = 987 };
+	// END
+}",
+@"	var $x = { $a2: 123, $b2: 456, $c2: 789, $d2: 987 };
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
+		}
+
+		[Test]
+		public void MemberCorrespondingToOptionalNonSpecifiedArgumentToJsonConstructorCanBeInitialized() {
+			AssertCorrect(
+@"class X {
+	public int a2, b2, c2, d2;
+	public X(int a, int b = 0) {}
+}
+
+public void M() {
+	// BEGIN
+	var x = new X(123) { c2 = 789, b2 = 987 };
+	// END
+}",
+@"	var $x = { $a2: 123, $c2: 789, $b2: 987 };
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
+		}
+
+		[Test]
+		public void InitializingMemberThatIsAlsoInitializedWithParameterToMemberMapIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public int a2;
+	public X(int a) {}
+}
+class C {
+	public void M() {
+		// BEGIN
+		var x = new X(123) { a2 = 789 };
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("a2") && er.AllMessagesText[0].Contains("initializer") && er.AllMessagesText[0].Contains("constructor call"));
+		}
 	}
 }

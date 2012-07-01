@@ -1006,51 +1006,80 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression CompileJsonConstructorCall(IMethod constructor, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
+		private string GetMemberNameForJsonConstructor(IMember member) {
+			if (member is IProperty) {
+				var currentImpl = _namingConvention.GetPropertySemantics((IProperty)member);
+				if (currentImpl.Type == PropertyScriptSemantics.ImplType.Field) {
+					return currentImpl.FieldName;
+				}
+				else {
+					_errorReporter.Message(7517, _filename, _location, member.DeclaringType.FullName + "." + member.Name);
+					return null;
+				}
+			}
+			else if (member is IField) {
+				var currentImpl = _namingConvention.GetFieldSemantics((IField)member);
+				if (currentImpl.Type == FieldScriptSemantics.ImplType.Field) {
+					return currentImpl.Name;
+				}
+				else {
+					_errorReporter.Message(7518, _filename, _location, member.DeclaringType.FullName + "." + member.Name);
+					return null;
+				}
+			}
+			else {
+				_errorReporter.InternalError("Unsupported member " + member + " in anonymous object initializer.", _filename, _location);
+				return null;
+			}
+		}
+
+		private JsExpression CompileJsonConstructorCall(IMethod constructor, ConstructorScriptSemantics impl, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements) {
+			argumentToParameterMap = argumentToParameterMap ?? CreateIdentityArgumentToParameterMap(argumentsForCall.Count);
+
 			var jsPropertyNames = new List<string>();
 			var expressions = new List<JsExpression>();
+			// Add initializers for specified arguments.
+			for (int i = 0; i < argumentToParameterMap.Count; i++) {
+				var m = impl.ParameterToMemberMap[argumentToParameterMap[i]];
+				string name = GetMemberNameForJsonConstructor(m);
+				if (name != null) {
+					jsPropertyNames.Add(name);
+					expressions.Add(InnerCompile(argumentsForCall[argumentToParameterMap[i]], false, expressions));
+				}
+			}
+			// Add initializers for initializer statements
 			foreach (var init in initializerStatements) {
 				var orr = init as OperatorResolveResult;
 				if (orr != null && orr.OperatorType == ExpressionType.Assign && orr.Operands[0] is MemberResolveResult && ((MemberResolveResult)orr.Operands[0]).TargetResult is InitializedObjectResolveResult) {
-					var currentMember = ((MemberResolveResult)orr.Operands[0]).Member;
-					string jsName;
-					if (currentMember is IProperty) {
-						var currentImpl = _namingConvention.GetPropertySemantics((IProperty)currentMember);
-						if (currentImpl.Type == PropertyScriptSemantics.ImplType.Field) {
-							jsName = currentImpl.FieldName;
+					var member = ((MemberResolveResult)orr.Operands[0]).Member;
+					string name = GetMemberNameForJsonConstructor(member);
+					if (name != null) {
+						if (jsPropertyNames.Contains(name)) {
+							_errorReporter.Message(7527, _filename, _location, member.Name);
 						}
 						else {
-							_errorReporter.Message(7517, _filename, _location, currentMember.DeclaringType.FullName + "." + currentMember.Name);
-							jsName = "X";
+							jsPropertyNames.Add(name);
+							expressions.Add(InnerCompile(orr.Operands[1], false, expressions));
 						}
 					}
-					else if (currentMember is IField) {
-						var currentImpl = _namingConvention.GetFieldSemantics((IField)currentMember);
-						if (currentImpl.Type == FieldScriptSemantics.ImplType.Field) {
-							jsName = currentImpl.Name;
-						}
-						else {
-							_errorReporter.Message(7518, _filename, _location, currentMember.DeclaringType.FullName + "." + currentMember.Name);
-							jsName = "X";
-						}
-					}
-					else {
-						_errorReporter.InternalError("Unsupported member " + currentMember + " in anonymous object initializer.", _filename, _location);
-						jsName = "X";
-					}
-
-					jsPropertyNames.Add(jsName);
-					expressions.Add(InnerCompile(orr.Operands[1], false, expressions));
 				}
 				else {
 					_errorReporter.InternalError("Expected an assignment to an InitializedObjectResolveResult, got " + orr, _filename, _location);
-					jsPropertyNames.Add("X");
-					expressions.Add(JsExpression.Null);
+				}
+			}
+			// Add initializers for unspecified arguments
+			for (int i = 0; i < argumentsForCall.Count; i++) {
+				if (!argumentToParameterMap.Contains(i)) {
+					string name = GetMemberNameForJsonConstructor(impl.ParameterToMemberMap[i]);
+					if (name != null && !jsPropertyNames.Contains(name)) {
+						jsPropertyNames.Add(name);
+						expressions.Add(InnerCompile(argumentsForCall[i], false, expressions));
+					}
 				}
 			}
 
 			var jsProperties = new List<JsObjectLiteralProperty>();
-			for (int i = 0; i < initializerStatements.Count; i++)
+			for (int i = 0; i < expressions.Count; i++)
 				jsProperties.Add(new JsObjectLiteralProperty(jsPropertyNames[i], expressions[i]));
 			return JsExpression.ObjectLiteral(jsProperties);
 		}
@@ -1072,7 +1101,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			if (impl.Type == ConstructorScriptSemantics.ImplType.Json) {
-				return CompileJsonConstructorCall(method, argumentsForCall, argumentToParameterMap, initializerStatements);
+				return CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements);
 			}
 			else {
 				if (impl.ExpandParams && !isExpandedForm) {

@@ -97,6 +97,7 @@ namespace Saltarelle.Compiler {
 			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it expands its param array in script.") },
 			{ 7525, Tuple.Create(MessageSeverity.Error, "Error in inline code compilation: {0}.") },
 			{ 7526, Tuple.Create(MessageSeverity.Error, "Dynamic invocations cannot use named arguments.") },
+			{ 7527, Tuple.Create(MessageSeverity.Error, "The member {0} cannot be initialized in an initializer statement because it was also initialized by the constructor call.") },
 
 			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },

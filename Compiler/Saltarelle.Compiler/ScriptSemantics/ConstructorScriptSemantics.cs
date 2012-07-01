@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.ScriptSemantics {
     public class ConstructorScriptSemantics {
@@ -93,6 +97,18 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool ExpandParams { get; set; }
 
+		private ReadOnlyCollection<IMember> _parameterToMemberMap;
+		/// <summary>
+		/// For JSON constructor, maps the constructor parameter to members. Each element in this array corresponds to the parameter with the same index, and the members have to be properties with field semantics, or fields.
+		/// </summary>
+		public ReadOnlyCollection<IMember> ParameterToMemberMap {
+			get {
+				if (Type != ImplType.Json)
+					throw new InvalidOperationException();
+				return _parameterToMemberMap;
+			}
+		}
+
         public static ConstructorScriptSemantics Unnamed(bool generateCode = true, bool expandParams = false) {
             return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode, ExpandParams = expandParams };
         }
@@ -113,8 +129,8 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             return new ConstructorScriptSemantics { Type = ImplType.NotUsableFromScript, GenerateCode = false };
         }
 
-		public static ConstructorScriptSemantics Json() {
-			return new ConstructorScriptSemantics { Type = ImplType.Json, GenerateCode = false };
+		public static ConstructorScriptSemantics Json(IEnumerable<IMember> parameterToMemberMap = null) {
+			return new ConstructorScriptSemantics { Type = ImplType.Json, _parameterToMemberMap = parameterToMemberMap.AsReadOnly(), GenerateCode = false };
 		}
     }
 }
