@@ -129,7 +129,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             return new ConstructorScriptSemantics { Type = ImplType.NotUsableFromScript, GenerateCode = false };
         }
 
-		public static ConstructorScriptSemantics Json(IEnumerable<IMember> parameterToMemberMap = null) {
+		public static ConstructorScriptSemantics Json(IEnumerable<IMember> parameterToMemberMap) {
 			return new ConstructorScriptSemantics { Type = ImplType.Json, _parameterToMemberMap = parameterToMemberMap.AsReadOnly(), GenerateCode = false };
 		}
     }

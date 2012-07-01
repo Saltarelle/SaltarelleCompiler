@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FluentAssertions;
+using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -69,7 +70,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ConstructorImplementedAsJsonDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json() };
+            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json(new IMember[0]) };
             Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }

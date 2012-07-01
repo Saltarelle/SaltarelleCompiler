@@ -1,6 +1,5 @@
 TODO:
 v1:
-Implement the improved JSON constructor options.
 
 v2:
 yield

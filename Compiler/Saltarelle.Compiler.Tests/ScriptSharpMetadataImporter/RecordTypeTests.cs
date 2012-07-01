@@ -9,11 +9,11 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	[TestFixture]
 	public class RecordTypeTests : ScriptSharpMetadataImporterTestBase {
-		private void TestBothKinds(string content, Action asserter) {
-			Prepare(@"using System.Runtime.CompilerServices; [Record] public sealed class C1 { " + content + " }");
+		private void TestBothKinds(string content, Action asserter, bool expectErrors = false) {
+			Prepare(@"using System.Runtime.CompilerServices; [Record] public sealed class C1 { " + content + " }", expectErrors: expectErrors);
 			asserter();
 
-			Prepare(@"using System.Runtime.CompilerServices; public sealed class C1 : System.Record { " + content + " }");
+			Prepare(@"using System.Runtime.CompilerServices; public sealed class C1 : System.Record { " + content + " }", expectErrors: expectErrors);
 			asserter();
 		}
 
@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void RecordTypesCannotImplementInterfacesMustBeSealed() {
+		public void RecordTypesCannotImplementInterfaces() {
 			Prepare(@"using System.Runtime.CompilerServices; interface I {} [Record] sealed class C1 : I {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
@@ -238,6 +238,57 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 				Assert.That(c3.Name, Is.EqualTo("$ctor"));
 				Assert.That(c3.GenerateCode, Is.True);
 			});
+		}
+
+		[Test]
+		public void ObjectLiteralAttributeMakesTheConstructorAJsonConstructor() {
+			TestBothKinds(@"public int MyProperty { get; set; } public int MyField; [ObjectLiteral] public C1(int myProperty, int myField) {} }", () => {
+				var ctor = FindConstructor("C1", 2);
+				Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+				Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "MyProperty", "MyField" }));
+			});
+		}
+
+		[Test]
+		public void ConstructorForImportedRecordTypeBecomesJsonConstructor() {
+			Prepare(@"using System.Runtime.CompilerServices; [Record, Imported] public sealed class C1 { public int MyProperty { get; set; } public int MyField; public C1(int myProperty, int myField) {} }");
+			var ctor = FindConstructor("C1", 2);
+			Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "MyProperty", "MyField" }));
+
+			Prepare(@"using System.Runtime.CompilerServices; [Imported] public sealed class C1 : System.Record { public int MyProperty { get; set; } public int MyField; public C1(int myProperty, int myField) {} }");
+			ctor = FindConstructor("C1", 2);
+			Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "MyProperty", "MyField" }));
+		}
+
+		[Test]
+		public void JsonConstructorMustHaveAllParametersMatchingMemberNamesCaseInsensitive() {
+			TestBothKinds(@"[ObjectLiteral] public C1(int someParameter) {}", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("parameter") && m.Contains("matching") && m.Contains("someParameter")));
+			}, expectErrors: true);
+		}
+
+		[Test]
+		public void ArgumentTypesForJsonConstructorMustMatchMemberTypes() {
+			TestBothKinds(@"[ObjectLiteral] public C1(int someParameter) {} public string SomeParameter;", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("System.String") && m.Contains("System.Int32")));
+			}, expectErrors: true);
+		}
+
+		[Test]
+		public void JsonConstructorCannotHaveRefOrOutParametersMustMatchMemberTypes() {
+			TestBothKinds(@"[ObjectLiteral] public C1(ref int someParameter) {} public string SomeParameter;", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("ref")));
+			}, expectErrors: true);
+
+			TestBothKinds(@"[ObjectLiteral] public C1(out int someParameter) {} public string SomeParameter;", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("out")));
+			}, expectErrors: true);
 		}
 	}
 }

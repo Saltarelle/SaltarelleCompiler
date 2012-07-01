@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -477,7 +478,7 @@ public void M() {
 @"	var $tmp1 = this.F();
 	this.set_P($tmp1);
 	var $c = { $a: $tmp1, $b: 'X' };
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json() });
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(new IMember[0]) });
 		}
 
 		[Test]

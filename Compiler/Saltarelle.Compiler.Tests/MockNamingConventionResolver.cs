@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests {
 			GetMethodSemantics         = m => MethodScriptSemantics.NormalMethod(m.Name);
 			GetConstructorSemantics    = c => {
 			                             	if (c.DeclaringType.Kind == TypeKind.Anonymous)
-			                             		return ConstructorScriptSemantics.Json();
+			                             		return ConstructorScriptSemantics.Json(new IMember[0]);
 			                             	else if (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0)
 			                             		return ConstructorScriptSemantics.Unnamed();
 			                             	else

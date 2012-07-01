@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			for (int i = 0; i < 1000; i++) {
 				string name = md.GetVariableName(null, u);
 				Assert.That(u.Contains(name), Is.False);
-				Assert.That(name.Length <= 2);
+				Assert.That(name.Length <= 3);
 				u.Add(name);
 			}
 		}

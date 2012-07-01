@@ -35,6 +35,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string NamedValuesAttribute                   = AttributeNamespace + ".NamedValuesAttribute";
 		private const string ResourcesAttribute                     = AttributeNamespace + ".ResourcesAttribute";
 		private const string MixinAttribute                         = AttributeNamespace + ".MixinAttribute";
+		private const string ObjectLiteralAttribute                 = AttributeNamespace + ".ObjectLiteralAttribute";
 		private const string Function = "Function";
 		private const string Array    = "Array";
 
@@ -119,12 +120,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public bool GlobalMethods { get; private set; }
 			public bool IsRecord { get; private set; }
 			public bool IsNamedValues { get; private set; }
+			public bool IsImported { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods, bool isRecord, bool isNamedValues) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool globalMethods, bool isRecord, bool isNamedValues, bool isImported) {
 				Semantics     = semantics;
 				GlobalMethods = globalMethods;
 				IsRecord      = isRecord;
 				IsNamedValues = isNamedValues;
+				IsImported    = isImported;
 			}
 		}
 
@@ -193,21 +196,22 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		private static readonly HashSet<string> _keywords = new HashSet<string>() { "abstract", "as", "boolean", "break", "byte", "case", "catch", "char", "class", "continue", "const", "debugger", "default", "delete", "do", "double", "else", "enum", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "is", "long", "namespace", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "use", "var", "void", "volatile", "while", "with", };
 
-		public static string EncodeNumber(int i, bool allowDigitFirst) {
-			if (allowDigitFirst) {
-				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
-				while (i >= _encodeNumberTable.Length) {
-					i /= _encodeNumberTable.Length;
-					result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
-				}
-				return result;
-			}
-			else {
+		public static string EncodeNumber(int i, bool ensureValidIdentifier) {
+			if (ensureValidIdentifier) {
 				string result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1);
 				while (i >= _encodeNumberTable.Length - 10) {
 					i /= _encodeNumberTable.Length - 10;
 					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
+				}
+				return _keywords.Contains(result) ? "_" + result : result;
+			}
+			else {
+				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
+				while (i >= _encodeNumberTable.Length) {
+					i /= _encodeNumberTable.Length;
+					result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
 				}
 				return result;
 			}
@@ -274,7 +278,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false);
 				return;
 			}
 
@@ -358,7 +362,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 			else if (typeDefinition.Kind == TypeKind.Interface && isImported) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.VirtualInterface(), globalMethods: false, isRecord: false, isNamedValues: false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.VirtualInterface(), globalMethods: false, isRecord: false, isNamedValues: false, isImported: true);
 				return;
 			}
 			else {
@@ -398,11 +402,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			for (int i = 0; i < typeDefinition.TypeParameterCount; i++) {
 				var tp = typeDefinition.TypeParameters[i];
-				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, false) : tp.Name;
+				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, true) : tp.Name;
 			}
 
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord, isNamedValues: nva != null);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), globalMethods: globalMethods, isRecord: isRecord, isNamedValues: nva != null, isImported: isImported);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -545,7 +549,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			string name = preferredName;
 			int i = (name == null ? 0 : 1);
 			while (name == null || usedNames.Contains(name)) {
-				name = preferredName + "$" + EncodeNumber(i, true);
+				name = preferredName + "$" + EncodeNumber(i, false);
 				i++;
 			}
 			return name;
@@ -555,6 +559,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var nsa = GetAttributePositionalArgs(constructor, NonScriptableAttribute);
 			var asa = GetAttributePositionalArgs(constructor, AlternateSignatureAttribute);
 			var epa = GetAttributePositionalArgs(constructor, ExpandParamsAttribute);
+			var ola = GetAttributePositionalArgs(constructor, ObjectLiteralAttribute);
 
 			if (nsa != null || _typeSemantics[constructor.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
@@ -595,6 +600,39 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null);
 				return;
 			}
+			else if (ola != null || (isRecord && _typeSemantics[constructor.DeclaringTypeDefinition].IsImported)) {
+				if (isRecord) {
+					bool hasError = false;
+					var members = constructor.DeclaringTypeDefinition.Members.Where(m => m.EntityType == EntityType.Property || m.EntityType == EntityType.Field).ToDictionary(m => m.Name.ToLowerInvariant());
+					var parameterToMemberMap = new List<IMember>();
+					foreach (var p in constructor.Parameters) {
+						IMember member;
+						if (p.IsOut || p.IsRef) {
+							Message(7145, p.Region, p.Name);
+							hasError = true;
+						}
+						else if (members.TryGetValue(p.Name.ToLowerInvariant(), out member)) {
+							if (member.ReturnType.Equals(p.Type)) {
+								parameterToMemberMap.Add(member);
+							}
+							else {
+								Message(7144, p.Region, p.Name, p.Type.FullName, member.ReturnType.FullName);
+								hasError = true;
+							}
+						}
+						else {
+							Message(7143, p.Region, constructor.DeclaringTypeDefinition.FullName, p.Name);
+							hasError = true;
+						}
+					}
+					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap);
+				}
+				else {
+					Message(7146, constructor.Region, constructor.DeclaringTypeDefinition.FullName);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
+				}
+				return;
+			}
 			else if (nameSpecified) {
 				if (isRecord)
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, expandParams: epa != null);
@@ -617,7 +655,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else {
 						int i = 1;
 						do {
-							name = "$ctor" + EncodeNumber(i, true);
+							name = "$ctor" + EncodeNumber(i, false);
 							i++;
 						} while (usedNames.Contains(name));
 					}
@@ -739,7 +777,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, HashSet<string> usedNames) {
 			for (int i = 0; i < method.TypeParameters.Count; i++) {
 				var tp = method.TypeParameters[i];
-				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, false) : tp.Name;
+				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, true) : tp.Name;
 			}
 
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
@@ -1078,7 +1116,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
 			if (method.DeclaringType.Kind == TypeKind.Anonymous)
-				return ConstructorScriptSemantics.Json();
+				return ConstructorScriptSemantics.Json(new IMember[0]);
 			return _constructorSemantics[(IMethod)method.MemberDefinition];
 		}
 
@@ -1137,7 +1175,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				int i = usedNames.Count;
 				string name;
 				do {
-					name = EncodeNumber(i++, false);
+					name = EncodeNumber(i++, true);
 				} while (usedNames.Contains(name));
 				return name;
 			}

@@ -220,8 +220,19 @@ class C1 {
 	static C1() {
 	}
 }");
-		
 			Assert.That(FindConstructor("C1", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+		}
+
+		[Test]
+		public void ObjectLiteralAttributeCannotBeUsedOnConstructorForNonRecordType() {
+			Prepare(
+@"public class C1 {
+	[System.Runtime.CompilerServices.ObjectLiteral]
+	public C1() {
+	}
+}", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("ObjectLiteralAttribute")));
 		}
 	}
 }
