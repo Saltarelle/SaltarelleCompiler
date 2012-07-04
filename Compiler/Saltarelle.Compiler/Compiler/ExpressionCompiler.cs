@@ -78,11 +78,6 @@ namespace Saltarelle.Compiler.Compiler {
 				_result = true;
 				return expression;
 			}
-
-			public override JsExpression Visit(JsMemberAccessExpression expression, object data) {
- 				_result = true;
-				return expression;
-			}
 		}
 
 		internal class DoesJsExpressionHaveSideEffects : RewriterVisitorBase<object> {
