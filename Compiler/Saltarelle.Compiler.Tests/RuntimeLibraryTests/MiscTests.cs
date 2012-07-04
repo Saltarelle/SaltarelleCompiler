@@ -69,6 +69,7 @@ public class C {
 		public void StringBuilderWorks() {
 			var result = ExecuteCSharp(@"
 using System;
+using System.Text;
 public class C {
 	public static string M() {
 		var arr = new[] { 1, 2 };
