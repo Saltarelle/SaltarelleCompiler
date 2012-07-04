@@ -45,8 +45,8 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
 			}
 		}
-/*
-		[Test]
+
+		[Test, Ignore("Debugging purposes")]
 		public void TestIt() {
 			var opts = ReadProject(@"C:\Projects\Saltarelle\Saltarelle\SaltarelleLib\SaltarelleLib.Client\SaltarelleLib.Client.csproj");
 			opts.DefineConstants.Add("CLIENT");
@@ -61,6 +61,6 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
 				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
 			}
-		}*/
+		}
 	}
 }
