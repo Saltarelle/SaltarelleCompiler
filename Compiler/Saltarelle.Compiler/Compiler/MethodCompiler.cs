@@ -9,11 +9,12 @@ using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.Compiler {
     public class MethodCompiler {
 		private class ThisReplacer : RewriterVisitorBase<object> {
-			private JsExpression _replaceWith;
+			private readonly JsExpression _replaceWith;
 
 			public ThisReplacer(JsExpression replaceWith) {
 				_replaceWith = replaceWith;
@@ -29,9 +30,30 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private class StaticMethodConstructorReturnPatcher : RewriterVisitorBase<object> {
+			private JsExpression _identifier;
+
+			private StaticMethodConstructorReturnPatcher(string identifier) {
+				this._identifier = JsExpression.Identifier(identifier);
+			}
+
+			public override JsStatement Visit(JsReturnStatement statement, object data) {
+				return new JsReturnStatement(_identifier);
+			}
+
+			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
+				return expression;	// Don't patch return values of nested functions.
+			}
+
+			public static IList<JsStatement> Process(IList<JsStatement> statements, string identifierToReturn) {
+				var obj = new StaticMethodConstructorReturnPatcher(identifierToReturn);
+				return obj.Visit(statements, null);
+			}
+		}
+
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
-        private ICompilation _compilation;
+        private readonly ICompilation _compilation;
         private readonly CSharpAstResolver _resolver;
     	private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly ISet<string> _definedSymbols;
@@ -69,7 +91,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			try {
 				CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namingConvention.ThisAlias : null));
-				var body = new List<JsStatement>();
+				IList<JsStatement> body = new List<JsStatement>();
 				body.AddRange(FixByRefParameters(constructor.Parameters, variables));
 
 				var systemObject = _compilation.FindType(KnownTypeCode.Object);
@@ -105,6 +127,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 				if (ctor != null) {
 					body.AddRange(_statementCompiler.Compile(ctor.Body).Statements);
+				}
+
+				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
+					if (body.Count == 0 || !(body[body.Count - 1] is JsReturnStatement))
+						body.Add(new JsReturnStatement());
+					body = StaticMethodConstructorReturnPatcher.Process(body, _namingConvention.ThisAlias).AsReadOnly();
 				}
 
 				return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));

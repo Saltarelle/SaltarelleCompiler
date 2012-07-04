@@ -9,7 +9,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.JSModel
 {
     public abstract class RewriterVisitorBase<TData> : IExpressionVisitor<JsExpression, TData>, IStatementVisitor<JsStatement, TData> {
-        protected static IEnumerable<T> VisitCollection<T>(ReadOnlyCollection<T> orig, Func<T, T> visitor) {
+        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, T> visitor) {
             List<T> list = null;
             for (int i = 0; i < orig.Count; i++) {
                 var before = orig[i];
@@ -24,14 +24,14 @@ namespace Saltarelle.Compiler.JSModel
                     list.Add(after);
                 }
             }
-            return list != null ? (IEnumerable<T>)list : orig;
+            return list ?? orig;
         }
 
-        public virtual IEnumerable<JsExpression> Visit(ReadOnlyCollection<JsExpression> expressions, TData data) {
+        public virtual IList<JsExpression> Visit(IList<JsExpression> expressions, TData data) {
             return VisitCollection(expressions, expr => Visit(expr, data));
         }
 
-        public virtual IEnumerable<JsObjectLiteralProperty> Visit(ReadOnlyCollection<JsObjectLiteralProperty> values, TData data) {
+        public virtual IList<JsObjectLiteralProperty> Visit(IList<JsObjectLiteralProperty> values, TData data) {
             return VisitCollection(values, v => Visit(v, data));
         }
 
@@ -120,15 +120,15 @@ namespace Saltarelle.Compiler.JSModel
 			return ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Literal(expression.Format, arguments);
 		}
 
-        public virtual IEnumerable<JsStatement> Visit(ReadOnlyCollection<JsStatement> statements, TData data) {
+        public virtual IList<JsStatement> Visit(IList<JsStatement> statements, TData data) {
             return VisitCollection(statements, s => Visit(s, data));
         }
 
-        public virtual IEnumerable<JsSwitchSection> Visit(ReadOnlyCollection<JsSwitchSection> clauses, TData data) {
+        public virtual IList<JsSwitchSection> Visit(IList<JsSwitchSection> clauses, TData data) {
             return VisitCollection(clauses, c => Visit(c, data));
         }
 
-        public virtual IEnumerable<JsVariableDeclaration> Visit(ReadOnlyCollection<JsVariableDeclaration> declarations, TData data) {
+        public virtual IList<JsVariableDeclaration> Visit(IList<JsVariableDeclaration> declarations, TData data) {
             return VisitCollection(declarations, d => Visit(d, data));
         }
 

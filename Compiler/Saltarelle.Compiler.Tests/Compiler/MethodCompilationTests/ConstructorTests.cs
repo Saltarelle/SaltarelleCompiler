@@ -61,6 +61,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 @"function() {
 	var $this = {};
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -80,6 +81,7 @@ class D : B {
 @"function() {
 	var $this = {B}.ctor();
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -99,6 +101,36 @@ class D : B {
 @"function() {
 	var $this = {B}.ctor();
 	$this.M();
+	return $this;
+}", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
+		}
+
+		[Test]
+		public void ReturningFromAStaticMethodConstructorReturnsTheCreatedObject() {
+			AssertCorrect(
+@"class C {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() {
+		if (false) {
+			System.Func<int, int> a = i => i + 1;
+			return;
+		}
+		this.M();
+		return;
+	}
+}",
+@"function() {
+	var $this = {};
+	if (false) {
+		var $a = function($i) {
+			return $i + 1;
+		};
+		return $this;
+	}
+	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -205,6 +237,7 @@ class D : B {
 @"function() {
 	var $this = __Literal_0_'X'__;
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
 		}
 
@@ -233,6 +266,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	var $this = {C}.ctor$7(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
 		}
 
@@ -261,6 +295,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	var $this = ctor$7(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), isGlobal: true) });
 		}
 
@@ -362,6 +397,7 @@ class D : B {
 	var $tmp3 = {C}.F3();
 	var $this = new {C}(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
 		}
 
@@ -480,6 +516,7 @@ class D : B {
 	var $this = {};
 	$this.$x = 1;
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -501,6 +538,7 @@ class D : B {
 	var $this = {B}.ctor();
 	$this.$x = 1;
 	$this.M();
+	return $this;
 }", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
