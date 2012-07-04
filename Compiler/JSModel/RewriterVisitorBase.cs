@@ -191,9 +191,9 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement Visit(JsForStatement statement, TData data) {
-            var initStatement = Visit(statement.InitStatement, data);
-            var condition     = Visit(statement.ConditionExpression, data);
-            var iterator      = Visit(statement.IteratorExpression, data);
+            var initStatement = statement.InitStatement       != null ? Visit(statement.InitStatement, data)       : null;
+            var condition     = statement.ConditionExpression != null ? Visit(statement.ConditionExpression, data) : null;
+            var iterator      = statement.IteratorExpression  != null ? Visit(statement.IteratorExpression, data)  : null;
             var body          = Visit(statement.Body, data);
             return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
                  ? statement
