@@ -19,6 +19,20 @@ public void M() {
 		}
 
 		[Test]
+		public void ReadingFieldReturnedByAMethodWorks() {
+			AssertCorrect(
+@"class X { public int x; }
+public X F() { return null; }
+public void M() {
+	// BEGIN
+	int i = F().x;
+	// END
+}",
+@"	var $i = this.$F().$x;
+");
+		}
+
+		[Test]
 		public void ReadingDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -74,6 +88,20 @@ public void M() {
 	// END
 }",
 @"	var $i = this.$F;
+");
+		}
+
+		[Test]
+		public void ReadingPropertyImplementedAsFieldReturnedByAMethodWorks() {
+			AssertCorrect(
+@"class X { public int F { get; set; } }
+public X F() { return null; }
+public void M() {
+	// BEGIN
+	int i = F().F;
+	// END
+}",
+@"	var $i = this.$F().$F;
 ");
 		}
 

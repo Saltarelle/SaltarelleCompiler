@@ -819,7 +819,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileMethodInvocation(impl.GetMethod, getter, rr.TargetResult, new ResolveResult[0], new int[0], false, false);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyScriptSemantics.ImplType.Field: {
-						var jsTarget = InnerCompile(rr.TargetResult, true);
+						var jsTarget = InnerCompile(rr.TargetResult, false);
 						return JsExpression.MemberAccess(jsTarget, impl.FieldName);
 					}
 					default: {
@@ -832,7 +832,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _namingConvention.GetFieldSemantics((IField)rr.Member);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), impl.Name);
+						return JsExpression.MemberAccess(InnerCompile(rr.TargetResult, false), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return Utils.MakeConstantExpression(impl.Value);
 					default:
