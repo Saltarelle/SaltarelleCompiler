@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 		<title>Test</title>
 	</head>
 	<body>
-		<script type=""text/javascript"">" + Environment.NewLine + Common.SSMscorlibScript + @"</script>
+		<script type=""text/javascript"">" + Environment.NewLine + Common.MscorlibScript + @"</script>
 		<script type=""text/javascript"">" + Environment.NewLine + script + @"</script>
 	</body>
 </html>
@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-            compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.SSMscorlib }, null);
+            compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, null);
 			var compiledTypes = compiler.Compile(compilation);
 
 			var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);

@@ -21,7 +21,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 
 		protected string Process(IEnumerable<JsType> types) {
 			IProjectContent proj = new CSharpProjectContent();
-			proj = proj.AddAssemblyReferences(new[] { Common.SSMscorlib });
+			proj = proj.AddAssemblyReferences(new[] { Common.Mscorlib });
 			var comp = proj.CreateCompilation();
 			var er = new MockErrorReporter(true);
 			var obj = new OOPEmulator.ScriptSharpOOPEmulator(new MockNamingConventionResolver(), er);

@@ -34,19 +34,20 @@ public void M() {
 		[Test]
 		public void RethrowStatementWorksThatDoesNotRequireAdditionalStatementsWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+public void M() {
 	// BEGIN
 	try {
 		try {
 			try {
 			}
-			catch (System.Exception) {
+			catch (Exception) {
 				if (true) {
 					throw;
 				}
 			}
 		}
-		catch (System.ArgumentException) {
+		catch (ArgumentException) {
 			throw;
 		}
 	}

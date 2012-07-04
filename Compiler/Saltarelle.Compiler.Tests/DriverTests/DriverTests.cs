@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				File.WriteAllText(Path.GetFullPath("File1.cs"), @"using System.Collections; public class C1 { public JsDictionary M() { return null; } }");
 				File.WriteAllText(Path.GetFullPath("File2.cs"), @"using System.Collections; public class C2 { public JsDictionary M() { return null; } }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File1.cs"), Path.GetFullPath("File2.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js")
@@ -63,7 +63,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = y; } }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js")
@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0; } }");
 				var options            = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -105,7 +105,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0; } }");
 				var options = new CompilerOptions {
-					References            = { new Reference(Common.SSMscorlibPath) },
+					References            = { new Reference(Common.MscorlibPath) },
 					SourceFiles           = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath    = Path.GetFullPath("Test.dll"),
 					OutputScriptPath      = Path.GetFullPath("Test.js"),
@@ -127,7 +127,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0; } }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -149,7 +149,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0; } }");
 				var options = new CompilerOptions {
-					References            = { new Reference(Common.SSMscorlibPath) },
+					References            = { new Reference(Common.MscorlibPath) },
 					SourceFiles           = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath    = Path.GetFullPath("Test.dll"),
 					OutputScriptPath      = Path.GetFullPath("Test.js"),
@@ -172,7 +172,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0l; } }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -188,7 +188,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0l; } }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -208,7 +208,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = 0l; } }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -236,7 +236,7 @@ public class C1 {
 	}
 }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -257,7 +257,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -274,7 +274,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -294,7 +294,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("MyOutputAssembly.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -321,7 +321,7 @@ public class C1 {
 				File.WriteAllText(Path.GetFullPath("FirstFile.cs"), @"class C1 { public void M() {} }");
 				File.WriteAllText(Path.GetFullPath("SecondFile.cs"), @"class C2 { public void M() {} }");
 				var options = new CompilerOptions {
-					References  = { new Reference(Common.SSMscorlibPath) },
+					References  = { new Reference(Common.MscorlibPath) },
 					SourceFiles = { Path.GetFullPath("FirstFile.cs"), Path.GetFullPath("SecondFile.cs") },
 				};
 				var er = new MockErrorReporter();
@@ -341,7 +341,7 @@ public class C1 {
 		public void NotSpecifyingAnyFilesToCompileIsAnError() {
 			UsingFiles(() => {
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = {},
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -360,7 +360,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("ExistentFile.cs"), @"class C1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("NonExistentFile.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -379,7 +379,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("MyOutputFile.dll"),
 					OutputScriptPath   = Path.GetFullPath("MyOutputFile.js"),
@@ -403,7 +403,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("MyOutputFile.dll"),
 					OutputScriptPath   = Path.GetFullPath("MyOutputFile.js"),
@@ -427,7 +427,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("MyOutputFile.dll"),
 					OutputScriptPath   = Path.GetFullPath("MyOutputFile.js"),
@@ -451,7 +451,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"/** <summary>$$$$$$$$$$$$$$$</summary>*/ class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -473,7 +473,7 @@ public class C1 {
 		public void ReferenceInTheCurrentDirectoryCanBeResolved() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
-				File.Copy(Common.SSMscorlibPath, "mscorlib.dll");
+				File.Copy(Common.MscorlibPath, "mscorlib.dll");
 				var options = new CompilerOptions {
 					References         = { new Reference("mscorlib.dll") },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
@@ -494,7 +494,7 @@ public class C1 {
 		public void ReferenceWithoutExtensionTheCurrentDirectoryCanBeResolved() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
-				File.Copy(Common.SSMscorlibPath, "mscorlib.dll");
+				File.Copy(Common.MscorlibPath, "mscorlib.dll");
 				var options = new CompilerOptions {
 					References         = { new Reference("mscorlib") },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
@@ -516,7 +516,7 @@ public class C1 {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath), new Reference("MyNonexistentAssembly") },
+					References         = { new Reference(Common.MscorlibPath), new Reference("MyNonexistentAssembly") },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -542,7 +542,7 @@ public class C1 {
 
 				File.WriteAllText(Path.GetFullPath("Ref.cs"), @"public class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("Ref.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Ref.dll"),
 					OutputScriptPath   = Path.GetFullPath("Ref.js"),
@@ -553,7 +553,7 @@ public class C1 {
 
 				File.WriteAllText(Path.GetFullPath("Out.cs"), @"extern alias myalias; class Class2 : myalias::Class1 { public void M2() {} }");
 				options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath), new Reference(Path.GetFullPath("Ref.dll"), alias: "myalias") },
+					References         = { new Reference(Common.MscorlibPath), new Reference(Path.GetFullPath("Ref.dll"), alias: "myalias") },
 					SourceFiles        = { Path.GetFullPath("Out.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Out.dll"),
 					OutputScriptPath   = Path.GetFullPath("Out.js"),
@@ -576,7 +576,7 @@ public class C1 {
 
 				File.WriteAllText(Path.GetFullPath("MyAdditionalReferencePath\\Ref.cs"), @"public class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("MyAdditionalReferencePath\\Ref.cs") },
 					OutputAssemblyPath = Path.GetFullPath("MyAdditionalReferencePath\\Ref.dll"),
 					OutputScriptPath   = Path.GetFullPath("MyAdditionalReferencePath\\Ref.js"),
@@ -587,7 +587,7 @@ public class C1 {
 
 				File.WriteAllText(Path.GetFullPath("Out.cs"), @"class Class2 : Class1 { public void M2() {} }");
 				options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath), new Reference("Ref.dll") },
+					References         = { new Reference(Common.MscorlibPath), new Reference("Ref.dll") },
 					SourceFiles        = { Path.GetFullPath("Out.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Out.dll"),
 					OutputScriptPath   = Path.GetFullPath("Out.js"),
@@ -613,7 +613,7 @@ public class C1 {
 				File.WriteAllBytes(Path.GetFullPath("Key.snk"), keyBytes);
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.SSMscorlibPath) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("File.dll"),
 					OutputScriptPath   = Path.GetFullPath("File.js"),
@@ -634,7 +634,7 @@ public class C1 {
 			var driver = new CompilerDriver(er);
 
 			File.WriteAllText(Path.GetFullPath(baseName + ".cs"), source);
-			var options = new CompilerOptions { References = { new Reference(Common.SSMscorlibPath) },
+			var options = new CompilerOptions { References = { new Reference(Common.MscorlibPath) },
 				SourceFiles        = { Path.GetFullPath(baseName + ".cs") },
 				OutputAssemblyPath = Path.GetFullPath(baseName + ".dll"),
 				OutputScriptPath   = Path.GetFullPath(baseName + ".js"),

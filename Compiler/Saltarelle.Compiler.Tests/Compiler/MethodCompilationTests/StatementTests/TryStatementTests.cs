@@ -28,12 +28,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypeToAVariableWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentException ex) {
+	catch (ArgumentException ex) {
 		int y = 0;
 	}
 	// END
@@ -57,12 +58,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypeWithoutStoringInAVariableWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentException) {
+	catch (ArgumentException) {
 		int y = 0;
 	}
 	// END
@@ -178,15 +180,17 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesTwoSpecificExceptionTypesWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+class ArgumentNullException : ArgumentException {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentNullException ex) {
+	catch (ArgumentNullException ex) {
 		int y = 0;
 	}
-	catch (System.ArgumentException) {
+	catch (ArgumentException) {
 		int z = 0;
 	}
 	// END
@@ -213,18 +217,20 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypesAndSystemExceptionWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+class ArgumentNullException : ArgumentException {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentNullException) {
+	catch (ArgumentNullException) {
 		int y = 0;
 	}
-	catch (System.ArgumentException ex) {
+	catch (ArgumentException ex) {
 		int z = 0;
 	}
-	catch (System.Exception) {
+	catch (Exception) {
 		int z2 = 0;
 	}
 	// END
@@ -251,18 +257,20 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypesAndNamedSystemExceptionWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+class ArgumentNullException : ArgumentException {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentNullException) {
+	catch (ArgumentNullException) {
 		int y = 0;
 	}
-	catch (System.ArgumentException ex) {
+	catch (ArgumentException ex) {
 		int z = 0;
 	}
-	catch (System.Exception ex2) {
+	catch (Exception ex2) {
 		int z2 = 0;
 	}
 	// END
@@ -290,15 +298,17 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypesAndHasEmptyCatchClauseWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+class ArgumentNullException : ArgumentException {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentNullException) {
+	catch (ArgumentNullException) {
 		int y = 0;
 	}
-	catch (System.ArgumentException) {
+	catch (ArgumentException) {
 		int z = 0;
 	}
 	catch {
@@ -327,23 +337,27 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypesAfterSystemExceptionWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+class ArgumentNullException : ArgumentException {}
+class InvalidOperationException : Exception {}
+class ArgumentOutOfRangeException : ArgumentException {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentNullException) {
+	catch (ArgumentNullException) {
 		int y = 0;
 	}
-	catch (System.ArgumentException) {
+	catch (ArgumentException) {
 		int z = 0;
 	}
-	catch (System.Exception) {
+	catch (Exception) {
 		int z2 = 0;
 	}
-	catch (System.InvalidOperationException) {
+	catch (InvalidOperationException) {
 	}
-	catch (System.ArgumentOutOfRangeException) {
+	catch (ArgumentOutOfRangeException) {
 	}
 	// END
 }",
@@ -396,12 +410,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void TryCatchFinallyBlockWorks() {
 			AssertCorrect(
-@"public void M() {
+@"class ArgumentException : Exception {}
+public void M() {
 	// BEGIN
 	try {
 		int x = 0;
 	}
-	catch (System.ArgumentException) {
+	catch (ArgumentException) {
 		int y = 0;
 	}
 	finally {

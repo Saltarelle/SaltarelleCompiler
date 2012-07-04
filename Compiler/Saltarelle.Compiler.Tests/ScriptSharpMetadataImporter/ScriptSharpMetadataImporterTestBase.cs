@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 				cu.AcceptVisitor(new TypeSystemConvertVisitor(pf));
 				project = project.UpdateProjectContent(null, pf);
             }
-            project = project.AddAssemblyReferences(new[] { Common.SSMscorlib });
+            project = project.AddAssemblyReferences(new[] { Common.Mscorlib });
 
 			var compilation = project.CreateCompilation();
 

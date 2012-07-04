@@ -160,11 +160,14 @@ public void M() {
         [Test]
         public void BaseQualifiedReferenceIsConsideredToUseThis() {
             CompileMethod(
-@"public void M() {
-    Func<int> f = () => {
-        return base.GetHashCode();
-    };
-}");
+@" class B { public int F() { return 0; } }
+class D : B {
+	public void M() {
+		System.Func<int> f = () => {
+			return base.F();
+		};
+	}
+}", addSkeleton: false);
 
             var f = MethodCompiler.nestedFunctionsRoot.NestedFunctions[0];
             Assert.That(f.DirectlyUsesThis, Is.True);

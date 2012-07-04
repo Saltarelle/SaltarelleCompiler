@@ -114,12 +114,12 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
         [Test]
         public void VariableDeclaredInUsingStatementIsCorrectlyRegistered() {
-            CompileMethod(@"
+            CompileMethod(@"class MemoryStream : IDisposable {}
                 public void M() {
-                    using (var ms = new System.IO.MemoryStream()) {
+                    using (var ms = new MemoryStream()) {
                         int a = 1;
                     }
-                    using (var ms = new System.IO.MemoryStream()) {
+                    using (var ms = new MemoryStream()) {
                         int a = 1;
                     }
                 }
@@ -135,10 +135,10 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
         [Test]
         public void UsingStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
-            CompileMethod(@"
+            CompileMethod(@"class MemoryStream : IDisposable {}
                 public void M() {
 					IDisposable ms;
-                    using (ms = new System.IO.MemoryStream()) {
+                    using (ms = new MemoryStream()) {
                         int a = 1;
                     }
                 }
@@ -155,25 +155,25 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
         [Test]
         public void VariableDeclaredInCatchBlockIsCorrectlyRegistered() {
-            CompileMethod(@"
+            CompileMethod(@"class InvalidOperationException : Exception {} class ArgumentException : Exception {}
                 public void M() {
 					try {
 						int a = 0;
 					}
-					catch (System.InvalidOperationException ex) {
+					catch (InvalidOperationException ex) {
 						int a = 0;
 					}
-					catch (System.ArgumentException ex) {
+					catch (ArgumentException ex) {
 						int a = 0;
 					}
 
 					try {
 						int a = 0;
 					}
-					catch (System.InvalidOperationException ex) {
+					catch (InvalidOperationException ex) {
 						int a = 0;
 					}
-					catch (System.ArgumentException ex) {
+					catch (ArgumentException ex) {
 						int a = 0;
 					}
                 }
@@ -190,12 +190,12 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 
         [Test]
         public void CatchBlockWithoutVariableDeclarationDoesNotCauseRegistration() {
-            CompileMethod(@"
+            CompileMethod(@"class InvalidOperationException : System.Exception {}
                 public void M() {
 					try {
 						int a = 0;
 					}
-					catch (System.InvalidOperationException) {
+					catch (InvalidOperationException) {
 						int a = 0;
 					}
 				}
