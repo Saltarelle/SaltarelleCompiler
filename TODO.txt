@@ -14,7 +14,6 @@ Multi-dimensional arrays
 Ensure that type initializers are run in the correct order.
 NAnt task
 Change the INamingConventionResolver interface (should not contain methods for variable names, should be one resolver per referenced assembly).
-Optimize foreach over arrays.
 Allow a class to inherit from two types with a member with the same name IFF both the members are implemented by the same method.
 
 v3:

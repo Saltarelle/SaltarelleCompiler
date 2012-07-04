@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
 		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
 				GetPropertySemantics = p => {
-					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name))
+					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
 						return PropertyScriptSemantics.Field("$" + p.Name);
 					else
 				        return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + p.Name), MethodScriptSemantics.NormalMethod("set_$" + p.Name));

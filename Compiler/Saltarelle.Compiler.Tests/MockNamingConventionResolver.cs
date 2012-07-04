@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.Tests {
 			                             		return ConstructorScriptSemantics.Named("ctor$" + String.Join("$", c.Parameters.Select(p => p.Type.Name)));
 			                             };
 			GetPropertySemantics       = p => {
-			                             	if (p.DeclaringType.Kind == TypeKind.Anonymous)
+			                             	if (p.DeclaringType.Kind == TypeKind.Anonymous || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
 			                             		return PropertyScriptSemantics.Field("$" + p.Name);
 			                             	else
 			                             		return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name));

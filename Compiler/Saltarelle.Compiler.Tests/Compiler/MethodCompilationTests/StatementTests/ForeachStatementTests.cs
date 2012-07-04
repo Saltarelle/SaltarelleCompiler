@@ -62,8 +62,26 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("Fix in next commit")]
-		public void ForeachStatementDoesNotGenerateDisposeCallForArrayEnumerator() {
+		[Test]
+		public void ForeachOverArrayIsOptimizedToForLoop() {
+			AssertCorrect(
+@"public void M() {
+	var arr = new[] { 1, 2, 3};
+	// BEGIN
+	foreach (var item in arr) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for (var $tmp1 = 0; $tmp1 < $arr.$Length; $tmp1++) {
+		var $item = $arr[$tmp1];
+		var $x = 0;
+	}
+");
+		}
+
+		[Test]
+		public void ForeachOverArrayCreatesATemporaryArrayVariableWhenTheArrayExpressionIsComplex() {
 			AssertCorrect(
 @"public void M() {
 	// BEGIN
@@ -72,9 +90,9 @@ public void M() {
 	}
 	// END
 }",
-@"	var $tmp1 = $Upcast([1, 2, 3], {IEnumerable}).$GetEnumerator();
-	while ($tmp1.$MoveNext()) {
-		var $item = $tmp1.get_$Current();
+@"	var $tmp1 = [1, 2, 3];
+	for (var $tmp2 = 0; $tmp2 < $tmp1.$Length; $tmp2++) {
+		var $item = $tmp1[$tmp2];
 		var $x = 0;
 	}
 ");
