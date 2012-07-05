@@ -26,7 +26,12 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 	copy "$base_dir\Compiler\SCTask\Saltarelle.Compiler.targets" "$out_dir"
 }
 
-Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
+Task Generate-jQueryUISource {
+	Exec { msbuild "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+	Exec { & "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\bin\ScriptSharp.Tools.jQueryUIGenerator.exe" "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\entries" "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI" /p | Out-Null }
+}
+
+Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generate-jQueryUISource {
 	Exec { msbuild "$base_dir\Runtime\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 }
 
@@ -75,8 +80,8 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$base_dir\Runtime\License.txt" target=""/>
 		<file src="$base_dir\Runtime\bin\mscorlib.dll" target="tools\Assemblies"/>
 		<file src="$base_dir\Runtime\bin\mscorlib.xml" target="tools\Assemblies"/>
-		<file src="$base_dir\Runtime\bin\mscorlib.js" target=""/>
-		<file src="$base_dir\Runtime\bin\mscorlib.debug.js" target=""/>
+		<file src="$base_dir\Runtime\bin\Script\mscorlib.js" target=""/>
+		<file src="$base_dir\Runtime\bin\Script\mscorlib.debug.js" target=""/>
 		<file src="$out_dir\dummy.txt" target="content"/>
 		<file src="$base_dir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
 	</files>
@@ -101,8 +106,8 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$base_dir\Runtime\License.txt" target=""/>
 		<file src="$base_dir\Runtime\bin\SSLoader.dll" target="lib"/>
 		<file src="$base_dir\Runtime\bin\SSLoader.xml" target="lib"/>
-		<file src="$base_dir\Runtime\bin\ssloader.js" target=""/>
-		<file src="$base_dir\Runtime\bin\ssloader.debug.js" target=""/>
+		<file src="$base_dir\Runtime\bin\Script\ssloader.js" target=""/>
+		<file src="$base_dir\Runtime\bin\Script\ssloader.debug.js" target=""/>
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$out_dir\Loader.nuspec"
@@ -153,6 +158,31 @@ Task Build-NuGetPackages -Depends Determine-Version {
 </package>
 "@ | Out-File -Encoding UTF8 "$out_dir\jQuery.nuspec"
 
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.jQuery.UI</id>
+		<version>$script:JQueryUIVersion</version>
+		<title>Metadata required to use jQuery UI with the Saltarelle C# to JavaScript compiler</title>
+		<description>This package contains the required metadata to use jQuery UI with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the jQuery import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+		<authors>Ivaylo Gochkov, Erik Källén</authors>
+		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<dependencies>
+			<dependency id="Saltarelle.Runtime" version="0.0"/>
+			<dependency id="Saltarelle.Web" version="0.0"/>
+			<dependency id="Saltarelle.jQuery" version="0.0"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="$base_dir\Runtime\License.txt" target=""/>
+		<file src="$base_dir\Runtime\bin\Script.jQuery.UI.dll" target="lib"/>
+		<file src="$base_dir\Runtime\bin\Script.jQuery.UI.xml" target="lib"/>
+		<file src="$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI\*.js" target=""/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$out_dir\jQuery.UI.nuspec"
+
 	"This file is safe to remove from the project, but NuGet requires the Saltarelle.Compiler package to install something." | Out-File -Encoding UTF8 "$out_dir\dummy.txt"
 
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Compiler.nuspec" -OutputDirectory "$out_dir" }
@@ -160,6 +190,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Loader.nuspec" -OutputDirectory "$out_dir" }
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Web.nuspec" -OutputDirectory "$out_dir" }
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\jQuery.nuspec" -OutputDirectory "$out_dir" }
+	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\jQuery.UI.nuspec" -OutputDirectory "$out_dir" }
 }
 
 Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackages {
@@ -206,18 +237,21 @@ Task Determine-Version {
 	cd "$base_dir\Compiler"
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$base_dir\Compiler"
+
 	cd "$base_dir\Runtime"
 	$refs = Determine-Ref
 	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
 	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
 	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\Web"
 	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
+	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "tools\jQueryUIGenerator"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
 	"Loader version: $script:LoaderVersion"
 	"Web version: $script:WebVersion"
 	"jQuery version: $script:jQueryVersion"
+	"jQuery UI version: $script:jQueryUIVersion"
 	
 	cd $olddir
 }
