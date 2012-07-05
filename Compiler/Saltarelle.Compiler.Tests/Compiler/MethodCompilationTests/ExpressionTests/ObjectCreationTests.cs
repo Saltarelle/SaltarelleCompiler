@@ -581,5 +581,21 @@ class C {
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("a2") && er.AllMessagesText[0].Contains("initializer") && er.AllMessagesText[0].Contains("constructor call"));
 		}
+
+		[Test]
+		public void CreatingANewDelegateFromAnOldOneWorks() {
+			AssertCorrect(
+@"delegate void D1(int i);
+delegate void D2(int i);
+
+public void M() {
+	D1 d1 = i => {};
+	// BEGIN
+	D2 d2 = new D2(d1);
+	// END
+}",
+@"	var $x = { $a2: 123, $c2: 789, $b2: 987 };
+");
+		}
 	}
 }
