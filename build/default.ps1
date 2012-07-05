@@ -27,8 +27,15 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 }
 
 Task Generate-jQueryUISource {
-	Exec { msbuild "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator.sln" /verbosity:minimal /p:"Configuration=$configuration" }
-	Exec { & "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\bin\ScriptSharp.Tools.jQueryUIGenerator.exe" "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\entries" "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI" /p | Out-Null }
+	try {
+		move "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI\Properties\Version.cs" "$base_dir\Runtime\src\Libraries\jQuery\UIVersion.tmp"
+		Exec { msbuild "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+		Exec { & "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\bin\ScriptSharp.Tools.jQueryUIGenerator.exe" "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\entries" "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI" /p | Out-Null }
+		copy "$base_dir\Runtime\src\Libraries\jQuery\UIVersion.tmp" "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI\Properties\Version.cs"
+	}
+	finally {
+		del "$base_dir\Runtime\src\Libraries\jQuery\UIVersion.tmp"
+	}
 }
 
 Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generate-jQueryUISource {
@@ -269,4 +276,6 @@ Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\LoaderLib\Properties\Version.cs" -Version $script:LoaderVersion
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\Web\Properties\Version.cs" -Version $script:WebVersion
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\jQuery\jQuery.Core\Properties\Version.cs" -Version $script:JQueryVersion
+	mkdir -Force "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI\Properties" | Out-Null
+	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI\Properties\Version.cs" -Version $script:JQueryUIVersion
 }
