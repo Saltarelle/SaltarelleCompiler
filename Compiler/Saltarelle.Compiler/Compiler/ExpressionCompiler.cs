@@ -1359,9 +1359,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 				if (rr.Type is ArrayType && rr.Input.Type is ArrayType)	// Array covariance / contravariance.
 					return input;
-				if (rr.Type.Kind == TypeKind.Dynamic)
+				else if (rr.Type.Kind == TypeKind.Dynamic)
 					return input;
-				if (rr.Conversion.IsImplicit)
+				else if (rr.Type.Kind == TypeKind.Delegate && rr.Input.Type.Kind == TypeKind.Delegate && rr.Type != _compilation.FindType(KnownTypeCode.MulticastDelegate) && rr.Input.Type != _compilation.FindType(KnownTypeCode.MulticastDelegate))
+					return input;	// Conversion between compatible delegate types.
+				else if (rr.Conversion.IsImplicit)
 					return _runtimeLibrary.Upcast(input, rr.Input.Type, rr.Type);
 				else
 					return _runtimeLibrary.Downcast(input, rr.Input.Type, rr.Type);

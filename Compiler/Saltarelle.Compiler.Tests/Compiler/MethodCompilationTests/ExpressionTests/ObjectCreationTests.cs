@@ -594,7 +594,7 @@ public void M() {
 	D2 d2 = new D2(d1);
 	// END
 }",
-@"	var $x = { $a2: 123, $c2: 789, $b2: 987 };
+@"	var $d2 = $d1;
 ");
 		}
 	}

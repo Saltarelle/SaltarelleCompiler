@@ -1209,7 +1209,7 @@ public void M() {
 	Func<D, B> f2 = f;
 	// END
 }",
-@"	var $f2 = $Upcast($f, $InstantiateGenericType({Func}, {D}, {B}));
+@"	var $f2 = $f;
 ");
 		}
 
