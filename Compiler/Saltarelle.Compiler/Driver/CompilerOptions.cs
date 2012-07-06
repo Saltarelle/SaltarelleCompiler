@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 
 namespace Saltarelle.Compiler.Driver {
+	[Serializable]
 	public class Reference {
 		/// <summary>
 		/// Alias for the reference (for use with "extern alias"). Null if no alias.
@@ -22,6 +23,7 @@ namespace Saltarelle.Compiler.Driver {
 		}
 	}
 
+	[Serializable]
 	public class CompilerOptions {
 		public List<string> AdditionalLibPaths  { get; private set; }
 		public bool MinimizeScript              { get; set; }
