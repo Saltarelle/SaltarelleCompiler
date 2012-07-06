@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -9,21 +8,6 @@ using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler.SCTask {
 	public class SCTask : Task {
-		public class Executor : MarshalByRefObject {
-			public bool Execute(CompilerOptions options, TaskLoggingHelper log) {
-				if (options == null)
-					return false;
-				var driver = new CompilerDriver(new TaskErrorReporter(log));
-				try {
-					return driver.Compile(options);
-				}
-				catch (Exception ex) {
-					log.LogErrorFromException(ex);
-					return false;
-				}
-			}
-		}
-
 		private bool HandleIntegerList(IList<int> targetCollection, string value, string itemName) {
 			if (!string.IsNullOrEmpty(value)) {
 				foreach (var s in value.Split(new[] { ';', ',' }).Select(s => s.Trim()).Where(s => s != "")) {
@@ -89,18 +73,13 @@ namespace Saltarelle.Compiler.SCTask {
 			var options = GetOptions();
 			if (options == null)
 				return false;
-
-			AppDomain ad = null;
+			var driver = new CompilerDriver(new TaskErrorReporter(Log));
 			try {
-				var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
-				ad = AppDomain.CreateDomain("SCTask", null, setup);
-				var executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
-				return executor.Execute(options, Log);
+				return driver.Compile(options, true);
 			}
-			finally {
-				if (ad != null) {
-					AppDomain.Unload(ad);
-				}
+			catch (Exception ex) {
+				Log.LogErrorFromException(ex);
+				return false;
 			}
 		}
 

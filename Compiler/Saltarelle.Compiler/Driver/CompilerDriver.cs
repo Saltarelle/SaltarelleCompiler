@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
 		private readonly IErrorReporter _errorReporter;
 
-		private string GetAssemblyName(CompilerOptions options) {
+		private static string GetAssemblyName(CompilerOptions options) {
 			if (options.OutputAssemblyPath != null)
 				return Path.GetFileNameWithoutExtension(options.OutputAssemblyPath);
 			else if (options.SourceFiles.Count > 0)
@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler.Driver {
 				return null;
 		}
 
-		private string ResolveReference(string filename, IEnumerable<string> paths, IErrorReporter er) {
+		private static string ResolveReference(string filename, IEnumerable<string> paths, IErrorReporter er) {
 			// Code taken from mcs, so it should match that behavior.
 			bool? hasExtension = null;
 			foreach (var path in paths) {
@@ -53,7 +53,7 @@ namespace Saltarelle.Compiler.Driver {
 			return null;
 		}
 
-		private CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath, string outputDocFilePath, IErrorReporter er) {
+		private static CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath, string outputDocFilePath, IErrorReporter er) {
 			var allPaths = options.AdditionalLibPaths.Concat(new[] { Environment.CurrentDirectory }).ToList();
 
 			var result = new CompilerSettings();
@@ -96,7 +96,23 @@ namespace Saltarelle.Compiler.Driver {
 
 			return result;
 		}
+/*
+		private class ProxyErrorReportPrinter : MarshalByRefObject, IErrorReporter {
+			private readonly IErrorReporter _prev;
 
+			public void Message(MessageSeverity severity, int code, string file, TextLocation location, string message, params object[] args) {
+				_prev.Message(severity, code, file, location, message, args);
+			}
+
+			public void InternalError(string text, string file, TextLocation location) {
+				_prev.InternalError(text, file, location);
+			}
+
+			public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
+				_prev.InternalError(ex, file, location, additionalText);
+			}
+		}
+*/
 		private class ConvertingReportPrinter : ReportPrinter {
 			private readonly IErrorReporter _errorReporter;
 
@@ -126,7 +142,7 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		private class ErrorReporterWrapper : IErrorReporter {
+		public class ErrorReporterWrapper : MarshalByRefObject, IErrorReporter {
 			private readonly IErrorReporter _er;
 			private readonly TextWriter _actualConsoleOut;
 
@@ -169,14 +185,10 @@ namespace Saltarelle.Compiler.Driver {
 			_errorReporter = errorReporter;
 		}
 
-		public bool Compile(CompilerOptions options) {
-			try {
+		public class Executor : MarshalByRefObject {
+			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
 				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
-				var actualOut = Console.Out;
 				try {
-					Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
-
-					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
 					// Compile the assembly
 					var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile, er);
 					if (er.HasErrors)
@@ -195,7 +207,7 @@ namespace Saltarelle.Compiler.Driver {
 					var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
 					var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
 
-					var references = LoadReferences(ctx.Settings.AssemblyReferences);
+					var references = LoadReferences(ctx.Settings.AssemblyReferences, er);
 					if (references == null)
 						return false;
 
@@ -236,21 +248,53 @@ namespace Saltarelle.Compiler.Driver {
 						er.Message(7951, null, TextLocation.Empty, ex.Message);
 						return false;
 					}
+					return true;
 				}
 				finally {
 					try { File.Delete(intermediateAssemblyFile); } catch {}
 					try { File.Delete(intermediateDocFile); } catch {}
-					Console.SetOut(actualOut);
+				}
+			}
+		}
+
+		/// <param name="options">Compile options</param>
+		/// <param name="runInSeparateAppDomain">Should be set to true for production code, but there are issues with NUnit, so tests need to set this to false.</param>
+		public bool Compile(CompilerOptions options, bool runInSeparateAppDomain) {
+			try {
+				AppDomain ad = null;
+				var actualOut = Console.Out;
+				try {
+					Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
+
+					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
+
+					Executor executor;
+					if (runInSeparateAppDomain) {
+						var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
+						ad = AppDomain.CreateDomain("SCTask", null, setup);
+						executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
+					}
+					else {
+						executor = new Executor();
+					}
+					return executor.Compile(options, er);
+				}
+				finally {
+					if (ad != null) {
+						AppDomain.Unload(ad);
+					}
+					if (actualOut != null) {
+						Console.SetOut(actualOut);
+					}
 				}
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex, null, TextLocation.Empty);
 			}
-
 			return true;
 		}
 
-		private IEnumerable<IAssemblyReference> LoadReferences(IEnumerable<string> references) {
+		private static IEnumerable<IAssemblyReference> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
 			var loader = new CecilLoader { IncludeInternalMembers = true };
 			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
 
@@ -266,7 +310,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			if (missingReferences.Count > 0) {
 				foreach (var r in missingReferences)
-					_errorReporter.Message(7996, DomRegion.Empty, r);
+					er.Message(7996, DomRegion.Empty, r);
 				return null;
 			}
 
