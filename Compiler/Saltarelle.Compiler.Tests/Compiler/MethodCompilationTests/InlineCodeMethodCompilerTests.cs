@@ -61,6 +61,12 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 		}
 
 		[Test]
+		public void TokenizerCanDetectParameterNamePreceededByAtSign() {
+			Assert.That(InlineCodeMethodCompiler.Tokenize("{p1}", new[] { "@p1" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new Token(TokenType.Parameter, index: 0) }));
+		}
+
+		[Test]
 		public void TokenizerCanDetectLiteralStringParameterToUseAsIdentifier() {
 			Assert.That(InlineCodeMethodCompiler.Tokenize("{@p1}{@p2}", new[] { "p1", "p2" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new Token(TokenType.LiteralStringParameterToUseAsIdentifier, index: 0), new Token(TokenType.LiteralStringParameterToUseAsIdentifier, index: 1) }));
@@ -82,6 +88,12 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 		public void TokenizerCanDetectTypeParameterNames() {
 			Assert.That(InlineCodeMethodCompiler.Tokenize("{T1}{T2}", new string[0], new[] { "T1", "T2" }, s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new Token(TokenType.TypeParameter, index: 0), new Token(TokenType.TypeParameter, index: 1) }));
+		}
+
+		[Test]
+		public void TokenizerCanDetectTypeParameterNamePreceededByAtSign() {
+			Assert.That(InlineCodeMethodCompiler.Tokenize("{T1}", new string[0], new[] { "@T1" }, s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new Token(TokenType.TypeParameter, index: 0) }));
 		}
 
 		[Test]

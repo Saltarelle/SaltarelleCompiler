@@ -74,6 +74,13 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private static int FindParameter(string name, IList<string> allParameters) {
+			int i = allParameters.IndexOf(name);
+			if (i >= 0)
+				return i;
+			return allParameters.IndexOf("@" + name);
+		}
+
 		private static InlineCodeToken ParsePlaceholder(string text, IList<string> parameterNames, IList<string> typeParameterNames, Action<string> errorReporter) {
 			if (text[0] == '$') {
 				try {
@@ -92,7 +99,7 @@ namespace Saltarelle.Compiler.Compiler {
 			string argName = text.TrimStart('@', '*', ',');
 
 			if (parameterNames != null) {
-				int i = parameterNames.IndexOf(argName);
+				int i = FindParameter(argName, parameterNames);
 				if (i >= 0) {
 					if (text[0] == '@')
 						return new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: i);
@@ -106,13 +113,13 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			if (typeParameterNames != null) {
-				int i = typeParameterNames.IndexOf(text);
+				int i = FindParameter(text, typeParameterNames);
 				if (i >= 0)
 					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i);
 			}
 
 			errorReporter("Unknown placeholder '{" + text + "}'");
-			return new InlineCodeToken(InlineCodeToken.TokenType.TypeRef, text);
+			return new InlineCodeToken(InlineCodeToken.TokenType.Text, text);
 		}
 
 		public static IList<InlineCodeToken> Tokenize(string code, IList<string> parameterNames, IList<string> typeParameterNames, Action<string> errorReporter) {
