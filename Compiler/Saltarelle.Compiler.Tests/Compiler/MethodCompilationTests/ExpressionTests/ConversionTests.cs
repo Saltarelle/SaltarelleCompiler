@@ -1518,5 +1518,61 @@ public void M() {
 	var $c2 = {C1}.$op_Explicit($i);
 ");
 		}
+
+		[Test]
+		public void ExplicitEnumerationConversionIsANoOp() {
+			AssertCorrect(@"
+enum E1 { X }
+enum E2 { Y }
+
+public void M() {
+	int i = 0;
+	E1 e = E1.X;
+	// BEGIN
+	int i2 = (int)e;
+	E2 e2 = (E2)e;
+	E1 e1 = (E1)i;
+	// END
+}",
+@"	var $i2 = $e;
+	var $e2 = $e;
+	var $e1 = $i;
+");
+		}
+
+		[Test]
+		public void LiftedExplicitEnumerationConversionsWork() {
+			AssertCorrect(@"
+enum E1 { X }
+enum E2 { Y }
+
+public void M() {
+	int i = 0;
+	E1 e = E1.X;
+	int? ix = 0;
+	E1? ex = E1.X;
+	// BEGIN
+	int? i2 = (int?)e;
+	E2? e2 = (E2?)e;
+	E1? e1 = (E1?)i;
+	int? i21 = (int?)ex;
+	E2? e21 = (E2?)ex;
+	E1? e11 = (E1?)ix;
+	int i22 = (int)ex;
+	E2 e22 = (E2)ex;
+	E1 e12 = (E1)ix;
+	// END
+}",
+@"	var $i2 = $e;
+	var $e2 = $e;
+	var $e1 = $i;
+	var $i21 = $ex;
+	var $e21 = $ex;
+	var $e11 = $ix;
+	var $i22 = $FromNullable($ex);
+	var $e22 = $FromNullable($ex);
+	var $e12 = $FromNullable($ix);
+");
+		}
 	}
 }

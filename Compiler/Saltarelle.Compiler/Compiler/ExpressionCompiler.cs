@@ -1397,7 +1397,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
 				}
 			}
-			else if (rr.Conversion.IsNullableConversion) {
+			else if (rr.Conversion.IsNullableConversion || rr.Conversion.IsEnumerationConversion) {
 				var result = VisitResolveResult(rr.Input, true);
 				if (IsNullableType(rr.Input.Type) && !IsNullableType(rr.Type))
 					result = _runtimeLibrary.FromNullable(result);
@@ -1464,7 +1464,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileMethodInvocation(impl, rr.Conversion.Method, new TypeResolveResult(rr.Conversion.Method.DeclaringType), new[] { rr.Input }, null, false, false);
 			}
 			else if (rr.Conversion.IsImplicit) {
-				// Null literal conversion have no property, should report this
+				// Null literal conversion have no property
 				return VisitResolveResult(rr.Input, true);
 			}
 
