@@ -861,6 +861,25 @@ public class C1 : I1, I2 {}", expectErrors: false);
 		}
 
 		[Test]
+		public void CanImplementTwoInterfacesThatDeriveFromTheSameInterface() {
+			Prepare(@"
+public interface I1 { void SomeMethod(); }
+public interface I2 : I1 { void SomeMethod2(); }
+public interface I3 : I1 { void SomeMethod3(); }
+public class C1 : I2, I3 {}", expectErrors: false);
+
+			// No errors is good enough.
+
+			Prepare(@"
+public interface I1 { void SomeMethod(); }
+public interface I2 : I1 { void SomeMethod2(); }
+public interface I3 : I1 { void SomeMethod3(); }
+public class C1 : I1, I2, I3 {}", expectErrors: false);
+
+			// No errors is good enough.
+		}
+
+		[Test]
 		public void CannotDeriveFromBaseClassAndImplementInterfaceWithTheSameMethodName() {
 			Prepare(@"
 public class B1 { public void SomeMethod(); }
