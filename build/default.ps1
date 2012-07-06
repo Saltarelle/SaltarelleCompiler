@@ -26,7 +26,7 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 	copy "$base_dir\Compiler\SCTask\Saltarelle.Compiler.targets" "$out_dir"
 }
 
-Task Generate-jQueryUISource {
+Task Generate-jQueryUISource -Depends Determine-Version {
 	Exec { msbuild "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 	rmdir -Force -Recurse "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI"
 	Exec { & "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\bin\ScriptSharp.Tools.jQueryUIGenerator.exe" "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\entries" "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI" /p | Out-Null }
