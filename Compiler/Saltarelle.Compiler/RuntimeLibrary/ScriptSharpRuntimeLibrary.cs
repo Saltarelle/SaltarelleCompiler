@@ -16,12 +16,12 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
 
-		public JsExpression GetScriptType(IType type, bool isTypeOf) {
-			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && isTypeOf) {
+		public JsExpression GetScriptType(IType type, TypeContext context) {
+			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
 			}
-			else if (type.Kind == TypeKind.Enum && !isTypeOf) {
+			else if (type.Kind == TypeKind.Enum && (context == TypeContext.CastTarget || context == TypeContext.Instantiation)) {
 				var def = type.GetDefinition();
 				return _createTypeReferenceExpression(def.EnumUnderlyingType.ToTypeReference());
 			}
@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				var def = pt.GetDefinition();
 				var sem = _namingConvention.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, isTypeOf))));
+					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				else
 					return _createTypeReferenceExpression(def.ToTypeReference());
 			}
@@ -48,7 +48,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				var sem = _namingConvention.GetTypeSemantics(td);
 				var jsref = _createTypeReferenceExpression(td.ToTypeReference());
 				if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
-					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, isTypeOf))));
+					// This handles the case of resolving the current type, eg. to access a static member.
+					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				}
 				else {
 					return jsref;
@@ -60,15 +61,15 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType targetType) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(targetType, false), "isInstanceOfType"), expression);
+			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(targetType, TypeContext.CastTarget), "isInstanceOfType"), expression);
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, GetScriptType(targetType, false));
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, GetScriptType(targetType, TypeContext.CastTarget));
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, GetScriptType(targetType, false));
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, GetScriptType(targetType, TypeContext.CastTarget));
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -76,7 +77,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
-			return JsExpression.Invocation(method, typeArguments.Select(a => GetScriptType(a, false)));
+			return JsExpression.Invocation(method, typeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument)));
 		}
 
 		public JsExpression MakeException(JsExpression operand) {
@@ -174,7 +175,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Default(IType type) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(type, false), "getDefaultValue"));
+			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(type, TypeContext.GetDefaultValue), "getDefaultValue"));
 		}
 
 		public JsExpression CreateArray(JsExpression size) {
@@ -182,7 +183,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
-			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, false), "prototype"), methodName);
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);
@@ -191,7 +192,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
-			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, false), "prototype"), methodName);
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);

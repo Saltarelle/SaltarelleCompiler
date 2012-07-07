@@ -178,7 +178,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return s.Replace("{", "{{").Replace("}", "}}");
 		}
 
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, JsExpression> getType, bool isParamArrayExpanded, Action<string> errorReporter) {
+		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, TypeContext, JsExpression> getType, bool isParamArrayExpanded, Action<string> errorReporter) {
 			List<string> typeParameterNames = new List<string>();
 			List<IType>  typeArguments      = new List<IType>();
 			var parameterizedType = method.DeclaringType as ParameterizedType;
@@ -220,11 +220,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 					case InlineCodeToken.TokenType.TypeParameter:
 						fmt.Append(CreatePlaceholder(fmtargs.Count));
-						fmtargs.Add(getType(typeArguments[token.Index].ToTypeReference()));
+						fmtargs.Add(getType(typeArguments[token.Index].ToTypeReference(), TypeContext.GenericArgument));
 						break;
 
 					case InlineCodeToken.TokenType.TypeRef:
-						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text));
+						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text), TypeContext.Instantiation);
 						if (typeRef == null) {
 							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation.");
 						}

@@ -569,6 +569,7 @@ public class C {
 		public void DefaultValuesWork() {
 			var result = ExecuteCSharp(@"
 using System.Collections.Generic;
+public enum E {}
 public class C {
 	static string s;
 	static T F<T>() {
@@ -594,11 +595,13 @@ public class C {
 			F<IDictionary<string, int>>(),
 			F<Dictionary<string, int>>(),
 			F<int?>(),
+			F<E>(),
+			F<E?>(),
 		};
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new object[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, null, null, null, null, null }));
+			Assert.That(result, Is.EqualTo(new object[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, null, null, null, null, null, 0, null }));
 		}
 
 		[Test]

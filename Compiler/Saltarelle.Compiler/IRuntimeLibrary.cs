@@ -6,13 +6,45 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler {
+	public enum TypeContext {
+		/// <summary>
+		/// The type is being instantiated.
+		/// </summary>
+		Instantiation,
+
+		/// <summary>
+		/// The type is being used as a generic argument.
+		/// </summary>
+		GenericArgument,
+
+		/// <summary>
+		/// The type is a target of a typeof expression.
+		/// </summary>
+		TypeOf,
+
+		/// <summary>
+		/// The type is being inherited from.
+		/// </summary>
+		Inheritance,
+
+		/// <summary>
+		/// The type is being cast to.
+		/// </summary>
+		CastTarget,
+
+		/// <summary>
+		/// The type is being used in a default(T) expression.
+		/// </summary>
+		GetDefaultValue
+	}
+
 	public interface IRuntimeLibrary {
 		/// <summary>
 		/// Returns an expression that references a type. This might mean a simple name, a generic instantiation, or something else.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
-		/// <param name="isTypeOf">Whether the type should be returned as being the target of a typeof expression. False in all other occasions that this method can be called.</param>
-		JsExpression GetScriptType(IType type, bool isTypeOf);
+		/// <param name="context">The context for which the type is desired.</param>
+		JsExpression GetScriptType(IType type, TypeContext context);
 
 		/// <summary>
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").
