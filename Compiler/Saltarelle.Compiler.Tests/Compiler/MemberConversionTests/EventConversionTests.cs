@@ -117,5 +117,19 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
             Compile(new[] { "class C { public static event System.EventHandler Event1; }" });
             FindStaticFieldInitializer("C.$Event1").Should().Be("null");
         }
+
+        [Test]
+        public void AbstractEventIsNotAnAutoEvent() {
+            var namingConvention = new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name)),
+                                                                      GetAutoEventBackingFieldName = e => "$" + e.Name
+                                                                    };
+
+            Compile(new[] { "abstract class C { public abstract event System.EventHandler SomeProp; }" }, namingConvention: namingConvention);
+            FindInstanceMethod("C.add_SomeProp").Should().NotBeNull();
+            FindInstanceMethod("C.add_SomeProp").Definition.Should().BeNull();
+            FindInstanceMethod("C.remove_SomeProp").Should().NotBeNull();
+            FindInstanceMethod("C.remove_SomeProp").Definition.Should().BeNull();
+            FindInstanceFieldInitializer("C.$SomeProp").Should().BeNull();
+        }
     }
 }

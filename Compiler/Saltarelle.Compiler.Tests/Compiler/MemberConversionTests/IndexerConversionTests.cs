@@ -79,5 +79,13 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
+
+		[Test]
+		public void AbstractIndexerHasANullDefinition() {
+            var namingConvention = new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_Item"), MethodScriptSemantics.NormalMethod("set_Item")) };
+            Compile(new[] { "abstract class C { public abstract int this[int i] { get; set; } }" }, namingConvention: namingConvention);
+            FindInstanceMethod("C.get_Item").Definition.Should().BeNull();
+            FindInstanceMethod("C.set_Item").Definition.Should().BeNull();
+		}
     }
 }

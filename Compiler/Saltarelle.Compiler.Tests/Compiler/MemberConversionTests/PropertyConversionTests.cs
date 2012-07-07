@@ -216,5 +216,19 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
             FindClass("C").InstanceMethods.Should().BeEmpty();
             FindClass("C").StaticMethods.Should().BeEmpty();
         }
+
+        [Test]
+        public void AbstractPropertyIsNotAnAutoProperty() {
+            var namingConvention = new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+                                                                      GetAutoPropertyBackingFieldName = p => "$" + p.Name
+                                                                    };
+
+            Compile(new[] { "abstract class C { public abstract string SomeProp { get; set; } }" }, namingConvention: namingConvention);
+            FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
+            FindInstanceMethod("C.get_SomeProp").Definition.Should().BeNull();
+            FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
+            FindInstanceMethod("C.set_SomeProp").Definition.Should().BeNull();
+            FindInstanceFieldInitializer("C.$SomeProp").Should().BeNull();
+        }
     }
 }

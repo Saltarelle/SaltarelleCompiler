@@ -251,7 +251,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (options.GenerateCode) {
                 var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(tp)).ToList();
 				JsMethod jsMethod;
-				if (jsClass.ClassType == JsClass.ClassTypeEnum.Interface) {
+				if (method.IsAbstract) {
 					jsMethod = new JsMethod(options.Name, typeParamNames, null);
 				}
 				else {
@@ -388,7 +388,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            if (method.DeclaringType.Kind == TypeKind.Interface || !methodDeclaration.Body.IsNull) {
+            if (method.IsAbstract || !methodDeclaration.Body.IsNull) {	// The second condition is used to ignore partial method parts without definitions.
                 MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _namingConvention.GetMethodSemantics(method));
             }
         }
@@ -462,7 +462,7 @@ namespace Saltarelle.Compiler.Compiler {
 
             switch (impl.Type) {
                 case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-                    if (property.DeclaringTypeDefinition.Kind != TypeKind.Interface && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
+                    if (!property.IsAbstract && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
                         // Auto-property
                         if ((impl.GetMethod != null && impl.GetMethod.GenerateCode) || (impl.SetMethod != null && impl.SetMethod.GenerateCode)) {
                             var fieldName = _namingConvention.GetAutoPropertyBackingFieldName(property);
@@ -516,7 +516,7 @@ namespace Saltarelle.Compiler.Compiler {
                 switch (impl.Type) {
                     case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
                         if ((impl.AddMethod != null && impl.AddMethod.GenerateCode) || (impl.RemoveMethod != null && impl.RemoveMethod.GenerateCode)) {
-							if (evt.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
+							if (evt.IsAbstract) {
 								if (impl.AddMethod.GenerateCode)
 									AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(impl.AddMethod.Name, null, null));
 								if (impl.RemoveMethod.GenerateCode)

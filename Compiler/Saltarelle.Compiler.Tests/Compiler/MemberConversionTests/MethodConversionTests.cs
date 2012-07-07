@@ -152,5 +152,12 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
             Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
             FindStaticMethod("C.X").TypeParameterNames.Should().BeEmpty();
         }
+
+		[Test]
+		public void AbstractMethodHasANullDefinition() {
+            Compile(new[] { "abstract class C { public abstract void M(); }" });
+            var m = FindInstanceMethod("C.M");
+            m.Definition.Should().BeNull();
+		}
     }
 }
