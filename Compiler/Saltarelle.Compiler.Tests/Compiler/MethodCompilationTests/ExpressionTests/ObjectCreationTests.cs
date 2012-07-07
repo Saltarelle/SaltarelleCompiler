@@ -70,7 +70,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new ({X}.$ctor2)();
+@"	var $c = new {X}.$ctor2();
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -86,7 +86,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new ({X}.$ctor2)($a, $b, $c);
+@"	var $t = new {X}.$ctor2($a, $b, $c);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -110,7 +110,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new ({X}.$ctor2)(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new {X}.$ctor2(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 

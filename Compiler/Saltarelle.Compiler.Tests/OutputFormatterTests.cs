@@ -327,8 +327,7 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
-        public void NewExpressionsAndMemberExpressionsAreParenthesizedInsideEachOther() {
-            // Other stuff from the department "strange edge cases". Should be parenthesized to cause as little trouble as possible.
+        public void NewExpressionIsParenthesizedWhenItIsTheTargetOfAMemberAccess() {
             Assert.That(OutputFormatter.Format(JsExpression.MemberAccess(
                                                    JsExpression.New(
                                                        JsExpression.Number(1),
@@ -337,16 +336,6 @@ namespace Saltarelle.Compiler.Tests
                                                    "Member"
                                                )
                         ), Is.EqualTo("(new 1(2)).Member"));
-
-            // Other stuff from the department "strange edge cases". Should be parenthesized to cause as little trouble as possible.
-            Assert.That(OutputFormatter.Format(JsExpression.New(
-                                                   JsExpression.MemberAccess(
-                                                       JsExpression.Number(1),
-                                                       "Member"
-                                                   ),
-                                                   new[] { JsExpression.Number(2) }
-                                               )
-                        ), Is.EqualTo("new (1.Member)(2)"));
         }
 
         [Test]
@@ -454,6 +443,21 @@ namespace Saltarelle.Compiler.Tests
                                                    new[] { JsExpression.Number(1) }
                                                )
                         ), Is.EqualTo("(new X())(1)"));
+        }
+
+        [Test]
+        public void CreatingObjectOfNestedTypeDoesNotCauseUnnecessaryParentheses() {
+            // Just to get rid of ambiguities
+            Assert.That(OutputFormatter.Format(JsExpression.New(
+                                                   JsExpression.MemberAccess(
+                                                       JsExpression.MemberAccess(
+                                                           JsExpression.Identifier("X"),
+                                                           "Y"
+                                                       ),
+                                                       "Z"
+                                                   )
+                                               )
+                        ), Is.EqualTo("new X.Y.Z()"));
         }
 
         [Test]
