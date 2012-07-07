@@ -16,10 +16,14 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
 
-		public JsExpression GetScriptType(IType type, bool returnOpenType) {
-			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && returnOpenType) {
+		public JsExpression GetScriptType(IType type, bool isTypeOf) {
+			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && isTypeOf) {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
+			}
+			else if (type.Kind == TypeKind.Enum && !isTypeOf) {
+				var def = type.GetDefinition();
+				return _createTypeReferenceExpression(def.EnumUnderlyingType.ToTypeReference());
 			}
 			else if (type.Kind == TypeKind.Array) {
 				return _createTypeReferenceExpression(KnownTypeReference.Array);
@@ -35,7 +39,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				var def = pt.GetDefinition();
 				var sem = _namingConvention.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, returnOpenType))));
+					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, isTypeOf))));
 				else
 					return _createTypeReferenceExpression(def.ToTypeReference());
 			}
@@ -44,7 +48,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				var sem = _namingConvention.GetTypeSemantics(td);
 				var jsref = _createTypeReferenceExpression(td.ToTypeReference());
 				if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
-					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, returnOpenType))));
+					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, isTypeOf))));
 				}
 				else {
 					return jsref;

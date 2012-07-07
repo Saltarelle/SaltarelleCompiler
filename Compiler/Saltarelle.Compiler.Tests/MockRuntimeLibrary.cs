@@ -78,8 +78,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
 
-		JsExpression IRuntimeLibrary.GetScriptType(IType type, bool returnOpenType) {
-			return GetScriptType(type, returnOpenType);
+		JsExpression IRuntimeLibrary.GetScriptType(IType type, bool isTypeOf) {
+			return GetScriptType(type, isTypeOf);
 		}
 			
 		JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, IType targetType) {

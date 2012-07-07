@@ -81,7 +81,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 		return new[] { typeof(sbyte).FullName, typeof(byte).FullName, typeof(short).FullName, typeof(ushort).FullName, typeof(int).FullName, typeof(uint).FullName, typeof(long).FullName, typeof(ulong).FullName };
 	}
 }", "C.M");
-			Assert.That(result, Has.All.EqualTo("Int32"));
+			Assert.That(result, Has.All.EqualTo("ss.Int32"));
 		}
 
 		[Test]
@@ -165,7 +165,7 @@ public class C {
 		return typeof(G<int,C>).FullName;
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo("G$2[Int32,C]"));
+			Assert.That(result, Is.EqualTo("G$2[ss.Int32,C]"));
 		}
 
 		[Test]
@@ -177,7 +177,7 @@ public class C {
 		return typeof(I<int,C>).FullName;
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo("I$2[Int32,C]"));
+			Assert.That(result, Is.EqualTo("I$2[ss.Int32,C]"));
 		}
 
 		[Test]
@@ -211,7 +211,7 @@ public class C {
 		return new[] { G<int,C>.Field, G<C,int>.Field, G<G<C,int>,G<string,C>>.Field };
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(new[] { "Int32 C", "C Int32", "G$2[C,Int32] G$2[String,C]" }));
+			Assert.That(result, Is.EqualTo(new[] { "ss.Int32 C", "C ss.Int32", "G$2[C,ss.Int32] G$2[String,C]" }));
 		}
 
 		[Test]
@@ -224,7 +224,7 @@ public class C {
 		return typeof(G<int,G<C,I<string>>>).FullName;
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo("G$2[Int32,G$2[C,I$1[String]]]"));
+			Assert.That(result, Is.EqualTo("G$2[ss.Int32,G$2[C,I$1[String]]]"));
 		}
 
 		[Test]
@@ -239,7 +239,7 @@ public class C {
 		return new[] { typeof(G<int,G<C,I<string>>>).BaseType.FullName, typeof(G<int,G<C,I<string>>>).GetInterfaces()[0].FullName };
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(new[] { "B$1[G$2[Int32,C]]", "I$1[G$2[G$2[C,I$1[String]],String]]" }));
+			Assert.That(result, Is.EqualTo(new[] { "B$1[G$2[ss.Int32,C]]", "I$1[G$2[G$2[C,I$1[String]],String]]" }));
 		}
 
 		[Test]
@@ -298,7 +298,7 @@ public class C {
 }", "C.M");
 			var l = ((IEnumerable)result).Cast<IList>().ToList();
 			Assert.That(l.Select(x => x != null).ToList(), Is.EqualTo(new[] { false, true, false, false, true, false, false }));
-			Assert.That(l[1], Is.EqualTo(new[] { "Int32" }));
+			Assert.That(l[1], Is.EqualTo(new[] { "ss.Int32" }));
 			Assert.That(l[4], Is.EqualTo(new[] { "String" }));
 		}
 
@@ -978,6 +978,48 @@ public class C {
 	}
 }", "C.M");
 			Assert.That(result, Has.All.True);
+		}
+
+		[Test]
+		public void TypeOfEnumIsTheEnumType() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public enum E {}
+
+public class C {
+	public static string M() {
+		return typeof(E).FullName;
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("E"));
+		}
+
+		[Test]
+		public void ConversionsToEnumAreTreatedAsConversionsToTheUnderlyingType() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public enum E {}
+
+public class C {
+	private static bool DoesItThrow(Action a) {
+		try {
+			a();
+			return false;
+		}
+		catch {
+			return true;
+		}
+	}
+
+	public static bool[] M() {
+		return new[] { DoesItThrow(() => { var e = (E)(object)0; }), DoesItThrow(() => { var e = (E)(object)0.5; }) };
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(new[] { false, true }));
 		}
 	}
 }

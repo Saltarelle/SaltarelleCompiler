@@ -1,6 +1,5 @@
 TODO:
 v1:
-cast to enum is really cast to its underlying type
 cast to Record type is a no-op
 var x = new (Saltarelle.UI.CancelEventArgs)() looks stupid.
 jQueryEvent cannot be record, but must somehow live besides the type system.

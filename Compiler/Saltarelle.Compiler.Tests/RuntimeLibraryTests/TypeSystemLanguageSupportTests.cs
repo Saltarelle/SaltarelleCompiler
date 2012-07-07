@@ -255,7 +255,7 @@ public class C {
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { "C1", "C2$1[Int32]", "C2$1[String]", "Number", "String", "Function", "Object", "Array" }));
+			Assert.That(result, Is.EqualTo(new[] { "C1", "C2$1[ss.Int32]", "C2$1[String]", "Number", "String", "Function", "Object", "Array" }));
 		}
 
 		[Test]
