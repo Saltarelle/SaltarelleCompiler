@@ -963,7 +963,7 @@ public class C {
 		}
 
 		[Test]
-		public void VirtualInterfaceAppearsAsObjectWhenUsedWithTypeOfAndAsGenericArgument() {
+		public void ImportedInterfaceAppearsAsObjectWhenUsedWithTypeOfAndAsGenericArgument() {
 			var result = ExecuteCSharp(@"
 using System;
 using System.Runtime.CompilerServices;

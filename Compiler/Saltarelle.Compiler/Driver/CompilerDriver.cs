@@ -12,6 +12,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Mono.CSharp;
 using System.Linq;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
@@ -204,7 +205,7 @@ namespace Saltarelle.Compiler.Driver {
 					// Compile the script
 					var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
+					var rtl = new ScriptSharpRuntimeLibrary(nc, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, nc.GetTypeSemantics(t).Name); });
 					var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
 
 					var references = LoadReferences(ctx.Settings.AssemblyReferences, er);

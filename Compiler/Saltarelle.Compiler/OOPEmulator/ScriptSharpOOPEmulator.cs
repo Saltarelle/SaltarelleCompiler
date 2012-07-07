@@ -7,6 +7,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.MetadataImporter;
 
 namespace Saltarelle.Compiler.OOPEmulator {
 	public class ScriptSharpOOPEmulator : IOOPEmulator {
@@ -19,18 +20,14 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private const string RegisterGenericInterfaceInstance = "registerGenericInterfaceInstance";
 		private const string RegisterGenericClass = "registerGenericClass";
 		private const string RegisterGenericInterface = "registerGenericInterface";
-		private const string GlobalMethodsAttribute = "GlobalMethodsAttribute";
-		private const string NamedValuesAttribute = "NamedValuesAttribute";
 		private const string FlagsAttribute = "FlagsAttribute";
-		private const string ResourcesAttribute = "ResourcesAttribute";
-		private const string MixinAttribute = "MixinAttribute";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
-		private readonly INamingConventionResolver _namingConvention;
+		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
 
-		public ScriptSharpOOPEmulator(INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
-			_namingConvention = namingConvention;
+		public ScriptSharpOOPEmulator(IScriptSharpMetadataImporter metadataImporter, IErrorReporter errorReporter) {
+			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 		}
 
@@ -124,7 +121,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		}
 
 		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
-			var systemType = Utils.CreateJsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Type).GetDefinition(), _namingConvention);
+			var netSystemType = compilation.FindType(KnownTypeCode.Type).GetDefinition();
+			var systemType = new JsTypeReferenceExpression(netSystemType.ParentAssembly, _metadataImporter.GetTypeSemantics(netSystemType).Name);
 
 			var result = new List<JsStatement>();
 
@@ -132,9 +130,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			string currentNs = "";
 			foreach (var t in orderedTypes) {
 				try {
-					bool globalMethods = GetAttributePositionalArgs(t.CSharpTypeDefinition, GlobalMethodsAttribute) != null;
-					bool resources     = GetAttributePositionalArgs(t.CSharpTypeDefinition, ResourcesAttribute) != null;
-					var  mixinArgs     = GetAttributePositionalArgs(t.CSharpTypeDefinition, MixinAttribute);
+					bool globalMethods = _metadataImporter.IsGlobalMethods(t.CSharpTypeDefinition);
+					var  mixinArg      = _metadataImporter.GetMixinArg(t.CSharpTypeDefinition);
 
 					string ns = GetNamespace(t.Name);
 					if (ns != currentNs && !globalMethods) {
@@ -149,11 +146,11 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						if (globalMethods) {
 							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.MemberAccess(JsExpression.Identifier("window"), m.Name), m.Definition))));
 						}
-						else if (resources) {
+						else if (_metadataImporter.IsResources(t.CSharpTypeDefinition)) {
 							result.Add(GenerateResourcesClass(c));
 						}
-						else if (mixinArgs != null) {
-							string prefix = (!string.IsNullOrEmpty((string)mixinArgs[0]) ? (string)mixinArgs[0] + "." : "");
+						else if (mixinArg != null) {
+							string prefix = mixinArg != "" ? mixinArg + "." : "";
 							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Literal(prefix + m.Name + " = {0}", m.Definition))));	// If we are good citizens and use assignment statements, we will get ugly parentheses around the assignee.
 						}
 						else {
@@ -176,9 +173,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					else if (t is JsEnum) {
 						var e = (JsEnum)t;
 						bool flags = GetAttributePositionalArgs(t.CSharpTypeDefinition, FlagsAttribute, "System") != null;
-						bool namedValues = GetAttributePositionalArgs(t.CSharpTypeDefinition, NamedValuesAttribute) != null;
 						result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement))));
-						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (namedValues ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
+						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (_metadataImporter.IsNamedValues(t.CSharpTypeDefinition) ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
 						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterEnum), JsExpression.String(t.Name), JsExpression.Boolean(flags))));
 					}
 				}
@@ -189,9 +185,9 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 			var typesToRegister = orderedTypes.OfType<JsClass>()
 			                            .Where(c =>    c.TypeArgumentNames.Count == 0
-			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, GlobalMethodsAttribute) == null
-			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) == null
-			                                        && GetAttributePositionalArgs(c.CSharpTypeDefinition, MixinAttribute) == null)
+			                                        && !_metadataImporter.IsGlobalMethods(c.CSharpTypeDefinition)
+			                                        && !_metadataImporter.IsResources(c.CSharpTypeDefinition)
+			                                        && _metadataImporter.GetMixinArg(c.CSharpTypeDefinition) == null)
 			                            .ToList();
 
 			result.AddRange(TopologicalSortTypesByInheritance(typesToRegister)
@@ -211,7 +207,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                 }
 			                             })
 			                .Select(expr => new JsExpressionStatement(expr)));
-			result.AddRange(orderedTypes.OfType<JsClass>().Where(c => c.TypeArgumentNames.Count == 0 && GetAttributePositionalArgs(c.CSharpTypeDefinition, ResourcesAttribute) == null).SelectMany(t => t.StaticInitStatements));
+			result.AddRange(orderedTypes.OfType<JsClass>().Where(c => c.TypeArgumentNames.Count == 0 && !_metadataImporter.IsResources(c.CSharpTypeDefinition)).SelectMany(t => t.StaticInitStatements));
 
 			return result;
 		}

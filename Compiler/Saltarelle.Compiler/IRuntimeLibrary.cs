@@ -41,6 +41,7 @@ namespace Saltarelle.Compiler {
 	public interface IRuntimeLibrary {
 		/// <summary>
 		/// Returns an expression that references a type. This might mean a simple name, a generic instantiation, or something else.
+		/// This method may return null if and only if the <paramref name="context"/> is <see cref="TypeContext.Inheritance"/>.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
 		/// <param name="context">The context for which the type is desired.</param>

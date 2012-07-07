@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using FluentAssertions;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -469,10 +470,17 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 		}
 
 		[Test]
-		public void VirtualInterfaceDoesNotAppearInTheImplementedInterfaces() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "I1" || t.Name == "I3" ? TypeScriptSemantics.VirtualInterface() : TypeScriptSemantics.NormalType(t.Name) };
-            Compile(new[] { "interface I1 {} interface I2 {} interface I3<T> {} class C1 : I1, I2, I3<int> {}" }, namingConvention: nc);
+		public void InterfaceForWhichGetScriptTypeReturnsNullDoesNotAppearInTheInheritanceList() {
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition().ParentAssembly, t.FullName) };
+            Compile(new[] { "interface I1 {} interface I2 {} interface I3<T> {} class C1 : I1, I2, I3<int> {}" }, runtimeLibrary: rtl);
             FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I2}" });
+		}
+
+		[Test]
+		public void BaseTypeForWhichGetScriptTypeReturnsNullIsNotConsideredInheritedFrom() {
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition().ParentAssembly, t.FullName) };
+            Compile(new[] { "interface I1 {} class B {} class C1 : B, I1 {}" }, runtimeLibrary: rtl);
+            FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I1}" });
 		}
     }
 }

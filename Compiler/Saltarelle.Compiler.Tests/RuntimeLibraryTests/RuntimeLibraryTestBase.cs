@@ -4,6 +4,7 @@ using FluentAssertions;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;
 using com.gargoylesoftware.htmlunit;
@@ -77,7 +78,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
             var er = new MockErrorReporter(true);
 			PreparedCompilation compilation = null;
-			var rtl = new ScriptSharpRuntimeLibrary(nc, tr => Utils.CreateJsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition(), nc));
+			var rtl = new ScriptSharpRuntimeLibrary(nc, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, nc.GetTypeSemantics(t).Name); });
             var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");

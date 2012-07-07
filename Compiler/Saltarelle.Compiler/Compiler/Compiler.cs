@@ -68,7 +68,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (!_types.TryGetValue(typeDefinition, out result)) {
                 var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
-                    var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _namingConvention.GetTypeSemantics(t.GetDefinition()).Type != TypeScriptSemantics.ImplType.VirtualInterface).ToList();
+                    var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _runtimeLibrary.GetScriptType(t, TypeContext.GenericArgument) != null).ToList();
 					var unusableTypes = Utils.FindUsedUnusableTypes(baseTypes, _namingConvention).ToList();
 					if (unusableTypes.Count > 0) {
 						foreach (var ut in unusableTypes)

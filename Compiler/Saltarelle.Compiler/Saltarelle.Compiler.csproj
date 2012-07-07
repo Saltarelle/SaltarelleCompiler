@@ -57,6 +57,7 @@
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="IReferenceImporter.cs" />
+    <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
     <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
     <Compile Include="ReferenceImporter\GlobalNamespaceReferenceImporter.cs" />
     <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />

@@ -904,11 +904,33 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void ImportedInterfaceBecomesVirtualInterface() {
-			Prepare(@"[System.Runtime.CompilerServices.Imported] public interface I1<T> {}");
-			var i1 = FindType("I1`1");
-			Assert.That(i1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.VirtualInterface));
-			Assert.That(i1.IgnoreGenericArguments, Is.True);
+		public void IsNamedValuesMethodWorks() {
+			Prepare(@"enum E1 {} [System.Runtime.CompilerServices.NamedValues] enum E2 {}");
+			Assert.That(Metadata.IsNamedValues(AllTypes["E1"]), Is.False);
+			Assert.That(Metadata.IsNamedValues(AllTypes["E2"]), Is.True);
+		}
+
+		[Test]
+		public void IsResourcesMethodWorks() {
+			Prepare(@"static class C1 {} [System.Runtime.CompilerServices.Resources] static class C2 {}");
+			Assert.That(Metadata.IsResources(AllTypes["C1"]), Is.False);
+			Assert.That(Metadata.IsResources(AllTypes["C2"]), Is.True);
+		}
+
+		[Test]
+		public void IsGlobalMethodsMethodWorks() {
+			Prepare(@"static class C1 {} [System.Runtime.CompilerServices.GlobalMethods] static class C2 {}");
+			Assert.That(Metadata.IsGlobalMethods(AllTypes["C1"]), Is.False);
+			Assert.That(Metadata.IsGlobalMethods(AllTypes["C2"]), Is.True);
+		}
+
+		[Test]
+		public void GetMixinArgMethodWorks() {
+			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [Mixin(null)] static class C2 {} [Mixin("""")] static class C3 {} [Mixin(""$.fn"")] static class C4 {}");
+			Assert.That(Metadata.GetMixinArg(AllTypes["C1"]), Is.Null);
+			Assert.That(Metadata.GetMixinArg(AllTypes["C2"]), Is.EqualTo(""));
+			Assert.That(Metadata.GetMixinArg(AllTypes["C3"]), Is.EqualTo(""));
+			Assert.That(Metadata.GetMixinArg(AllTypes["C4"]), Is.EqualTo("$.fn"));
 		}
 	}
 }
