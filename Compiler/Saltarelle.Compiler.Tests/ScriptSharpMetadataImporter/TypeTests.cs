@@ -932,5 +932,16 @@ public class C1 : B1, I1 {}", expectErrors: false);
 			Assert.That(Metadata.GetMixinArg(AllTypes["C3"]), Is.EqualTo(""));
 			Assert.That(Metadata.GetMixinArg(AllTypes["C4"]), Is.EqualTo("$.fn"));
 		}
+
+		[Test]
+		public void IsImportedMethodWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported] class C1 {}
+class C2 {}
+");
+			Assert.That(Metadata.IsImported(AllTypes["C1"]), Is.True);
+			Assert.That(Metadata.IsImported(AllTypes["C2"]), Is.False);
+		}
 	}
 }

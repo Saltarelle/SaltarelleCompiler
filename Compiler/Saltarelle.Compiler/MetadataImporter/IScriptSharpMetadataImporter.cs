@@ -5,6 +5,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		bool IsNamedValues(ITypeDefinition t);
 		bool IsResources(ITypeDefinition t);
 		bool IsGlobalMethods(ITypeDefinition t);
+		bool IsRecord(ITypeDefinition t);
+		bool IsImported(ITypeDefinition t);
 		string GetMixinArg(ITypeDefinition t);
 	}
 }

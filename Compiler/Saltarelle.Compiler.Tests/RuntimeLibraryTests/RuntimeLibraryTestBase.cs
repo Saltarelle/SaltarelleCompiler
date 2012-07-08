@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			return ConvertResult(result);
 		}
 
-		protected object ExecuteCSharp(string source, string methodName) {
+		private Tuple<string, ICompilation, INamingConventionResolver> Compile(string source) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
             var er = new MockErrorReporter(true);
@@ -93,13 +93,37 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 			if (Output == OutputType.GeneratedScript)
 				Console.WriteLine(script);
+			return Tuple.Create(script, compilation.Compilation, (INamingConventionResolver)nc);
+		}
+
+		protected object ExecuteCSharp(string source, string methodName) {
+			var compiled = Compile(source);
 
 			int lastDot = methodName.LastIndexOf(".", System.StringComparison.Ordinal);
-			var type = ReflectionHelper.ParseReflectionName(methodName.Substring(0, lastDot)).Resolve(compilation.Compilation).GetDefinition();
+			var type = ReflectionHelper.ParseReflectionName(methodName.Substring(0, lastDot)).Resolve(compiled.Item2).GetDefinition();
 			var method = type.Methods.Single(m => m.Name == methodName.Substring(lastDot + 1));
-			string scriptMethod = nc.GetTypeSemantics(type).Name + "." + nc.GetMethodSemantics(method).Name;
+			string scriptMethod = compiled.Item3.GetTypeSemantics(type).Name + "." + compiled.Item3.GetMethodSemantics(method).Name;
 
-			return ExecuteScript(script, scriptMethod + "()");
+			return ExecuteScript(compiled.Item1, scriptMethod + "()");
+		}
+
+		protected void AssertSourceCorrect(string csharp, string expectedJs) {
+			string actual = Compile(csharp).Item1;
+
+			int begin = actual.IndexOf("// BEGIN");
+			if (begin > -1) {
+				while (begin < (actual.Length - 1) && actual[begin - 1] != '\n')
+					begin++;
+				actual = actual.Substring(begin);
+			}
+
+			int end = actual.IndexOf("// END");
+			if (end >= 0) {
+				while (end >= 0 && actual[end] != '\n')
+					end--;
+				actual = actual.Substring(0, end + 1);
+			}
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expectedJs.Replace("\r\n", "\n")));
 		}
 	}
 }

@@ -220,6 +220,7 @@
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />
+    <Compile Include="MockScriptSharpMetadataImporter.cs" />
     <Compile Include="MockSourceFile.cs" />
     <Compile Include="OutputFormatterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

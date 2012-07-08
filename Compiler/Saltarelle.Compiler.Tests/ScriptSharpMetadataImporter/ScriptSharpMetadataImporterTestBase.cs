@@ -8,6 +8,7 @@ using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
@@ -19,7 +20,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		private MockErrorReporter errorReporter;
 
 		protected Dictionary<string, ITypeDefinition> AllTypes { get; private set; }
-		protected INamingConventionResolver Metadata { get; private set; }
+		protected IScriptSharpMetadataImporter Metadata { get; private set; }
 		protected IList<string> AllErrorTexts { get; private set; }
 		protected IList<Message> AllErrors { get; private set; }
 

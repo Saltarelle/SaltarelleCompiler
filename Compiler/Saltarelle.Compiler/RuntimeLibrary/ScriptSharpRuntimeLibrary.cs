@@ -4,15 +4,16 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.RuntimeLibrary {
 	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
-		private readonly INamingConventionResolver _namingConvention;
+		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly Func<ITypeReference, JsExpression> _createTypeReferenceExpression;
 
-		public ScriptSharpRuntimeLibrary(INamingConventionResolver namingConvention, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
-			_namingConvention = namingConvention;
+		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
+			_metadataImporter = metadataImporter;
 			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
 
@@ -32,12 +33,12 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
 			else if (type is ITypeParameter) {
-				return JsExpression.Identifier(_namingConvention.GetTypeParameterName((ITypeParameter)type));
+				return JsExpression.Identifier(_metadataImporter.GetTypeParameterName((ITypeParameter)type));
 			}
 			else if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;
 				var def = pt.GetDefinition();
-				var sem = _namingConvention.GetTypeSemantics(def);
+				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
 					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				else
@@ -45,14 +46,25 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
-				var sem = _namingConvention.GetTypeSemantics(td);
-				var jsref = _createTypeReferenceExpression(td.ToTypeReference());
-				if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
-					// This handles the case of resolving the current type, eg. to access a static member.
-					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+				if (_metadataImporter.IsRecord(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
+					return null;
+				}
+				else if (td.Kind == TypeKind.Interface && _metadataImporter.IsImported(td)) {
+					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
+						return null;
+					else
+						return _createTypeReferenceExpression(KnownTypeReference.Object);
 				}
 				else {
-					return jsref;
+					var sem = _metadataImporter.GetTypeSemantics(td);
+					var jsref = _createTypeReferenceExpression(td.ToTypeReference());
+					if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
+						// This handles the case of resolving the current type, eg. to access a static member.
+						return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+					}
+					else {
+						return jsref;
+					}
 				}
 			}
 			else {
@@ -61,15 +73,18 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType targetType) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(targetType, TypeContext.CastTarget), "isInstanceOfType"), expression);
+			var jsTarget = GetScriptType(targetType, TypeContext.CastTarget);
+			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(jsTarget, "isInstanceOfType"), expression) : expression;
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, GetScriptType(targetType, TypeContext.CastTarget));
+			var jsTarget = GetScriptType(targetType, TypeContext.CastTarget);
+			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, GetScriptType(targetType, TypeContext.CastTarget)) : expression;
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, GetScriptType(targetType, TypeContext.CastTarget));
+			var jsTarget = GetScriptType(targetType, TypeContext.CastTarget);
+			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, GetScriptType(targetType, TypeContext.CastTarget)) : expression;
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {

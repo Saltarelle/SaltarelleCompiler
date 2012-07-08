@@ -290,5 +290,13 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("out")));
 			}, expectErrors: true);
 		}
+
+		[Test]
+		public void IsRecordReturnsTheCorrectValue() {
+			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 {} sealed class C2 : System.Record {} class C3");
+			Assert.That(Metadata.IsRecord(AllTypes["C1"]), Is.True);
+			Assert.That(Metadata.IsRecord(AllTypes["C2"]), Is.True);
+			Assert.That(Metadata.IsRecord(AllTypes["C3"]), Is.False);
+		}
 	}
 }

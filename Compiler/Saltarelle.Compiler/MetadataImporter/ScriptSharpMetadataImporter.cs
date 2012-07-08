@@ -1213,6 +1213,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsGlobalMethods;
 		}
 
+		public bool IsRecord(ITypeDefinition t) {
+			return _typeSemantics[t].IsRecord;
+		}
+
+		public bool IsImported(ITypeDefinition t) {
+			return _typeSemantics[t].IsImported;
+		}
+
 		public string GetMixinArg(ITypeDefinition t) {
 			return _typeSemantics[t].MixinArg;
 		}

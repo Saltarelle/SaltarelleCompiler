@@ -1024,5 +1024,47 @@ public class C {
 }", "C.M");
 			Assert.That(result, Is.EqualTo(new[] { false, true }));
 		}
+
+		[Test]
+		public void CastToRecordTypeIsANoOp() {
+			AssertSourceCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+[Record]
+sealed class R {}
+
+public class C {
+	private void M() {
+		object o = null;
+		// BEGIN
+		var r = (R)o;
+		// END
+	}
+}",
+@"		var r = o;
+");
+		}
+
+		[Test]
+		public void CastToImportedInterfaceIsANoOp() {
+			AssertSourceCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+[Imported]
+interface I {}
+
+public class C {
+	private void M() {
+		object o = null;
+		// BEGIN
+		var i = (I)o;
+		// END
+	}
+}",
+@"		var i = o;
+");
+		}
 	}
 }

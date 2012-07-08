@@ -75,30 +75,30 @@ y = 1;
 x = 1;
 ",
 
-			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace.SomeType", JsClass.ClassTypeEnum.Class, null, null, null) {
+			new JsClass(CreateMockType("OuterNamespace.InnerNamespace.SomeType"), "OuterNamespace.InnerNamespace.SomeType", JsClass.ClassTypeEnum.Class, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, "a"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod("method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))),
 				                    new JsMethod("method2", null, JsExpression.FunctionDefinition(new[] { "x", "y" }, new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))))
 				                  },
 				StaticMethods = { new JsMethod("staticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 			},
-			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace.SomeType2", JsClass.ClassTypeEnum.Class, null, null, null) {
+			new JsClass(CreateMockType("OuterNamespace.InnerNamespace.SomeType2"), "OuterNamespace.InnerNamespace.SomeType2", JsClass.ClassTypeEnum.Class, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, "b"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod("method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))) },
 				StaticMethods = { new JsMethod("otherStaticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("y"), JsExpression.Number(1))) }
 			},
-			new JsEnum(CreateMockType(), "OuterNamespace.InnerNamespace.SomeEnum", new[] {
+			new JsEnum(CreateMockType("OuterNamespace.InnerNamespace.SomeEnum"), "OuterNamespace.InnerNamespace.SomeEnum", new[] {
 				new JsEnumValue("Value1", 1),
 				new JsEnumValue("Value2", 2),
 				new JsEnumValue("Value3", 3),
 			}),
-			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace2.OtherType", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(null, "OuterNamespace.InnerNamespace.SomeType2"), null) {
+			new JsClass(CreateMockType("OuterNamespace.InnerNamespace2.OtherType"), "OuterNamespace.InnerNamespace2.OtherType", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(null, "OuterNamespace.InnerNamespace.SomeType2"), null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod("method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))), },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("x"), JsExpression.Number(1))) }
 			},
-			new JsClass(CreateMockType(), "OuterNamespace.InnerNamespace2.OtherInterface", JsClass.ClassTypeEnum.Interface, null, null, null) {
+			new JsClass(CreateMockType("OuterNamespace.InnerNamespace2.OtherInterface"), "OuterNamespace.InnerNamespace2.OtherInterface", JsClass.ClassTypeEnum.Interface, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod("interfaceMethod", null, null) },
 				StaticInitStatements = {}
@@ -122,7 +122,7 @@ x = 1;
 			var rnd = new Random(3);
 			var unorderedNames = names.Select(n => new { n = n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
 			
-			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockType(), n, JsClass.ClassTypeEnum.Class, null, null, null)));
+			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockType(n), n, JsClass.ClassTypeEnum.Class, null, null, null)));
 
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("// ")).Select(l => l.Substring(3)).ToList();
 

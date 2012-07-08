@@ -23,12 +23,12 @@ namespace Saltarelle.Compiler {
 		TypeOf,
 
 		/// <summary>
-		/// The type is being inherited from.
+		/// The type is being inherited from. A null result means that the type should not appear in the inheritance list.
 		/// </summary>
 		Inheritance,
 
 		/// <summary>
-		/// The type is being cast to.
+		/// The type is being cast to. A null result means that the cast should be replaced with a regular assignment.
 		/// </summary>
 		CastTarget,
 
@@ -41,7 +41,6 @@ namespace Saltarelle.Compiler {
 	public interface IRuntimeLibrary {
 		/// <summary>
 		/// Returns an expression that references a type. This might mean a simple name, a generic instantiation, or something else.
-		/// This method may return null if and only if the <paramref name="context"/> is <see cref="TypeContext.Inheritance"/>.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
 		/// <param name="context">The context for which the type is desired.</param>
