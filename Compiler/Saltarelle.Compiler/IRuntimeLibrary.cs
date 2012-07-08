@@ -50,7 +50,7 @@ namespace Saltarelle.Compiler {
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").
 		/// This might also represent an unboxing, in which case it must be verified that (any non-null) object can be converted to the target type before returning true.
 		/// </summary>
-		JsExpression TypeIs(JsExpression expression, IType targetType);
+		JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType);
 
 		/// <summary>
 		/// Returns an expression that casts an expression to a specified type, or returns null if the expression is not of that type (equivalent to C# "as").

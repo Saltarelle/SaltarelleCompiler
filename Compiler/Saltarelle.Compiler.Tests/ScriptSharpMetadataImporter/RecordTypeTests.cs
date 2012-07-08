@@ -293,7 +293,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
 		[Test]
 		public void IsRecordReturnsTheCorrectValue() {
-			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 {} sealed class C2 : System.Record {} class C3");
+			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 {} sealed class C2 : System.Record {} class C3 {}");
 			Assert.That(Metadata.IsRecord(AllTypes["C1"]), Is.True);
 			Assert.That(Metadata.IsRecord(AllTypes["C2"]), Is.True);
 			Assert.That(Metadata.IsRecord(AllTypes["C3"]), Is.False);

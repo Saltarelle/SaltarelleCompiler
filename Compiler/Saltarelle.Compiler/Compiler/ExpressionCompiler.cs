@@ -1328,7 +1328,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
 			var targetType = IsNullableType(rr.TargetType) ? GetNonNullableType(rr.TargetType) : rr.TargetType;
-			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), targetType);
+			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), rr.Input.Type, targetType);
         }
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {

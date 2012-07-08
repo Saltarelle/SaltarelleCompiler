@@ -1038,11 +1038,15 @@ public class C {
 	private void M() {
 		object o = null;
 		// BEGIN
-		var r = (R)o;
+		var v1 = (R)o;
+		var v2 = o as R;
+		var v3 = o is R;
 		// END
 	}
 }",
-@"		var r = o;
+@"		var v1 = o;
+		var v2 = o;
+		var v3 = true;
 ");
 		}
 
@@ -1059,11 +1063,42 @@ public class C {
 	private void M() {
 		object o = null;
 		// BEGIN
-		var i = (I)o;
+		var v1 = (I)o;
+		var v2 = o as I;
+		var v3 = o is I;
 		// END
 	}
 }",
-@"		var i = o;
+@"		var v1 = o;
+		var v2 = o;
+		var v3 = true;
+");
+		}
+
+		[Test]
+		public void CastBetweenTypesWithTheSameScriptNameIsANoOp() {
+			AssertSourceCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+[ScriptName(""X"")]
+class C1 {}
+[ScriptName(""X"")]
+class C2 {}
+
+public class C {
+	private void M() {
+		C1 o = null;
+		// BEGIN
+		var v1 = (C2)o;
+		var v2 = o as C2;
+		var v3 = o is C2;
+		// END
+	}
+}",
+@"		var v1 = o;
+		var v2 = o;
+		var v3 = true;
 ");
 		}
 	}

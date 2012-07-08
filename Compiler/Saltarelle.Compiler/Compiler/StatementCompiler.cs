@@ -658,7 +658,7 @@ namespace Saltarelle.Compiler.Compiler {
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
-					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _resolver.Resolve(catchClauses[i].Type).Type);
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _currentVariableForRethrow.Type, _resolver.Resolve(catchClauses[i].Type).Type);
 					current = new JsIfStatement(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false, catchClauses.Count == 1), current);
 				}
 
