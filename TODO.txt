@@ -1,7 +1,5 @@
 TODO:
 v1:
-jQueryEvent cannot be record, but must somehow live besides the type system.
-Elements must live beside type system (?)
 el.draggable({ helper: ('clone'), appendTo: (this.getElement()), scroll: true, containment: ('parent') });
 Tree.Element_DragFeedback: The variable 'x' is byref for some reason.
 Understand why R# doesnot get the define symbols right.

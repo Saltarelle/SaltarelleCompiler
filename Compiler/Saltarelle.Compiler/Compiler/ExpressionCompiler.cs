@@ -1295,7 +1295,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
-#warning TODO: Check this!!
 			return _runtimeLibrary.GetScriptType(rr.Type, TypeContext.Instantiation);
 		}
 
