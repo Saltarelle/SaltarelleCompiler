@@ -27,3 +27,5 @@ $toRemove | % { $msbuild.Xml.RemoveChild($_) }
 
 # Remove the dummy file we have to create in order to have our installer being called by NuGet
 $project.ProjectItems | ? { $_.Name -eq "dummy.txt" } | % { $_.Delete() }
+
+$project.Save()
