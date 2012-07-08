@@ -934,14 +934,18 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void IsImportedMethodWorks() {
+		public void IsRealTypeMethodWorks() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [Imported] class C1 {}
-class C2 {}
+[Imported(IsRealType = false)] class C2 {}
+[Imported(IsRealType = true)] class C3 {}
+class C4 {}
 ");
-			Assert.That(Metadata.IsImported(AllTypes["C1"]), Is.True);
-			Assert.That(Metadata.IsImported(AllTypes["C2"]), Is.False);
+			Assert.That(Metadata.IsRealType(AllTypes["C1"]), Is.False);
+			Assert.That(Metadata.IsRealType(AllTypes["C2"]), Is.False);
+			Assert.That(Metadata.IsRealType(AllTypes["C3"]), Is.True);
+			Assert.That(Metadata.IsRealType(AllTypes["C4"]), Is.True);
 		}
 	}
 }

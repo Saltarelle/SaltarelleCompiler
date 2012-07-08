@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				if (_metadataImporter.IsRecord(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
-				else if (td.Kind == TypeKind.Interface && _metadataImporter.IsImported(td)) {
+				else if (!_metadataImporter.IsRealType(td)) {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else

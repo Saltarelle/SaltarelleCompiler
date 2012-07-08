@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.Tests {
 			IsResources     = t => false;
 			IsGlobalMethods = t => false;
 			IsRecord        = t => false;
-			IsImported      = t => false;
+			IsRealType      = t => true;
 			GetMixinArg     = t => null;
 		}
 
@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> IsResources { get; set; }
 		public Func<ITypeDefinition, bool> IsGlobalMethods { get; set; }
 		public Func<ITypeDefinition, bool> IsRecord { get; set; }
-		public Func<ITypeDefinition, bool> IsImported { get; set; }
+		public Func<ITypeDefinition, bool> IsRealType { get; set; }
 		public Func<ITypeDefinition, string> GetMixinArg { get; set; }
 
 		bool IScriptSharpMetadataImporter.IsNamedValues(ITypeDefinition t) {
@@ -36,8 +36,8 @@ namespace Saltarelle.Compiler.Tests {
 			return IsRecord(t);
 		}
 
-		bool IScriptSharpMetadataImporter.IsImported(ITypeDefinition t) {
-			return IsImported(t);
+		bool IScriptSharpMetadataImporter.IsRealType(ITypeDefinition t) {
+			return IsRealType(t);
 		}
 
 		string IScriptSharpMetadataImporter.GetMixinArg(ITypeDefinition t) {

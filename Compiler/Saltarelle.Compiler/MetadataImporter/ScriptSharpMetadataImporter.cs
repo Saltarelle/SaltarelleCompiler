@@ -36,6 +36,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ResourcesAttribute                     = AttributeNamespace + ".ResourcesAttribute";
 		private const string MixinAttribute                         = AttributeNamespace + ".MixinAttribute";
 		private const string ObjectLiteralAttribute                 = AttributeNamespace + ".ObjectLiteralAttribute";
+		private const string IsRealTypePropertyName = "IsRealType";
 		private const string Function = "Function";
 		private const string Array    = "Array";
 
@@ -121,15 +122,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public bool IsRecord { get; private set; }
 			public bool IsNamedValues { get; private set; }
 			public bool IsImported { get; private set; }
+			public bool IsRealType { get; private set; }
 			public bool IsResources { get; private set; }
 			public string MixinArg { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isRecord, bool isNamedValues, bool isImported, bool isResources, string mixinArg) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isRecord, bool isNamedValues, bool isImported, bool isRealType, bool isResources, string mixinArg) {
 				Semantics       = semantics;
 				IsGlobalMethods = isGlobalMethods;
 				IsRecord        = isRecord;
 				IsNamedValues   = isNamedValues;
 				IsImported      = isImported;
+				IsRealType      = isRealType;
 				IsResources     = isResources;
 				MixinArg        = mixinArg;
 			}
@@ -282,12 +285,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, null);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, true, false, null);
 				return;
 			}
 
 			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
-			bool isImported = GetAttributePositionalArgs(typeDefinition, ImportedAttribute) != null;
+			var importedAttr = typeDefinition.Attributes.FirstOrDefault(a => a.AttributeType.FullName == ImportedAttribute);
+			bool isImported = importedAttr != null;
+			bool isRealType = importedAttr == null || (importedAttr.NamedArguments.Where(a => a.Key.Name == IsRealTypePropertyName).Select(a => (bool)a.Value.ConstantValue).FirstOrDefault());
 			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
 
 			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null;
@@ -410,7 +415,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isRecord: isRecord, isNamedValues: nva != null, isImported: isImported, isResources: isResources, mixinArg: mixinArg);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isRecord: isRecord, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, mixinArg: mixinArg);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -1217,8 +1222,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsRecord;
 		}
 
-		public bool IsImported(ITypeDefinition t) {
-			return _typeSemantics[t].IsImported;
+		public bool IsRealType(ITypeDefinition t) {
+			return _typeSemantics[t].IsRealType;
 		}
 
 		public string GetMixinArg(ITypeDefinition t) {
