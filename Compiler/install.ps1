@@ -23,7 +23,9 @@ $toRemove = $msbuild.Xml.Imports | ? { $_.Project.EndsWith("Saltarelle.Compiler.
 $newLocation = $toRemove | Select-Object -First 1
 $newImport = $msbuild.Xml.CreateImportElement("`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Saltarelle.Compiler.targets"")))")
 $msbuild.Xml.InsertAfterChild($newImport, $newLocation)
-$toRemove | % { $msbuild.Xml.RemoveChild($_) }
+if ($toRemove) {
+	$toRemove | % { $msbuild.Xml.RemoveChild($_) }
+}
 
 # Remove the dummy file we have to create in order to have our installer being called by NuGet
 $project.ProjectItems | ? { $_.Name -eq "dummy.txt" } | % { $_.Delete() }
