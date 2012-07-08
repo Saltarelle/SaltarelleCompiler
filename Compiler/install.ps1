@@ -17,10 +17,13 @@ $project.Object.References | ? { $_.Name.StartsWith("System.") } | % { try { $_.
 $project.Object.References | ? { $_.Name -eq "System" } | % { $_.Remove() }
 $project.Object.References | ? { $_.Name.StartsWith("Microsoft.") } | % { $_.Remove() }
 
-## Swap the import for Microsoft.CSharp.targets for Saltarelle.Compiler.targets. Also remove any existing reference to Saltarelle.Compiler.targets since we might be upgrading.
-$msbuild.Xml.Imports | ? { $_.Project.EndsWith("Saltarelle.Compiler.targets") } | % { $msbuild.Xml.RemoveChild($_) }
-$msbuild.Xml.Imports | ? { $_.Project.EndsWith("Microsoft.CSharp.targets") } | % { $msbuild.Xml.RemoveChild($_) }
-$msbuild.Xml.AddImport("`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Saltarelle.Compiler.targets"")))")
+# Swap the import for Microsoft.CSharp.targets for Saltarelle.Compiler.targets. Also remove any existing reference to Saltarelle.Compiler.targets since we might be upgrading.
+# Ensure that the new import appears in the same place in the project file as the old one.
+$toRemove = $msbuild.Xml.Imports | ? { $_.Project.EndsWith("Saltarelle.Compiler.targets") -or $_.Project.EndsWith("Microsoft.CSharp.targets") }
+$newLocation = $toRemove | Select-Object -First 1
+$newImport = $msbuild.Xml.CreateImportElement("`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Saltarelle.Compiler.targets"")))")
+$msbuild.Xml.InsertAfterChild($newImport, $newLocation)
+$toRemove | % { $msbuild.Xml.RemoveChild($_) }
 
 # Remove the dummy file we have to create in order to have our installer being called by NuGet
 $project.ProjectItems | ? { $_.Name -eq "dummy.txt" } | % { $_.Delete() }

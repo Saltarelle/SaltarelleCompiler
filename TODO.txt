@@ -1,6 +1,5 @@
 TODO:
 v1:
-Must fix the location of the <Import> in the MSBuild file
 Understand why R# doesn't get the define symbols right.
 
 v2:
