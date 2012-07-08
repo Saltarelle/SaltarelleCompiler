@@ -13,6 +13,7 @@ operator true + operator false.
 Don't assign a field the default value when it is always assigned before being read in the constructor.
 Multi-dimensional arrays
 Ensure that type initializers are run in the correct order.
+Use the entire location instead of just the start location in error messages.
 NAnt task
 Change the INamingConventionResolver interface (should not contain methods for variable names, should be one resolver per referenced assembly).
 Allow a class to inherit from two types with a member with the same name IFF both the members are implemented by the same method.
