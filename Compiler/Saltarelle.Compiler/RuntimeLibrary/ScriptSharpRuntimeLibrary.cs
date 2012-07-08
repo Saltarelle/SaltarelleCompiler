@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType) {
 			var jsTarget = GetCastTarget(sourceType, targetType);
-			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(jsTarget, "isInstanceOfType"), expression) : (JsExpression)JsExpression.True;
+			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "isInstanceOfType"), expression, jsTarget) : (JsExpression)JsExpression.True;
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {

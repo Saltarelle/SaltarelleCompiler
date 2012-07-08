@@ -52,8 +52,8 @@ public class C {
 		               new D4() is I3,                 // true
 		               new D4() is I4,                 // true
 		               new X2() is I1,                 // true
-		               new E2() is E1,                 // false
-		               new E1() is int,                // false
+		               new E2() is E1,                 // true
+		               new E1() is int,                // true
 		               new E1() is object,             // true
 		               null is object,                 // false
 		             };
@@ -61,7 +61,7 @@ public class C {
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, false, true, false }));
+			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, true, true, true, false }));
 		}
 
 		[Test]
@@ -121,8 +121,8 @@ public class C {
 		               (new D4() as I3) != null,                 // true
 		               (new D4() as I4) != null,                 // true
 		               (new X2() as I1) != null,                 // true
-		               (new E2() as E1?) != null,                // false
-		               (new E1() as int) != null,                // false
+		               (new E2() as E1?) != null,                // true
+		               (new E1() as int) != null,                // true
 		               (new E1() as object) != null,             // true
 		               (null as object) != null,                 // false
 		             };
@@ -130,7 +130,7 @@ public class C {
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, false, true, false }));
+			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, true, true, true, false }));
 		}
 
 		[Test]
@@ -200,8 +200,8 @@ public class C {
 		               F<I3>(new D4()),                 // true
 		               F<I4>(new D4()),                 // true
 		               F<I1>(new X2()),                 // true
-		               F<E1>(new E2()),                 // false
-		               F<int>(new E1()),                // false
+		               F<E1>(new E2()),                 // true
+		               F<int>(new E1()),                // true
 		               F<object>(new E1()),             // true
 		               F<object>(null),                 // false
 		             };
@@ -209,7 +209,7 @@ public class C {
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, false, true, true }));
+			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, true, true, true, true }));
 		}
 
 		[Test]

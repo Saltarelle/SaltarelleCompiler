@@ -597,5 +597,19 @@ public void M() {
 @"	var $d2 = $d1;
 ");
 		}
+
+		[Test]
+		public void CreatingEnumGivesAZeroConstant() {
+			AssertCorrect(
+@"enum E {}
+
+public void M() {
+	// BEGIN
+	var e = new E();
+	// END
+}",
+@"	var $e = 0;
+");
+		}
 	}
 }

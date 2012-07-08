@@ -498,7 +498,9 @@ public class X {
 		[Test]
 		public void IsInstanceOfTypeWorksForReferenceTypes() {
 			var result = ExecuteCSharp(
-@"public class C1 {}
+@"using System;
+
+public class C1 {}
 public class C2<T> {}
 public interface I1 {}
 public interface I2<T1> {}
@@ -521,44 +523,45 @@ public enum E2 {}
 
 public class C {
 	public static bool[] M() {
-		return new[] { typeof(C1).IsInstanceOfType(new object()),             // false
-		               typeof(object).IsInstanceOfType(new C1()),             // true
-		               typeof(I1).IsInstanceOfType(new object()),             // false
-		               typeof(D1).IsInstanceOfType(new C1()),                 // false
-		               typeof(C1).IsInstanceOfType(new D1()),                 // true
-		               typeof(I1).IsInstanceOfType(new D1()),                 // true
-		               typeof(C2<int>).IsInstanceOfType(new D2<int>()),       // true
-		               typeof(C2<string>).IsInstanceOfType(new D2<int>()),    // false
-		               typeof(I2<int>).IsInstanceOfType(new D2<int>()),       // true
-		               typeof(I2<string>).IsInstanceOfType(new D2<int>()),    // false
-		               typeof(I1).IsInstanceOfType(new D2<int>()),            // true
-		               typeof(C2<string>).IsInstanceOfType(new D3()),         // false
-		               typeof(C2<int>).IsInstanceOfType(new D3()),            // true
-		               typeof(I2<int>).IsInstanceOfType(new D3()),            // false
-		               typeof(I2<string>).IsInstanceOfType(new D3()),         // true
-		               typeof(I1).IsInstanceOfType(new D4()),                 // true
-		               typeof(I3).IsInstanceOfType(new D4()),                 // true
-		               typeof(I4).IsInstanceOfType(new D4()),                 // true
-		               typeof(I1).IsInstanceOfType(new X2()),                 // true
-		               typeof(C2<>).IsInstanceOfType(new D3()),               // false
-		               typeof(E1).IsInstanceOfType(new E2()),                 // false
-		               typeof(int).IsInstanceOfType(new E1()),                // false
-		               typeof(object).IsInstanceOfType(new E1()),             // true
-		               typeof(object).IsInstanceOfType(null),                 // false
+		return new[] { Type.IsInstanceOfType(new object(), typeof(C1)),             // false
+		               Type.IsInstanceOfType(new C1(), typeof(object)),             // true
+		               Type.IsInstanceOfType(new object(), typeof(I1)),             // false
+		               Type.IsInstanceOfType(new C1(), typeof(D1)),                 // false
+		               Type.IsInstanceOfType(new D1(), typeof(C1)),                 // true
+		               Type.IsInstanceOfType(new D1(), typeof(I1)),                 // true
+		               Type.IsInstanceOfType(new D2<int>(), typeof(C2<int>)),       // true
+		               Type.IsInstanceOfType(new D2<int>(), typeof(C2<string>)),    // false
+		               Type.IsInstanceOfType(new D2<int>(), typeof(I2<int>)),       // true
+		               Type.IsInstanceOfType(new D2<int>(), typeof(I2<string>)),    // false
+		               Type.IsInstanceOfType(new D2<int>(), typeof(I1)),            // true
+		               Type.IsInstanceOfType(new D3(), typeof(C2<string>)),         // false
+		               Type.IsInstanceOfType(new D3(), typeof(C2<int>)),            // true
+		               Type.IsInstanceOfType(new D3(), typeof(I2<int>)),            // false
+		               Type.IsInstanceOfType(new D3(), typeof(I2<string>)),         // true
+		               Type.IsInstanceOfType(new D4(), typeof(I1)),                 // true
+		               Type.IsInstanceOfType(new D4(), typeof(I3)),                 // true
+		               Type.IsInstanceOfType(new D4(), typeof(I4)),                 // true
+		               Type.IsInstanceOfType(new X2(), typeof(I1)),                 // true
+		               Type.IsInstanceOfType(new D3(), typeof(C2<>)),               // false
+		               Type.IsInstanceOfType(new E2(), typeof(E1)),                 // true
+		               Type.IsInstanceOfType(new E1(), typeof(int)),                // true
+		               Type.IsInstanceOfType(new E1(), typeof(object)),             // true
+		               Type.IsInstanceOfType(null, typeof(object)),                 // false
 		             };
 		};
 	}
 }", "C.M");
 
-			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, false, false, true, false }));
+			Assert.That(result, Is.EqualTo(new[] { false, true, false, false, true, true, true, false, true, false, true, false, true, false, true, true, true, true, true, false, true, true, true, false }));
 		}
 
 		[Test]
 		public void IsInstanceOfTypeWorksForInt32() {
 			var result = ExecuteCSharp(@"
+using System;
 public class C {
 	public static bool[] M() {
-		return new[] { typeof(int).IsInstanceOfType(null), typeof(int).IsInstanceOfType(new object()), typeof(int).IsInstanceOfType(1.5), typeof(int).IsInstanceOfType(1) };
+		return new[] { Type.IsInstanceOfType(null, typeof(int)), Type.IsInstanceOfType(new object(), typeof(int)), Type.IsInstanceOfType(1.5, typeof(int)), Type.IsInstanceOfType(1, typeof(int)) };
 	}
 }", "C.M");
 

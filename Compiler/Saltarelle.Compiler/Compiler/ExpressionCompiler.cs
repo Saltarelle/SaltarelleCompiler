@@ -1158,7 +1158,12 @@ namespace Saltarelle.Compiler.Compiler {
 				else {
 					var method = (IMethod)member;
 					if (method.IsConstructor) {
-						return CompileConstructorInvocation(_namingConvention.GetConstructorSemantics(method), method, argumentsForCall, argumentToParameterMap, initializerStatements, isExpandedForm);
+						if (method.DeclaringType.Kind == TypeKind.Enum) {
+							return JsExpression.Number(0);
+						}
+						else {
+							return CompileConstructorInvocation(_namingConvention.GetConstructorSemantics(method), method, argumentsForCall, argumentToParameterMap, initializerStatements, isExpandedForm);
+						}
 					}
 					else {
 						return CompileMethodInvocation(_namingConvention.GetMethodSemantics(method), method, targetResult, argumentsForCall, argumentToParameterMap, isVirtualCall, isExpandedForm);
