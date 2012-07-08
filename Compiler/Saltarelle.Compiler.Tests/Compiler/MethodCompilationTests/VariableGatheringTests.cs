@@ -581,6 +581,21 @@ public void M() {
 			AssertNotUsedByReference("$f");
 		}
 
+		[Test]
+		public void LocalVariableDeclaredInLoopInNestedFunctionIsNotConsideredUsedByReference() {
+			CompileMethod(@"
+public void M() {
+	System.Action a = () => {
+		for (int i = 0; i < 1; i++) {
+			int x = 0;
+			int y = x;
+		}
+	};
+}");
+
+			AssertNotUsedByReference("$x");
+		}
+
         [Test]
         public void DeclaringMethodsAreCorrect() {
             CompileMethod(

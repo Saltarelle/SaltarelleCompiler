@@ -1,8 +1,7 @@
 TODO:
 v1:
-el.draggable({ helper: ('clone'), appendTo: (this.getElement()), scroll: true, containment: ('parent') });
-Tree.Element_DragFeedback: The variable 'x' is byref for some reason.
-Understand why R# doesnot get the define symbols right.
+Must fix the location of the <Import> in the MSBuild file
+Understand why R# doesn't get the define symbols right.
 
 v2:
 yield
