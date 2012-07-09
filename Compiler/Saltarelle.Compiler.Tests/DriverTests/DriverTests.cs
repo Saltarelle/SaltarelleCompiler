@@ -290,6 +290,24 @@ public class C1 {
 		}
 
 		[Test]
+		public void CompilingAnonymousTypeWorks() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"using System.Collections; public class C1 { public void M() { var o = new { someValue = 1 }; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options, false);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void TheAssemblyNameIsCorrect() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
