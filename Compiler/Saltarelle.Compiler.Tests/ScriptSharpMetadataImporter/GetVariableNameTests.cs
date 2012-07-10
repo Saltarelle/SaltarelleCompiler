@@ -12,15 +12,15 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		[Test]
 		public void ReturnsTheVariableNameWhenPossibleAndNotMinimizing() {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string>()), Is.EqualTo("variable"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string>()), Is.EqualTo("variable"));
 		}
 
 		[Test]
 		public void ReturnsTheVariableNameSuffixedWithAnIncrementingDigitWhenNotMinimizedAndTheNameIsAlreadyUsed() {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string> { "variable" }), Is.EqualTo("variable1"));
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string> { "variable", "variable1" }), Is.EqualTo("variable2"));
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string> { "variable", "variable1", "variable2" }), Is.EqualTo("variable3"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string> { "variable" }), Is.EqualTo("variable1"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string> { "variable", "variable1" }), Is.EqualTo("variable2"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string> { "variable", "variable1", "variable2" }), Is.EqualTo("variable3"));
 		}
 
 		[Test]
@@ -35,10 +35,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		[Test]
 		public void ReturnsAShortUniqueNameWhenMinimizingNames() {
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(true);
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string>()), Is.EqualTo("a"));
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string> { "a" }), Is.EqualTo("b"));
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string> { "a", "b" }), Is.EqualTo("c"));
-			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable"), new HashSet<string> { "a", "b", "c" }), Is.EqualTo("d"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string>()), Is.EqualTo("a"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string> { "a" }), Is.EqualTo("b"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string> { "a", "b" }), Is.EqualTo("c"));
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "variable", DomRegion.Empty), new HashSet<string> { "a", "b", "c" }), Is.EqualTo("d"));
 
 			Assert.That(md.GetVariableName(null, new HashSet<string>()), Is.EqualTo("a"));
 			Assert.That(md.GetVariableName(null, new HashSet<string> { "a" }), Is.EqualTo("b"));

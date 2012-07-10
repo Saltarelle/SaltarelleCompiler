@@ -628,5 +628,15 @@ public void M(int p) {
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(9, 29)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
         }
+
+		[Test]
+		public void UsedNamesIsCorrectWhenGeneratingTemporaryVariables() {
+            CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namingConvention: new MockNamingConventionResolver { GetVariableName = (v, used) => new string('x', used.Count + 1) });
+            MethodCompiler.variables
+                .OrderBy(kvp => kvp.Key.Region.Begin)
+                .Select(kvp => kvp.Value.Name)
+                .Should()
+                .Equal(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ });
+		}
     }
 }

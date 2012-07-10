@@ -7,12 +7,13 @@ namespace Saltarelle.Compiler.Compiler {
 		readonly IType type;
 		readonly string name;
 			
-		public SimpleVariable(IType type, string name) {
+		public SimpleVariable(IType type, string name, DomRegion region) {
 			Debug.Assert(type != null);
 			Debug.Assert(name != null);
+			Debug.Assert(region != null);
 			this.type = type;
 			this.name = name;
-			this.region = new DomRegion();
+			this.region = region;
 		}
 			
 		public string Name {

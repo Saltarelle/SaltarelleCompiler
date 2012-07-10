@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
@@ -22,7 +23,7 @@ namespace Saltarelle.Compiler.Compiler {
             _errorReporter = errorReporter;
         }
 
-        public IDictionary<IVariable, VariableData> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
+        public Tuple<IDictionary<IVariable, VariableData>, ISet<string>> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
             _result = new Dictionary<IVariable, VariableData>();
             _usedNames = new HashSet<string>(usedNames);
             _currentMethod = node;
@@ -35,7 +36,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
             node.AcceptVisitor(this);
-            return _result;
+            return Tuple.Create((IDictionary<IVariable, VariableData>)_result, (ISet<string>)_usedNames);
         }
 
     	private void AddVariable(AstNode variableNode, string variableName) {

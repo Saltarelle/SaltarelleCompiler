@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly ExpressionCompiler _expressionCompiler;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly string _thisAlias;
-		private readonly HashSet<string> _usedVariableNames;
+		private readonly ISet<string> _usedVariableNames;
 		private readonly NestedFunctionContext _nestedFunctionContext;
 		private readonly SharedValue<int> _nextLabelIndex;
 		private readonly IMethod _methodBeingCompiled;
@@ -37,12 +37,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, HashSet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols)
+		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols)
 			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, methodBeingCompiled, definedSymbols, null, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, HashSet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
+		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
 			_namingConvention           = namingConvention;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
@@ -60,7 +60,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, CreateTemporaryVariable, c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _definedSymbols), thisAlias, nestedFunctionContext, null, _methodBeingCompiled);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, v => CreateTemporaryVariable(v, new DomRegion(_filename, _location, _location)), c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _definedSymbols), thisAlias, nestedFunctionContext, null, _methodBeingCompiled);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -188,9 +188,9 @@ namespace Saltarelle.Compiler.Compiler {
 			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _methodBeingCompiled, _definedSymbols, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
-		private IVariable CreateTemporaryVariable(IType type) {
+		private IVariable CreateTemporaryVariable(IType type, DomRegion region) {
 			string name = _namingConvention.GetVariableName(null, _usedVariableNames);
-			IVariable variable = new SimpleVariable(type, "temporary");
+			IVariable variable = new SimpleVariable(type, "temporary", region);
 			_variables[variable] = new VariableData(name, null, false);
 			_usedVariableNames.Add(name);
 			return variable;
@@ -472,7 +472,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;
 				if (ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(array)) {
-					var tmpArray = CreateTemporaryVariable(ferr.CollectionType);
+					var tmpArray = CreateTemporaryVariable(ferr.CollectionType, foreachStatement.GetRegion());
 					_result.Add(new JsVariableDeclarationStatement(_variables[tmpArray].Name, array));
 					array = JsExpression.Identifier(_variables[tmpArray].Name);
 				}
@@ -488,7 +488,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return;
 				}
 
-				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32));
+				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32), foreachStatement.GetRegion());
 				var jsIndex = JsExpression.Identifier(_variables[index].Name);
 				var body = new[] { new JsVariableDeclarationStatement(_variables[iterator.Variable].Name, JsExpression.Index(array, jsIndex)) }
 				          .Concat(CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement).Statements);
@@ -501,7 +501,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else {
 				var getEnumeratorCall = _expressionCompiler.Compile(_filename, foreachStatement.StartLocation, ferr.GetEnumeratorCall, true);
 				_result.AddRange(getEnumeratorCall.AdditionalStatements);
-				var enumerator = CreateTemporaryVariable(ferr.EnumeratorType);
+				var enumerator = CreateTemporaryVariable(ferr.EnumeratorType, foreachStatement.GetRegion());
 				_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[enumerator].Name, getEnumeratorCall.Expression)));
 
 				var moveNextInvocation = _expressionCompiler.Compile(_filename, foreachStatement.StartLocation, new CSharpInvocationResolveResult(new LocalResolveResult(enumerator), ferr.MoveNextMethod, new ResolveResult[0]), true);
@@ -546,7 +546,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsBlockStatement GenerateUsingBlock(LocalResolveResult resource, Expression aquisitionExpression, JsBlockStatement body) {
+		private JsBlockStatement GenerateUsingBlock(LocalResolveResult resource, Expression aquisitionExpression, DomRegion tempVariableRegion, JsBlockStatement body) {
 			var boolType = _compilation.FindType(KnownTypeCode.Boolean);
 			var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
 			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
@@ -561,7 +561,7 @@ namespace Saltarelle.Compiler.Compiler {
 			bool isDynamic = resource.Type.Kind == TypeKind.Dynamic;
 
 			if (isDynamic) {
-				var newResource = CreateTemporaryVariable(systemIDisposable);
+				var newResource = CreateTemporaryVariable(systemIDisposable, tempVariableRegion);
 				var castExpr = _expressionCompiler.Compile(_filename, aquisitionExpression.StartLocation, new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
 				stmts.AddRange(castExpr.AdditionalStatements);
 				stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[newResource].Name, castExpr.Expression)));
@@ -600,12 +600,12 @@ namespace Saltarelle.Compiler.Compiler {
 			var vds = usingStatement.ResourceAcquisition as VariableDeclarationStatement;
 			if (vds != null) {
 				foreach (var resource in vds.Variables.Reverse()) {
-					stmt = GenerateUsingBlock(((LocalResolveResult)_resolver.Resolve(resource)), resource.Initializer, stmt);
+					stmt = GenerateUsingBlock(((LocalResolveResult)_resolver.Resolve(resource)), resource.Initializer, usingStatement.GetRegion(), stmt);
 				}
 			}
 			else {
-				var resource = CreateTemporaryVariable(ResolveWithConversion((Expression)usingStatement.ResourceAcquisition).Type);
-				stmt = GenerateUsingBlock(new LocalResolveResult(resource), (Expression)usingStatement.ResourceAcquisition, stmt);
+				var resource = CreateTemporaryVariable(ResolveWithConversion((Expression)usingStatement.ResourceAcquisition).Type, usingStatement.GetRegion());
+				stmt = GenerateUsingBlock(new LocalResolveResult(resource), (Expression)usingStatement.ResourceAcquisition, usingStatement.GetRegion(), stmt);
 			}
 
 			_result.Add(stmt);
@@ -645,7 +645,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (tryCatchStatement.CatchClauses.Count > 0) {
 				var oldVariableForRethrow = _currentVariableForRethrow;
 
-				_currentVariableForRethrow = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
+				_currentVariableForRethrow = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object), tryCatchStatement.CatchClauses.First().GetRegion());
 				string catchVariableName = _variables[_currentVariableForRethrow].Name;
 
 				var catchClauses = tryCatchStatement.CatchClauses.ToList();
