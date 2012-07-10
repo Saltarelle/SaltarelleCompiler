@@ -5,7 +5,12 @@
         <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
         <DefaultLanguageSourceExtension>.cs</DefaultLanguageSourceExtension>
         <Language>C#</Language>
+		    <EmitDebugInformation>false</EmitDebugInformation>
     </PropertyGroup>
+	
+  	<PropertyGroup Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'">
+    		<EmitDebugInformation>true</EmitDebugInformation>
+  	</PropertyGroup>
    
     <ItemGroup>
         <DocFileItem Include="$(DocumentationFile)" Condition="'$(DocumentationFile)'!=''"/>
@@ -43,7 +48,7 @@
                  DefineConstants="$(DefineConstants)"
                  DisabledWarnings="$(NoWarn)"
                  DocumentationFile="@(DocFileItem)"
-                 EmitDebugInformation="$(DebugSymbols)"
+                 EmitDebugInformation="$(EmitDebugInformation)"
                  KeyContainer="$(KeyContainerName)"
                  KeyFile="$(KeyOriginatorFile)"
                  OutputAssembly="@(IntermediateAssembly)"
