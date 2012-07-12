@@ -808,11 +808,32 @@ class C1 {
 		public void AlternateSignatureAttributeWorksOnMethods() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-class C1 {
+public class C1 {
 	[AlternateSignature]
 	public void SomeMethod() {
 	}
 
+	[AlternateSignature]
+	public void SomeMethod(int x) {
+	}
+
+	public void SomeMethod(int x, int y) {
+	}
+}");
+
+			var methods = FindMethods("C1.SomeMethod");
+			Assert.That(methods.All(m => m.Item2.Name == "someMethod"));
+			Assert.That(methods.All(m => m.Item2.GenerateCode == (m.Item1.Parameters.Count == 2)));
+		}
+
+		[Test]
+		public void AlternateSignatureAttributeWorksWhenTheMinMethodIsRenamed() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[AlternateSignature]
+	public void SomeMethod() {
+	}
 
 	[AlternateSignature]
 	public void SomeMethod(int x) {

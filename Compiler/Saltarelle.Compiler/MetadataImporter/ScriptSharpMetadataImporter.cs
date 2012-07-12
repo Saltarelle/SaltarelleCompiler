@@ -797,6 +797,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
 			var noa = GetAttributePositionalArgs(method, IntrinsicOperatorAttribute);
 			var epa = GetAttributePositionalArgs(method, ExpandParamsAttribute);
+			var asa = GetAttributePositionalArgs(method, AlternateSignatureAttribute);
 
 			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
@@ -983,7 +984,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 					else {
 						string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
-						usedNames[name] = true;
+						if (asa == null)
+							usedNames[name] = true;
 						if (_typeSemantics[method.DeclaringTypeDefinition].IsRecord && !method.IsStatic)
 							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
 						else
