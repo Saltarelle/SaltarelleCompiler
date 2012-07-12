@@ -1,6 +1,11 @@
 TODO:
 v1:
+Finish the collection initializer work.
 Understand why R# doesn't get the define symbols right.
+[AlternateSignature] seems to cause a $1 to be appended to the real method
+If not swapping, the import should appear after the last import, or last in the project if no other import exists
+Only add files to server project if ends with .Server
+Swap correctly in Saltarelle.Framework
 
 v2:
 yield

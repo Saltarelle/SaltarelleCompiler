@@ -937,7 +937,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						Message(7135, method);
 					}
 
-					if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name).Distinct().Count() > 1) {
+					if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).Where(sem => sem.Type == MethodScriptSemantics.ImplType.NormalMethod).Select(sem => sem.Name).Distinct().Count() > 1) {
 						Message(7136, method);
 					}
 

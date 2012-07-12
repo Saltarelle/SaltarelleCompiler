@@ -68,8 +68,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (!_types.TryGetValue(typeDefinition, out result)) {
                 var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
-                    var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _runtimeLibrary.GetScriptType(t, TypeContext.GenericArgument) != null).ToList();
-					var unusableTypes = Utils.FindUsedUnusableTypes(baseTypes, _namingConvention).ToList();
+					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _namingConvention).ToList();
 					if (unusableTypes.Count > 0) {
 						foreach (var ut in unusableTypes)
 							_errorReporter.Message(7500, typeDefinition.Region, ut.FullName, typeDefinition.FullName);
@@ -77,6 +76,8 @@ namespace Saltarelle.Compiler.Compiler {
 						result = new JsClass(typeDefinition, "X", ConvertClassType(typeDefinition.Kind), new string[0], null, null);
 					}
 					else {
+						var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _runtimeLibrary.GetScriptType(t, TypeContext.GenericArgument) != null).ToList();
+
 						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? _runtimeLibrary.GetScriptType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class), TypeContext.Inheritance) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
 						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.Inheritance)).Where(t => t != null).ToList();
 						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
