@@ -28,7 +28,7 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo {
 
 Task Generate-jQueryUISource -Depends Determine-Version {
 	Exec { msbuild "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator.sln" /verbosity:minimal /p:"Configuration=$configuration" }
-	rmdir -Force -Recurse "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI"
+	rmdir -Force -Recurse -ErrorAction SilentlyContinue "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI" | Out-Null
 	Exec { & "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\bin\ScriptSharp.Tools.jQueryUIGenerator.exe" "$base_dir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\entries" "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI" /p | Out-Null }
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\jQuery\jQuery.UI\Properties\Version.cs" -Version $script:JQueryUIVersion
 }
