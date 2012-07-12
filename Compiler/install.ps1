@@ -21,6 +21,12 @@ $project.Object.References | ? { $_.Name.StartsWith("Microsoft.") } | % { $_.Rem
 # Ensure that the new import appears in the same place in the project file as the old one.
 $toRemove = $msbuild.Xml.Imports | ? { $_.Project.EndsWith("Saltarelle.Compiler.targets") -or $_.Project.EndsWith("Microsoft.CSharp.targets") }
 $newLocation = $toRemove | Select-Object -First 1
+if (-not $newLocation) {
+	$newLocation = $msbuild.Xml.Imports | Select-Object -First 1
+	if (-not $newLocation) {
+		$newLocation = $msbuild.Xml.Children | Select-Object -Last 1
+	}
+}
 $newImport = $msbuild.Xml.CreateImportElement("`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Saltarelle.Compiler.targets"")))")
 $msbuild.Xml.InsertAfterChild($newImport, $newLocation)
 if ($toRemove) {
