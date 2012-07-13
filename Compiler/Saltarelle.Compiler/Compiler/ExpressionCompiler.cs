@@ -426,7 +426,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 								JsExpression oldValue, jsOtherOperand;
 								if (oldValueIsImportant) {
-									thisAndArguments.Add(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, new IType[0], mrr.Member.IsVirtual && !mrr.IsVirtualCall, false));
+									thisAndArguments.Add(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, new IType[0], mrr.Member.IsOverridable && !mrr.IsVirtualCall, false));
 									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, thisAndArguments) : null);
 									oldValue = thisAndArguments[thisAndArguments.Count - 1];
 									thisAndArguments.RemoveAt(thisAndArguments.Count - 1); // Remove the current value because it should not be an argument to the setter.
@@ -449,12 +449,12 @@ namespace Saltarelle.Compiler.Compiler {
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
 									thisAndArguments.Add(newValue);
-									_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0], mrr.Member.IsVirtual && !mrr.IsVirtualCall, false)));
+									_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0], mrr.Member.IsOverridable && !mrr.IsVirtualCall, false)));
 									return valueToReturn;
 								}
 								else {
 									thisAndArguments.Add(valueFactory(oldValue, jsOtherOperand));
-									return CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0], mrr.Member.IsVirtual && !mrr.IsVirtualCall, false);
+									return CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, new IType[0], mrr.Member.IsOverridable && !mrr.IsVirtualCall, false);
 								}
 							}
 						}
@@ -538,7 +538,7 @@ namespace Saltarelle.Compiler.Compiler {
 			switch (impl.Type) {
 				case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
 					var accessor = isAdd ? evt.AddAccessor : evt.RemoveAccessor;
-					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, target.TargetResult, new[] { value }, new[] { 0 }, false, false);
+					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, target.TargetResult, new[] { value }, new[] { 0 }, target.IsVirtualCall, false);
 				}
 				default:
 					_errorReporter.Message(7511, _filename, _location, evt.DeclaringType.FullName + "." + evt.Name);
@@ -815,7 +815,7 @@ namespace Saltarelle.Compiler.Compiler {
 				switch (impl.Type) {
 					case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
 						var getter = ((IProperty)rr.Member).Getter;
-						return CompileMethodInvocation(impl.GetMethod, getter, rr.TargetResult, new ResolveResult[0], new int[0], false, false);	// We know we have no arguments because indexers are treated as invocations.
+						return CompileMethodInvocation(impl.GetMethod, getter, rr.TargetResult, new ResolveResult[0], new int[0], rr.IsVirtualCall, false);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyScriptSemantics.ImplType.Field: {
 						var jsTarget = InnerCompile(rr.TargetResult, false);
@@ -935,7 +935,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.Message(7514, _filename, _location, method.DeclaringType.FullName + "." + method.Name);
 			}
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
-			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsVirtual && !isVirtualCall, isExpandedForm);
+			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsOverridable && !isVirtualCall, isExpandedForm);
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, IList<IType> typeArguments, bool isNonVirtualInvocationOfVirtualMethod, bool isExpandedForm) {
@@ -1421,7 +1421,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var typeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments : new List<IType>();
 
-				if (rr.Conversion.Method.IsVirtual && !rr.Conversion.IsVirtualMethodLookup) {
+				if (rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup) {
 					// base.Method
 					var jsTarget = InnerCompile(mgrr.TargetResult, true);
 					return _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, impl.Name, typeArguments, jsTarget);

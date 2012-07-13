@@ -895,5 +895,32 @@ public void M() {
 @"	var $a = $this.get_Item(123, $d);
 ");
 		}
+
+		[Test]
+		public void CallingBaseWorksWhenTheBaseMethodIsAnOverride() {
+			AssertCorrect(
+@"using System.Collections;
+class Base {
+	protected virtual void M(JsDictionary d) {
+	}
+}
+class Middle : Base {
+	protected override void M(JsDictionary d) {
+		// BEGIN
+		base.M(d);
+		// END
+	}
+}
+class Derived : Middle {
+	protected override void M(JsDictionary d) {
+		// BEGIN
+		base.M(d);
+		// END
+	}
+}",
+@"	$CallBase({Middle}, '$M', [], [this, $d]);
+", addSkeleton: false);
+
+		}
 	}
 }
