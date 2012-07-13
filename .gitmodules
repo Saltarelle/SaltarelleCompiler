@@ -6,4 +6,4 @@
 	url = git://github.com/jbevain/cecil.git
 [submodule "Runtime"]
 	path = Runtime
-	url = git@github.com:erik-kallen/scriptsharp.git
+	url = git://github.com/erik-kallen/scriptsharp.git
