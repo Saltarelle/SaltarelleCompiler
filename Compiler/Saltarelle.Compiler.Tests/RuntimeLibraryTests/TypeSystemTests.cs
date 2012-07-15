@@ -1104,5 +1104,70 @@ public class C {
 		var v3 = true;
 ");
 		}
+
+		[Test]
+		public void ComparingObjectToNullIsCallToIsNullOrUndefined() {
+			AssertSourceCorrect(@"
+using System;
+
+public class C {
+	private void M() {
+		object o = null;
+		// BEGIN
+		var v1 = o == null;
+		var v2 = null == o;
+		var v3 = o != null;
+		var v4 = null != o;
+		// END
+	}
+}",
+@"		var v1 = ss.isNullOrUndefined(o);
+		var v2 = ss.isNullOrUndefined(o);
+		var v3 = ss.isValue(o);
+		var v4 = ss.isValue(o);
+");
+		}
+
+		[Test]
+		public void ComparingWithLiteralStringIsNotCallToIsNullOrUndefined() {
+			AssertSourceCorrect(@"
+using System;
+
+public class C {
+	private void M() {
+		object o = null;
+		// BEGIN
+		var v1 = o == ""X"";
+		var v2 = ""X"" == o;
+		var v3 = o != ""X"";
+		var v4 = ""X"" != o;
+		// END
+	}
+}",
+@"		var v1 = o === 'X';
+		var v2 = 'X' === o;
+		var v3 = o !== 'X';
+		var v4 = 'X' !== o;
+");
+		}
+
+		[Test]
+		public void ComparingObjectsIsCallToReferenceEquals() {
+			AssertSourceCorrect(@"
+using System;
+
+public class C {
+	private void M() {
+		object o1 = null, o2 = null;
+		// BEGIN
+		var v1 = o1 == o2;
+		var v2 = o1 != o2;
+		// END
+	}
+}",
+@"		var v1 = ss.referenceEquals(o1, o2);
+		var v2 = !ss.referenceEquals(o1, o2);
+");
+		}
 	}
 }

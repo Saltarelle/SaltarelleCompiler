@@ -83,7 +83,7 @@ public void M() {
 		}
 
 		[Test]
-		public void LiftedBulkOperatorsExceptForEqualsAndNotEqualsWork() {
+		public void LiftedBulkOperatorsWork() {
 			AssertCorrectForBulkOperators(
 @"public void M() {
 	int? a, b;
@@ -92,30 +92,7 @@ public void M() {
 	// END
 }",
 @"	var $c = $Lift($a + $b);
-", includeEqualsAndNotEquals: false);
-		}
-
-		[Test]
-		public void LiftedEqualsAndNotEqualsAreTheSameAsNonLiftedVersions() {
-			AssertCorrect(
-@"public void M() {
-	int? a, b;
-	// BEGIN
-	var c = a == b;
-	// END
-}",
-@"	var $c = $a === $b;
-");
-
-			AssertCorrect(
-@"public void M() {
-	int? a, b;
-	// BEGIN
-	var c = a != b;
-	// END
-}",
-@"	var $c = $a !== $b;
-");
+", includeEqualsAndNotEquals: true);
 		}
 
 		[Test]
@@ -377,7 +354,27 @@ public void M() {
 	// END
 }",
 @"	var $i = $d.someField + 123;
-", true);
+", includeEqualsAndNotEquals: false);
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d.someField == 123;
+	// END
+}",
+@"	var $i = $ReferenceEquals($d.someField, 123);
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d.someField != 123;
+	// END
+}",
+@"	var $i = $ReferenceNotEquals($d.someField, 123);
+");
 
 			AssertCorrect(
 @"public void M() {
@@ -432,7 +429,27 @@ public void M() {
 	// END
 }",
 @"	var $i = $d + 123;
-", true);
+", includeEqualsAndNotEquals: false);
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d == 123;
+	// END
+}",
+@"	var $i = $ReferenceEquals($d, 123);
+");
+
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d != 123;
+	// END
+}",
+@"	var $i = $ReferenceNotEquals($d, 123);
+");
 
 			AssertCorrect(
 @"public void M() {
@@ -474,6 +491,53 @@ public void M() {
 	// END
 }",
 @"	var $i = $d || $b;
+");
+		}
+
+		[Test]
+		public void EqualityForReferenceTypesIsDelegatedToTheRuntimeLibrary() {
+			AssertCorrect(
+@"public void M() {
+	object o1 = null, o2 = null;
+	// BEGIN
+	bool b = o1 == o2;
+	// END
+}",
+@"	var $b = $ReferenceEquals($o1, $o2);
+");
+
+			AssertCorrect(
+@"public void M() {
+	System.Collections.JsDictionary o1 = null, o2 = null;
+	// BEGIN
+	bool b = o1 == o2;
+	// END
+}",
+@"	var $b = $ReferenceEquals($Upcast($o1, {Object}), $Upcast($o2, {Object}));
+");
+		}
+
+		[Test]
+		public void InequalityForReferenceTypesIsDelegatedToTheRuntimeLibrary() {
+			AssertCorrect(
+@"public void M() {
+	object o1 = null, o2 = null;
+	// BEGIN
+	bool b = o1 != o2;
+	// END
+}",
+@"	var $b = $ReferenceNotEquals($o1, $o2);
+");
+
+			AssertCorrect(
+@"using System.Collections;
+public void M() {
+	System.Collections.JsDictionary o1 = null, o2 = null;
+	// BEGIN
+	bool b = o1 != o2;
+	// END
+}",
+@"	var $b = $ReferenceNotEquals($Upcast($o1, {Object}), $Upcast($o2, {Object}));
 ");
 		}
 	}

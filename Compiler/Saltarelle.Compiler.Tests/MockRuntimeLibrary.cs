@@ -42,6 +42,8 @@ namespace Saltarelle.Compiler.Tests {
 			TryDowncast              = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget));
 			Downcast                 = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, TypeContext.CastTarget));
 			Upcast                   = (e, s, d)     => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, TypeContext.CastTarget));
+			ReferenceEquals          = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
+			ReferenceNotEquals       = (a, b)        => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
 			InstantiateGenericMethod = (m, a)        => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument))));
 			MakeException            = (e)           => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 			IntegerDivision          = (n, d)        => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
@@ -62,8 +64,10 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, IType, IType, JsExpression> TypeIs { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> TryDowncast { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> Downcast { get; set; }
-		public Func<JsExpression, IEnumerable<IType>, JsExpression> InstantiateGenericMethod { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> Upcast { get; set; }
+		public Func<JsExpression, IEnumerable<IType>, JsExpression> InstantiateGenericMethod { get; set; }
+		new public Func<JsExpression, JsExpression, JsExpression> ReferenceEquals { get; set; }
+		public Func<JsExpression, JsExpression, JsExpression> ReferenceNotEquals { get; set; }
 		public Func<JsExpression, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> IntegerDivision { get; set; }
 		public Func<JsExpression, JsExpression> FloatToInt { get; set; }
@@ -96,6 +100,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.Upcast(JsExpression expression, IType sourceType, IType targetType) {
 			return Upcast(expression, sourceType, targetType);
+		}
+
+		JsExpression IRuntimeLibrary.ReferenceEquals(JsExpression a, JsExpression b) {
+			return ReferenceEquals(a, b);
+		}
+
+		JsExpression IRuntimeLibrary.ReferenceNotEquals(JsExpression a, JsExpression b) {
+			return ReferenceNotEquals(a, b);
 		}
 
 		JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<IType> typeArguments) {

@@ -70,6 +70,16 @@ namespace Saltarelle.Compiler {
 		JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType);
 
 		/// <summary>
+		/// Returns an expression that determines if two reference values are equal.
+		/// </summary>
+		JsExpression ReferenceEquals(JsExpression a, JsExpression b);
+
+		/// <summary>
+		/// Returns an expression that determines if two reference values are not equal.
+		/// </summary>
+		JsExpression ReferenceNotEquals(JsExpression a, JsExpression b);
+
+		/// <summary>
 		/// Returns an expression that will instantiate a generic method.
 		/// </summary>
 		JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments);

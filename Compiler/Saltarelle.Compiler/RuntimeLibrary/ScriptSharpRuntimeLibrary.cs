@@ -101,6 +101,28 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return expression;
 		}
 
+		public JsExpression ReferenceEquals(JsExpression a, JsExpression b) {
+			if (a.NodeType == ExpressionNodeType.Null)
+				return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "isNullOrUndefined"), b);
+			else if (b.NodeType == ExpressionNodeType.Null)
+				return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "isNullOrUndefined"), a);
+			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
+				return JsExpression.Same(a, b);
+			else
+				return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "referenceEquals"), a, b);
+		}
+
+		public JsExpression ReferenceNotEquals(JsExpression a, JsExpression b) {
+			if (a.NodeType == ExpressionNodeType.Null)
+				return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "isValue"), b);
+			else if (b.NodeType == ExpressionNodeType.Null)
+				return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "isValue"), a);
+			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
+				return JsExpression.NotSame(a, b);
+			else
+				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "referenceEquals"), a, b));
+		}
+
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
 			return JsExpression.Invocation(method, typeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument)));
 		}
@@ -153,9 +175,13 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				switch (expression.NodeType) {
 					case ExpressionNodeType.Equal:
 					case ExpressionNodeType.Same:
+						methodName = "eq";
+						goto default;
+
 					case ExpressionNodeType.NotEqual:
 					case ExpressionNodeType.NotSame:
-						return expression;
+						methodName = "ne";
+						goto default;
 
 					case ExpressionNodeType.LesserOrEqual:      methodName = "le";   goto default;
 					case ExpressionNodeType.GreaterOrEqual:     methodName = "ge";   goto default;

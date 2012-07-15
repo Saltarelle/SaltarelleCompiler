@@ -706,7 +706,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, rr.IsLiftedOperator);
 
 				case ExpressionType.Equal:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Same, false);	// We are so lucky that performing a lifted equality comparison in JS is the same as in C#, so no need to lift.
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => rr.Operands[0].Type.IsReferenceType == false || rr.Operands[1].Type.IsReferenceType == false ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b), rr.IsLiftedOperator);
 
 				case ExpressionType.LeftShift:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, rr.IsLiftedOperator);
@@ -725,7 +725,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, rr.IsLiftedOperator);
 
 				case ExpressionType.NotEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.NotSame, false);	// We are so lucky that performing a lifted equality comparison in JS is the same as in C#, so no need to lift.
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => rr.Operands[0].Type.IsReferenceType == false || rr.Operands[1].Type.IsReferenceType == false ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b), rr.IsLiftedOperator);
 
 				case ExpressionType.Or:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
