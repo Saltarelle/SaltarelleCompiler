@@ -291,8 +291,8 @@ namespace Saltarelle.Compiler.Driver {
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex, null, TextLocation.Empty);
+				return false;
 			}
-			return true;
 		}
 
 		private static IEnumerable<IAssemblyReference> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
