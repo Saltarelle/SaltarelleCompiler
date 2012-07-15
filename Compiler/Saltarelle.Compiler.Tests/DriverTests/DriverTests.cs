@@ -308,6 +308,24 @@ public class C1 {
 		}
 
 		[Test]
+		public void CompilingLiftedEqualityWorks() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() { int? i1 = null; int i2 = 0; bool b = (i1 == i2); } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options, false);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void CanInitializeListWithCollectionInitializer() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("Test.cs"), @"using System.Collections.Generic; public class C1 { public void M() { var l = new List<int> { 1 }; } }");
