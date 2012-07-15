@@ -27,10 +27,10 @@ namespace Saltarelle.Compiler.Tests.ReferenceImporterTests {
 			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.MemberAccess(new JsTypeReferenceExpression(asm.Object, "Global.NestedNamespace.InnerNamespace.Type"), "x"), JsExpression.Number(1)))
 			});
 
-			Assert.That(actual, Is.EqualTo(
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(
 @"GlobalType;
 return Global.NestedNamespace.InnerNamespace.Type.x + 1;
-"));
+".Replace("\r\n", "\n")));
 		}
 	}
 }
