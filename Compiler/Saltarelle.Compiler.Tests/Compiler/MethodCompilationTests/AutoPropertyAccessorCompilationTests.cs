@@ -12,20 +12,20 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindInstanceMethod("C.get_MyProperty");
 			var setter = FindInstanceMethod("C.set_MyProperty");
 
-			Assert.That(OutputFormatter.Format(getter.Definition), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function() {
 	return this.$MyProperty;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($value) {
 	this.$MyProperty = $value;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(FindClass("C").UnnamedConstructor), Is.EqualTo(
+			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
 	this.$MyProperty = 0;
-}"));
+}");
 		}
 
 		[Test]
@@ -35,20 +35,20 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			Assert.That(OutputFormatter.Format(getter.Definition), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function($this) {
 	return $this.$MyProperty;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($this, $value) {
 	$this.$MyProperty = $value;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(FindClass("C").UnnamedConstructor), Is.EqualTo(
+			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
 	this.$MyProperty = 0;
-}"));
+}");
 		}
 
 		[Test]
@@ -58,19 +58,19 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function() {
 	return {C}.$MyProperty;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($value) {
 	{C}.$MyProperty = $value;
-}"));
+}");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{C}.$MyProperty = 0;" + Environment.NewLine));
+			AssertCorrect(c.StaticInitStatements[0], "{C}.$MyProperty = 0;" + Environment.NewLine);
 		}
 
 		[Test]
@@ -80,15 +80,15 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function() {
 	return $InstantiateGenericType({C}, $T).$MyProperty;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($value) {
 	$InstantiateGenericType({C}, $T).$MyProperty = $value;
-}"));
+}");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));

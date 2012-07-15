@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			Assert.That(compiledConstructor, Is.Not.Null, "No constructor was compiled.");
 
 			string actual = OutputFormatter.Format(compiledConstructor, allowIntermediates: true);
-			Assert.That(actual, Is.EqualTo(expected));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
         }
 
 		[Test]

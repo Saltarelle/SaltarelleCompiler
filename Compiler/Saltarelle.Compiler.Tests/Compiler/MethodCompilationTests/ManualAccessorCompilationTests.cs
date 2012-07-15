@@ -15,15 +15,15 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindInstanceMethod("C.get_MyProperty");
 			var setter = FindInstanceMethod("C.set_MyProperty");
 
-			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function() {
 	return this.$myField;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($value) {
 	this.$myField = $value;
-}"));
+}");
 		}
 
 		[Test]
@@ -33,15 +33,15 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function() {
 	return {C}.$myField;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($value) {
 	{C}.$myField = $value;
-}"));
+}");
 		}
 
 		[Test]
@@ -51,15 +51,15 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindInstanceMethod("C.get_Item");
 			var setter = FindInstanceMethod("C.set_Item");
 
-			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function($i, $j) {
 	return $i + $j;
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($i, $j, $value) {
 	this.$x = $i + $j + $value;
-}"));
+}");
 		}
 
 		[Test]
@@ -69,15 +69,15 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var getter = FindInstanceMethod("C.add_MyEvent");
 			var setter = FindInstanceMethod("C.remove_MyEvent");
 
-			Assert.That(OutputFormatter.Format(getter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(getter.Definition,
 @"function($value) {
 	this.$myField = {Delegate}.Combine(this.$myField, $value);
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(setter.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(setter.Definition,
 @"function($value) {
 	this.$myField = {Delegate}.Remove(this.$myField, $value);
-}"));
+}");
 		}
 
 		[Test]
@@ -87,15 +87,15 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 			var adder = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
 
-			Assert.That(OutputFormatter.Format(adder.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(adder.Definition,
 @"function($value) {
 	{C}.$myField = {Delegate}.Combine({C}.$myField, $value);
-}"));
+}");
 
-			Assert.That(OutputFormatter.Format(remover.Definition, allowIntermediates: true), Is.EqualTo(
+			AssertCorrect(remover.Definition,
 @"function($value) {
 	{C}.$myField = {Delegate}.Remove({C}.$myField, $value);
-}"));
+}");
 		}
 	}
 }

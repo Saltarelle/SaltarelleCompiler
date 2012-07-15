@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool useFirstConstructor = false) {
 			Compile(csharp, namingConvention, useFirstConstructor: useFirstConstructor);
 			string actual = OutputFormatter.Format(CompiledConstructor, allowIntermediates: true);
-			Assert.That(actual, Is.EqualTo(expected));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
 		[Test]

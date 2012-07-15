@@ -88,11 +88,11 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 }" }, namingConvention: namingConvention);
 
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
-            cctor.Should().Be(
+            cctor.Replace("\r\n", "\n").Should().Be(
 @"{C}.$x = 0;
 {C}.$y = 1;
 var $z = 2;
-");
+".Replace("\r\n", "\n"));
         }
 
         [Test]
@@ -106,11 +106,11 @@ var $z = 2;
 }" }, namingConvention: namingConvention);
 
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
-        	cctor.Should().Be(
+        	cctor.Replace("\r\n", "\n").Should().Be(
 @"$InstantiateGenericType({C}, $T).$x = $Default($T);
 $InstantiateGenericType({C}, $T).$y = 0;
 $InstantiateGenericType({C}, $T).$z = null;
-");
+".Replace("\r\n", "\n"));
         }
     }
 }

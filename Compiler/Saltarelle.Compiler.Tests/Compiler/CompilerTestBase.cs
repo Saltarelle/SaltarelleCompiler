@@ -17,6 +17,16 @@ namespace Saltarelle.Compiler.Tests.Compiler {
     public class CompilerTestBase {
         protected ReadOnlyCollection<JsType> CompiledTypes { get; private set; }
 
+		protected void AssertCorrect(JsStatement stmt, string expected) {
+			var actual = OutputFormatter.Format(stmt, allowIntermediates: true);
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
+		}
+
+		protected void AssertCorrect(JsExpression expr, string expected) {
+			var actual = OutputFormatter.Format(expr, allowIntermediates: true);
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
+		}
+
         protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUnsupportedConstructs = true) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;

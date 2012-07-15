@@ -523,14 +523,14 @@ namespace Saltarelle.Compiler.Tests
             Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
                                                                         new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], new JsReturnStatement())),
                                                                         new JsObjectLiteralProperty("z", JsExpression.Number(3)))
-                       ), Is.EqualTo(
+                       ).Replace("\r\n", "\n"), Is.EqualTo(
 @"{
 	x: 1,
 	y: function() {
 		return;
 	},
 	z: 3
-}"));
+}".Replace("\r\n", "\n")));
         }
 
         [Test]
@@ -726,7 +726,7 @@ namespace Saltarelle.Compiler.Tests
 			            Is.EqualTo("if (true) {\r\n\ti = 0;\r\n}\r\n"));
 			Assert.That(OutputFormatter.Format(new JsIfStatement(JsExpression.Identifier("a"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))),
 			                                       new JsIfStatement(JsExpression.Identifier("b"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1))),
-												       new JsIfStatement(JsExpression.Identifier("c"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3))))))),
+												       new JsIfStatement(JsExpression.Identifier("c"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3))))))).Replace("\r\n", "\n"),
 			            Is.EqualTo(
 @"if (a) {
 	i = 0;
@@ -740,7 +740,7 @@ else if (c) {
 else {
 	i = 3;
 }
-"));
+".Replace("\r\n", "\n")));
 		}
 
 		[Test]
@@ -794,7 +794,7 @@ else {
 			                                       new JsSwitchSection(new[] { JsExpression.Number(0) }, new JsExpressionStatement(JsExpression.Identifier("a"))),
 			                                       new JsSwitchSection(new[] { JsExpression.Number(1), JsExpression.Number(2) }, new JsExpressionStatement(JsExpression.Identifier("b"))),
 			                                       new JsSwitchSection(new[] { null, JsExpression.Number(3) }, new JsExpressionStatement(JsExpression.Identifier("c")))
-			                                   )),
+			                                   )).Replace("\r\n", "\n"),
 			            Is.EqualTo(
 @"switch (x) {
 	case 0: {
@@ -809,7 +809,7 @@ else {
 		c;
 	}
 }
-"));
+".Replace("\r\n", "\n")));
 
 		}
     }
