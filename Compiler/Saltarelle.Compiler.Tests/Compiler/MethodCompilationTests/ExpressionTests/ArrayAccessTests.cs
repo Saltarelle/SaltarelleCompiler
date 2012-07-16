@@ -43,64 +43,6 @@ void M() {
 		}
 
 		[Test]
-		public void CanIndexDynamicMember() {
-			AssertCorrect(
-@"public void M() {
-	dynamic d = null;
-	// BEGIN
-	var i = d.someMember[123];
-	// END
-}",
-@"	var $i = $d.someMember[123];
-");
-		}
-
-		[Test]
-		public void CanIndexDynamicObject() {
-			AssertCorrect(
-@"public void M() {
-	dynamic d = null;
-	// BEGIN
-	var i = d[123];
-	// END
-}",
-@"	var $i = $d[123];
-");
-		}
-
-		[Test]
-		public void IndexingDynamicMemberWithMoreThanOneArgumentGivesAnError() {
-			var er = new MockErrorReporter(false);
-
-			Compile(new[] {
-@"class C {
-	public void M() {
-		dynamic d = null;
-		var i = d.someMember[123, 456];
-	}
-}" }, errorReporter: er);
-
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
-		}
-
-		[Test]
-		public void IndexingDynamicObjectWithMoreThanOneArgumentGivesAnError() {
-			var er = new MockErrorReporter(false);
-
-			Compile(new[] {
-@"class C {
-	public void M() {
-		dynamic d = null;
-		var i = d[123, 456];
-	}
-}" }, errorReporter: er);
-
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("dimension")));
-		}
-
-		[Test]
 		public void IndexingArrayWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"public void M() {

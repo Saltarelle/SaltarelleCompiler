@@ -809,6 +809,64 @@ public void M() {
 		}
 
 		[Test]
+		public void CanIndexDynamicMember() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d.someMember[123];
+	// END
+}",
+@"	var $i = $d.someMember[123];
+");
+		}
+
+		[Test]
+		public void CanIndexDynamicObject() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = null;
+	// BEGIN
+	var i = d[123];
+	// END
+}",
+@"	var $i = $d[123];
+");
+		}
+
+		[Test]
+		public void IndexingDynamicMemberWithMoreThanOneArgumentGivesAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C {
+	public void M() {
+		dynamic d = null;
+		var i = d.someMember[123, 456];
+	}
+}" }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+		}
+
+		[Test]
+		public void IndexingDynamicObjectWithMoreThanOneArgumentGivesAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C {
+	public void M() {
+		dynamic d = null;
+		var i = d[123, 456];
+	}
+}" }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+		}
+
+		[Test]
 		public void InvokingDynamicMemberEnsuresArgumentsAreEvaluatedInTheCorrectOrder() {
 			AssertCorrect(
 @"public int P { get; set; }
@@ -859,7 +917,7 @@ public void M() {
 			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
 		}
 
-		[Test, Ignore("NRefactory issue, inserts a cast")]
+		[Test]
 		public void InvokingMemberWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"class X {
@@ -877,12 +935,12 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory issue, inserts a cast")]
-		public void InvokingIndexerWithDynamicArgumentWorks() {
+		[Test]
+		public void InvokingIndexerWithDynamicArgumentWorksWhenOnlyOneMemberIsApplicable() {
 			AssertCorrect(
 @"class X {
 	public int this[int a, string b] { get { return 0; } set {} }
-	public int this[int a, int b] { get { return 0; } set {} }
+	public int this[int a] { get { return 0; } set {} }
 }
 
 public void M() {
@@ -892,8 +950,77 @@ public void M() {
 	var a = x[123, d];
 	// END
 }",
-@"	var $a = $this.get_Item(123, $d);
+@"	var $a = $x.get_$Item(123, $Cast($d, {String}));
 ");
+		}
+
+		[Test]
+		public void InvokingIndexerWithDynamicArgumentIsAnErrorWhenMoreThanOneMemberIsApplicable() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public int this[int a, string b] { get { return 0; } set {} }
+	public int this[int a, int b] { get { return 0; } set {} }
+}
+class C {
+	public void M() {
+		dynamic d = null;
+		var x = new X();
+		// BEGIN
+		var a = x[123, d];
+		// END
+	}
+}" }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+		}
+
+		[Test]
+		public void InvokingMethodWithDynamicArgumentIsAnErrorWhenAllMethodsInTheGroupDoNotHaveTheSameScriptName() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public int F(int a, string b) { return 0; }
+	public int F(int a, int b) { return 0; }
+}
+class C {
+	public void M() {
+		dynamic d = null;
+		var x = new X();
+		// BEGIN
+		var a = x.F(123, d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name + "$" + string.Join("$", m.Parameters.Select(p => p.Type.Name))) }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("same script name")));
+		}
+
+		[Test]
+		public void InvokingMethodWithDynamicArgumentIsAnErrorWhenAMethodInTheGroupIsNotImplementedAsANormalMethod() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public int F(int a, string b) { return 0; }
+	public int F(int a, int b) { return 0; }
+}
+class C {
+	public void M() {
+		dynamic d = null;
+		var x = new X();
+		// BEGIN
+		var a = x.F(123, d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" && m.Parameters[1].Type.Name == "String" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("not a normal method")));
 		}
 
 		[Test]

@@ -1481,7 +1481,29 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, bool data) {
-			var expressions = new List<JsExpression>() { InnerCompile(rr.Target, false) };
+			if (rr.IsIndexing && rr.Arguments.Count != 1) {
+				_errorReporter.Message(7528, _filename, _location);
+				return JsExpression.Number(0);
+			}
+
+			var expressions = new List<JsExpression>();
+			if (rr.Target is MethodGroupResolveResult) {
+				var mgrr = (MethodGroupResolveResult)rr.Target;
+				var impl = mgrr.Methods.Select(_namingConvention.GetMethodSemantics).ToList();
+				if (impl.Any(x => x.Type != MethodScriptSemantics.ImplType.NormalMethod)) {
+					_errorReporter.Message(7530, _filename, _location);
+					return JsExpression.Number(0);
+				}
+				if (impl.Any(x => x.Name != impl[0].Name)) {
+					_errorReporter.Message(7529, _filename, _location);
+					return JsExpression.Number(0);
+				}
+				expressions.Add(JsExpression.MemberAccess(InnerCompile(mgrr.TargetResult, false), impl[0].Name));
+			}
+			else {
+				expressions.Add(InnerCompile(rr.Target, false));
+			}
+
 			foreach (var arg in rr.Arguments) {
 				if (arg.Name != null) {
 					_errorReporter.Message(7526, _filename, _location);
@@ -1489,7 +1511,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				expressions.Add(InnerCompile(arg.Value, false, expressions));
 			}
-			return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+			return rr.IsIndexing ? (JsExpression)JsExpression.Index(expressions[0], expressions[1]) : JsExpression.Invocation(expressions[0], expressions.Skip(1));
 		}
 	}
 }
