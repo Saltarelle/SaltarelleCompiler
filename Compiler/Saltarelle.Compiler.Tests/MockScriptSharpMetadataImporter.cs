@@ -11,6 +11,8 @@ namespace Saltarelle.Compiler.Tests {
 			IsRecord        = t => false;
 			IsRealType      = t => true;
 			GetMixinArg     = t => null;
+			IsTestFixture   = t => false;
+			GetTestData     = m => null;
 		}
 
 		public Func<ITypeDefinition, bool> IsNamedVaules { get; set; }
@@ -19,6 +21,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> IsRecord { get; set; }
 		public Func<ITypeDefinition, bool> IsRealType { get; set; }
 		public Func<ITypeDefinition, string> GetMixinArg { get; set; }
+		public Func<ITypeDefinition, bool> IsTestFixture { get; set; }
+		public Func<IMethod, TestMethodData> GetTestData { get; set; }
 
 		bool IScriptSharpMetadataImporter.IsNamedValues(ITypeDefinition t) {
 			return IsNamedVaules(t);
@@ -42,6 +46,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		string IScriptSharpMetadataImporter.GetMixinArg(ITypeDefinition t) {
 			return GetMixinArg(t);
+		}
+
+		bool IScriptSharpMetadataImporter.IsTestFixture(ITypeDefinition t) {
+			return IsTestFixture(t);
+		}
+
+		TestMethodData IScriptSharpMetadataImporter.GetTestData(IMethod m) {
+			return GetTestData(m);
 		}
 	}
 }

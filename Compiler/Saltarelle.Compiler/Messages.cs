@@ -25,6 +25,10 @@ namespace Saltarelle.Compiler {
 			{ 7016, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]") },
 			{ 7017, Tuple.Create(MessageSeverity.Error, "[GlobalMethodsAttribute] cannot be applied to the generic type {0}.") },
 			{ 7018, Tuple.Create(MessageSeverity.Error, "The type {0} cannot inherit from both {1} and {2} because both those types have a member with the script name {3}. You have to rename the member on one of the base types, or refactor your code.") },
+			{ 7019, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have the script name 'runTests' because its defining type has a TestFixtureAttribute.") },
+			{ 7020, Tuple.Create(MessageSeverity.Error, "Method {0}: Methods decorated with a [TestAttribute] or [AsyncTestAttribute] must be public, non-generic, parameterless instance methods that return void.") },
+			{ 7021, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have both an [AsyncTestAttribute] and a [TestAttribute].") },
+			{ 7022, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [AsyncTestAttribute] or a [TestAttribute] because its declaring class does not have a [TestFixtureAttribute].") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
 			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },

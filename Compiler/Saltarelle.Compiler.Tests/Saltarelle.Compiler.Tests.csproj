@@ -251,6 +251,7 @@
     <Compile Include="ScriptSharpMetadataImporter\PropertyTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\MethodTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\RecordTypeTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporter\TestingTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\ThisAliasTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\TypeTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\ScriptSharpMetadataImporterTestBase.cs" />
