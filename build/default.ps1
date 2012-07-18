@@ -84,6 +84,8 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$base_dir\Runtime\bin\mscorlib.xml" target="tools\Assemblies"/>
 		<file src="$base_dir\Runtime\bin\Script\mscorlib.js" target=""/>
 		<file src="$base_dir\Runtime\bin\Script\mscorlib.debug.js" target=""/>
+		<file src="$base_dir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.js" target=""/>
+		<file src="$base_dir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.css" target=""/>
 		<file src="$out_dir\dummy.txt" target="content"/>
 		<file src="$base_dir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
 	</files>

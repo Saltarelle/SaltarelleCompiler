@@ -22,6 +22,12 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 			return typeDef.Object;
 		}
 
+		protected IMethod CreateMockMethod(string name) {
+			var mock = new Mock<IMethod>();
+			mock.Setup(m => m.Name).Returns(name);
+			return mock.Object;
+		}
+
 		protected string Process(IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null) {
 			metadataImporter = metadataImporter ?? new MockScriptSharpMetadataImporter();
 
