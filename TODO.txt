@@ -32,7 +32,6 @@ Checked/unchecked
 Script# features to handle:
 ScriptQualifierAttribute.
 ScriptAssemblyAttribute.
-QUnit tests
 
 
 Runtime library:

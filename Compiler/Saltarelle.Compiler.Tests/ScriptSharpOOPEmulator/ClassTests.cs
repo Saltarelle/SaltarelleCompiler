@@ -11,6 +11,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.MetadataImporter;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulator {
 	[TestFixture]
@@ -57,11 +58,11 @@ R;
 				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
 				                      new JsNamedConstructor("ctor2", CreateFunction("z")),
 				                    },
-				InstanceMethods = { new JsMethod("m1", null, CreateFunction("a")),
-				                    new JsMethod("m2", null, CreateFunction("b")),
+				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, CreateFunction("a")),
+				                    new JsMethod(CreateMockMethod("M2"), "m2", null, CreateFunction("b")),
 				                  },
-				StaticMethods = { new JsMethod("s1", null, CreateFunction("s")),
-				                  new JsMethod("s2", null, CreateFunction("t"))
+				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
+				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
 				                },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
 				                         new JsExpressionStatement(JsExpression.Identifier("R")),
@@ -99,8 +100,8 @@ R;
 				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
 				                      new JsNamedConstructor("ctor2", CreateFunction("z")),
 				                    },
-				StaticMethods = { new JsMethod("s1", null, CreateFunction("s")),
-				                  new JsMethod("s2", null, CreateFunction("t"))
+				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
+				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
 				                },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
 				                         new JsExpressionStatement(JsExpression.Identifier("R")),
@@ -177,8 +178,8 @@ R;
 {IMyInterface}.prototype = { m1: null, m2: null };
 {IMyInterface}.registerInterface('IMyInterface', [Interface1, Interface2, Interface3]);
 ",			new JsClass(CreateMockType("IMyInterface"), "IMyInterface", JsClass.ClassTypeEnum.Interface, null, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				InstanceMethods = { new JsMethod("m1", null, null),
-				                    new JsMethod("m2", null, null),
+				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, null),
+				                    new JsMethod(CreateMockMethod("M2"), "m2", null, null),
 				                  },
 			});
 		}
@@ -240,11 +241,11 @@ R;
 				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
 				                      new JsNamedConstructor("ctor2", CreateFunction("z")),
 				                    },
-				InstanceMethods = { new JsMethod("m1", null, CreateFunction("a")),
-				                    new JsMethod("m2", null, CreateFunction("b")),
+				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, CreateFunction("a")),
+				                    new JsMethod(CreateMockMethod("M2"), "m2", null, CreateFunction("b")),
 				                  },
-				StaticMethods = { new JsMethod("s1", null, CreateFunction("s")),
-				                  new JsMethod("s2", null, CreateFunction("t"))
+				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
+				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
 				                },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
 				                         new JsExpressionStatement(JsExpression.Identifier("R")),
@@ -268,8 +269,8 @@ R;
 };
 {IMyInterface}.registerGenericInterface('IMyInterface', 2);
 ",			new JsClass(CreateMockType("IMyInterface"), "IMyInterface", JsClass.ClassTypeEnum.Interface, new[] { "T1", "T2" }, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				InstanceMethods = { new JsMethod("m1", null, null),
-				                    new JsMethod("m2", null, null),
+				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, null),
+				                    new JsMethod(CreateMockMethod("M2"), "m2", null, null),
 				                  },
 			});
 		}
@@ -290,7 +291,7 @@ R;
 };
 {MyClass}.registerClass('MyClass');
 ",			new JsClass(CreateMockType("MyClass"), "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				InstanceMethods = { new JsMethod("m1", new[] { "T1", "T2" }, CreateFunction("x")) }
+				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", new[] { "T1", "T2" }, CreateFunction("x")) }
 			});
 		}
 
@@ -308,7 +309,7 @@ R;
 };
 {MyClass}.registerClass('MyClass');
 ",			new JsClass(CreateMockType("MyClass"), "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod("m1", new[] { "T1", "T2" }, CreateFunction("x")) }
+				StaticMethods = { new JsMethod(CreateMockMethod("M1"), "m1", new[] { "T1", "T2" }, CreateFunction("x")) }
 			});
 		}
 
@@ -327,8 +328,8 @@ Q;
 R;
 ", new MockScriptSharpMetadataImporter { IsGlobalMethods = t => t.FullName == "SomeNamespace.InnerNamespace.MyClass" },
 			new JsClass(CreateMockType("SomeNamespace.InnerNamespace.MyClass"), "SomeNamespace.InnerNamespace.MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod("s1", null, CreateFunction("s")),
-				                  new JsMethod("s2", null, CreateFunction("t"))
+				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
+				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
 				                },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
 				                         new JsExpressionStatement(JsExpression.Identifier("R")),
@@ -345,8 +346,8 @@ R;
 {MyClass} = { Field1: 'the value', Field2: 123, Field3: null };
 ",          new MockScriptSharpMetadataImporter { IsResources = t => t.FullName == "SomeNamespace.InnerNamespace.MyClass" },
 			new JsClass(CreateMockType("SomeNamespace.InnerNamespace.MyClass"), "SomeNamespace.InnerNamespace.MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod("s1", null, CreateFunction("s")),
-				                  new JsMethod("s2", null, CreateFunction("t"))
+				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
+				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
 				                },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(null, "SomeNamespace.InnerNamespace.MyClass"), "Field1"), JsExpression.String("the value"))),
 				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(null, "SomeNamespace.InnerNamespace.MyClass"), "Field2"), JsExpression.Number(123))),
@@ -368,8 +369,90 @@ $.fn.method2 = function(y) {
 };
 ",          new MockScriptSharpMetadataImporter { GetMixinArg = t => t.FullName == "MyClass" ? "$.fn" : null },
 			new JsClass(CreateMockType("MyClass"), "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod("method1", null, CreateFunction("x")),
-				                  new JsMethod("method2", null, CreateFunction("y")) }
+				StaticMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, CreateFunction("x")),
+				                  new JsMethod(CreateMockMethod("Method2"), "method2", null, CreateFunction("y")) }
+			});
+		}
+
+		[Test]
+		public void TestFixtureClassHasARunMethodThatRunsAllTestMethodsInTheClass() {
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+{MyClass} = function() {
+};
+{MyClass}.prototype = {
+	normalMethod: function(y) {
+		Y;
+	},
+	runTests: function() {
+		test('TestMethod description', function(x1) {
+			X1;
+		});
+		asyncTest('AsyncTestMethod description', function(x2) {
+			X2;
+		});
+		test('TestMethodWithAssertionCount description', 3, function(x3) {
+			X3;
+		});
+		asyncTest('AsyncTestMethodWithAssertionCount description', 3, function(x4) {
+			X4;
+		});
+	}
+};
+{MyClass}.registerClass('MyClass');
+",          new MockScriptSharpMetadataImporter { IsTestFixture = t => t.FullName == "MyClass", GetTestData = m => m.Name.Contains("TestMethod") ? new TestMethodData(m.Name + " description", null, m.Name.Contains("Async"), m.Name.Contains("AssertionCount") ? 3 : (int?)null) : null },
+			new JsClass(CreateMockType("MyClass"), "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				InstanceMethods = { new JsMethod(CreateMockMethod("TestMethod"), "testMethod", null, CreateFunction("x1")),
+				                    new JsMethod(CreateMockMethod("AsyncTestMethod"), "asyncTestMethod", null, CreateFunction("x2")),
+				                    new JsMethod(CreateMockMethod("TestMethodWithAssertionCount"), "testMethodWithAssertionCount", null, CreateFunction("x3")),
+				                    new JsMethod(CreateMockMethod("AsyncTestMethodWithAssertionCount"), "asyncTestMethodWithAssertionCount", null, CreateFunction("x4")),
+				                    new JsMethod(CreateMockMethod("NormalMethod"), "normalMethod", null, CreateFunction("y"))
+				                  }
+			});
+		}
+
+		[Test]
+		public void TestMethodsAreGroupedByCategoryWithTestsWithoutCategoryFirst() {
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+{MyClass} = function() {
+};
+{MyClass}.prototype = {
+	runTests: function() {
+		test('Test1 description', function(x1) {
+			X1;
+		});
+		test('Test4 description', function(x4) {
+			X4;
+		});
+		module('Category1');
+		test('Test2 description', function(x2) {
+			X2;
+		});
+		test('Test5 description', function(x5) {
+			X5;
+		});
+		module('Category2');
+		test('Test3 description', function(x3) {
+			X3;
+		});
+		test('Test6 description', function(x6) {
+			X6;
+		});
+	}
+};
+{MyClass}.registerClass('MyClass');
+",          new MockScriptSharpMetadataImporter { IsTestFixture = t => t.FullName == "MyClass", GetTestData = m => { int idx = m.Name.IndexOf("X"); return new TestMethodData(m.Name.Substring(idx + 1) + " description", idx >= 0 ? m.Name.Substring(0, idx) : null, false, null); } },
+			new JsClass(CreateMockType("MyClass"), "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				InstanceMethods = { new JsMethod(CreateMockMethod("Test1"), "test1", null, CreateFunction("x1")),
+				                    new JsMethod(CreateMockMethod("Category1XTest2"), "category1XTest2", null, CreateFunction("x2")),
+				                    new JsMethod(CreateMockMethod("Category2XTest3"), "category2XTest3", null, CreateFunction("x3")),
+				                    new JsMethod(CreateMockMethod("Test4"), "test4", null, CreateFunction("x4")),
+				                    new JsMethod(CreateMockMethod("Category1XTest5"), "category1XTest5", null, CreateFunction("x5")),
+				                    new JsMethod(CreateMockMethod("Category2XTest6"), "category2XTest6", null, CreateFunction("x6")),
+				                  }
 			});
 		}
 	}
