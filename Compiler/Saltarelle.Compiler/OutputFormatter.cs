@@ -248,7 +248,8 @@ namespace Saltarelle.Compiler
 			var oldCB = _cb;
 			var arguments = new string[expression.Arguments.Count];
 			for (int i = 0; i < expression.Arguments.Count; i++) {
-				_cb = new CodeBuilder();
+				_cb = new CodeBuilder(indentLevel: oldCB.IndentLevel);
+				_cb.PreventIndent();
 				Visit(expression.Arguments[i], GetPrecedence(expression.Arguments[i].NodeType) > expressionPrecedence);
 				arguments[i] = _cb.ToString();
 			}

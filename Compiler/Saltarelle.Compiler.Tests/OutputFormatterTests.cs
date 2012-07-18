@@ -653,6 +653,12 @@ namespace Saltarelle.Compiler.Tests
 		}
 
 		[Test]
+		public void LiteralCodeIsCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Literal("|{1}|{0}|{2}|", JsExpression.FunctionDefinition(new[] { "a", "b" }, new JsExpressionStatement(JsExpression.Identifier("X"))), JsExpression.Identifier("something"), JsExpression.Number(12))))).Replace("\r\n", "\n"),
+			           Is.EqualTo("function() {\n\t|something|function(a, b) {\n\t\tX;\n\t}|12|;\n}"));
+		}
+
+		[Test]
 		public void CommentsAreCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsComment("Line 1")), Is.EqualTo("//Line 1\r\n"));
 			Assert.That(OutputFormatter.Format(new JsComment(" With spaces ")), Is.EqualTo("// With spaces \r\n"));

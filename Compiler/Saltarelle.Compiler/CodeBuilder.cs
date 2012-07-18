@@ -1,27 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Saltarelle.Compiler {
 	public class CodeBuilder {
-		private readonly Dictionary<int, string> _indents = new Dictionary<int, string>() { { 0, "" } };
+		private static readonly ConcurrentDictionary<int, string> _indents = new ConcurrentDictionary<int, string>();
 		private int _indentLevel = 0;
 		private readonly StringBuilder _sb;
 		private bool _atLineStart;
-		
-		public CodeBuilder() : this(new StringBuilder()) {
+
+		private string GetIndent() {
+			string result;
+			if (_indents.TryGetValue(_indentLevel, out result))
+				return result;
+			result = new string('\t', _indentLevel);
+			_indents.TryAdd(_indentLevel, result);
+			return result;
 		}
 		
-		public CodeBuilder(StringBuilder sb) {
+		public CodeBuilder(int indentLevel = 0) : this(new StringBuilder(), indentLevel) {
+		}
+		
+		public CodeBuilder(StringBuilder sb, int indentLevel = 0) {
 			this._sb = sb;
-			_atLineStart = true;
+			this._indentLevel = indentLevel;
+			this._atLineStart = true;
 		}
 		
 		internal int IndentLevel { get { return _indentLevel; } }
 
 		public CodeBuilder Indent() {
 			_indentLevel++;
-			if (!_indents.ContainsKey(_indentLevel))
-				_indents.Add(_indentLevel, new string('\t', _indentLevel));
 			return this;
 		}
 		
@@ -32,7 +41,7 @@ namespace Saltarelle.Compiler {
 
 		public CodeBuilder Append(string value) {
 			if (_atLineStart)
-				_sb.Append(_indents[_indentLevel]);
+				_sb.Append(GetIndent());
 			_atLineStart = false;
 			_sb.Append(value);
 			return this;
