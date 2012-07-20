@@ -203,7 +203,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTe
 	var b = (decimal)123.5;
 	// END
 }",
-@"	var $b = {Decimal}.$op_Implicit(123.5);
+@"	var $b = 123.5;
 ");
 		}
 

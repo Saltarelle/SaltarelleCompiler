@@ -52,7 +52,7 @@ public class C1 {
 	[Test(ExpectedAssertionCount = 2)]
 	public void M3() {}
 
-	[Test(""M4 description"", ExpectedAssertionCount = null)]
+	[Test(""M4 description"", ExpectedAssertionCount = -1)]
 	public void M4() {}
 
 	[Test(Category = ""My category"")]

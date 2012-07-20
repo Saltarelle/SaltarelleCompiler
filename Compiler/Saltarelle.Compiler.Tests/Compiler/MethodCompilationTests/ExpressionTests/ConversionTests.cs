@@ -572,7 +572,7 @@ public void M() {
 	var $c = $Truncate($src);
 	var $fl = $src;
 	var $db = $src;
-	var $dc = {Decimal}.$op_Implicit($src);
+	var $dc = $src;
 }");
 		}
 
@@ -608,7 +608,7 @@ public void M() {
 	var $c = $Truncate($src);
 	var $fl = $src;
 	var $db = $src;
-	var $dc = {Decimal}.$op_Implicit($src);
+	var $dc = $src;
 }");
 		}
 

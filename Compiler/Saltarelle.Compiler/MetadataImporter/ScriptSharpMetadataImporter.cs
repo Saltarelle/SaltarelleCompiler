@@ -1022,8 +1022,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 									bool isAsync = ata != null;
 									string description = (ta.PositionalArguments.Count > 0 ? (string)ta.PositionalArguments[0].ConstantValue : null) ?? method.Name;
 									string category = GetNamedArgument<string>(ta, CategoryPropertyName);
-									int? expectedAssertionCount = GetNamedArgument<int?>(ta, ExpectedAssertionCountPropertyName);
-									_methodTestData[method] = new TestMethodData(description, category, isAsync, expectedAssertionCount);
+									int? expectedAssertionCount = GetNamedArgument<int?>(ta, ExpectedAssertionCountPropertyName) ?? -1;
+									_methodTestData[method] = new TestMethodData(description, category, isAsync, expectedAssertionCount >= 0 ? expectedAssertionCount : (int?)null);
 								}
 							}
 
