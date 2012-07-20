@@ -97,23 +97,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			return result;
 		}
-/*
-		private class ProxyErrorReportPrinter : MarshalByRefObject, IErrorReporter {
-			private readonly IErrorReporter _prev;
 
-			public void Message(MessageSeverity severity, int code, string file, TextLocation location, string message, params object[] args) {
-				_prev.Message(severity, code, file, location, message, args);
-			}
-
-			public void InternalError(string text, string file, TextLocation location) {
-				_prev.InternalError(text, file, location);
-			}
-
-			public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
-				_prev.InternalError(ex, file, location, additionalText);
-			}
-		}
-*/
 		private class ConvertingReportPrinter : ReportPrinter {
 			private readonly IErrorReporter _errorReporter;
 
@@ -250,6 +234,10 @@ namespace Saltarelle.Compiler.Driver {
 						return false;
 					}
 					return true;
+				}
+				catch (Exception ex) {
+					er.InternalError(ex.ToString(), DomRegion.Empty);
+					return false;
 				}
 				finally {
 					try { File.Delete(intermediateAssemblyFile); } catch {}
