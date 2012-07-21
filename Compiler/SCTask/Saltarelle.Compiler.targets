@@ -34,9 +34,6 @@
         Returns=""
         DependsOnTargets="$(CoreCompileDependsOn)"
     >
-		<ItemGroup>
-			<ActualReference Include="@(ReferencePath)" Condition="%(Filename) != 'System.Core'"/>
-		</ItemGroup>
         <!-- These two compiler warnings are raised when a reference is bound to a different version
              than specified in the assembly reference version number.  MSBuild raises the same warning in this case,
              so the compiler warning would be redundant. -->
@@ -53,7 +50,7 @@
                  KeyFile="$(KeyOriginatorFile)"
                  OutputAssembly="@(IntermediateAssembly)"
                  OutputScript="@(IntermediateScript)"
-                 References="@(ActualReference)"
+                 References="@(ReferencePath)"
                  Sources="@(Compile)"
                  TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
                  WarningLevel="$(WarningLevel)"

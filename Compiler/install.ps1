@@ -12,6 +12,9 @@ $msbuild = [Microsoft.Build.Evaluation.ProjectCollection]::GlobalProjectCollecti
 # Set the NoStdLib property. Not that we need it, but other tools (eg. ReSharper) will have use for it.
 $msbuild.SetProperty("NoStdLib", "True")
 
+#Set the target framework to v2.0, otherwise we will have two System.Linq if installing the Linq package.
+$msbuild.SetProperty("TargetFrameworkVersion", "v2.0")
+
 # Remove default assemblies System, System.*, Microsoft.*
 $project.Object.References | ? { $_.Name.StartsWith("System.") } | % { try { $_.Remove() } catch {} }
 $project.Object.References | ? { $_.Name -eq "System" } | % { $_.Remove() }
