@@ -88,6 +88,24 @@ namespace TestNamespace {
 		}
 
 		[Test]
+		public void MultipleNestingWorksWithNonPublicTypes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+namespace TestNamespace {
+	class Outer {
+		class Inner {
+			class SomeType {
+			}
+		}
+	}
+}", minimizeNames: false);
+			var type = FindType("TestNamespace.Outer+Inner+SomeType");
+			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+			Assert.That(type.Name, Is.EqualTo("TestNamespace.$Outer$Inner$SomeType"));
+		}
+
+		[Test]
 		public void ScriptNameAttributeCanChangeTheNameOfATopLevelClass() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

@@ -291,6 +291,21 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return dot > 0 ? Tuple.Create(typeName.Substring(0, dot), typeName.Substring(dot + 1)) : Tuple.Create("", typeName);
 		}
 
+		private Tuple<string, string> SplitNamespacedName(string fullName) {
+			string nmspace;
+			string name;
+			int dot = fullName.IndexOf('.');
+			if (dot >= 0) {
+				nmspace = fullName.Substring(0, dot);
+				name = fullName.Substring(dot + 1 );
+			}
+			else {
+				nmspace = "";
+				name = fullName;
+			}
+			return Tuple.Create(nmspace, name);
+		}
+
 		private void ProcessType(ITypeDefinition typeDefinition) {
 			if (_typeSemantics.ContainsKey(typeDefinition))
 				return;
@@ -347,8 +362,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							Message(7007, typeDefinition);
 						}
 
-						typeName = GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Name + "$" + typeName;
-						nmspace = "";
+						var declaringName = SplitNamespacedName(GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Name);
+						nmspace = declaringName.Item1;
+						typeName = declaringName.Item2 + "$" + typeName;
 					}
 					else {
 						nmspace = DetermineNamespace(typeDefinition);
