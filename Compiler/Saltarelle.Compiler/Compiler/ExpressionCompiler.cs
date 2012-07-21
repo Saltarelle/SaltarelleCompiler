@@ -1484,50 +1484,80 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, bool data) {
-			if (rr.InvocationType == DynamicInvocationType.Indexing && rr.Arguments.Count != 1) {
-				_errorReporter.Message(7528, _filename, _location);
-				return JsExpression.Number(0);
-			}
-
-			var expressions = new List<JsExpression>();
-			if (rr.Target is MethodGroupResolveResult) {
-				var mgrr = (MethodGroupResolveResult)rr.Target;
-				var impl = mgrr.Methods.Select(_namingConvention.GetMethodSemantics).ToList();
-				if (impl.Any(x => x.Type != MethodScriptSemantics.ImplType.NormalMethod)) {
-					_errorReporter.Message(7530, _filename, _location);
-					return JsExpression.Number(0);
-				}
-				if (impl.Any(x => x.Name != impl[0].Name)) {
-					_errorReporter.Message(7529, _filename, _location);
-					return JsExpression.Number(0);
-				}
-				expressions.Add(JsExpression.MemberAccess(InnerCompile(mgrr.TargetResult, false), impl[0].Name));
-			}
-			else {
-				expressions.Add(InnerCompile(rr.Target, false));
-			}
-
-			foreach (var arg in rr.Arguments) {
-				if (arg.Name != null) {
+			if (rr.InvocationType == DynamicInvocationType.ObjectCreation) {
+				if (rr.Arguments.Any(arg => arg.Name != null)) {
 					_errorReporter.Message(7526, _filename, _location);
 					return JsExpression.Number(0);
 				}
-				expressions.Add(InnerCompile(arg.Value, false, expressions));
-			}
+				var methods = ((MethodGroupResolveResult)rr.Target).Methods.ToList();
+				var semantics = methods.Select(_namingConvention.GetConstructorSemantics).ToList();
 
-			switch (rr.InvocationType) {
-				case DynamicInvocationType.Indexing:
-					return (JsExpression)JsExpression.Index(expressions[0], expressions[1]);
-
-				case DynamicInvocationType.Invocation:
-					return JsExpression.Invocation(expressions[0], expressions.Skip(1));
-
-				case DynamicInvocationType.ObjectCreation:
-					throw new NotImplementedException();
-
-				default:
-					_errorReporter.InternalError("Unsupported dynamic invocation type " + rr.InvocationType, _filename, _location);
+				if (semantics.Select(s => s.Type).Distinct().Count() > 1) {
+					_errorReporter.Message(7531, _filename, _location);
 					return JsExpression.Number(0);
+				}
+				switch (semantics[0].Type) {
+					case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
+						break;
+
+					case ConstructorScriptSemantics.ImplType.NamedConstructor:
+					case ConstructorScriptSemantics.ImplType.StaticMethod:
+						if (semantics.Select(s => s.Name).Distinct().Count() > 1) {
+							_errorReporter.Message(7531, _filename, _location);
+							return JsExpression.Number(0);
+						}
+						break;
+
+					default:
+						_errorReporter.Message(7531, _filename, _location);
+						return JsExpression.Number(0);
+				}
+
+				return CompileConstructorInvocation(semantics[0], methods[0], rr.Arguments.Select(a => a.Value).ToList(), null, rr.InitializerStatements, false);
+			}
+			else {
+				if (rr.InvocationType == DynamicInvocationType.Indexing && rr.Arguments.Count != 1) {
+					_errorReporter.Message(7528, _filename, _location);
+					return JsExpression.Number(0);
+				}
+
+				var expressions = new List<JsExpression>();
+				if (rr.Target is MethodGroupResolveResult) {
+					var mgrr = (MethodGroupResolveResult)rr.Target;
+					var impl = mgrr.Methods.Select(_namingConvention.GetMethodSemantics).ToList();
+					if (impl.Any(x => x.Type != MethodScriptSemantics.ImplType.NormalMethod)) {
+						_errorReporter.Message(7530, _filename, _location);
+						return JsExpression.Number(0);
+					}
+					if (impl.Any(x => x.Name != impl[0].Name)) {
+						_errorReporter.Message(7529, _filename, _location);
+						return JsExpression.Number(0);
+					}
+					expressions.Add(JsExpression.MemberAccess(InnerCompile(mgrr.TargetResult, false), impl[0].Name));
+				}
+				else {
+					expressions.Add(InnerCompile(rr.Target, false));
+				}
+
+				foreach (var arg in rr.Arguments) {
+					if (arg.Name != null) {
+						_errorReporter.Message(7526, _filename, _location);
+						return JsExpression.Number(0);
+					}
+					expressions.Add(InnerCompile(arg.Value, false, expressions));
+				}
+
+				switch (rr.InvocationType) {
+					case DynamicInvocationType.Indexing:
+						return (JsExpression)JsExpression.Index(expressions[0], expressions[1]);
+
+					case DynamicInvocationType.Invocation:
+						return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+
+					default:
+						_errorReporter.InternalError("Unsupported dynamic invocation type " + rr.InvocationType, _filename, _location);
+						return JsExpression.Number(0);
+				}
 			}
 		}
 	}

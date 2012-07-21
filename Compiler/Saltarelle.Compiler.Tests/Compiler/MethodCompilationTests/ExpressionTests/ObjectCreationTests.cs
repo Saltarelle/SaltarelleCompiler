@@ -611,5 +611,183 @@ public void M() {
 @"	var $e = 0;
 ");
 		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentWorksWhenAllCandidatesAreUnnamedConstructors() {
+			AssertCorrect(
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	var c = new C1(d);
+	// END
+}",
+@"	var $c = new {C1}($d);
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
+		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentWorksWhenAllCandidatesAreNamedConstructorsWithTheSameName() {
+			AssertCorrect(
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	var c = new C1(d);
+	// END
+}",
+@"	var $c = new {C1}.X($d);
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", generateCode: false) });
+		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentWorksWhenAllCandidatesAreStaticMethodsWithTheSameName() {
+			AssertCorrect(
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	var c = new C1(d);
+	// END
+}",
+@"	var $c = {C1}.X($d);
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", generateCode: false) });
+		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentAndInitializerStatementsWorks() {
+			AssertCorrect(
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+	public int P { get; set; }
+}
+
+public void M() {
+	dynamic d = null;
+	int i = 0;
+	// BEGIN
+	var c = new C1(d) { P = i; };
+	// END
+}",
+@"	var $tmp1 = new {C1}($d);
+	$tmp1.set_P($i);
+	var $c = $tmp1;
+", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
+		}
+
+		[Test]
+		public void UsingNamedArgumentWithDynamicConstructorInvocationIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public class C {
+	public void M() {
+		dynamic d = null;
+		// BEGIN
+		var c = new C1(x: d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7526));
+		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentGivesAnErrorWhenTheSemanticsDifferBetweenApplicableMethods() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public class C {
+	public void M() {
+		dynamic d = null;
+		// BEGIN
+		var c = new C1(x: d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 || c.Parameters[0].Type.Name == "Int32" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("X") }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7526));
+		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentGivesAnErrorWhenNamesDifferBetweenApplicableMethods() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public class C {
+	public void M() {
+		dynamic d = null;
+		// BEGIN
+		var c = new C1(d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count > 0 ? ConstructorScriptSemantics.Named("C$" + c.Parameters[0].Type.Name) : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
+
+			er = new MockErrorReporter();
+			Compile(new[] {
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public class C {
+	public void M() {
+		dynamic d = null;
+		// BEGIN
+		var c = new C1(d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count > 0 ? ConstructorScriptSemantics.StaticMethod("C$" + c.Parameters[0].Type.Name) : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
+		}
+
+		[Test]
+		public void CreatingObjectWithDynamicArgumentGivesAnErrorWhenTheApplicableMethodsUseInlineCode() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+}
+
+public class C {
+	public void M() {
+		dynamic d = null;
+		// BEGIN
+		var c = new C1(d);
+		// END
+	}
+}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("X") }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
+		}
 	}
 }

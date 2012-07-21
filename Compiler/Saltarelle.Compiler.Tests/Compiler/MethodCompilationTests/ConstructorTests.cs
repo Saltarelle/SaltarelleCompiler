@@ -326,6 +326,29 @@ class D : B {
 		}
 
 		[Test]
+		public void DynamicChainingIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class B {
+}
+class C {
+	public C(int x) {}
+	public C(string x) {}
+
+	public void M() {}
+
+	private static dynamic x;
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : this(x) {
+		this.M();
+	}
+}" }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7998 && (string)m.Args[0] == "dynamic constructor chaining"));
+		}
+
+		[Test]
 		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotDerivingFromObject() {
 			AssertCorrect(
 @"class B {
@@ -418,6 +441,28 @@ class D : B {
 	{B}.call(this);
 	this.M();
 }");
+		}
+
+		[Test]
+		public void DynamicInvocationOfBaseConstructorIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class B {
+	public B(int x) {}
+	public B(string x) {}
+}
+class D : B {
+	public void M() {}
+
+	private static dynamic x;
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base(x) {
+		this.M();
+	}
+}" }, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7998 && (string)m.Args[0] == "dynamic invocation of base constructor"));
 		}
 
 		[Test]

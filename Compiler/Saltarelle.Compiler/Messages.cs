@@ -109,6 +109,7 @@ namespace Saltarelle.Compiler {
 			{ 7528, Tuple.Create(MessageSeverity.Error, "Dynamic indexing must have exactly one argument.") },
 			{ 7529, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because all the applicable methods do not have the same script name. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
 			{ 7530, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because at least one of the applicable methods is not a normal method. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
+			{ 7531, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.") },
 
 			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },

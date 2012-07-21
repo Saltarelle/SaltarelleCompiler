@@ -100,8 +100,15 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public IList<JsStatement> CompileConstructorInitializer(ConstructorInitializer initializer, bool currentIsStaticMethod) {
 			try {
-				var rr = (CSharpInvocationResolveResult)_resolver.Resolve(initializer);
-				return _expressionCompiler.CompileConstructorInitializer(initializer.GetRegion().FileName, initializer.StartLocation, (IMethod)rr.Member, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, currentIsStaticMethod, rr.IsExpandedForm);
+				var rr = _resolver.Resolve(initializer);
+				if (rr is DynamicInvocationResolveResult) {
+					_errorReporter.Message(7998, _filename, _location, initializer.ConstructorInitializerType == ConstructorInitializerType.Base ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
+					return new JsStatement[0];
+				}
+				else {
+					var csirr = (CSharpInvocationResolveResult)rr;
+					return _expressionCompiler.CompileConstructorInitializer(initializer.GetRegion().FileName, initializer.StartLocation, (IMethod)csirr.Member, csirr.GetArgumentsForCall(), csirr.GetArgumentToParameterMap(), csirr.InitializerStatements, currentIsStaticMethod, csirr.IsExpandedForm);
+				}
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex, initializer.GetRegion());
