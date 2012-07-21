@@ -67,6 +67,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 					}
 				}
 			}
+			else if (type.Kind == TypeKind.Anonymous && context == TypeContext.GenericArgument) {
+				return _createTypeReferenceExpression(KnownTypeReference.Object);
+			}
 			else {
 				throw new NotImplementedException();
 			}

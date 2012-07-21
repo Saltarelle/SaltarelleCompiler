@@ -12,7 +12,7 @@ using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler.Tests.EndToEndTests {
 	[TestFixture]
-	public class MscorlibCompilation {
+	public class EndToEndCompilation {
 		private CompilerOptions ReadProject(string filename, string solutionDir = null) {
 			var basePath = Path.GetDirectoryName(filename);
 			var opts = new CompilerOptions();
@@ -54,8 +54,28 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			}
 		}
 
+		[Test]
+		public void CanCompileLinqJSTests() {
+			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\LinqJSTests\LinqJSTests.csproj"));
+			opts.References.Clear();
+			opts.References.Add(new Reference(Common.MscorlibPath));
+			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\LinqJS.dll")));
+
+			try {
+				var er = new MockErrorReporter();
+				var d = new CompilerDriver(er);
+				bool result = d.Compile(opts, false);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+			}
+			finally {
+				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
+				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
+			}
+		}
+
 		[Test, Ignore("Debugging purposes")]
-		public void TestIt() {
+		public void CanCompileProject() {
 			var opts = ReadProject(@"C:\Projects\EngineGit\Project\Search\Search.Client\Search.Client.csproj", @"C:\Projects\EngineGit\Project");
 			opts.DefineConstants.Add("CLIENT");
 			try {
