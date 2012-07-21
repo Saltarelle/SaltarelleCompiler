@@ -142,6 +142,11 @@ namespace Saltarelle.Compiler {
 		JsExpression CreateArray(JsExpression size);
 
 		/// <summary>
+		/// Generates an expression that copies an existing delegate to a new one.
+		/// </summary>
+		JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType);
+
+		/// <summary>
 		/// Generates an expression to call a base implementation of an overridden method
 		/// </summary>
 		/// <param name="baseType">Type whose implementation of the method to invoke.</param>

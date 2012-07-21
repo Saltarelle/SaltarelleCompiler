@@ -236,6 +236,16 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return JsExpression.New(_createTypeReferenceExpression(KnownTypeReference.Array), size);
 		}
 
+		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
+			if (sourceType == targetType) {
+				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
+				return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "clone"), source);
+			}
+			else {
+				return source;	// The clone is just to convert the delegate to a different type. The risk of anyone comparing the references is small, so just return the original as delegates are immutable anyway.
+			}
+		}
+
 		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
 			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
 			

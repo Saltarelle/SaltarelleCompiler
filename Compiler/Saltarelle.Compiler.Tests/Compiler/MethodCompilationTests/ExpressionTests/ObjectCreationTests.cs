@@ -594,7 +594,7 @@ public void M() {
 	D2 d2 = new D2(d1);
 	// END
 }",
-@"	var $d2 = $d1;
+@"	var $d2 = $CloneDelegate($d1);
 ");
 		}
 

@@ -56,6 +56,7 @@ namespace Saltarelle.Compiler.Tests {
 			Bind                     = (f, t)        => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
 			Default                  = (t)           => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
 			CreateArray              = (s)           => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
+			CloneDelegate            = (e, s, t)     => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
 			CallBase                 = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.Instantiation), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
 			BindBaseCall             = (t, n, ta, a) => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.Instantiation), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
 		}
@@ -79,6 +80,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
 		public Func<IType, JsExpression> Default { get; set; }
 		public Func<JsExpression, JsExpression> CreateArray { get; set; }
+		public Func<JsExpression, IType, IType, JsExpression> CloneDelegate { get; set; }
 		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
 
@@ -156,6 +158,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.CreateArray(JsExpression size) {
 			return CreateArray(size);
+		}
+
+		JsExpression IRuntimeLibrary.CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
+			return CloneDelegate(source, sourceType, targetType);
 		}
 
 		JsExpression IRuntimeLibrary.CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
