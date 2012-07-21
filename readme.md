@@ -32,13 +32,13 @@ Many, hopefully everything that is not on the unsupported list. For example, it 
 * Ensures that expressions are always evaluated left to right, as the C# standard specifies,
 * Automatically implemented properties (and events),
 * Nullable types (and lifted operators),
+* LINQ (as in the Enumerable class that contains all extension methods). This is implemented as an import library for [Linq.js](http://linqjs.codeplex.com/),
 * ... and many more.
 
 ### Unsupported features ###
 
 Currently it does not support
 
-* LINQ (as in the Enumerable class that contains all extension methods). This will be solved by writing an import library for [JSLINQ](http://jslinq.codeplex.com/) or [Linq.js](http://linqjs.codeplex.com/),
 * NodeJS (because the runtime library expects to be running in a browser),
 * Query expressions (eg. from a in b select a.name),
 * goto (incl. goto case),
