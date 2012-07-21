@@ -59,7 +59,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\LinqJSTests\LinqJSTests.csproj"));
 			opts.References.Clear();
 			opts.References.Add(new Reference(Common.MscorlibPath));
-			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\LinqJS.dll")));
+			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Linq.dll")));
 
 			try {
 				var er = new MockErrorReporter();

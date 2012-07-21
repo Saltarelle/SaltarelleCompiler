@@ -37,9 +37,10 @@ Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generat
 	Exec { msbuild "$base_dir\Runtime\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 }
 
-Task Run-Tests {
+Task Run-Tests -Depends Build-Compiler, Build-Runtime {
 	$runner = (dir "$base_dir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
-	Exec { & "$runner" "$base_dir\Compiler\Compiler.sln" -nologo -xml "$out_dir\TestResults.xml" }
+	Exec { & "$runner" "$base_dir\Compiler\Compiler.sln" -nologo -xml "$out_dir\CompilerTestResults.xml" }
+	Exec { & "$runner" "$base_dir\Runtime\src\Tests\RuntimeLibrary.Tests\RuntimeLibrary.Tests.csproj" -nologo -xml "$out_dir\RuntimeTestResults.xml" }
 }
 
 Task Build-NuGetPackages -Depends Determine-Version {
@@ -91,6 +92,30 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$out_dir\Runtime.nuspec"
+
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.Linq</id>
+		<version>$script:LinqVersion</version>
+		<title>Linq for the Saltarelle C# to JavaScript compiler</title>
+		<description>Import library for Linq.js (linqjs.codeplex.com) for projects compiled with Saltarelle.Compiler. Unfortunately the official version is slightly incompatible with the Saltarelle runtime so you have to use the JS files included in this package instead of the official linq.js release.</description>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+		<authors>neue.cc, Erik Källén</authors>
+		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<dependencies>
+			<dependency id="Saltarelle.Runtime" version="0.0"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="$base_dir\Runtime\License.txt" target=""/>
+		<file src="$base_dir\Runtime\bin\Script.Linq.dll" target="lib"/>
+		<file src="$base_dir\Runtime\bin\Script.Linq.xml" target="lib"/>
+		<file src="$base_dir\Runtime\bin\Script\linq.js" target=""/>
+		<file src="$base_dir\Runtime\bin\Script\linq.min.js" target=""/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$out_dir\Linq.nuspec"
 
 @"
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -191,6 +216,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Compiler.nuspec" -OutputDirectory "$out_dir" }
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Runtime.nuspec" -OutputDirectory "$out_dir" }
+	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Linq.nuspec" -OutputDirectory "$out_dir" }
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Loader.nuspec" -OutputDirectory "$out_dir" }
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\Web.nuspec" -OutputDirectory "$out_dir" }
 	Exec { & "$buildtools_dir\nuget.exe" pack "$out_dir\jQuery.nuspec" -OutputDirectory "$out_dir" }
@@ -245,6 +271,7 @@ Task Determine-Version {
 	cd "$base_dir\Runtime"
 	$refs = Determine-Ref
 	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
+	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LinqJS","src\Core\LinqJSScript"
 	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
 	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\Web"
 	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
@@ -252,11 +279,12 @@ Task Determine-Version {
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
+	"Linq version: $script:LinqVersion"
 	"Loader version: $script:LoaderVersion"
 	"Web version: $script:WebVersion"
 	"jQuery version: $script:jQueryVersion"
 	"jQuery UI version: $script:jQueryUIVersion"
-	
+
 	cd $olddir
 }
 
@@ -271,6 +299,7 @@ Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$base_dir\Compiler\CompilerVersion.cs" -Version $script:CompilerVersion
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\CoreLib\Properties\Version.cs" -Version $script:RuntimeVersion
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\LoaderLib\Properties\Version.cs" -Version $script:LoaderVersion
+	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\LinqJS\Properties\Version.cs" -Version $script:LinqVersion
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\Web\Properties\Version.cs" -Version $script:WebVersion
 	Generate-VersionFile -Path "$base_dir\Runtime\src\Libraries\jQuery\jQuery.Core\Properties\Version.cs" -Version $script:JQueryVersion
 }
