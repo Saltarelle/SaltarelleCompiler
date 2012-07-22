@@ -12,12 +12,10 @@ namespace Saltarelle.Compiler.Compiler {
 		internal class ParsedSourceFile {
 			public CompilationUnit CompilationUnit { get; private set; }
 			public CSharpParsedFile ParsedFile { get; private set; }
-			public ISet<string> DefinedSymbols { get; private set; }
 
-			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile, ISet<string> definedSymbols) {
+			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile) {
 				CompilationUnit = compilationUnit;
 				ParsedFile      = parsedFile;
-				DefinedSymbols  = definedSymbols;
 			}
 		}
 
