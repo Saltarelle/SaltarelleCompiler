@@ -18,5 +18,8 @@ namespace Saltarelle.Compiler.Tests {
 
         private static readonly Lazy<string> _mscorlibScriptLazy = new Lazy<string>(() => File.ReadAllText(@"..\..\..\Runtime\bin\Script\mscorlib.debug.js"));
 		internal static string MscorlibScript { get { return _mscorlibScriptLazy.Value; } }
+
+        private static readonly Lazy<string> _linqScriptLazy = new Lazy<string>(() => File.ReadAllText(@"..\..\..\Runtime\bin\Script\linq.js"));
+		internal static string LinqScript { get { return _linqScriptLazy.Value; } }
 	}
 }

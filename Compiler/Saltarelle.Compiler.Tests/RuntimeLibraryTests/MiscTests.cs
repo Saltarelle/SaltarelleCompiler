@@ -105,8 +105,18 @@ Text
 		}
 
 		[Test]
-		public void QueryExpressionWithTwoLetClausesWorks() {
-			Assert.Fail("TODO");
+		public void QueryExpressionWorks() {
+			var result = ExecuteCSharp(@"
+using System.Linq;
+public class C {
+	public static void M() {
+		string[] args = new[] { ""4"", ""5"", ""7"" };
+		// BEGIN
+		return (from a in args let b = int.Parse(a) let c = b + 1 select a + b.ToString() + c.ToString()).ToArray();
+		// END
+	}
+}", "C.M", includeLinq: true);
+		Assert.That(result, Is.EqualTo(new[] { "445", "556", "778" }));
 		}
 	}
 }

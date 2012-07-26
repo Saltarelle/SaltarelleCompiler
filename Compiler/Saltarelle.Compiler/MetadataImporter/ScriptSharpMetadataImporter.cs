@@ -1189,7 +1189,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		public PropertyScriptSemantics GetPropertySemantics(IProperty property) {
 			if (property.DeclaringType.Kind == TypeKind.Anonymous)
-				return PropertyScriptSemantics.Field(property.Name);
+				return PropertyScriptSemantics.Field(property.Name.Replace("<>", "$"));
 			return _propertySemantics[(IProperty)property.MemberDefinition];
 		}
 
@@ -1247,7 +1247,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return name;
 			}
 			else {
-                string baseName = (variable != null ? variable.Name : "$t");
+                string baseName = (variable != null ? variable.Name.Replace("<>", "$") : "$t");
                 if (variable != null && !usedNames.Contains(baseName))
                     return baseName;
                 int i = 1;

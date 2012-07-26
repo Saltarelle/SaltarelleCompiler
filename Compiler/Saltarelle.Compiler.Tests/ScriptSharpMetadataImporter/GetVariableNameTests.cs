@@ -53,5 +53,11 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 				u.Add(name);
 			}
 		}
+
+		[Test]
+		public void ReturnsAValidJavaScriptIdentifierWithNameStartingWithDollarForTransparentIdentifersWhenNotMinimizingNames() {
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			Assert.That(md.GetVariableName(new SimpleVariable(SpecialType.UnknownType, "<>identifier", DomRegion.Empty), new HashSet<string>()), Is.EqualTo("$identifier"));
+		}
 	}
 }

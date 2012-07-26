@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 		private OutputType Output = OutputType.None;
 
-		private HtmlPage GeneratePage(string script) {
+		private HtmlPage GeneratePage(string script, bool includeLinq) {
 			WebClient client = new WebClient();
 			try {
 				var html =
@@ -28,6 +28,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	</head>
 	<body>
 		<script type=""text/javascript"">" + Environment.NewLine + Common.MscorlibScript + @"</script>
+" + (includeLinq ? @"		<script type=""text/javascript"">" + Environment.NewLine + Common.LinqScript + @"</script>" : "") + @"
 		<script type=""text/javascript"">" + Environment.NewLine + script + @"</script>
 	</body>
 </html>
@@ -67,13 +68,13 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			}
 		}
 
-		protected object ExecuteScript(string generatedScript, string scriptToReturn) {
-			var page = GeneratePage(generatedScript);
+		protected object ExecuteScript(string generatedScript, string scriptToReturn, bool includeLinq = false) {
+			var page = GeneratePage(generatedScript, includeLinq);
 			var result = page.executeJavaScript(scriptToReturn).getJavaScriptResult();
 			return ConvertResult(result);
 		}
 
-		private Tuple<string, ICompilation, INamingConventionResolver> Compile(string source) {
+		private Tuple<string, ICompilation, INamingConventionResolver> Compile(string source, bool includeLinq = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
             var er = new MockErrorReporter(true);
@@ -83,7 +84,8 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-            compilation = compiler.CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, null);
+            var references = includeLinq ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
+			compilation = compiler.CreateCompilation(new[] { sourceFile }, references, null);
 			var compiledTypes = compiler.Compile(compilation);
 
 			var js = new OOPEmulator.ScriptSharpOOPEmulator(nc, er).Rewrite(compiledTypes, compilation.Compilation);
@@ -96,19 +98,19 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			return Tuple.Create(script, compilation.Compilation, (INamingConventionResolver)nc);
 		}
 
-		protected object ExecuteCSharp(string source, string methodName) {
-			var compiled = Compile(source);
+		protected object ExecuteCSharp(string source, string methodName, bool includeLinq = false) {
+			var compiled = Compile(source, includeLinq: includeLinq);
 
 			int lastDot = methodName.LastIndexOf(".", System.StringComparison.Ordinal);
 			var type = ReflectionHelper.ParseReflectionName(methodName.Substring(0, lastDot)).Resolve(compiled.Item2).GetDefinition();
 			var method = type.Methods.Single(m => m.Name == methodName.Substring(lastDot + 1));
 			string scriptMethod = compiled.Item3.GetTypeSemantics(type).Name + "." + compiled.Item3.GetMethodSemantics(method).Name;
 
-			return ExecuteScript(compiled.Item1, scriptMethod + "()");
+			return ExecuteScript(compiled.Item1, scriptMethod + "()", includeLinq: includeLinq);
 		}
 
-		protected void AssertSourceCorrect(string csharp, string expectedJs) {
-			string actual = Compile(csharp).Item1;
+		protected void AssertSourceCorrect(string csharp, string expectedJs, bool includeLinq = false) {
+			string actual = Compile(csharp, includeLinq).Item1;
 
 			int begin = actual.IndexOf("// BEGIN");
 			if (begin > -1) {

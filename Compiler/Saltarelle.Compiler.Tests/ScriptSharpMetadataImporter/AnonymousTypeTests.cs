@@ -11,8 +11,9 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	[TestFixture]
 	public class AnonymousTypeTests {
-		private IType CreateType(ICompilation compilation) {
-			var unresolvedProperties = new[] { "prop1", "Prop2" }
+		private IType CreateType(ICompilation compilation, string[] propertyNames = null) {
+			propertyNames = propertyNames ?? new[] { "prop1", "Prop2" };
+			var unresolvedProperties = propertyNames
 				.Select(name =>
 					new DefaultUnresolvedProperty {
 						Name = name,
@@ -80,6 +81,21 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 			var p2 = md.GetPropertySemantics(t.GetProperties().Single(p => p.Name == "Prop2"));
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p2.FieldName, Is.EqualTo("Prop2"));
+		}
+
+		[Test]
+		public void TransparentIdentiferIsValidJavascriptIdentifierStartingWithDollar() {
+			var compilation = new SimpleCompilation(new CSharpProjectContent());
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var er = new MockErrorReporter(true);
+			md.Prepare(new ITypeDefinition[0], compilation.MainAssembly, er);
+			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
+
+			var t = CreateType(compilation, new[] { "<>Identifier" });
+
+			var c = md.GetPropertySemantics(t.GetProperties().Single());
+			Assert.That(c.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(c.FieldName, Is.EqualTo("$Identifier"));
 		}
 	}
 }
