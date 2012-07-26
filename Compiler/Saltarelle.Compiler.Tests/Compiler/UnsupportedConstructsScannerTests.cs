@@ -55,17 +55,6 @@ class C {
 		}
 
 		[Test]
-		public void QueryExpressionIsReportedAsUnsupported() {
-			AssertCorrect(@"
-class C {
-	public void M() {
-		var x = from i in new[] { 1, 2, 3 } select i + 1;
-	}
-}
-", "query expression");
-		}
-
-		[Test]
 		public void GotoIsReportedAsUnsupported() {
 			AssertCorrect(@"
 class C {

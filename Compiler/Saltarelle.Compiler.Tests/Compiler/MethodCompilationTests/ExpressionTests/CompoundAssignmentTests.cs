@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTe
 		protected void AssertCorrectForBulkOperators(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
 			// Bulk operators are all except for division and shift right.
 			foreach (var op in new[] { "+", "*", "%", "-", "<<", "&", "|", "^" }) {
-				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), namingConvention, addSkeleton);
+				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), namingConvention, addSkeleton: addSkeleton);
 			}
 		}
 

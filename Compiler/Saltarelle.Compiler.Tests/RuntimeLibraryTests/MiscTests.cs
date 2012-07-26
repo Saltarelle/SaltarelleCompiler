@@ -103,5 +103,10 @@ Text
 
 ".Replace("\r\n", "\n")));
 		}
+
+		[Test]
+		public void QueryExpressionWithTwoLetClausesWorks() {
+			Assert.Fail("TODO");
+		}
 	}
 }

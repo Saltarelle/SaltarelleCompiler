@@ -25,23 +25,33 @@ namespace Saltarelle.Compiler.Tests {
 			                             		return ConstructorScriptSemantics.Named("ctor$" + String.Join("$", c.Parameters.Select(p => p.Type.Name)));
 			                             };
 			GetPropertySemantics       = p => {
-			                             	if (p.DeclaringType.Kind == TypeKind.Anonymous || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
-			                             		return PropertyScriptSemantics.Field("$" + p.Name);
-			                             	else
-			                             		return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name));
+			                                 if (p.DeclaringType.Kind == TypeKind.Anonymous || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length")) {
+			                                     string name = p.Name.Replace("<>", "$");
+			                                     return PropertyScriptSemantics.Field(name.StartsWith("$") ? name : ("$" + name));
+			                                 }
+			                                 else
+			                                     return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name));
 			                             };
 			GetAutoPropertyBackingFieldName = p => "$" + p.Name;
 			GetFieldSemantics               = f => FieldScriptSemantics.Field("$" + f.Name);
 			GetEventSemantics               = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
 			GetAutoEventBackingFieldName    = e => "$" + e.Name;
 			GetVariableName                 = (v, used) => {
-			                                  	string baseName = "$" + (v != null ? v.Name : "tmp");
-			                                  	if (v != null && !used.Contains(baseName))
-			                                  		return baseName;
-			                                  	int i = (v == null ? 1 : 2);
-			                                  	while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
-			                                  		i++;
-			                                  	return baseName + i.ToString(CultureInfo.InvariantCulture);
+			                                      string baseName;
+		                                          if (v != null) {
+		                                              baseName = v.Name.Replace("<>", "$");
+		                                              if (!baseName.StartsWith("$"))
+		                                                  baseName = "$" + baseName;
+		                                          }
+		                                          else {
+		                                              baseName = "$tmp";
+		                                          }
+			                                      if (v != null && !used.Contains(baseName))
+			                                          return baseName;
+			                                      int i = (v == null ? 1 : 2);
+			                                      while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
+			                                          i++;
+			                                      return baseName + i.ToString(CultureInfo.InvariantCulture);
 			                                  };
 			ThisAlias                       = "$this";
 		}

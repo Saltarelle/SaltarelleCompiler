@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUnsupportedConstructs = true) {
+        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUnsupportedConstructs = true, bool referenceSystemCore = false) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
@@ -35,11 +35,12 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                 errorReporter = new MockErrorReporter(true);
             }
 
-        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(namingConvention ?? new MockNamingConventionResolver(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter) {AllowUnsupportedConstructs = allowUnsupportedConstructs};
+        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(namingConvention ?? new MockNamingConventionResolver(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter) { AllowUnsupportedConstructs = allowUnsupportedConstructs };
         	if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 
-			var c = compiler.CreateCompilation(sourceFiles, new[] { Common.Mscorlib }, defineConstants);
+			var references = referenceSystemCore ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
+			var c = compiler.CreateCompilation(sourceFiles, references, defineConstants);
             CompiledTypes = compiler.Compile(c).AsReadOnly();
             if (defaultErrorHandling) {
                 ((MockErrorReporter)errorReporter).AllMessagesText.Should().BeEmpty("Compile should not generate errors");

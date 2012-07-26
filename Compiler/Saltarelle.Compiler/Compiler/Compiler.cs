@@ -149,6 +149,8 @@ namespace Saltarelle.Compiler.Compiler {
             var files = sourceFiles.Select(f => { 
                                                     using (var rdr = f.Open()) {
                                                         var cu = CreateParser(defineConstants).Parse(rdr, f.FileName);
+                                                        var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(cu);
+                                                        cu = (expandResult != null ? (CompilationUnit)expandResult.AstNode : cu);
                                                         return new PreparedCompilation.ParsedSourceFile(cu, new CSharpParsedFile(f.FileName, new UsingScope()));
                                                     }
                                                 }).ToList();

@@ -13,19 +13,19 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
         protected MethodCompiler MethodCompiler { get; private set; }
         protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
-        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true) {
+        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, bool referenceSystemCore = false) {
             Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;
 					CompiledMethod = res;
 				}
-            });
+            }, referenceSystemCore: referenceSystemCore);
 
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
         }
 
-		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, bool addSkeleton = true) {
+		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, bool referenceSystemCore = false) {
 			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
 				GetPropertySemantics = p => {
 					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
@@ -35,7 +35,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
 				},
 				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
 				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
-			}, addSkeleton: addSkeleton);
+			}, runtimeLibrary: runtimeLibrary, addSkeleton: addSkeleton, referenceSystemCore: referenceSystemCore);
 			string actual = OutputFormatter.Format(CompiledMethod, true);
 
 			int begin = actual.IndexOf("// BEGIN");
