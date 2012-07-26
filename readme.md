@@ -32,7 +32,7 @@ Many, hopefully everything that is not on the unsupported list. For example, it 
 * Ensures that expressions are always evaluated left to right, as the C# standard specifies,
 * Automatically implemented properties (and events),
 * Nullable types (and lifted operators),
-* LINQ (as in the Enumerable class that contains all extension methods). This is implemented as an import library for [Linq.js](http://linqjs.codeplex.com/),
+* LINQ (including query expression, as well as all the IEnumerable methods supplied by an import library for [Linq.js](http://linqjs.codeplex.com/),
 * ... and many more.
 
 ### Unsupported features ###
@@ -40,7 +40,6 @@ Many, hopefully everything that is not on the unsupported list. For example, it 
 Currently it does not support
 
 * NodeJS (because the runtime library expects to be running in a browser),
-* Query expressions (eg. from a in b select a.name),
 * goto (incl. goto case),
 * yield break / yield return,
 * await (C# 5),
