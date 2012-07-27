@@ -1365,7 +1365,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return input;
 				else if (rr.Type.Kind == TypeKind.Dynamic)
 					return input;
-				else if (rr.Type.Kind == TypeKind.Delegate && rr.Input.Type.Kind == TypeKind.Delegate && rr.Type != _compilation.FindType(KnownTypeCode.MulticastDelegate) && rr.Input.Type != _compilation.FindType(KnownTypeCode.MulticastDelegate))
+				else if (rr.Type.Kind == TypeKind.Delegate && rr.Input.Type.Kind == TypeKind.Delegate && !rr.Type.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)) && !rr.Input.Type.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)))
 					return input;	// Conversion between compatible delegate types.
 				else if (rr.Conversion.IsImplicit)
 					return _runtimeLibrary.Upcast(input, rr.Input.Type, rr.Type);

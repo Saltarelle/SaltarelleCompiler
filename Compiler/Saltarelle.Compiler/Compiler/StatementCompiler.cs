@@ -628,7 +628,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private void RemoveCatchClausesAfterExceptionType(List<CatchClause> catchClauses, IType exceptionType) {
 			for (int i = 0; i < catchClauses.Count; i++) {
 				var type = _resolver.Resolve(catchClauses[i].Type).Type;
-				if (type == exceptionType) {
+				if (type.Equals(exceptionType)) {
 					catchClauses.RemoveRange(i + 1, catchClauses.Count - i - 1);
 					return;
 				}
@@ -666,7 +666,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var systemException = _compilation.FindType(KnownTypeCode.Exception);
 				RemoveCatchClausesAfterExceptionType(catchClauses, systemException);
 
-				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type == systemException);
+				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type.Equals(systemException));
 				JsStatement current = lastIsCatchall
 					                ? CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[catchClauses.Count - 1], true, catchClauses.Count == 1)
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));

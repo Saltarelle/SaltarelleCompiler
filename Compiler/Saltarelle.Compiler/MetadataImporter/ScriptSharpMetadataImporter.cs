@@ -377,7 +377,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			bool hasRecordAttr = GetAttributePositionalArgs(typeDefinition, RecordAttribute) != null;
-			bool inheritsRecord = typeDefinition.GetAllBaseTypeDefinitions().Any(td => td == _systemRecord) && typeDefinition != _systemRecord;
+			bool inheritsRecord = typeDefinition.GetAllBaseTypeDefinitions().Any(td => td.Equals(_systemRecord)) && !typeDefinition.Equals(_systemRecord);
 			
 			bool globalMethods = false, isRecord = hasRecordAttr || inheritsRecord;
 			string mixinArg = null;
