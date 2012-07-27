@@ -8,6 +8,10 @@ The compiler comes as a command line utility, with options similar to those of c
 
 To get started compiling, see the Getting Started guide in the wiki.
 
+## Obtaining binaries ##
+
+Eventually, the project will be included in the NuGet gallery. For the time being, all packages are available at [teamcity.codebetter.com](http://teamcity.codebetter.com/viewLog.html?buildId=lastSuccessful&buildTypeId=bt720&tab=artifacts).
+
 ## Current State ##
 
 The compiler currently works quite well. I still need to test it more in practice before I am ready to release it officially, but there are no known issues except for the features that are on the unsupported list.

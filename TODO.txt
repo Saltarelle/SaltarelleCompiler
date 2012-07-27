@@ -7,7 +7,6 @@ v2:
 yield
 async
 goto
-Query comprehension
 Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.
