@@ -1191,5 +1191,35 @@ class C1 {
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1.M2") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
 		}
+
+		[Test]
+		public void MethodInGlobalMethodsClassHonorsIgnoreGenericArgumentsAttribute() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[GlobalMethods]
+static class C {
+	[IgnoreGenericArguments]
+	public static void M1<T>(T t) {}
+
+	public static void M2<T>(T t) {}
+}");
+			Assert.That(FindMethod("C.M1").IgnoreGenericArguments, Is.True);
+			Assert.That(FindMethod("C.M2").IgnoreGenericArguments, Is.False);
+		}
+
+		[Test]
+		public void MethodInGlobalMethodsClassHonorsExpandParamsAttribute() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[GlobalMethods]
+static class C {
+	[ExpandParams]
+	public static void M1(params object[] arg) {}
+
+	public static void M2(params object[] arg) {}
+}");
+			Assert.That(FindMethod("C.M1").ExpandParams, Is.True);
+			Assert.That(FindMethod("C.M2").ExpandParams, Is.False);
+		}
 	}
 }

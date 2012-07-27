@@ -116,7 +116,7 @@ public class C {
 		// END
 	}
 }", "C.M", includeLinq: true);
-		Assert.That(result, Is.EqualTo(new[] { "445", "556", "778" }));
+			Assert.That(result, Is.EqualTo(new[] { "445", "556", "778" }));
 		}
 	}
 }

@@ -1007,7 +1007,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 					}
 					else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, expandParams: epa != null);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, ignoreGenericArguments: iga != null, expandParams: epa != null);
 						return;
 					}
 					else {
