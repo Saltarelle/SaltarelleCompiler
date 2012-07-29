@@ -652,6 +652,18 @@ redo:
 			return null;
     	}
 
+    	public object Visit(JsFunctionStatement statement, bool addNewline) {
+			_cb.Append("function " + statement.Name + "(");
+			for (int i = 0; i < statement.ParameterNames.Count; i++) {
+				if (i != 0)
+					_cb.Append(", ");
+				_cb.Append(statement.ParameterNames[i]);
+			}
+			_cb.Append(") ");
+			Visit(statement.Body, addNewline);
+			return null;
+		}
+
     	public object Visit(JsGotoStatement statement, bool addNewline) {
     		_cb.Append("goto ").Append(statement.TargetLabel).Append(";");
 			if (addNewline)

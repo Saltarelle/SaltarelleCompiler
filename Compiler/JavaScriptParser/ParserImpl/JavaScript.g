@@ -13,10 +13,27 @@ options
 	memoize=true;
 }
 
+tokens {
+	POSTFIX_PLUSPLUS;
+	POSTFIX_MINUSMINUS;
+	BINARY_PLUS;
+	BINARY_MINUS;
+	MEMBER;
+	OBJECT_LITERAL;
+	ARRAY_LITERAL;
+	CALL;
+	ARGS;
+	FOR_IN;
+	INIT;
+	TEST;
+	INCR;
+	FUNCTION_DECLARATION;
+}
+
 @namespace { JavaScriptParser.ParserImpl }
 @lexer::namespace { JavaScriptParser.ParserImpl }
 
-program
+public program
 	: LT!* sourceElements LT!* EOF!
 	;
 	
@@ -24,26 +41,26 @@ sourceElements
 	: sourceElement (LT!* sourceElement)*
 	;
 	
-sourceElement
+public sourceElement
 	: functionDeclaration
 	| statement
 	;
 	
 // functions
 functionDeclaration
-	: 'function' LT!* Identifier LT!* formalParameterList LT!* functionBody
+	: 'function' LT* Identifier LT* formalParameterList LT* functionBody -> ^(FUNCTION_DECLARATION Identifier ^(ARGS formalParameterList?) functionBody)
 	;
 	
 functionExpression
-	: 'function' LT!* Identifier? LT!* formalParameterList LT!* functionBody
+	: 'function' LT* Identifier? LT* formalParameterList LT* functionBody -> ^('function' Identifier? ^(ARGS formalParameterList?) functionBody)
 	;
 	
 formalParameterList
-	: '(' (LT!* Identifier (LT!* ',' LT!* Identifier)*)? LT!* ')'
+	: '('! (LT!* Identifier (LT!* ','! LT!* Identifier)*)? LT!* ')'!
 	;
 
 functionBody
-	: '{' LT!* sourceElements LT!* '}'
+	: '{'^ LT!* sourceElements? LT!* '}'!
 	;
 
 // statements
@@ -62,10 +79,11 @@ statement
 	| switchStatement
 	| throwStatement
 	| tryStatement
+	| gotoStatement
 	;
 	
 statementBlock
-	: '{' LT!* statementList? LT!* '}'
+	: '{'^ LT!* statementList? LT!* '}'!
 	;
 	
 statementList
@@ -73,31 +91,33 @@ statementList
 	;
 	
 variableStatement
-	: 'var' LT!* variableDeclarationList (LT | ';')!
+	: 'var'^ LT!* variableDeclarationList (LT | ';')!
 	;
 	
 variableDeclarationList
-	: variableDeclaration (LT!* ',' LT!* variableDeclaration)*
+	: variableDeclaration (LT!* ','! LT!* variableDeclaration)*
 	;
 	
 variableDeclarationListNoIn
-	: variableDeclarationNoIn (LT!* ',' LT!* variableDeclarationNoIn)*
+	: variableDeclarationNoIn (LT!* ','! LT!* variableDeclarationNoIn)*
 	;
 	
 variableDeclaration
-	: Identifier LT!* initialiser?
+	: Identifier LT* initialiser -> ^('=' Identifier initialiser)
+	| Identifier
 	;
 	
 variableDeclarationNoIn
-	: Identifier LT!* initialiserNoIn?
+	: Identifier LT* initialiserNoIn -> ^('=' Identifier initialiserNoIn)
+	| Identifier
 	;
 	
 initialiser
-	: '=' LT!* assignmentExpression
+	: '='! LT!* assignmentExpression
 	;
 	
 initialiserNoIn
-	: '=' LT!* assignmentExpressionNoIn
+	: '='! LT!* assignmentExpressionNoIn
 	;
 	
 emptyStatement
@@ -109,7 +129,7 @@ expressionStatement
 	;
 	
 ifStatement
-	: 'if' LT!* '(' LT!* expression LT!* ')' LT!* statement (LT!* 'else' LT!* statement)?
+	: 'if'^ LT!* '('! LT!* expression LT!* ')'! LT!* statement (LT!* 'else'! LT!* statement)?
 	;
 	
 iterationStatement
@@ -120,24 +140,24 @@ iterationStatement
 	;
 	
 doWhileStatement
-	: 'do' LT!* statement LT!* 'while' LT!* '(' expression ')' (LT | ';')!
+	: 'do'^ LT!* statement LT!* 'while'! LT!* '('! expression ')'! (LT | ';')!
 	;
 	
 whileStatement
-	: 'while' LT!* '(' LT!* expression LT!* ')' LT!* statement
+	: 'while'^ LT!* '('! LT!* expression LT!* ')'! LT!* statement
 	;
 	
 forStatement
-	: 'for' LT!* '(' (LT!* forStatementInitialiserPart)? LT!* ';' (LT!* expression)? LT!* ';' (LT!* expression)? LT!* ')' LT!* statement
+	: 'for' LT* '(' (LT* forStatementInitialiserPart)? LT* ';' (LT* a=expression)? LT* ';' (LT* b=expression)? LT* ')' LT* statement -> ^('for' ^(INIT forStatementInitialiserPart?) ^(TEST $a?) ^(INCR $b?) statement)
 	;
 	
 forStatementInitialiserPart
 	: expressionNoIn
-	| 'var' LT!* variableDeclarationListNoIn
+	| 'var'^ LT!* variableDeclarationListNoIn
 	;
 	
 forInStatement
-	: 'for' LT!* '(' LT!* forInStatementInitialiserPart LT!* 'in' LT!* expression LT!* ')' LT!* statement
+	: 'for' LT* '(' LT* forInStatementInitialiserPart LT* 'in' LT* expression LT* ')' LT* statement -> ^(FOR_IN forInStatementInitialiserPart expression statement)
 	;
 	
 forInStatementInitialiserPart
@@ -146,74 +166,82 @@ forInStatementInitialiserPart
 	;
 
 continueStatement
-	: 'continue' Identifier? (LT | ';')!
+	: 'continue'^ Identifier? (LT | ';')!
 	;
 
 breakStatement
-	: 'break' Identifier? (LT | ';')!
+	: 'break'^ Identifier? (LT | ';')!
 	;
 
 returnStatement
-	: 'return' expression? (LT | ';')!
+	: 'return'^ expression? (LT | ';')!
 	;
 	
 withStatement
-	: 'with' LT!* '(' LT!* expression LT!* ')' LT!* statement
+	: 'with'^ LT!* '('! LT!* expression LT!* ')'! LT!* statement
 	;
 
 labelledStatement
-	: Identifier LT!* ':' LT!* statement
+	: Identifier LT* ':' LT* statement -> ^(':' Identifier) statement
 	;
 	
 switchStatement
-	: 'switch' LT!* '(' LT!* expression LT!* ')' LT!* caseBlock
+	: 'switch'^ LT!* '('! LT!* expression LT!* ')'! LT!* caseBlock
 	;
 	
 caseBlock
-	: '{' (LT!* caseClause)* (LT!* defaultClause (LT!* caseClause)*)? LT!* '}'
+	: '{' (LT* a+=caseClause)* (LT* a+=defaultClause (LT* a+=caseClause)*)? LT* '}' -> $a*
 	;
 
 caseClause
-	: 'case' LT!* expression LT!* ':' LT!* statementList?
+	: 'case' LT* expression LT* ':' LT* l+=statementList? -> { $l != null && $l.Count > 0 }? ^('case' expression) ^('{' $l)
+	                                                      -> ^('case' expression)
 	;
 	
 defaultClause
-	: 'default' LT!* ':' LT!* statementList?
+	: 'default' LT* ':' LT* l+=statementList? -> { $l != null && $l.Count > 0 }? 'default' ^('{' $l)
+	                                          -> 'default'
 	;
 	
 throwStatement
-	: 'throw' expression (LT | ';')!
+	: 'throw'^ expression (LT | ';')!
 	;
 
 tryStatement
-	: 'try' LT!* statementBlock LT!* (finallyClause | catchClause (LT!* finallyClause)?)
+	: 'try'^ LT!* statementBlock LT!* (finallyClause | catchClause (LT!* finallyClause)?)
 	;
        
 catchClause
-	: 'catch' LT!* '(' LT!* Identifier LT!* ')' LT!* statementBlock
+	: 'catch'^ LT!* '('! LT!* Identifier LT!* ')'! LT!* statementBlock
 	;
 	
 finallyClause
-	: 'finally' LT!* statementBlock
+	: 'finally'^ LT!* statementBlock
+	;
+
+gotoStatement
+	: 'goto'^ LT!* Identifier
 	;
 
 // expressions
-expression
-	: assignmentExpression (LT!* ',' LT!* assignmentExpression)*
+public expression
+	: a=assignmentExpression (LT* ',' LT* b+=assignmentExpression)* -> { $b != null && $b.Count > 0 }? ^(',' $a $b+)
+	                                                                -> $a
 	;
 	
 expressionNoIn
-	: assignmentExpressionNoIn (LT!* ',' LT!* assignmentExpressionNoIn)*
+	: a=assignmentExpressionNoIn (LT* ',' LT* b+=assignmentExpressionNoIn)* -> { $b != null && $b.Count > 0 }? ^(',' $a $b+)
+	                                                                        -> $a
 	;
 	
 assignmentExpression
 	: conditionalExpression
-	| leftHandSideExpression LT!* assignmentOperator LT!* assignmentExpression
+	| leftHandSideExpression LT!* assignmentOperator^ LT!* assignmentExpression
 	;
 	
 assignmentExpressionNoIn
 	: conditionalExpressionNoIn
-	| leftHandSideExpression LT!* assignmentOperator LT!* assignmentExpressionNoIn
+	| leftHandSideExpression LT!* assignmentOperator^ LT!* assignmentExpressionNoIn
 	;
 	
 leftHandSideExpression
@@ -223,11 +251,16 @@ leftHandSideExpression
 	
 newExpression
 	: memberExpression
-	| 'new' LT!* newExpression
+	| 'new'^ LT!* newExpression
 	;
 	
 memberExpression
-	: (primaryExpression | functionExpression | 'new' LT!* memberExpression LT!* arguments) (LT!* memberExpressionSuffix)*
+	: (a=primaryExpression | a=functionExpression | a=newInMemberExpression) (LT* b+=memberExpressionSuffix)* -> { $b != null && $b.Count > 0 }? ^(MEMBER $a $b+)
+	                                                                                                          -> $a
+	;
+
+newInMemberExpression
+	: 'new'^ LT!* memberExpression LT!* arguments
 	;
 	
 memberExpressionSuffix
@@ -236,25 +269,26 @@ memberExpressionSuffix
 	;
 
 callExpression
-	: memberExpression LT!* arguments (LT!* callExpressionSuffix)*
+	: a=memberExpression LT* b=arguments (LT* c+=callExpressionSuffix)* -> { $c != null && $c.Count > 0 }? ^(MEMBER ^(CALL $a $b*) $c+)
+	                                                                    -> ^(CALL $a $b*)
 	;
 	
 callExpressionSuffix
-	: arguments
+	: arguments -> ^(CALL arguments)
 	| indexSuffix
 	| propertyReferenceSuffix
 	;
 
 arguments
-	: '(' (LT!* assignmentExpression (LT!* ',' LT!* assignmentExpression)*)? LT!* ')'
+	: '(' (LT* a+=assignmentExpression (LT* ',' LT* a+=assignmentExpression)*)? LT* ')' -> $a*
 	;
 	
 indexSuffix
-	: '[' LT!* expression LT!* ']'
+	: '['^ LT!* expression LT!* ']'!
 	;	
 	
 propertyReferenceSuffix
-	: '.' LT!* Identifier
+	: '.'! LT!* Identifier
 	;
 	
 assignmentOperator
@@ -262,89 +296,93 @@ assignmentOperator
 	;
 
 conditionalExpression
-	: logicalORExpression (LT!* '?' LT!* assignmentExpression LT!* ':' LT!* assignmentExpression)?
+	: logicalORExpression (LT!* '?'^ LT!* assignmentExpression LT!* ':'! LT!* assignmentExpression)?
 	;
 
 conditionalExpressionNoIn
-	: logicalORExpressionNoIn (LT!* '?' LT!* assignmentExpressionNoIn LT!* ':' LT!* assignmentExpressionNoIn)?
+	: logicalORExpressionNoIn (LT!* '?'^ LT!* assignmentExpressionNoIn LT!* ':'! LT!* assignmentExpressionNoIn)?
 	;
 
 logicalORExpression
-	: logicalANDExpression (LT!* '||' LT!* logicalANDExpression)*
+	: logicalANDExpression (LT!* '||'^ LT!* logicalANDExpression)*
 	;
 	
 logicalORExpressionNoIn
-	: logicalANDExpressionNoIn (LT!* '||' LT!* logicalANDExpressionNoIn)*
+	: logicalANDExpressionNoIn (LT!* '||'^ LT!* logicalANDExpressionNoIn)*
 	;
 	
 logicalANDExpression
-	: bitwiseORExpression (LT!* '&&' LT!* bitwiseORExpression)*
+	: bitwiseORExpression (LT!* '&&'^ LT!* bitwiseORExpression)*
 	;
 	
 logicalANDExpressionNoIn
-	: bitwiseORExpressionNoIn (LT!* '&&' LT!* bitwiseORExpressionNoIn)*
+	: bitwiseORExpressionNoIn (LT!* '&&'^ LT!* bitwiseORExpressionNoIn)*
 	;
 	
 bitwiseORExpression
-	: bitwiseXORExpression (LT!* '|' LT!* bitwiseXORExpression)*
+	: bitwiseXORExpression (LT!* '|'^ LT!* bitwiseXORExpression)*
 	;
 	
 bitwiseORExpressionNoIn
-	: bitwiseXORExpressionNoIn (LT!* '|' LT!* bitwiseXORExpressionNoIn)*
+	: bitwiseXORExpressionNoIn (LT!* '|'^ LT!* bitwiseXORExpressionNoIn)*
 	;
 	
 bitwiseXORExpression
-	: bitwiseANDExpression (LT!* '^' LT!* bitwiseANDExpression)*
+	: bitwiseANDExpression (LT!* '^'^ LT!* bitwiseANDExpression)*
 	;
 	
 bitwiseXORExpressionNoIn
-	: bitwiseANDExpressionNoIn (LT!* '^' LT!* bitwiseANDExpressionNoIn)*
+	: bitwiseANDExpressionNoIn (LT!* '^'^ LT!* bitwiseANDExpressionNoIn)*
 	;
 	
 bitwiseANDExpression
-	: equalityExpression (LT!* '&' LT!* equalityExpression)*
+	: equalityExpression (LT!* '&'^ LT!* equalityExpression)*
 	;
 	
 bitwiseANDExpressionNoIn
-	: equalityExpressionNoIn (LT!* '&' LT!* equalityExpressionNoIn)*
+	: equalityExpressionNoIn (LT!* '&'^ LT!* equalityExpressionNoIn)*
 	;
 	
 equalityExpression
-	: relationalExpression (LT!* ('==' | '!=' | '===' | '!==') LT!* relationalExpression)*
+	: relationalExpression (LT!* ('==' | '!=' | '===' | '!==')^ LT!* relationalExpression)*
 	;
 
 equalityExpressionNoIn
-	: relationalExpressionNoIn (LT!* ('==' | '!=' | '===' | '!==') LT!* relationalExpressionNoIn)*
+	: relationalExpressionNoIn (LT!* ('==' | '!=' | '===' | '!==')^ LT!* relationalExpressionNoIn)*
 	;
 	
 relationalExpression
-	: shiftExpression (LT!* ('<' | '>' | '<=' | '>=' | 'instanceof' | 'in') LT!* shiftExpression)*
+	: shiftExpression (LT!* ('<' | '>' | '<=' | '>=' | 'instanceof' | 'in')^ LT!* shiftExpression)*
 	;
 
 relationalExpressionNoIn
-	: shiftExpression (LT!* ('<' | '>' | '<=' | '>=' | 'instanceof') LT!* shiftExpression)*
+	: shiftExpression (LT!* ('<' | '>' | '<=' | '>=' | 'instanceof')^ LT!* shiftExpression)*
 	;
 
 shiftExpression
-	: additiveExpression (LT!* ('<<' | '>>' | '>>>') LT!* additiveExpression)*
+	: additiveExpression (LT!* ('<<' | '>>' | '>>>')^ LT!* additiveExpression)*
 	;
 
 additiveExpression
-	: multiplicativeExpression (LT!* ('+' | '-') LT!* multiplicativeExpression)*
-	;
+@init { int type = 0; }
+	: multiplicativeExpression (LT* ('+' { type = 1; } | '-' { type = 2; }) LT* multiplicativeExpression)* -> { type == 1 }? ^(BINARY_PLUS multiplicativeExpression+)
+	                                                                                                       -> { type == 2 }? ^(BINARY_MINUS multiplicativeExpression+)
+	                                                                                                       -> multiplicativeExpression;
 
 multiplicativeExpression
-	: unaryExpression (LT!* ('*' | '/' | '%') LT!* unaryExpression)*
+	: unaryExpression (LT!* ('*' | '/' | '%')^ LT!* unaryExpression)*
 	;
 
 unaryExpression
 	: postfixExpression
-	| ('delete' | 'void' | 'typeof' | '++' | '--' | '+' | '-' | '~' | '!') unaryExpression
+	| ('delete' | 'void' | 'typeof' | '++' | '--' | '+' | '-' | '~' | '!')^ unaryExpression
 	;
 	
 postfixExpression
-	: leftHandSideExpression ('++' | '--')?
-	;
+@init { int type = 0; }
+	: x=leftHandSideExpression ('++' { type = 1; } | '--' { type = 2; })? -> { type == 1 }? ^(POSTFIX_PLUSPLUS $x)
+	                                                                      -> { type == 2 }? ^(POSTFIX_MINUSMINUS $x)
+	                                                                      -> $x;
 
 primaryExpression
 	: 'this'
@@ -352,21 +390,21 @@ primaryExpression
 	| literal
 	| arrayLiteral
 	| objectLiteral
-	| '(' LT!* expression LT!* ')'
+	| '('! LT!* expression LT!* ')'!
 	;
 	
 // arrayLiteral definition.
 arrayLiteral
-	: '[' LT!* assignmentExpression? (LT!* ',' (LT!* assignmentExpression)?)* LT!* ']'
+	: '[' LT* assignmentExpression? (LT* ',' (LT* assignmentExpression)?)* LT* ']' -> ^(ARRAY_LITERAL assignmentExpression*)
 	;
        
 // objectLiteral definition.
 objectLiteral
-	: '{' LT!* propertyNameAndValue (LT!* ',' LT!* propertyNameAndValue)* LT!* '}'
+	: '{' LT* (propertyNameAndValue (LT* ',' LT* propertyNameAndValue)* LT*)* '}' -> ^(OBJECT_LITERAL propertyNameAndValue*)
 	;
 	
 propertyNameAndValue
-	: propertyName LT!* ':' LT!* assignmentExpression
+	: propertyName LT!* ':'! LT!* assignmentExpression
 	;
 
 propertyName

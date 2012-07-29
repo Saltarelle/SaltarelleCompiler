@@ -251,6 +251,11 @@ namespace Saltarelle.Compiler.JSModel
     		return statement;
     	}
 
+		public JsStatement Visit(JsFunctionStatement statement, TData data) {
+			var body = Visit(statement.Body, data);
+			return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
+		}
+
     	public JsStatement Visit(JsGotoStatement statement, TData data) {
     		return statement;
     	}

@@ -50,17 +50,47 @@
   </ItemGroup>
   <ItemGroup>
     <Antlr3 Include="ParserImpl\JavaScript.g">
-      <Generator>MSBuild:Compile</Generator>
+      <OutputFiles>ParserImpl\JavaScriptLexer.cs;ParserImpl\JavaScriptParser.cs</OutputFiles>
+    </Antlr3>
+    <Antlr3 Include="ParserImpl\JavaScriptTreeParser.g">
+      <OutputFiles>ParserImpl\JavaScriptTreeParser.cs</OutputFiles>
     </Antlr3>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ParserImpl\JavaScriptLexer.cs">
+      <DependentUpon>JavaScript.g</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="ParserImpl\JavaScriptParser.cs">
+      <DependentUpon>JavaScript.g</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="ParserImpl\JavaScriptTreeParser.cs">
+      <DependentUpon>JavaScriptTreeParser.g</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JSModel\JSModel.csproj">
+      <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
+      <Name>JSModel</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="CleanAntlrCode">
+    <Delete Files="%(Antlr3.OutputFiles)" />
+  </Target>
+  <Target Name="GenerateAntlrCode" Inputs="@(Antlr3)" Outputs="%(Antlr3.OutputFiles)">
+    <Delete Files="%(Antlr3.OutputFiles)" />
+    <Exec Command="@(Antlr3->'%22$(SolutionDir)packages-manual\antlr\Antlr3.exe%22 -message-format vs2005 %22%(Filename)%(Extension)%22')" WorkingDirectory="$(ProjectDir)ParserImpl" />
+  </Target>
   <PropertyGroup>
-    <!-- Folder containing AntlrBuildTask.dll -->
-    <AntlrBuildTaskPath>$(SolutionDir)packages-manual\antlr\</AntlrBuildTaskPath>
-    <!-- Path to the ANTLR Tool itself. -->
-    <AntlrToolPath>$(SolutionDir)packages-manual\antlr\Antlr3.exe</AntlrToolPath>
+    <CleanDependsOn>CleanAntlrCode;$(CleanDependsOn)</CleanDependsOn>
+    <CompileDependsOn>GenerateAntlrCode;$(CompileDependsOn)</CompileDependsOn>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)packages-manual\antlr\Antlr3.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

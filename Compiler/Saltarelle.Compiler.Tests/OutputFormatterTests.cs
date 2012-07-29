@@ -818,5 +818,10 @@ else {
 ".Replace("\r\n", "\n")));
 
 		}
+
+		[Test]
+		public void FunctionDefinitionStatementWorks() {
+			Assert.That(OutputFormatter.Format(new JsFunctionStatement("f", new[] { "a, b, c" }, new JsExpressionStatement(JsExpression.Identifier("x")))).Replace("\r\n", "\n"), Is.EqualTo("function f(a, b, c) {\n\tx;\n}\n"));
+		}
     }
 }
