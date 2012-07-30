@@ -1089,7 +1089,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var unusableTypes = Utils.FindUsedUnusableTypes(((ParameterizedType)typeToConstruct).TypeArguments, _namingConvention).ToList();
 				if (unusableTypes.Count > 0) {
 					foreach (var ut in unusableTypes)
-						_errorReporter.Message(7520, _filename, _location, ut.FullName, typeToConstruct.GetDefinition().FullName);
+						_errorReporter.Message(7520, _filename, _location, ut.FullName, typeToConstructDef.FullName);
 					return JsExpression.Number(0);
 				}
 			}
@@ -1451,7 +1451,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsBoxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Type.Kind != TypeKind.Dynamic && rr.Type.GetDefinition().KnownTypeCode == KnownTypeCode.ValueType)
+				if (rr.Type.Kind != TypeKind.Dynamic && (rr.Type is ITypeParameter || rr.Type.Equals(_compilation.FindType(KnownTypeCode.ValueType))))
 					result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
 				return result;
 			}
