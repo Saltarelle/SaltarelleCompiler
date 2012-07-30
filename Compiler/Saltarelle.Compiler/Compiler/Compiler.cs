@@ -37,6 +37,7 @@ namespace Saltarelle.Compiler.Compiler {
         private HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>> _constructorDeclarations;
         private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
 		private TextLocation _location;
+		private ISet<string> _definedSymbols;
 
         public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
 
@@ -151,7 +152,8 @@ namespace Saltarelle.Compiler.Compiler {
                                                         var cu = CreateParser(defineConstants).Parse(rdr, f.FileName);
                                                         var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(cu);
                                                         cu = (expandResult != null ? (CompilationUnit)expandResult.AstNode : cu);
-                                                        return new PreparedCompilation.ParsedSourceFile(cu, new CSharpParsedFile(f.FileName, new UsingScope()));
+                                                        var definedSymbols = DefinedSymbolsGatherer.Gather(cu, defineConstants);
+                                                        return new PreparedCompilation.ParsedSourceFile(cu, new CSharpParsedFile(f.FileName, new UsingScope()), definedSymbols);
                                                     }
                                                 }).ToList();
 
@@ -185,6 +187,7 @@ namespace Saltarelle.Compiler.Compiler {
 							continue;
 						}
 					}
+					_definedSymbols = f.DefinedSymbols;
 
 	                _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
 		            _resolver.ApplyNavigator(new ResolveAllNavigator());
@@ -235,7 +238,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private MethodCompiler CreateMethodCompiler() {
-            return new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+            return new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary, _definedSymbols);
         }
 
         private void AddCompiledMethodToType(JsClass jsClass, IMethod method, MethodScriptSemantics options, JsMethod jsMethod) {

@@ -1284,8 +1284,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, {U});
-	var $u2 = $Upcast($t, {U});
+@"	var $u1 = $Upcast($t, $U);
+	var $u2 = $Upcast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1296,8 +1296,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, {U});
-	var $u2 = $Upcast($t, {U});
+@"	var $u1 = $Upcast($t, $U);
+	var $u2 = $Upcast($t, $U);
 ");
 		}
 
@@ -1390,7 +1390,7 @@ public void M<T>() where T : class {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void TypeParameterCanBeConvertedToOtherTypeParameterWhichDependsOnIt() {
 			AssertCorrect(
 @"public void M<T, U>() where U : T {
@@ -1399,7 +1399,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, {U});
+@"	var $u = $Cast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1409,7 +1409,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, {U});
+@"	var $u = $Cast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1419,7 +1419,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, {U});
+@"	var $u = $Cast($t, $U);
 ");
 		}
 
