@@ -1485,7 +1485,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, bool data) {
 			if (rr.InvocationType == DynamicInvocationType.ObjectCreation) {
-				if (rr.Arguments.Any(arg => arg.Name != null)) {
+				if (rr.Arguments.Any(arg => arg is NamedArgumentResolveResult)) {
 					_errorReporter.Message(7526, _filename, _location);
 					return JsExpression.Number(0);
 				}
@@ -1513,7 +1513,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Number(0);
 				}
 
-				return CompileConstructorInvocation(semantics[0], methods[0], rr.Arguments.Select(a => a.Value).ToList(), null, rr.InitializerStatements, false);
+				return CompileConstructorInvocation(semantics[0], methods[0], rr.Arguments, null, rr.InitializerStatements, false);
 			}
 			else {
 				if (rr.InvocationType == DynamicInvocationType.Indexing && rr.Arguments.Count != 1) {
@@ -1540,11 +1540,11 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				foreach (var arg in rr.Arguments) {
-					if (arg.Name != null) {
+					if (arg is NamedArgumentResolveResult) {
 						_errorReporter.Message(7526, _filename, _location);
 						return JsExpression.Number(0);
 					}
-					expressions.Add(InnerCompile(arg.Value, false, expressions));
+					expressions.Add(InnerCompile(arg, false, expressions));
 				}
 
 				switch (rr.InvocationType) {
@@ -1559,6 +1559,10 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Number(0);
 				}
 			}
+		}
+
+		public override JsExpression VisitNamedArgumentResolveResult(NamedArgumentResolveResult rr, bool data) {
+			return VisitResolveResult(rr.Argument, data);	// Argument names are ignored.
 		}
 	}
 }

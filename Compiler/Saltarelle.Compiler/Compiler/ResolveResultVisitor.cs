@@ -110,5 +110,10 @@ namespace Saltarelle.Compiler.Compiler {
 			VisitChildResolveResults(rr, data);
 			return default(TResult);
 		}
+
+		public virtual TResult VisitNamedArgumentResolveResult(NamedArgumentResolveResult rr, TData data) {
+			VisitChildResolveResults(rr, data);
+			return default(TResult);
+		}
 	}
 }
