@@ -218,6 +218,7 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
+    <Compile Include="GotoTests\LabelledBlockGathererTests.cs" />
     <Compile Include="JavaScriptParserTests\JavaScriptParserTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />

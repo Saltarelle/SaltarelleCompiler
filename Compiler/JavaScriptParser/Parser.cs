@@ -21,7 +21,7 @@ namespace JavaScriptParser {
 		}
 
 		public static JsStatement ParseStatement(string source) {
-			JavaScriptLexer lex = new JavaScriptLexer(new ANTLRStringStream(source));
+			JavaScriptLexer lex = new JavaScriptLexer(new ANTLRStringStream(source.Trim()));
    			CommonTokenStream tokens = new CommonTokenStream(lex);
 			var parser = new JavaScriptParser.ParserImpl.JavaScriptParser(tokens);
 

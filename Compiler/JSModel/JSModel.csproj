@@ -50,6 +50,13 @@
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
+    <Compile Include="GotoRewrite\GotoRewriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GotoRewrite\LabelledBlock.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GotoRewrite\LabelledBlockGatherer.cs" />
     <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />

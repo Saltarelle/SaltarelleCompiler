@@ -220,7 +220,7 @@ finallyClause
 	;
 
 gotoStatement
-	: 'goto'^ LT!* Identifier
+	: 'goto'^ Identifier (LT | ';')!
 	;
 
 // expressions
