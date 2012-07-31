@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler
+namespace Saltarelle.Compiler.JSModel
 {
     public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
     	private readonly bool _allowIntermediates;
@@ -645,10 +642,9 @@ redo:
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsLabelStatement statement, bool addNewline) {
-    		_cb.Append(statement.Name).Append(":");
-			if (addNewline)
-				_cb.AppendLine();
+    	public object Visit(JsLabelledStatement statement, bool addNewline) {
+    		_cb.Append(statement.Label).AppendLine(":");
+			Visit(statement.Statement, addNewline);
 			return null;
     	}
 

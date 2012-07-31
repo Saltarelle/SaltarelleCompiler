@@ -12,6 +12,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Mono.CSharp;
 using System.Linq;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;

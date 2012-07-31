@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.GotoRewrite;
+using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Tests.GotoTests {
 	[TestFixture]
 	public class LabelledBlockGathererTests {
 		private void AssertCorrect(string orig, string expected) {
-			var stmt = JavaScriptParser.Parser.ParseStatement(orig);
+			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
 			var blocks = new LabelledBlockGatherer().Gather(stmt);
 			var actual = string.Join("", blocks.OrderBy(b => b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
@@ -52,28 +54,20 @@ goto $exit;
 {
 	a;
 	b;
-	goto lbl2;
+	goto lbl1;
 lbl1:
 	c;
 	d;
-lbl2:
-	e;
-	f;
 }", 
 @"
 --$0
 a;
 b;
-goto lbl2;
+goto lbl1;
 
 --lbl1
 c;
 d;
-goto lbl2;
-
---lbl2
-e;
-f;
 goto $exit;
 ");
 		}
@@ -85,20 +79,12 @@ goto $exit;
 	a;
 	b;
 	return;
-lbl1:
-	c;
-	d;
 }", 
 @"
 --$0
 a;
 b;
 return;
-
---lbl1
-c;
-d;
-goto $exit;
 ");
 		}
 
@@ -109,21 +95,21 @@ goto $exit;
 	a;
 	{
 		b;
-lbl1:	{
+		lbl1: {
 			c;
 		}
 		d;
-lbl2:
+		lbl2:
 		e;
 	}
 	{
 		f;
 		{
 			g;
-			goto lbl1;
+			goto lbl4;
 		}
 	}
-lbl4:
+	lbl4:
 	h;
 }", 
 @"
@@ -141,7 +127,7 @@ goto lbl2;
 e;
 f;
 g;
-goto lbl1;
+goto lbl4;
 
 --lbl4
 h;

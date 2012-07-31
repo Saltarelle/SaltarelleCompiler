@@ -182,7 +182,7 @@ withStatement
 	;
 
 labelledStatement
-	: Identifier LT* ':' LT* statement -> ^(':' Identifier) statement
+	: Identifier LT* ':' LT* statement -> ^(':' Identifier statement)
 	;
 	
 switchStatement

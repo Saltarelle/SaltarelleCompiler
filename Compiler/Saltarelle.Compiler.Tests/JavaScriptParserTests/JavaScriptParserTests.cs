@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -246,11 +247,11 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		[Test]
 		public void LabelledStatement() {
 			var stmt = ParseStatement<JsBlockStatement>("{lbl: x;}");
-			Assert.That(stmt.Statements.Count, Is.EqualTo(2));
-			Assert.That(stmt.Statements[0], Is.InstanceOf<JsLabelStatement>());
-			Assert.That(((JsLabelStatement)stmt.Statements[0]).Name, Is.EqualTo("lbl"));
-			Assert.That(stmt.Statements[1], Is.InstanceOf<JsExpressionStatement>());
-			Assert.That(((JsExpressionStatement)stmt.Statements[1]).Expression, Is.InstanceOf<JsIdentifierExpression>());
+			Assert.That(stmt.Statements.Count, Is.EqualTo(1));
+			Assert.That(stmt.Statements[0], Is.InstanceOf<JsLabelledStatement>());
+			Assert.That(((JsLabelledStatement)stmt.Statements[0]).Label, Is.EqualTo("lbl"));
+			Assert.That(((JsLabelledStatement)stmt.Statements[0]).Statement, Is.InstanceOf<JsExpressionStatement>());
+			Assert.That(((JsExpressionStatement)((JsLabelledStatement)stmt.Statements[0]).Statement).Expression, Is.InstanceOf<JsIdentifierExpression>());
 		}
 
 		[Test]

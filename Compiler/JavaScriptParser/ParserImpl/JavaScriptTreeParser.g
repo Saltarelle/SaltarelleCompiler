@@ -231,7 +231,7 @@ emptyStatement returns [JsStatement result]
 	: ';' { $result = new JsEmptyStatement(); };
 
 labelledStatement returns [JsStatement result]
-	: ^(':' i=Identifier) { $result = new JsLabelStatement(i.Text); };
+	: ^(':' i=Identifier s=statement) { $result = new JsLabelledStatement(i.Text, s); };
 
 variableStatement returns [JsStatement result]
 @init { var vars = new List<JsVariableDeclaration>(); }

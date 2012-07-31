@@ -247,25 +247,26 @@ namespace Saltarelle.Compiler.JSModel
             return ReferenceEquals(@object, statement.Object) && ReferenceEquals(body, statement.Body) ? statement : new JsWithStatement(@object, body);
         }
 
-    	public JsStatement Visit(JsLabelStatement statement, TData data) {
-    		return statement;
+    	public virtual JsStatement Visit(JsLabelledStatement statement, TData data) {
+			var stmt = Visit(statement.Statement, data);
+    		return ReferenceEquals(stmt, statement.Statement) ? statement : new JsLabelledStatement(statement.Label, stmt);
     	}
 
-		public JsStatement Visit(JsFunctionStatement statement, TData data) {
+		public virtual JsStatement Visit(JsFunctionStatement statement, TData data) {
 			var body = Visit(statement.Body, data);
 			return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
 		}
 
-    	public JsStatement Visit(JsGotoStatement statement, TData data) {
+    	public virtual JsStatement Visit(JsGotoStatement statement, TData data) {
     		return statement;
     	}
 
-    	public JsStatement Visit(JsYieldReturnStatement statement, TData data) {
+    	public virtual JsStatement Visit(JsYieldReturnStatement statement, TData data) {
     		var value = Visit(statement.Value, data);
 			return ReferenceEquals(value, statement.Value) ? statement : new JsYieldReturnStatement(value);
     	}
 
-    	public JsStatement Visit(JsYieldBreakStatement statement, TData data) {
+    	public virtual JsStatement Visit(JsYieldBreakStatement statement, TData data) {
     		return statement;
     	}
     }

@@ -46,6 +46,7 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="CodeBuilder.cs" />
     <Compile Include="Expressions\JsLiteralExpression.cs" />
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
@@ -57,6 +58,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GotoRewrite\LabelledBlockGatherer.cs" />
+    <Compile Include="OutputFormatter.cs" />
     <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />

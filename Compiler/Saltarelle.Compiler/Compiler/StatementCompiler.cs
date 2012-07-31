@@ -216,13 +216,23 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		protected override void VisitChildren(AstNode node) {
-			AstNode next;
-			for (var child = node.FirstChild; child != null; child = next) {
+			for (var child = node.FirstChild; child != null; child = child.NextSibling) {
 				// Store next to allow the loop to continue
 				// if the visitor removes/replaces child.
-				next = child.NextSibling;
-				_location = child.StartLocation;
-				child.AcceptVisitor (this);
+
+				if (child is LabelStatement) {
+					string name = ((LabelStatement)child).Label;
+					do {
+						child = child.NextSibling;
+					} while (child.Role != BlockStatement.StatementRole);
+					int index = _result.Count;
+					child.AcceptVisitor(this);
+					_result[index] = new JsLabelledStatement(name, _result[index]);
+				}
+				else {
+					_location = child.StartLocation;
+					child.AcceptVisitor(this);
+				}
 			}
 		}
 
@@ -406,8 +416,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitBlockStatement(BlockStatement blockStatement) {
 			var innerCompiler = CreateInnerCompiler();
-			foreach (var c in blockStatement.Children)
-				c.AcceptVisitor(innerCompiler);
+			innerCompiler.VisitChildren(blockStatement);
 			_result.Add(new JsBlockStatement(innerCompiler._result));
 		}
 
@@ -709,7 +718,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitLabelStatement(LabelStatement labelStatement) {
-			_result.Add(new JsLabelStatement(labelStatement.Label));
+			throw new InvalidOperationException("Visited a LabelStatement in the statement compiler, this should have been taken care of in parent.");
 		}
 
 		public override void VisitFixedStatement(FixedStatement fixedStatement) {
@@ -810,10 +819,10 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 				}
 
-				var statements = section.Statements.SelectMany(stmt => CreateInnerCompiler().Compile(stmt).Statements);
+				var statements = section.Statements.SelectMany(stmt => CreateInnerCompiler().Compile(stmt).Statements).ToList();
 
 				if (gotoCaseData.Item1.ContainsKey(section))
-					statements = new[] { new JsLabelStatement(gotoCaseData.Item1[section]) }.Concat(statements);
+					statements = new[] { new JsLabelledStatement(gotoCaseData.Item1[section], statements[0]) }.Concat(statements.Skip(1)).ToList();
 
 				caseClauses.Add(new JsSwitchSection(values, new JsBlockStatement(statements)));
 			}
