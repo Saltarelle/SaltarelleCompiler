@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler.Tests.GotoTests {
 			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
 			var blocks = new LabelledBlockGatherer().Gather(stmt);
 			var actual = string.Join("", blocks.OrderBy(b => b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
 
 		[Test]
@@ -243,14 +243,16 @@ goto $1;
 		[Test]
 		public void IfStatement3() {
 			AssertCorrect(@"
-if (x) {
-	a;
-	b;
-lbl1:
-	c;
-	d;
-}
-lbl2: e;", 
+{
+	if (x) {
+		a;
+		b;
+	lbl1:
+		c;
+		d;
+	}
+	lbl2: e;
+}", 
 @"
 --$0
 if (x) {
@@ -274,17 +276,19 @@ goto $exit;
 		[Test]
 		public void IfElse() {
 			AssertCorrect(@"
-if (x) {
-	a;
-lbl1:
-	b;
+{
+	if (x) {
+		a;
+	lbl1:
+		b;
+	}
+	else {
+		c;
+	lbl2:
+		d;
+	}
+	e;
 }
-else {
-	c;
-lbl2:
-	d;
-}
-e;
 ", 
 @"
 --$0
@@ -297,6 +301,10 @@ else {
 	goto lbl2;
 }
 
+--$1
+e;
+goto $exit;
+
 --lbl1
 b;
 goto $1;
@@ -304,10 +312,78 @@ goto $1;
 --lbl2
 d;
 goto $1;
+");
+		}
+
+		[Test]
+		public void IfElseWithNoLabelInThen() {
+			AssertCorrect(@"
+{
+	if (x) {
+		a;
+	}
+	else {
+		b;
+	lbl1:
+		c;
+	}
+	d;
+}
+", 
+@"
+--$0
+if (x) {
+	a;
+	goto $1;
+}
+else {
+	b;
+	goto lbl1;
+}
 
 --$1
-e;
+d;
 goto $exit;
+
+--lbl1
+c;
+goto $1;
+");
+		}
+
+		[Test]
+		public void IfElseWithNoLabelInElse() {
+			AssertCorrect(@"
+{
+	if (x) {
+		a;
+	lbl1:
+		b;
+	}
+	else {
+		c;
+	}
+	d;
+}
+", 
+@"
+--$0
+if (x) {
+	a;
+	goto lbl1;
+}
+else {
+	c;
+	goto $1;
+}
+
+--$1
+d;
+goto $exit;
+
+--lbl1
+b;
+goto $1;
 ");
 		}
 
@@ -315,123 +391,89 @@ goto $exit;
 		public void NestedIfElse() {
 			// No this assertion is not really correct.
 			AssertCorrect(@"
-if (x) {
-	a;
-	if (y) {
-		b;
-lbl1:
-		c;
-	}
-	else {
-		d;
-lbl2:
-		e;
-	}
-	f;
-}
-else {
-	g;
-	if (z) {
-		h;
-lbl3:
-		i;
-	}
-	else {
-		j;
-lbl4:
-		k;
-	}
-	l;
-}
-m;
-", 
-@"TODO");
+{
+	if (x) {
+		a;
+		if (y) {
+			b;
+			lbl1:
+			c;
 		}
-
-		[Test]
-		public void NestedIfElse2() {
-			// No this assertion is not really correct.
-			AssertCorrect(@"
-if (x) {
-	a;
-lbl1:
-	if (y) {
-		b;
-lbl2:
-		c;
+		else {
+			d;
+			lbl2:
+			e;
+		}
+		f;
 	}
 	else {
-		d;
-lbl3:
-		e;
+		g;
+		if (z) {
+			h;
+			lbl3:
+			i;
+		}
+		else {
+			j;
+			lbl4:
+			k;
+		}
+		l;
 	}
-	f;
-}
-else {
-	g;
-lbl4:
-	if (z) {
-		h;
-lbl5:
-		i;
-	}
-	else {
-		j;
-lbl6:
-		k;
-	}
-	l;
-}
-m;
-", 
+	m;
+}", 
 @"
 --$0
 if (x) {
 	a;
-	goto lbl1;
+	if (y) {
+		b;
+		goto lbl1;
+	}
+	else {
+		d;
+		goto lbl2;
+	}
 }
 else {
 	g;
-	goto lbl4;
+	if (z) {
+		h;
+		goto lbl3;
+	}
+	else {
+		j;
+		goto lbl4;
+	}
 }
-
---lbl1
-if (y) {
-	b;
-	goto lbl2;
-}
-else {
-	d;
-	goto lbl3;
-}
-
---lbl2
-c;
-goto $1;
-
---lbl3
-e;
-goto $1;
 
 --$1
-f;
-goto $2;
-
---$2
 m;
 goto $exit;
 
---lbl1
-b;
+--$2
+f;
 goto $1;
+
+--$3
+l;
+goto $1;
+
+--lbl1
+c;
+goto $2;
 
 --lbl2
-d;
-goto $1;
-
---$1
 e;
-goto $exit;
+goto $2;
+
+--lbl3
+i;
+goto $3;
+
+--lbl4
+k;
+goto $3;
 ");
 		}
 	}

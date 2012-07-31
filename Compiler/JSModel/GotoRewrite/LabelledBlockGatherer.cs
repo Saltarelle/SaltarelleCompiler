@@ -35,6 +35,8 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 	}
 */
 	internal class LabelledBlockGatherer {
+		internal const string ExitLabelName = "$exit";	// Use this label as a name to denote that when control leaves a block through this path, it means that it is leaving the current state machine.
+
 		class ContainsLabelsVisitor : RewriterVisitorBase<object> {
 			bool _result;
 
@@ -54,12 +56,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		class StackEntry {
 			public JsBlockStatement Block { get; private set; }
 			public int Index { get; private set; }
-			public string ExitLabel { get; private set; }
 
-			public StackEntry(JsBlockStatement block, int index, string exitLabel) {
+			public StackEntry(JsBlockStatement block, int index) {
 				Block = block;
 				Index = index;
-				ExitLabel = exitLabel;
 			}
 
 			public string DebugToString() {
@@ -67,8 +67,20 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
+		class OutstandingBlock {
+			public ImmutableStack<StackEntry> Stack { get; private set; }
+			public string Name { get; private set; }
+			public string ReturnLabel { get; private set; }
+
+			public OutstandingBlock(ImmutableStack<StackEntry> stack, string name, string returnLabel) {
+				Stack = stack;
+				Name = name;
+				ReturnLabel = returnLabel;
+			}
+		}
+
 		int _currentAnonymousBlockIndex;
-		Queue<Tuple<ImmutableStack<StackEntry>, string>> _outstandingBlocks = new Queue<Tuple<ImmutableStack<StackEntry>, string>>();
+		Queue<OutstandingBlock> _outstandingBlocks = new Queue<OutstandingBlock>();
 		HashSet<JsStatement> _processedStatements;
 
 		private string CreateAnonymousBlockName() {
@@ -82,15 +94,20 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					return true;
 				current = block.Statements[block.Statements.Count - 1];
 			}
+			var ifst = current as JsIfStatement;
+			if (ifst != null) {
+				return ifst.Else == null || ifst.Then.Statements.Count == 0 || ifst.Else.Statements.Count == 0 || IsNextStatementReachable(ifst.Then.Statements[ifst.Then.Statements.Count - 1]) || IsNextStatementReachable(ifst.Else.Statements[ifst.Else.Statements.Count - 1]);
+			}
+
 			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement);
 		}
 
-		private void Enqueue(ImmutableStack<StackEntry> stack, string label) {
+		private void Enqueue(ImmutableStack<StackEntry> stack, string name, string exitLabel) {
 			var tos = stack.Peek();
 			if (_processedStatements.Contains(tos.Block.Statements[tos.Index]))
 				throw new Exception("Don't think this will happen");
 			Console.WriteLine("Enqueue " + tos.Block.Statements[tos.Index].DebugToString());
-			_outstandingBlocks.Enqueue(Tuple.Create(stack, label));
+			_outstandingBlocks.Enqueue(new OutstandingBlock(stack, name, exitLabel));
 			_processedStatements.Add(tos.Block.Statements[tos.Index]);
 		}
 
@@ -101,28 +118,26 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
 			var startBlockName = CreateAnonymousBlockName();
 			_processedStatements = new HashSet<JsStatement>(ReferenceComparer.Instance);
-			_outstandingBlocks = new Queue<Tuple<ImmutableStack<StackEntry>, string>>();
-			_outstandingBlocks.Enqueue(Tuple.Create(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0, LabelledBlock.ExitLabelName)), startBlockName));
+			_outstandingBlocks = new Queue<OutstandingBlock>();
+			_outstandingBlocks.Enqueue(new OutstandingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), startBlockName, ExitLabelName));
 
 			var result = new List<LabelledBlock>();
 
 			while (_outstandingBlocks.Count > 0) {
 				var current = _outstandingBlocks.Dequeue();
-				Console.WriteLine("Dequeue " + current.Item1.Peek().Block.Statements[current.Item1.Peek().Index].DebugToString());
-				result.Add(new LabelledBlock(current.Item2, Handle(current.Item1, true)));
+				Console.WriteLine("Dequeue " + current.Stack.Peek().Block.Statements[current.Stack.Peek().Index].DebugToString());
+				result.Add(new LabelledBlock(current.Name, Handle(current.Stack, true, current.ReturnLabel)));
 			}
 
 			return result;
 		}
 
-		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, bool dequeued) {
+		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, bool dequeued, string returnLabel) {
 			var currentBlock = new List<JsStatement>();
 			bool first = true;
-			string exitLabel = LabelledBlock.ExitLabelName;
 			while (!stack.IsEmpty) {
 				var tos = stack.Peek();
 				stack = stack.Pop();
-				exitLabel = tos.ExitLabel;
 
 				var stmt = tos.Block.Statements[tos.Index];
 				var lbl = stmt as JsLabelledStatement;
@@ -133,7 +148,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 					else {
 						// A label that terminates the current block.
-						Enqueue(stack.Push(new StackEntry(tos.Block, tos.Index, tos.ExitLabel)), lbl.Label);
+						Enqueue(stack.Push(new StackEntry(tos.Block, tos.Index)), lbl.Label, returnLabel);
 						if (currentBlock.Count == 0 || IsNextStatementReachable(currentBlock[currentBlock.Count - 1]))
 							currentBlock.Add(new JsGotoStatement(lbl.Label));
 						return currentBlock;
@@ -141,11 +156,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				}
 
 				if (tos.Index < tos.Block.Statements.Count - 1)
-					stack = stack.Push(new StackEntry(tos.Block, tos.Index + 1, tos.ExitLabel));
+					stack = stack.Push(new StackEntry(tos.Block, tos.Index + 1));
 
 				if (ContainsLabels(stmt)) {
 					if (stmt is JsBlockStatement) {
-						stack = stack.Push(new StackEntry((JsBlockStatement)stmt, 0, tos.ExitLabel));
+						stack = stack.Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
 					else {
 						var ifst = (JsIfStatement)stmt;
@@ -161,18 +176,18 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 							}
 						}
 						else {
-							labelAfter = tos.ExitLabel;
+							labelAfter = returnLabel;
 						}
 
-						var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Then, 0, labelAfter)), false);
-						var elsePart = ifst.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Else, 0, labelAfter)), false) : null;
+						var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Then, 0)), false, labelAfter);
+						var elsePart = ifst.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Else, 0)), false, labelAfter) : null;
 
 						currentBlock.Add(new JsIfStatement(ifst.Test, new JsBlockStatement(thenPart), elsePart != null ? new JsBlockStatement(elsePart) : null));
 						if (elsePart == null)
-							currentBlock.Add(new JsGotoStatement(exitLabel));
+							currentBlock.Add(new JsGotoStatement(labelAfter));
 
 						if (needInsertLabelAfter) {
-							Enqueue(stack, labelAfter);
+							Enqueue(stack, labelAfter, returnLabel);
 							return currentBlock;
 						}
 					}
@@ -184,7 +199,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				first = false;
 			}
 			if (currentBlock.Count == 0 || IsNextStatementReachable(currentBlock[currentBlock.Count - 1]))
-				currentBlock.Add(new JsGotoStatement(exitLabel));
+				currentBlock.Add(new JsGotoStatement(returnLabel));
 
 			return currentBlock;
 		}
