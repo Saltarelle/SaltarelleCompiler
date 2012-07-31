@@ -106,21 +106,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
-		class ContainsContinueVisitor : RewriterVisitorBase<object> {
-			bool _result = false;
-
-			public override JsStatement Visit(JsContinueStatement statement, object data) {
-				_result = true;
-				return statement;
-			}
-
-			public bool Process(JsStatement statement) {
-				_result = false;
-				Visit(statement, null);
-				return _result;
-			}
-		}
-
 		[DebuggerDisplay("{DebugToString()}")]
 		class StackEntry {
 			public JsBlockStatement Block { get; private set; }
@@ -178,7 +163,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				throw new InvalidOperationException("Duplicate enqueueing of " + name);
 			_processedLabels.Add(name);
 			if (stack.IsEmpty)
-				return;
+				throw new InvalidOperationException("Empty stack for label " + name);
 			var tos = stack.Peek();
 			Console.WriteLine("Enqueue " + tos.Block.Statements[tos.Index].DebugToString());
 			_outstandingBlocks.Enqueue(new OutstandingBlock(stack, name, exitLabel));
@@ -190,10 +175,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 		private bool ContainsBreak(JsStatement statement) {
 			return new ContainsBreakVisitor().Process(statement);
-		}
-
-		private bool ContainsContinue(JsStatement statement) {
-			return new ContainsContinueVisitor().Process(statement);
 		}
 
 		private ImmutableStack<StackEntry> PushFollowing(ImmutableStack<StackEntry> stack, JsBlockStatement block, int currentIndex) {
@@ -260,7 +241,8 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 								return currentBlock;
 						}
 						else if (stmt is JsSwitchStatement) {
-							throw new NotImplementedException();
+							if (!HandleSwitchStatement((JsSwitchStatement)stmt, tos, returnLabel, stack, blockName, currentBlock))
+								return currentBlock;
 						}
 						else {
 							throw new NotSupportedException("Statement " + stmt + " cannot contain labels.");
@@ -364,7 +346,9 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				body = new ReplaceContinueWithGotoVisitor().Process(body, blockName);
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(body, 0)), blockName, blockName));
 
-				Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+				if (location.Index < location.Block.Statements.Count - 1) {
+					Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+				}
 
 				return false;
 			}
@@ -394,10 +378,47 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsBlockStatement.MakeBlock(new JsExpressionStatement(stmt.IteratorExpression)), 0)), iteratorLabel, blockName);
 				}
 
-				Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+				if (location.Index < location.Block.Statements.Count - 1) {
+					Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+				}
 
 				return false;
 			}
+		}
+
+		private bool HandleSwitchStatement(JsSwitchStatement stmt, StackEntry location, string returnLabel, ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
+			var labelAfter = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
+			JsExpression expression = stmt.Expression;
+
+			JsIfStatement ifStatement = null;
+			foreach (var clause in stmt.Clauses.Reverse()) {
+				var origBody = clause.Body;
+				if (origBody.Statements.Count > 0 && origBody.Statements[origBody.Statements.Count - 1] is JsBreakStatement) {	// TODO: Also check if it has a label that causes it to reference something else (but we don't generate those kinds of labels, at least not currently).
+					// Remove break statements that come last in the clause - they are unnecessary since we use if/else if/else
+					var stmts = new List<JsStatement>(origBody.Statements);
+					stmts.RemoveAt(stmts.Count - 1);
+					origBody = new JsBlockStatement(stmts);
+				}
+
+				origBody = new ReplaceBreakWithGotoVisitor().Process(origBody, labelAfter.Item1);
+				var body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(origBody, 0)), blockName, labelAfter.Item1);
+				if (body.Count > 0 && body[body.Count - 1] is JsGotoStatement && ((JsGotoStatement)body[body.Count - 1]).TargetLabel == labelAfter.Item1)
+					body.RemoveAt(body.Count - 1);	// If the last statement says to go to after this statement, it can safely be ignored because we use if/else if/else.
+
+				var test = clause.Values.Select(v => JsExpression.Same(expression, v)).Aggregate((o, e) => o != null ? JsExpression.LogicalOr(o, e) : e);
+
+				ifStatement = new JsIfStatement(test, new JsBlockStatement(body), ifStatement);
+			}
+
+			currentBlock.Add(ifStatement);
+			currentBlock.Add(new JsGotoStatement(labelAfter.Item1));
+
+			if (labelAfter.Item2) {
+				Enqueue(PushFollowing(stack, location.Block, location.Index), labelAfter.Item1, returnLabel);
+				return false;
+			}
+
+			return true;
 		}
 	}
 }

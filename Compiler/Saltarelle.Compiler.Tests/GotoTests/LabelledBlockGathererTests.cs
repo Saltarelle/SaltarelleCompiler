@@ -1357,5 +1357,280 @@ e;
 goto $3;
 ");
 		}
+
+		[Test]
+		public void NestedForStatements() {
+			AssertCorrect(@"
+{
+	for (a; b; c) {
+		for (d; e; f) {
+			g;
+			lbl1:
+			h;
+		}
+	}
+	i;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $3;
+}
+d;
+goto $4;
+
+--$2
+c;
+goto $1;
+
+--$3
+i;
+goto $exit;
+
+--$4
+if (!e) {
+	goto $2;
+}
+g;
+goto lbl1;
+
+--$5
+f;
+goto $4;
+
+--lbl1
+h;
+goto $5;
+");
+		}
+
+		[Test]
+		public void SwitchStatement1() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+		case c:
+			d;
+			lbl1:
+			e;
+			break;
+		case f:
+			g;
+			break;
+		case h:
+		case i:
+			j;
+			break;
+		case k:
+			l;
+			lbl2:
+			m;
+			break;
+	}
+	n;
+}", 
+@"
+--$0
+if (a === b || a === c) {
+	d;
+	goto lbl1;
+}
+else if (a === f) {
+	g;
+}
+else if (a === h || a === i) {
+	j;
+}
+else if (a === k) {
+	l;
+	goto lbl2;
+}
+goto $1;
+
+--$1
+n;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+
+--lbl2
+m;
+goto $1;
+");
+		}
+
+		[Test]
+		public void SwitchStatement2() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+		case c:
+			d;
+			lbl1:
+			e;
+			break;
+		case f:
+			g;
+			break;
+		case h:
+		case i:
+			j;
+			break;
+		case k:
+			l;
+			lbl2:
+			m;
+			break;
+	}
+}", 
+@"
+--$0
+if (a === b || a === c) {
+	d;
+	goto lbl1;
+}
+else if (a === f) {
+	g;
+}
+else if (a === h || a === i) {
+	j;
+}
+else if (a === k) {
+	l;
+	goto lbl2;
+}
+goto $exit;
+
+--lbl1
+e;
+goto $exit;
+
+--lbl2
+m;
+goto $exit;
+");
+		}
+
+		[Test]
+		public void SwitchStatement3() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+		case c:
+			d;
+			lbl1:
+			e;
+			break;
+		case f:
+			g;
+			break;
+		case h:
+		case i:
+			j;
+			break;
+		case k:
+			l;
+			lbl2:
+			m;
+			break;
+	}
+	lbl3: n;
+}", 
+@"
+--$0
+if (a === b || a === c) {
+	d;
+	goto lbl1;
+}
+else if (a === f) {
+	g;
+}
+else if (a === h || a === i) {
+	j;
+}
+else if (a === k) {
+	l;
+	goto lbl2;
+}
+goto lbl3;
+
+--lbl1
+e;
+goto lbl3;
+
+--lbl2
+m;
+goto lbl3;
+
+--lbl3
+n;
+goto $exit;
+");
+		}
+		
+		[Test]
+		public void SwitchStatementFallthrough() {
+			Assert.Fail("TODO: Test different kind of 'after' labels");
+		}
+
+		[Test]
+		public void SwitchStatementWithBreakInTheMiddleOfSection() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			break;
+			c;
+			break;
+		case d:
+			d;
+			lbl1:
+			break;
+			e;
+			break;
+	}
+	f;
+}", 
+@"
+--$0
+if (a === b) {
+	goto $1;
+	c;
+}
+else if (a === d) {
+	d;
+	goto lbl1;
+}
+goto $1;
+
+--$1
+f;
+goto $exit;
+
+--lbl1
+goto $1;
+e;
+goto $1;
+");
+		}
+
+		[Test]
+		public void SwitchStatementWithComplexExpression() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void SwitchStatementWithDefault() {
+			Assert.Fail("TODO, default in the middle, default grouped with other cases, only default");
+		}
 	}
 }
