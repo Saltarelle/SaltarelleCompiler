@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,197 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 	}
 */
+	internal class LabelledBlockGatherer {
+		class ContainsLabelsVisitor : RewriterVisitorBase<object> {
+			bool _result;
+
+			public override JsStatement Visit(JsLabelledStatement statement, object data) {
+				_result = true;
+				return statement;
+			}
+
+			public bool Process(JsStatement statement) {
+				_result = false;
+				Visit(statement, null);
+				return _result;
+			}
+		}
+
+		[DebuggerDisplay("{DebugToString()}")]
+		class StackEntry {
+			public JsBlockStatement Block { get; private set; }
+			public int Index { get; private set; }
+			public string ExitLabel { get; private set; }
+
+			public StackEntry(JsBlockStatement block, int index, string exitLabel) {
+				Block = block;
+				Index = index;
+				ExitLabel = exitLabel;
+			}
+
+			public string DebugToString() {
+				return new JsBlockStatement(Block.Statements.Skip(Index)).DebugToString();
+			}
+		}
+
+		int _currentAnonymousBlockIndex;
+		Queue<Tuple<ImmutableStack<StackEntry>, string>> _outstandingBlocks = new Queue<Tuple<ImmutableStack<StackEntry>, string>>();
+		HashSet<JsStatement> _processedStatements;
+
+		private string CreateAnonymousBlockName() {
+			return string.Format(CultureInfo.InvariantCulture, "${0}", _currentAnonymousBlockIndex++);
+		}
+
+		private bool IsNextStatementReachable(JsStatement current) {
+			while (current is JsBlockStatement) {
+				var block = (JsBlockStatement)current;
+				if (block.Statements.Count == 0)
+					return true;
+				current = block.Statements[block.Statements.Count - 1];
+			}
+			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement);
+		}
+
+		private void Enqueue(ImmutableStack<StackEntry> stack, string label) {
+			var tos = stack.Peek();
+			if (_processedStatements.Contains(tos.Block.Statements[tos.Index]))
+				throw new Exception("Don't think this will happen");
+			Console.WriteLine("Enqueue " + tos.Block.Statements[tos.Index].DebugToString());
+			_outstandingBlocks.Enqueue(Tuple.Create(stack, label));
+			_processedStatements.Add(tos.Block.Statements[tos.Index]);
+		}
+
+		private bool ContainsLabels(JsStatement statement) {
+			return new ContainsLabelsVisitor().Process(statement);
+		}
+
+		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
+			var startBlockName = CreateAnonymousBlockName();
+			_processedStatements = new HashSet<JsStatement>(ReferenceComparer.Instance);
+			_outstandingBlocks = new Queue<Tuple<ImmutableStack<StackEntry>, string>>();
+			_outstandingBlocks.Enqueue(Tuple.Create(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0, LabelledBlock.ExitLabelName)), startBlockName));
+
+			var result = new List<LabelledBlock>();
+
+			while (_outstandingBlocks.Count > 0) {
+				var current = _outstandingBlocks.Dequeue();
+				Console.WriteLine("Dequeue " + current.Item1.Peek().Block.Statements[current.Item1.Peek().Index].DebugToString());
+				result.Add(new LabelledBlock(current.Item2, Handle(current.Item1, true)));
+			}
+
+			return result;
+		}
+
+		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, bool dequeued) {
+			var currentBlock = new List<JsStatement>();
+			bool first = true;
+			string exitLabel = LabelledBlock.ExitLabelName;
+			while (!stack.IsEmpty) {
+				var tos = stack.Peek();
+				stack = stack.Pop();
+				exitLabel = tos.ExitLabel;
+
+				var stmt = tos.Block.Statements[tos.Index];
+				var lbl = stmt as JsLabelledStatement;
+				if (lbl != null) {
+					if (dequeued && first) {
+						// First statement in the new block
+						stmt = lbl.Statement;
+					}
+					else {
+						// A label that terminates the current block.
+						Enqueue(stack.Push(new StackEntry(tos.Block, tos.Index, tos.ExitLabel)), lbl.Label);
+						if (currentBlock.Count == 0 || IsNextStatementReachable(currentBlock[currentBlock.Count - 1]))
+							currentBlock.Add(new JsGotoStatement(lbl.Label));
+						return currentBlock;
+					}
+				}
+
+				if (tos.Index < tos.Block.Statements.Count - 1)
+					stack = stack.Push(new StackEntry(tos.Block, tos.Index + 1, tos.ExitLabel));
+
+				if (ContainsLabels(stmt)) {
+					if (stmt is JsBlockStatement) {
+						stack = stack.Push(new StackEntry((JsBlockStatement)stmt, 0, tos.ExitLabel));
+					}
+					else {
+						var ifst = (JsIfStatement)stmt;
+						string labelAfter;
+						bool needInsertLabelAfter = false;
+						if (tos.Index < tos.Block.Statements.Count - 1) {
+							if (tos.Block.Statements[tos.Index + 1] is JsLabelledStatement) {
+								labelAfter = (tos.Block.Statements[tos.Index + 1] as JsLabelledStatement).Label;
+							}
+							else {
+								labelAfter = CreateAnonymousBlockName();
+								needInsertLabelAfter = true;
+							}
+						}
+						else {
+							labelAfter = tos.ExitLabel;
+						}
+
+						var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Then, 0, labelAfter)), false);
+						var elsePart = ifst.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Else, 0, labelAfter)), false) : null;
+
+						currentBlock.Add(new JsIfStatement(ifst.Test, new JsBlockStatement(thenPart), elsePart != null ? new JsBlockStatement(elsePart) : null));
+						if (elsePart == null)
+							currentBlock.Add(new JsGotoStatement(exitLabel));
+
+						if (needInsertLabelAfter) {
+							Enqueue(stack, labelAfter);
+							return currentBlock;
+						}
+					}
+				}
+				else {
+					currentBlock.Add(stmt);	// No rewrites necessary in this statement.
+				}
+
+				first = false;
+			}
+			if (currentBlock.Count == 0 || IsNextStatementReachable(currentBlock[currentBlock.Count - 1]))
+				currentBlock.Add(new JsGotoStatement(exitLabel));
+
+			return currentBlock;
+		}
+/*
+		private bool HandleBlock(JsBlockStatement statement, string exitLabel) {
+			var stmts = statement.Statements;
+			for (int i = 0; i < stmts.Count; i++) {
+				var lbl = stmts[i] as JsLabelledStatement;
+				JsStatement stmt;
+				if (lbl != null) {
+				}
+				else {
+					stmt = stmts[i];	// Not a labelled statement
+				}
+
+				if (ContainsLabels(stmt)) {
+					_currentStack = _currentStack.Push(new StackEntry(statement, i + 1, exitLabel));
+					bool didRewrite = Visit(stmt, data);
+					_currentStack = _currentStack.Pop();
+					if (didRewrite) {
+						if (i < stmts.Count - 1) {
+							string label = (stmts[i + 1] is JsLabelledStatement ? ((JsLabelledStatement)stmts[i + 1]).Label : CreateAnonymousBlockName());
+							Enqueue(statement, i + 1, label, data);
+						}
+						return true;
+					}
+				}
+				else {
+					_currentBlock.Add(stmt);
+				}
+			}
+		}
+		*
+
+		public bool Visit(JsBlockStatement statement, string data) {
+		}*/
+	}
+}
+
+#if false
 	internal class LabelledBlockGatherer : IStatementVisitor<bool, string> {
 		class ContainsLabelsVisitor : RewriterVisitorBase<object> {
 			bool _result;
@@ -309,3 +501,4 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 	}
 }
+#endif

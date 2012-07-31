@@ -54,20 +54,28 @@ goto $exit;
 {
 	a;
 	b;
-	goto lbl1;
+	goto lbl2;
 lbl1:
 	c;
 	d;
+lbl2:
+	e;
+	f;
 }", 
 @"
 --$0
 a;
 b;
-goto lbl1;
+goto lbl2;
 
 --lbl1
 c;
 d;
+goto lbl2;
+
+--lbl2
+e;
+f;
 goto $exit;
 ");
 		}
@@ -79,12 +87,20 @@ goto $exit;
 	a;
 	b;
 	throw c;
+lbl1:
+	d;
+	e;
 }", 
 @"
 --$0
 a;
 b;
 throw c;
+
+--lbl1
+d;
+e;
+goto $exit;
 ");
 		}
 		
@@ -95,12 +111,20 @@ throw c;
 	a;
 	b;
 	return;
+lbl1:
+	c;
+	d;
 }", 
 @"
 --$0
 a;
 b;
 return;
+
+--lbl1
+c;
+d;
+goto $exit;
 ");
 		}
 
@@ -179,6 +203,70 @@ goto $exit;
 --lbl1
 c;
 d;
+goto $exit;
+");
+		}
+
+		[Test]
+		public void IfStatement2() {
+			AssertCorrect(@"
+{
+	if (x) {
+		a;
+		b;
+	lbl1:
+		c;
+		d;
+	}
+	e;
+}", 
+@"
+--$0
+if (x) {
+	a;
+	b;
+	goto lbl1;
+}
+goto $1;
+
+--$1
+e;
+goto $exit;
+
+--lbl1
+c;
+d;
+goto $1;
+");
+		}
+
+		[Test]
+		public void IfStatement3() {
+			AssertCorrect(@"
+if (x) {
+	a;
+	b;
+lbl1:
+	c;
+	d;
+}
+lbl2: e;", 
+@"
+--$0
+if (x) {
+	a;
+	b;
+	goto lbl1;
+}
+goto lbl2;
+
+--lbl1
+c;
+d;
+goto lbl2;
+
+--lbl2
+e;
 goto $exit;
 ");
 		}
