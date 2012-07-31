@@ -476,5 +476,134 @@ k;
 goto $3;
 ");
 		}
+
+		[Test]
+		public void DoWhile1() {
+			AssertCorrect(@"
+{
+	do {
+		a;
+		lbl1:
+		b;
+	} while (c);
+	d;
+}", 
+@"
+--$0
+a;
+goto lbl1;
+
+--$1
+if (c) {
+	goto $0;
+}
+d;
+goto $exit;
+
+--lbl1
+b;
+goto $1;
+");
+		}
+
+		[Test]
+		public void DoWhile2() {
+			AssertCorrect(@"
+{
+	x;
+	do {
+		a;
+		lbl1:
+		b;
+	} while (c);
+	d;
+}", 
+@"
+--$0
+x;
+goto $1;
+
+--$1
+a;
+goto lbl1;
+
+--$2
+if (c) {
+	goto $1;
+}
+d;
+goto $exit;
+
+--lbl1
+b;
+goto $2;
+");
+		}
+
+		[Test]
+		public void DoWhile3() {
+			AssertCorrect(@"
+{
+	x;
+	before:
+	do {
+		a;
+		lbl1:
+		b;
+	} while (c);
+	d;
+}", 
+@"
+--$0
+x;
+goto before;
+
+--$1
+if (c) {
+	goto before;
+}
+d;
+goto $exit;
+
+--before
+a;
+goto lbl1;
+
+--lbl1
+b;
+goto $1;
+");
+		}
+
+		[Test]
+		public void DoWhileWithBreak() {
+			AssertCorrect(@"
+{
+	a;
+	b;
+lbl1:
+	c;
+	d;
+lbl2:
+	e;
+	f;
+}", 
+@"
+--$0
+a;
+b;
+goto lbl1;
+
+--lbl1
+c;
+d;
+goto lbl2;
+
+--lbl2
+e;
+f;
+goto $exit;
+");
+		}
 	}
 }

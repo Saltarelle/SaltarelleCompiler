@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.Utils;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.GotoRewrite {
@@ -115,6 +116,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return new ContainsLabelsVisitor().Process(statement);
 		}
 
+		private ImmutableStack<StackEntry> PushFollowing(ImmutableStack<StackEntry> stack, JsBlockStatement block, int currentIndex) {
+			return currentIndex < block.Statements.Count - 1 ? stack.Push(new StackEntry(block, currentIndex + 1)) : stack;
+		}
+
 		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
 			var startBlockName = CreateAnonymousBlockName();
 			_processedStatements = new HashSet<JsStatement>(ReferenceComparer.Instance);
@@ -126,13 +131,13 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			while (_outstandingBlocks.Count > 0) {
 				var current = _outstandingBlocks.Dequeue();
 				Console.WriteLine("Dequeue " + current.Stack.Peek().Block.Statements[current.Stack.Peek().Index].DebugToString());
-				result.Add(new LabelledBlock(current.Name, Handle(current.Stack, true, current.ReturnLabel)));
+				result.Add(new LabelledBlock(current.Name, Handle(current.Stack, true, current.Name, current.ReturnLabel)));
 			}
 
 			return result;
 		}
 
-		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, bool dequeued, string returnLabel) {
+		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, bool dequeued, string blockName, string returnLabel) {
 			var currentBlock = new List<JsStatement>();
 			bool first = true;
 			while (!stack.IsEmpty) {
@@ -155,44 +160,27 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 				}
 
-				if (tos.Index < tos.Block.Statements.Count - 1)
-					stack = stack.Push(new StackEntry(tos.Block, tos.Index + 1));
+				//if (tos.Index < tos.Block.Statements.Count - 1)
+				//	stack = stack.Push(new StackEntry(tos.Block, tos.Index + 1));
 
 				if (ContainsLabels(stmt)) {
 					if (stmt is JsBlockStatement) {
-						stack = stack.Push(new StackEntry((JsBlockStatement)stmt, 0));
+						stack = PushFollowing(stack, tos.Block, tos.Index).Push(new StackEntry((JsBlockStatement)stmt, 0));
+					}
+					else if (stmt is JsIfStatement) {
+						if (!HandleIfStatement((JsIfStatement)stmt, tos.Block, tos.Index, returnLabel, ref stack, blockName, currentBlock))
+							return currentBlock;
+					}
+					else if (stmt is JsDoWhileStatement) {
+						if (!HandleDoWhileStatement((JsDoWhileStatement)stmt, tos.Block, tos.Index, returnLabel, ref stack, blockName, currentBlock))
+							return currentBlock;
 					}
 					else {
-						var ifst = (JsIfStatement)stmt;
-						string labelAfter;
-						bool needInsertLabelAfter = false;
-						if (tos.Index < tos.Block.Statements.Count - 1) {
-							if (tos.Block.Statements[tos.Index + 1] is JsLabelledStatement) {
-								labelAfter = (tos.Block.Statements[tos.Index + 1] as JsLabelledStatement).Label;
-							}
-							else {
-								labelAfter = CreateAnonymousBlockName();
-								needInsertLabelAfter = true;
-							}
-						}
-						else {
-							labelAfter = returnLabel;
-						}
-
-						var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Then, 0)), false, labelAfter);
-						var elsePart = ifst.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(ifst.Else, 0)), false, labelAfter) : null;
-
-						currentBlock.Add(new JsIfStatement(ifst.Test, new JsBlockStatement(thenPart), elsePart != null ? new JsBlockStatement(elsePart) : null));
-						if (elsePart == null)
-							currentBlock.Add(new JsGotoStatement(labelAfter));
-
-						if (needInsertLabelAfter) {
-							Enqueue(stack, labelAfter, returnLabel);
-							return currentBlock;
-						}
+						throw new NotSupportedException("Statement " + stmt + " cannot contain labels.");
 					}
 				}
 				else {
+					stack = PushFollowing(stack, tos.Block, tos.Index);
 					currentBlock.Add(stmt);	// No rewrites necessary in this statement.
 				}
 
@@ -202,6 +190,55 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				currentBlock.Add(new JsGotoStatement(returnLabel));
 
 			return currentBlock;
+		}
+
+		private bool HandleIfStatement(JsIfStatement stmt, JsBlockStatement parent, int index, string returnLabel, ref ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
+			string labelAfter;
+			bool needInsertLabelAfter = false;
+			if (index < parent.Statements.Count - 1) {
+				if (parent.Statements[index + 1] is JsLabelledStatement) {
+					labelAfter = (parent.Statements[index + 1] as JsLabelledStatement).Label;
+				}
+				else {
+					labelAfter = CreateAnonymousBlockName();
+					needInsertLabelAfter = true;
+				}
+			}
+			else {
+				labelAfter = returnLabel;
+			}
+
+			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), false, blockName, labelAfter);
+			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), false, blockName, labelAfter) : null;
+
+			currentBlock.Add(new JsIfStatement(stmt.Test, new JsBlockStatement(thenPart), elsePart != null ? new JsBlockStatement(elsePart) : null));
+			if (elsePart == null)
+				currentBlock.Add(new JsGotoStatement(labelAfter));
+
+			if (needInsertLabelAfter) {
+				stack = PushFollowing(stack, parent, index);
+				Enqueue(stack, labelAfter, returnLabel);
+				return false;
+			}
+
+			return true;
+		}
+
+		private bool HandleDoWhileStatement(JsDoWhileStatement stmt, JsBlockStatement parent, int index, string returnLabel, ref ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
+			if (currentBlock.Count > 0) {
+				// We have to create a new block for the statement.
+				var lbl = parent.Statements[index] as JsLabelledStatement;
+				string topOfLoopLabelName = lbl != null ? lbl.Label : CreateAnonymousBlockName();
+				Enqueue(stack.Push(new StackEntry(parent, index)), topOfLoopLabelName, returnLabel);
+				currentBlock.Add(new JsGotoStatement(topOfLoopLabelName));
+				return false;
+			}
+			else {
+				string beforeConditionLabel = CreateAnonymousBlockName();
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), false, blockName, beforeConditionLabel));
+				Enqueue(PushFollowing(stack, parent, index).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, returnLabel);
+				return false;
+			}
 		}
 /*
 		private bool HandleBlock(JsBlockStatement statement, string exitLabel) {
