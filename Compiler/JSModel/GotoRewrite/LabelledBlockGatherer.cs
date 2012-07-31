@@ -160,9 +160,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 				}
 
-				//if (tos.Index < tos.Block.Statements.Count - 1)
-				//	stack = stack.Push(new StackEntry(tos.Block, tos.Index + 1));
-
 				if (ContainsLabels(stmt)) {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos.Block, tos.Index).Push(new StackEntry((JsBlockStatement)stmt, 0));
@@ -215,8 +212,9 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			if (elsePart == null)
 				currentBlock.Add(new JsGotoStatement(labelAfter));
 
+			stack = PushFollowing(stack, parent, index);
+
 			if (needInsertLabelAfter) {
-				stack = PushFollowing(stack, parent, index);
 				Enqueue(stack, labelAfter, returnLabel);
 				return false;
 			}
