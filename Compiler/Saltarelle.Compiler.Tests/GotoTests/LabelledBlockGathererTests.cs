@@ -73,6 +73,22 @@ goto $exit;
 		}
 
 		[Test]
+		public void BlockEndingWithThrowIsNotDoubleConnected() {
+			AssertCorrect(@"
+{
+	a;
+	b;
+	throw c;
+}", 
+@"
+--$0
+a;
+b;
+throw c;
+");
+		}
+		
+		[Test]
 		public void BlockEndingWithReturnIsNotDoubleConnected() {
 			AssertCorrect(@"
 {
@@ -119,15 +135,21 @@ b;
 goto lbl1;
 
 --lbl1
-c;
+{
+	c;
+}
 d;
 goto lbl2;
 
 --lbl2
 e;
-f;
-g;
-goto lbl4;
+{
+	f;
+	{
+		g;
+		goto lbl4;
+	}
+}
 
 --lbl4
 h;

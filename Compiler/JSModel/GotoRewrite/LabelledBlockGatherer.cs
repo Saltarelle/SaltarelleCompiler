@@ -112,7 +112,13 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		private bool IsNextStatementReachable(JsStatement current) {
-			return !(current is JsReturnStatement || current is JsGotoStatement);
+			while (current is JsBlockStatement) {
+				var block = (JsBlockStatement)current;
+				if (block.Statements.Count == 0)
+					return true;
+				current = block.Statements[block.Statements.Count - 1];
+			}
+			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement);
 		}
 
 		private void Enqueue(JsBlockStatement block, int i, string label, string returnLabel) {
@@ -120,14 +126,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return;
 			Console.WriteLine("Enqueue " + block.Statements[i].DebugToString());
 			_outstandingBlocks.Enqueue(Tuple.Create(_currentStack.Push(Tuple.Create(block, i)), label, returnLabel));
-			_processedStatements.Add(block.Statements[i]);
-		}
-
-		private void EnqueueScanOnly(JsBlockStatement block, int i) {
-			if (_processedStatements.Contains(block.Statements[i]))
-				return;
-			Console.WriteLine("Enqueue " + block.Statements[i].DebugToString());
-			_outstandingBlocks.Enqueue(Tuple.Create(_currentStack.Push(Tuple.Create(block, i)), (string)null, (string)null));
 			_processedStatements.Add(block.Statements[i]);
 		}
 
@@ -165,35 +163,13 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			// The visitor sometimes creates some unnecessary blocks - remove them.
-//			var referenced = new FindReferencedLabelsVisitor().FindReferencedLabels(result.SelectMany(b => b.Statements));
-//			referenced.Add(startBlockName);
-//			result.RemoveAll(b => !referenced.Contains(b.Name));
+			var referenced = new FindReferencedLabelsVisitor().FindReferencedLabels(result.SelectMany(b => b.Statements));
+			referenced.Add(startBlockName);
+			result.RemoveAll(b => !referenced.Contains(b.Name));
 
 			return result;
 		}
-/*
-		private void NewBlock(string name = null, bool connect = false) {
-			string newName = name ?? string.Format(CultureInfo.InvariantCulture, "${0}", _currentAnonymousBlockIndex++);
-			if (_currentBlock != null) {
-				if (connect)
-					_currentBlock.Add(new JsGotoStatement(newName));
-				_result.Add(new LabelledBlock(_currentBlockName, _currentBlock));
-			}
-			_currentBlock = new List<JsStatement>();
-			_currentBlockName = newName;
-		}
 
-		public IList<LabelledBlock> Gather(JsStatement statement) {
-			_result = new List<LabelledBlock>();
-			_currentBlock = null;
-			NewBlock(null);
-			bool reachable = Visit(statement, LabelledBlock.ExitLabelName);
-			if (reachable)
-				_currentBlock.Add(new JsGotoStatement(LabelledBlock.ExitLabelName));
-			_result.Add(new LabelledBlock(_currentBlockName, _currentBlock));
-			return _result;
-		}
-		*/
 		public bool Visit(JsStatement statement, string data) {
 			return statement.Accept(this, data);
 		}
@@ -220,105 +196,111 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					stmt = stmts[i];	// Not a labelled statement
 				}
 
-				_currentStack = _currentStack.Push(Tuple.Create(statement, i + 1));
-				bool didRewrite = Visit(stmt, data);
-				_currentStack = _currentStack.Pop();
-				if (didRewrite) {
-					if (i < stmts.Count - 1) {
-						string label = (stmts[i + 1] is JsLabelledStatement ? ((JsLabelledStatement)stmts[i + 1]).Label : CreateAnonymousBlockName());
-						Enqueue(statement, i + 1, label, data);
+				if (new ContainsLabelsVisitor().Process(stmt)) {
+					_currentStack = _currentStack.Push(Tuple.Create(statement, i + 1));
+					bool didRewrite = Visit(stmt, data);
+					_currentStack = _currentStack.Pop();
+					if (didRewrite) {
+						if (i < stmts.Count - 1) {
+							string label = (stmts[i + 1] is JsLabelledStatement ? ((JsLabelledStatement)stmts[i + 1]).Label : CreateAnonymousBlockName());
+							Enqueue(statement, i + 1, label, data);
+						}
+						return true;
 					}
-					return true;
+				}
+				else {
+					_currentBlock.Add(stmt);
 				}
 			}
 			return false;
 		}
 
-		public bool Visit(JsDoWhileStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsForEachInStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsForStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
 		public bool Visit(JsIfStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsSwitchStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsThrowStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsTryCatchFinallyStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsWhileStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsWithStatement statement, string data) {
-			throw new NotImplementedException();
-		}
-
-		public bool Visit(JsLabelledStatement statement, string data) {
-			throw new InvalidOperationException("JsLabelledStatement should be handled above.");
-		}
-
-		public bool Visit(JsGotoStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			var oldStack = _currentStack;
+			try {
+				if (statement.Else == null) {
+				}
+			}
+			finally {
+				_currentStack = oldStack;
+			}
 		}
 
 		public bool Visit(JsFunctionStatement statement, string data) {
-			throw new NotImplementedException();
+			_currentBlock.Add(statement);
+			return false;
+		}
+
+		public bool Visit(JsDoWhileStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsForEachInStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsForStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsSwitchStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsTryCatchFinallyStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsWhileStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsWithStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsLabelledStatement statement, string data) {
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsGotoStatement statement, string data) {
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsYieldReturnStatement statement, string data) {
-			throw new NotSupportedException();
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsYieldBreakStatement statement, string data) {
-			throw new NotSupportedException();
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsComment statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			throw new InvalidOperationException();
+		}
+
+		public bool Visit(JsThrowStatement statement, string data) {
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsBreakStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsContinueStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsEmptyStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsExpressionStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsReturnStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
+			throw new InvalidOperationException();
 		}
 
 		public bool Visit(JsVariableDeclarationStatement statement, string data) {
