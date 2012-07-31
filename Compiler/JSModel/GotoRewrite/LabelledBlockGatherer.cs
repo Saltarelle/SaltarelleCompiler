@@ -53,6 +53,91 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
+		// TODO: This class does not support 'break label' and 'continue label' statements (but we don't generate those).
+		class DoNotEnterLoopsVisitor<T> : RewriterVisitorBase<T> {
+			public override JsStatement Visit(JsForStatement statement, T data) {
+				return statement;
+			}
+
+			public override JsStatement Visit(JsForEachInStatement statement, T data) {
+				return statement;
+			}
+
+			public override JsStatement Visit(JsWhileStatement statement, T data) {
+				return statement;
+			}
+
+			public override JsStatement Visit(JsDoWhileStatement statement, T data) {
+				return statement;
+			}
+
+			public override JsStatement Visit(JsFunctionStatement statement, T data) {
+				return statement;
+			}
+
+			public override JsExpression Visit(JsFunctionDefinitionExpression expression, T data) {
+				return expression;
+			}
+		}
+
+		class ReplaceBreakWithGotoVisitor : DoNotEnterLoopsVisitor<string> {
+			public override JsStatement Visit(JsSwitchStatement statement, string data) {
+				return statement;
+			}
+
+			public override JsStatement Visit(JsBreakStatement statement, string data) {
+				return new JsGotoStatement(data);
+			}
+
+			public JsBlockStatement Process(JsBlockStatement statement, string labelName) {
+				return (JsBlockStatement)Visit(statement, labelName);
+			}
+		}
+
+		class ContainsBreakVisitor : RewriterVisitorBase<object> {
+			bool _result = false;
+
+			public override JsStatement Visit(JsSwitchStatement statement, object data) {
+				return statement;
+			}
+
+			public override JsStatement Visit(JsBreakStatement statement, object data) {
+				_result = true;
+				return statement;
+			}
+
+			public bool Process(JsStatement statement) {
+				_result = false;
+				Visit(statement, null);
+				return _result;
+			}
+		}
+
+		class ReplaceContinueWithGotoVisitor : DoNotEnterLoopsVisitor<string> {
+			public override JsStatement Visit(JsContinueStatement statement, string data) {
+				return new JsGotoStatement(data);
+			}
+
+			public JsBlockStatement Process(JsBlockStatement statement, string labelName) {
+				return (JsBlockStatement)Visit(statement, labelName);
+			}
+		}
+
+		class ContainsContinueVisitor : RewriterVisitorBase<object> {
+			bool _result = false;
+
+			public override JsStatement Visit(JsContinueStatement statement, object data) {
+				_result = true;
+				return statement;
+			}
+
+			public bool Process(JsStatement statement) {
+				_result = false;
+				Visit(statement, null);
+				return _result;
+			}
+		}
+
 		[DebuggerDisplay("{DebugToString()}")]
 		class StackEntry {
 			public JsBlockStatement Block { get; private set; }
@@ -114,6 +199,14 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 		private bool ContainsLabels(JsStatement statement) {
 			return new ContainsLabelsVisitor().Process(statement);
+		}
+
+		private bool ContainsBreak(JsStatement statement) {
+			return new ContainsBreakVisitor().Process(statement);
+		}
+
+		private bool ContainsContinue(JsStatement statement) {
+			return new ContainsContinueVisitor().Process(statement);
 		}
 
 		private ImmutableStack<StackEntry> PushFollowing(ImmutableStack<StackEntry> stack, JsBlockStatement block, int currentIndex) {
@@ -189,33 +282,34 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return currentBlock;
 		}
 
-		private bool HandleIfStatement(JsIfStatement stmt, JsBlockStatement parent, int index, string returnLabel, ref ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
-			string labelAfter;
-			bool needInsertLabelAfter = false;
+		private Tuple<string, bool> GetLabelAfterStatement(JsBlockStatement parent, int index, string returnLabel) {
 			if (index < parent.Statements.Count - 1) {
 				if (parent.Statements[index + 1] is JsLabelledStatement) {
-					labelAfter = (parent.Statements[index + 1] as JsLabelledStatement).Label;
+					return Tuple.Create((parent.Statements[index + 1] as JsLabelledStatement).Label, false);
 				}
 				else {
-					labelAfter = CreateAnonymousBlockName();
-					needInsertLabelAfter = true;
+					return Tuple.Create(CreateAnonymousBlockName(), true);
 				}
 			}
 			else {
-				labelAfter = returnLabel;
+				return Tuple.Create(returnLabel, false);
 			}
+		}
 
-			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), false, blockName, labelAfter);
-			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), false, blockName, labelAfter) : null;
+		private bool HandleIfStatement(JsIfStatement stmt, JsBlockStatement parent, int index, string returnLabel, ref ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
+			var labelAfter = GetLabelAfterStatement(parent, index, returnLabel);
+
+			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), false, blockName, labelAfter.Item1);
+			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), false, blockName, labelAfter.Item1) : null;
 
 			currentBlock.Add(new JsIfStatement(stmt.Test, new JsBlockStatement(thenPart), elsePart != null ? new JsBlockStatement(elsePart) : null));
 			if (elsePart == null)
-				currentBlock.Add(new JsGotoStatement(labelAfter));
+				currentBlock.Add(new JsGotoStatement(labelAfter.Item1));
 
 			stack = PushFollowing(stack, parent, index);
 
-			if (needInsertLabelAfter) {
-				Enqueue(stack, labelAfter, returnLabel);
+			if (labelAfter.Item2) {
+				Enqueue(stack, labelAfter.Item1, returnLabel);
 				return false;
 			}
 
@@ -233,8 +327,28 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 			else {
 				string beforeConditionLabel = CreateAnonymousBlockName();
-				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), false, blockName, beforeConditionLabel));
-				Enqueue(PushFollowing(stack, parent, index).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, returnLabel);
+				JsBlockStatement body;
+				Tuple<string, bool> afterLoopLabel;
+				if (ContainsBreak(stmt.Body)) {
+					afterLoopLabel = GetLabelAfterStatement(parent, index, returnLabel);
+					body = new ReplaceBreakWithGotoVisitor().Process(stmt.Body, afterLoopLabel.Item1);
+				}
+				else {
+					afterLoopLabel = Tuple.Create(returnLabel, false);
+					body = stmt.Body;
+				}
+				body = new ReplaceContinueWithGotoVisitor().Process(stmt.Body, beforeConditionLabel);
+
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(body, 0)), false, blockName, beforeConditionLabel));
+
+				if (afterLoopLabel.Item2) {
+					Enqueue(PushFollowing(stack, parent, index), afterLoopLabel.Item1, returnLabel);
+					Enqueue(stack.Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, afterLoopLabel.Item1);
+				}
+				else {
+					Enqueue(PushFollowing(stack, parent, index).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, returnLabel);
+				}
+
 				return false;
 			}
 		}
