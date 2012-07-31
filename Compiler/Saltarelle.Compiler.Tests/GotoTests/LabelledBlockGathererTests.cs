@@ -49,6 +49,22 @@ goto $exit;
 		}
 
 		[Test]
+		public void FirstStatementIsLabel() {
+			AssertCorrect(@"
+{
+	lbl: a;
+}", 
+@"
+--$0
+goto lbl;
+
+--lbl
+a;
+goto $exit;
+");
+		}
+
+		[Test]
 		public void BlockEndingWithGotoIsNotDoubleConnected() {
 			AssertCorrect(@"
 {
@@ -697,6 +713,648 @@ b;
 goto $1;
 c;
 goto $1;
+");
+		}
+
+		[Test]
+		public void While1() {
+			AssertCorrect(@"
+{
+	while (a) {
+		b;
+		lbl1:
+		c;
+	}
+	d;
+}", 
+@"
+--$0
+if (!a) {
+	goto $1;
+}
+b;
+goto lbl1;
+
+--$1
+d;
+goto $exit;
+
+--lbl1
+c;
+goto $0;
+");
+		}
+
+		[Test]
+		public void While2() {
+			AssertCorrect(@"
+{
+	a;
+	while (b) {
+		c;
+		lbl1:
+		d;
+	}
+	e;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $2;
+}
+c;
+goto lbl1;
+
+--$2
+e;
+goto $exit;
+
+--lbl1
+d;
+goto $1;
+");
+		}
+
+		[Test]
+		public void While3() {
+			AssertCorrect(@"
+{
+	while (a) {
+		b;
+		lbl1:
+		c;
+	}
+}", 
+@"
+--$0
+if (!a) {
+	goto $exit;
+}
+b;
+goto lbl1;
+
+--lbl1
+c;
+goto $0;
+");
+		}
+
+		[Test]
+		public void While4() {
+			AssertCorrect(@"
+{
+	while (a) {
+		b;
+		lbl1:
+		c;
+	}
+	lbl2: d;
+}", 
+@"
+--$0
+if (!a) {
+	goto lbl2;
+}
+b;
+goto lbl1;
+
+--lbl1
+c;
+goto $0;
+
+--lbl2
+d;
+goto $exit;
+");
+		}
+
+		[Test]
+		public void WhileWithBreak() {
+			AssertCorrect(@"
+{
+	while (a) {
+		b;
+		lbl1:
+		c;
+		break;
+	}
+	d;
+}", 
+@"
+--$0
+if (!a) {
+	goto $1;
+}
+b;
+goto lbl1;
+
+--$1
+d;
+goto $exit;
+
+--lbl1
+c;
+goto $1;
+");
+		}
+
+		[Test]
+		public void WhileWithContinue() {
+			AssertCorrect(@"
+{
+	while (a) {
+		b;
+		lbl1:
+		c;
+		continue;
+	}
+	d;
+}", 
+@"
+--$0
+if (!a) {
+	goto $1;
+}
+b;
+goto lbl1;
+
+--$1
+d;
+goto $exit;
+
+--lbl1
+c;
+goto $0;
+");
+		}
+
+		[Test]
+		public void ForStatement1() {
+			AssertCorrect(@"
+{
+	for (a; b; c) {
+		d;
+		lbl1:
+		e;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $3;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--$3
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ForStatement2() {
+			AssertCorrect(@"
+{
+	for (a; b; c) {
+		d;
+		lbl1:
+		e;
+	}
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $exit;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ForStatement3() {
+			AssertCorrect(@"
+{
+	for (a; b; c) {
+		d;
+		lbl1:
+		e;
+	}
+	lbl2: f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto lbl2;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--lbl1
+e;
+goto $2;
+
+--lbl2
+f;
+goto $exit;
+");
+		}
+
+		[Test]
+		public void ForStatementWithoutInitializer1() {
+			AssertCorrect(@"
+{
+	a;
+	for (; b; c) {
+		d;
+		lbl1:
+		e;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $3;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--$3
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ForStatementWithoutInitializer2() {
+			AssertCorrect(@"
+{
+	for (; b; c) {
+		d;
+		lbl1:
+		e;
+	}
+	f;
+}", 
+@"
+--$0
+if (!b) {
+	goto $2;
+}
+d;
+goto lbl1;
+
+--$1
+c;
+goto $0;
+
+--$2
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+");
+		}
+
+		[Test]
+		public void ForStatementWithoutInitializer3() {
+			AssertCorrect(@"
+{
+	a;
+	lbl2:
+	for (; b; c) {
+		d;
+		lbl1:
+		e;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto lbl2;
+
+--$1
+c;
+goto lbl2;
+
+--$2
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+
+--lbl2
+if (!b) {
+	goto $2;
+}
+d;
+goto lbl1;
+");
+		}
+
+		[Test]
+		public void ForStatementWithoutTest() {
+			AssertCorrect(@"
+{
+	for (a; ; c) {
+		d;
+		lbl1:
+		e;
+	}
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ForStatementWithoutIncrementer() {
+			AssertCorrect(@"
+{
+	for (a; b; ) {
+		d;
+		lbl1:
+		e;
+	}
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $exit;
+}
+d;
+goto lbl1;
+
+--lbl1
+e;
+goto $1;
+");
+		}
+
+		[Test]
+		public void ForEverStatement() {
+			AssertCorrect(@"
+{
+	for (;; ) {
+		d;
+		lbl1:
+		e;
+	}
+}", 
+@"
+--$0
+d;
+goto lbl1;
+
+--lbl1
+e;
+goto $0;
+");
+		}
+
+		[Test]
+		public void ContinueInForStatement() {
+			AssertCorrect(@"
+{
+	for (a; b; c) {
+		d;
+		lbl1:
+		e;
+		continue;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $3;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--$3
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ContinueInForStatementWitoutIncrementer() {
+			AssertCorrect(@"
+{
+	for (a; b; ) {
+		d;
+		lbl1:
+		e;
+		continue;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $2;
+}
+d;
+goto lbl1;
+
+--$2
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+");
+		}
+
+		[Test]
+		public void ContinueInForStatementWitoutTest() {
+			AssertCorrect(@"
+{
+	for (a; ; c) {
+		d;
+		lbl1:
+		e;
+		continue;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--$3
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ContinueInForEverStatement() {
+			AssertCorrect(@"
+{
+	for (;;) {
+		d;
+		lbl1:
+		e;
+		continue;
+	}
+	f;
+}", 
+@"
+--$0
+d;
+goto lbl1;
+
+--$1
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $0;
+");
+		}
+
+		[Test]
+		public void BreakInForStatement() {
+			AssertCorrect(@"
+{
+	for (a; b; c) {
+		d;
+		lbl1:
+		e;
+		break;
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $3;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--$3
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $3;
 ");
 		}
 	}

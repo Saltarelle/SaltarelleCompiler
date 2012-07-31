@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public JsStatement InitStatement { get; private set; }
         public JsExpression ConditionExpression { get; private set; }
         public JsExpression IteratorExpression { get; private set; }
-        public JsStatement Body { get; private set; }
+        public JsBlockStatement Body { get; private set; }
 
         public JsForStatement(JsStatement initStatement, JsExpression conditionExpression, JsExpression iteratorExpression, JsStatement body) {
             if (initStatement == null) throw new ArgumentNullException("initStatement");
@@ -22,7 +22,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
             InitStatement       = initStatement;
             ConditionExpression = conditionExpression;
             IteratorExpression  = iteratorExpression;
-            Body                = body;
+            Body                = JsBlockStatement.MakeBlock(body);
         }
 
         [System.Diagnostics.DebuggerStepThrough]
