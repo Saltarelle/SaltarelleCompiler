@@ -257,16 +257,29 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos.Block, tos.Index).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
-					else if (stmt is JsIfStatement) {
-						if (!HandleIfStatement((JsIfStatement)stmt, tos.Block, tos.Index, returnLabel, ref stack, blockName, currentBlock))
-							return currentBlock;
-					}
-					else if (stmt is JsDoWhileStatement) {
-						if (!HandleDoWhileStatement((JsDoWhileStatement)stmt, tos.Block, tos.Index, returnLabel, ref stack, blockName, currentBlock))
-							return currentBlock;
-					}
 					else {
-						throw new NotSupportedException("Statement " + stmt + " cannot contain labels.");
+						if (stmt is JsIfStatement) {
+							if (!HandleIfStatement((JsIfStatement)stmt, tos.Block, tos.Index, returnLabel, stack, blockName, currentBlock))
+								return currentBlock;
+						}
+						else if (stmt is JsDoWhileStatement) {
+							if (!HandleDoWhileStatement((JsDoWhileStatement)stmt, tos.Block, tos.Index, returnLabel, stack, blockName, currentBlock))
+								return currentBlock;
+						}
+						else if (stmt is JsWhileStatement) {
+							throw new NotImplementedException();
+						}
+						else if (stmt is JsForStatement) {
+							throw new NotImplementedException();
+						}
+						else if (stmt is JsSwitchStatement) {
+							throw new NotImplementedException();
+						}
+						else {
+							throw new NotSupportedException("Statement " + stmt + " cannot contain labels.");
+						}
+
+						stack = PushFollowing(stack, tos.Block, tos.Index);
 					}
 				}
 				else {
@@ -296,7 +309,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
-		private bool HandleIfStatement(JsIfStatement stmt, JsBlockStatement parent, int index, string returnLabel, ref ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
+		private bool HandleIfStatement(JsIfStatement stmt, JsBlockStatement parent, int index, string returnLabel, ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
 			var labelAfter = GetLabelAfterStatement(parent, index, returnLabel);
 
 			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), false, blockName, labelAfter.Item1);
@@ -306,17 +319,15 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			if (elsePart == null)
 				currentBlock.Add(new JsGotoStatement(labelAfter.Item1));
 
-			stack = PushFollowing(stack, parent, index);
-
 			if (labelAfter.Item2) {
-				Enqueue(stack, labelAfter.Item1, returnLabel);
+				Enqueue(PushFollowing(stack, parent, index), labelAfter.Item1, returnLabel);
 				return false;
 			}
 
 			return true;
 		}
 
-		private bool HandleDoWhileStatement(JsDoWhileStatement stmt, JsBlockStatement parent, int index, string returnLabel, ref ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
+		private bool HandleDoWhileStatement(JsDoWhileStatement stmt, JsBlockStatement parent, int index, string returnLabel, ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
 			if (currentBlock.Count > 0) {
 				// We have to create a new block for the statement.
 				var lbl = parent.Statements[index] as JsLabelledStatement;
@@ -337,7 +348,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					afterLoopLabel = Tuple.Create(returnLabel, false);
 					body = stmt.Body;
 				}
-				body = new ReplaceContinueWithGotoVisitor().Process(stmt.Body, beforeConditionLabel);
+				body = new ReplaceContinueWithGotoVisitor().Process(body, beforeConditionLabel);
 
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(body, 0)), false, blockName, beforeConditionLabel));
 
@@ -352,317 +363,5 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return false;
 			}
 		}
-/*
-		private bool HandleBlock(JsBlockStatement statement, string exitLabel) {
-			var stmts = statement.Statements;
-			for (int i = 0; i < stmts.Count; i++) {
-				var lbl = stmts[i] as JsLabelledStatement;
-				JsStatement stmt;
-				if (lbl != null) {
-				}
-				else {
-					stmt = stmts[i];	// Not a labelled statement
-				}
-
-				if (ContainsLabels(stmt)) {
-					_currentStack = _currentStack.Push(new StackEntry(statement, i + 1, exitLabel));
-					bool didRewrite = Visit(stmt, data);
-					_currentStack = _currentStack.Pop();
-					if (didRewrite) {
-						if (i < stmts.Count - 1) {
-							string label = (stmts[i + 1] is JsLabelledStatement ? ((JsLabelledStatement)stmts[i + 1]).Label : CreateAnonymousBlockName());
-							Enqueue(statement, i + 1, label, data);
-						}
-						return true;
-					}
-				}
-				else {
-					_currentBlock.Add(stmt);
-				}
-			}
-		}
-		*
-
-		public bool Visit(JsBlockStatement statement, string data) {
-		}*/
 	}
 }
-
-#if false
-	internal class LabelledBlockGatherer : IStatementVisitor<bool, string> {
-		class ContainsLabelsVisitor : RewriterVisitorBase<object> {
-			bool _result;
-
-			public override JsStatement Visit(JsLabelledStatement statement, object data) {
-				_result = true;
-				return statement;
-			}
-
-			public bool Process(JsStatement statement) {
-				_result = false;
-				Visit(statement, null);
-				return _result;
-			}
-		}
-
-		class FindReferencedLabelsVisitor : RewriterVisitorBase<object> {
-			HashSet<string> _result;
-
-			public override JsStatement Visit(JsGotoStatement statement, object data) {
-				_result.Add(statement.TargetLabel);
-				return statement;
-			}
-
-			public HashSet<string> FindReferencedLabels(IEnumerable<JsStatement> statements) {
-				_result = new HashSet<string>();
-				foreach (var s in statements)
-					Visit(s, null);
-				return _result;
-			}
-		}
-/*
-		class FindLabelLocationsVisitor : RewriterVisitorBase<object> {
-			private ImmutableStack<Tuple<JsBlockStatement, int>> _currentStack;
-			private List<Tuple<ImmutableStack<Tuple<JsBlockStatement, int>>, string>> _result;
-
-			public override JsStatement Visit(JsBlockStatement statement, object data) {
-				_currentStack = _currentStack.Push(Tuple.Create(statement, 0));
-				try {
-					var stmts = statement.Statements;
-					for (int i = 0; i < stmts.Count; i++) {
-						_currentStack = _currentStack.Pop().Push(Tuple.Create(statement, i + 1));
-
-						var lbl = stmts[i] as JsLabelStatement;
-						if (lbl != null) {
-							_result.Add(Tuple.Create(_currentStack.Pop().Push(Tuple.Create(statement, i + 1)), lbl.Name));
-						}
-						else {
-							_currentStack = _currentStack.Pop().Push(Tuple.Create(statement, i + 1));
-							Visit(stmts[i], data);
-						}
-					}
-					return statement;
-				}
-				finally {
-					_currentStack = _currentStack.Pop();
-				}
-			}
-
-			public List<Tuple<ImmutableStack<Tuple<JsBlockStatement, int>>, string>> Process(JsBlockStatement statement) {
-				_currentStack = ImmutableStack<Tuple<JsBlockStatement, int>>.Empty;
-				_result = new List<Tuple<ImmutableStack<Tuple<JsBlockStatement, int>>, string>>();
-				Visit(statement, null);
-				return _result;
-			}
-		}
-		*/
-		int _currentAnonymousBlockIndex;
-		List<JsStatement> _currentBlock;
-		string _currentBlockName;
-		ImmutableStack<Tuple<JsBlockStatement, int>> _currentStack;
-		Queue<Tuple<ImmutableStack<Tuple<JsBlockStatement, int>>, string, string>> _outstandingBlocks = new Queue<Tuple<ImmutableStack<Tuple<JsBlockStatement, int>>, string, string>>();
-		HashSet<JsStatement> _processedStatements;
-
-		private string CreateAnonymousBlockName() {
-			return string.Format(CultureInfo.InvariantCulture, "${0}", _currentAnonymousBlockIndex++);
-		}
-
-		private bool IsNextStatementReachable(JsStatement current) {
-			while (current is JsBlockStatement) {
-				var block = (JsBlockStatement)current;
-				if (block.Statements.Count == 0)
-					return true;
-				current = block.Statements[block.Statements.Count - 1];
-			}
-			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement);
-		}
-
-		private void Enqueue(JsBlockStatement block, int i, string label, string returnLabel) {
-			if (_processedStatements.Contains(block.Statements[i]))
-				return;
-			Console.WriteLine("Enqueue " + block.Statements[i].DebugToString());
-			_outstandingBlocks.Enqueue(Tuple.Create(_currentStack.Push(Tuple.Create(block, i)), label, returnLabel));
-			_processedStatements.Add(block.Statements[i]);
-		}
-
-		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
-			var startBlockName = CreateAnonymousBlockName();
-			_processedStatements = new HashSet<JsStatement>(ReferenceComparer.Instance);
-			_outstandingBlocks = new Queue<Tuple<ImmutableStack<Tuple<JsBlockStatement, int>>, string, string>>();
-			_outstandingBlocks.Enqueue(Tuple.Create(ImmutableStack<Tuple<JsBlockStatement, int>>.Empty.Push(Tuple.Create(statement, 0)), startBlockName, LabelledBlock.ExitLabelName));
-
-			var result = new List<LabelledBlock>();
-			int i = 0;
-
-			while (_outstandingBlocks.Count > 0) {
-				var current = _outstandingBlocks.Dequeue();
-				Console.WriteLine("Dequeue " + current.Item1.Peek().Item1.Statements[current.Item1.Peek().Item2].DebugToString());
-
-				_currentStack = current.Item1;
-				_currentBlock = new List<JsStatement>();
-				_currentBlockName = current.Item2;
-				bool reachable = true;
-				while (!_currentStack.IsEmpty) {
-					var tos = _currentStack.Peek();
-					_currentStack = _currentStack.Pop();
-					Visit(tos.Item2 == 0 ? tos.Item1 : new JsBlockStatement(tos.Item1.Statements.Skip(tos.Item2)), current.Item3);
-					reachable = IsNextStatementReachable(_currentBlock[_currentBlock.Count - 1]);
-					if (!reachable)
-						break;	// No need to check the rest of the stack since we can never get there.
-				}
-				if (reachable)
-					_currentBlock.Add(new JsGotoStatement(LabelledBlock.ExitLabelName));
-				result.Add(new LabelledBlock(_currentBlockName, _currentBlock));
-
-				if (i++ > 1000)
-					throw new Exception("Internal error, infinite loop in LabelledBlockGatherer");
-			}
-
-			// The visitor sometimes creates some unnecessary blocks - remove them.
-			var referenced = new FindReferencedLabelsVisitor().FindReferencedLabels(result.SelectMany(b => b.Statements));
-			referenced.Add(startBlockName);
-			result.RemoveAll(b => !referenced.Contains(b.Name));
-
-			return result;
-		}
-
-		public bool Visit(JsStatement statement, string data) {
-			return statement.Accept(this, data);
-		}
-
-		public bool Visit(JsBlockStatement statement, string data) {
-			var stmts = statement.Statements;
-			for (int i = 0; i < stmts.Count; i++) {
-				var lbl = stmts[i] as JsLabelledStatement;
-				JsStatement stmt;
-				if (lbl != null) {
-					if (lbl.Label != _currentBlockName) {
-						// A label that terminates the current block.
-						Enqueue(statement, i, lbl.Label, data);
-						if (_currentBlock.Count == 0 || IsNextStatementReachable(_currentBlock[_currentBlock.Count - 1]))
-							_currentBlock.Add(new JsGotoStatement(lbl.Label));
-						return true;
-					}
-					else {
-						// First statement in the new block
-						stmt = lbl.Statement;
-					}
-				}
-				else {
-					stmt = stmts[i];	// Not a labelled statement
-				}
-
-				if (new ContainsLabelsVisitor().Process(stmt)) {
-					_currentStack = _currentStack.Push(Tuple.Create(statement, i + 1));
-					bool didRewrite = Visit(stmt, data);
-					_currentStack = _currentStack.Pop();
-					if (didRewrite) {
-						if (i < stmts.Count - 1) {
-							string label = (stmts[i + 1] is JsLabelledStatement ? ((JsLabelledStatement)stmts[i + 1]).Label : CreateAnonymousBlockName());
-							Enqueue(statement, i + 1, label, data);
-						}
-						return true;
-					}
-				}
-				else {
-					_currentBlock.Add(stmt);
-				}
-			}
-			return false;
-		}
-
-		public bool Visit(JsIfStatement statement, string data) {
-			var oldStack = _currentStack;
-			try {
-				if (statement.Else == null) {
-				}
-			}
-			finally {
-				_currentStack = oldStack;
-			}
-		}
-
-		public bool Visit(JsFunctionStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
-		}
-
-		public bool Visit(JsDoWhileStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsForEachInStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsForStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsSwitchStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsTryCatchFinallyStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsWhileStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsWithStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsLabelledStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsGotoStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsYieldReturnStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsYieldBreakStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsComment statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsThrowStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsBreakStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsContinueStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsEmptyStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsExpressionStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsReturnStatement statement, string data) {
-			throw new InvalidOperationException();
-		}
-
-		public bool Visit(JsVariableDeclarationStatement statement, string data) {
-			_currentBlock.Add(statement);
-			return false;
-		}
-	}
-}
-#endif
