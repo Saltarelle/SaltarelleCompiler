@@ -1578,8 +1578,120 @@ goto $exit;
 		}
 		
 		[Test]
-		public void SwitchStatementFallthrough() {
-			Assert.Fail("TODO: Test different kind of 'after' labels");
+		public void SwitchStatementFallthrough1() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			c;
+		case d:
+			d;
+			lbl1:
+			e;
+	}
+	f;
+}", 
+@"
+--$0
+if (a === b) {
+	c;
+	goto $2;
+}
+else if (a === d) {
+	goto $2;
+}
+goto $1;
+
+--$1
+f;
+goto $exit;
+
+--$2
+d;
+goto lbl1;
+
+--lbl1
+e;
+goto $1;
+");
+		}
+
+		[Test]
+		public void SwitchStatementFallthrough2() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			c;
+		case d:
+			lbl2: d;
+			lbl1:
+			e;
+	}
+	f;
+}", 
+@"
+--$0
+if (a === b) {
+	c;
+	goto lbl2;
+}
+else if (a === d) {
+	goto lbl2;
+}
+goto $1;
+
+--$1
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+
+--lbl2
+d;
+goto lbl1;
+");
+		}
+
+		[Test]
+		public void SwitchStatementFallthrough3() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			c;
+			lbl1:
+			d;
+		case e:
+			f;
+	}
+	g;
+}", 
+@"
+--$0
+if (a === b) {
+	c;
+	goto lbl1;
+}
+else if (a === d) {
+	goto $2;
+}
+goto $1;
+
+--$1
+g;
+goto $exit;
+
+--$2
+f;
+goto $1;
+
+--lbl1
+d;
+goto $2;
+");
 		}
 
 		[Test]
@@ -1630,7 +1742,154 @@ goto $1;
 
 		[Test]
 		public void SwitchStatementWithDefault() {
-			Assert.Fail("TODO, default in the middle, default grouped with other cases, only default");
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			c;
+			break;
+		case d:
+			e;
+			lbl1:
+			f;
+			break;
+		default:
+			g;
+			lbl2:
+			h;
+			break;
+	}
+	f;
+}", 
+@"
+--$0
+if (a === b) {
+	c;
+}
+else if (a === d) {
+	e;
+	goto lbl1;
+}
+else {
+	g;
+	goto lbl2;
+}
+goto $1;
+
+--$1
+f;
+goto $exit;
+
+--lbl1
+f;
+goto $1;
+
+--lbl2
+h;
+goto $1;
+");
+		}
+
+		[Test]
+		public void SwitchStatementWithDefaultGroupedWithOtherCases() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			c;
+			break;
+		case d:
+			e;
+			lbl1:
+			f;
+			break;
+		case 1:
+		default:
+		case 2:
+			g;
+			lbl2:
+			h;
+			break;
+	}
+	f;
+}", 
+@"
+--$0
+if (a === b) {
+	c;
+}
+else if (a === d) {
+	e;
+	goto lbl1;
+}
+else {
+	g;
+	goto lbl2;
+}
+goto $1;
+
+--$1
+f;
+goto $exit;
+
+--lbl1
+f;
+goto $1;
+
+--lbl2
+h;
+goto $1;
+");
+		}
+
+		[Test]
+		public void SwitchStatementWithDefaultInTheMiddle() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		case b:
+			c;
+			break;
+		default:
+			g;
+			lbl2:
+			h;
+			break;
+		case d:
+			e;
+			lbl1:
+			f;
+			break;
+	}
+	f;
+}", 
+@"
+--$0
+if (a === b) {
+	c;
+}
+else if (a === d) {
+	e;
+	goto lbl1;
+}
+else {
+	g;
+	goto lbl2;
+}
+goto $1;
+
+--$1
+f;
+goto $exit;
+
+--lbl1
+f;
+goto $1;
+
+--lbl2
+h;
+goto $1;
+");
 		}
 	}
 }

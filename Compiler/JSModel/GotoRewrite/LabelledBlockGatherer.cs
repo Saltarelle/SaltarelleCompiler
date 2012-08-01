@@ -390,8 +390,9 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			var labelAfter = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
 			JsExpression expression = stmt.Expression;
 
-			JsIfStatement ifStatement = null;
-			foreach (var clause in stmt.Clauses.Reverse()) {
+			var clauses = new List<Tuple<JsExpression, JsBlockStatement>>();
+			JsStatement defaultClause = null;
+			foreach (var clause in stmt.Clauses) {
 				var origBody = clause.Body;
 				if (origBody.Statements.Count > 0 && origBody.Statements[origBody.Statements.Count - 1] is JsBreakStatement) {	// TODO: Also check if it has a label that causes it to reference something else (but we don't generate those kinds of labels, at least not currently).
 					// Remove break statements that come last in the clause - they are unnecessary since we use if/else if/else
@@ -405,12 +406,17 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				if (body.Count > 0 && body[body.Count - 1] is JsGotoStatement && ((JsGotoStatement)body[body.Count - 1]).TargetLabel == labelAfter.Item1)
 					body.RemoveAt(body.Count - 1);	// If the last statement says to go to after this statement, it can safely be ignored because we use if/else if/else.
 
-				var test = clause.Values.Select(v => JsExpression.Same(expression, v)).Aggregate((o, e) => o != null ? JsExpression.LogicalOr(o, e) : e);
-
-				ifStatement = new JsIfStatement(test, new JsBlockStatement(body), ifStatement);
+				if (clause.Values.Any(v => v == null)) {
+					defaultClause = new JsBlockStatement(body);
+				}
+				else {
+					JsExpression test = clause.Values.Select(v => JsExpression.Same(expression, v)).Aggregate((o, e) => o != null ? JsExpression.LogicalOr(o, e) : e);
+					clauses.Add(Tuple.Create(test, new JsBlockStatement(body)));
+				}
 			}
+			clauses.Reverse();
 
-			currentBlock.Add(ifStatement);
+			currentBlock.Add(clauses.Where(c => c.Item1 != null).Aggregate(defaultClause, (o, n) => new JsIfStatement(n.Item1, n.Item2, o)));
 			currentBlock.Add(new JsGotoStatement(labelAfter.Item1));
 
 			if (labelAfter.Item2) {
