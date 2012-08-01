@@ -392,17 +392,33 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 			var clauses = new List<Tuple<JsExpression, JsBlockStatement>>();
 			JsStatement defaultClause = null;
-			foreach (var clause in stmt.Clauses) {
-				var origBody = clause.Body;
-				if (origBody.Statements.Count > 0 && origBody.Statements[origBody.Statements.Count - 1] is JsBreakStatement) {	// TODO: Also check if it has a label that causes it to reference something else (but we don't generate those kinds of labels, at least not currently).
+			string currentFallthroughLabel = null;
+			for (int i = 0; i < stmt.Clauses.Count; i++) {
+				var clause = stmt.Clauses[i];
+
+				var origBody = new List<JsStatement>();
+				origBody.AddRange(clause.Body.Statements);
+				if (currentFallthroughLabel != null && (origBody.Count == 0 || !(origBody[0] is JsLabelledStatement)))
+					origBody[0] = new JsLabelledStatement(currentFallthroughLabel, origBody.Count > 0 ? origBody[0] : new JsEmptyStatement());
+
+				if (origBody.Count > 0 && origBody[origBody.Count - 1] is JsBreakStatement) {	// TODO: Also check if it has a label that causes it to reference something else (but we don't generate those kinds of labels, at least not currently).
 					// Remove break statements that come last in the clause - they are unnecessary since we use if/else if/else
-					var stmts = new List<JsStatement>(origBody.Statements);
-					stmts.RemoveAt(stmts.Count - 1);
-					origBody = new JsBlockStatement(stmts);
+					origBody.RemoveAt(origBody.Count - 1);
+					currentFallthroughLabel = null;
+				}
+				else if (i < stmt.Clauses.Count - 1) {
+					// Fallthrough
+					var nextBody = stmt.Clauses[i + 1].Body.Statements;
+					if (nextBody.Count > 0 && nextBody[0] is JsLabelledStatement)
+						currentFallthroughLabel = ((JsLabelledStatement)nextBody[0]).Label;
+					else
+						currentFallthroughLabel = CreateAnonymousBlockName();
+
+					origBody.Add(new JsGotoStatement(currentFallthroughLabel));
 				}
 
-				origBody = new ReplaceBreakWithGotoVisitor().Process(origBody, labelAfter.Item1);
-				var body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(origBody, 0)), blockName, labelAfter.Item1);
+				var b = new ReplaceBreakWithGotoVisitor().Process(new JsBlockStatement(origBody), labelAfter.Item1);
+				var body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(b, 0)), blockName, labelAfter.Item1);
 				if (body.Count > 0 && body[body.Count - 1] is JsGotoStatement && ((JsGotoStatement)body[body.Count - 1]).TargetLabel == labelAfter.Item1)
 					body.RemoveAt(body.Count - 1);	// If the last statement says to go to after this statement, it can safely be ignored because we use if/else if/else.
 

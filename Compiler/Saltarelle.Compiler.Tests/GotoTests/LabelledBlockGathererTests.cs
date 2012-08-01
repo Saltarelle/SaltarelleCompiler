@@ -1675,7 +1675,7 @@ if (a === b) {
 	c;
 	goto lbl1;
 }
-else if (a === d) {
+else if (a === e) {
 	goto $2;
 }
 goto $1;
