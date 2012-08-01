@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.GotoRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -12,8 +13,8 @@ namespace Saltarelle.Compiler.Tests.GotoTests {
 	public class LabelledBlockGathererTests {
 		private void AssertCorrect(string orig, string expected) {
 			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
-			var blocks = new LabelledBlockGatherer().Gather(stmt);
-			var actual = string.Join("", blocks.OrderBy(b => b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
+			var blocks = new LabelledBlockGatherer(e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp").Gather(stmt);
+			var actual = string.Join("", blocks.OrderBy(b => b.Name == "$entry" ? "" : b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
 
@@ -31,7 +32,7 @@ lbl2:
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 b;
 goto lbl1;
@@ -55,7 +56,7 @@ goto $exit;
 	lbl: a;
 }", 
 @"
---$0
+--$entry
 goto lbl;
 
 --lbl
@@ -79,7 +80,7 @@ lbl2:
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 b;
 goto lbl2;
@@ -108,7 +109,7 @@ lbl1:
 	e;
 }", 
 @"
---$0
+--$entry
 a;
 b;
 throw c;
@@ -132,7 +133,7 @@ lbl1:
 	d;
 }", 
 @"
---$0
+--$entry
 a;
 b;
 return;
@@ -169,7 +170,7 @@ goto $exit;
 	h;
 }", 
 @"
---$0
+--$entry
 a;
 b;
 goto lbl1;
@@ -208,7 +209,7 @@ lbl1:
 	d;
 }", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	b;
@@ -237,7 +238,7 @@ goto $exit;
 	e;
 }", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	b;
@@ -270,7 +271,7 @@ goto $1;
 	lbl2: e;
 }", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	b;
@@ -307,7 +308,7 @@ goto $exit;
 }
 ", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	goto lbl1;
@@ -347,7 +348,7 @@ goto $1;
 }
 ", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	goto $1;
@@ -383,7 +384,7 @@ goto $1;
 }
 ", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	goto lbl1;
@@ -439,7 +440,7 @@ goto $1;
 	m;
 }", 
 @"
---$0
+--$entry
 if (x) {
 	a;
 	if (y) {
@@ -505,13 +506,13 @@ goto $3;
 	d;
 }", 
 @"
---$0
+--$entry
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $0;
+	goto $entry;
 }
 d;
 goto $exit;
@@ -535,7 +536,7 @@ goto $1;
 	d;
 }", 
 @"
---$0
+--$entry
 x;
 goto $1;
 
@@ -570,7 +571,7 @@ goto $2;
 	d;
 }", 
 @"
---$0
+--$entry
 x;
 goto before;
 
@@ -604,13 +605,13 @@ goto $1;
 	d;
 }", 
 @"
---$0
+--$entry
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $0;
+	goto $entry;
 }
 goto $2;
 
@@ -637,13 +638,13 @@ goto $2;
 	lbl2: d;
 }", 
 @"
---$0
+--$entry
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $0;
+	goto $entry;
 }
 goto lbl2;
 
@@ -669,13 +670,13 @@ goto $exit;
 	} while (c);
 }", 
 @"
---$0
+--$entry
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $0;
+	goto $entry;
 }
 goto $exit;
 
@@ -698,13 +699,13 @@ goto $exit;
 	} while (c);
 }", 
 @"
---$0
+--$entry
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $0;
+	goto $entry;
 }
 goto $exit;
 
@@ -728,7 +729,7 @@ goto $1;
 	d;
 }", 
 @"
---$0
+--$entry
 if (!a) {
 	goto $1;
 }
@@ -741,7 +742,7 @@ goto $exit;
 
 --lbl1
 c;
-goto $0;
+goto $entry;
 ");
 		}
 
@@ -758,7 +759,7 @@ goto $0;
 	e;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -790,7 +791,7 @@ goto $1;
 	}
 }", 
 @"
---$0
+--$entry
 if (!a) {
 	goto $exit;
 }
@@ -799,7 +800,7 @@ goto lbl1;
 
 --lbl1
 c;
-goto $0;
+goto $entry;
 ");
 		}
 
@@ -815,7 +816,7 @@ goto $0;
 	lbl2: d;
 }", 
 @"
---$0
+--$entry
 if (!a) {
 	goto lbl2;
 }
@@ -824,7 +825,7 @@ goto lbl1;
 
 --lbl1
 c;
-goto $0;
+goto $entry;
 
 --lbl2
 d;
@@ -845,7 +846,7 @@ goto $exit;
 	d;
 }", 
 @"
---$0
+--$entry
 if (!a) {
 	goto $1;
 }
@@ -875,7 +876,7 @@ goto $1;
 	d;
 }", 
 @"
---$0
+--$entry
 if (!a) {
 	goto $1;
 }
@@ -888,7 +889,7 @@ goto $exit;
 
 --lbl1
 c;
-goto $0;
+goto $entry;
 ");
 		}
 
@@ -904,7 +905,7 @@ goto $0;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -940,7 +941,7 @@ goto $2;
 	}
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -973,7 +974,7 @@ goto $2;
 	lbl2: f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1011,7 +1012,7 @@ goto $exit;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1048,7 +1049,7 @@ goto $2;
 	f;
 }", 
 @"
---$0
+--$entry
 if (!b) {
 	goto $2;
 }
@@ -1057,7 +1058,7 @@ goto lbl1;
 
 --$1
 c;
-goto $0;
+goto $entry;
 
 --$2
 f;
@@ -1083,7 +1084,7 @@ goto $1;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto lbl2;
 
@@ -1119,7 +1120,7 @@ goto lbl1;
 	}
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1148,7 +1149,7 @@ goto $2;
 	}
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1176,13 +1177,13 @@ goto $1;
 	}
 }", 
 @"
---$0
+--$entry
 d;
 goto lbl1;
 
 --lbl1
 e;
-goto $0;
+goto $entry;
 ");
 		}
 
@@ -1199,7 +1200,7 @@ goto $0;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1237,7 +1238,7 @@ goto $2;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1271,7 +1272,7 @@ goto $1;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1306,7 +1307,7 @@ goto $2;
 	f;
 }", 
 @"
---$0
+--$entry
 d;
 goto lbl1;
 
@@ -1316,7 +1317,7 @@ goto $exit;
 
 --lbl1
 e;
-goto $0;
+goto $entry;
 ");
 		}
 
@@ -1333,7 +1334,7 @@ goto $0;
 	f;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1372,7 +1373,7 @@ goto $3;
 	i;
 }", 
 @"
---$0
+--$entry
 a;
 goto $1;
 
@@ -1435,7 +1436,7 @@ goto $5;
 	n;
 }", 
 @"
---$0
+--$entry
 if (a === b || a === c) {
 	d;
 	goto lbl1;
@@ -1492,7 +1493,7 @@ goto $1;
 	}
 }", 
 @"
---$0
+--$entry
 if (a === b || a === c) {
 	d;
 	goto lbl1;
@@ -1546,7 +1547,7 @@ goto $exit;
 	lbl3: n;
 }", 
 @"
---$0
+--$entry
 if (a === b || a === c) {
 	d;
 	goto lbl1;
@@ -1592,7 +1593,7 @@ goto $exit;
 	f;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	c;
 	goto $2;
@@ -1631,7 +1632,7 @@ goto $1;
 	f;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	c;
 	goto lbl2;
@@ -1670,7 +1671,7 @@ goto lbl1;
 	g;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	c;
 	goto lbl1;
@@ -1713,7 +1714,7 @@ goto $2;
 	f;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	goto $1;
 	c;
@@ -1737,7 +1738,41 @@ goto $1;
 
 		[Test]
 		public void SwitchStatementWithComplexExpression() {
-			Assert.Fail("TODO");
+			AssertCorrect(@"
+{
+	switch (a + b) {
+		case c:
+			d;
+			lbl1:
+			e;
+			break;
+		case f:
+		case g:
+			h;
+			break;
+	}
+	n;
+}", 
+@"
+--$entry
+var $tmp = a + b;
+if ($tmp === c) {
+	d;
+	goto lbl1;
+}
+else if ($tmp === f || $tmp === g) {
+	h;
+}
+goto $1;
+
+--$1
+n;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+");
 		}
 
 		[Test]
@@ -1762,7 +1797,7 @@ goto $1;
 	f;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	c;
 }
@@ -1814,7 +1849,7 @@ goto $1;
 	f;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	c;
 }
@@ -1864,7 +1899,7 @@ goto $1;
 	f;
 }", 
 @"
---$0
+--$entry
 if (a === b) {
 	c;
 }

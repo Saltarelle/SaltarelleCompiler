@@ -11,7 +11,8 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 	internal class LabelledBlockGatherer {
-		internal const string ExitLabelName = "$exit";	// Use this label as a name to denote that when control leaves a block through this path, it means that it is leaving the current state machine.
+		internal const string EntryBlockName = "$entry"; // The block with this name is the starting point of the state machine.
+		internal const string ExitLabelName  = "$exit";	 // Use this label as a name to denote that when control leaves a block through this path, it means that it is leaving the current state machine.
 
 		class ContainsLabelsVisitor : RewriterVisitorBase<object> {
 			bool _result;
@@ -139,6 +140,14 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		Queue<OutstandingBlock> _outstandingBlocks = new Queue<OutstandingBlock>();
 		HashSet<string> _processedLabels = new HashSet<string>();
 
+		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
+		readonly Func<string> _allocateTempVariable;
+
+		public LabelledBlockGatherer(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable) {
+			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
+			_allocateTempVariable = allocateTempVariable;
+		}
+
 		private string CreateAnonymousBlockName() {
 			return string.Format(CultureInfo.InvariantCulture, "${0}", _currentAnonymousBlockIndex++);
 		}
@@ -182,9 +191,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
-			var startBlockName = CreateAnonymousBlockName();
+			_currentAnonymousBlockIndex = 1;
+			_processedLabels.Clear();
 			_outstandingBlocks = new Queue<OutstandingBlock>();
-			_outstandingBlocks.Enqueue(new OutstandingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), startBlockName, ExitLabelName));
+			_outstandingBlocks.Enqueue(new OutstandingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), EntryBlockName, ExitLabelName));
 
 			var result = new List<LabelledBlock>();
 
@@ -389,6 +399,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		private bool HandleSwitchStatement(JsSwitchStatement stmt, StackEntry location, string returnLabel, ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
 			var labelAfter = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
 			JsExpression expression = stmt.Expression;
+			if (_isExpressionComplexEnoughForATemporaryVariable(expression)) {
+				string newName = _allocateTempVariable();
+				currentBlock.Add(new JsVariableDeclarationStatement(newName, expression));
+				expression = JsExpression.Identifier(newName);
+			}
 
 			var clauses = new List<Tuple<JsExpression, JsBlockStatement>>();
 			JsStatement defaultClause = null;

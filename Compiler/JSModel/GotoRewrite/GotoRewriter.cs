@@ -7,7 +7,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 	public class GotoRewriter {
 		public static void Rewrite(JsBlockStatement block) {
-			var labelledBlocks = new LabelledBlockGatherer().Gather(block);
+			//var labelledBlocks = new LabelledBlockGatherer().Gather(block);
 		}
 	}
 }
