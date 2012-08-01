@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTests {
 	[TestFixture]
@@ -251,6 +252,43 @@ public void M() {
 		}
 	}
 ");
+		}
+
+		[Test]
+		public void FieldsImplementedAsConstantsWorkAsCaseLabels() {
+			AssertCorrect(
+@"enum E { Value1, Value2 }
+public void M() {
+	E e = E.Value1;
+	// BEGIN
+	switch (e) {
+		case E.Value1:
+			int x = 0;
+			break;
+		case E.Value2:
+			int y = 0;
+			break;
+		default:
+			int z = 0;
+			break;
+	}
+	// END
+}",
+@"	switch ($e) {
+		case 'Value1': {
+			var $x = 0;
+			break;
+		}
+		case 'Value2': {
+			var $y = 0;
+			break;
+		}
+		default: {
+			var $z = 0;
+			break;
+		}
+	}
+", namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.DeclaringType.Name == "E" ? FieldScriptSemantics.StringConstant(f.Name) : FieldScriptSemantics.Field(f.Name) });
 		}
 	}
 }
