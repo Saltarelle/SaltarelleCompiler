@@ -1272,8 +1272,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsResources;
 		}
 
-		public bool IsGlobalMethods(ITypeDefinition t) {
-			return _typeSemantics[t].IsGlobalMethods;
+		public string GetGlobalMethodsPrefix(ITypeDefinition t) {
+			var s = _typeSemantics[t];
+			if (s.MixinArg != null)
+				return s.MixinArg;
+			else if (s.IsGlobalMethods)
+				return "";
+			else
+				return null;
 		}
 
 		public bool IsSerializable(ITypeDefinition t) {
@@ -1282,10 +1288,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		public bool IsRealType(ITypeDefinition t) {
 			return _typeSemantics[t].IsRealType;
-		}
-
-		public string GetMixinArg(ITypeDefinition t) {
-			return _typeSemantics[t].MixinArg;
 		}
 
 		public bool IsTestFixture(ITypeDefinition t) {

@@ -159,11 +159,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			string currentNs = "";
 			foreach (var t in orderedTypes) {
 				try {
-					bool globalMethods = _metadataImporter.IsGlobalMethods(t.CSharpTypeDefinition);
-					var  mixinArg      = _metadataImporter.GetMixinArg(t.CSharpTypeDefinition);
+					var globalMethodsPrefix = _metadataImporter.GetGlobalMethodsPrefix(t.CSharpTypeDefinition);
 
 					string ns = GetNamespace(t.Name);
-					if (ns != currentNs && !globalMethods) {
+					if (ns != currentNs && globalMethodsPrefix == null) {
 						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(systemType, RegisterNamespace), JsExpression.String(ns))));
 						currentNs = ns;
 					}
@@ -172,15 +171,16 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, t.Name);
 					if (t is JsClass) {
 						var c = (JsClass)t;
-						if (globalMethods) {
-							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.MemberAccess(JsExpression.Identifier("window"), m.Name), m.Definition))));
+						if (globalMethodsPrefix != null) {
+							if (globalMethodsPrefix == "") {
+								result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.MemberAccess(JsExpression.Identifier("window"), m.Name), m.Definition))));
+							}
+							else {
+								result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Literal(globalMethodsPrefix + "." + m.Name + " = {0}", m.Definition))));	// If we are good citizens and use assignment statements, we will get ugly parentheses around the assignee.
+							}
 						}
 						else if (_metadataImporter.IsResources(t.CSharpTypeDefinition)) {
 							result.Add(GenerateResourcesClass(c));
-						}
-						else if (mixinArg != null) {
-							string prefix = mixinArg != "" ? mixinArg + "." : "";
-							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Literal(prefix + m.Name + " = {0}", m.Definition))));	// If we are good citizens and use assignment statements, we will get ugly parentheses around the assignee.
 						}
 						else {
 							var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
@@ -214,9 +214,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 			var typesToRegister = orderedTypes.OfType<JsClass>()
 			                            .Where(c =>    c.TypeArgumentNames.Count == 0
-			                                        && !_metadataImporter.IsGlobalMethods(c.CSharpTypeDefinition)
-			                                        && !_metadataImporter.IsResources(c.CSharpTypeDefinition)
-			                                        && _metadataImporter.GetMixinArg(c.CSharpTypeDefinition) == null)
+			                                        && _metadataImporter.GetGlobalMethodsPrefix(c.CSharpTypeDefinition) == null
+			                                        && !_metadataImporter.IsResources(c.CSharpTypeDefinition))
 			                            .ToList();
 
 			result.AddRange(TopologicalSortTypesByInheritance(typesToRegister)

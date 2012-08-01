@@ -936,19 +936,14 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void IsGlobalMethodsMethodWorks() {
-			Prepare(@"static class C1 {} [System.Runtime.CompilerServices.GlobalMethods] static class C2 {}");
-			Assert.That(Metadata.IsGlobalMethods(AllTypes["C1"]), Is.False);
-			Assert.That(Metadata.IsGlobalMethods(AllTypes["C2"]), Is.True);
-		}
+		public void GetGlobalMethodsPrefixMethodWorks() {
+			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [GlobalMethods] static class C2 {} [Mixin(null)] static class C3 {} [Mixin("""")] static class C4 {} [Mixin(""$.fn"")] static class C5 {}");
 
-		[Test]
-		public void GetMixinArgMethodWorks() {
-			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [Mixin(null)] static class C2 {} [Mixin("""")] static class C3 {} [Mixin(""$.fn"")] static class C4 {}");
-			Assert.That(Metadata.GetMixinArg(AllTypes["C1"]), Is.Null);
-			Assert.That(Metadata.GetMixinArg(AllTypes["C2"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetMixinArg(AllTypes["C3"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetMixinArg(AllTypes["C4"]), Is.EqualTo("$.fn"));
+			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C1"]), Is.Null);
+			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C2"]), Is.EqualTo(""));
+			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C3"]), Is.EqualTo(""));
+			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C4"]), Is.EqualTo(""));
+			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C5"]), Is.EqualTo("$.fn"));
 		}
 
 		[Test]
