@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests {
 			IsNamedVaules   = t => false;
 			IsResources     = t => false;
 			IsGlobalMethods = t => false;
-			IsRecord        = t => false;
+			IsSerializable  = t => false;
 			IsRealType      = t => true;
 			GetMixinArg     = t => null;
 			IsTestFixture   = t => false;
@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> IsNamedVaules { get; set; }
 		public Func<ITypeDefinition, bool> IsResources { get; set; }
 		public Func<ITypeDefinition, bool> IsGlobalMethods { get; set; }
-		public Func<ITypeDefinition, bool> IsRecord { get; set; }
+		public Func<ITypeDefinition, bool> IsSerializable { get; set; }
 		public Func<ITypeDefinition, bool> IsRealType { get; set; }
 		public Func<ITypeDefinition, string> GetMixinArg { get; set; }
 		public Func<ITypeDefinition, bool> IsTestFixture { get; set; }
@@ -36,8 +36,8 @@ namespace Saltarelle.Compiler.Tests {
 			return IsGlobalMethods(t);
 		}
 
-		bool IScriptSharpMetadataImporter.IsRecord(ITypeDefinition t) {
-			return IsRecord(t);
+		bool IScriptSharpMetadataImporter.IsSerializable(ITypeDefinition t) {
+			return IsSerializable(t);
 		}
 
 		bool IScriptSharpMetadataImporter.IsRealType(ITypeDefinition t) {

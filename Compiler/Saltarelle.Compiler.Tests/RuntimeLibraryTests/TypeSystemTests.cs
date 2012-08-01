@@ -1029,12 +1029,12 @@ public class C {
 		}
 
 		[Test]
-		public void CastToRecordTypeIsANoOp() {
+		public void CastToSerializableTypeIsANoOp() {
 			AssertSourceCorrect(@"
 using System;
 using System.Runtime.CompilerServices;
 
-[Record]
+[Serializable]
 sealed class R {}
 
 public class C {

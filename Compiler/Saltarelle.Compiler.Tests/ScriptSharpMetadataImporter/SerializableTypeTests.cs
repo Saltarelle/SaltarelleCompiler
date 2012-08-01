@@ -8,9 +8,9 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 	[TestFixture]
-	public class RecordTypeTests : ScriptSharpMetadataImporterTestBase {
+	public class SerializableTypeTests : ScriptSharpMetadataImporterTestBase {
 		private void TestBothKinds(string content, Action asserter, bool expectErrors = false) {
-			Prepare(@"using System.Runtime.CompilerServices; [Record] public sealed class C1 { " + content + " }", expectErrors: expectErrors);
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public sealed class C1 { " + content + " }", expectErrors: expectErrors);
 			asserter();
 
 			Prepare(@"using System.Runtime.CompilerServices; public sealed class C1 : System.Record { " + content + " }", expectErrors: expectErrors);
@@ -18,43 +18,43 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void RecordTypesMustBeSealed() {
-			Prepare(@"using System.Runtime.CompilerServices; [Record] class C1 {}", expectErrors: true);
+		public void SerializableTypesMustBeSealed() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class C1 {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must be sealed")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("must be sealed")));
 
 			Prepare(@"class C1 : System.Record {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must be sealed")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("must be sealed")));
 		}
 
 		[Test]
-		public void TypeWithRecordAttributeMustNotHaveABaseClass() {
-			Prepare(@"using System.Runtime.CompilerServices; class B {} [Record] sealed class C1 : B {}", expectErrors: true);
+		public void TypeWithSerializableAttributeMustNotHaveABaseClass() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] sealed class C1 : B {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("must inherit from either System.Object or System.Record")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("must inherit from either System.Object or System.Record")));
 		}
 
 		[Test]
-		public void RecordTypesCannotImplementInterfaces() {
-			Prepare(@"using System.Runtime.CompilerServices; interface I {} [Record] sealed class C1 : I {}", expectErrors: true);
+		public void SerializableTypesCannotImplementInterfaces() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; interface I {} [Serializable] sealed class C1 : I {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot implement interface")));
 
 			Prepare(@"interface I {} sealed class C1 : System.Record, I {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot implement interface")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot implement interface")));
 		}
 
 		[Test]
-		public void RecordTypesCannotDeclareInstanceEvents() {
-			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 { event System.EventHandler Evt; }", expectErrors: true);
+		public void SerializableTypesCannotDeclareInstanceEvents() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] sealed class C1 { event System.EventHandler Evt; }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot declare instance event")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot declare instance event")));
 
 			Prepare(@"using System.Runtime.CompilerServices; sealed class C1 : System.Record { event System.EventHandler Evt; }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("cannot declare instance event")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot declare instance event")));
 
 			// But static events are OK
 			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 { static event System.EventHandler Evt; }", expectErrors: false);
@@ -62,7 +62,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void InstanceFieldsOnRecordTypesCanBeRenamedButUsesPreserveNameIfNoOtherAttributeWasSpecified() {
+		public void InstanceFieldsOnSerializableTypesCanBeRenamedButUsesPreserveNameIfNoOtherAttributeWasSpecified() {
 			TestBothKinds(@"[PreserveName] int Field1; [PreserveCase] int Field2; [ScriptName(""Renamed"")] int Field3; int Field4;", () => {
 				Assert.That(FindField("C1.Field1").Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 				Assert.That(FindField("C1.Field1").Name, Is.EqualTo("field1"));
@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void StaticFieldsOnRecordTypesDoNotUsePreserveNameByDefault() {
+		public void StaticFieldsOnSerializableTypesDoNotUsePreserveNameByDefault() {
 			TestBothKinds("static int Field1;", () => {
 				Assert.That(FindField("C1.Field1").Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 				Assert.That(FindField("C1.Field1").Name, Is.EqualTo("$0"));
@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void InstancePropertiessOnRecordTypesUseFieldSemanticsAndCanBeRenamedButUsesPreserveNameIfNoOtherAttributeWasSpecified() {
+		public void InstancePropertiessOnSerializableTypesUseFieldSemanticsAndCanBeRenamedButUsesPreserveNameIfNoOtherAttributeWasSpecified() {
 			TestBothKinds(@"[PreserveName] int Prop1 { get; set; } [PreserveCase] int Prop2 { get; set; } [ScriptName(""Renamed"")] int Prop3 { get; set; } int Prop4 { get; set; } }", () => {
 				Assert.That(FindProperty("C1.Prop1").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 				Assert.That(FindProperty("C1.Prop1").FieldName, Is.EqualTo("prop1"));
@@ -98,7 +98,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void StaticPropertiesOnRecordTypesDoNotUseFieldSemanticsAndDoNotPreserveName() {
+		public void StaticPropertiesOnSerializableTypesDoNotUseFieldSemanticsAndDoNotPreserveName() {
 			TestBothKinds("static int Prop1 { get; set; }", () => {
 				Assert.That(FindProperty("C1.Prop1").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 				Assert.That(FindProperty("C1.Prop1").GetMethod.Name, Is.EqualTo("$0"));
@@ -250,8 +250,8 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void ConstructorForImportedRecordTypeBecomesJsonConstructor() {
-			Prepare(@"using System.Runtime.CompilerServices; [Record, Imported] public sealed class C1 { public int MyProperty { get; set; } public int MyField; public C1(int myProperty, int myField) {} }");
+		public void ConstructorForImportedSerializableTypeBecomesJsonConstructor() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable, Imported] public sealed class C1 { public int MyProperty { get; set; } public int MyField; public C1(int myProperty, int myField) {} }");
 			var ctor = FindConstructor("C1", 2);
 			Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
 			Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "MyProperty", "MyField" }));
@@ -292,11 +292,11 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 		}
 
 		[Test]
-		public void IsRecordReturnsTheCorrectValue() {
-			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 {} sealed class C2 : System.Record {} class C3 {}");
-			Assert.That(Metadata.IsRecord(AllTypes["C1"]), Is.True);
-			Assert.That(Metadata.IsRecord(AllTypes["C2"]), Is.True);
-			Assert.That(Metadata.IsRecord(AllTypes["C3"]), Is.False);
+		public void IsSerializableReturnsTheCorrectValue() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] sealed class C1 {} sealed class C2 : System.Record {} class C3 {}");
+			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			Assert.That(Metadata.IsSerializable(AllTypes["C2"]), Is.True);
+			Assert.That(Metadata.IsSerializable(AllTypes["C3"]), Is.False);
 		}
 	}
 }
