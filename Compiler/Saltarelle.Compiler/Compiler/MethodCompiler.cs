@@ -7,6 +7,7 @@ using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.GotoRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -61,6 +62,7 @@ namespace Saltarelle.Compiler.Compiler {
     	internal IDictionary<IVariable, VariableData> variables;
         internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
+		private ISet<string> _usedNames;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
             _namingConvention = namingConvention;
@@ -72,21 +74,31 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, string thisAlias) {
-            ISet<string> usedNames = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p))) : new HashSet<string>();
+            _usedNames = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p))) : new HashSet<string>();
 			if (entity != null) {
-				var x = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, usedNames);
-				variables = x.Item1;
-				usedNames = x.Item2;
+				var x = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, _usedNames);
+				variables  = x.Item1;
+				_usedNames = x.Item2;
 			}
             nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
-			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, usedNames, null, method, _definedSymbols);
+			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, _definedSymbols);
+		}
+
+		internal static bool DisablePostProcessingTestingUseOnly;
+
+		private JsFunctionDefinitionExpression PostProcess(JsFunctionDefinitionExpression function) {
+			if (DisablePostProcessingTestingUseOnly)
+				return function;
+
+			var body = GotoRewriter.Rewrite(function.Body, expr => ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(expr), () => _namingConvention.GetVariableName(null, _usedNames));
+			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
 			CreateCompilationContext(entity, method, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null));
-            return _statementCompiler.CompileMethod(method.Parameters, variables, body);
+            return PostProcess(_statementCompiler.CompileMethod(method.Parameters, variables, body));
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
@@ -139,7 +151,7 @@ namespace Saltarelle.Compiler.Compiler {
 					body = StaticMethodConstructorReturnPatcher.Process(body, _namingConvention.ThisAlias).AsReadOnly();
 				}
 
-				return JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
+				return PostProcess(JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex, filename, location);

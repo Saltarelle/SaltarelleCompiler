@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler.Tests.GotoTests {
 		private void AssertCorrect(string orig, string expected) {
 			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
 			var blocks = new LabelledBlockGatherer(e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp").Gather(stmt);
-			var actual = string.Join("", blocks.OrderBy(b => b.Name == "$entry" ? "" : b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
+			var actual = string.Join("", blocks.OrderBy(b => b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
 
@@ -32,7 +32,7 @@ lbl2:
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 b;
 goto lbl1;
@@ -56,7 +56,7 @@ goto $exit;
 	lbl: a;
 }", 
 @"
---$entry
+--$0
 goto lbl;
 
 --lbl
@@ -80,7 +80,7 @@ lbl2:
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 b;
 goto lbl2;
@@ -109,7 +109,7 @@ lbl1:
 	e;
 }", 
 @"
---$entry
+--$0
 a;
 b;
 throw c;
@@ -133,7 +133,7 @@ lbl1:
 	d;
 }", 
 @"
---$entry
+--$0
 a;
 b;
 return;
@@ -170,7 +170,7 @@ goto $exit;
 	h;
 }", 
 @"
---$entry
+--$0
 a;
 b;
 goto lbl1;
@@ -209,7 +209,7 @@ lbl1:
 	d;
 }", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	b;
@@ -238,7 +238,7 @@ goto $exit;
 	e;
 }", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	b;
@@ -271,7 +271,7 @@ goto $1;
 	lbl2: e;
 }", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	b;
@@ -308,7 +308,7 @@ goto $exit;
 }
 ", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	goto lbl1;
@@ -348,7 +348,7 @@ goto $1;
 }
 ", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	goto $1;
@@ -384,7 +384,7 @@ goto $1;
 }
 ", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	goto lbl1;
@@ -440,7 +440,7 @@ goto $1;
 	m;
 }", 
 @"
---$entry
+--$0
 if (x) {
 	a;
 	if (y) {
@@ -506,13 +506,13 @@ goto $3;
 	d;
 }", 
 @"
---$entry
+--$0
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $entry;
+	goto $0;
 }
 d;
 goto $exit;
@@ -536,7 +536,7 @@ goto $1;
 	d;
 }", 
 @"
---$entry
+--$0
 x;
 goto $1;
 
@@ -571,7 +571,7 @@ goto $2;
 	d;
 }", 
 @"
---$entry
+--$0
 x;
 goto before;
 
@@ -605,13 +605,13 @@ goto $1;
 	d;
 }", 
 @"
---$entry
+--$0
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $entry;
+	goto $0;
 }
 goto $2;
 
@@ -638,13 +638,13 @@ goto $2;
 	lbl2: d;
 }", 
 @"
---$entry
+--$0
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $entry;
+	goto $0;
 }
 goto lbl2;
 
@@ -670,13 +670,13 @@ goto $exit;
 	} while (c);
 }", 
 @"
---$entry
+--$0
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $entry;
+	goto $0;
 }
 goto $exit;
 
@@ -699,13 +699,13 @@ goto $exit;
 	} while (c);
 }", 
 @"
---$entry
+--$0
 a;
 goto lbl1;
 
 --$1
 if (c) {
-	goto $entry;
+	goto $0;
 }
 goto $exit;
 
@@ -729,7 +729,7 @@ goto $1;
 	d;
 }", 
 @"
---$entry
+--$0
 if (!a) {
 	goto $1;
 }
@@ -742,7 +742,7 @@ goto $exit;
 
 --lbl1
 c;
-goto $entry;
+goto $0;
 ");
 		}
 
@@ -759,7 +759,7 @@ goto $entry;
 	e;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -791,7 +791,7 @@ goto $1;
 	}
 }", 
 @"
---$entry
+--$0
 if (!a) {
 	goto $exit;
 }
@@ -800,7 +800,7 @@ goto lbl1;
 
 --lbl1
 c;
-goto $entry;
+goto $0;
 ");
 		}
 
@@ -816,7 +816,7 @@ goto $entry;
 	lbl2: d;
 }", 
 @"
---$entry
+--$0
 if (!a) {
 	goto lbl2;
 }
@@ -825,7 +825,7 @@ goto lbl1;
 
 --lbl1
 c;
-goto $entry;
+goto $0;
 
 --lbl2
 d;
@@ -846,7 +846,7 @@ goto $exit;
 	d;
 }", 
 @"
---$entry
+--$0
 if (!a) {
 	goto $1;
 }
@@ -876,7 +876,7 @@ goto $1;
 	d;
 }", 
 @"
---$entry
+--$0
 if (!a) {
 	goto $1;
 }
@@ -889,7 +889,7 @@ goto $exit;
 
 --lbl1
 c;
-goto $entry;
+goto $0;
 ");
 		}
 
@@ -905,7 +905,7 @@ goto $entry;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -941,7 +941,7 @@ goto $2;
 	}
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -974,7 +974,7 @@ goto $2;
 	lbl2: f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1012,7 +1012,7 @@ goto $exit;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1049,7 +1049,7 @@ goto $2;
 	f;
 }", 
 @"
---$entry
+--$0
 if (!b) {
 	goto $2;
 }
@@ -1058,7 +1058,7 @@ goto lbl1;
 
 --$1
 c;
-goto $entry;
+goto $0;
 
 --$2
 f;
@@ -1084,7 +1084,7 @@ goto $1;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto lbl2;
 
@@ -1120,7 +1120,7 @@ goto lbl1;
 	}
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1149,7 +1149,7 @@ goto $2;
 	}
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1177,13 +1177,13 @@ goto $1;
 	}
 }", 
 @"
---$entry
+--$0
 d;
 goto lbl1;
 
 --lbl1
 e;
-goto $entry;
+goto $0;
 ");
 		}
 
@@ -1200,7 +1200,7 @@ goto $entry;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1238,7 +1238,7 @@ goto $2;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1272,7 +1272,7 @@ goto $1;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1307,7 +1307,7 @@ goto $2;
 	f;
 }", 
 @"
---$entry
+--$0
 d;
 goto lbl1;
 
@@ -1317,7 +1317,7 @@ goto $exit;
 
 --lbl1
 e;
-goto $entry;
+goto $0;
 ");
 		}
 
@@ -1334,7 +1334,7 @@ goto $entry;
 	f;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1373,7 +1373,7 @@ goto $3;
 	i;
 }", 
 @"
---$entry
+--$0
 a;
 goto $1;
 
@@ -1436,7 +1436,7 @@ goto $5;
 	n;
 }", 
 @"
---$entry
+--$0
 if (a === b || a === c) {
 	d;
 	goto lbl1;
@@ -1493,7 +1493,7 @@ goto $1;
 	}
 }", 
 @"
---$entry
+--$0
 if (a === b || a === c) {
 	d;
 	goto lbl1;
@@ -1547,7 +1547,7 @@ goto $exit;
 	lbl3: n;
 }", 
 @"
---$entry
+--$0
 if (a === b || a === c) {
 	d;
 	goto lbl1;
@@ -1593,7 +1593,7 @@ goto $exit;
 	f;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	c;
 	goto $2;
@@ -1632,7 +1632,7 @@ goto $1;
 	f;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	c;
 	goto lbl2;
@@ -1671,7 +1671,7 @@ goto lbl1;
 	g;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	c;
 	goto lbl1;
@@ -1714,7 +1714,7 @@ goto $2;
 	f;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	goto $1;
 	c;
@@ -1754,7 +1754,7 @@ goto $1;
 	n;
 }", 
 @"
---$entry
+--$0
 var $tmp = a + b;
 if ($tmp === c) {
 	d;
@@ -1797,7 +1797,7 @@ goto $1;
 	f;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	c;
 }
@@ -1849,7 +1849,7 @@ goto $1;
 	f;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	c;
 }
@@ -1899,7 +1899,7 @@ goto $1;
 	f;
 }", 
 @"
---$entry
+--$0
 if (a === b) {
 	c;
 }

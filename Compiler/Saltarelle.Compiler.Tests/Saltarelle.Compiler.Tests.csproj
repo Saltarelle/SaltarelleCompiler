@@ -154,6 +154,7 @@
     <Compile Include="Compiler\CompilerTestBase.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\QueryExpressionTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ParametersUsingByRefSemanticsTests.cs" />
+    <Compile Include="Compiler\MethodCompilationTests\PostProcessingTests.cs" />
     <Compile Include="Compiler\PreprocessorTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\InlineCodeMethodCompilerTests.cs" />
     <Compile Include="Compiler\MemberConversionTests\ConstructorConversionTests.cs" />

@@ -150,7 +150,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			if (stack.IsEmpty)
 				throw new InvalidOperationException("Empty stack for label " + name);
 			var tos = stack.Peek();
-			Console.WriteLine("Enqueue " + tos.Block.Statements[tos.Index].DebugToString());
 			_outstandingBlocks.Enqueue(new OutstandingBlock(stack, name, exitLabel));
 		}
 
@@ -163,7 +162,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
-			_currentAnonymousBlockIndex = 1;
+			_currentAnonymousBlockIndex = 0;
 			_processedLabels.Clear();
 			_outstandingBlocks = new Queue<OutstandingBlock>();
 			_outstandingBlocks.Enqueue(new OutstandingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), CreateAnonymousBlockName(), ExitLabelName));
@@ -172,7 +171,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 			while (_outstandingBlocks.Count > 0) {
 				var current = _outstandingBlocks.Dequeue();
-				Console.WriteLine("Dequeue " + current.Stack.Peek().Block.Statements[current.Stack.Peek().Index].DebugToString());
 				result.Add(new LabelledBlock(current.Name, Handle(current.Stack, current.Name, current.ReturnLabel)));
 			}
 

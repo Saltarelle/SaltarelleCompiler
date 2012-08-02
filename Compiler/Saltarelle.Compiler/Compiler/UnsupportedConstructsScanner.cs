@@ -37,26 +37,6 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitQueryExpression(QueryExpression queryExpression) {
-			_errorReporter.Message(7998, queryExpression.GetRegion(), "query expression");
-			_result = false;
-		}
-
-		public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
-			_errorReporter.Message(7998, gotoCaseStatement.GetRegion(), "goto case");
-			_result = false;
-		}
-
-		public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
-			_errorReporter.Message(7998, gotoDefaultStatement.GetRegion(), "goto default");
-			_result = false;
-		}
-
-		public override void VisitGotoStatement(GotoStatement gotoStatement) {
-			_errorReporter.Message(7998, gotoStatement.GetRegion(), "goto");
-			_result = false;
-		}
-
 		public override void VisitTypeDeclaration(TypeDeclaration typeDeclaration) {
 			if (typeDeclaration.ClassType == ClassType.Struct && !_isCorelibCompilation) {
 				_errorReporter.Message(7998, typeDeclaration.GetRegion(), "user-defined value type (struct)");
