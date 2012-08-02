@@ -11,31 +11,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 	internal class LabelledBlockGatherer {
-		internal const string EntryBlockName = "$entry"; // The block with this name is the starting point of the state machine.
 		internal const string ExitLabelName  = "$exit";	 // Use this label as a name to denote that when control leaves a block through this path, it means that it is leaving the current state machine.
-
-		class ContainsLabelsVisitor : RewriterVisitorBase<object> {
-			bool _result;
-
-			public override JsStatement Visit(JsFunctionStatement statement, object data) {
-				return statement;
-			}
-
-			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
-				return expression;
-			}
-
-			public override JsStatement Visit(JsLabelledStatement statement, object data) {
-				_result = true;
-				return statement;
-			}
-
-			public bool Process(JsStatement statement) {
-				_result = false;
-				Visit(statement, null);
-				return _result;
-			}
-		}
 
 		// TODO: This class does not support 'break label' and 'continue label' statements (but we don't generate those).
 		class DoNotEnterLoopsVisitor<T> : RewriterVisitorBase<T> {
@@ -164,7 +140,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return ifst.Else == null || ifst.Then.Statements.Count == 0 || ifst.Else.Statements.Count == 0 || IsNextStatementReachable(ifst.Then.Statements[ifst.Then.Statements.Count - 1]) || IsNextStatementReachable(ifst.Else.Statements[ifst.Else.Statements.Count - 1]);
 			}
 
-			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement);
+			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement || current is JsBreakStatement || current is JsContinueStatement);
 		}
 
 		private void Enqueue(ImmutableStack<StackEntry> stack, string name, string exitLabel) {
@@ -176,10 +152,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			var tos = stack.Peek();
 			Console.WriteLine("Enqueue " + tos.Block.Statements[tos.Index].DebugToString());
 			_outstandingBlocks.Enqueue(new OutstandingBlock(stack, name, exitLabel));
-		}
-
-		private bool ContainsLabels(JsStatement statement) {
-			return new ContainsLabelsVisitor().Process(statement);
 		}
 
 		private bool ContainsBreak(JsStatement statement) {
@@ -194,7 +166,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			_currentAnonymousBlockIndex = 1;
 			_processedLabels.Clear();
 			_outstandingBlocks = new Queue<OutstandingBlock>();
-			_outstandingBlocks.Enqueue(new OutstandingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), EntryBlockName, ExitLabelName));
+			_outstandingBlocks.Enqueue(new OutstandingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), CreateAnonymousBlockName(), ExitLabelName));
 
 			var result = new List<LabelledBlock>();
 
@@ -229,7 +201,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 				}
 
-				if (ContainsLabels(stmt)) {
+				if (ContainsLabelsVisitor.Analyze(stmt)) {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos.Block, tos.Index).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}

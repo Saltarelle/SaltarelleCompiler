@@ -51,6 +51,7 @@
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
+    <Compile Include="GotoRewrite\ContainsLabelsVisitor.cs" />
     <Compile Include="GotoRewrite\GotoRewriter.cs">
       <SubType>Code</SubType>
     </Compile>
