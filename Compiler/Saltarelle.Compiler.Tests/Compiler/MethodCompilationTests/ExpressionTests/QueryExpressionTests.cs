@@ -519,32 +519,40 @@ void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void ThenByWorks() {
 			AssertCorrect(@"
+class C { public int field1, field2; }
 void M() {
-	int[] outer = null;
+	C[] arr = null;
 	// BEGIN
-	var result = from i in arr1 orderby i.field1, i.field2 select i;
+	var result = from i in arr orderby i.field1, i.field2 select i;
 	// END
 }",
-@"	var $result = arr1.Select(i => new { i, j = i + 1 }).OrderBy(x0 => x0.i + x0.j).Select(x1 => x1.i);
+@"	var $result = {Enumerable}.$OrderBy($arr, function($i) {
+		return $i.$field1;
+	}).$ThenBy(function($i2) {
+		return $i2.$field2;
+	});
 ");
-			Assert.Fail("TODO: Assertion must be fixed");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void OrderingDescendingWorks() {
 			AssertCorrect(@"
+class C { public int field1, field2; }
 void M() {
-	int[] outer = null;
+	C[] arr = null;
 	// BEGIN
-	var result = from i in arr1 orderby i.field1 descending, i.field2 descending select i;
+	var result = from i in arr orderby i.field1 descending, i.field2 descending select i;
 	// END
 }",
-@"	var $result = arr1.Select(i => new { i, j = i + 1 }).OrderBy(x0 => x0.i + x0.j).Select(x1 => x1.i);
+@"	var $result = {Enumerable}.$OrderByDescending($arr, function($i) {
+		return $i.$field1;
+	}).$ThenByDescending(function($i2) {
+		return $i2.$field2;
+	});
 ");
-			Assert.Fail("TODO: Assertion must be fixed");
 		}
 
 		[Test]
