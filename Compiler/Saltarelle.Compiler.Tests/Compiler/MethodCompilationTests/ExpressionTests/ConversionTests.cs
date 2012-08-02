@@ -1166,7 +1166,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Ignore("NRefactory bug")]
 		public void ExplicitArrayToGenericIList() {
 			AssertCorrect(
 @"class B {}
@@ -1274,7 +1274,7 @@ public void M<T>() where T : class, D, I {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void TypeParameterCanBeConvertedToOtherTypeParameterOnWhichItDepends() {
 			AssertCorrect(
 @"public void M<T, U>() where T : U {

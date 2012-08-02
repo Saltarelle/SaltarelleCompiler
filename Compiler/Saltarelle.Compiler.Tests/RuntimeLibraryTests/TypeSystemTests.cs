@@ -1087,7 +1087,7 @@ using System.Runtime.CompilerServices;
 [ScriptName(""X"")]
 class C1 {}
 [ScriptName(""X"")]
-class C2 {}
+class C2 : C1 {}
 
 public class C {
 	private void M() {

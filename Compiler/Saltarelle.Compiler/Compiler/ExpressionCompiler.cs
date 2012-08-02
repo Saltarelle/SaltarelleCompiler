@@ -1453,6 +1453,8 @@ namespace Saltarelle.Compiler.Compiler {
 				var result = VisitResolveResult(rr.Input, true);
 				if (rr.Type.Kind != TypeKind.Dynamic && (rr.Type is ITypeParameter || rr.Type.Equals(_compilation.FindType(KnownTypeCode.ValueType))))
 					result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
+				else if (rr.Input.Type is ITypeParameter)
+					result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
 				return result;
 			}
 			else if (rr.Conversion.IsUnboxingConversion) {

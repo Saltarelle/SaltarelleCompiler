@@ -30,8 +30,8 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporter {
 
             using (var rdr = new StringReader(source)) {
 				var pf = new CSharpParsedFile("File.cs");
-				var cu = parser.Parse(rdr, pf.FileName);
-				cu.AcceptVisitor(new TypeSystemConvertVisitor(pf));
+				var syntaxTree = parser.Parse(rdr, pf.FileName);
+				syntaxTree.AcceptVisitor(new TypeSystemConvertVisitor(pf));
 				project = project.UpdateProjectContent(null, pf);
             }
             project = project.AddAssemblyReferences(new[] { Common.Mscorlib });
