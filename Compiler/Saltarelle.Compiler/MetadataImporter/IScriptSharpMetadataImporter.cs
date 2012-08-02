@@ -18,14 +18,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 	public interface IScriptSharpMetadataImporter : INamingConventionResolver {
 		bool IsNamedValues(ITypeDefinition t);
 		bool IsResources(ITypeDefinition t);
-		bool IsGlobalMethods(ITypeDefinition t);
-		bool IsRecord(ITypeDefinition t);
+		bool IsSerializable(ITypeDefinition t);
 		bool IsRealType(ITypeDefinition t);
 
 		/// <summary>
-		/// Returns the argument supplied to a [Mixin] attribute constructor, or null if no such attribute was specified.
+		/// If the type has a [MixinAttribute], returns the argument to that attribute.
+		/// Otherwise, if the type has a [GlobalMethodsAttribute], returns an empty string.
+		/// Otherwise returns null.
 		/// </summary>
-		string GetMixinArg(ITypeDefinition t);
+		string GetGlobalMethodsPrefix(ITypeDefinition t);
 
 		bool IsTestFixture(ITypeDefinition t);
 

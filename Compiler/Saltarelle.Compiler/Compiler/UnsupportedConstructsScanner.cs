@@ -11,9 +11,9 @@ namespace Saltarelle.Compiler.Compiler {
 			_isCorelibCompilation = isCorelibCompilation;
 		}
 
-		public bool ProcessAndReturnTrueIfEverythingIsSupported(CompilationUnit cu) {
+		public bool ProcessAndReturnTrueIfEverythingIsSupported(SyntaxTree syntaxTree) {
 			_result = true;
-			cu.AcceptVisitor(this);
+			syntaxTree.AcceptVisitor(this);
 			return _result;
 		}
 

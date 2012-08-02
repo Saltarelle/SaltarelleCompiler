@@ -326,7 +326,7 @@ window.s2 = function(t) {
 };
 Q;
 R;
-", new MockScriptSharpMetadataImporter { IsGlobalMethods = t => t.FullName == "SomeNamespace.InnerNamespace.MyClass" },
+", new MockScriptSharpMetadataImporter { GetGlobalMethodsPrefix = t => t.FullName == "SomeNamespace.InnerNamespace.MyClass" ? "" : null },
 			new JsClass(CreateMockType("SomeNamespace.InnerNamespace.MyClass"), "SomeNamespace.InnerNamespace.MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
 				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
@@ -367,7 +367,7 @@ $.fn.method1 = function(x) {
 $.fn.method2 = function(y) {
 	Y;
 };
-",          new MockScriptSharpMetadataImporter { GetMixinArg = t => t.FullName == "MyClass" ? "$.fn" : null },
+",          new MockScriptSharpMetadataImporter { GetGlobalMethodsPrefix = t => t.FullName == "MyClass" ? "$.fn" : null },
 			new JsClass(CreateMockType("MyClass"), "MyClass", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				StaticMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, CreateFunction("x")),
 				                  new JsMethod(CreateMockMethod("Method2"), "method2", null, CreateFunction("y")) }

@@ -149,17 +149,17 @@ namespace Saltarelle.Compiler.Compiler {
 
             var files = sourceFiles.Select(f => { 
                                                     using (var rdr = f.Open()) {
-                                                        var cu = CreateParser(defineConstants).Parse(rdr, f.FileName);
-                                                        var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(cu);
-                                                        cu = (expandResult != null ? (CompilationUnit)expandResult.AstNode : cu);
-                                                        var definedSymbols = DefinedSymbolsGatherer.Gather(cu, defineConstants);
-                                                        return new PreparedCompilation.ParsedSourceFile(cu, new CSharpParsedFile(f.FileName, new UsingScope()), definedSymbols);
+                                                        var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.FileName);
+                                                        var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
+                                                        syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
+                                                        var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
+                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpParsedFile(f.FileName, new UsingScope()), definedSymbols);
                                                     }
                                                 }).ToList();
 
             foreach (var f in files) {
                 var tcv = new TypeSystemConvertVisitor(f.ParsedFile);
-                f.CompilationUnit.AcceptVisitor(tcv);
+                f.SyntaxTree.AcceptVisitor(tcv);
                 project = project.UpdateProjectContent(null, f.ParsedFile);
             }
             project = project.AddAssemblyReferences(references);
@@ -182,16 +182,16 @@ namespace Saltarelle.Compiler.Compiler {
             foreach (var f in compilation.SourceFiles) {
 				try {
 					if (!AllowUnsupportedConstructs) {
-						if (!unsupportedConstructsScanner.ProcessAndReturnTrueIfEverythingIsSupported(f.CompilationUnit)) {
+						if (!unsupportedConstructsScanner.ProcessAndReturnTrueIfEverythingIsSupported(f.SyntaxTree)) {
 							hasUnsupported = true;
 							continue;
 						}
 					}
 					_definedSymbols = f.DefinedSymbols;
 
-	                _resolver = new CSharpAstResolver(_compilation, f.CompilationUnit, f.ParsedFile);
+	                _resolver = new CSharpAstResolver(_compilation, f.SyntaxTree, f.ParsedFile);
 		            _resolver.ApplyNavigator(new ResolveAllNavigator());
-			        f.CompilationUnit.AcceptVisitor(this);
+			        f.SyntaxTree.AcceptVisitor(this);
 				}
 				catch (Exception ex) {
 					_errorReporter.InternalError(ex, f.ParsedFile.FileName, _location);

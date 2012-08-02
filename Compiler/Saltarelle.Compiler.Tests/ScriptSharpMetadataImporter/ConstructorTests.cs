@@ -224,7 +224,7 @@ class C1 {
 		}
 
 		[Test]
-		public void ObjectLiteralAttributeCannotBeUsedOnConstructorForNonRecordType() {
+		public void ObjectLiteralAttributeCannotBeUsedOnConstructorForNonSerializableType() {
 			Prepare(
 @"public class C1 {
 	[System.Runtime.CompilerServices.ObjectLiteral]
@@ -232,7 +232,7 @@ class C1 {
 	}
 }", expectErrors: true);
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("record type") && m.Contains("ObjectLiteralAttribute")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("ObjectLiteralAttribute")));
 		}
 	}
 }

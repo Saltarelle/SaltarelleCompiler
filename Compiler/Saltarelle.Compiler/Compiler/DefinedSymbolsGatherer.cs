@@ -24,9 +24,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static ISet<string> Gather(CompilationUnit cu, IEnumerable<string> predefinedSymbols) {
+		public static ISet<string> Gather(SyntaxTree syntaxTree, IEnumerable<string> predefinedSymbols) {
 			var obj = new DefinedSymbolsGatherer(predefinedSymbols);
-			cu.AcceptVisitor(obj);
+			syntaxTree.AcceptVisitor(obj);
 			return obj._definedSymbols;
 		}
 	}

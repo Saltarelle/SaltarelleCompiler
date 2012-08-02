@@ -1029,12 +1029,12 @@ public class C {
 		}
 
 		[Test]
-		public void CastToRecordTypeIsANoOp() {
+		public void CastToSerializableTypeIsANoOp() {
 			AssertSourceCorrect(@"
 using System;
 using System.Runtime.CompilerServices;
 
-[Record]
+[Serializable]
 sealed class R {}
 
 public class C {
@@ -1087,7 +1087,7 @@ using System.Runtime.CompilerServices;
 [ScriptName(""X"")]
 class C1 {}
 [ScriptName(""X"")]
-class C2 {}
+class C2 : C1 {}
 
 public class C {
 	private void M() {

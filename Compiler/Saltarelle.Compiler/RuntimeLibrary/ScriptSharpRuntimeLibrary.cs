@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
-				if (_metadataImporter.IsRecord(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
+				if (_metadataImporter.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
 				else if (!_metadataImporter.IsRealType(td)) {

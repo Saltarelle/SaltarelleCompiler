@@ -10,14 +10,14 @@ namespace Saltarelle.Compiler.Compiler {
 		public ICompilation Compilation { get; private set; }
 
 		internal class ParsedSourceFile {
-			public CompilationUnit CompilationUnit { get; private set; }
+			public SyntaxTree SyntaxTree { get; private set; }
 			public CSharpParsedFile ParsedFile { get; private set; }
 			public ISet<string> DefinedSymbols { get; private set; }
 
-			public ParsedSourceFile(CompilationUnit compilationUnit, CSharpParsedFile parsedFile, ISet<string> definedSymbols) {
-				CompilationUnit = compilationUnit;
-				ParsedFile      = parsedFile;
-				DefinedSymbols  = definedSymbols;
+			public ParsedSourceFile(SyntaxTree syntaxTree, CSharpParsedFile parsedFile, ISet<string> definedSymbols) {
+				SyntaxTree     = syntaxTree;
+				ParsedFile     = parsedFile;
+				DefinedSymbols = definedSymbols;
 			}
 		}
 

@@ -807,14 +807,21 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 					else {
 						var rr = _resolver.Resolve(v.Expression);
-						if (rr.ConstantValue == null) {
+						object value = rr.ConstantValue;
+						if (rr is MemberResolveResult && ((MemberResolveResult)rr).Member is IField) {
+							var sem = _namingConvention.GetFieldSemantics((IField)((MemberResolveResult)rr).Member);
+							if (sem.Type == FieldScriptSemantics.ImplType.Constant)
+								value = sem.Value;
+						}
+
+						if (value == null) {
 							values.Add(JsExpression.Null);
 						}
-						else if (rr.ConstantValue is string) {
-							values.Add(JsExpression.String((string)rr.ConstantValue));
+						else if (value is string) {
+							values.Add(JsExpression.String((string)value));
 						}
 						else {
-							values.Add(JsExpression.Number((int)Convert.ChangeType(rr.ConstantValue, typeof(int))));
+							values.Add(JsExpression.Number((int)Convert.ChangeType(value, typeof(int))));
 						}
 					}
 				}

@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string IntrinsicPropertyAttribute             = "System.Runtime.CompilerServices.IntrinsicPropertyAttribute";
 		private const string GlobalMethodsAttribute                 = "System.Runtime.CompilerServices.GlobalMethodsAttribute";
 		private const string ImportedAttribute                      = "System.Runtime.CompilerServices.ImportedAttribute";
-		private const string RecordAttribute                        = "System.Runtime.CompilerServices.RecordAttribute";
+		private const string SerializableAttribute                  = "System.SerializableAttribute";
 		private const string IntrinsicOperatorAttribute             = "System.Runtime.CompilerServices.IntrinsicOperatorAttribute";
 		private const string ExpandParamsAttribute                  = "System.Runtime.CompilerServices.ExpandParamsAttribute";
 		private const string NamedValuesAttribute                   = "System.Runtime.CompilerServices.NamedValuesAttribute";
@@ -123,7 +123,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private class TypeSemantics {
 			public TypeScriptSemantics Semantics { get; private set; }
 			public bool IsGlobalMethods { get; private set; }
-			public bool IsRecord { get; private set; }
+			public bool IsSerializable { get; private set; }
 			public bool IsNamedValues { get; private set; }
 			public bool IsImported { get; private set; }
 			public bool IsRealType { get; private set; }
@@ -131,10 +131,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public string MixinArg { get; private set; }
 			public bool IsTestFixture { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isRecord, bool isNamedValues, bool isImported, bool isRealType, bool isResources, string mixinArg, bool isTestFixture) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isSerializable, bool isNamedValues, bool isImported, bool isRealType, bool isResources, string mixinArg, bool isTestFixture) {
 				Semantics       = semantics;
 				IsGlobalMethods = isGlobalMethods;
-				IsRecord        = isRecord;
+				IsSerializable  = isSerializable;
 				IsNamedValues   = isNamedValues;
 				IsImported      = isImported;
 				IsRealType      = isRealType;
@@ -376,28 +376,28 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			bool hasRecordAttr = GetAttributePositionalArgs(typeDefinition, RecordAttribute) != null;
+			bool hasSerializableAttr = GetAttributePositionalArgs(typeDefinition, SerializableAttribute) != null;
 			bool inheritsRecord = typeDefinition.GetAllBaseTypeDefinitions().Any(td => td.Equals(_systemRecord)) && !typeDefinition.Equals(_systemRecord);
 			
-			bool globalMethods = false, isRecord = hasRecordAttr || inheritsRecord;
+			bool globalMethods = false, isSerializable = hasSerializableAttr || inheritsRecord;
 			string mixinArg = null;
 
-			if (isRecord) {
+			if (isSerializable) {
 				if (!typeDefinition.IsSealed) {
 					Message(7008, typeDefinition);
-					isRecord = false;
+					isSerializable = false;
 				}
 				if (!typeDefinition.DirectBaseTypes.Contains(_systemObject) && !typeDefinition.DirectBaseTypes.Contains(_systemRecord)) {
 					Message(7009, typeDefinition);
-					isRecord = false;
+					isSerializable = false;
 				}
 				if (typeDefinition.DirectBaseTypes.Any(b => b.Kind == TypeKind.Interface)) {
 					Message(7010, typeDefinition);
-					isRecord = false;
+					isSerializable = false;
 				}
 				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
 					Message(7011, typeDefinition);
-					isRecord = false;
+					isSerializable = false;
 				}
 			}
 			else {
@@ -443,7 +443,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
 			var tfa = GetAttributePositionalArgs(typeDefinition, TestFixtureAttribute);
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isRecord: isRecord, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, mixinArg: mixinArg, isTestFixture: tfa != null);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, mixinArg: mixinArg, isTestFixture: tfa != null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -516,7 +516,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                                                       || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
 			                                                       || typeSemantics.IsGlobalMethods
 			                                                       || (!typeSemantics.Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
-			                                                       || (typeSemantics.IsRecord && !member.IsStatic && (member is IProperty || member is IField)))
+			                                                       || (typeSemantics.IsSerializable && !member.IsStatic && (member is IProperty || member is IField)))
 			                                                       || (typeSemantics.IsNamedValues && member is IField));
 
 			if (preserveName)
@@ -552,7 +552,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                     group new { m, name } by name.Item1 into g
 			                    select new { Name = g.Key, Members = g.Select(x => new { Member = x.m, NameSpecified = x.name.Item2 }).ToList() };
 
-			bool isRecord = _typeSemantics[typeDefinition].IsRecord;
+			bool isSerializable = _typeSemantics[typeDefinition].IsSerializable;
 			foreach (var current in membersByName) {
 				foreach (var m in current.Members.OrderByDescending(x => x.NameSpecified).ThenBy(x => x.Member, MemberOrderer.Instance)) {
 					if (m.Member is IMethod) {
@@ -562,7 +562,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							ProcessConstructor(method, current.Name, m.NameSpecified, staticMembers);
 						}
 						else {
-							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic || isRecord ? staticMembers : instanceMembers);
+							ProcessMethod(method, current.Name, m.NameSpecified, m.Member.IsStatic || isSerializable ? staticMembers : instanceMembers);
 						}
 					}
 					else if (m.Member is IProperty) {
@@ -617,7 +617,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				Message(7102, constructor);
 			}
 
-			bool isRecord = _typeSemantics[constructor.DeclaringTypeDefinition].IsRecord;
+			bool isSerializable = _typeSemantics[constructor.DeclaringTypeDefinition].IsSerializable;
 
 			var ica = GetAttributePositionalArgs(constructor, InlineCodeAttribute);
 			if (ica != null) {
@@ -637,8 +637,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null);
 				return;
 			}
-			else if (ola != null || (isRecord && _typeSemantics[constructor.DeclaringTypeDefinition].IsImported)) {
-				if (isRecord) {
+			else if (ola != null || (isSerializable && _typeSemantics[constructor.DeclaringTypeDefinition].IsImported)) {
+				if (isSerializable) {
 					bool hasError = false;
 					var members = constructor.DeclaringTypeDefinition.Members.Where(m => m.EntityType == EntityType.Property || m.EntityType == EntityType.Field).ToDictionary(m => m.Name.ToLowerInvariant());
 					var parameterToMemberMap = new List<IMember>();
@@ -671,7 +671,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else if (nameSpecified) {
-				if (isRecord)
+				if (isSerializable)
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, expandParams: epa != null);
 				else
 					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, expandParams: epa != null);
@@ -679,8 +679,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else {
-				if (!usedNames.ContainsKey("$ctor") && !(isRecord && _minimizeNames && !Utils.IsPublic(constructor))) {	// The last part ensures that the first constructor of a record type can have its name minimized. 
-					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
+				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && !Utils.IsPublic(constructor))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
 					usedNames["$ctor"] = true;
 					return;
 				}
@@ -697,7 +697,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						} while (usedNames.ContainsKey(name));
 					}
 
-					_constructorSemantics[constructor] = isRecord ? ConstructorScriptSemantics.StaticMethod(name, expandParams: epa != null) : ConstructorScriptSemantics.Named(name, expandParams: epa != null);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, expandParams: epa != null) : ConstructorScriptSemantics.Named(name, expandParams: epa != null);
 					usedNames[name] = true;
 					return;
 				}
@@ -719,7 +719,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
 			}
-			else if (_typeSemantics[property.DeclaringTypeDefinition].IsRecord && !property.IsStatic) {
+			else if (_typeSemantics[property.DeclaringTypeDefinition].IsSerializable && !property.IsStatic) {
 				usedNames[preferredName] = true;
 				_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
 				return;
@@ -1014,7 +1014,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 						if (asa == null)
 							usedNames[name] = true;
-						if (_typeSemantics[method.DeclaringTypeDefinition].IsRecord && !method.IsStatic) {
+						if (_typeSemantics[method.DeclaringTypeDefinition].IsSerializable && !method.IsStatic) {
 							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
 						}
 						else {
@@ -1272,20 +1272,22 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsResources;
 		}
 
-		public bool IsGlobalMethods(ITypeDefinition t) {
-			return _typeSemantics[t].IsGlobalMethods;
+		public string GetGlobalMethodsPrefix(ITypeDefinition t) {
+			var s = _typeSemantics[t];
+			if (s.MixinArg != null)
+				return s.MixinArg;
+			else if (s.IsGlobalMethods)
+				return "";
+			else
+				return null;
 		}
 
-		public bool IsRecord(ITypeDefinition t) {
-			return _typeSemantics[t].IsRecord;
+		public bool IsSerializable(ITypeDefinition t) {
+			return _typeSemantics[t].IsSerializable;
 		}
 
 		public bool IsRealType(ITypeDefinition t) {
 			return _typeSemantics[t].IsRealType;
-		}
-
-		public string GetMixinArg(ITypeDefinition t) {
-			return _typeSemantics[t].MixinArg;
 		}
 
 		public bool IsTestFixture(ITypeDefinition t) {
