@@ -13,7 +13,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			private readonly string _loopLabel;
 			private readonly string _stateVariable;
 
-			public override JsStatement Visit(JsBlockStatement statement, object data) {
+			public override JsStatement VisitBlockStatement(JsBlockStatement statement, object data) {
 	            List<JsStatement> list = null;
 	            for (int i = 0; i < statement.Statements.Count; i++) {
 	                var before = statement.Statements[i];
@@ -31,7 +31,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 						}
 					}
 					else {
-						after = new[] { Visit(before, null) };
+						after = new[] { VisitStatement(before, null) };
 					}
 
 	                if (list != null) {
@@ -54,7 +54,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			public JsBlockStatement Rewrite(JsBlockStatement statement) {
-				return (JsBlockStatement)Visit(statement, null);
+				return (JsBlockStatement)VisitBlockStatement(statement, null);
 			}
 		}
 
@@ -70,25 +70,25 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			public override JsCatchClause Visit(JsCatchClause clause, object data) {
-				var body = DoRewrite((JsBlockStatement)Visit(clause.Body, data));
+				var body = DoRewrite((JsBlockStatement)VisitBlockStatement(clause.Body, data));
 				return ReferenceEquals(body, clause.Body) ? clause : new JsCatchClause(clause.Identifier, body);
 			}
 
-			public override JsStatement Visit(JsTryCatchFinallyStatement statement, object data) {
-				var guarded  = DoRewrite((JsBlockStatement)Visit(statement.GuardedStatement, data));
+			public override JsStatement VisitTryStatement(JsTryStatement statement, object data) {
+				var guarded  = DoRewrite((JsBlockStatement)VisitBlockStatement(statement.GuardedStatement, data));
 				var @catch   = statement.Catch != null ? Visit(statement.Catch, data) : null;
-				var @finally = statement.Finally != null ? DoRewrite((JsBlockStatement)Visit(statement.Finally, data)) : null;
+				var @finally = statement.Finally != null ? DoRewrite((JsBlockStatement)VisitBlockStatement(statement.Finally, data)) : null;
 
-	            return ReferenceEquals(guarded, statement.GuardedStatement) && ReferenceEquals(@catch, statement.Catch) && ReferenceEquals(@finally, statement.Finally) ? statement : new JsTryCatchFinallyStatement(guarded, @catch, @finally);
+	            return ReferenceEquals(guarded, statement.GuardedStatement) && ReferenceEquals(@catch, statement.Catch) && ReferenceEquals(@finally, statement.Finally) ? statement : new JsTryStatement(guarded, @catch, @finally);
 			}
 
-			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
-				var body = DoRewrite((JsBlockStatement)Visit(expression.Body, data));
+			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
+				var body = DoRewrite((JsBlockStatement)VisitBlockStatement(expression.Body, data));
 	            return ReferenceEquals(body, expression.Body) ? expression : JsExpression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
 			}
 
-			public override JsStatement Visit(JsFunctionStatement statement, object data) {
-				var body = DoRewrite((JsBlockStatement)Visit(statement.Body, data));
+			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
+				var body = DoRewrite((JsBlockStatement)VisitBlockStatement(statement.Body, data));
 	            return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
 			}
 	
@@ -118,7 +118,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable) {
 			var visitor = new Visitor(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable);
-			return visitor.DoRewrite((JsBlockStatement)visitor.Visit(block, null));
+			return visitor.DoRewrite((JsBlockStatement)visitor.VisitBlockStatement(block, null));
 		}
 	}
 }

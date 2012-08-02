@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data) {
-            return visitor.Visit(this, data);
+            return visitor.VisitConditionalExpression(this, data);
         }
 
         public override string ToString() {

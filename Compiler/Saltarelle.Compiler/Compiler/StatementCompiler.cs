@@ -557,7 +557,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				JsStatement stmt = new JsWhileStatement(moveNextInvocation.Expression, body);
 				if (disposer != null)
-					stmt = new JsTryCatchFinallyStatement(stmt, null, disposer);
+					stmt = new JsTryStatement(stmt, null, disposer);
 				_result.Add(stmt);
 			}
 		}
@@ -605,7 +605,7 @@ namespace Saltarelle.Compiler.Compiler {
 				releaseStmt = new JsIfStatement(compiledTest.Expression, new JsExpressionStatement(compiledDisposeCall.Expression), null);
 			}
 
-			stmts.Add(new JsTryCatchFinallyStatement(body, null, releaseStmt));
+			stmts.Add(new JsTryStatement(body, null, releaseStmt));
 
 			return new JsBlockStatement(stmts);
 		}
@@ -689,7 +689,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var finallyBlock = (!tryCatchStatement.FinallyBlock.IsNull ? CreateInnerCompiler().Compile(tryCatchStatement.FinallyBlock) : null);
 
-			_result.Add(new JsTryCatchFinallyStatement(tryBlock, catchClause, finallyBlock));
+			_result.Add(new JsTryStatement(tryBlock, catchClause, finallyBlock));
 		}
 
 		public override void VisitThrowStatement(ThrowStatement throwStatement) {
@@ -704,13 +704,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
-			_result.Add(new JsYieldBreakStatement());
+			_result.Add(new JsYieldStatement(null));
 		}
 
 		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
 			var compiledExpr = CompileExpression(yieldReturnStatement.Expression, true);
 			_result.AddRange(compiledExpr.AdditionalStatements);
-			_result.Add(new JsYieldReturnStatement(compiledExpr.Expression));
+			_result.Add(new JsYieldStatement(compiledExpr.Expression));
 		}
 
 		public override void VisitGotoStatement(GotoStatement gotoStatement) {

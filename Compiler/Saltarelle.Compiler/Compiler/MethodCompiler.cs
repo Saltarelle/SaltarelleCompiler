@@ -21,11 +21,11 @@ namespace Saltarelle.Compiler.Compiler {
 				_replaceWith = replaceWith;
 			}
 
-			public override JsExpression Visit(JsThisExpression expression, object data) {
+			public override JsExpression VisitThisExpression(JsThisExpression expression, object data) {
 				return _replaceWith;
 			}
 
-			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
+			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
 				// Inside a function, "this" is in another context and should thus not be replaced.
 				return expression;
 			}
@@ -38,11 +38,11 @@ namespace Saltarelle.Compiler.Compiler {
 				this._identifier = JsExpression.Identifier(identifier);
 			}
 
-			public override JsStatement Visit(JsReturnStatement statement, object data) {
+			public override JsStatement VisitReturnStatement(JsReturnStatement statement, object data) {
 				return new JsReturnStatement(_identifier);
 			}
 
-			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
+			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
 				return expression;	// Don't patch return values of nested functions.
 			}
 
@@ -127,7 +127,7 @@ namespace Saltarelle.Compiler.Compiler {
 					if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
 						// The compiler one step up has created the statements as "this.a = b;", but we need to replace that with "$this.a = b;" (or whatever name the this alias has).
 						var replacer = new ThisReplacer(JsExpression.Identifier(_namingConvention.ThisAlias));
-						instanceInitStatements = instanceInitStatements.Select(s => replacer.Visit(s, null)).ToList();
+						instanceInitStatements = instanceInitStatements.Select(s => replacer.VisitStatement(s, null)).ToList();
 					}
 					body.AddRange(instanceInitStatements);	// Don't initialize fields when we are chaining, but do it when we 1) compile the default constructor, 2) don't have an initializer, or 3) when the initializer is not this(...).
 				}

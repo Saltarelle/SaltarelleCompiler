@@ -8,27 +8,27 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		private ContainsLabelsVisitor() {
 		}
 
-		public override JsStatement Visit(JsTryCatchFinallyStatement statement, object data) {
+		public override JsStatement VisitTryStatement(JsTryStatement statement, object data) {
 			// This is a little hacky. In our state machines, we emit labelled loops, which the LabelledBlockGatherer doesn't like because it doesn't realize that no rewrite is necessary because the labels are only used for break and continue. In the long run, this should probably be fixed, but it will not cause any problems since we never want to go into or out of try/catch/finally anyway.
 			return statement;
 		}
 
-		public override JsStatement Visit(JsFunctionStatement statement, object data) {
+		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
 			return statement;
 		}
 
-		public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
+		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
 			return expression;
 		}
 
-		public override JsStatement Visit(JsLabelledStatement statement, object data) {
+		public override JsStatement VisitLabelledStatement(JsLabelledStatement statement, object data) {
 			_result = true;
 			return statement;
 		}
 
 		public static bool Analyze(JsStatement statement) {
 			var obj = new ContainsLabelsVisitor();
-			obj.Visit(statement, null);
+			obj.VisitStatement(statement, null);
 			return obj._result;
 		}
 	}

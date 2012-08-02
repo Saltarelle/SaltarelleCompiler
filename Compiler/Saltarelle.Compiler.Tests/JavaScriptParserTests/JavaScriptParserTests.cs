@@ -386,19 +386,19 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 
 		[Test]
 		public void TryStatement() {
-			var stmt = ParseStatement<JsTryCatchFinallyStatement>("try { a; } catch (b) { c; } finally { d; }");
+			var stmt = ParseStatement<JsTryStatement>("try { a; } catch (b) { c; } finally { d; }");
 			Assert.That(OutputFormatter.Format(stmt.GuardedStatement).Replace("\r\n", "\n"), Is.EqualTo("{\n\ta;\n}\n"));
 			Assert.That(stmt.Catch.Identifier, Is.EqualTo("b"));
 			Assert.That(OutputFormatter.Format(stmt.Catch.Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tc;\n}\n"));
 			Assert.That(OutputFormatter.Format(stmt.Finally).Replace("\r\n", "\n"), Is.EqualTo("{\n\td;\n}\n"));
 
-			stmt = ParseStatement<JsTryCatchFinallyStatement>("try { a; } catch (b) { c; }");
+			stmt = ParseStatement<JsTryStatement>("try { a; } catch (b) { c; }");
 			Assert.That(OutputFormatter.Format(stmt.GuardedStatement).Replace("\r\n", "\n"), Is.EqualTo("{\n\ta;\n}\n"));
 			Assert.That(stmt.Catch.Identifier, Is.EqualTo("b"));
 			Assert.That(OutputFormatter.Format(stmt.Catch.Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tc;\n}\n"));
 			Assert.That(stmt.Finally, Is.Null);
 
-			stmt = ParseStatement<JsTryCatchFinallyStatement>("try { a; } finally { d; }");
+			stmt = ParseStatement<JsTryStatement>("try { a; } finally { d; }");
 			Assert.That(OutputFormatter.Format(stmt.GuardedStatement).Replace("\r\n", "\n"), Is.EqualTo("{\n\ta;\n}\n"));
 			Assert.That(stmt.Catch, Is.Null);
 			Assert.That(OutputFormatter.Format(stmt.Finally).Replace("\r\n", "\n"), Is.EqualTo("{\n\td;\n}\n"));

@@ -64,8 +64,7 @@
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />
     <Compile Include="Statements\JsLabelStatement.cs" />
-    <Compile Include="Statements\JsYieldBreakStatement.cs" />
-    <Compile Include="Statements\JsYieldReturnStatement.cs" />
+    <Compile Include="Statements\JsYieldStatement.cs" />
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />
     <Compile Include="Expressions\JsObjectLiteralProperty.cs" />
@@ -98,7 +97,7 @@
     <Compile Include="Statements\JsSwitchStatement.cs" />
     <Compile Include="Expressions\JsConditionalExpression.cs" />
     <Compile Include="Statements\JsThrowStatement.cs" />
-    <Compile Include="Statements\JsTryCatchFinallyStatement.cs" />
+    <Compile Include="Statements\JsTryStatement.cs" />
     <Compile Include="Expressions\JsUnaryExpression.cs" />
     <Compile Include="Expressions\JsConstantExpression.cs" />
     <Compile Include="Statements\JsVariableDeclaration.cs" />

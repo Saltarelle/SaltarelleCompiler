@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 	/// </summary>
 	public class GlobalNamespaceReferenceImporter : IReferenceImporter {
 		private class ImportVisitor : RewriterVisitorBase<object> {
-			public override JsExpression Visit(JsTypeReferenceExpression expression, object data) {
+			public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, object data) {
 				var parts = expression.TypeName.Split('.');
 				JsExpression result = JsExpression.Identifier(parts[0]);
 				for (int i = 1; i < parts.Length; i++)
@@ -21,7 +21,7 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 			}
 
 			public JsStatement Process(JsStatement stmt) {
-				return Visit(stmt, null);
+				return VisitStatement(stmt, null);
 			}
 
 			private ImportVisitor() {

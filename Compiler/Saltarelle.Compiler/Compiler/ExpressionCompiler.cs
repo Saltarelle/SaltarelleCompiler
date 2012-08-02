@@ -39,42 +39,42 @@ namespace Saltarelle.Compiler.Compiler {
 				return v._result;
 			}
 
-			public override JsExpression Visit(JsArrayLiteralExpression expression, object data) {
+			public override JsExpression VisitArrayLiteralExpression(JsArrayLiteralExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsBinaryExpression expression, object data) {
+			public override JsExpression VisitBinaryExpression(JsBinaryExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsCommaExpression expression, object data) {
+			public override JsExpression VisitCommaExpression(JsCommaExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsFunctionDefinitionExpression expression, object data) {
+			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsInvocationExpression expression, object data) {
+			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsNewExpression expression, object data) {
+			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsObjectLiteralExpression expression, object data) {
+			public override JsExpression VisitObjectLiteralExpression(JsObjectLiteralExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsUnaryExpression expression, object data) {
+			public override JsExpression VisitUnaryExpression(JsUnaryExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
@@ -89,27 +89,27 @@ namespace Saltarelle.Compiler.Compiler {
 				return v._result;
 			}
 
-			public override JsExpression Visit(JsInvocationExpression expression, object data) {
+			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsNewExpression expression, object data) {
+			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
 				_result = true;
 				return expression;
 			}
 
-			public override JsExpression Visit(JsBinaryExpression expression, object data) {
+			public override JsExpression VisitBinaryExpression(JsBinaryExpression expression, object data) {
 				if (expression.NodeType >= ExpressionNodeType.AssignFirst && expression.NodeType <= ExpressionNodeType.AssignLast) {
 					_result = true;
 					return expression;
 				}
 				else {
-					return base.Visit(expression, data);
+					return base.VisitBinaryExpression(expression, data);
 				}
 			}
 
-			public override JsExpression Visit(JsUnaryExpression expression, object data) {
+			public override JsExpression VisitUnaryExpression(JsUnaryExpression expression, object data) {
 				switch (expression.NodeType) {
 					case ExpressionNodeType.PrefixPlusPlus:
 					case ExpressionNodeType.PrefixMinusMinus:
@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler.Compiler {
 						_result = true;
 						return expression;
 					default:
-						return base.Visit(expression, data);
+						return base.VisitUnaryExpression(expression, data);
 				}
 			}
 		}

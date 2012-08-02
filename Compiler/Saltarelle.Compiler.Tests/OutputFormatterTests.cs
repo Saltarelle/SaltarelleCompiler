@@ -782,11 +782,11 @@ else {
 
 		[Test]
 		public void TryCatchFinallyStatementWithCatchOrFinallyOrBothWorks() {
-			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), new JsExpressionStatement(JsExpression.Identifier("z")))),
+			Assert.That(OutputFormatter.Format(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), new JsExpressionStatement(JsExpression.Identifier("z")))),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
-			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), null)),
+			Assert.That(OutputFormatter.Format(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), null)),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\n"));
-			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z")))),
+			Assert.That(OutputFormatter.Format(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z")))),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
 		}
 

@@ -15,71 +15,71 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 		// TODO: This class does not support 'break label' and 'continue label' statements (but we don't generate those).
 		class DoNotEnterLoopsVisitor<T> : RewriterVisitorBase<T> {
-			public override JsStatement Visit(JsForStatement statement, T data) {
+			public override JsStatement VisitForStatement(JsForStatement statement, T data) {
 				return statement;
 			}
 
-			public override JsStatement Visit(JsForEachInStatement statement, T data) {
+			public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, T data) {
 				return statement;
 			}
 
-			public override JsStatement Visit(JsWhileStatement statement, T data) {
+			public override JsStatement VisitWhileStatement(JsWhileStatement statement, T data) {
 				return statement;
 			}
 
-			public override JsStatement Visit(JsDoWhileStatement statement, T data) {
+			public override JsStatement VisitDoWhileStatement(JsDoWhileStatement statement, T data) {
 				return statement;
 			}
 
-			public override JsStatement Visit(JsFunctionStatement statement, T data) {
+			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, T data) {
 				return statement;
 			}
 
-			public override JsExpression Visit(JsFunctionDefinitionExpression expression, T data) {
+			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, T data) {
 				return expression;
 			}
 		}
 
 		class ReplaceBreakWithGotoVisitor : DoNotEnterLoopsVisitor<string> {
-			public override JsStatement Visit(JsSwitchStatement statement, string data) {
+			public override JsStatement VisitSwitchStatement(JsSwitchStatement statement, string data) {
 				return statement;
 			}
 
-			public override JsStatement Visit(JsBreakStatement statement, string data) {
+			public override JsStatement VisitBreakStatement(JsBreakStatement statement, string data) {
 				return new JsGotoStatement(data);
 			}
 
 			public JsBlockStatement Process(JsBlockStatement statement, string labelName) {
-				return (JsBlockStatement)Visit(statement, labelName);
+				return (JsBlockStatement)VisitBlockStatement(statement, labelName);
 			}
 		}
 
 		class ContainsBreakVisitor : RewriterVisitorBase<object> {
 			bool _result = false;
 
-			public override JsStatement Visit(JsSwitchStatement statement, object data) {
+			public override JsStatement VisitSwitchStatement(JsSwitchStatement statement, object data) {
 				return statement;
 			}
 
-			public override JsStatement Visit(JsBreakStatement statement, object data) {
+			public override JsStatement VisitBreakStatement(JsBreakStatement statement, object data) {
 				_result = true;
 				return statement;
 			}
 
 			public bool Process(JsStatement statement) {
 				_result = false;
-				Visit(statement, null);
+				VisitStatement(statement, null);
 				return _result;
 			}
 		}
 
 		class ReplaceContinueWithGotoVisitor : DoNotEnterLoopsVisitor<string> {
-			public override JsStatement Visit(JsContinueStatement statement, string data) {
+			public override JsStatement VisitContinueStatement(JsContinueStatement statement, string data) {
 				return new JsGotoStatement(data);
 			}
 
 			public JsBlockStatement Process(JsBlockStatement statement, string labelName) {
-				return (JsBlockStatement)Visit(statement, labelName);
+				return (JsBlockStatement)VisitBlockStatement(statement, labelName);
 			}
 		}
 
