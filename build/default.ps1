@@ -6,10 +6,19 @@ properties {
 	$outDir = "$(Resolve-Path "".."")\bin"
 	$configuration = "Debug"
 	$releaseTagPattern = "release-(.*)"
-	$autoVersion = $true
 }
 
-Task default -Depends Build
+Task default -Depends Build-AutoVersion
+
+Task Build-AutoVersion {
+	$script:autoVersion = $true
+	Invoke-Task Build
+}
+
+Task Build-NoAutoVersion {
+	$script:autoVersion = $false
+	Invoke-Task Build
+}
 
 Task Clean {
 	if (Test-Path $outDir) {
@@ -231,7 +240,7 @@ Task Configure -Depends Generate-VersionInfo {
 }
 
 Function Determine-PathVersion($RefCommit, $RefVersion, $Path) {
-	if ($autoVersion) {
+	if ($script:autoVersion) {
 		$RefVersion = New-Object System.Version(($RefVersion -Replace "-.*$",""))
 		if ($RefVersion.Build -lt 0) {
 			$RefVersion = New-Object System.Version($RefVersion.Major, $RefVersion.Minor, 0)
@@ -267,7 +276,7 @@ Function Determine-Ref {
 }
 
 Task Determine-Version {
-	if (-not $autoVersion) {
+	if (-not $script:autoVersion) {
 		if ((git log -1 --decorate=full --simplify-by-decoration --pretty=oneline HEAD |
 			 Select-String '\(' |
 			 % { ($_ -replace "^[^(]*\(([^)]*)\).*$","`$1" -replace " ", "").Split(',') } |
