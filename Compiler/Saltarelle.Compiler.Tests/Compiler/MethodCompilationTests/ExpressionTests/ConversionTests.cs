@@ -1166,7 +1166,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void ExplicitArrayToGenericIList() {
 			AssertCorrect(
 @"class B {}
