@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
+using MC = Saltarelle.Compiler.Compiler.MethodCompiler;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTests {
 	[TestFixture]
@@ -91,7 +92,10 @@ public void M() {
 
 		[Test]
 		public void GotoCaseAndGotoDefaultStatementsWork() {
-			AssertCorrect(
+			try {
+				MC.DisablePostProcessingTestingUseOnly = true;
+
+				AssertCorrect(
 @"public void M() {
 	long i = 0;
 	// BEGIN
@@ -154,11 +158,18 @@ public void M() {
 		}
 	}
 ");
+			}
+			finally {
+				MC.DisablePostProcessingTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void GotoCaseAndGotoDefaultStatementsWorkWithNestedSwitches() {
-			AssertCorrect(
+			try {
+				MC.DisablePostProcessingTestingUseOnly = true;
+
+				AssertCorrect(
 @"public void M() {
 	int i = 0, j = 0;
 	// BEGIN
@@ -215,11 +226,18 @@ public void M() {
 		}
 	}
 ");
+			}
+			finally {
+				MC.DisablePostProcessingTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void NullCaseWorksWithGotoCase() {
-			AssertCorrect(
+			try {
+				MC.DisablePostProcessingTestingUseOnly = true;
+
+				AssertCorrect(
 @"public void M() {
 	int? i = 0;
 	// BEGIN
@@ -252,6 +270,10 @@ public void M() {
 		}
 	}
 ");
+			}
+			finally {
+				MC.DisablePostProcessingTestingUseOnly = false;
+			}
 		}
 
 		[Test]

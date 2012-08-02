@@ -3,7 +3,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.Statements {
 	[Serializable]
-    public class JsTryCatchFinallyStatement : JsStatement {
+    public class JsTryStatement : JsStatement {
         public JsBlockStatement GuardedStatement { get; private set; }
 
         /// <summary>
@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         /// </summary>
         public JsBlockStatement Finally { get; private set; }
 
-        public JsTryCatchFinallyStatement(JsStatement guardedStatement, JsCatchClause catchClause, JsStatement @finally) {
+        public JsTryStatement(JsStatement guardedStatement, JsCatchClause catchClause, JsStatement @finally) {
             if (guardedStatement == null) throw new ArgumentException("guardedStatement");
             if (catchClause == null && @finally == null) throw new ArgumentException("Either catchClause or finally (or both) must be specified");
 
@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
-            return visitor.Visit(this, data);
+            return visitor.VisitTryStatement(this, data);
         }
     }
 }

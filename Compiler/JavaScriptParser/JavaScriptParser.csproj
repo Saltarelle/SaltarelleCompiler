@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{819223CA-D211-44C2-BC01-A2B955D4CA61}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>JavaScriptParser</RootNamespace>
+    <AssemblyName>JavaScriptParser</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>3021</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>3021</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\packages-manual\antlr\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Parser.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Antlr3 Include="ParserImpl\JavaScript.g">
+      <OutputFiles>ParserImpl\JavaScriptLexer.cs;ParserImpl\JavaScriptParser.cs</OutputFiles>
+    </Antlr3>
+    <Antlr3 Include="ParserImpl\JavaScriptTreeParser.g">
+      <OutputFiles>ParserImpl\JavaScriptTreeParser.cs</OutputFiles>
+    </Antlr3>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ParserImpl\JavaScriptLexer.cs">
+      <DependentUpon>JavaScript.g</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="ParserImpl\JavaScriptParser.cs">
+      <DependentUpon>JavaScript.g</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="ParserImpl\JavaScriptTreeParser.cs">
+      <DependentUpon>JavaScriptTreeParser.g</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JSModel\JSModel.csproj">
+      <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
+      <Name>JSModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="CleanAntlrCode">
+    <Delete Files="%(Antlr3.OutputFiles)" />
+  </Target>
+  <Target Name="GenerateAntlrCode" Inputs="@(Antlr3)" Outputs="%(Antlr3.OutputFiles)">
+    <Delete Files="%(Antlr3.OutputFiles)" />
+    <Exec Command="@(Antlr3->'%22$(SolutionDir)packages-manual\antlr\Antlr3.exe%22 -message-format vs2005 %22%(Filename)%(Extension)%22')" WorkingDirectory="$(ProjectDir)ParserImpl" />
+  </Target>
+  <PropertyGroup>
+    <CleanDependsOn>CleanAntlrCode;$(CleanDependsOn)</CleanDependsOn>
+    <CompileDependsOn>GenerateAntlrCode;$(CompileDependsOn)</CompileDependsOn>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

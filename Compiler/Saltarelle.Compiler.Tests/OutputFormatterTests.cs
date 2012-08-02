@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -781,11 +782,11 @@ else {
 
 		[Test]
 		public void TryCatchFinallyStatementWithCatchOrFinallyOrBothWorks() {
-			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), new JsExpressionStatement(JsExpression.Identifier("z")))),
+			Assert.That(OutputFormatter.Format(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), new JsExpressionStatement(JsExpression.Identifier("z")))),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
-			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), null)),
+			Assert.That(OutputFormatter.Format(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), null)),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\ncatch (e) {\r\n\ty;\r\n}\r\n"));
-			Assert.That(OutputFormatter.Format(new JsTryCatchFinallyStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z")))),
+			Assert.That(OutputFormatter.Format(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z")))),
 			            Is.EqualTo("try {\r\n\tx;\r\n}\r\nfinally {\r\n\tz;\r\n}\r\n"));
 		}
 
@@ -817,6 +818,11 @@ else {
 }
 ".Replace("\r\n", "\n")));
 
+		}
+
+		[Test]
+		public void FunctionDefinitionStatementWorks() {
+			Assert.That(OutputFormatter.Format(new JsFunctionStatement("f", new[] { "a, b, c" }, new JsExpressionStatement(JsExpression.Identifier("x")))).Replace("\r\n", "\n"), Is.EqualTo("function f(a, b, c) {\n\tx;\n}\n"));
 		}
     }
 }

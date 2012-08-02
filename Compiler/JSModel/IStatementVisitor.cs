@@ -2,27 +2,27 @@
 
 namespace Saltarelle.Compiler.JSModel {
     public interface IStatementVisitor<out TReturn, in TData> {
-        TReturn Visit(JsStatement statement, TData data);
-        TReturn Visit(JsComment statement, TData data);
-        TReturn Visit(JsBlockStatement statement, TData data);
-        TReturn Visit(JsBreakStatement statement, TData data);
-        TReturn Visit(JsContinueStatement statement, TData data);
-        TReturn Visit(JsDoWhileStatement statement, TData data);
-        TReturn Visit(JsEmptyStatement statement, TData data);
-        TReturn Visit(JsExpressionStatement statement, TData data);
-        TReturn Visit(JsForEachInStatement statement, TData data);
-        TReturn Visit(JsForStatement statement, TData data);
-        TReturn Visit(JsIfStatement statement, TData data);
-        TReturn Visit(JsReturnStatement statement, TData data);
-        TReturn Visit(JsSwitchStatement statement, TData data);
-        TReturn Visit(JsThrowStatement statement, TData data);
-        TReturn Visit(JsTryCatchFinallyStatement statement, TData data);
-        TReturn Visit(JsVariableDeclarationStatement statement, TData data);
-        TReturn Visit(JsWhileStatement statement, TData data);
-        TReturn Visit(JsWithStatement statement, TData data);
-		TReturn Visit(JsLabelStatement statement, TData data);
-		TReturn Visit(JsGotoStatement statement, TData data);
-		TReturn Visit(JsYieldReturnStatement statement, TData data);
-		TReturn Visit(JsYieldBreakStatement statement, TData data);
+        TReturn VisitStatement(JsStatement statement, TData data);
+        TReturn VisitComment(JsComment statement, TData data);
+        TReturn VisitBlockStatement(JsBlockStatement statement, TData data);
+        TReturn VisitBreakStatement(JsBreakStatement statement, TData data);
+        TReturn VisitContinueStatement(JsContinueStatement statement, TData data);
+        TReturn VisitDoWhileStatement(JsDoWhileStatement statement, TData data);
+        TReturn VisitEmptyStatement(JsEmptyStatement statement, TData data);
+        TReturn VisitExpressionStatement(JsExpressionStatement statement, TData data);
+        TReturn VisitForEachInStatement(JsForEachInStatement statement, TData data);
+        TReturn VisitForStatement(JsForStatement statement, TData data);
+        TReturn VisitIfStatement(JsIfStatement statement, TData data);
+        TReturn VisitReturnStatement(JsReturnStatement statement, TData data);
+        TReturn VisitSwitchStatement(JsSwitchStatement statement, TData data);
+        TReturn VisitThrowStatement(JsThrowStatement statement, TData data);
+        TReturn VisitTryStatement(JsTryStatement statement, TData data);
+        TReturn VisitVariableDeclarationStatement(JsVariableDeclarationStatement statement, TData data);
+        TReturn VisitWhileStatement(JsWhileStatement statement, TData data);
+        TReturn VisitWithStatement(JsWithStatement statement, TData data);
+		TReturn VisitLabelledStatement(JsLabelledStatement statement, TData data);
+		TReturn VisitGotoStatement(JsGotoStatement statement, TData data);
+		TReturn VisitYieldStatement(JsYieldStatement statement, TData data);
+		TReturn VisitFunctionStatement(JsFunctionStatement statement, TData data);
     }
 }

@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
-            return visitor.Visit(this, data);
+            return visitor.VisitContinueStatement(this, data);
         }
     }
 }

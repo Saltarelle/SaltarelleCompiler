@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler
+namespace Saltarelle.Compiler.JSModel
 {
     public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
     	private readonly bool _allowIntermediates;
@@ -21,17 +18,17 @@ namespace Saltarelle.Compiler
 
     	public static string Format(JsExpression expression, bool allowIntermediates = false) {
             var fmt = new OutputFormatter(allowIntermediates);
-            fmt.Visit(expression, false);
+            fmt.VisitExpression(expression, false);
             return fmt._cb.ToString();
         }
 
         public static string Format(JsStatement statement, bool allowIntermediates = false) {
             var fmt = new OutputFormatter(allowIntermediates);
-            fmt.Visit(statement, true);
+            fmt.VisitStatement(statement, true);
             return fmt._cb.ToString();
         }
 
-        public object Visit(JsExpression expression, bool parenthesized) {
+        public object VisitExpression(JsExpression expression, bool parenthesized) {
             if (parenthesized)
                 _cb.Append("(");
             expression.Accept(this, parenthesized);
@@ -45,57 +42,57 @@ namespace Saltarelle.Compiler
             foreach (var x in expressions) {
                 if (!first)
                     _cb.Append(", ");
-                Visit(x, GetPrecedence(x.NodeType) >= PrecedenceComma); // We need to parenthesize comma expressions, eg. [1, (2, 3), 4]
+                VisitExpression(x, GetPrecedence(x.NodeType) >= PrecedenceComma); // We need to parenthesize comma expressions, eg. [1, (2, 3), 4]
                 first = false;
             }
         }
 
-        public object Visit(JsArrayLiteralExpression expression, bool parenthesized) {
+        public object VisitArrayLiteralExpression(JsArrayLiteralExpression expression, bool parenthesized) {
             _cb.Append("[");
             VisitExpressionList(expression.Elements);
             _cb.Append("]");
             return null;
         }
 
-        public object Visit(JsBinaryExpression expression, bool parenthesized) {
+        public object VisitBinaryExpression(JsBinaryExpression expression, bool parenthesized) {
             int expressionPrecedence = GetPrecedence(expression.NodeType);
             if (expression.NodeType == ExpressionNodeType.Index) {
-                Visit(expression.Left, GetPrecedence(expression.Left.NodeType) > expressionPrecedence);
+                VisitExpression(expression.Left, GetPrecedence(expression.Left.NodeType) > expressionPrecedence);
                 _cb.Append("[");
-                Visit(expression.Right, false);
+                VisitExpression(expression.Right, false);
                 _cb.Append("]");
             }
             else {
                 bool isRightAssociative = expression.NodeType >= ExpressionNodeType.AssignFirst && expression.NodeType <= ExpressionNodeType.AssignLast;
 
-                Visit(expression.Left, GetPrecedence(expression.Left.NodeType) > expressionPrecedence - (isRightAssociative ? 1 : 0));
+                VisitExpression(expression.Left, GetPrecedence(expression.Left.NodeType) > expressionPrecedence - (isRightAssociative ? 1 : 0));
                 _cb.Append(" ").Append(GetBinaryOperatorString(expression.NodeType)).Append(" ");
-                Visit(expression.Right, GetPrecedence(expression.Right.NodeType) > expressionPrecedence - (isRightAssociative ? 0 : 1));
+                VisitExpression(expression.Right, GetPrecedence(expression.Right.NodeType) > expressionPrecedence - (isRightAssociative ? 0 : 1));
             }
             return null;
         }
 
-        public object Visit(JsCommaExpression expression, bool parenthesized) {
+        public object VisitCommaExpression(JsCommaExpression expression, bool parenthesized) {
             int expressionPrecedence = GetPrecedence(expression.NodeType);
             for (int i = 0; i < expression.Expressions.Count; i++) {
                 if (i > 0)
                     _cb.Append(", ");
-            	Visit(expression.Expressions[i], GetPrecedence(expression.Expressions[i].NodeType) > expressionPrecedence);
+            	VisitExpression(expression.Expressions[i], GetPrecedence(expression.Expressions[i].NodeType) > expressionPrecedence);
             }
             return null;
         }
 
-        public object Visit(JsConditionalExpression expression, bool parenthesized) {
+        public object VisitConditionalExpression(JsConditionalExpression expression, bool parenthesized) {
             // Always parenthesize conditionals (but beware of double parentheses). Better this than accidentally getting the tricky precedence wrong sometimes.
             if (!parenthesized)
                 _cb.Append("(");
 
             // Also, be rather liberal when parenthesizing the operands, partly to avoid bugs, partly for readability.
-            Visit(expression.Test, GetPrecedence(expression.Test.NodeType) >= PrecedenceMultiply);
+            VisitExpression(expression.Test, GetPrecedence(expression.Test.NodeType) >= PrecedenceMultiply);
             _cb.Append(" ? ");
-            Visit(expression.TruePart, GetPrecedence(expression.TruePart.NodeType) >= PrecedenceMultiply);
+            VisitExpression(expression.TruePart, GetPrecedence(expression.TruePart.NodeType) >= PrecedenceMultiply);
             _cb.Append(" : ");
-            Visit(expression.FalsePart, GetPrecedence(expression.FalsePart.NodeType) >= PrecedenceMultiply);
+            VisitExpression(expression.FalsePart, GetPrecedence(expression.FalsePart.NodeType) >= PrecedenceMultiply);
 
             if (!parenthesized)
                 _cb.Append(")");
@@ -103,7 +100,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(JsConstantExpression expression, bool parenthesized) {
+        public object VisitConstantExpression(JsConstantExpression expression, bool parenthesized) {
             switch (expression.NodeType) {
                 case ExpressionNodeType.Null:
                     _cb.Append("null");
@@ -126,7 +123,7 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(JsFunctionDefinitionExpression expression, bool parenthesized) {
+        public object VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, bool parenthesized) {
             _cb.Append("function");
             if (expression.Name != null)
                 _cb.Append(" ").Append(expression.Name);
@@ -140,25 +137,25 @@ namespace Saltarelle.Compiler
                 first = false;
             }
             _cb.Append(") ");
-			Visit(expression.Body, false);
+			VisitBlockStatement(expression.Body, false);
 
             return null;
         }
 
-        public object Visit(JsIdentifierExpression expression, bool parenthesized) {
+        public object VisitIdentifierExpression(JsIdentifierExpression expression, bool parenthesized) {
             _cb.Append(expression.Name);
             return null;
         }
 
-        public object Visit(JsInvocationExpression expression, bool parenthesized) {
-            Visit(expression.Method, GetPrecedence(expression.Method.NodeType) > GetPrecedence(expression.NodeType) || (expression.Method is JsNewExpression)); // Ugly code to make sure that we put parentheses around "new", eg. "(new X())(1)" rather than "new X()(1)"
+        public object VisitInvocationExpression(JsInvocationExpression expression, bool parenthesized) {
+            VisitExpression(expression.Method, GetPrecedence(expression.Method.NodeType) > GetPrecedence(expression.NodeType) || (expression.Method is JsNewExpression)); // Ugly code to make sure that we put parentheses around "new", eg. "(new X())(1)" rather than "new X()(1)"
             _cb.Append("(");
             VisitExpressionList(expression.Arguments);
             _cb.Append(")");
             return null;
         }
 
-        public object Visit(JsObjectLiteralExpression expression, bool parenthesized) {
+        public object VisitObjectLiteralExpression(JsObjectLiteralExpression expression, bool parenthesized) {
             if (expression.Values.Count == 0) {
                 _cb.Append("{}");
             }
@@ -179,7 +176,7 @@ namespace Saltarelle.Compiler
 					}
                     _cb.Append(v.Name.IsValidJavaScriptIdentifier() ? v.Name : ("'" + v.Name.EscapeJavascriptStringLiteral() + "'"))
                        .Append(": ");
-                    Visit(v.Value, GetPrecedence(v.Value.NodeType) >= PrecedenceComma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
+                    VisitExpression(v.Value, GetPrecedence(v.Value.NodeType) >= PrecedenceComma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
                     first = false;
                 }
 				if (multiline)
@@ -190,23 +187,23 @@ namespace Saltarelle.Compiler
             return null;
         }
 
-        public object Visit(JsMemberAccessExpression expression, bool parenthesized) {
-            Visit(expression.Target, (GetPrecedence(expression.Target.NodeType) > GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
+        public object VisitMemberAccessExpression(JsMemberAccessExpression expression, bool parenthesized) {
+            VisitExpression(expression.Target, (GetPrecedence(expression.Target.NodeType) > GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
             _cb.Append(".");
             _cb.Append(expression.Member);
             return null;
         }
 
-        public object Visit(JsNewExpression expression, bool parenthesized) {
+        public object VisitNewExpression(JsNewExpression expression, bool parenthesized) {
             _cb.Append("new ");
-            Visit(expression.Constructor, GetPrecedence(expression.Constructor.NodeType) >= GetPrecedence(expression.NodeType));
+            VisitExpression(expression.Constructor, GetPrecedence(expression.Constructor.NodeType) >= GetPrecedence(expression.NodeType));
             _cb.Append("(");
             VisitExpressionList(expression.Arguments);
             _cb.Append(")");
             return null;
         }
 
-        public object Visit(JsUnaryExpression expression, bool parenthesized) {
+        public object VisitUnaryExpression(JsUnaryExpression expression, bool parenthesized) {
             string prefix = "", postfix = "";
             bool alwaysParenthesize = false;
             switch (expression.NodeType) {
@@ -224,12 +221,12 @@ namespace Saltarelle.Compiler
                 default: throw new ArgumentException("expression");
             }
             _cb.Append(prefix);
-            Visit(expression.Operand, (GetPrecedence(expression.Operand.NodeType) >= PrecedenceIncrDecr) || alwaysParenthesize);
+            VisitExpression(expression.Operand, (GetPrecedence(expression.Operand.NodeType) >= PrecedenceIncrDecr) || alwaysParenthesize);
             _cb.Append(postfix);
             return null;
         }
 
-        public object Visit(JsTypeReferenceExpression expression, bool parenthesized) {
+        public object VisitTypeReferenceExpression(JsTypeReferenceExpression expression, bool parenthesized) {
 			if (!_allowIntermediates)
 				throw new NotSupportedException("TypeReferenceExpressions should not occur in the output stage");
 			int lastDot = expression.TypeName.LastIndexOf('.');
@@ -238,19 +235,19 @@ namespace Saltarelle.Compiler
 			return null;
         }
 
-        public object Visit(JsThisExpression expression, bool parenthesized) {
+        public object VisitThisExpression(JsThisExpression expression, bool parenthesized) {
             _cb.Append("this");
 			return null;
         }
 
-		public object Visit(JsLiteralExpression expression, bool parenthesized) {
+		public object VisitLiteralExpression(JsLiteralExpression expression, bool parenthesized) {
             int expressionPrecedence = GetPrecedence(expression.NodeType);
 			var oldCB = _cb;
 			var arguments = new string[expression.Arguments.Count];
 			for (int i = 0; i < expression.Arguments.Count; i++) {
 				_cb = new CodeBuilder(indentLevel: oldCB.IndentLevel);
 				_cb.PreventIndent();
-				Visit(expression.Arguments[i], GetPrecedence(expression.Arguments[i].NodeType) > expressionPrecedence);
+				VisitExpression(expression.Arguments[i], GetPrecedence(expression.Arguments[i].NodeType) > expressionPrecedence);
 				arguments[i] = _cb.ToString();
 			}
 			_cb = oldCB;
@@ -442,27 +439,27 @@ namespace Saltarelle.Compiler
             }
         }
 
-    	public object Visit(JsStatement statement, bool addNewline) {
+    	public object VisitStatement(JsStatement statement, bool addNewline) {
 			return statement.Accept(this, addNewline);
     	}
 
-    	public object Visit(JsComment comment, bool data) {
+    	public object VisitComment(JsComment comment, bool data) {
 			foreach (var l in comment.Text.Replace("\r", "").Split('\n'))
 				_cb.AppendLine("//" + l);
 			return null;
     	}
 
-    	public object Visit(JsBlockStatement statement, bool addNewline) {
+    	public object VisitBlockStatement(JsBlockStatement statement, bool addNewline) {
 			_cb.AppendLine("{").Indent();
 			foreach (var c in statement.Statements)
-				Visit(c, true);
+				VisitStatement(c, true);
 			_cb.Outdent().Append("}");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsBreakStatement statement, bool addNewline) {
+    	public object VisitBreakStatement(JsBreakStatement statement, bool addNewline) {
 			_cb.Append("break");
 			if (statement.TargetLabel != null)
 				_cb.Append(" ").Append(statement.TargetLabel);
@@ -472,7 +469,7 @@ namespace Saltarelle.Compiler
 			return null;
     	}
 
-    	public object Visit(JsContinueStatement statement, bool addNewline) {
+    	public object VisitContinueStatement(JsContinueStatement statement, bool addNewline) {
 			_cb.Append("continue");
 			if (statement.TargetLabel != null)
 				_cb.Append(" ").Append(statement.TargetLabel);
@@ -482,61 +479,61 @@ namespace Saltarelle.Compiler
 			return null;
     	}
 
-    	public object Visit(JsDoWhileStatement statement, bool addNewline) {
+    	public object VisitDoWhileStatement(JsDoWhileStatement statement, bool addNewline) {
     		_cb.Append("do ");
-			Visit(statement.Body, false);
+			VisitBlockStatement(statement.Body, false);
 			_cb.Append(" while (");
-			Visit(statement.Condition, false);
+			VisitExpression(statement.Condition, false);
 			_cb.Append(");");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsEmptyStatement statement, bool addNewline) {
+    	public object VisitEmptyStatement(JsEmptyStatement statement, bool addNewline) {
     		_cb.Append(";");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsExpressionStatement statement, bool addNewline) {
-    		Visit(statement.Expression, false);
+    	public object VisitExpressionStatement(JsExpressionStatement statement, bool addNewline) {
+    		VisitExpression(statement.Expression, false);
 			_cb.Append(";");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsForEachInStatement statement, bool addNewline) {
+    	public object VisitForEachInStatement(JsForEachInStatement statement, bool addNewline) {
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsForStatement statement, bool addNewline) {
+    	public object VisitForStatement(JsForStatement statement, bool addNewline) {
     		_cb.Append("for (");
-			Visit(statement.InitStatement, false);
+			VisitStatement(statement.InitStatement, false);
 
 			if (statement.ConditionExpression != null) {
 				_cb.Append(" ");
-				Visit(statement.ConditionExpression, false);
+				VisitExpression(statement.ConditionExpression, false);
 			}
 			_cb.Append(";");
 
 			if (statement.IteratorExpression != null) {
 				_cb.Append(" ");
-				Visit(statement.IteratorExpression, false);
+				VisitExpression(statement.IteratorExpression, false);
 			}
 			_cb.Append(") ");
-			Visit(statement.Body, addNewline);
+			VisitBlockStatement(statement.Body, addNewline);
 			return null;
     	}
 
-    	public object Visit(JsIfStatement statement, bool addNewline) {
+    	public object VisitIfStatement(JsIfStatement statement, bool addNewline) {
 redo:
 			_cb.Append("if (");
-			Visit(statement.Test, false);
+			VisitExpression(statement.Test, false);
 			_cb.Append(") ");
-			Visit(statement.Then, statement.Else != null || addNewline);
+			VisitBlockStatement(statement.Then, statement.Else != null || addNewline);
 			if (statement.Else != null) {
 				_cb.Append("else ");
 				if (statement.Else.Statements.Count == 1 && statement.Else.Statements[0] is JsIfStatement) {
@@ -546,16 +543,16 @@ redo:
 			}
 
 			if (statement.Else != null)
-				Visit(statement.Else, addNewline);
+				VisitBlockStatement(statement.Else, addNewline);
 
 			return null;
     	}
 
-    	public object Visit(JsReturnStatement statement, bool addNewline) {
+    	public object VisitReturnStatement(JsReturnStatement statement, bool addNewline) {
     		_cb.Append("return");
 			if (statement.Value != null) {
 				_cb.Append(" ");
-				Visit(statement.Value, false);
+				VisitExpression(statement.Value, false);
 			}
 			_cb.Append(";");
 			if (addNewline)
@@ -563,9 +560,9 @@ redo:
 			return null;
     	}
 
-    	public object Visit(JsSwitchStatement statement, bool addNewline) {
+    	public object VisitSwitchStatement(JsSwitchStatement statement, bool addNewline) {
     		_cb.Append("switch (");
-			Visit(statement.Expression, false);
+			VisitExpression(statement.Expression, false);
 			_cb.AppendLine(") {").Indent();
 			foreach (var clause in statement.Clauses) {
 				bool first = true;
@@ -574,7 +571,7 @@ redo:
 						_cb.AppendLine();
 					if (v != null) {
 						_cb.Append("case ");
-						Visit(v, false);
+						VisitExpression(v, false);
 						_cb.Append(":");
 					}
 					else {
@@ -583,7 +580,7 @@ redo:
 					first = false;
 				}
 				_cb.Append(" ");
-				Visit(clause.Body, true);
+				VisitBlockStatement(clause.Body, true);
 			}
 			_cb.Outdent().Append("}");
 			if (addNewline)
@@ -591,30 +588,30 @@ redo:
 			return null;
     	}
 
-    	public object Visit(JsThrowStatement statement, bool addNewline) {
+    	public object VisitThrowStatement(JsThrowStatement statement, bool addNewline) {
     		_cb.Append("throw ");
-			Visit(statement.Expression, false);
+			VisitExpression(statement.Expression, false);
 			_cb.Append(";");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsTryCatchFinallyStatement statement, bool addNewline) {
+    	public object VisitTryStatement(JsTryStatement statement, bool addNewline) {
 			_cb.Append("try ");
-			Visit(statement.GuardedStatement, true);
+			VisitBlockStatement(statement.GuardedStatement, true);
 			if (statement.Catch != null) {
 				_cb.AppendFormat("catch ({0}) ", statement.Catch.Identifier);
-				Visit(statement.Catch.Body, addNewline || statement.Finally != null);
+				VisitBlockStatement(statement.Catch.Body, addNewline || statement.Finally != null);
 			}
 			if (statement.Finally != null) {
 				_cb.AppendFormat("finally ");
-				Visit(statement.Finally, addNewline);
+				VisitBlockStatement(statement.Finally, addNewline);
 			}
 			return null;
     	}
 
-    	public object Visit(JsVariableDeclarationStatement statement, bool addNewline) {
+    	public object VisitVariableDeclarationStatement(JsVariableDeclarationStatement statement, bool addNewline) {
     		_cb.Append("var ");
 			bool first = true;
 			foreach (var d in statement.Declarations) {
@@ -623,7 +620,7 @@ redo:
 				_cb.Append(d.Name);
 				if (d.Initializer != null) {
 					_cb.Append(" = ");
-					this.Visit(d.Initializer, false);
+					this.VisitExpression(d.Initializer, false);
 				}
 				first = false;
 			}
@@ -633,47 +630,54 @@ redo:
 			return null;
     	}
 
-    	public object Visit(JsWhileStatement statement, bool addNewline) {
+    	public object VisitWhileStatement(JsWhileStatement statement, bool addNewline) {
 			_cb.Append("while (");
-			Visit(statement.Condition, false);
+			VisitExpression(statement.Condition, false);
 			_cb.Append(") ");
-			Visit(statement.Body, addNewline);
+			VisitBlockStatement(statement.Body, addNewline);
 			return null;
     	}
 
-    	public object Visit(JsWithStatement statement, bool data) {
+    	public object VisitWithStatement(JsWithStatement statement, bool data) {
     		throw new NotImplementedException();
     	}
 
-    	public object Visit(JsLabelStatement statement, bool addNewline) {
-    		_cb.Append(statement.Name).Append(":");
-			if (addNewline)
-				_cb.AppendLine();
+    	public object VisitLabelledStatement(JsLabelledStatement statement, bool addNewline) {
+    		_cb.Append(statement.Label).AppendLine(":");
+			VisitStatement(statement.Statement, addNewline);
 			return null;
     	}
 
-    	public object Visit(JsGotoStatement statement, bool addNewline) {
+    	public object VisitFunctionStatement(JsFunctionStatement statement, bool addNewline) {
+			_cb.Append("function " + statement.Name + "(");
+			for (int i = 0; i < statement.ParameterNames.Count; i++) {
+				if (i != 0)
+					_cb.Append(", ");
+				_cb.Append(statement.ParameterNames[i]);
+			}
+			_cb.Append(") ");
+			VisitBlockStatement(statement.Body, addNewline);
+			return null;
+		}
+
+    	public object VisitGotoStatement(JsGotoStatement statement, bool addNewline) {
     		_cb.Append("goto ").Append(statement.TargetLabel).Append(";");
 			if (addNewline)
 				_cb.AppendLine();
 			return null;
     	}
 
-    	public object Visit(JsYieldReturnStatement statement, bool addNewline) {
+    	public object VisitYieldStatement(JsYieldStatement statement, bool addNewline) {
 			if (!_allowIntermediates)
 				throw new NotSupportedException("yield return should not occur in the output stage");
-			_cb.Append("yield return ");
-			Visit(statement.Value, false);
-			_cb.Append(";");
-			if (addNewline)
-				_cb.AppendLine();
-			return null;
-    	}
-
-    	public object Visit(JsYieldBreakStatement statement, bool addNewline) {
-			if (!_allowIntermediates)
-				throw new NotSupportedException("yield break should not occur in the output stage");
-			_cb.Append("yield break;");
+			if (statement.Value != null) {
+				_cb.Append("yield return ");
+				VisitExpression(statement.Value, false);
+				_cb.Append(";");
+			}
+			else {
+				_cb.Append("yield break;");
+			}
 			if (addNewline)
 				_cb.AppendLine();
 			return null;

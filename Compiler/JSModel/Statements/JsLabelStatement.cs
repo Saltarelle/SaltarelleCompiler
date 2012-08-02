@@ -3,17 +3,19 @@ using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.Statements {
     [Serializable]
-    public class JsLabelStatement : JsStatement {
-        public string Name { get; private set; }
+    public class JsLabelledStatement : JsStatement {
+        public string Label { get; private set; }
+		public JsStatement Statement { get; private set; }
 
-        public JsLabelStatement(string name) {
-			Require.ValidJavaScriptIdentifier(name, "name", allowNull: false);
-			Name = name;
+        public JsLabelledStatement(string label, JsStatement statement) {
+			Require.ValidJavaScriptIdentifier(label, "label", allowNull: false);
+			Label = label;
+			Statement = statement;
         }
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
-            return visitor.Visit(this, data);
+            return visitor.VisitLabelledStatement(this, data);
         }
     }
 }

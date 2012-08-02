@@ -8,3 +8,8 @@ _ReSharper*/
 *.user
 *.suo
 Compiler/CompilerVersion.cs
+Compiler/JavaScriptParser/ParserImpl/JavaScript.tokens
+Compiler/JavaScriptParser/ParserImpl/JavaScriptLexer.cs
+Compiler/JavaScriptParser/ParserImpl/JavaScriptParser.cs
+Compiler/JavaScriptParser/ParserImpl/JavaScriptTreeParser.cs
+Compiler/JavaScriptParser/ParserImpl/JavaScriptTreeParser.tokens

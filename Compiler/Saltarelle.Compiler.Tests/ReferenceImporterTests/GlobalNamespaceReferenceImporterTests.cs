@@ -5,6 +5,7 @@ using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Moq;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ReferenceImporter;

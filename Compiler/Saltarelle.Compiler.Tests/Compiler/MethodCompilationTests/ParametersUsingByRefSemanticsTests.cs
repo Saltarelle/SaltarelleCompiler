@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
