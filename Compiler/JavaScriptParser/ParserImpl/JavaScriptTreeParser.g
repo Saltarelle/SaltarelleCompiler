@@ -279,7 +279,7 @@ withStatement returns [JsStatement result]
 
 tryStatement returns [JsStatement result]
 @init { JsCatchClause catchClause = null; }
-	: ^('try' a=statement (^('catch' b=Identifier c=statement { catchClause = new JsCatchClause(b.Text, c); }))? (^('finally' d=statement))?) { $result = new JsTryCatchFinallyStatement(a, catchClause, d); };
+	: ^('try' a=statement (^('catch' b=Identifier c=statement { catchClause = new JsCatchClause(b.Text, c); }))? (^('finally' d=statement))?) { $result = new JsTryStatement(a, catchClause, d); };
 
 throwStatement returns [JsStatement result]
 	: ^('throw' a=expression) { $result = new JsThrowStatement(a); };
