@@ -471,5 +471,17 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			var stmt = ParseStatement<JsGotoStatement>("goto lbl;");
 			Assert.That(stmt.TargetLabel, Is.EqualTo("lbl"));
 		}
+
+		[Test]
+		public void YieldReturnStatement() {
+			var stmt = ParseStatement<JsYieldStatement>("yield return a;");
+			Assert.That(OutputFormatter.Format(stmt.Value), Is.EqualTo("a"));
+		}
+
+		[Test]
+		public void YieldBreakStatement() {
+			var stmt = ParseStatement<JsYieldStatement>("yield break;");
+			Assert.That(stmt.Value, Is.Null);
+		}
 	}
 }

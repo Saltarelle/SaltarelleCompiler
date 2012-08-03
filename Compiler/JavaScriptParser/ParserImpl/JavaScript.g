@@ -80,6 +80,7 @@ statement
 	| throwStatement
 	| tryStatement
 	| gotoStatement
+	| yieldStatement
 	;
 	
 statementBlock
@@ -221,6 +222,10 @@ finallyClause
 
 gotoStatement
 	: 'goto'^ Identifier (LT | ';')!
+	;
+
+yieldStatement
+	: 'yield'^ (('return'! expression) | 'break'!) (LT | ';')!
 	;
 
 // expressions
