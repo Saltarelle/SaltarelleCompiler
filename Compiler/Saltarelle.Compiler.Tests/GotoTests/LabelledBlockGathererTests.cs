@@ -11,9 +11,9 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.Tests.GotoTests {
 	[TestFixture]
 	public class LabelledBlockGathererTests {
-		private void AssertCorrect(string orig, string expected) {
+		private void AssertCorrect(string orig, string expected, bool isIteratorBlock = false) {
 			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
-			var blocks = new LabelledBlockGatherer(e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp").Gather(stmt);
+			var blocks = new LabelledBlockGatherer(e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp", v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v)).Gather(stmt, "$state", isIteratorBlock: isIteratorBlock);
 			var actual = string.Join("", blocks.OrderBy(b => b.Name).Select(b => Environment.NewLine + "--" + b.Name + Environment.NewLine + b.Statements.Aggregate("", (old, s) => old + OutputFormatter.Format(s))));
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
@@ -2055,6 +2055,97 @@ goto $1;
 h;
 goto $1;
 ");
+		}
+
+		[Test]
+		public void IteratorBlockWithoutYieldBreak() {
+			AssertCorrect(@"
+{
+	a;
+	yield return b;
+	c;
+	yield return d;
+lbl1:
+	e;
+}", 
+@"
+--$0
+$state = -1;
+a;
+setCurrent(b);
+$state = 1;
+return true;
+
+--$1
+$state = -1;
+c;
+setCurrent(d);
+$state = 2;
+return true;
+
+--lbl1
+$state = -1;
+e;
+$state = -1;
+return false;
+", isIteratorBlock: true);
+		}
+
+		[Test]
+		public void IteratorBlockWithYieldBreak() {
+			AssertCorrect(@"
+{
+	a;
+	yield return b;
+	c;
+	yield break;
+}", 
+@"
+--$0
+$state = -1;
+a;
+setCurrent(b);
+$state = 1;
+return true;
+
+--$1
+$state = -1;
+c;
+$state = -1;
+return false;
+", isIteratorBlock: true);
+		}
+
+		[Test]
+		public void IteratorBlockWithYieldBreakWithStuffFollowing() {
+			AssertCorrect(@"
+{
+	a;
+	yield return b;
+	c;
+	yield break;
+	d;
+}", 
+@"
+--$0
+$state = -1;
+a;
+setCurrent(b);
+$state = 1;
+return true;
+
+--$1
+$state = -1;
+c;
+$state = -1;
+return false;
+
+--$2
+$state = -1;
+d;
+$state = -1;
+return false;
+", isIteratorBlock: true);
 		}
 	}
 }

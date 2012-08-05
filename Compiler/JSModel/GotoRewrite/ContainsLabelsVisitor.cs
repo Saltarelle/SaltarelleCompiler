@@ -26,6 +26,12 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return statement;
 		}
 
+		public override JsStatement VisitYieldStatement(JsYieldStatement statement, object data) {
+			if (statement.Value != null)
+				_result = true;	// 'yield return' contains an implicit label.
+			return statement;
+		}
+
 		public static bool Analyze(JsStatement statement) {
 			var obj = new ContainsLabelsVisitor();
 			obj.VisitStatement(statement, null);

@@ -61,12 +61,14 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		private class Visitor : RewriterVisitorBase<object> {
 			private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 			private readonly Func<string> _allocateTempVariable;
+			private readonly Func<JsExpression, JsExpression> _makeSetCurrent;
 
 			private int _currentLoopNameIndex;
 	
-			public Visitor(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable) {
+			public Visitor(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent) {
 				_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 				_allocateTempVariable = allocateTempVariable;
+				_makeSetCurrent = makeSetCurrent;
 			}
 
 			public override JsCatchClause Visit(JsCatchClause clause, object data) {
@@ -96,10 +98,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				if (!ContainsLabelsVisitor.Analyze(block))
 					return block;
 	
-				var labelledBlocks = new LabelledBlockGatherer(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable).Gather(block);
-				var stateMap  = labelledBlocks.Select((b, i) => new { b, i }).ToDictionary(x => x.b.Name, x => x.i);
-				var loopLabel = "$loop" + (++_currentLoopNameIndex).ToString(CultureInfo.InvariantCulture);
 				var stateVar  = _allocateTempVariable();
+				var labelledBlocks = new LabelledBlockGatherer(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _makeSetCurrent).Gather(block, stateVar, false);
+				var stateMap  = labelledBlocks.ToDictionary(b => b.Name, b => b.StateValue);
+				var loopLabel = "$loop" + (++_currentLoopNameIndex).ToString(CultureInfo.InvariantCulture);
 	
 				var gotoStatementRewriter = new RewriteGotoStatementsVisitor(stateMap, loopLabel, stateVar);
 	
@@ -116,8 +118,8 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
-		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable) {
-			var visitor = new Visitor(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable);
+		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent) {
+			var visitor = new Visitor(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, makeSetCurrent);
 			return visitor.DoRewrite((JsBlockStatement)visitor.VisitBlockStatement(block, null));
 		}
 	}

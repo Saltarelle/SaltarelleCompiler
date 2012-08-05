@@ -92,7 +92,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (DisablePostProcessingTestingUseOnly)
 				return function;
 
-			var body = GotoRewriter.Rewrite(function.Body, expr => ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(expr), () => _namingConvention.GetVariableName(null, _usedNames));
+			var body = GotoRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), v => { throw new NotImplementedException("TODO"); });
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 

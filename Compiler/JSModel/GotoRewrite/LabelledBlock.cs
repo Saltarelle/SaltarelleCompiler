@@ -13,11 +13,18 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 	/// </summary>
 	internal class LabelledBlock {
 		public string Name { get; private set; }
-		public ReadOnlyCollection<JsStatement> Statements { get; private set; }
+		public int StateValue { get; private set; }
+		public IList<JsStatement> Statements { get; private set; }
 
-		public LabelledBlock(string name, IEnumerable<JsStatement> statements) {
+		public LabelledBlock(string name, int stateValue, IEnumerable<JsStatement> statements) {
 			this.Name       = name;
-			this.Statements = statements.AsReadOnly();
+			this.StateValue = stateValue;
+			this.Statements = new List<JsStatement>(statements);
+		}
+
+		public void Freeze() {
+			if (Statements is List<JsStatement>)
+				Statements = ((List<JsStatement>)Statements).AsReadOnly();
 		}
 	}
 }

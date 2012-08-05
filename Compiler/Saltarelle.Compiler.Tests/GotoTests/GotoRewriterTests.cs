@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.Tests.GotoTests {
 		private void AssertCorrect(string orig, string expected) {
 			int tempCount = 0;
 			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
-			var result = GotoRewriter.Rewrite(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempCount).ToString(CultureInfo.InvariantCulture));
+			var result = GotoRewriter.Rewrite(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempCount).ToString(CultureInfo.InvariantCulture), v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v));
 			var actual = OutputFormatter.Format(result);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
