@@ -157,8 +157,8 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return new ContainsBreakVisitor().Process(statement);
 		}
 
-		private ImmutableStack<StackEntry> PushFollowing(ImmutableStack<StackEntry> stack, JsBlockStatement block, int currentIndex) {
-			return currentIndex < block.Statements.Count - 1 ? stack.Push(new StackEntry(block, currentIndex + 1)) : stack;
+		private ImmutableStack<StackEntry> PushFollowing(ImmutableStack<StackEntry> stack, StackEntry location) {
+			return location.Index < location.Block.Statements.Count - 1 ? stack.Push(new StackEntry(location.Block, location.Index + 1)) : stack;
 		}
 
 		public IList<LabelledBlock> Gather(JsBlockStatement statement) {
@@ -201,7 +201,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 				if (ContainsLabelsVisitor.Analyze(stmt)) {
 					if (stmt is JsBlockStatement) {
-						stack = PushFollowing(stack, tos.Block, tos.Index).Push(new StackEntry((JsBlockStatement)stmt, 0));
+						stack = PushFollowing(stack, tos).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
 					else {
 						if (stmt is JsIfStatement) {
@@ -228,11 +228,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 							throw new NotSupportedException("Statement " + stmt + " cannot contain labels.");
 						}
 
-						stack = PushFollowing(stack, tos.Block, tos.Index);
+						stack = PushFollowing(stack, tos);
 					}
 				}
 				else {
-					stack = PushFollowing(stack, tos.Block, tos.Index);
+					stack = PushFollowing(stack, tos);
 					currentBlock.Add(stmt);	// No rewrites necessary in this statement.
 				}
 			}
@@ -242,14 +242,24 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return currentBlock;
 		}
 
-		private Tuple<string, bool> GetLabelAfterStatement(JsBlockStatement parent, int index, string returnLabel) {
-			if (index < parent.Statements.Count - 1) {
-				if (parent.Statements[index + 1] is JsLabelledStatement) {
-					return Tuple.Create((parent.Statements[index + 1] as JsLabelledStatement).Label, false);
-				}
-				else {
-					return Tuple.Create(CreateAnonymousBlockName(), true);
-				}
+		private Tuple<string, bool> GetLabelAfterStatement(StackEntry location, ImmutableStack<StackEntry> stack, string returnLabel) {
+			JsStatement next;
+			if (location.Index < location.Block.Statements.Count - 1) {
+				next = location.Block.Statements[location.Index + 1];
+			}
+			else if (!stack.IsEmpty) {
+				var tos = stack.Peek();
+				next = tos.Block.Statements[tos.Index];
+			}
+			else
+				next = null;
+
+			if (next is JsLabelledStatement) {
+				return Tuple.Create((next as JsLabelledStatement).Label, false);
+			}
+			else if (next != null) {
+				string name = CreateAnonymousBlockName();
+				return Tuple.Create(name, true);
 			}
 			else {
 				return Tuple.Create(returnLabel, false);
@@ -257,7 +267,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		private bool HandleIfStatement(JsIfStatement stmt, StackEntry location, string returnLabel, ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
-			var labelAfter = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
+			var labelAfter = GetLabelAfterStatement(location, stack, returnLabel);
 
 			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), blockName, labelAfter.Item1);
 			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), blockName, labelAfter.Item1) : null;
@@ -267,7 +277,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				currentBlock.Add(new JsGotoStatement(labelAfter.Item1));
 
 			if (labelAfter.Item2) {
-				Enqueue(PushFollowing(stack, location.Block, location.Index), labelAfter.Item1, returnLabel);
+				Enqueue(PushFollowing(stack, location), labelAfter.Item1, returnLabel);
 				return false;
 			}
 
@@ -287,7 +297,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				JsBlockStatement body;
 				Tuple<string, bool> afterLoopLabel;
 				if (ContainsBreak(stmt.Body)) {
-					afterLoopLabel = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
+					afterLoopLabel = GetLabelAfterStatement(location, stack, returnLabel);
 					body = new ReplaceBreakWithGotoVisitor().Process(stmt.Body, afterLoopLabel.Item1);
 				}
 				else {
@@ -299,11 +309,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(body, 0)), blockName, beforeConditionLabel));
 
 				if (afterLoopLabel.Item2) {
-					Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+					Enqueue(PushFollowing(stack, location), afterLoopLabel.Item1, returnLabel);
 					Enqueue(stack.Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, afterLoopLabel.Item1);
 				}
 				else {
-					Enqueue(PushFollowing(stack, location.Block, location.Index).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, returnLabel);
+					Enqueue(PushFollowing(stack, location).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, new JsGotoStatement(blockName), null)), 0)), beforeConditionLabel, returnLabel);
 				}
 
 				return false;
@@ -319,15 +329,15 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return false;
 			}
 			else {
-				var afterLoopLabel = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
+				var afterLoopLabel = GetLabelAfterStatement(location, stack, returnLabel);
 
 				currentBlock.Add(new JsIfStatement(JsExpression.LogicalNot(stmt.Condition), new JsGotoStatement(afterLoopLabel.Item1), null));
 				var body = new ReplaceBreakWithGotoVisitor().Process(stmt.Body, afterLoopLabel.Item1);
 				body = new ReplaceContinueWithGotoVisitor().Process(body, blockName);
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(body, 0)), blockName, blockName));
 
-				if (location.Index < location.Block.Statements.Count - 1) {
-					Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
+					Enqueue(PushFollowing(stack, location), afterLoopLabel.Item1, returnLabel);
 				}
 
 				return false;
@@ -346,7 +356,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 			else {
 				var iteratorLabel = (stmt.IteratorExpression != null ? CreateAnonymousBlockName() : blockName);
-				var afterLoopLabel = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
+				var afterLoopLabel = GetLabelAfterStatement(location, stack, returnLabel);
 
 				if (stmt.ConditionExpression != null)
 					currentBlock.Add(new JsIfStatement(JsExpression.LogicalNot(stmt.ConditionExpression), new JsGotoStatement(afterLoopLabel.Item1), null));
@@ -358,8 +368,8 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsBlockStatement.MakeBlock(new JsExpressionStatement(stmt.IteratorExpression)), 0)), iteratorLabel, blockName);
 				}
 
-				if (location.Index < location.Block.Statements.Count - 1) {
-					Enqueue(PushFollowing(stack, location.Block, location.Index), afterLoopLabel.Item1, returnLabel);
+				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
+					Enqueue(PushFollowing(stack, location), afterLoopLabel.Item1, returnLabel);
 				}
 
 				return false;
@@ -367,7 +377,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		private bool HandleSwitchStatement(JsSwitchStatement stmt, StackEntry location, string returnLabel, ImmutableStack<StackEntry> stack, string blockName, IList<JsStatement> currentBlock) {
-			var labelAfter = GetLabelAfterStatement(location.Block, location.Index, returnLabel);
+			var labelAfter = GetLabelAfterStatement(location, stack, returnLabel);
 			JsExpression expression = stmt.Expression;
 			if (_isExpressionComplexEnoughForATemporaryVariable(expression)) {
 				string newName = _allocateTempVariable();
@@ -421,7 +431,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			currentBlock.Add(new JsGotoStatement(labelAfter.Item1));
 
 			if (labelAfter.Item2) {
-				Enqueue(PushFollowing(stack, location.Block, location.Index), labelAfter.Item1, returnLabel);
+				Enqueue(PushFollowing(stack, location), labelAfter.Item1, returnLabel);
 				return false;
 			}
 

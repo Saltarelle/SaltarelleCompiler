@@ -750,6 +750,37 @@ goto $0;
 		public void While2() {
 			AssertCorrect(@"
 {
+	{
+		while (a) {
+			b;
+			lbl1:
+			c;
+		}
+	}
+	d;
+}", 
+@"
+--$0
+if (!a) {
+	goto $1;
+}
+b;
+goto lbl1;
+
+--$1
+d;
+goto $exit;
+
+--lbl1
+c;
+goto $0;
+");
+		}
+
+		[Test]
+		public void While3() {
+			AssertCorrect(@"
+{
 	a;
 	while (b) {
 		c;
@@ -781,7 +812,7 @@ goto $1;
 		}
 
 		[Test]
-		public void While3() {
+		public void While4() {
 			AssertCorrect(@"
 {
 	while (a) {
@@ -805,7 +836,7 @@ goto $0;
 		}
 
 		[Test]
-		public void While4() {
+		public void While5() {
 			AssertCorrect(@"
 {
 	while (a) {
@@ -934,6 +965,45 @@ goto $2;
 		public void ForStatement2() {
 			AssertCorrect(@"
 {
+	{
+		for (a; b; c) {
+			d;
+			lbl1:
+			e;
+		}
+	}
+	f;
+}", 
+@"
+--$0
+a;
+goto $1;
+
+--$1
+if (!b) {
+	goto $3;
+}
+d;
+goto lbl1;
+
+--$2
+c;
+goto $1;
+
+--$3
+f;
+goto $exit;
+
+--lbl1
+e;
+goto $2;
+");
+		}
+
+		[Test]
+		public void ForStatement3() {
+			AssertCorrect(@"
+{
 	for (a; b; c) {
 		d;
 		lbl1:
@@ -963,7 +1033,7 @@ goto $2;
 		}
 
 		[Test]
-		public void ForStatement3() {
+		public void ForStatement4() {
 			AssertCorrect(@"
 {
 	for (a; b; c) {
@@ -1471,6 +1541,66 @@ goto $1;
 		public void SwitchStatement2() {
 			AssertCorrect(@"
 {
+	{
+		switch (a) {
+			case b:
+			case c:
+				d;
+				lbl1:
+				e;
+				break;
+			case f:
+				g;
+				break;
+			case h:
+			case i:
+				j;
+				break;
+			case k:
+				l;
+				lbl2:
+				m;
+				break;
+		}
+	}
+	n;
+}", 
+@"
+--$0
+if (a === b || a === c) {
+	d;
+	goto lbl1;
+}
+else if (a === f) {
+	g;
+}
+else if (a === h || a === i) {
+	j;
+}
+else if (a === k) {
+	l;
+	goto lbl2;
+}
+goto $1;
+
+--$1
+n;
+goto $exit;
+
+--lbl1
+e;
+goto $1;
+
+--lbl2
+m;
+goto $1;
+");
+		}
+
+		[Test]
+		public void SwitchStatement3() {
+			AssertCorrect(@"
+{
 	switch (a) {
 		case b:
 		case c:
@@ -1521,7 +1651,7 @@ goto $exit;
 		}
 
 		[Test]
-		public void SwitchStatement3() {
+		public void SwitchStatement4() {
 			AssertCorrect(@"
 {
 	switch (a) {
