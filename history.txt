@@ -1,2 +1,5 @@
+1.0.1
+Fixed project URL and included history in NuGet packages.
+
 1.0.0
 Initial version
