@@ -55,50 +55,6 @@ class C {
 		}
 
 		[Test]
-		public void GotoIsReportedAsUnsupported() {
-			AssertCorrect(@"
-class C {
-	public void M() {
-		goto lbl;
-		lbl: int i = 0;
-	}
-}
-", "goto");
-		}
-
-		[Test]
-		public void GotoCaseIsReportedAsUnsupported() {
-			AssertCorrect(@"
-class C {
-	public void M() {
-		switch (0) {
-			case 0:
-				goto case 1;
-			case 1:
-				break;
-		}
-	}
-}
-", "goto case");
-		}
-
-		[Test]
-		public void GotoDefaultIsReportedAsUnsupported() {
-			AssertCorrect(@"
-class C {
-	public void M() {
-		switch (0) {
-			case 0:
-				goto default;
-			default:
-				break;
-		}
-	}
-}
-", "goto default");
-		}
-
-		[Test]
 		public void StructIsReportedAsUnsupported() {
 			AssertCorrect(@"
 struct S {

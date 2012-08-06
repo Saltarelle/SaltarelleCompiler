@@ -23,7 +23,7 @@ namespace Saltarelle.Compiler.Compiler {
 				Result = new ObservableState();
 			}
 
-			public override JsExpression Visit(JsBinaryExpression expression, object data) {
+			public override JsExpression VisitBinaryExpression(JsBinaryExpression expression, object data) {
 				if (expression.NodeType >= ExpressionNodeType.AssignFirst && expression.NodeType <= ExpressionNodeType.AssignLast) {
 					if (expression.Left is JsIdentifierExpression) {
 						string name = ((JsIdentifierExpression)expression.Left).Name;
@@ -31,7 +31,7 @@ namespace Saltarelle.Compiler.Compiler {
 							Result.LocalReadSet.Add(name);	// Compound assignment means that we both read and write the state.
 
 						Result.LocalWriteSet.Add(name);
-						base.Visit(expression.Right, data);
+						base.VisitExpression(expression.Right, data);
 						return expression;
 					}
 					else {
@@ -39,35 +39,35 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 				}
 
-				return base.Visit(expression, data);
+				return base.VisitBinaryExpression(expression, data);
 			}
 
-			public override JsExpression Visit(JsIdentifierExpression expression, object data) {
+			public override JsExpression VisitIdentifierExpression(JsIdentifierExpression expression, object data) {
 				Result.LocalReadSet.Add(expression.Name);	// It has to be a read since we don't call Visit() for the target of an assignment.
-				return base.Visit(expression, data);
+				return base.VisitIdentifierExpression(expression, data);
 			}
 
-			public override JsExpression Visit(JsInvocationExpression expression, object data) {
+			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
 				Result.UsesExternalState = true;	// Invoking anything counts as external state.
-				return base.Visit(expression, data);
+				return base.VisitInvocationExpression(expression, data);
 			}
 
-			public override JsExpression Visit(JsLiteralExpression expression, object data) {
+			public override JsExpression VisitLiteralExpression(JsLiteralExpression expression, object data) {
 				Result.UsesExternalState = true;	// Literal code counts as external state since we don't know what it does.
-				return base.Visit(expression, data);
+				return base.VisitLiteralExpression(expression, data);
 			}
 
-			public override JsExpression Visit(JsMemberAccessExpression expression, object data) {
+			public override JsExpression VisitMemberAccessExpression(JsMemberAccessExpression expression, object data) {
 				Result.UsesExternalState = true;	// Member access has to count as external state. Otherwise, what if someone does "var a = this" and then tries to order "a.i" and "this.i" (aliasing)
-				return base.Visit(expression, data);
+				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			public override JsExpression Visit(JsNewExpression expression, object data) {
+			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
 				Result.UsesExternalState = true;	// Constructor invocation is external state.
-				return base.Visit(expression, data);
+				return base.VisitNewExpression(expression, data);
 			}
 
-			public override JsExpression Visit(JsUnaryExpression expression, object data) {
+			public override JsExpression VisitUnaryExpression(JsUnaryExpression expression, object data) {
 				switch (expression.NodeType) {
 					case ExpressionNodeType.PrefixPlusPlus:
 					case ExpressionNodeType.PostfixPlusPlus:
@@ -82,16 +82,16 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 						else {
 							Result.UsesExternalState = true;
-							return base.Visit(expression.Operand, data);	// Increments/decrements something that is not a local. This is external state.
+							return base.VisitExpression(expression.Operand, data);	// Increments/decrements something that is not a local. This is external state.
 						}
 
 					case ExpressionNodeType.Delete: {
 						Result.UsesExternalState = true;	// Delete counts as external state.
-						return base.Visit(expression.Operand, data);
+						return base.VisitExpression(expression.Operand, data);
 					}
 
 					default:
-						return base.Visit(expression, data);
+						return base.VisitUnaryExpression(expression, data);
 				}
 			}
 		}
@@ -106,11 +106,11 @@ namespace Saltarelle.Compiler.Compiler {
 			// 2) The expressions write to the same locals, or
 			// 3) Both the expressions use any external state.
 			var v1 = new FindObservableStateVisitor();
-			v1.Visit(expr1, null);
+			v1.VisitExpression(expr1, null);
 			var v2 = new FindObservableStateVisitor();
 			foreach (var s in expr2.AdditionalStatements)
-				v2.Visit(s, null);
-			v2.Visit(expr2.Expression, null);
+				v2.VisitStatement(s, null);
+			v2.VisitExpression(expr2.Expression, null);
 
 			if (v1.Result.LocalReadSet.Overlaps(v2.Result.LocalWriteSet) || v1.Result.LocalWriteSet.Overlaps(v2.Result.LocalReadSet))
 				return true;

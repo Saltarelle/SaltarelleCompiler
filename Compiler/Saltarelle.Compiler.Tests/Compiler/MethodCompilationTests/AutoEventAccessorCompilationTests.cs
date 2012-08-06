@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {

@@ -1,8 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Text;
 
-namespace Saltarelle.Compiler {
+namespace Saltarelle.Compiler.JSModel {
 	public class CodeBuilder {
 		private static readonly ConcurrentDictionary<int, string> _indents = new ConcurrentDictionary<int, string>();
 		private int _indentLevel = 0;

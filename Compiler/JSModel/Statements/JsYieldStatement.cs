@@ -3,16 +3,19 @@ using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.JSModel.Statements {
     [Serializable]
-    public class JsYieldReturnStatement : JsStatement {
+    public class JsYieldStatement : JsStatement {
+		/// <summary>
+		/// Value to yield. If this is null (as opposed to JsExpression.Null), the yield terminates the iterator block (C#: 'yield break').
+		/// </summary>
         public JsExpression Value { get; private set; }
 
-        public JsYieldReturnStatement(JsExpression value) {
+        public JsYieldStatement(JsExpression value) {
             this.Value = value;
         }
 
         [System.Diagnostics.DebuggerStepThrough]
         public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
-            return visitor.Visit(this, data);
+            return visitor.VisitYieldStatement(this, data);
         }
     }
 }

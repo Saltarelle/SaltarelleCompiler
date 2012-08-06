@@ -46,15 +46,25 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="CodeBuilder.cs" />
     <Compile Include="Expressions\JsLiteralExpression.cs" />
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
+    <Compile Include="GotoRewrite\ContainsLabelsVisitor.cs" />
+    <Compile Include="GotoRewrite\GotoRewriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GotoRewrite\LabelledBlock.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GotoRewrite\LabelledBlockGatherer.cs" />
+    <Compile Include="OutputFormatter.cs" />
+    <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />
     <Compile Include="Statements\JsLabelStatement.cs" />
-    <Compile Include="Statements\JsYieldBreakStatement.cs" />
-    <Compile Include="Statements\JsYieldReturnStatement.cs" />
+    <Compile Include="Statements\JsYieldStatement.cs" />
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />
     <Compile Include="Expressions\JsObjectLiteralProperty.cs" />
@@ -87,7 +97,7 @@
     <Compile Include="Statements\JsSwitchStatement.cs" />
     <Compile Include="Expressions\JsConditionalExpression.cs" />
     <Compile Include="Statements\JsThrowStatement.cs" />
-    <Compile Include="Statements\JsTryCatchFinallyStatement.cs" />
+    <Compile Include="Statements\JsTryStatement.cs" />
     <Compile Include="Expressions\JsUnaryExpression.cs" />
     <Compile Include="Expressions\JsConstantExpression.cs" />
     <Compile Include="Statements\JsVariableDeclaration.cs" />

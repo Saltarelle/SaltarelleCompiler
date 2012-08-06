@@ -46,7 +46,6 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
-    <Compile Include="CodeBuilder.cs" />
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
@@ -79,7 +78,6 @@
     <Compile Include="Compiler\NestedFunctionData.cs" />
     <Compile Include="Compiler\NestedFunctionGatherer.cs" />
     <Compile Include="MetadataImporter\ScriptSharpMetadataImporter.cs" />
-    <Compile Include="OutputFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\Compiler.cs" />
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />

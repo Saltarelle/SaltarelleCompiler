@@ -154,6 +154,7 @@
     <Compile Include="Compiler\CompilerTestBase.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\QueryExpressionTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ParametersUsingByRefSemanticsTests.cs" />
+    <Compile Include="Compiler\MethodCompilationTests\PostProcessingTests.cs" />
     <Compile Include="Compiler\PreprocessorTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\InlineCodeMethodCompilerTests.cs" />
     <Compile Include="Compiler\MemberConversionTests\ConstructorConversionTests.cs" />
@@ -218,6 +219,9 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
+    <Compile Include="GotoTests\GotoRewriterTests.cs" />
+    <Compile Include="GotoTests\LabelledBlockGathererTests.cs" />
+    <Compile Include="JavaScriptParserTests\JavaScriptParserTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />
@@ -266,6 +270,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JavaScriptParser\JavaScriptParser.csproj">
+      <Project>{819223CA-D211-44C2-BC01-A2B955D4CA61}</Project>
+      <Name>JavaScriptParser</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JSModel\JSModel.csproj">
       <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
       <Name>JSModel</Name>

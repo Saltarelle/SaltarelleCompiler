@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\TODO.txt = ..\TODO.txt
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptParser", "JavaScriptParser\JavaScriptParser.csproj", "{819223CA-D211-44C2-BC01-A2B955D4CA61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -236,6 +238,30 @@ Global
 		{7CE9DA6A-BFCC-4C98-84D3-7939D920FBC7}.winphone_Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CE9DA6A-BFCC-4C98-84D3-7939D920FBC7}.winphone_Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CE9DA6A-BFCC-4C98-84D3-7939D920FBC7}.winphone_Release|Any CPU.Build.0 = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_2_0_Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_2_0_Debug|Any CPU.Build.0 = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_2_0_Release|Any CPU.ActiveCfg = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_2_0_Release|Any CPU.Build.0 = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_3_5_Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_3_5_Debug|Any CPU.Build.0 = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_3_5_Release|Any CPU.ActiveCfg = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_3_5_Release|Any CPU.Build.0 = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_4_0_Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_4_0_Debug|Any CPU.Build.0 = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_4_0_Release|Any CPU.ActiveCfg = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.net_4_0_Release|Any CPU.Build.0 = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.silverlight_Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.silverlight_Debug|Any CPU.Build.0 = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.silverlight_Release|Any CPU.ActiveCfg = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.silverlight_Release|Any CPU.Build.0 = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.winphone_Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.winphone_Debug|Any CPU.Build.0 = Debug|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.winphone_Release|Any CPU.ActiveCfg = Release|Any CPU
+		{819223CA-D211-44C2-BC01-A2B955D4CA61}.winphone_Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
