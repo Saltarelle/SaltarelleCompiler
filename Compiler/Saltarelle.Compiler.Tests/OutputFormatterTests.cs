@@ -484,24 +484,6 @@ namespace Saltarelle.Compiler.Tests
         }
 
         [Test]
-        public void ExpressionNodeTypesAreParenthesizedInsideEachother() {
-            // Just to get rid of ambiguities
-            Assert.That(OutputFormatter.Format(JsExpression.Unary(ExpressionNodeType.PostfixPlusPlus,
-                                                   JsExpression.Unary(ExpressionNodeType.LogicalNot,
-                                                       JsExpression.Identifier("X")
-                                                   )
-                                               )
-                        ), Is.EqualTo("(!X)++"));
-
-            Assert.That(OutputFormatter.Format(JsExpression.Unary(ExpressionNodeType.LogicalNot,
-                                                   JsExpression.Unary(ExpressionNodeType.PostfixPlusPlus,
-                                                       JsExpression.Identifier("X")
-                                                   )
-                                               )
-                        ), Is.EqualTo("!(X++)"));
-        }
-
-        [Test]
         public void EmptyObjectLiteralIsOutputCorrectly() {
             Assert.That(OutputFormatter.Format(JsExpression.ObjectLiteral()), Is.EqualTo("{}"));
         }

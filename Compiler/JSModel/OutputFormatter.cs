@@ -221,7 +221,7 @@ namespace Saltarelle.Compiler.JSModel
                 default: throw new ArgumentException("expression");
             }
             _cb.Append(prefix);
-            VisitExpression(expression.Operand, (GetPrecedence(expression.Operand.NodeType) >= PrecedenceIncrDecr) || alwaysParenthesize);
+            VisitExpression(expression.Operand, (GetPrecedence(expression.Operand.NodeType) > GetPrecedence(expression.NodeType)) || alwaysParenthesize);
             _cb.Append(postfix);
             return null;
         }
