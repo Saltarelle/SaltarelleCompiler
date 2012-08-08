@@ -334,9 +334,65 @@ lbl1:
 ", isIteratorBlock: true);
 		}
 
-		[Test, Ignore("TODO")]
-		public void FinallyCanContainGoto() {
-			Assert.Fail("TODO, but is a nested state machine so make the change to only use one state variable first.");
+		[Test]
+		public void IteratorFinallyCanContainLabelAndGoto() {
+			AssertCorrect(
+@"{
+	a;
+	try {
+		yield return 0;
+	}
+	finally {
+		b;
+		lbl1:
+		c;
+		goto lbl1;
+	}
+	d;
+}",
+@"$finally1 = function() {
+	$tmp1 = 1;
+	$loop2:
+	for (;;) {
+		switch ($tmp1) {
+			case 1: {
+				b;
+				$tmp1 = 2;
+				continue $loop2;
+			}
+			case 2: {
+				c;
+				$tmp1 = 2;
+				continue $loop2;
+			}
+		}
+	}
+};
+{
+	var $tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				a;
+				$tmp1 = 4;
+				setCurrent(0);
+				$tmp1 = 5;
+				return true;
+			}
+			case 5: {
+				$finally1();
+				$tmp1 = 3;
+				continue $loop1;
+			}
+			case 3: {
+				d;
+				break $loop1;
+			}
+		}
+	}
+}
+");
 		}
 
 		[Test]
@@ -399,7 +455,7 @@ lbl1:
 ", isIteratorBlock: true);
 		}
 
-		[Test]
+		[Test, Ignore("Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.")]
 		public void YieldBreakExecutesFinallyHandlersNested() {
 			AssertCorrect(
 @"{
@@ -681,9 +737,43 @@ $finally3 = function() {
 ", isIteratorBlock: true);
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void CanYieldBreakFromTryWithCatch() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"{
+	a;
+	try {
+		b;
+		yield break;
+	}
+	catch (e) {
+		c;
+		yield break;
+	}
+}",
+@"{
+	var $tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				$tmp1 = -1;
+				a;
+				try {
+					b;
+					return false;
+				}
+				catch (e) {
+					c;
+					return false;
+				}
+				break $loop1;
+			}
+		}
+	}
+	return false;
+}
+", isIteratorBlock: true);
 		}
 
 		[Test]

@@ -45,10 +45,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 	}
 
-	internal class ContainsYieldVisitor : RewriterVisitorBase<object> {
+	internal class ContainsYieldReturnVisitor : RewriterVisitorBase<object> {
 		bool _result;
 
-		private ContainsYieldVisitor() {
+		private ContainsYieldReturnVisitor() {
 		}
 
 		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
@@ -65,7 +65,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		public static bool Analyze(JsStatement statement) {
-			var obj = new ContainsYieldVisitor();
+			var obj = new ContainsYieldReturnVisitor();
 			obj.VisitStatement(statement, null);
 			return obj._result;
 		}
@@ -388,8 +388,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				for (int i = 0, n = remaining.Count() - compareStack.Count(); i < n; i++) {
 					var current = remaining.Peek();
 					remaining = remaining.Pop();
-					#warning TODO: Obviously the variable name must be changed (but this is about to be redone anyway)
-					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("$tmp1"), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1))));
+					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1))));
 					result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier(current.Item2))));
 				}
 				return new JsBlockStatement(result, mergeWithParent: true);
@@ -598,7 +597,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 						stack = PushFollowing(stack, tos);
 					}
 				}
-				else if (NeedsRewriteVisitor.Analyze(stmt, true)) {
+				else if (NeedsRewriteVisitor.Analyze(stmt, false)) {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
@@ -683,10 +682,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		private bool HandleTryStatement(JsTryStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
-			if (ContainsYieldVisitor.Analyze(stmt.GuardedStatement)) {
+			if (ContainsYieldReturnVisitor.Analyze(stmt.GuardedStatement)) {
 				if (stmt.Catch != null)
-					throw new InvalidOperationException("Cannot yield from try with catch");
-				string handlerName = _allocateFinallyHandler(NeedsRewriteVisitor.Analyze(stmt.Finally, false) ? new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, finallyStack)) : stmt.Finally);
+					throw new InvalidOperationException("Cannot yield return from try with catch");
+				string handlerName = _allocateFinallyHandler(NeedsRewriteVisitor.Analyze(stmt.Finally, false) ? new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, finallyStack))) : stmt.Finally);
 				var stateAfter = GetStateAfterStatement(location, stack, finallyStack, returnState);
 				var innerState = CreateNewStateValue(finallyStack);
 				var stateBeforeFinally = CreateNewStateValue(finallyStack);
