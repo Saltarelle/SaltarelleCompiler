@@ -277,8 +277,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
-		struct State : IEquatable<State>
-		{
+		struct State : IEquatable<State> {
 			public string VariableName { get; private set; }
 			public string LoopLabelName { get; private set; }
 			public int StateValue { get; private set; }
@@ -312,17 +311,20 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		int _nextStateIndex;
 		string _currentStateVariableName;
 		string _currentLoopLabel;
+		bool _isIteratorBlock;
 		Queue<RemainingBlock> _remainingBlocks = new Queue<RemainingBlock>();
 		HashSet<State> _processedStates = new HashSet<State>();
 		Dictionary<string, State> _labelStates = new Dictionary<string, State>();
 
 		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		readonly Func<string> _allocateTempVariable;
+		readonly Func<string> _allocateLoopLabel;
 		readonly Func<JsExpression, JsExpression> _makeSetCurrent;
 
-		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent) {
+		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsExpression, JsExpression> makeSetCurrent) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
+			_allocateLoopLabel = allocateLoopLabel;
 			_makeSetCurrent = makeSetCurrent;
 		}
 
@@ -396,14 +398,20 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return new JsBlockStatement(list, mergeWithParent);
 		}
 
-		public JsBlockStatement Process(JsBlockStatement statement, string stateVariableName, string loopLabel, bool isIteratorBlock) {
+		public JsBlockStatement Process(JsBlockStatement statement, bool isIteratorBlock) {
+			var stmt = ProcessInner(statement, isIteratorBlock, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty);
+			return new GotoStatementRewriter(_labelStates).Process(stmt);
+		}
+
+		private JsBlockStatement ProcessInner(JsBlockStatement statement, bool isIteratorBlock, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack) {
 			_nextStateIndex = 0;
-			_currentStateVariableName = stateVariableName;
-			_currentLoopLabel = loopLabel;
+			_currentStateVariableName = _allocateTempVariable();
+			_currentLoopLabel = _allocateLoopLabel();
+			_isIteratorBlock = isIteratorBlock;
 			_processedStates.Clear();
 			_labelStates.Clear();
 			_remainingBlocks = new Queue<RemainingBlock>();
-			_remainingBlocks.Enqueue(new RemainingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty, GetNewStateValue(), new State(_currentStateVariableName, _currentLoopLabel, -1)));
+			_remainingBlocks.Enqueue(new RemainingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), breakStack, continueStack, GetNewStateValue(), new State(_currentStateVariableName, _currentLoopLabel, -1)));
 
 			var sections = new List<Section>();
 
@@ -411,15 +419,15 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				var current = _remainingBlocks.Dequeue();
 				var list = Handle(current.Stack, current.BreakStack, current.ContinueStack, current.StateValue, current.ReturnState);
 				if (isIteratorBlock)
-					list.Insert(0, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(stateVariableName), JsExpression.Number(-1))));
+					list.Insert(0, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_currentStateVariableName), JsExpression.Number(-1))));
 				sections.Add(new Section(current.StateValue, list));
 			}
 
 			var body = new List<JsStatement> {
-			    new JsVariableDeclarationStatement(stateVariableName, JsExpression.Number(0)),
-			    new JsLabelledStatement(loopLabel,
+			    new JsVariableDeclarationStatement(_currentStateVariableName, JsExpression.Number(0)),
+			    new JsLabelledStatement(_currentLoopLabel,
 			        new JsForStatement(new JsEmptyStatement(), null, null,
-			            new JsSwitchStatement(JsExpression.Identifier(stateVariableName),
+			            new JsSwitchStatement(JsExpression.Identifier(_currentStateVariableName),
 			                sections.Select(b =>
 			                    new JsSwitchSection(
 			                        new[] { JsExpression.Number(b.State.StateValue) },
@@ -427,8 +435,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			};
 			if (isIteratorBlock)
 				body.Add(new JsReturnStatement(JsExpression.False));
-
-			return new GotoStatementRewriter(_labelStates).Process(new JsBlockStatement(body));
+			return new JsBlockStatement(body);
 		}
 
 		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState) {
@@ -462,7 +469,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 						stack = PushFollowing(stack, tos).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
 					else {
-						if (stmt is JsIfStatement) {
+						if (stmt is JsTryStatement) {
+							if (!HandleTryStatement((JsTryStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+								return currentBlock;
+						}
+						else if (stmt is JsIfStatement) {
 							if (!HandleIfStatement((JsIfStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
@@ -490,31 +501,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 				}
 				else {
-#warning Need to handle break/continue even inside statements that do not themselves need processing. Visitor?
-/*					if (stmt is JsBreakStatement) {
-						var brkStmt = (JsBreakStatement)stmt;
-						if (brkStmt.TargetLabel == null) {
-							GotoState(currentBlock, breakStack.Peek().Item2);
-						}
-						else {
-							GotoState(currentBlock, breakStack.Single(x => x.Item1 == brkStmt.TargetLabel).Item2);
-						}
-					}
-					else if (stmt is JsContinueStatement) {
-						var contStmt = (JsContinueStatement)stmt;
-						if (contStmt.TargetLabel == null) {
-							GotoState(currentBlock, continueStack.Peek().Item2);
-						}
-						else {
-							GotoState(currentBlock, continueStack.Single(x => x.Item1 == contStmt.TargetLabel).Item2);
-						}
-					}
-					else if (stmt is JsGotoStatement) {
-						GotoState(currentBlock, GetStateForLabel(((JsGotoStatement)stmt).TargetLabel));
-					}
-					else {
-						currentBlock.Add(stmt);	// No rewrites necessary in this statement.
-					}*/
 					currentBlock.AddRange(new NestedBreakAndContinueRewriter(breakStack, continueStack).Process(stmt));
 					stack = PushFollowing(stack, tos);
 				}
@@ -565,6 +551,23 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			return false;
+		}
+
+		private JsBlockStatement InnerRewrite(JsBlockStatement stmt, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack) {
+			var innerRewriter = new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, _makeSetCurrent);
+			var result = innerRewriter.ProcessInner(stmt, _isIteratorBlock, breakStack, continueStack);
+			foreach (var ls in innerRewriter._labelStates)
+				this._labelStates[ls.Key] = ls.Value;
+			return result;
+		}
+
+		private bool HandleTryStatement(JsTryStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+			var guarded = NeedsRewriteVisitor.Analyze(stmt.GuardedStatement) ? InnerRewrite(stmt.GuardedStatement, breakStack, continueStack) : stmt.GuardedStatement;
+			var @catch = stmt.Catch != null && NeedsRewriteVisitor.Analyze(stmt.Catch.Body) ? new JsCatchClause(stmt.Catch.Identifier, InnerRewrite(stmt.Catch.Body, breakStack, continueStack)) : stmt.Catch;
+			var @finally = stmt.Finally != null && NeedsRewriteVisitor.Analyze(stmt.Finally) ? InnerRewrite(stmt.Finally, breakStack, continueStack) : stmt.Finally;
+
+			currentBlock.Add(new JsTryStatement(guarded, @catch, @finally));
+			return true;
 		}
 
 		private bool HandleIfStatement(JsIfStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
@@ -693,12 +696,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 				State? nextFallthroughState;
 
-				if (origBody.Count > 0 && origBody[origBody.Count - 1] is JsBreakStatement) {	// TODO: Also check if it has a label that causes it to reference something else (but we don't generate those kinds of labels, at least not currently).
-					// Remove break statements that come last in the clause - they are unnecessary since we use if/else if/else
-					origBody.RemoveAt(origBody.Count - 1);
-					nextFallthroughState = null;
-				}
-				else if (i < stmt.Sections.Count - 1 && (origBody.Count == 0 || IsNextStatementReachable(origBody[origBody.Count - 1]))) {
+				if (i < stmt.Sections.Count - 1 && (origBody.Count == 0 || IsNextStatementReachable(origBody[origBody.Count - 1]))) {
 					// Fallthrough
 					var nextBody = stmt.Sections[i + 1].Body.Statements;
 					if (nextBody.Count > 0 && nextBody[0] is JsLabelledStatement)
@@ -749,14 +747,16 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 	public class StateMachineRewriter : RewriterVisitorBase<object> {
 		private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		private readonly Func<string> _allocateTempVariable;
+		private readonly Func<string> _allocateLoopLabel;
 		private readonly Func<JsExpression, JsExpression> _makeSetCurrent;
 		private readonly bool _isIteratorBlock;
 
 		private int _currentLoopNameIndex;
 
-		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
+		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
+			_allocateLoopLabel = allocateLoopLabel;
 			_makeSetCurrent = makeSetCurrent;
 			_isIteratorBlock = isIteratorBlock;
 		}
@@ -775,13 +775,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			if (!NeedsRewriteVisitor.Analyze(block))
 				return block;
 
-			var stateVar  = _allocateTempVariable();
-			var loopLabel = "$loop" + (++_currentLoopNameIndex).ToString(CultureInfo.InvariantCulture);
-			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _makeSetCurrent).Process(block, stateVar, loopLabel, _isIteratorBlock);
+			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, _makeSetCurrent).Process(block, _isIteratorBlock);
 		}
 
-		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, makeSetCurrent, isIteratorBlock);
+		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
+			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, makeSetCurrent, isIteratorBlock);
 			return obj.DoRewrite((JsBlockStatement)obj.VisitBlockStatement(block, null));
 		}
 	}

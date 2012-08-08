@@ -1,63 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace Saltarelle.Compiler.Tests.GotoTests
+namespace Saltarelle.Compiler.Tests.StateMachineTests
 {
 	[TestFixture]
-	public class DoWhileStatementTests : StateMachineRewriterTestBase {
+	public class WhileStatementTests : StateMachineRewriterTestBase {
 		[Test]
-		public void DoWhile1() {
+		public void While1() {
 			AssertCorrect(@"
 {
-	do {
-		a;
-		lbl1:
+	while (a) {
 		b;
-	} while (c);
-	d;
-}", 
-@"{
-	var $tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				a;
-				$tmp1 = 2;
-				continue $loop1;
-			}
-			case 2: {
-				b;
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				if (c) {
-					$tmp1 = 0;
-					continue $loop1;
-				}
-				d;
-				break $loop1;
-			}
-		}
+		lbl1:
+		c;
 	}
-}
-");
-		}
-
-		[Test]
-		public void DoWhile2() {
-			AssertCorrect(@"
-{
-	x;
-	do {
-		a;
-		lbl1:
-		b;
-	} while (c);
 	d;
 }", 
 @"{
@@ -66,25 +21,20 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				x;
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				a;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
-				b;
-				$tmp1 = 2;
-				continue $loop1;
-			}
-			case 2: {
-				if (c) {
+				if (!a) {
 					$tmp1 = 1;
 					continue $loop1;
 				}
+				b;
+				$tmp1 = 2;
+				continue $loop1;
+			}
+			case 2: {
+				c;
+				$tmp1 = 0;
+				continue $loop1;
+			}
+			case 1: {
 				d;
 				break $loop1;
 			}
@@ -95,16 +45,16 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 		}
 
 		[Test]
-		public void DoWhile3() {
+		public void While2() {
 			AssertCorrect(@"
 {
-	x;
-	before:
-	do {
-		a;
-		lbl1:
-		b;
-	} while (c);
+	{
+		while (a) {
+			b;
+			lbl1:
+			c;
+		}
+	}
 	d;
 }", 
 @"{
@@ -113,26 +63,67 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				x;
+				if (!a) {
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				b;
+				$tmp1 = 2;
+				continue $loop1;
+			}
+			case 2: {
+				c;
+				$tmp1 = 0;
+				continue $loop1;
+			}
+			case 1: {
+				d;
+				break $loop1;
+			}
+		}
+	}
+}
+");
+		}
+
+		[Test]
+		public void While3() {
+			AssertCorrect(@"
+{
+	a;
+	while (b) {
+		c;
+		lbl1:
+		d;
+	}
+	e;
+}", 
+@"{
+	var $tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				a;
 				$tmp1 = 1;
 				continue $loop1;
 			}
 			case 1: {
-				a;
+				if (!b) {
+					$tmp1 = 2;
+					continue $loop1;
+				}
+				c;
 				$tmp1 = 3;
 				continue $loop1;
 			}
 			case 3: {
-				b;
-				$tmp1 = 2;
+				d;
+				$tmp1 = 1;
 				continue $loop1;
 			}
 			case 2: {
-				if (c) {
-					$tmp1 = 1;
-					continue $loop1;
-				}
-				d;
+				e;
 				break $loop1;
 			}
 		}
@@ -142,42 +133,31 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 		}
 
 		[Test]
-		public void DoWhileWithBreak1() {
+		public void While4() {
 			AssertCorrect(@"
 {
-	do {
-		a;
-		lbl1:
+	while (a) {
 		b;
-		break;
-	} while (c);
-	d;
-}", 
+		lbl1:
+		c;
+	}
+}",
 @"{
 	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				a;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
+				if (!a) {
+					break $loop1;
+				}
 				b;
-				$tmp1 = 2;
+				$tmp1 = 1;
 				continue $loop1;
-			}
-			case 2: {
-				d;
-				break $loop1;
 			}
 			case 1: {
-				if (c) {
-					$tmp1 = 0;
-					continue $loop1;
-				}
-				$tmp1 = 2;
+				c;
+				$tmp1 = 0;
 				continue $loop1;
 			}
 		}
@@ -187,15 +167,14 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 		}
 
 		[Test]
-		public void DoWhileWithBreak2() {
+		public void While5() {
 			AssertCorrect(@"
 {
-	do {
-		a;
-		lbl1:
+	while (a) {
 		b;
-		break;
-	} while (c);
+		lbl1:
+		c;
+	}
 	lbl2: d;
 }", 
 @"{
@@ -204,63 +183,21 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				a;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
+				if (!a) {
+					$tmp1 = 1;
+					continue $loop1;
+				}
 				b;
 				$tmp1 = 2;
 				continue $loop1;
 			}
-			case 1: {
-				if (c) {
-					$tmp1 = 0;
-					continue $loop1;
-				}
-				$tmp1 = 2;
+			case 2: {
+				c;
+				$tmp1 = 0;
 				continue $loop1;
 			}
-			case 2: {
+			case 1: {
 				d;
-				break $loop1;
-			}
-		}
-	}
-}
-");
-		}
-	
-		[Test]
-		public void DoWhileWithBreak3() {
-			AssertCorrect(@"
-{
-	do {
-		a;
-		lbl1:
-		b;
-		break;
-	} while (c);
-}", 
-@"{
-	var $tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				a;
-				$tmp1 = 2;
-				continue $loop1;
-			}
-			case 2: {
-				b;
-				break $loop1;
-			}
-			case 1: {
-				if (c) {
-					$tmp1 = 0;
-					continue $loop1;
-				}
 				break $loop1;
 			}
 		}
@@ -270,16 +207,16 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 		}
 
 		[Test]
-		public void DoWhileWithContinue() {
+		public void WhileWithBreak() {
 			AssertCorrect(@"
 {
-	do {
-		a;
-		lbl1:
+	while (a) {
 		b;
-		continue;
+		lbl1:
 		c;
-	} while (c);
+		break;
+	}
+	d;
 }", 
 @"{
 	var $tmp1 = 0;
@@ -287,23 +224,62 @@ namespace Saltarelle.Compiler.Tests.GotoTests
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				a;
+				if (!a) {
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				b;
 				$tmp1 = 2;
 				continue $loop1;
 			}
 			case 2: {
-				b;
-				$tmp1 = 1;
-				continue $loop1;
 				c;
 				$tmp1 = 1;
 				continue $loop1;
 			}
 			case 1: {
-				if (c) {
-					$tmp1 = 0;
+				d;
+				break $loop1;
+			}
+		}
+	}
+}
+");
+		}
+
+		[Test]
+		public void WhileWithContinue() {
+			AssertCorrect(@"
+{
+	while (a) {
+		b;
+		lbl1:
+		c;
+		continue;
+	}
+	d;
+}", 
+@"{
+	var $tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				if (!a) {
+					$tmp1 = 1;
 					continue $loop1;
 				}
+				b;
+				$tmp1 = 2;
+				continue $loop1;
+			}
+			case 2: {
+				c;
+				$tmp1 = 0;
+				continue $loop1;
+			}
+			case 1: {
+				d;
 				break $loop1;
 			}
 		}

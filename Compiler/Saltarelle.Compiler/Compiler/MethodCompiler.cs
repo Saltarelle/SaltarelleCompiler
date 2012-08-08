@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
@@ -92,7 +93,8 @@ namespace Saltarelle.Compiler.Compiler {
 			if (DisableStateMachineRewriteTestingUseOnly)
 				return function;
 
-			var body = StateMachineRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), v => { throw new NotImplementedException("TODO"); }, false);
+			int loopLabelIndex = 0;
+			var body = StateMachineRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), v => { throw new NotImplementedException("TODO"); }, false);
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
