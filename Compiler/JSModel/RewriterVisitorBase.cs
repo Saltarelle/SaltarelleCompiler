@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler.JSModel
                 if (list != null) {
                     list.AddRange(after);
                 }
-                else if (after.Count > 1 || !ReferenceEquals(before, after[0])) {
+                else if (after.Count != 1 || !ReferenceEquals(before, after[0])) {
                     list = new List<T>();
                     for (int j = 0; j < i; j++)
                         list.Add(orig[j]);
