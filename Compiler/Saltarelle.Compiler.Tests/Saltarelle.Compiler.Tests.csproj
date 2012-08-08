@@ -154,7 +154,7 @@
     <Compile Include="Compiler\CompilerTestBase.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ExpressionTests\QueryExpressionTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\ParametersUsingByRefSemanticsTests.cs" />
-    <Compile Include="Compiler\MethodCompilationTests\PostProcessingTests.cs" />
+    <Compile Include="Compiler\MethodCompilationTests\StateMachineRewriteTests.cs" />
     <Compile Include="Compiler\PreprocessorTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\InlineCodeMethodCompilerTests.cs" />
     <Compile Include="Compiler\MemberConversionTests\ConstructorConversionTests.cs" />
@@ -219,9 +219,15 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
-    <Compile Include="GotoTests\StateMachineRewriterTests.cs" />
-    <Compile Include="GotoTests\GotoRewriterTests.cs" />
-    <Compile Include="GotoTests\LabelledBlockGathererTests.cs" />
+    <Compile Include="GotoTests\BlockStatementTests.cs" />
+    <Compile Include="GotoTests\IteratorBlockTests.cs" />
+    <Compile Include="GotoTests\SwitchStatementTests.cs" />
+    <Compile Include="GotoTests\DoWhileStatementTests.cs" />
+    <Compile Include="GotoTests\ForStatementTests.cs" />
+    <Compile Include="GotoTests\IfStatementTests.cs" />
+    <Compile Include="GotoTests\StateMachineRewriterTestBase.cs" />
+    <Compile Include="GotoTests\CompositeTests.cs" />
+    <Compile Include="GotoTests\WhileStatementTests.cs" />
     <Compile Include="JavaScriptParserTests\JavaScriptParserTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockNamingConventionResolver.cs" />

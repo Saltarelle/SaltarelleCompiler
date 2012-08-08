@@ -41,47 +41,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 	}
 
-	public class StateMachineRewriter : RewriterVisitorBase<object> {
-		private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
-		private readonly Func<string> _allocateTempVariable;
-		private readonly Func<JsExpression, JsExpression> _makeSetCurrent;
-		private readonly bool _isIteratorBlock;
-
-		private int _currentLoopNameIndex;
-
-		public StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
-			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
-			_allocateTempVariable = allocateTempVariable;
-			_makeSetCurrent = makeSetCurrent;
-			_isIteratorBlock = isIteratorBlock;
-		}
-
-		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
-			var body = DoRewrite((JsBlockStatement)VisitBlockStatement(expression.Body, data));
-	        return ReferenceEquals(body, expression.Body) ? expression : JsExpression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
-		}
-
-		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
-			var body = DoRewrite((JsBlockStatement)VisitBlockStatement(statement.Body, data));
-	        return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
-		}
-
-		private JsBlockStatement DoRewrite(JsBlockStatement block) {
-			if (!NeedsRewriteVisitor.Analyze(block))
-				return block;
-
-			var stateVar  = _allocateTempVariable();
-			var loopLabel = "$loop" + (++_currentLoopNameIndex).ToString(CultureInfo.InvariantCulture);
-			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _makeSetCurrent).Process(block, stateVar, loopLabel, _isIteratorBlock);
-		}
-
-		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, makeSetCurrent, isIteratorBlock);
-			return obj.DoRewrite((JsBlockStatement)obj.VisitBlockStatement(block, null));
-		}
-	}
-
-	class ContainsBreakVisitor : RewriterVisitorBase<object> {
+	internal class ContainsBreakVisitor : RewriterVisitorBase<object> {
 		bool _result;
 		bool _unnamedIsMatch;
 		string _statementName;
@@ -346,7 +306,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					if (!HandleYieldStatement((JsYieldStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
 						return currentBlock;
 				}
-				else if (ContainsLabelsVisitor.Analyze(stmt)) {
+				else if (NeedsRewriteVisitor.Analyze(stmt)) {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
@@ -578,8 +538,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 				var origBody = new List<JsStatement>();
 				origBody.AddRange(clause.Body.Statements);
-//				if (currentFallthroughState != null && (origBody.Count == 0 || !(origBody[0] is JsLabelledStatement)))
-//					origBody[0] = new JsLabelledStatement(currentFallthroughLabel, origBody.Count > 0 ? origBody[0] : new JsEmptyStatement());
 
 				int? nextFallthroughState;
 
@@ -633,6 +591,46 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			return true;
+		}
+	}
+
+	public class StateMachineRewriter : RewriterVisitorBase<object> {
+		private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
+		private readonly Func<string> _allocateTempVariable;
+		private readonly Func<JsExpression, JsExpression> _makeSetCurrent;
+		private readonly bool _isIteratorBlock;
+
+		private int _currentLoopNameIndex;
+
+		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
+			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
+			_allocateTempVariable = allocateTempVariable;
+			_makeSetCurrent = makeSetCurrent;
+			_isIteratorBlock = isIteratorBlock;
+		}
+
+		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
+			var body = DoRewrite((JsBlockStatement)VisitBlockStatement(expression.Body, data));
+	        return ReferenceEquals(body, expression.Body) ? expression : JsExpression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
+		}
+
+		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
+			var body = DoRewrite((JsBlockStatement)VisitBlockStatement(statement.Body, data));
+	        return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
+		}
+
+		private JsBlockStatement DoRewrite(JsBlockStatement block) {
+			if (!NeedsRewriteVisitor.Analyze(block))
+				return block;
+
+			var stateVar  = _allocateTempVariable();
+			var loopLabel = "$loop" + (++_currentLoopNameIndex).ToString(CultureInfo.InvariantCulture);
+			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _makeSetCurrent).Process(block, stateVar, loopLabel, _isIteratorBlock);
+		}
+
+		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
+			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, makeSetCurrent, isIteratorBlock);
+			return obj.DoRewrite((JsBlockStatement)obj.VisitBlockStatement(block, null));
 		}
 	}
 }

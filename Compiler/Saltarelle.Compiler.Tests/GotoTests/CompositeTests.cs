@@ -11,15 +11,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Tests.GotoTests {
 	[TestFixture]
-	public class GotoRewriterTests {
-		private void AssertCorrect(string orig, string expected) {
-			int tempCount = 0;
-			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
-			var result = GotoRewriter.Rewrite(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempCount).ToString(CultureInfo.InvariantCulture), v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v));
-			var actual = OutputFormatter.Format(result);
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
-		}
-
+	public class CompositeTests : StateMachineRewriterTestBase {
 		[Test]
 		public void CanRewriteGotoToStateMachine() {
 			AssertCorrect(
@@ -275,6 +267,30 @@ lbl2:
 	}
 }
 ");
+		}
+
+		[Test]
+		public void CanGotoOuterLabelFromInnerTryBlock() {
+			AssertCorrect(
+@"{
+	try {
+		a;
+		try {
+			b;
+			lbl1:
+			goto lbl2;
+		}
+		catch (c) {
+			d;
+		}
+		e;
+		lbl2:
+		f;
+	}
+	catch (g) {
+	}
+}",
+@"TODO");
 		}
 	}
 }

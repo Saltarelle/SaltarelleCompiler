@@ -51,15 +51,7 @@
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
-    <Compile Include="GotoRewrite\ContainsLabelsVisitor.cs" />
     <Compile Include="GotoRewrite\StateMachineRewriter.cs" />
-    <Compile Include="GotoRewrite\GotoRewriter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GotoRewrite\LabelledBlock.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GotoRewrite\LabelledBlockGatherer.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />

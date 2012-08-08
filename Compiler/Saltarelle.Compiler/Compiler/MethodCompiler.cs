@@ -86,19 +86,19 @@ namespace Saltarelle.Compiler.Compiler {
 			_statementCompiler = new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, _definedSymbols);
 		}
 
-		internal static bool DisablePostProcessingTestingUseOnly;
+		internal static bool DisableStateMachineRewriteTestingUseOnly;
 
-		private JsFunctionDefinitionExpression PostProcess(JsFunctionDefinitionExpression function) {
-			if (DisablePostProcessingTestingUseOnly)
+		private JsFunctionDefinitionExpression PerformStateMachineRewrite(JsFunctionDefinitionExpression function) {
+			if (DisableStateMachineRewriteTestingUseOnly)
 				return function;
 
-			var body = GotoRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), v => { throw new NotImplementedException("TODO"); });
+			var body = StateMachineRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), v => { throw new NotImplementedException("TODO"); }, false);
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
 			CreateCompilationContext(entity, method, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null));
-            return PostProcess(_statementCompiler.CompileMethod(method.Parameters, variables, body));
+            return PerformStateMachineRewrite(_statementCompiler.CompileMethod(method.Parameters, variables, body));
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
@@ -151,7 +151,7 @@ namespace Saltarelle.Compiler.Compiler {
 					body = StaticMethodConstructorReturnPatcher.Process(body, _namingConvention.ThisAlias).AsReadOnly();
 				}
 
-				return PostProcess(JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
+				return PerformStateMachineRewrite(JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex, filename, location);

@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 		[Test]
 		public void LabelWorks() {
 			try {
-				MC.DisablePostProcessingTestingUseOnly = true;
+				MC.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"Exception MyProperty { get; set; }
@@ -22,7 +22,7 @@ myLabel:
 ");
 			}
 			finally {
-				MC.DisablePostProcessingTestingUseOnly = false;
+				MC.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 	}

@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
 	[TestFixture]
-	public class PostProcessingTests : MethodCompilerTestBase {
+	public class StateMachineRewriteTests : MethodCompilerTestBase {
 		[Test]
 		public void MethodCanUseGoto() {
 			AssertCorrect(@"
