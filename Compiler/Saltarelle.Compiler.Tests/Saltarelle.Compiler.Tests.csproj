@@ -219,6 +219,7 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
+    <Compile Include="GotoTests\StateMachineRewriterTests.cs" />
     <Compile Include="GotoTests\GotoRewriterTests.cs" />
     <Compile Include="GotoTests\LabelledBlockGathererTests.cs" />
     <Compile Include="JavaScriptParserTests\JavaScriptParserTests.cs" />
