@@ -420,42 +420,42 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		public void SwitchStatement() {
 			var stmt = ParseStatement<JsSwitchStatement>("switch(a) { case b: x; case c: y; default: z; }");
 			Assert.That(OutputFormatter.Format(stmt.Expression), Is.EqualTo("a"));
-			Assert.That(stmt.Clauses.Count, Is.EqualTo(3));
-			Assert.That(stmt.Clauses[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b" }));
-			Assert.That(OutputFormatter.Format(stmt.Clauses[0].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tx;\n}\n"));
-			Assert.That(stmt.Clauses[1].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "c" }));
-			Assert.That(OutputFormatter.Format(stmt.Clauses[1].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\ty;\n}\n"));
-			Assert.That(stmt.Clauses[2].Values, Is.EqualTo(new object[] { null }));
-			Assert.That(OutputFormatter.Format(stmt.Clauses[2].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tz;\n}\n"));
+			Assert.That(stmt.Sections.Count, Is.EqualTo(3));
+			Assert.That(stmt.Sections[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b" }));
+			Assert.That(OutputFormatter.Format(stmt.Sections[0].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tx;\n}\n"));
+			Assert.That(stmt.Sections[1].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "c" }));
+			Assert.That(OutputFormatter.Format(stmt.Sections[1].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\ty;\n}\n"));
+			Assert.That(stmt.Sections[2].Values, Is.EqualTo(new object[] { null }));
+			Assert.That(OutputFormatter.Format(stmt.Sections[2].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tz;\n}\n"));
 		}
 
 		[Test]
 		public void SwitchStatementWithMultipleLabelsPerBlock() {
 			var stmt = ParseStatement<JsSwitchStatement>("switch(a) { case b: case c: x; case d: default: y; }");
 			Assert.That(OutputFormatter.Format(stmt.Expression), Is.EqualTo("a"));
-			Assert.That(stmt.Clauses.Count, Is.EqualTo(2));
-			Assert.That(stmt.Clauses[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b", "c" }));
-			Assert.That(OutputFormatter.Format(stmt.Clauses[0].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tx;\n}\n"));
-			Assert.That(stmt.Clauses[1].Values.Count, Is.EqualTo(2));
-			Assert.That(OutputFormatter.Format(stmt.Clauses[1].Values[0]), Is.EqualTo("d"));
-			Assert.That(stmt.Clauses[1].Values[1], Is.Null);
-			Assert.That(OutputFormatter.Format(stmt.Clauses[1].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\ty;\n}\n"));
+			Assert.That(stmt.Sections.Count, Is.EqualTo(2));
+			Assert.That(stmt.Sections[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b", "c" }));
+			Assert.That(OutputFormatter.Format(stmt.Sections[0].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\tx;\n}\n"));
+			Assert.That(stmt.Sections[1].Values.Count, Is.EqualTo(2));
+			Assert.That(OutputFormatter.Format(stmt.Sections[1].Values[0]), Is.EqualTo("d"));
+			Assert.That(stmt.Sections[1].Values[1], Is.Null);
+			Assert.That(OutputFormatter.Format(stmt.Sections[1].Body).Replace("\r\n", "\n"), Is.EqualTo("{\n\ty;\n}\n"));
 		}
 
 		[Test]
 		public void EmptySwitchStatement() {
 			var stmt = ParseStatement<JsSwitchStatement>("switch(a) {}");
 			Assert.That(OutputFormatter.Format(stmt.Expression), Is.EqualTo("a"));
-			Assert.That(stmt.Clauses.Count, Is.EqualTo(0));
+			Assert.That(stmt.Sections.Count, Is.EqualTo(0));
 		}
 
 		[Test]
 		public void SwitchStatementWithEmptyClause() {
 			var stmt = ParseStatement<JsSwitchStatement>("switch(a) { case b: }");
 			Assert.That(OutputFormatter.Format(stmt.Expression), Is.EqualTo("a"));
-			Assert.That(stmt.Clauses.Count, Is.EqualTo(1));
-			Assert.That(stmt.Clauses[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b" }));
-			Assert.That(stmt.Clauses[0].Body.Statements[0], Is.InstanceOf<JsEmptyStatement>());
+			Assert.That(stmt.Sections.Count, Is.EqualTo(1));
+			Assert.That(stmt.Sections[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b" }));
+			Assert.That(stmt.Sections[0].Body.Statements[0], Is.InstanceOf<JsEmptyStatement>());
 		}
 
 		[Test]

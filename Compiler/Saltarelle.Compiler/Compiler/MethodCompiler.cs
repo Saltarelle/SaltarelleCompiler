@@ -48,7 +48,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			public static IList<JsStatement> Process(IList<JsStatement> statements, string identifierToReturn) {
 				var obj = new StaticMethodConstructorReturnPatcher(identifierToReturn);
-				return obj.Visit(statements, null);
+				return obj.VisitStatements(statements, null);
 			}
 		}
 

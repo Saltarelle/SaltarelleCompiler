@@ -8,10 +8,15 @@ namespace Saltarelle.Compiler.JSModel.Statements {
     [Serializable]
     public class JsBlockStatement : JsStatement {
         public ReadOnlyCollection<JsStatement> Statements { get; private set; }
+		/// <summary>
+		/// If true, this statement should be merged with its parent (if possible). Primarilly useful in rewriters.
+		/// </summary>
+		public bool MergeWithParent { get; private set; }
 
-        public JsBlockStatement(IEnumerable<JsStatement> statements) {
+        public JsBlockStatement(IEnumerable<JsStatement> statements, bool mergeWithParent = false) {
             if (statements == null) throw new ArgumentNullException("statements");
             Statements = statements.AsReadOnly();
+			MergeWithParent = mergeWithParent;
         }
 
         public JsBlockStatement(params JsStatement[] statements) : this((IEnumerable<JsStatement>)statements) {

@@ -564,7 +564,7 @@ redo:
     		_cb.Append("switch (");
 			VisitExpression(statement.Expression, false);
 			_cb.AppendLine(") {").Indent();
-			foreach (var clause in statement.Clauses) {
+			foreach (var clause in statement.Sections) {
 				bool first = true;
 				foreach (var v in clause.Values) {
 					if (!first)

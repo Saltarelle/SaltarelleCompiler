@@ -96,16 +96,16 @@ lbl2:
 			case 0: {
 				a;
 				b;
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 2: {
-				c;
-				d;
-				$tmp1 = 1;
+				$tmp1 = 2;
 				continue $loop1;
 			}
 			case 1: {
+				c;
+				d;
+				$tmp1 = 2;
+				continue $loop1;
+			}
+			case 2: {
 				e;
 				f;
 				break $loop1;
