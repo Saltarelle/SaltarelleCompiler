@@ -41,6 +41,32 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 	}
 
+	internal class ContainsYieldVisitor : RewriterVisitorBase<object> {
+		bool _result;
+
+		private ContainsYieldVisitor() {
+		}
+
+		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
+			return statement;
+		}
+
+		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
+			return expression;
+		}
+
+		public override JsStatement VisitYieldStatement(JsYieldStatement statement, object data) {
+			_result = true;
+			return statement;
+		}
+
+		public static bool Analyze(JsStatement statement) {
+			var obj = new ContainsYieldVisitor();
+			obj.VisitStatement(statement, null);
+			return obj._result;
+		}
+	}
+
 	internal class ContainsBreakVisitor : RewriterVisitorBase<object> {
 		bool _result;
 		bool _unnamedIsMatch;
@@ -131,13 +157,15 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			public ImmutableStack<StackEntry> Stack { get; private set; }
 			public ImmutableStack<Tuple<string, State>> BreakStack { get; private set; }
 			public ImmutableStack<Tuple<string, State>> ContinueStack { get; private set; }
+			public ImmutableStack<Tuple<int, string>> FinallyStack { get; private set; }
 			public State StateValue { get; private set; }
 			public State ReturnState { get; private set; }
 
-			public RemainingBlock(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State stateValue, State returnState) {
+			public RemainingBlock(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State stateValue, State returnState) {
 				Stack = stack;
 				BreakStack = breakStack;
 				ContinueStack = continueStack;
+				FinallyStack = finallyStack;
 				StateValue = stateValue;
 				ReturnState = returnState;
 			}
@@ -319,16 +347,18 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		readonly Func<string> _allocateTempVariable;
 		readonly Func<string> _allocateLoopLabel;
+		readonly Func<string> _allocateFinallyHandler;
 		readonly Func<JsExpression, JsExpression> _makeSetCurrent;
 
-		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsExpression, JsExpression> makeSetCurrent) {
+		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
 			_allocateLoopLabel = allocateLoopLabel;
+			_allocateFinallyHandler = allocateFinallyHandler;
 			_makeSetCurrent = makeSetCurrent;
 		}
 
-		private State GetNewStateValue() {
+		private State CreateNewStateValue() {
 			return new State(_currentStateVariableName, _currentLoopLabel, _nextStateIndex++);
 		}
 
@@ -340,7 +370,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			State result;
 			if (_labelStates.TryGetValue(labelName, out result))
 				return result;
-			_labelStates[labelName] = result = GetNewStateValue();
+			_labelStates[labelName] = result = CreateNewStateValue();
 			return result;
 		}
 
@@ -359,13 +389,13 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement || current is JsBreakStatement || current is JsContinueStatement);
 		}
 
-		private void Enqueue(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State stateValue, State returnState) {
+		private void Enqueue(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State stateValue, State returnState) {
 			if (_processedStates.Contains(stateValue))
 				throw new InvalidOperationException("Duplicate enqueueing of " + stateValue);
 			_processedStates.Add(stateValue);
 			if (stack.IsEmpty)
 				throw new InvalidOperationException("Empty stack for state " + stateValue);
-			_remainingBlocks.Enqueue(new RemainingBlock(stack, breakStack, continueStack, stateValue, returnState));
+			_remainingBlocks.Enqueue(new RemainingBlock(stack, breakStack, continueStack, finallyStack, stateValue, returnState));
 		}
 
 		private ImmutableStack<StackEntry> PushFollowing(ImmutableStack<StackEntry> stack, StackEntry location) {
@@ -399,11 +429,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		public JsBlockStatement Process(JsBlockStatement statement, bool isIteratorBlock) {
-			var stmt = ProcessInner(statement, isIteratorBlock, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty);
+			var stmt = ProcessInner(statement, isIteratorBlock, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<int, string>>.Empty.Push(Tuple.Create(-1, (string)null)));
 			return new GotoStatementRewriter(_labelStates).Process(stmt);
 		}
 
-		private JsBlockStatement ProcessInner(JsBlockStatement statement, bool isIteratorBlock, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack) {
+		private JsBlockStatement ProcessInner(JsBlockStatement statement, bool isIteratorBlock, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack) {
 			_nextStateIndex = 0;
 			_currentStateVariableName = _allocateTempVariable();
 			_currentLoopLabel = _allocateLoopLabel();
@@ -411,15 +441,15 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			_processedStates.Clear();
 			_labelStates.Clear();
 			_remainingBlocks = new Queue<RemainingBlock>();
-			_remainingBlocks.Enqueue(new RemainingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), breakStack, continueStack, GetNewStateValue(), new State(_currentStateVariableName, _currentLoopLabel, -1)));
+			_remainingBlocks.Enqueue(new RemainingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), breakStack, continueStack, finallyStack, CreateNewStateValue(), new State(_currentStateVariableName, _currentLoopLabel, -1)));
 
 			var sections = new List<Section>();
 
 			while (_remainingBlocks.Count > 0) {
 				var current = _remainingBlocks.Dequeue();
-				var list = Handle(current.Stack, current.BreakStack, current.ContinueStack, current.StateValue, current.ReturnState);
+				var list = Handle(current.Stack, current.BreakStack, current.ContinueStack, current.FinallyStack, current.StateValue, current.ReturnState);
 				if (isIteratorBlock)
-					list.Insert(0, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_currentStateVariableName), JsExpression.Number(-1))));
+					list.Insert(0, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_currentStateVariableName), JsExpression.Number(current.FinallyStack.Peek().Item1))));
 				sections.Add(new Section(current.StateValue, list));
 			}
 
@@ -438,7 +468,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			return new JsBlockStatement(body);
 		}
 
-		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState) {
+		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState) {
 			var currentBlock = new List<JsStatement>();
 			while (!stack.IsEmpty) {
 				var tos = stack.Peek();
@@ -453,7 +483,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 					else {
 						// A label that terminates the current block.
-						Enqueue(stack.Push(new StackEntry(tos.Block, tos.Index)), breakStack, continueStack, GetStateForLabel(lbl.Label), returnState);
+						Enqueue(stack.Push(new StackEntry(tos.Block, tos.Index)), breakStack, continueStack, finallyStack, GetStateForLabel(lbl.Label), returnState);
 						if (currentBlock.Count == 0 || IsNextStatementReachable(currentBlock[currentBlock.Count - 1]))
 							GotoState(currentBlock, GetStateForLabel(lbl.Label));
 						return currentBlock;
@@ -461,7 +491,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				}
 
 				if (stmt is JsYieldStatement) {
-					if (!HandleYieldStatement((JsYieldStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+					if (!HandleYieldStatement((JsYieldStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 						return currentBlock;
 				}
 				else if (NeedsRewriteVisitor.Analyze(stmt)) {
@@ -470,27 +500,27 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 					else {
 						if (stmt is JsTryStatement) {
-							if (!HandleTryStatement((JsTryStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+							if (!HandleTryStatement((JsTryStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
 						else if (stmt is JsIfStatement) {
-							if (!HandleIfStatement((JsIfStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+							if (!HandleIfStatement((JsIfStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
 						else if (stmt is JsDoWhileStatement) {
-							if (!HandleDoWhileStatement((JsDoWhileStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+							if (!HandleDoWhileStatement((JsDoWhileStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
 						else if (stmt is JsWhileStatement) {
-							if (!HandleWhileStatement((JsWhileStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+							if (!HandleWhileStatement((JsWhileStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
 						else if (stmt is JsForStatement) {
-							if (!HandleForStatement((JsForStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+							if (!HandleForStatement((JsForStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
 						else if (stmt is JsSwitchStatement) {
-							if (!HandleSwitchStatement((JsSwitchStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+							if (!HandleSwitchStatement((JsSwitchStatement)stmt, tos, stack, breakStack, continueStack, finallyStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
 						else {
@@ -527,14 +557,14 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return Tuple.Create(GetStateForLabel((next as JsLabelledStatement).Label), false);
 			}
 			else if (next != null) {
-				return Tuple.Create(GetNewStateValue(), true);
+				return Tuple.Create(CreateNewStateValue(), true);
 			}
 			else {
 				return Tuple.Create(returnState, false);
 			}
 		}
 
-		private bool HandleYieldStatement(JsYieldStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+		private bool HandleYieldStatement(JsYieldStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			var stateAfter = GetStateAfterStatement(location, stack, returnState);
 
 			if (stmt.Value != null) {
@@ -547,57 +577,77 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
-				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
+				Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, stateAfter.Item1, returnState);
 			}
 
 			return false;
 		}
 
-		private JsBlockStatement InnerRewrite(JsBlockStatement stmt, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack) {
-			var innerRewriter = new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, _makeSetCurrent);
-			var result = innerRewriter.ProcessInner(stmt, _isIteratorBlock, breakStack, continueStack);
+		private JsBlockStatement InnerRewrite(JsBlockStatement stmt, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack) {
+			var innerRewriter = new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, _allocateFinallyHandler, _makeSetCurrent);
+			var result = innerRewriter.ProcessInner(stmt, _isIteratorBlock, breakStack, continueStack, finallyStack);
 			foreach (var ls in innerRewriter._labelStates)
 				this._labelStates[ls.Key] = ls.Value;
 			return result;
 		}
 
-		private bool HandleTryStatement(JsTryStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
-			var guarded = NeedsRewriteVisitor.Analyze(stmt.GuardedStatement) ? InnerRewrite(stmt.GuardedStatement, breakStack, continueStack) : stmt.GuardedStatement;
-			var @catch = stmt.Catch != null && NeedsRewriteVisitor.Analyze(stmt.Catch.Body) ? new JsCatchClause(stmt.Catch.Identifier, InnerRewrite(stmt.Catch.Body, breakStack, continueStack)) : stmt.Catch;
-			var @finally = stmt.Finally != null && NeedsRewriteVisitor.Analyze(stmt.Finally) ? InnerRewrite(stmt.Finally, breakStack, continueStack) : stmt.Finally;
+		private bool HandleTryStatement(JsTryStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+			if (ContainsYieldVisitor.Analyze(stmt.GuardedStatement)) {
+				if (stmt.Catch != null)
+					throw new InvalidOperationException("Cannot yield from try with catch");	// TODO: Not really. It is possible to 'yield break' (I think, need to check).
+				string handlerName = _allocateFinallyHandler();
+				var stateAfter = GetStateAfterStatement(location, stack, returnState);
+				var innerState = CreateNewStateValue();
+				var stateBeforeFinally = CreateNewStateValue();
+				SetNextState(currentBlock, innerState);
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.GuardedStatement, 0)), breakStack, continueStack, finallyStack.Push(Tuple.Create(innerState.StateValue, handlerName)), currentState, stateBeforeFinally));
 
-			currentBlock.Add(new JsTryStatement(guarded, @catch, @finally));
+				Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsBlockStatement.MakeBlock(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier(handlerName)))), 0)), breakStack, continueStack, finallyStack, stateBeforeFinally, stateAfter.Item1);
+				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
+					#warning: TODO: Verify the three different ways in which a statement can end.
+					Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, stateAfter.Item1, returnState);
+				}
+				return false;
+			}
+			else {
+				var guarded = NeedsRewriteVisitor.Analyze(stmt.GuardedStatement) ? InnerRewrite(stmt.GuardedStatement, breakStack, continueStack, finallyStack) : stmt.GuardedStatement;
+				var @catch = stmt.Catch != null && NeedsRewriteVisitor.Analyze(stmt.Catch.Body) ? new JsCatchClause(stmt.Catch.Identifier, InnerRewrite(stmt.Catch.Body, breakStack, continueStack, finallyStack)) : stmt.Catch;
+ 				var @finally = stmt.Finally != null && NeedsRewriteVisitor.Analyze(stmt.Finally) ? InnerRewrite(stmt.Finally, breakStack, continueStack, finallyStack) : stmt.Finally;
+				currentBlock.Add(new JsTryStatement(guarded, @catch, @finally));
+				return true;
+			}
+
 			return true;
 		}
 
-		private bool HandleIfStatement(JsIfStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+		private bool HandleIfStatement(JsIfStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			var stateAfter = GetStateAfterStatement(location, stack, returnState);
 
-			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), breakStack, continueStack, currentState, stateAfter.Item1);
-			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), breakStack, continueStack, currentState, stateAfter.Item1) : null;
+			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), breakStack, continueStack, finallyStack, currentState, stateAfter.Item1);
+			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), breakStack, continueStack, finallyStack, currentState, stateAfter.Item1) : null;
 
 			currentBlock.Add(new JsIfStatement(stmt.Test, new JsBlockStatement(thenPart), elsePart != null ? new JsBlockStatement(elsePart) : null));
 			if (elsePart == null)
 				GotoState(currentBlock, stateAfter.Item1);
 
 			if (stateAfter.Item2) {
-				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
+				Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, stateAfter.Item1, returnState);
 				return false;
 			}
 
 			return true;
 		}
 
-		private bool HandleDoWhileStatement(JsDoWhileStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+		private bool HandleDoWhileStatement(JsDoWhileStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			if (currentBlock.Count > 0) {
 				// We have to create a new block for the statement.
-				var topOfLoopState = GetNewStateValue();
-				Enqueue(stack.Push(location), breakStack, continueStack, topOfLoopState, returnState);
+				var topOfLoopState = CreateNewStateValue();
+				Enqueue(stack.Push(location), breakStack, continueStack, finallyStack, topOfLoopState, returnState);
 				GotoState(currentBlock, topOfLoopState);
 				return false;
 			}
 			else {
-				var beforeConditionState = GetNewStateValue();
+				var beforeConditionState = CreateNewStateValue();
 				Tuple<State, bool> afterLoopState;
 				string currentName = GetLabelForState(currentState);
 				if (new ContainsBreakVisitor().Analyze(stmt.Body, currentName)) {
@@ -608,25 +658,25 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					afterLoopState = Tuple.Create(returnState, false);
 				}
 
-				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack, continueStack.Push(Tuple.Create(GetLabelForState(currentState), beforeConditionState)), currentState, beforeConditionState));
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack, continueStack.Push(Tuple.Create(GetLabelForState(currentState), beforeConditionState)), finallyStack, currentState, beforeConditionState));
 
 				if (afterLoopState.Item2) {
-					Enqueue(PushFollowing(stack, location), breakStack, continueStack, afterLoopState.Item1, returnState);
-					Enqueue(stack.Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, GotoState(currentState, false), null)), 0)), breakStack, continueStack, beforeConditionState, afterLoopState.Item1);
+					Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, afterLoopState.Item1, returnState);
+					Enqueue(stack.Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, GotoState(currentState, false), null)), 0)), breakStack, continueStack, finallyStack, beforeConditionState, afterLoopState.Item1);
 				}
 				else {
-					Enqueue(PushFollowing(stack, location).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, GotoState(currentState, false), null)), 0)), breakStack, continueStack, beforeConditionState, returnState);
+					Enqueue(PushFollowing(stack, location).Push(new StackEntry(new JsBlockStatement(new JsIfStatement(stmt.Condition, GotoState(currentState, false), null)), 0)), breakStack, continueStack, finallyStack, beforeConditionState, returnState);
 				}
 
 				return false;
 			}
 		}
 
-		private bool HandleWhileStatement(JsWhileStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+		private bool HandleWhileStatement(JsWhileStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			if (currentBlock.Count > 0) {
 				// We have to create a new block for the statement.
-				var topOfLoopState = GetNewStateValue();
-				Enqueue(stack.Push(location), breakStack, continueStack, topOfLoopState, returnState);
+				var topOfLoopState = CreateNewStateValue();
+				Enqueue(stack.Push(location), breakStack, continueStack, finallyStack, topOfLoopState, returnState);
 				GotoState(currentBlock, topOfLoopState);
 				return false;
 			}
@@ -635,48 +685,48 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 
 				currentBlock.Add(new JsIfStatement(JsExpression.LogicalNot(stmt.Condition), GotoState(afterLoopState.Item1, false), null));
 				var currentName = GetLabelForState(currentState);
-				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack.Push(Tuple.Create(currentName, afterLoopState.Item1)), continueStack.Push(Tuple.Create(currentName, currentState)), currentState, currentState));
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack.Push(Tuple.Create(currentName, afterLoopState.Item1)), continueStack.Push(Tuple.Create(currentName, currentState)), finallyStack, currentState, currentState));
 
 				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
-					Enqueue(PushFollowing(stack, location), breakStack, continueStack, afterLoopState.Item1, returnState);
+					Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, afterLoopState.Item1, returnState);
 				}
 
 				return false;
 			}
 		}
 
-		private bool HandleForStatement(JsForStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+		private bool HandleForStatement(JsForStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			if (currentBlock.Count > 0 || (!(stmt.InitStatement is JsEmptyStatement) && !location.AfterForInitializer)) {
 				// We have to create a new block for the statement.
-				var topOfLoopState = GetNewStateValue();
-				Enqueue(stack.Push(new StackEntry(location.Block, location.Index, true)), breakStack, continueStack, topOfLoopState, returnState);
+				var topOfLoopState = CreateNewStateValue();
+				Enqueue(stack.Push(new StackEntry(location.Block, location.Index, true)), breakStack, continueStack, finallyStack, topOfLoopState, returnState);
 				if (!(stmt.InitStatement is JsEmptyStatement))
 					currentBlock.Add(stmt.InitStatement);
 				GotoState(currentBlock, topOfLoopState);
 				return false;
 			}
 			else {
-				var iteratorState = (stmt.IteratorExpression != null ? GetNewStateValue() : currentState);
+				var iteratorState = (stmt.IteratorExpression != null ? CreateNewStateValue() : currentState);
 				var afterLoopState = GetStateAfterStatement(location, stack, returnState);
 
 				if (stmt.ConditionExpression != null)
 					currentBlock.Add(new JsIfStatement(JsExpression.LogicalNot(stmt.ConditionExpression), GotoState(afterLoopState.Item1, false), null));
 				string currentName = GetLabelForState(currentState);
-				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack.Push(Tuple.Create(currentName, afterLoopState.Item1)), continueStack.Push(Tuple.Create(currentName, iteratorState)), currentState, iteratorState));
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack.Push(Tuple.Create(currentName, afterLoopState.Item1)), continueStack.Push(Tuple.Create(currentName, iteratorState)), finallyStack, currentState, iteratorState));
 
 				if (stmt.IteratorExpression != null) {
-					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsBlockStatement.MakeBlock(new JsExpressionStatement(stmt.IteratorExpression)), 0)), breakStack, continueStack, iteratorState, currentState);
+					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsBlockStatement.MakeBlock(new JsExpressionStatement(stmt.IteratorExpression)), 0)), breakStack, continueStack, finallyStack, iteratorState, currentState);
 				}
 
 				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
-					Enqueue(PushFollowing(stack, location), breakStack, continueStack, afterLoopState.Item1, returnState);
+					Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, afterLoopState.Item1, returnState);
 				}
 
 				return false;
 			}
 		}
 
-		private bool HandleSwitchStatement(JsSwitchStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
+		private bool HandleSwitchStatement(JsSwitchStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			var stateAfter = GetStateAfterStatement(location, stack, returnState);
 			JsExpression expression = stmt.Expression;
 			if (_isExpressionComplexEnoughForATemporaryVariable(expression)) {
@@ -702,7 +752,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					if (nextBody.Count > 0 && nextBody[0] is JsLabelledStatement)
 						nextFallthroughState = GetStateForLabel(((JsLabelledStatement)nextBody[0]).Label);
 					else
-						nextFallthroughState = GetNewStateValue();
+						nextFallthroughState = CreateNewStateValue();
 				}
 				else {
 					nextFallthroughState = null;
@@ -714,10 +764,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				if (currentFallthroughState != null) {
 					body = new List<JsStatement>();
 					GotoState(body, currentFallthroughState.Value);
-					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(origBody), 0)), breakStack, continueStack, currentFallthroughState.Value, stateAfter.Item1);
+					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(origBody), 0)), breakStack, continueStack, finallyStack, currentFallthroughState.Value, stateAfter.Item1);
 				}
 				else {
-					body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(origBody), 0)), breakStack, continueStack, currentState, nextFallthroughState ?? stateAfter.Item1);
+					body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(origBody), 0)), breakStack, continueStack, finallyStack, currentState, nextFallthroughState ?? stateAfter.Item1);
 				}
 
 				if (clause.Values.Any(v => v == null)) {
@@ -736,7 +786,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			GotoState(currentBlock, stateAfter.Item1);
 
 			if (stateAfter.Item2) {
-				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
+				Enqueue(PushFollowing(stack, location), breakStack, continueStack, finallyStack, stateAfter.Item1, returnState);
 				return false;
 			}
 
@@ -748,15 +798,17 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		private readonly Func<string> _allocateTempVariable;
 		private readonly Func<string> _allocateLoopLabel;
+		private readonly Func<string> _allocateFinallyHandler;
 		private readonly Func<JsExpression, JsExpression> _makeSetCurrent;
 		private readonly bool _isIteratorBlock;
 
 		private int _currentLoopNameIndex;
 
-		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
+		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
 			_allocateLoopLabel = allocateLoopLabel;
+			_allocateFinallyHandler = allocateFinallyHandler;
 			_makeSetCurrent = makeSetCurrent;
 			_isIteratorBlock = isIteratorBlock;
 		}
@@ -775,11 +827,11 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			if (!NeedsRewriteVisitor.Analyze(block))
 				return block;
 
-			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, _makeSetCurrent).Process(block, _isIteratorBlock);
+			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, _allocateFinallyHandler, _makeSetCurrent).Process(block, _isIteratorBlock);
 		}
 
-		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, makeSetCurrent, isIteratorBlock);
+		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
+			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, allocateFinallyHandler, makeSetCurrent, isIteratorBlock);
 			return obj.DoRewrite((JsBlockStatement)obj.VisitBlockStatement(block, null));
 		}
 	}

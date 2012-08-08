@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return function;
 
 			int loopLabelIndex = 0;
-			var body = StateMachineRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), v => { throw new NotImplementedException("TODO"); }, false);
+			var body = StateMachineRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), () => { throw new NotImplementedException(); }, v => { throw new NotImplementedException("TODO"); }, false);
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
