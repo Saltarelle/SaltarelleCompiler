@@ -197,41 +197,43 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
-		interface IExecuteFinallyBlockStatementVisitor<TReturn, TData> {
-			TReturn VisitExecuteFinallyBlocksStatement(JsExecuteFinallyBlocksStatement stmt, TData data);
+		interface IGotoStateStatementVisitor<TReturn, TData> {
+			TReturn VisitGotoStateStatement(JsGotoStateStatement stmt, TData data);
 		}
 
-		class JsExecuteFinallyBlocksStatement : JsStatement {
-			public string CompareLabel { get; private set; }
-			public ImmutableStack<Tuple<int, string>> CompareFinallyStack { get; private set; }
-			public ImmutableStack<Tuple<int, string>> OwnStack { get; private set; }
+		class JsGotoStateStatement : JsStatement {
+			public string TargetLabel { get; private set; }
+			public State? TargetState { get; private set; }
+			public State CurrentState { get; private set; }
 
-			public JsExecuteFinallyBlocksStatement(string compareLabel, ImmutableStack<Tuple<int, string>> ownStack) {
-				CompareLabel = compareLabel;
-				OwnStack = ownStack;
+			public JsGotoStateStatement(string targetLabel, State currentState) {
+				TargetLabel = targetLabel;
+				CurrentState = currentState;
 			}
 
-			public JsExecuteFinallyBlocksStatement(ImmutableStack<Tuple<int, string>> compareFinallyStack, ImmutableStack<Tuple<int, string>> ownStack) {
-				CompareFinallyStack = compareFinallyStack;
-				OwnStack = ownStack;
+			public JsGotoStateStatement(State targetState, State currentState) {
+				TargetState = targetState;
+				CurrentState = currentState;
 			}
 
 			public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
-				return ((IExecuteFinallyBlockStatementVisitor<TReturn, TData>)visitor).VisitExecuteFinallyBlocksStatement(this, data);
+				return ((IGotoStateStatementVisitor<TReturn, TData>)visitor).VisitGotoStateStatement(this, data);
 			}
 		}
 
 		class NestedBreakAndContinueRewriter : RewriterVisitorBase<object> {
 			private ImmutableStack<Tuple<string, State>> _breakStack;
 			private ImmutableStack<Tuple<string, State>> _continueStack;
-			private ImmutableStack<Tuple<int, string>> _finallyStack;
-			private string _stateVariableName;
+			private State _currentState;
 
-			public NestedBreakAndContinueRewriter(string stateVariableName, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack) {
-				_stateVariableName = stateVariableName;
+			public NestedBreakAndContinueRewriter(ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState) {
 				_breakStack = breakStack;
 				_continueStack = continueStack;
-				_finallyStack = finallyStack;
+				_currentState = currentState;
+			}
+
+			public JsBlockStatement Process(JsBlockStatement statement) {
+				return (JsBlockStatement)VisitStatement(statement, null);
 			}
 
 			public IEnumerable<JsStatement> Process(JsStatement statement) {
@@ -299,9 +301,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				}
 
 				if (state != null) {
-					var l = new List<JsStatement>() { new JsExecuteFinallyBlocksStatement(_finallyStack, state.Item2.FinallyStack) };
-					GotoState(l, _stateVariableName, state.Item2);
-					return new JsBlockStatement(l, mergeWithParent: true);
+					return new JsGotoStateStatement(state.Item2, _currentState);
 				}
 				else {
 					return statement;
@@ -318,9 +318,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				}
 
 				if (state != null) {
-					var l = new List<JsStatement>() { new JsExecuteFinallyBlocksStatement(_finallyStack, state.Item2.FinallyStack) };
-					GotoState(l, _stateVariableName, state.Item2);
-					return new JsBlockStatement(l, mergeWithParent: true);
+					return new JsGotoStateStatement(state.Item2, _currentState);
 				}
 				else {
 					return statement;
@@ -330,18 +328,12 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			public override JsStatement VisitYieldStatement(JsYieldStatement statement, object data) {
 				if (statement.Value != null)
 					throw new InvalidOperationException("yield return should have been already taken care of.");
-
-				return new JsBlockStatement(new JsStatement[] {
-					new JsExecuteFinallyBlocksStatement(ImmutableStack<Tuple<int, string>>.Empty, _finallyStack),
-					new JsReturnStatement(JsExpression.False)
-				}, mergeWithParent: true);
+				#warning TODO: Obviously needs to be taken care of
+				return new JsGotoStateStatement(new State("$loop1", -1, ImmutableStack<Tuple<int, string>>.Empty), _currentState);
 			}
 
 			public override JsStatement VisitGotoStatement(JsGotoStatement statement, object data) {
-				return new JsBlockStatement(new JsStatement[] {
-					new JsExecuteFinallyBlocksStatement(statement.TargetLabel, _finallyStack),
-					statement
-				}, mergeWithParent: true);
+				return new JsGotoStateStatement(statement.TargetLabel, _currentState);
 			}
 
 			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
@@ -353,7 +345,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 		}
 
-		class FinalizerRewriter : RewriterVisitorBase<object>, IExecuteFinallyBlockStatementVisitor<JsStatement, object> {
+		class FinalizerRewriter : RewriterVisitorBase<object>, IGotoStateStatementVisitor<JsStatement, object> {
 			private string _stateVariableName;
 			private Dictionary<string, State> _labelStates = new Dictionary<string, State>();
 
@@ -367,10 +359,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			}
 
 			public override JsStatement VisitGotoStatement(JsGotoStatement statement, object data) {
-				State targetState;
-				if (!_labelStates.TryGetValue(statement.TargetLabel, out targetState))
-					throw new InvalidOperationException("The label " + statement.TargetLabel + " does not exist.");
-				return GotoState(targetState, _stateVariableName, true);
+				throw new InvalidOperationException("Shouldn't happen");
 			}
 
 			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
@@ -381,16 +370,24 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return expression;
 			}
 
-			public JsStatement VisitExecuteFinallyBlocksStatement(JsExecuteFinallyBlocksStatement statement, object data) {
+			public JsStatement VisitGotoStateStatement(JsGotoStateStatement statement, object data) {
 				var result = new List<JsStatement>();
-				var compareStack = (statement.CompareFinallyStack ?? _labelStates[statement.CompareLabel].FinallyStack);
-				var remaining = statement.OwnStack;
-				for (int i = 0, n = remaining.Count() - compareStack.Count(); i < n; i++) {
+				State targetState;
+				if (statement.TargetState == null) {
+					if (!_labelStates.TryGetValue(statement.TargetLabel, out targetState))
+						throw new InvalidOperationException("The label " + statement.TargetLabel + " does not exist.");
+				}
+				else
+					targetState = statement.TargetState.Value;
+
+				var remaining = statement.CurrentState.FinallyStack;
+				for (int i = 0, n = remaining.Count() - targetState.FinallyStack.Count(); i < n; i++) {
 					var current = remaining.Peek();
 					remaining = remaining.Pop();
 					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1))));
 					result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier(current.Item2))));
 				}
+				GotoState(result, _stateVariableName, targetState);
 				return new JsBlockStatement(result, mergeWithParent: true);
 			}
 		}
@@ -475,7 +472,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return ifst.Else == null || ifst.Then.Statements.Count == 0 || ifst.Else.Statements.Count == 0 || IsNextStatementReachable(ifst.Then.Statements[ifst.Then.Statements.Count - 1]) || IsNextStatementReachable(ifst.Else.Statements[ifst.Else.Statements.Count - 1]);
 			}
 
-			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsThrowStatement || current is JsBreakStatement || current is JsContinueStatement);
+			return !(current is JsReturnStatement || current is JsGotoStatement || current is JsGotoStateStatement || current is JsThrowStatement || current is JsBreakStatement || current is JsContinueStatement);
 		}
 
 		private void Enqueue(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State stateValue, State returnState) {
@@ -565,6 +562,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack, State currentState, State returnState) {
+#warning TODO: Remove the finallyStack parameter from this method
 			var currentBlock = new List<JsStatement>();
 			while (!stack.IsEmpty) {
 				var tos = stack.Peek();
@@ -593,7 +591,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 							return currentBlock;
 					}
 					else {
-						currentBlock.AddRange(new NestedBreakAndContinueRewriter(_stateVariableName, breakStack, continueStack, finallyStack).Process(stmt));
+						currentBlock.AddRange(new NestedBreakAndContinueRewriter(breakStack, continueStack, currentState).Process(stmt));
 						stack = PushFollowing(stack, tos);
 					}
 				}
@@ -634,7 +632,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 					}
 				}
 				else {
-					currentBlock.AddRange(new NestedBreakAndContinueRewriter(_stateVariableName, breakStack, continueStack, finallyStack).Process(stmt));
+					currentBlock.AddRange(new NestedBreakAndContinueRewriter(breakStack, continueStack, currentState).Process(stmt));
 					stack = PushFollowing(stack, tos);
 				}
 			}
@@ -699,9 +697,31 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 				return false;
 			}
 			else {
-				var guarded = NeedsRewriteVisitor.Analyze(stmt.GuardedStatement, false) ? new JsBlockStatement(ProcessInner(stmt.GuardedStatement, breakStack, continueStack, finallyStack)) : stmt.GuardedStatement;
-				var @catch = stmt.Catch != null && NeedsRewriteVisitor.Analyze(stmt.Catch.Body, false) ? new JsCatchClause(stmt.Catch.Identifier, new JsBlockStatement(ProcessInner(stmt.Catch.Body, breakStack, continueStack, finallyStack))) : stmt.Catch;
- 				var @finally = stmt.Finally != null && NeedsRewriteVisitor.Analyze(stmt.Finally, false) ? new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, finallyStack)) : stmt.Finally;
+				var rewriter = new NestedBreakAndContinueRewriter(breakStack, continueStack, currentState);
+				var guarded = NeedsRewriteVisitor.Analyze(stmt.GuardedStatement, false) ? new JsBlockStatement(ProcessInner(stmt.GuardedStatement, breakStack, continueStack, finallyStack)) : rewriter.Process(stmt.GuardedStatement);
+				JsCatchClause @catch;
+				if (stmt.Catch != null) {
+					if (NeedsRewriteVisitor.Analyze(stmt.Catch.Body, false)) {
+						@catch = new JsCatchClause(stmt.Catch.Identifier, new JsBlockStatement(ProcessInner(stmt.Catch.Body, breakStack, continueStack, finallyStack)));
+					}
+					else {
+						var body = rewriter.Process(stmt.Catch.Body);
+						@catch = ReferenceEquals(body, stmt.Catch.Body) ? stmt.Catch : new JsCatchClause(stmt.Catch.Identifier, body);
+					}
+				}
+				else
+					@catch = null;
+
+				JsBlockStatement @finally;
+				if (stmt.Finally != null) {
+					if (NeedsRewriteVisitor.Analyze(stmt.Finally, false))
+						@finally = new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, finallyStack));
+					else
+						@finally = rewriter.Process(stmt.Finally);
+				}
+				else
+					@finally = null;
+
 				currentBlock.Add(new JsTryStatement(guarded, @catch, @finally));
 				return true;
 			}

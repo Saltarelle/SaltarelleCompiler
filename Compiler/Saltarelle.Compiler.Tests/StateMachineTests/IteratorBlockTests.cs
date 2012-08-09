@@ -70,7 +70,7 @@ lbl1:
 			case 1: {
 				$tmp1 = -1;
 				c;
-				return false;
+				break $loop1;
 			}
 		}
 	}
@@ -104,7 +104,7 @@ lbl1:
 			case 1: {
 				$tmp1 = -1;
 				c;
-				return false;
+				break $loop1;
 				d;
 				break $loop1;
 			}
@@ -432,7 +432,7 @@ lbl1:
 				b;
 				$tmp1 = -1;
 				$finally1();
-				return false;
+				break $loop1;
 				c;
 				$tmp1 = 3;
 				continue $loop1;
@@ -455,8 +455,9 @@ lbl1:
 ", isIteratorBlock: true);
 		}
 
-		[Test, Ignore("Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.")]
+		[Test]
 		public void YieldBreakExecutesFinallyHandlersNested() {
+			// Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.
 			AssertCorrect(
 @"{
 	a;
@@ -546,7 +547,7 @@ $finally3 = function() {
 				$finally2();
 				$tmp1 = -1;
 				$finally1();
-				return false;
+				break $loop1;
 				g;
 				$tmp1 = 11;
 				continue $loop1;
@@ -596,8 +597,9 @@ $finally3 = function() {
 ", isIteratorBlock: true);
 		}
 
-		[Test, Ignore("Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.")]
+		[Test]
 		public void GotoOutOfTryBlockExecutesFinallyHandlers() {
+			// Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.
 			AssertCorrect(
 @"{
 	a;
@@ -761,11 +763,11 @@ $finally3 = function() {
 				a;
 				try {
 					b;
-					return false;
+					break $loop1;
 				}
 				catch (e) {
 					c;
-					return false;
+					break $loop1;
 				}
 				break $loop1;
 			}
