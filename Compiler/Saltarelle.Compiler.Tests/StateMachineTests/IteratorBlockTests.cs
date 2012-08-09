@@ -154,6 +154,8 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -212,6 +214,8 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -267,6 +271,8 @@ lbl1:
 				continue $loop1;
 			}
 			case 2: {
+				$tmp1 = 1;
+				;
 				$tmp1 = -1;
 				$finally1();
 				break $loop1;
@@ -317,6 +323,8 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -356,11 +364,13 @@ lbl1:
 	for (;;) {
 		switch ($tmp1) {
 			case 1: {
+				$tmp1 = -1;
 				b;
 				$tmp1 = 2;
 				continue $loop2;
 			}
 			case 2: {
+				$tmp1 = -1;
 				c;
 				$tmp1 = 2;
 				continue $loop2;
@@ -374,6 +384,7 @@ lbl1:
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
+				$tmp1 = -1;
 				a;
 				$tmp1 = 4;
 				setCurrent(0);
@@ -381,18 +392,23 @@ lbl1:
 				return true;
 			}
 			case 5: {
+				$tmp1 = 4;
+				;
+				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 3;
 				continue $loop1;
 			}
 			case 3: {
+				$tmp1 = -1;
 				d;
 				break $loop1;
 			}
 		}
 	}
+	return false;
 }
-");
+", isIteratorBlock: true);
 		}
 
 		[Test]
@@ -438,6 +454,8 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -848,6 +866,8 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -868,6 +888,8 @@ $finally3 = function() {
 				return true;
 			}
 			case 7: {
+				$tmp1 = 6;
+				;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -887,6 +909,8 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 11: {
+				$tmp1 = 10;
+				;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
