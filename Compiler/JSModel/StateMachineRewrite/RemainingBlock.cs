@@ -1,7 +1,7 @@
 using System;
 using ICSharpCode.NRefactory.Utils;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	internal class RemainingBlock {
 		public ImmutableStack<StackEntry> Stack { get; private set; }

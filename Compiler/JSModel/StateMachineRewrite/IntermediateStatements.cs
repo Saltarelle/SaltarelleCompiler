@@ -1,6 +1,6 @@
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	internal interface IStateMachineRewriterIntermediateStatementsVisitor<TReturn, TData> {
 		TReturn VisitGotoStateStatement(JsGotoStateStatement stmt, TData data);

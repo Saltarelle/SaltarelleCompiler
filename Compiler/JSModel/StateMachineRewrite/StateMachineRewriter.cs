@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
+using System.Linq;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite {
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 	public class StateMachineRewriter : RewriterVisitorBase<object> {
 		private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		private readonly Func<string> _allocateTempVariable;
@@ -15,6 +14,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		private readonly bool _isIteratorBlock;
 
 		private readonly List<Tuple<string, JsFunctionDefinitionExpression>> _finallyHandlers = new List<Tuple<string, JsFunctionDefinitionExpression>>();
+		private readonly List<Tuple<int, List<string>>> _stateFinallyHandlers = new List<Tuple<int, List<string>>>();
 
 		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
@@ -45,7 +45,9 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 			if (!FindInterestingConstructsVisitor.Analyze(block, InterestingConstruct.Label | InterestingConstruct.YieldReturn | InterestingConstruct.YieldBreak))
 				return block;
 
-			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, AddFinallyHandler, _makeSetCurrent).Process(block, _isIteratorBlock);
+			var rewriteResult = new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, AddFinallyHandler, _makeSetCurrent).Process(block, _isIteratorBlock);
+			_stateFinallyHandlers.AddRange(rewriteResult.Item2.Where(x => x.Item2.Count > 0));
+			return rewriteResult.Item1;
 		}
 
 		public static StateMachine Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {

@@ -6,7 +6,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	internal class SingleStateMachineRewriter {
 		int _nextStateIndex;
@@ -16,6 +16,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 		Queue<RemainingBlock> _remainingBlocks = new Queue<RemainingBlock>();
 		HashSet<State> _processedStates = new HashSet<State>();
 		Dictionary<string, State> _labelStates = new Dictionary<string, State>();
+		List<State> _allStates;
 		State? _exitState;
 
 		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
@@ -35,7 +36,9 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 		private State CreateNewStateValue(ImmutableStack<Tuple<int, string>> finallyStack, string finallyHandlerToPush = null) {
 			int value = _nextStateIndex++;
 			finallyStack = finallyHandlerToPush != null ? finallyStack.Push(Tuple.Create(value, finallyHandlerToPush)) : finallyStack;
-			return new State(_currentLoopLabel, value, finallyStack);
+			var result = new State(_currentLoopLabel, value, finallyStack);
+			_allStates.Add(result);
+			return result;
 		}
 
 		private string GetLabelForState(State state) {
@@ -78,19 +81,22 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 			return location.Index < location.Block.Statements.Count - 1 ? stack.Push(new StackEntry(location.Block, location.Index + 1)) : stack;
 		}
 
-		public JsBlockStatement Process(JsBlockStatement statement, bool isIteratorBlock) {
+		internal Tuple<JsBlockStatement, List<Tuple<int, List<string>>>> Process(JsBlockStatement statement, bool isIteratorBlock) {
 			_stateVariableName = _allocateTempVariable();
 			_nextStateIndex = 0;
 			_isIteratorBlock = isIteratorBlock;
 			_processedStates.Clear();
 			_labelStates.Clear();
+			_allStates = new List<State>();
 			_remainingBlocks = new Queue<RemainingBlock>();
 			_exitState = null;
 			var body = ProcessInner(statement, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<int, string>>.Empty);
 			body[0] = new JsVariableDeclarationStatement(_stateVariableName, JsExpression.Number(0));	// Replace the assignment statement with a variable declaration.
 			if (_isIteratorBlock)
 				body.Add(new JsReturnStatement(JsExpression.False));
-			return new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(body));
+			var resultBody = new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(body));
+			var stateFinallyHandlers = _allStates.Select(s => Tuple.Create(s.StateValue, s.FinallyStack.Select(x => x.Item2).Reverse().ToList())).ToList();
+			return Tuple.Create(resultBody, stateFinallyHandlers);
 		}
 
 		private IList<JsStatement> ProcessInner(JsBlockStatement statement, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack) {

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Linq;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	[DebuggerDisplay("{DebugToString()}")]
 	internal class StackEntry {

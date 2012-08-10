@@ -4,7 +4,7 @@ using System.Globalization;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.JSModel.GotoRewrite;
+using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Tests.StateMachineTests {

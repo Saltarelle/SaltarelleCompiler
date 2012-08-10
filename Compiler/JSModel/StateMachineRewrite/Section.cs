@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	internal class Section {
 		public State State { get; private set; }

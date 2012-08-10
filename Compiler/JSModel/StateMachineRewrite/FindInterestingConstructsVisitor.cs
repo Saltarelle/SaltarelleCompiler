@@ -2,7 +2,7 @@ using System;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.GotoRewrite {
+namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 	[Flags]
 	internal enum InterestingConstruct {
 		None        = 0,
