@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		public bool Equals(State other) {
-			return Equals(other.LoopLabelName, LoopLabelName) && other.StateValue == StateValue;
+			return other.StateValue == StateValue;
 		}
 
 		public override bool Equals(object obj) {
@@ -25,11 +25,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		public override int GetHashCode() {
-			unchecked {
-				int result = LoopLabelName.GetHashCode();
-				result = (result*397) ^ StateValue;
-				return result;
-			}
+			return StateValue;
 		}
 	}
 }
