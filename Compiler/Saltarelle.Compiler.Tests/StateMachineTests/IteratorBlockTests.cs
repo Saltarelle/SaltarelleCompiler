@@ -133,6 +133,24 @@ lbl1:
 @"$finally1 = function() {
 	d;
 };
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4: {
+				try {
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
+};
 {
 	var $tmp1 = 0;
 	$loop1:
@@ -191,6 +209,24 @@ lbl1:
 @"$finally1 = function() {
 	d;
 };
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4: {
+				try {
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
+};
 {
 	var $tmp1 = 0;
 	$loop1:
@@ -246,6 +282,24 @@ lbl1:
 @"$finally1 = function() {
 	d;
 };
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 1:
+			case 2:
+			case 3: {
+				try {
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
+};
 {
 	var $tmp1 = 0;
 	$loop1:
@@ -295,6 +349,24 @@ lbl1:
 }",
 @"$finally1 = function() {
 	d;
+};
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4: {
+				try {
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
 };
 {
 	var $tmp1 = 0;
@@ -370,6 +442,23 @@ lbl1:
 		}
 	}
 };
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 4:
+			case 5: {
+				try {
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
+};
 {
 	var $tmp1 = 0;
 	$loop1:
@@ -419,6 +508,24 @@ lbl1:
 }",
 @"$finally1 = function() {
 	d;
+};
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4: {
+				try {
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
 };
 {
 	var $tmp1 = 0;
@@ -506,6 +613,58 @@ $finally2 = function() {
 };
 $finally3 = function() {
 	h;
+};
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12:
+			case 13: {
+				try {
+					switch ($tmp1) {
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+						case 10:
+						case 11:
+						case 13: {
+							try {
+								switch ($tmp1) {
+									case 10:
+									case 11: {
+										try {
+										}
+										finally {
+											$finally3();
+										}
+									}
+								}
+							}
+							finally {
+								$finally2();
+							}
+						}
+					}
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
 };
 {
 	var $tmp1 = 0;
@@ -652,6 +811,58 @@ $finally2 = function() {
 };
 $finally3 = function() {
 	h;
+};
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12:
+			case 13: {
+				try {
+					switch ($tmp1) {
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+						case 10:
+						case 11:
+						case 13: {
+							try {
+								switch ($tmp1) {
+									case 10:
+									case 11: {
+										try {
+										}
+										finally {
+											$finally3();
+										}
+									}
+								}
+							}
+							finally {
+								$finally2();
+							}
+						}
+					}
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
 };
 {
 	var $tmp1 = 0;
@@ -808,6 +1019,58 @@ $finally2 = function() {
 $finally3 = function() {
 	h;
 };
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12:
+			case 13: {
+				try {
+					switch ($tmp1) {
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+						case 10:
+						case 11:
+						case 13: {
+							try {
+								switch ($tmp1) {
+									case 10:
+									case 11: {
+										try {
+										}
+										finally {
+											$finally3();
+										}
+									}
+								}
+							}
+							finally {
+								$finally2();
+							}
+						}
+					}
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
+};
 {
 	var $tmp1 = 0;
 	$loop1:
@@ -953,6 +1216,58 @@ $finally2 = function() {
 };
 $finally3 = function() {
 	h;
+};
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12:
+			case 13: {
+				try {
+					switch ($tmp1) {
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+						case 10:
+						case 11:
+						case 13: {
+							try {
+								switch ($tmp1) {
+									case 10:
+									case 11: {
+										try {
+										}
+										finally {
+											$finally3();
+										}
+									}
+								}
+							}
+							finally {
+								$finally2();
+							}
+						}
+					}
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
 };
 {
 	var $tmp1 = 0;
@@ -1144,6 +1459,61 @@ $finally2 = function() {
 };
 $finally3 = function() {
 	h;
+};
+disposer = function() {
+	try {
+		switch ($tmp1) {
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12:
+			case 13:
+			case 14: {
+				try {
+					switch ($tmp1) {
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+						case 10:
+						case 11:
+						case 12:
+						case 14: {
+							try {
+								switch ($tmp1) {
+									case 10:
+									case 11:
+									case 12: {
+										try {
+										}
+										finally {
+											$finally3();
+										}
+									}
+								}
+							}
+							finally {
+								$finally2();
+							}
+						}
+					}
+				}
+				finally {
+					$finally1();
+				}
+			}
+		}
+	}
+	finally {
+		$tmp1 = -1;
+	}
 };
 {
 	var $tmp1 = 0;

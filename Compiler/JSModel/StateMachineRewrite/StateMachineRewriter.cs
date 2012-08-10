@@ -53,7 +53,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		public static StateMachine Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
 			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, allocateFinallyHandler, makeSetCurrent, isIteratorBlock);
 			var mainBlock = obj.DoRewrite((JsBlockStatement)obj.VisitBlockStatement(block, null));
-			return new StateMachine(mainBlock, obj._finallyHandlers, new JsBlockStatement());
+			#warning TODO: Obviously needs fixing
+			return new StateMachine(mainBlock, obj._finallyHandlers, DisposeGenerator.GenerateDisposer("$tmp1", obj._stateFinallyHandlers));
 		}
 	}
 }
