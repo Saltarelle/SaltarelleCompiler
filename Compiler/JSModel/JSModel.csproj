@@ -52,10 +52,9 @@
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="GotoRewrite\ContainsBreakVisitor.cs" />
-    <Compile Include="GotoRewrite\ContainsYieldReturnVisitor.cs" />
     <Compile Include="GotoRewrite\FinalizerRewriter.cs" />
     <Compile Include="GotoRewrite\JsGotoStateStatement.cs" />
-    <Compile Include="GotoRewrite\NeedsRewriteVisitor.cs" />
+    <Compile Include="GotoRewrite\FindInterestingConstructsVisitor.cs" />
     <Compile Include="GotoRewrite\NestedJumpStatementRewriter.cs" />
     <Compile Include="GotoRewrite\RemainingBlock.cs" />
     <Compile Include="GotoRewrite\Section.cs" />

@@ -412,7 +412,7 @@ lbl1:
 		}
 
 		[Test]
-		public void YieldBreakExecutesFinallyHandlers1() {
+		public void YieldBreakExecutesFinallyHandlers() {
 			AssertCorrect(
 @"{
 	a;
@@ -474,8 +474,7 @@ lbl1:
 		}
 
 		[Test]
-		public void YieldBreakExecutesFinallyHandlersNested() {
-			// Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.
+		public void YieldBreakExecutesFinallyHandlersNested1() {
 			AssertCorrect(
 @"{
 	a;
@@ -544,6 +543,8 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -571,6 +572,8 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 7: {
+				$tmp1 = 6;
+				;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -584,6 +587,8 @@ $finally3 = function() {
 				return true;
 			}
 			case 11: {
+				$tmp1 = 10;
+				;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
@@ -616,8 +621,172 @@ $finally3 = function() {
 		}
 
 		[Test]
-		public void GotoOutOfTryBlockExecutesFinallyHandlers() {
-			// Finally blocks are executed in the wrong order. The innermost statement contains no labels or yield, so it is preserved.
+		public void YieldBreakExecutesFinallyHandlersNested2() {
+			AssertCorrect(
+@"{
+	a;
+	try {
+		b;
+		yield return 1;
+		c;
+		try {
+			d;
+			yield return 2;
+			e;
+			try {
+				f1;
+				yield break;
+				g1;
+			}
+			catch (ex) {
+				f2;
+				yield break;
+				g2;
+			}
+			finally {
+				h;
+			}
+			i;
+			yield return 4;
+			j;
+		}
+		finally {
+			k;
+		}
+		l;
+		yield return 5;
+		m;
+	}
+	finally {
+		n;
+	}
+	o;
+}",
+@"$finally1 = function() {
+	n;
+};
+$finally2 = function() {
+	k;
+};
+$finally3 = function() {
+	h;
+};
+{
+	var $tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				$tmp1 = -1;
+				a;
+				$tmp1 = 2;
+				b;
+				setCurrent(1);
+				$tmp1 = 4;
+				return true;
+			}
+			case 4: {
+				$tmp1 = 2;
+				c;
+				$tmp1 = 6;
+				d;
+				setCurrent(2);
+				$tmp1 = 8;
+				return true;
+			}
+			case 3: {
+				$tmp1 = 2;
+				;
+				$tmp1 = -1;
+				$finally1();
+				$tmp1 = 1;
+				continue $loop1;
+			}
+			case 1: {
+				$tmp1 = -1;
+				o;
+				break $loop1;
+			}
+			case 8: {
+				$tmp1 = 6;
+				e;
+				$tmp1 = 10;
+				try {
+					f1;
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = -1;
+					$finally1();
+					break $loop1;
+					g1;
+				}
+				catch (ex) {
+					f2;
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = -1;
+					$finally1();
+					break $loop1;
+					g2;
+				}
+				$tmp1 = 11;
+				continue $loop1;
+			}
+			case 7: {
+				$tmp1 = 6;
+				;
+				$tmp1 = 2;
+				$finally2();
+				$tmp1 = 5;
+				continue $loop1;
+			}
+			case 5: {
+				$tmp1 = 2;
+				l;
+				setCurrent(5);
+				$tmp1 = 12;
+				return true;
+			}
+			case 11: {
+				$tmp1 = 10;
+				;
+				$tmp1 = 6;
+				$finally3();
+				$tmp1 = 9;
+				continue $loop1;
+			}
+			case 9: {
+				$tmp1 = 6;
+				i;
+				setCurrent(4);
+				$tmp1 = 13;
+				return true;
+			}
+			case 12: {
+				$tmp1 = 2;
+				m;
+				$tmp1 = 3;
+				continue $loop1;
+			}
+			case 13: {
+				$tmp1 = 6;
+				j;
+				$tmp1 = 7;
+				continue $loop1;
+			}
+		}
+	}
+	return false;
+}
+", isIteratorBlock: true);
+		}
+
+		[Test]
+		public void GotoOutOfTryBlockExecutesFinallyHandlers1() {
 			AssertCorrect(
 @"{
 	a;
@@ -687,6 +856,8 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
+				$tmp1 = 2;
+				;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -713,6 +884,8 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 7: {
+				$tmp1 = 6;
+				;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -726,6 +899,172 @@ $finally3 = function() {
 				return true;
 			}
 			case 11: {
+				$tmp1 = 10;
+				;
+				$tmp1 = 6;
+				$finally3();
+				$tmp1 = 9;
+				continue $loop1;
+			}
+			case 9: {
+				$tmp1 = 6;
+				i;
+				setCurrent(4);
+				$tmp1 = 13;
+				return true;
+			}
+			case 12: {
+				$tmp1 = 2;
+				m;
+				$tmp1 = 3;
+				continue $loop1;
+			}
+			case 13: {
+				$tmp1 = 6;
+				j;
+				$tmp1 = 7;
+				continue $loop1;
+			}
+		}
+	}
+	return false;
+}
+", isIteratorBlock: true);
+		}
+
+		[Test]
+		public void GotoOutOfTryBlockExecutesFinallyHandlers2() {
+			AssertCorrect(
+@"{
+	a;
+	try {
+		b;
+		yield return 1;
+		c;
+		try {
+			d;
+			yield return 2;
+			e;
+			try {
+				f1;
+				goto lbl1;
+				g1;
+			}
+			catch (ex) {
+				f2;
+				goto lbl1;
+				g2;
+			}
+			finally {
+				h;
+			}
+			i;
+			yield return 4;
+			j;
+		}
+		finally {
+			k;
+		}
+		l;
+		yield return 5;
+lbl1:
+		m;
+	}
+	finally {
+		n;
+	}
+	o;
+}",
+@"$finally1 = function() {
+	n;
+};
+$finally2 = function() {
+	k;
+};
+$finally3 = function() {
+	h;
+};
+{
+	var $tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				$tmp1 = -1;
+				a;
+				$tmp1 = 2;
+				b;
+				setCurrent(1);
+				$tmp1 = 4;
+				return true;
+			}
+			case 4: {
+				$tmp1 = 2;
+				c;
+				$tmp1 = 6;
+				d;
+				setCurrent(2);
+				$tmp1 = 8;
+				return true;
+			}
+			case 3: {
+				$tmp1 = 2;
+				;
+				$tmp1 = -1;
+				$finally1();
+				$tmp1 = 1;
+				continue $loop1;
+			}
+			case 1: {
+				$tmp1 = -1;
+				o;
+				break $loop1;
+			}
+			case 8: {
+				$tmp1 = 6;
+				e;
+				$tmp1 = 10;
+				try {
+					f1;
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 12;
+					continue $loop1;
+					g1;
+				}
+				catch (ex) {
+					f2;
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 12;
+					continue $loop1;
+					g2;
+				}
+				$tmp1 = 11;
+				continue $loop1;
+			}
+			case 7: {
+				$tmp1 = 6;
+				;
+				$tmp1 = 2;
+				$finally2();
+				$tmp1 = 5;
+				continue $loop1;
+			}
+			case 5: {
+				$tmp1 = 2;
+				l;
+				setCurrent(5);
+				$tmp1 = 12;
+				return true;
+			}
+			case 11: {
+				$tmp1 = 10;
+				;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;

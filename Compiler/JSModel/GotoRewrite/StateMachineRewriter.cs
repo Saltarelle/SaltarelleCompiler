@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		private JsBlockStatement DoRewrite(JsBlockStatement block) {
-			if (!NeedsRewriteVisitor.Analyze(block, true))
+			if (!FindInterestingConstructsVisitor.Analyze(block, InterestingConstruct.Label | InterestingConstruct.YieldReturn | InterestingConstruct.YieldBreak))
 				return block;
 
 			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, AddFinallyHandler, _makeSetCurrent).Process(block, _isIteratorBlock);

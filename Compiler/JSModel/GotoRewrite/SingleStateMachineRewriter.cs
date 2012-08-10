@@ -99,8 +99,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 
 		private IList<JsStatement> ProcessInner(JsBlockStatement statement, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack) {
 			var oldLoopLabel = _currentLoopLabel;
+			var oldRemainingBlocks = _remainingBlocks;
 			try {
 				_currentLoopLabel = _allocateLoopLabel();
+				_remainingBlocks = new Queue<RemainingBlock>();
 				_remainingBlocks.Enqueue(new RemainingBlock(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(statement, 0)), breakStack, continueStack, CreateNewStateValue(finallyStack), new State(_currentLoopLabel, -1, finallyStack)));
 				if (_exitState == null)
 					_exitState = new State(_currentLoopLabel, -1, ImmutableStack<Tuple<int, string>>.Empty);
@@ -129,6 +131,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 			}
 			finally {
 				_currentLoopLabel = oldLoopLabel;
+				_remainingBlocks = oldRemainingBlocks;
 			}
 		}
 
@@ -165,16 +168,17 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 						stack = PushFollowing(stack, tos);
 					}
 				}
-				else if (NeedsRewriteVisitor.Analyze(stmt, false)) {
+				else if (stmt is JsTryStatement) {
+					if (!HandleTryStatement((JsTryStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
+						return currentBlock;
+					stack = PushFollowing(stack, tos);
+				}
+				else if (FindInterestingConstructsVisitor.Analyze(stmt, InterestingConstruct.YieldReturn | InterestingConstruct.Label)) {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}
 					else {
-						if (stmt is JsTryStatement) {
-							if (!HandleTryStatement((JsTryStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
-								return currentBlock;
-						}
-						else if (stmt is JsIfStatement) {
+						if (stmt is JsIfStatement) {
 							if (!HandleIfStatement((JsIfStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
 								return currentBlock;
 						}
@@ -250,10 +254,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 		}
 
 		private bool HandleTryStatement(JsTryStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
-			if (ContainsYieldReturnVisitor.Analyze(stmt.GuardedStatement)) {
+			if (FindInterestingConstructsVisitor.Analyze(stmt.GuardedStatement, InterestingConstruct.YieldReturn) || (stmt.Finally != null && stmt.Catch == null && !currentState.FinallyStack.IsEmpty)) {
 				if (stmt.Catch != null)
 					throw new InvalidOperationException("Cannot yield return from try with catch");
-				string handlerName = _allocateFinallyHandler(NeedsRewriteVisitor.Analyze(stmt.Finally, false) ? new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack))) : stmt.Finally);
+				string handlerName = _allocateFinallyHandler(FindInterestingConstructsVisitor.Analyze(stmt.Finally, InterestingConstruct.Label) ? new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack))) : stmt.Finally);
 				var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 				var innerState = CreateNewStateValue(currentState.FinallyStack, handlerName);
 				var stateBeforeFinally = CreateNewStateValue(innerState.FinallyStack);
@@ -266,12 +270,19 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 				}
 				return false;
 			}
+			else if (stmt.Finally != null && !currentState.FinallyStack.IsEmpty) {
+				// This is necessary to special-case in order to ensure that the inner finally block is executed before all outer ones.
+				return HandleTryStatement(new JsTryStatement(new JsTryStatement(stmt.GuardedStatement, stmt.Catch, null), null, stmt.Finally), location, stack, breakStack, continueStack, currentState, returnState, currentBlock);
+			}
 			else {
 				var rewriter = new NestedJumpStatementRewriter(breakStack, continueStack, currentState, _exitState.Value);
-				var guarded = NeedsRewriteVisitor.Analyze(stmt.GuardedStatement, false) ? new JsBlockStatement(ProcessInner(stmt.GuardedStatement, breakStack, continueStack, currentState.FinallyStack)) : rewriter.Process(stmt.GuardedStatement);
+				var guarded = FindInterestingConstructsVisitor.Analyze(stmt.GuardedStatement, InterestingConstruct.Label)
+				              ? new JsBlockStatement(ProcessInner(stmt.GuardedStatement, breakStack, continueStack, currentState.FinallyStack))
+				              : rewriter.Process(stmt.GuardedStatement);
+
 				JsCatchClause @catch;
 				if (stmt.Catch != null) {
-					if (NeedsRewriteVisitor.Analyze(stmt.Catch.Body, false)) {
+					if (FindInterestingConstructsVisitor.Analyze(stmt.Catch.Body, InterestingConstruct.Label)) {
 						@catch = new JsCatchClause(stmt.Catch.Identifier, new JsBlockStatement(ProcessInner(stmt.Catch.Body, breakStack, continueStack, currentState.FinallyStack)));
 					}
 					else {
@@ -284,7 +295,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 
 				JsBlockStatement @finally;
 				if (stmt.Finally != null) {
-					if (NeedsRewriteVisitor.Analyze(stmt.Finally, false))
+					if (FindInterestingConstructsVisitor.Analyze(stmt.Finally, InterestingConstruct.Label))
 						@finally = new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack));
 					else
 						@finally = rewriter.Process(stmt.Finally);
