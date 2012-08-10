@@ -28,10 +28,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 	}
 
 	internal class JsSetNextStateStatement : JsStatement {
-		public State TargetState { get; private set; }
+		public int TargetStateValue { get; private set; }
 
-		public JsSetNextStateStatement(State targetState) {
-			TargetState = targetState;
+		public JsSetNextStateStatement(int targetStateValue) {
+			TargetStateValue = targetStateValue;
 		}
 
 		public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {

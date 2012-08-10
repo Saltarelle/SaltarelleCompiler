@@ -154,7 +154,6 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -213,7 +212,6 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -269,7 +267,6 @@ lbl1:
 				continue $loop1;
 			}
 			case 2: {
-				$tmp1 = 1;
 				$tmp1 = -1;
 				$finally1();
 				break $loop1;
@@ -320,7 +317,6 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -388,7 +384,6 @@ lbl1:
 				return true;
 			}
 			case 5: {
-				$tmp1 = 4;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 3;
@@ -449,7 +444,6 @@ lbl1:
 				continue $loop1;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -537,7 +531,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -565,7 +558,6 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 7: {
-				$tmp1 = 6;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -579,7 +571,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 11: {
-				$tmp1 = 10;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
@@ -686,7 +677,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -727,7 +717,6 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 7: {
-				$tmp1 = 6;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -741,7 +730,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 11: {
-				$tmp1 = 10;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
@@ -844,7 +832,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -871,7 +858,6 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 7: {
-				$tmp1 = 6;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -885,7 +871,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 11: {
-				$tmp1 = 10;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
@@ -993,7 +978,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -1032,7 +1016,6 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 7: {
-				$tmp1 = 6;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -1046,7 +1029,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 11: {
-				$tmp1 = 10;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
@@ -1187,7 +1169,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 3: {
-				$tmp1 = 2;
 				$tmp1 = -1;
 				$finally1();
 				$tmp1 = 1;
@@ -1208,7 +1189,6 @@ $finally3 = function() {
 				return true;
 			}
 			case 7: {
-				$tmp1 = 6;
 				$tmp1 = 2;
 				$finally2();
 				$tmp1 = 5;
@@ -1228,7 +1208,6 @@ $finally3 = function() {
 				continue $loop1;
 			}
 			case 11: {
-				$tmp1 = 10;
 				$tmp1 = 6;
 				$finally3();
 				$tmp1 = 9;
