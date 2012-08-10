@@ -7,7 +7,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.GotoRewrite
 {
-	internal class NestedJumpStatementRewriter : RewriterVisitorBase<object>, IGotoStateStatementVisitor<JsStatement, object> {
+	internal class NestedJumpStatementRewriter : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
 		private ImmutableStack<Tuple<string, State>> _breakStack;
 		private ImmutableStack<Tuple<string, State>> _continueStack;
 		private State _currentState;
@@ -132,6 +132,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 		}
 
 		public JsStatement VisitGotoStateStatement(JsGotoStateStatement stmt, object data) {
+			return stmt;
+		}
+
+		public JsStatement VisitSetNextStateStatement(JsSetNextStateStatement stmt, object data) {
 			return stmt;
 		}
 	}

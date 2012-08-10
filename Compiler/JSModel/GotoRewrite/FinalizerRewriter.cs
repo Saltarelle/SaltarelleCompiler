@@ -6,7 +6,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.GotoRewrite
 {
-	internal class FinalizerRewriter : RewriterVisitorBase<object>, IGotoStateStatementVisitor<JsStatement, object> {
+	internal class FinalizerRewriter : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
 		private string _stateVariableName;
 		private Dictionary<string, State> _labelStates = new Dictionary<string, State>();
 
@@ -53,10 +53,18 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 				result.Add(new JsBreakStatement(targetState.LoopLabelName));
 			}
 			else {
-				SingleStateMachineRewriter.SetNextState(result, _stateVariableName, targetState.StateValue);
+				result.Add(MakeSetNextStateStatement(targetState));
 				result.Add(new JsContinueStatement(targetState.LoopLabelName));
 			}
 			return new JsBlockStatement(result, mergeWithParent: true);
+		}
+
+		public JsStatement VisitSetNextStateStatement(JsSetNextStateStatement stmt, object data) {
+			return MakeSetNextStateStatement(stmt.TargetState);
+		}
+
+		private JsStatement MakeSetNextStateStatement(State targetState) {
+			return new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(targetState.StateValue)));
 		}
 	}
 }

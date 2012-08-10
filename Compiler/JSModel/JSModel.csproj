@@ -53,7 +53,7 @@
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="GotoRewrite\ContainsBreakVisitor.cs" />
     <Compile Include="GotoRewrite\FinalizerRewriter.cs" />
-    <Compile Include="GotoRewrite\JsGotoStateStatement.cs" />
+    <Compile Include="GotoRewrite\IntermediateStatements.cs" />
     <Compile Include="GotoRewrite\FindInterestingConstructsVisitor.cs" />
     <Compile Include="GotoRewrite\NestedJumpStatementRewriter.cs" />
     <Compile Include="GotoRewrite\RemainingBlock.cs" />

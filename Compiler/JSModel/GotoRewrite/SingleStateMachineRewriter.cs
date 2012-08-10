@@ -78,10 +78,6 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 			return location.Index < location.Block.Statements.Count - 1 ? stack.Push(new StackEntry(location.Block, location.Index + 1)) : stack;
 		}
 
-		internal static void SetNextState(IList<JsStatement> statements, string stateVariableName, int stateValue) {
-			statements.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(stateVariableName), JsExpression.Number(stateValue))));
-		}
-
 		public JsBlockStatement Process(JsBlockStatement statement, bool isIteratorBlock) {
 			_stateVariableName = _allocateTempVariable();
 			_nextStateIndex = 0;
@@ -245,7 +241,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 			var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 
 			currentBlock.Add(new JsExpressionStatement(_makeSetCurrent(stmt.Value)));
-			SetNextState(currentBlock, _stateVariableName, stateAfter.Item1.StateValue);
+			currentBlock.Add(new JsSetNextStateStatement(stateAfter.Item1));
 			currentBlock.Add(new JsReturnStatement(JsExpression.True));
 
 			if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
@@ -263,7 +259,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 				var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 				var innerState = CreateNewStateValue(currentState.FinallyStack, handlerName);
 				var stateBeforeFinally = CreateNewStateValue(innerState.FinallyStack);
-				SetNextState(currentBlock, _stateVariableName, innerState.StateValue);
+				currentBlock.Add(new JsSetNextStateStatement(innerState));
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.GuardedStatement, 0)), breakStack, continueStack, innerState, stateBeforeFinally));
 
 				Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(new JsBlockStatement(new JsStatement[0], true)), 0)), breakStack, continueStack, stateBeforeFinally, stateAfter.Item1);

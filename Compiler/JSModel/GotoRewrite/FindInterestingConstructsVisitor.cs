@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		Goto        = 8,
 	}
 
-	internal class FindInterestingConstructsVisitor : RewriterVisitorBase<object>, IGotoStateStatementVisitor<JsStatement, object> {
+	internal class FindInterestingConstructsVisitor : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
 		InterestingConstruct _result;
 
 		private FindInterestingConstructsVisitor() {
@@ -55,6 +55,10 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite {
 		}
 
 		public JsStatement VisitGotoStateStatement(JsGotoStateStatement stmt, object data) {
+			return stmt;
+		}
+
+		public JsStatement VisitSetNextStateStatement(JsSetNextStateStatement stmt, object data) {
 			return stmt;
 		}
 	}
