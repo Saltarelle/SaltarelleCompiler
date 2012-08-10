@@ -112,6 +112,8 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 				while (_remainingBlocks.Count > 0) {
 					var current = _remainingBlocks.Dequeue();
 					var list = Handle(current.Stack, current.BreakStack, current.ContinueStack, current.StateValue, current.ReturnState);
+					// Merge all top-level blocks that should be merged with their parents.
+					list = list.SelectMany(stmt => (stmt is JsBlockStatement && ((JsBlockStatement)stmt).MergeWithParent) ? ((JsBlockStatement)stmt).Statements : (IList<JsStatement>)new[] { stmt }).ToList();
 					if (_isIteratorBlock)
 						list.Insert(0, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(current.StateValue.FinallyStack.IsEmpty ? -1 : current.StateValue.FinallyStack.Peek().Item1))));
 					sections.Add(new Section(current.StateValue, list));
@@ -264,7 +266,7 @@ namespace Saltarelle.Compiler.JSModel.GotoRewrite
 				SetNextState(currentBlock, _stateVariableName, innerState.StateValue);
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.GuardedStatement, 0)), breakStack, continueStack, innerState, stateBeforeFinally));
 
-				Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(new JsEmptyStatement()), 0)), breakStack, continueStack, stateBeforeFinally, stateAfter.Item1);
+				Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(new JsBlockStatement(new JsStatement[0], true)), 0)), breakStack, continueStack, stateBeforeFinally, stateAfter.Item1);
 				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {
 					Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
 				}
