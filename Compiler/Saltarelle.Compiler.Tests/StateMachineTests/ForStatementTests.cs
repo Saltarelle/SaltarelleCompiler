@@ -16,8 +16,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -69,8 +68,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -119,8 +117,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -165,8 +162,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	lbl2: f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -217,8 +213,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -268,8 +263,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -316,8 +310,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -366,8 +359,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -408,8 +400,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -448,8 +439,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -482,8 +472,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -534,8 +523,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -581,8 +569,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -629,8 +616,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -667,8 +653,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -720,8 +705,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	i;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {

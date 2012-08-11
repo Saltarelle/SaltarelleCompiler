@@ -83,7 +83,9 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		internal JsBlockStatement Process(JsBlockStatement statement) {
 			_allocateFinallyHandler = null;
 			_makeSetCurrent = null;
-			return Process(statement, false);
+			var result = Process(statement, false);
+			var hoistResult = VariableHoistingVisitor.Process(result);
+			return new JsBlockStatement(new[] { new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration(_stateVariableName, JsExpression.Number(0)) }.Concat(hoistResult.Item2.Select(v => new JsVariableDeclaration(v, null)))) }.Concat(hoistResult.Item1.Statements));
 		}
 
 		internal IteratorStateMachine ProcessIteratorBlock(JsBlockStatement statement, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent) {
@@ -96,7 +98,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 			var hoistResult = VariableHoistingVisitor.Process(result);
 			return new IteratorStateMachine(hoistResult.Item1,
-			                                hoistResult.Item2,
+			                                new[] { new JsVariableDeclaration(_stateVariableName, JsExpression.Number(0)) }.Concat(hoistResult.Item2.Select(v => new JsVariableDeclaration(v, null))),
 			                                _finallyHandlers.Select(h => Tuple.Create(h.Item1, JsExpression.FunctionDefinition(new string[0], h.Item2))),
 			                                stateFinallyHandlers.Count > 0 ? DisposeGenerator.GenerateDisposer(_stateVariableName, stateFinallyHandlers) : null);
 
@@ -113,7 +115,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			_remainingBlocks = new Queue<RemainingBlock>();
 			_exitState = null;
 			var body = ProcessInner(statement, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<int, string>>.Empty);
-			body[0] = new JsVariableDeclarationStatement(_stateVariableName, JsExpression.Number(0));	// Replace the assignment statement with a variable declaration.
+			body.RemoveAt(0);	// Remove the initial assignment of the state. This will instead happen in the statement that declares the variables for this state machine.
 			if (_isIteratorBlock)
 				body.Add(new JsReturnStatement(JsExpression.False));
 			var resultBody = new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(body));
@@ -143,15 +145,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				}
 	
 				var body = new List<JsStatement> {
-				                                 	new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(sections[0].State.StateValue))),
-				                                 	new JsLabelledStatement(_currentLoopLabel,
-				                                 	                        new JsForStatement(new JsEmptyStatement(), null, null,
-				                                 	                                           new JsSwitchStatement(JsExpression.Identifier(_stateVariableName),
-				                                 	                                                                 sections.Select(b =>
-				                                 	                                                                                 new JsSwitchSection(
-				                                 	                                                                                 	new[] { JsExpression.Number(b.State.StateValue) },
-				                                 	                                                                                 	new JsBlockStatement(b.Statements))))))
-				                                 };
+				               new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(sections[0].State.StateValue))),				                                 	new JsLabelledStatement(_currentLoopLabel,
+				                   new JsForStatement(new JsEmptyStatement(), null, null,
+				                       new JsSwitchStatement(JsExpression.Identifier(_stateVariableName),
+				                           sections.Select(b => new JsSwitchSection(
+				                                                    new[] { JsExpression.Number(b.State.StateValue) },
+				                                                    new JsBlockStatement(b.Statements))))))
+				           };
 				return body;
 			}
 			finally {

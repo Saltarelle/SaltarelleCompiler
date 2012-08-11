@@ -16,9 +16,8 @@ lbl1:
 	e;
 }", 
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -59,9 +58,8 @@ lbl1:
 	yield break;
 }", 
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -96,9 +94,8 @@ lbl1:
 	d;
 }", 
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -140,7 +137,7 @@ lbl1:
 	e;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		d;
 	};
@@ -163,7 +160,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -219,7 +215,7 @@ lbl1:
 	e;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		d;
 	};
@@ -242,7 +238,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -295,7 +290,7 @@ lbl1:
 	}
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		d;
 	};
@@ -318,7 +313,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -366,7 +360,7 @@ lbl1:
 	lbl2: e;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		d;
 	};
@@ -389,7 +383,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -444,7 +437,7 @@ lbl1:
 	d;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		$tmp1 = 1;
 		$loop2:
@@ -483,7 +476,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -531,7 +523,7 @@ lbl1:
 	e;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		d;
 	};
@@ -554,7 +546,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -633,7 +624,7 @@ lbl1:
 	o;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		n;
 	};
@@ -696,7 +687,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -834,7 +824,7 @@ lbl1:
 	o;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		n;
 	};
@@ -897,7 +887,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -1044,7 +1033,7 @@ lbl1:
 	o;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		n;
 	};
@@ -1107,7 +1096,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -1245,7 +1233,7 @@ lbl1:
 	o;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		n;
 	};
@@ -1308,7 +1296,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -1429,9 +1416,8 @@ lbl1:
 	}
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -1494,7 +1480,7 @@ lbl1:
 	o;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	$finally1 = function() {
 		n;
 	};
@@ -1560,7 +1546,6 @@ lbl1:
 		}
 	};
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -1660,9 +1645,8 @@ lbl1:
 	yield break;
 }",
 @"{
-	var $tmp1;
+	var $tmp1 = 0;
 	{
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {

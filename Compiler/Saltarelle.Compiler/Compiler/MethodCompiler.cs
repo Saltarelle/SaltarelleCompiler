@@ -114,7 +114,7 @@ namespace Saltarelle.Compiler.Compiler {
 			bool  isIEnumerable = methodReturnType.IsKnownType(KnownTypeCode.IEnumerable) || methodReturnType.IsKnownType(KnownTypeCode.IEnumerableOfT);
 
 			var body = new List<JsStatement>();
-			body.Add(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("$result", null) }.Concat(sm.Variables.Select(v => new JsVariableDeclaration(v, null)))));
+			body.Add(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("$result", null) }.Concat(sm.Variables)));
 			body.AddRange(sm.FinallyHandlers.Select(h => new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2))));
 			body.Add(new JsReturnStatement(_runtimeLibrary.MakeEnumerator(yieldType,
 			                                                              JsExpression.FunctionDefinition(new string[0], sm.MainBlock),

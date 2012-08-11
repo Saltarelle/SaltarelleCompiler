@@ -30,13 +30,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 			if (!FindInterestingConstructsVisitor.Analyze(block, InterestingConstruct.Label | InterestingConstruct.YieldReturn | InterestingConstruct.YieldBreak))
 				return block;
 
-			var result = new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel).Process(block);
-
-			var hoistResult = VariableHoistingVisitor.Process(result);
-			if (!ReferenceEquals(hoistResult.Item1, result)) {
-				result = new JsBlockStatement(new[] { new JsVariableDeclarationStatement(hoistResult.Item2.Select(v => new JsVariableDeclaration(v, null))) }.Concat(hoistResult.Item1.Statements));
-			}
-			return result;
+			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel).Process(block);
 		}
 
 		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel) {

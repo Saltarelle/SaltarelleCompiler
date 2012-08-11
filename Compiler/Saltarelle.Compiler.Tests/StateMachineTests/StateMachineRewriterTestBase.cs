@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 				result = StateMachineRewriter.RewriteIteratorBlock(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), () => string.Format("$finally" + (++finallyHandlerIndex).ToString(CultureInfo.InvariantCulture)), v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v), sm => {
 					var body = new List<JsStatement>();
 					if (sm.Variables.Count > 0)
-						body.Add(new JsVariableDeclarationStatement(sm.Variables.Select(v => new JsVariableDeclaration(v, null))));
+						body.Add(new JsVariableDeclarationStatement(sm.Variables));
 					body.AddRange(sm.FinallyHandlers.Select(h => new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2))));
 					if (sm.Disposer != null)
 						body.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("dispose"), new JsFunctionDefinitionExpression(new string[0], sm.Disposer))));

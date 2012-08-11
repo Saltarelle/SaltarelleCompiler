@@ -9,11 +9,11 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	public class IteratorStateMachine {
 		public JsBlockStatement MainBlock { get; private set; }
-		public ReadOnlyCollection<string> Variables { get; private set; }
+		public ReadOnlyCollection<JsVariableDeclaration> Variables { get; private set; }
 		public ReadOnlyCollection<Tuple<string, JsFunctionDefinitionExpression>> FinallyHandlers { get; private set; }
 		public JsBlockStatement Disposer { get; private set; }
 
-		public IteratorStateMachine(JsBlockStatement mainBlock, IEnumerable<string> variables, IEnumerable<Tuple<string, JsFunctionDefinitionExpression>> finallyHandlers, JsBlockStatement disposer) {
+		public IteratorStateMachine(JsBlockStatement mainBlock, IEnumerable<JsVariableDeclaration> variables, IEnumerable<Tuple<string, JsFunctionDefinitionExpression>> finallyHandlers, JsBlockStatement disposer) {
 			MainBlock       = mainBlock;
 			Variables       = variables.AsReadOnly();
 			FinallyHandlers = finallyHandlers.AsReadOnly();

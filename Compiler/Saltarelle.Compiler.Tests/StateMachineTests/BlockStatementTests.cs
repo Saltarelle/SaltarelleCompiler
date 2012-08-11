@@ -18,8 +18,7 @@ lbl2:
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -53,8 +52,7 @@ lbl2:
 	lbl: a;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -87,8 +85,7 @@ lbl2:
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -127,8 +124,7 @@ lbl1:
 	e;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -160,8 +156,7 @@ lbl1:
 	d;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -206,8 +201,7 @@ lbl1:
 	h;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {

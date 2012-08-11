@@ -18,8 +18,7 @@ lbl2:
 	f;
 }", 
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -89,8 +88,7 @@ lbl2:
 	}
 }",
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -217,8 +215,7 @@ lbl2:
 	j;
 }",
 @"{
-	var $tmp3, c;
-	$tmp3 = 0;
+	var $tmp3 = 0, c;
 	$loop3:
 	for (;;) {
 		switch ($tmp3) {
@@ -243,8 +240,7 @@ lbl2:
 							case 1: {
 								e;
 								f = function() {
-									var $tmp1;
-									$tmp1 = 0;
+									var $tmp1 = 0;
 									$loop1:
 									for (;;) {
 										switch ($tmp1) {
@@ -298,8 +294,7 @@ lbl2:
 	}
 }",
 @"{
-	var $tmp1;
-	$tmp1 = 0;
+	var $tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -374,8 +369,7 @@ lbl1:
 	goto lbl1;
 }", 
 @"{
-	var $tmp1, a, b, c, d, e, f, g, h, i, j, k, l;
-	$tmp1 = 0;
+	var $tmp1 = 0, a, b, c, d, e, f, g, h, i, j, k, l;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
