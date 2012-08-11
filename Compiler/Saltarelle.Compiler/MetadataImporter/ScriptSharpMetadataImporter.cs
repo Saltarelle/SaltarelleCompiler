@@ -980,7 +980,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						Message(7136, method);
 					}
 
-					_methodSemantics[method] = _methodSemantics[(IMethod)method.ImplementedInterfaceMembers[0].MemberDefinition];
+					// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
+					_methodSemantics[method] = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(sem => sem.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
 					return;
 				}
 				else {
