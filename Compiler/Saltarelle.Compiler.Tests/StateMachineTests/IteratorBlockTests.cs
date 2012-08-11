@@ -17,32 +17,34 @@ lbl1:
 }", 
 @"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				setCurrent(b);
-				$tmp1 = 1;
-				return true;
-			}
-			case 1: {
-				$tmp1 = -1;
-				c;
-				setCurrent(d);
-				$tmp1 = 2;
-				return true;
-			}
-			case 2: {
-				$tmp1 = -1;
-				e;
-				break $loop1;
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					setCurrent(b);
+					$tmp1 = 1;
+					return true;
+				}
+				case 1: {
+					$tmp1 = -1;
+					c;
+					setCurrent(d);
+					$tmp1 = 2;
+					return true;
+				}
+				case 2: {
+					$tmp1 = -1;
+					e;
+					break $loop1;
+				}
 			}
 		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -58,25 +60,27 @@ lbl1:
 }", 
 @"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				setCurrent(b);
-				$tmp1 = 1;
-				return true;
-			}
-			case 1: {
-				$tmp1 = -1;
-				c;
-				break $loop1;
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					setCurrent(b);
+					$tmp1 = 1;
+					return true;
+				}
+				case 1: {
+					$tmp1 = -1;
+					c;
+					break $loop1;
+				}
 			}
 		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -93,27 +97,29 @@ lbl1:
 }", 
 @"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				setCurrent(b);
-				$tmp1 = 1;
-				return true;
-			}
-			case 1: {
-				$tmp1 = -1;
-				c;
-				break $loop1;
-				d;
-				break $loop1;
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					setCurrent(b);
+					$tmp1 = 1;
+					return true;
+				}
+				case 1: {
+					$tmp1 = -1;
+					c;
+					break $loop1;
+					d;
+					break $loop1;
+				}
 			}
 		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -133,62 +139,64 @@ lbl1:
 	}
 	e;
 }",
-@"$finally1 = function() {
-	d;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4: {
-				try {
-				}
-				finally {
-					$finally1();
-				}
-			}
-		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
+@"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				e;
-				break $loop1;
+	$finally1 = function() {
+		d;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4: {
+					try {
+					}
+					finally {
+						$finally1();
+					}
+				}
 			}
 		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$tmp1 = -1;
+					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					e;
+					break $loop1;
+				}
+			}
+		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -210,62 +218,64 @@ disposer = function() {
 	}
 	e;
 }",
-@"$finally1 = function() {
-	d;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4: {
-				try {
-				}
-				finally {
-					$finally1();
-				}
-			}
-		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
+@"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				e;
-				break $loop1;
+	$finally1 = function() {
+		d;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4: {
+					try {
+					}
+					finally {
+						$finally1();
+					}
+				}
 			}
 		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$tmp1 = -1;
+					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					e;
+					break $loop1;
+				}
+			}
+		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -284,56 +294,58 @@ disposer = function() {
 		d;
 	}
 }",
-@"$finally1 = function() {
-	d;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 1:
-			case 2:
-			case 3: {
-				try {
-				}
-				finally {
-					$finally1();
-				}
-			}
-		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
+@"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 1;
-				b;
-				setCurrent(1);
-				$tmp1 = 3;
-				return true;
-			}
-			case 3: {
-				$tmp1 = 1;
-				c;
-				$tmp1 = 2;
-				continue $loop1;
-			}
-			case 2: {
-				$tmp1 = -1;
-				$finally1();
-				break $loop1;
+	$finally1 = function() {
+		d;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 1:
+				case 2:
+				case 3: {
+					try {
+					}
+					finally {
+						$finally1();
+					}
+				}
 			}
 		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 1;
+					b;
+					setCurrent(1);
+					$tmp1 = 3;
+					return true;
+				}
+				case 3: {
+					$tmp1 = 1;
+					c;
+					$tmp1 = 2;
+					continue $loop1;
+				}
+				case 2: {
+					$tmp1 = -1;
+					$finally1();
+					break $loop1;
+				}
+			}
+		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -353,62 +365,64 @@ disposer = function() {
 	}
 	lbl2: e;
 }",
-@"$finally1 = function() {
-	d;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4: {
-				try {
-				}
-				finally {
-					$finally1();
-				}
-			}
-		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
+@"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				e;
-				break $loop1;
+	$finally1 = function() {
+		d;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4: {
+					try {
+					}
+					finally {
+						$finally1();
+					}
+				}
 			}
 		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$tmp1 = -1;
+					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					e;
+					break $loop1;
+				}
+			}
+		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -429,71 +443,73 @@ disposer = function() {
 	}
 	d;
 }",
-@"$finally1 = function() {
-	$tmp1 = 1;
-	$loop2:
-	for (;;) {
-		switch ($tmp1) {
-			case 1: {
-				$tmp1 = -1;
-				b;
-				$tmp1 = 2;
-				continue $loop2;
-			}
-			case 2: {
-				$tmp1 = -1;
-				c;
-				$tmp1 = 2;
-				continue $loop2;
-			}
-		}
-	}
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 4:
-			case 5: {
-				try {
-				}
-				finally {
-					$finally1();
-				}
-			}
-		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
+@"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 4;
-				setCurrent(0);
-				$tmp1 = 5;
-				return true;
-			}
-			case 5: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
-				$tmp1 = -1;
-				d;
-				break $loop1;
+	$finally1 = function() {
+		$tmp1 = 1;
+		$loop2:
+		for (;;) {
+			switch ($tmp1) {
+				case 1: {
+					$tmp1 = -1;
+					b;
+					$tmp1 = 2;
+					continue $loop2;
+				}
+				case 2: {
+					$tmp1 = -1;
+					c;
+					$tmp1 = 2;
+					continue $loop2;
+				}
 			}
 		}
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 4:
+				case 5: {
+					try {
+					}
+					finally {
+						$finally1();
+					}
+				}
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 4;
+					setCurrent(0);
+					$tmp1 = 5;
+					return true;
+				}
+				case 5: {
+					$tmp1 = -1;
+					$finally1();
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$tmp1 = -1;
+					d;
+					break $loop1;
+				}
+			}
+		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -514,65 +530,67 @@ disposer = function() {
 	}
 	e;
 }",
-@"$finally1 = function() {
-	d;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4: {
-				try {
-				}
-				finally {
-					$finally1();
-				}
-			}
-		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
+@"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				setCurrent(0);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				b;
-				$tmp1 = -1;
-				$finally1();
-				break $loop1;
-				c;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				e;
-				break $loop1;
+	$finally1 = function() {
+		d;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4: {
+					try {
+					}
+					finally {
+						$finally1();
+					}
+				}
 			}
 		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					setCurrent(0);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					b;
+					$tmp1 = -1;
+					$finally1();
+					break $loop1;
+					c;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$tmp1 = -1;
+					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					e;
+					break $loop1;
+				}
+			}
+		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -614,159 +632,161 @@ disposer = function() {
 	}
 	o;
 }",
-@"$finally1 = function() {
-	n;
-};
-$finally2 = function() {
-	k;
-};
-$finally3 = function() {
-	h;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			case 11:
-			case 12:
-			case 13: {
-				try {
-					switch ($tmp1) {
-						case 6:
-						case 7:
-						case 8:
-						case 9:
-						case 10:
-						case 11:
-						case 13: {
-							try {
-								switch ($tmp1) {
-									case 10:
-									case 11: {
-										try {
-										}
-										finally {
-											$finally3();
+@"{
+	var $tmp1;
+	$finally1 = function() {
+		n;
+	};
+	$finally2 = function() {
+		k;
+	};
+	$finally3 = function() {
+		h;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+				case 13: {
+					try {
+						switch ($tmp1) {
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 13: {
+								try {
+									switch ($tmp1) {
+										case 10:
+										case 11: {
+											try {
+											}
+											finally {
+												$finally3();
+											}
 										}
 									}
 								}
-							}
-							finally {
-								$finally2();
+								finally {
+									$finally2();
+								}
 							}
 						}
 					}
+					finally {
+						$finally1();
+					}
 				}
-				finally {
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 6;
+					d;
+					setCurrent(2);
+					$tmp1 = 8;
+					return true;
+				}
+				case 3: {
+					$tmp1 = -1;
 					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					o;
+					break $loop1;
+				}
+				case 8: {
+					$tmp1 = 6;
+					e;
+					$tmp1 = 10;
+					f;
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = -1;
+					$finally1();
+					break $loop1;
+					g;
+					$tmp1 = 11;
+					continue $loop1;
+				}
+				case 7: {
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 5;
+					continue $loop1;
+				}
+				case 5: {
+					$tmp1 = 2;
+					l;
+					setCurrent(5);
+					$tmp1 = 12;
+					return true;
+				}
+				case 11: {
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 9;
+					continue $loop1;
+				}
+				case 9: {
+					$tmp1 = 6;
+					i;
+					setCurrent(4);
+					$tmp1 = 13;
+					return true;
+				}
+				case 12: {
+					$tmp1 = 2;
+					m;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 13: {
+					$tmp1 = 6;
+					j;
+					$tmp1 = 7;
+					continue $loop1;
 				}
 			}
 		}
+		return false;
 	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
-	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 6;
-				d;
-				setCurrent(2);
-				$tmp1 = 8;
-				return true;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				o;
-				break $loop1;
-			}
-			case 8: {
-				$tmp1 = 6;
-				e;
-				$tmp1 = 10;
-				f;
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = -1;
-				$finally1();
-				break $loop1;
-				g;
-				$tmp1 = 11;
-				continue $loop1;
-			}
-			case 7: {
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = 5;
-				continue $loop1;
-			}
-			case 5: {
-				$tmp1 = 2;
-				l;
-				setCurrent(5);
-				$tmp1 = 12;
-				return true;
-			}
-			case 11: {
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 9;
-				continue $loop1;
-			}
-			case 9: {
-				$tmp1 = 6;
-				i;
-				setCurrent(4);
-				$tmp1 = 13;
-				return true;
-			}
-			case 12: {
-				$tmp1 = 2;
-				m;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 13: {
-				$tmp1 = 6;
-				j;
-				$tmp1 = 7;
-				continue $loop1;
-			}
-		}
-	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -813,172 +833,174 @@ disposer = function() {
 	}
 	o;
 }",
-@"$finally1 = function() {
-	n;
-};
-$finally2 = function() {
-	k;
-};
-$finally3 = function() {
-	h;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			case 11:
-			case 12:
-			case 13: {
-				try {
-					switch ($tmp1) {
-						case 6:
-						case 7:
-						case 8:
-						case 9:
-						case 10:
-						case 11:
-						case 13: {
-							try {
-								switch ($tmp1) {
-									case 10:
-									case 11: {
-										try {
-										}
-										finally {
-											$finally3();
+@"{
+	var $tmp1;
+	$finally1 = function() {
+		n;
+	};
+	$finally2 = function() {
+		k;
+	};
+	$finally3 = function() {
+		h;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+				case 13: {
+					try {
+						switch ($tmp1) {
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 13: {
+								try {
+									switch ($tmp1) {
+										case 10:
+										case 11: {
+											try {
+											}
+											finally {
+												$finally3();
+											}
 										}
 									}
 								}
-							}
-							finally {
-								$finally2();
+								finally {
+									$finally2();
+								}
 							}
 						}
 					}
-				}
-				finally {
-					$finally1();
+					finally {
+						$finally1();
+					}
 				}
 			}
 		}
-	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
-	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 6;
-				d;
-				setCurrent(2);
-				$tmp1 = 8;
-				return true;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				o;
-				break $loop1;
-			}
-			case 8: {
-				$tmp1 = 6;
-				e;
-				$tmp1 = 10;
-				try {
-					f1;
-					$tmp1 = 6;
-					$finally3();
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
 					$tmp1 = 2;
-					$finally2();
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 6;
+					d;
+					setCurrent(2);
+					$tmp1 = 8;
+					return true;
+				}
+				case 3: {
 					$tmp1 = -1;
 					$finally1();
-					break $loop1;
-					g1;
+					$tmp1 = 1;
+					continue $loop1;
 				}
-				catch (ex) {
-					f2;
+				case 1: {
+					$tmp1 = -1;
+					o;
+					break $loop1;
+				}
+				case 8: {
 					$tmp1 = 6;
-					$finally3();
+					e;
+					$tmp1 = 10;
+					try {
+						f1;
+						$tmp1 = 6;
+						$finally3();
+						$tmp1 = 2;
+						$finally2();
+						$tmp1 = -1;
+						$finally1();
+						break $loop1;
+						g1;
+					}
+					catch (ex) {
+						f2;
+						$tmp1 = 6;
+						$finally3();
+						$tmp1 = 2;
+						$finally2();
+						$tmp1 = -1;
+						$finally1();
+						break $loop1;
+						g2;
+					}
+					$tmp1 = 11;
+					continue $loop1;
+				}
+				case 7: {
 					$tmp1 = 2;
 					$finally2();
-					$tmp1 = -1;
-					$finally1();
-					break $loop1;
-					g2;
+					$tmp1 = 5;
+					continue $loop1;
 				}
-				$tmp1 = 11;
-				continue $loop1;
-			}
-			case 7: {
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = 5;
-				continue $loop1;
-			}
-			case 5: {
-				$tmp1 = 2;
-				l;
-				setCurrent(5);
-				$tmp1 = 12;
-				return true;
-			}
-			case 11: {
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 9;
-				continue $loop1;
-			}
-			case 9: {
-				$tmp1 = 6;
-				i;
-				setCurrent(4);
-				$tmp1 = 13;
-				return true;
-			}
-			case 12: {
-				$tmp1 = 2;
-				m;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 13: {
-				$tmp1 = 6;
-				j;
-				$tmp1 = 7;
-				continue $loop1;
+				case 5: {
+					$tmp1 = 2;
+					l;
+					setCurrent(5);
+					$tmp1 = 12;
+					return true;
+				}
+				case 11: {
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 9;
+					continue $loop1;
+				}
+				case 9: {
+					$tmp1 = 6;
+					i;
+					setCurrent(4);
+					$tmp1 = 13;
+					return true;
+				}
+				case 12: {
+					$tmp1 = 2;
+					m;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 13: {
+					$tmp1 = 6;
+					j;
+					$tmp1 = 7;
+					continue $loop1;
+				}
 			}
 		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -1021,158 +1043,160 @@ lbl1:
 	}
 	o;
 }",
-@"$finally1 = function() {
-	n;
-};
-$finally2 = function() {
-	k;
-};
-$finally3 = function() {
-	h;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			case 11:
-			case 12:
-			case 13: {
-				try {
-					switch ($tmp1) {
-						case 6:
-						case 7:
-						case 8:
-						case 9:
-						case 10:
-						case 11:
-						case 13: {
-							try {
-								switch ($tmp1) {
-									case 10:
-									case 11: {
-										try {
-										}
-										finally {
-											$finally3();
+@"{
+	var $tmp1;
+	$finally1 = function() {
+		n;
+	};
+	$finally2 = function() {
+		k;
+	};
+	$finally3 = function() {
+		h;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+				case 13: {
+					try {
+						switch ($tmp1) {
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 13: {
+								try {
+									switch ($tmp1) {
+										case 10:
+										case 11: {
+											try {
+											}
+											finally {
+												$finally3();
+											}
 										}
 									}
 								}
-							}
-							finally {
-								$finally2();
+								finally {
+									$finally2();
+								}
 							}
 						}
 					}
+					finally {
+						$finally1();
+					}
 				}
-				finally {
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 6;
+					d;
+					setCurrent(2);
+					$tmp1 = 8;
+					return true;
+				}
+				case 3: {
+					$tmp1 = -1;
 					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					o;
+					break $loop1;
+				}
+				case 8: {
+					$tmp1 = 6;
+					e;
+					$tmp1 = 10;
+					f;
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 12;
+					continue $loop1;
+					g;
+					$tmp1 = 11;
+					continue $loop1;
+				}
+				case 7: {
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 5;
+					continue $loop1;
+				}
+				case 5: {
+					$tmp1 = 2;
+					l;
+					setCurrent(5);
+					$tmp1 = 12;
+					return true;
+				}
+				case 11: {
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 9;
+					continue $loop1;
+				}
+				case 9: {
+					$tmp1 = 6;
+					i;
+					setCurrent(4);
+					$tmp1 = 13;
+					return true;
+				}
+				case 12: {
+					$tmp1 = 2;
+					m;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 13: {
+					$tmp1 = 6;
+					j;
+					$tmp1 = 7;
+					continue $loop1;
 				}
 			}
 		}
+		return false;
 	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
-	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 6;
-				d;
-				setCurrent(2);
-				$tmp1 = 8;
-				return true;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				o;
-				break $loop1;
-			}
-			case 8: {
-				$tmp1 = 6;
-				e;
-				$tmp1 = 10;
-				f;
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = 12;
-				continue $loop1;
-				g;
-				$tmp1 = 11;
-				continue $loop1;
-			}
-			case 7: {
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = 5;
-				continue $loop1;
-			}
-			case 5: {
-				$tmp1 = 2;
-				l;
-				setCurrent(5);
-				$tmp1 = 12;
-				return true;
-			}
-			case 11: {
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 9;
-				continue $loop1;
-			}
-			case 9: {
-				$tmp1 = 6;
-				i;
-				setCurrent(4);
-				$tmp1 = 13;
-				return true;
-			}
-			case 12: {
-				$tmp1 = 2;
-				m;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 13: {
-				$tmp1 = 6;
-				j;
-				$tmp1 = 7;
-				continue $loop1;
-			}
-		}
-	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -1220,170 +1244,172 @@ lbl1:
 	}
 	o;
 }",
-@"$finally1 = function() {
-	n;
-};
-$finally2 = function() {
-	k;
-};
-$finally3 = function() {
-	h;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			case 11:
-			case 12:
-			case 13: {
-				try {
-					switch ($tmp1) {
-						case 6:
-						case 7:
-						case 8:
-						case 9:
-						case 10:
-						case 11:
-						case 13: {
-							try {
-								switch ($tmp1) {
-									case 10:
-									case 11: {
-										try {
-										}
-										finally {
-											$finally3();
+@"{
+	var $tmp1;
+	$finally1 = function() {
+		n;
+	};
+	$finally2 = function() {
+		k;
+	};
+	$finally3 = function() {
+		h;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+				case 13: {
+					try {
+						switch ($tmp1) {
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 13: {
+								try {
+									switch ($tmp1) {
+										case 10:
+										case 11: {
+											try {
+											}
+											finally {
+												$finally3();
+											}
 										}
 									}
 								}
-							}
-							finally {
-								$finally2();
+								finally {
+									$finally2();
+								}
 							}
 						}
 					}
+					finally {
+						$finally1();
+					}
 				}
-				finally {
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 6;
+					d;
+					setCurrent(2);
+					$tmp1 = 8;
+					return true;
+				}
+				case 3: {
+					$tmp1 = -1;
 					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					o;
+					break $loop1;
+				}
+				case 8: {
+					$tmp1 = 6;
+					e;
+					$tmp1 = 10;
+					try {
+						f1;
+						$tmp1 = 6;
+						$finally3();
+						$tmp1 = 2;
+						$finally2();
+						$tmp1 = 12;
+						continue $loop1;
+						g1;
+					}
+					catch (ex) {
+						f2;
+						$tmp1 = 6;
+						$finally3();
+						$tmp1 = 2;
+						$finally2();
+						$tmp1 = 12;
+						continue $loop1;
+						g2;
+					}
+					$tmp1 = 11;
+					continue $loop1;
+				}
+				case 7: {
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 5;
+					continue $loop1;
+				}
+				case 5: {
+					$tmp1 = 2;
+					l;
+					setCurrent(5);
+					$tmp1 = 12;
+					return true;
+				}
+				case 11: {
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 9;
+					continue $loop1;
+				}
+				case 9: {
+					$tmp1 = 6;
+					i;
+					setCurrent(4);
+					$tmp1 = 13;
+					return true;
+				}
+				case 12: {
+					$tmp1 = 2;
+					m;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 13: {
+					$tmp1 = 6;
+					j;
+					$tmp1 = 7;
+					continue $loop1;
 				}
 			}
 		}
+		return false;
 	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
-	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 6;
-				d;
-				setCurrent(2);
-				$tmp1 = 8;
-				return true;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				o;
-				break $loop1;
-			}
-			case 8: {
-				$tmp1 = 6;
-				e;
-				$tmp1 = 10;
-				try {
-					f1;
-					$tmp1 = 6;
-					$finally3();
-					$tmp1 = 2;
-					$finally2();
-					$tmp1 = 12;
-					continue $loop1;
-					g1;
-				}
-				catch (ex) {
-					f2;
-					$tmp1 = 6;
-					$finally3();
-					$tmp1 = 2;
-					$finally2();
-					$tmp1 = 12;
-					continue $loop1;
-					g2;
-				}
-				$tmp1 = 11;
-				continue $loop1;
-			}
-			case 7: {
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = 5;
-				continue $loop1;
-			}
-			case 5: {
-				$tmp1 = 2;
-				l;
-				setCurrent(5);
-				$tmp1 = 12;
-				return true;
-			}
-			case 11: {
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 9;
-				continue $loop1;
-			}
-			case 9: {
-				$tmp1 = 6;
-				i;
-				setCurrent(4);
-				$tmp1 = 13;
-				return true;
-			}
-			case 12: {
-				$tmp1 = 2;
-				m;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 13: {
-				$tmp1 = 6;
-				j;
-				$tmp1 = 7;
-				continue $loop1;
-			}
-		}
-	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -1404,26 +1430,28 @@ disposer = function() {
 }",
 @"{
 	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				try {
-					b;
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					try {
+						b;
+						break $loop1;
+					}
+					catch (e) {
+						c;
+						break $loop1;
+					}
 					break $loop1;
 				}
-				catch (e) {
-					c;
-					break $loop1;
-				}
-				break $loop1;
 			}
 		}
+		return false;
 	}
-	return false;
 }
 ", isIteratorBlock: true);
 		}
@@ -1465,163 +1493,189 @@ disposer = function() {
 	}
 	o;
 }",
-@"$finally1 = function() {
-	n;
-};
-$finally2 = function() {
-	k;
-};
-$finally3 = function() {
-	h;
-};
-disposer = function() {
-	try {
-		switch ($tmp1) {
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			case 11:
-			case 12:
-			case 13:
-			case 14: {
-				try {
-					switch ($tmp1) {
-						case 6:
-						case 7:
-						case 8:
-						case 9:
-						case 10:
-						case 11:
-						case 12:
-						case 14: {
-							try {
-								switch ($tmp1) {
-									case 10:
-									case 11:
-									case 12: {
-										try {
-										}
-										finally {
-											$finally3();
+@"{
+	var $tmp1;
+	$finally1 = function() {
+		n;
+	};
+	$finally2 = function() {
+		k;
+	};
+	$finally3 = function() {
+		h;
+	};
+	dispose = function() {
+		try {
+			switch ($tmp1) {
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+				case 13:
+				case 14: {
+					try {
+						switch ($tmp1) {
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 12:
+							case 14: {
+								try {
+									switch ($tmp1) {
+										case 10:
+										case 11:
+										case 12: {
+											try {
+											}
+											finally {
+												$finally3();
+											}
 										}
 									}
 								}
-							}
-							finally {
-								$finally2();
+								finally {
+									$finally2();
+								}
 							}
 						}
 					}
+					finally {
+						$finally1();
+					}
 				}
-				finally {
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	};
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					$tmp1 = 2;
+					b;
+					setCurrent(1);
+					$tmp1 = 4;
+					return true;
+				}
+				case 4: {
+					$tmp1 = 2;
+					c;
+					$tmp1 = 6;
+					d;
+					setCurrent(2);
+					$tmp1 = 8;
+					return true;
+				}
+				case 3: {
+					$tmp1 = -1;
 					$finally1();
+					$tmp1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$tmp1 = -1;
+					o;
+					break $loop1;
+				}
+				case 8: {
+					$tmp1 = 6;
+					e;
+					$tmp1 = 10;
+					f;
+					setCurrent(3);
+					$tmp1 = 12;
+					return true;
+				}
+				case 7: {
+					$tmp1 = 2;
+					$finally2();
+					$tmp1 = 5;
+					continue $loop1;
+				}
+				case 5: {
+					$tmp1 = 2;
+					l;
+					setCurrent(5);
+					$tmp1 = 13;
+					return true;
+				}
+				case 12: {
+					$tmp1 = 10;
+					g;
+					$tmp1 = 11;
+					continue $loop1;
+				}
+				case 11: {
+					$tmp1 = 6;
+					$finally3();
+					$tmp1 = 9;
+					continue $loop1;
+				}
+				case 9: {
+					$tmp1 = 6;
+					i;
+					setCurrent(4);
+					$tmp1 = 14;
+					return true;
+				}
+				case 13: {
+					$tmp1 = 2;
+					m;
+					$tmp1 = 3;
+					continue $loop1;
+				}
+				case 14: {
+					$tmp1 = 6;
+					j;
+					$tmp1 = 7;
+					continue $loop1;
 				}
 			}
 		}
+		return false;
 	}
-	finally {
-		$tmp1 = -1;
-	}
-};
-{
-	var $tmp1;
-	$tmp1 = 0;
-	$loop1:
-	for (;;) {
-		switch ($tmp1) {
-			case 0: {
-				$tmp1 = -1;
-				a;
-				$tmp1 = 2;
-				b;
-				setCurrent(1);
-				$tmp1 = 4;
-				return true;
-			}
-			case 4: {
-				$tmp1 = 2;
-				c;
-				$tmp1 = 6;
-				d;
-				setCurrent(2);
-				$tmp1 = 8;
-				return true;
-			}
-			case 3: {
-				$tmp1 = -1;
-				$finally1();
-				$tmp1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				$tmp1 = -1;
-				o;
-				break $loop1;
-			}
-			case 8: {
-				$tmp1 = 6;
-				e;
-				$tmp1 = 10;
-				f;
-				setCurrent(3);
-				$tmp1 = 12;
-				return true;
-			}
-			case 7: {
-				$tmp1 = 2;
-				$finally2();
-				$tmp1 = 5;
-				continue $loop1;
-			}
-			case 5: {
-				$tmp1 = 2;
-				l;
-				setCurrent(5);
-				$tmp1 = 13;
-				return true;
-			}
-			case 12: {
-				$tmp1 = 10;
-				g;
-				$tmp1 = 11;
-				continue $loop1;
-			}
-			case 11: {
-				$tmp1 = 6;
-				$finally3();
-				$tmp1 = 9;
-				continue $loop1;
-			}
-			case 9: {
-				$tmp1 = 6;
-				i;
-				setCurrent(4);
-				$tmp1 = 14;
-				return true;
-			}
-			case 13: {
-				$tmp1 = 2;
-				m;
-				$tmp1 = 3;
-				continue $loop1;
-			}
-			case 14: {
-				$tmp1 = 6;
-				j;
-				$tmp1 = 7;
-				continue $loop1;
-			}
-		}
-	}
-	return false;
 }
 ", isIteratorBlock: true);
+		}
+
+		[Test]
+		public void IteratorWithOnlyYieldBreakWorks() {
+			AssertCorrect(@"{
+	yield break;
+}",
+@"{
+	var $tmp1;
+	{
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", isIteratorBlock: true);
+
 		}
 	}
 }

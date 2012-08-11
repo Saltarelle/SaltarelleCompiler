@@ -62,7 +62,7 @@
     <Compile Include="StateMachineRewrite\SingleStateMachineRewriter.cs" />
     <Compile Include="StateMachineRewrite\StackEntry.cs" />
     <Compile Include="StateMachineRewrite\State.cs" />
-    <Compile Include="StateMachineRewrite\StateMachine.cs" />
+    <Compile Include="StateMachineRewrite\IteratorStateMachine.cs" />
     <Compile Include="StateMachineRewrite\StateMachineRewriter.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="StateMachineRewrite\VariableHoistingVisitor.cs" />

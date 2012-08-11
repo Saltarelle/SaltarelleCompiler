@@ -13,24 +13,23 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		string _stateVariableName;
 		string _currentLoopLabel;
 		bool _isIteratorBlock;
-		Queue<RemainingBlock> _remainingBlocks = new Queue<RemainingBlock>();
-		HashSet<State> _processedStates = new HashSet<State>();
-		Dictionary<string, State> _labelStates = new Dictionary<string, State>();
+		Queue<RemainingBlock> _remainingBlocks;
+		HashSet<State> _processedStates;
+		Dictionary<string, State> _labelStates;
+		List<Tuple<string, JsBlockStatement>> _finallyHandlers;
 		List<State> _allStates;
 		State? _exitState;
 
 		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		readonly Func<string> _allocateTempVariable;
 		readonly Func<string> _allocateLoopLabel;
-		readonly Func<JsBlockStatement, string> _allocateFinallyHandler;
-		readonly Func<JsExpression, JsExpression> _makeSetCurrent;
+		Func<string> _allocateFinallyHandler;
+		Func<JsExpression, JsExpression> _makeSetCurrent;
 
-		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<JsBlockStatement, string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent) {
+		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
 			_allocateLoopLabel = allocateLoopLabel;
-			_allocateFinallyHandler = allocateFinallyHandler;
-			_makeSetCurrent = makeSetCurrent;
 		}
 
 		private State CreateNewStateValue(ImmutableStack<Tuple<int, string>> finallyStack, string finallyHandlerToPush = null) {
@@ -81,12 +80,35 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			return location.Index < location.Block.Statements.Count - 1 ? stack.Push(new StackEntry(location.Block, location.Index + 1)) : stack;
 		}
 
-		internal Tuple<JsBlockStatement, List<Tuple<int, List<string>>>> Process(JsBlockStatement statement, bool isIteratorBlock) {
+		internal JsBlockStatement Process(JsBlockStatement statement) {
+			_allocateFinallyHandler = null;
+			_makeSetCurrent = null;
+			return Process(statement, false);
+		}
+
+		internal IteratorStateMachine ProcessIteratorBlock(JsBlockStatement statement, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent) {
+			_allocateFinallyHandler = allocateFinallyHandler;
+			_makeSetCurrent = makeSetCurrent;
+
+			var result = Process(statement, true);
+
+			var stateFinallyHandlers = _allStates.Where(s => !s.FinallyStack.IsEmpty).Select(s => Tuple.Create(s.StateValue, s.FinallyStack.Select(x => x.Item2).Reverse().ToList())).ToList();
+
+			var hoistResult = VariableHoistingVisitor.Process(result);
+			return new IteratorStateMachine(hoistResult.Item1,
+			                                hoistResult.Item2,
+			                                _finallyHandlers.Select(h => Tuple.Create(h.Item1, JsExpression.FunctionDefinition(new string[0], h.Item2))),
+			                                stateFinallyHandlers.Count > 0 ? DisposeGenerator.GenerateDisposer(_stateVariableName, stateFinallyHandlers) : null);
+
+		}
+
+		private JsBlockStatement Process(JsBlockStatement statement, bool isIteratorBlock) {
 			_stateVariableName = _allocateTempVariable();
 			_nextStateIndex = 0;
 			_isIteratorBlock = isIteratorBlock;
-			_processedStates.Clear();
-			_labelStates.Clear();
+			_processedStates = new HashSet<State>();
+			_labelStates = new Dictionary<string, State>();
+			_finallyHandlers = new List<Tuple<string, JsBlockStatement>>();
 			_allStates = new List<State>();
 			_remainingBlocks = new Queue<RemainingBlock>();
 			_exitState = null;
@@ -95,8 +117,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			if (_isIteratorBlock)
 				body.Add(new JsReturnStatement(JsExpression.False));
 			var resultBody = new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(body));
-			var stateFinallyHandlers = _allStates.Select(s => Tuple.Create(s.StateValue, s.FinallyStack.Select(x => x.Item2).Reverse().ToList())).ToList();
-			return Tuple.Create(resultBody, stateFinallyHandlers);
+			return resultBody;
 		}
 
 		private IList<JsStatement> ProcessInner(JsBlockStatement statement, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, ImmutableStack<Tuple<int, string>> finallyStack) {
@@ -261,7 +282,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			if (FindInterestingConstructsVisitor.Analyze(stmt.GuardedStatement, InterestingConstruct.YieldReturn) || (stmt.Finally != null && stmt.Catch == null && !currentState.FinallyStack.IsEmpty)) {
 				if (stmt.Catch != null)
 					throw new InvalidOperationException("Cannot yield return from try with catch");
-				string handlerName = _allocateFinallyHandler(FindInterestingConstructsVisitor.Analyze(stmt.Finally, InterestingConstruct.Label) ? new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack))) : stmt.Finally);
+				string handlerName = _allocateFinallyHandler();
+				_finallyHandlers.Add(Tuple.Create(handlerName, FindInterestingConstructsVisitor.Analyze(stmt.Finally, InterestingConstruct.Label) ? new FinalizerRewriter(_stateVariableName, _labelStates).Process(new JsBlockStatement(ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack))) : stmt.Finally));
 				var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 				var innerState = CreateNewStateValue(currentState.FinallyStack, handlerName);
 				var stateBeforeFinally = CreateNewStateValue(innerState.FinallyStack);
