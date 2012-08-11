@@ -26,12 +26,12 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		}
 
 		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
-			var body = DoRewrite((JsBlockStatement)VisitBlockStatement(expression.Body, data));
+			var body = DoRewrite((JsBlockStatement)VisitStatement(expression.Body, data));
 	        return ReferenceEquals(body, expression.Body) ? expression : JsExpression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
 		}
 
 		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
-			var body = DoRewrite((JsBlockStatement)VisitBlockStatement(statement.Body, data));
+			var body = DoRewrite((JsBlockStatement)VisitStatement(statement.Body, data));
 	        return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
 		}
 
@@ -47,12 +47,20 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 
 			var rewriteResult = new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateLoopLabel, AddFinallyHandler, _makeSetCurrent).Process(block, _isIteratorBlock);
 			_stateFinallyHandlers.AddRange(rewriteResult.Item2.Where(x => x.Item2.Count > 0));
-			return rewriteResult.Item1;
+
+			var hoistResult = VariableHoistingVisitor.Process(rewriteResult.Item1);
+			JsBlockStatement body;
+			if (!ReferenceEquals(hoistResult.Item1, rewriteResult.Item1)) {
+				body = new JsBlockStatement(new[] { new JsVariableDeclarationStatement(hoistResult.Item2.Select(v => new JsVariableDeclaration(v, null))) }.Concat(hoistResult.Item1.Statements));
+			}
+			else
+				body = rewriteResult.Item1;
+			return body;
 		}
 
 		public static StateMachine Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, bool isIteratorBlock) {
 			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, allocateFinallyHandler, makeSetCurrent, isIteratorBlock);
-			var mainBlock = obj.DoRewrite((JsBlockStatement)obj.VisitBlockStatement(block, null));
+			var mainBlock = obj.DoRewrite((JsBlockStatement)obj.VisitStatement(block, null));
 			#warning TODO: Obviously needs fixing
 			return new StateMachine(mainBlock, obj._finallyHandlers, DisposeGenerator.GenerateDisposer("$tmp1", obj._stateFinallyHandlers));
 		}

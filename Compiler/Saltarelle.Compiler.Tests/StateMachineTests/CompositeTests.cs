@@ -18,7 +18,8 @@ lbl2:
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -88,7 +89,8 @@ lbl2:
 	}
 }",
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -215,7 +217,8 @@ lbl2:
 	j;
 }",
 @"{
-	var $tmp3 = 0;
+	var $tmp3, c;
+	$tmp3 = 0;
 	$loop3:
 	for (;;) {
 		switch ($tmp3) {
@@ -226,8 +229,9 @@ lbl2:
 			}
 			case 1: {
 				b;
-				var c = function() {
-					var $tmp2 = 0;
+				c = function() {
+					var $tmp2, f;
+					$tmp2 = 0;
 					$loop2:
 					for (;;) {
 						switch ($tmp2) {
@@ -238,8 +242,9 @@ lbl2:
 							}
 							case 1: {
 								e;
-								var f = function() {
-									var $tmp1 = 0;
+								f = function() {
+									var $tmp1;
+									$tmp1 = 0;
 									$loop1:
 									for (;;) {
 										switch ($tmp1) {
@@ -293,7 +298,8 @@ lbl2:
 	}
 }",
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -341,6 +347,56 @@ lbl2:
 				catch (g) {
 				}
 				break $loop1;
+			}
+		}
+	}
+}
+");
+		}
+
+		[Test]
+		public void VariablesInSimpleStateMachineAreDeclaredBeforeTheLoop() {
+			AssertCorrect(
+@"{
+	var a = 0, b = 0, c;
+	var d, e;
+	for (var f = 0, g = 1, h; f < g; f++) {
+		for (var i = 0, j; i < 0; i++) {
+			for (var k; k < 0; k++) {
+			}
+		}
+	}
+	for (var l in x) {
+	}
+	for (m in x) {
+	}
+lbl1:
+	goto lbl1;
+}", 
+@"{
+	var $tmp1, a, b, c, d, e, f, g, h, i, j, k, l;
+	$tmp1 = 0;
+	$loop1:
+	for (;;) {
+		switch ($tmp1) {
+			case 0: {
+				a = 0, b = 0;
+				for (f = 0, g = 1; f < g; f++) {
+					for (i = 0; i < 0; i++) {
+						for (; k < 0; k++) {
+						}
+					}
+				}
+				for (l in x) {
+				}
+				for (m in x) {
+				}
+				$tmp1 = 1;
+				continue $loop1;
+			}
+			case 1: {
+				$tmp1 = 1;
+				continue $loop1;
 			}
 		}
 	}

@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			try {
 				_breakStack = _breakStack.Push(null);
 				_continueStack = _continueStack.Push(null);
-				return VisitBlockStatement(block, data);
+				return VisitStatement(block, data);
 			}
 			finally {
 				_breakStack = oldBreak;

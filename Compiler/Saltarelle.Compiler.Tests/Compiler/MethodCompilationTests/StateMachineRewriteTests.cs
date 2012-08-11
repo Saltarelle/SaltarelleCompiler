@@ -25,12 +25,13 @@ public void M() {
 	goto lbl1;
 }",
 @"function() {
-	var $tmp1 = 0;
+	var $tmp1, $a, $b, $c;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				var $a = 0, $b = 0, $c = 0;
+				$a = 0, $b = 0, $c = 0;
 				$tmp1 = 1;
 				continue $loop1;
 			}
@@ -77,12 +78,13 @@ public C() {
 	goto lbl1;
 }",
 @"function() {
-	var $tmp1 = 0;
+	var $tmp1, $a, $b, $c;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				var $a = 0, $b = 0, $c = 0;
+				$a = 0, $b = 0, $c = 0;
 				$tmp1 = 1;
 				continue $loop1;
 			}

@@ -65,6 +65,7 @@
     <Compile Include="StateMachineRewrite\StateMachine.cs" />
     <Compile Include="StateMachineRewrite\StateMachineRewriter.cs" />
     <Compile Include="OutputFormatter.cs" />
+    <Compile Include="StateMachineRewrite\VariableHoistingVisitor.cs" />
     <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />

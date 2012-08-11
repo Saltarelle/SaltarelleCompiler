@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
     [Serializable]
     public class JsForStatement : JsStatement {
         /// <summary>
-        /// Initialization statement (first part). Must be a VariableDeclarationStatement or an ExpressionStatement.
+        /// Initialization statement (first part). Must be a VariableDeclarationStatement, an ExpressionStatement or an EmptyStatement.
         /// </summary>
         public JsStatement InitStatement { get; private set; }
         public JsExpression ConditionExpression { get; private set; }

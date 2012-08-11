@@ -91,7 +91,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, TData data) {
-            var body = VisitBlockStatement(expression.Body, data);
+            var body = VisitStatement(expression.Body, data);
             return ReferenceEquals(body, expression.Body) ? expression : JsExpression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
         }
 
@@ -160,12 +160,12 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsSwitchSection VisitSwitchSection(JsSwitchSection clause, TData data) {
             var values = VisitCollection(clause.Values, x => x != null ? x.Accept(this, data) : null);
-            var body  = VisitBlockStatement(clause.Body, data);
+            var body  = VisitStatement(clause.Body, data);
             return ReferenceEquals(values, clause.Values) && ReferenceEquals(body, clause.Body) ? clause : new JsSwitchSection(values, body);
         }
 
         public virtual JsCatchClause VisitCatchClause(JsCatchClause clause, TData data) {
-            var body = VisitBlockStatement(clause.Body, data);
+            var body = VisitStatement(clause.Body, data);
             return ReferenceEquals(body, clause.Body) ? clause : new JsCatchClause(clause.Identifier, body);
         }
 
@@ -197,7 +197,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement VisitDoWhileStatement(JsDoWhileStatement statement, TData data) {
             var condition = VisitExpression(statement.Condition, data);
-            var body      = VisitBlockStatement(statement.Body, data);
+            var body      = VisitStatement(statement.Body, data);
             return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsDoWhileStatement(condition, body);
         }
 
@@ -217,10 +217,10 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement VisitForStatement(JsForStatement statement, TData data) {
-            var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)       : null;
+            var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)        : null;
             var condition     = statement.ConditionExpression != null ? VisitExpression(statement.ConditionExpression, data) : null;
             var iterator      = statement.IteratorExpression  != null ? VisitExpression(statement.IteratorExpression, data)  : null;
-            var body          = VisitBlockStatement(statement.Body, data);
+            var body          = VisitStatement(statement.Body, data);
             return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
                  ? statement
                  : new JsForStatement(initStatement, condition, iterator, body);
@@ -228,8 +228,8 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement VisitIfStatement(JsIfStatement statement, TData data) {
             var test  = VisitExpression(statement.Test, data);
-            var then  = VisitBlockStatement(statement.Then, data);
-            var @else = statement.Else != null ? VisitBlockStatement(statement.Else, data) : null;
+            var then  = VisitStatement(statement.Then, data);
+            var @else = statement.Else != null ? VisitStatement(statement.Else, data) : null;
             return ReferenceEquals(test, statement.Test) && ReferenceEquals(then, statement.Then) && ReferenceEquals(@else, statement.Else) ? statement : new JsIfStatement(test, then, @else);
         }
 
@@ -250,9 +250,9 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement VisitTryStatement(JsTryStatement statement, TData data) {
-            var guarded  = VisitBlockStatement(statement.GuardedStatement, data);
+            var guarded  = VisitStatement(statement.GuardedStatement, data);
             var @catch   = statement.Catch != null ? VisitCatchClause(statement.Catch, data) : null;
-            var @finally = statement.Finally != null ? VisitBlockStatement(statement.Finally, data) : null;
+            var @finally = statement.Finally != null ? VisitStatement(statement.Finally, data) : null;
             return ReferenceEquals(guarded, statement.GuardedStatement) && ReferenceEquals(@catch, statement.Catch) && ReferenceEquals(@finally, statement.Finally) ? statement : new JsTryStatement(guarded, @catch, @finally);
         }
 
@@ -263,7 +263,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement VisitWhileStatement(JsWhileStatement statement, TData data) {
             var condition = VisitExpression(statement.Condition, data);
-            var body      = VisitBlockStatement(statement.Body, data);
+            var body      = VisitStatement(statement.Body, data);
             return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsWhileStatement(condition, body);
         }
 
@@ -279,7 +279,7 @@ namespace Saltarelle.Compiler.JSModel
     	}
 
 		public virtual JsStatement VisitFunctionStatement(JsFunctionStatement statement, TData data) {
-			var body = VisitBlockStatement(statement.Body, data);
+			var body = VisitStatement(statement.Body, data);
 			return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
 		}
 

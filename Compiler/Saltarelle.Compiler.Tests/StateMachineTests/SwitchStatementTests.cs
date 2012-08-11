@@ -31,7 +31,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	n;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -108,7 +109,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	n;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -182,7 +184,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }",
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -248,7 +251,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	lbl3: n;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -311,7 +315,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -363,7 +368,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -415,7 +421,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	g;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -471,7 +478,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -526,12 +534,13 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	n;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1, $tmp2;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
 			case 0: {
-				var $tmp2 = a + b;
+				$tmp2 = a + b;
 				if ($tmp2 === c) {
 					d;
 					$tmp1 = 2;
@@ -582,7 +591,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	i;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -649,7 +659,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	i;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -714,7 +725,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	i;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {

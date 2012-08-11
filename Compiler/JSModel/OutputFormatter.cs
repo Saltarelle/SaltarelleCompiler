@@ -137,7 +137,7 @@ namespace Saltarelle.Compiler.JSModel
                 first = false;
             }
             _cb.Append(") ");
-			VisitBlockStatement(expression.Body, false);
+			VisitStatement(expression.Body, false);
 
             return null;
         }
@@ -481,7 +481,7 @@ namespace Saltarelle.Compiler.JSModel
 
     	public object VisitDoWhileStatement(JsDoWhileStatement statement, bool addNewline) {
     		_cb.Append("do ");
-			VisitBlockStatement(statement.Body, false);
+			VisitStatement(statement.Body, false);
 			_cb.Append(" while (");
 			VisitExpression(statement.Condition, false);
 			_cb.Append(");");
@@ -506,7 +506,15 @@ namespace Saltarelle.Compiler.JSModel
     	}
 
     	public object VisitForEachInStatement(JsForEachInStatement statement, bool addNewline) {
-    		throw new NotImplementedException();
+    		_cb.Append("for (");
+			if (statement.IsLoopVariableDeclared)
+				_cb.Append("var ");
+			_cb.Append(statement.LoopVariableName)
+			   .Append(" in ");
+			VisitExpression(statement.ObjectToIterateOver, false);
+			_cb.Append(") ");
+			VisitStatement(statement.Body, addNewline);
+			return null;
     	}
 
     	public object VisitForStatement(JsForStatement statement, bool addNewline) {
@@ -524,7 +532,7 @@ namespace Saltarelle.Compiler.JSModel
 				VisitExpression(statement.IteratorExpression, false);
 			}
 			_cb.Append(") ");
-			VisitBlockStatement(statement.Body, addNewline);
+			VisitStatement(statement.Body, addNewline);
 			return null;
     	}
 
@@ -533,7 +541,7 @@ redo:
 			_cb.Append("if (");
 			VisitExpression(statement.Test, false);
 			_cb.Append(") ");
-			VisitBlockStatement(statement.Then, statement.Else != null || addNewline);
+			VisitStatement(statement.Then, statement.Else != null || addNewline);
 			if (statement.Else != null) {
 				_cb.Append("else ");
 				if (statement.Else.Statements.Count == 1 && statement.Else.Statements[0] is JsIfStatement) {
@@ -543,7 +551,7 @@ redo:
 			}
 
 			if (statement.Else != null)
-				VisitBlockStatement(statement.Else, addNewline);
+				VisitStatement(statement.Else, addNewline);
 
 			return null;
     	}
@@ -580,7 +588,7 @@ redo:
 					first = false;
 				}
 				_cb.Append(" ");
-				VisitBlockStatement(clause.Body, true);
+				VisitStatement(clause.Body, true);
 			}
 			_cb.Outdent().Append("}");
 			if (addNewline)
@@ -599,14 +607,14 @@ redo:
 
     	public object VisitTryStatement(JsTryStatement statement, bool addNewline) {
 			_cb.Append("try ");
-			VisitBlockStatement(statement.GuardedStatement, true);
+			VisitStatement(statement.GuardedStatement, true);
 			if (statement.Catch != null) {
 				_cb.AppendFormat("catch ({0}) ", statement.Catch.Identifier);
-				VisitBlockStatement(statement.Catch.Body, addNewline || statement.Finally != null);
+				VisitStatement(statement.Catch.Body, addNewline || statement.Finally != null);
 			}
 			if (statement.Finally != null) {
 				_cb.AppendFormat("finally ");
-				VisitBlockStatement(statement.Finally, addNewline);
+				VisitStatement(statement.Finally, addNewline);
 			}
 			return null;
     	}
@@ -634,7 +642,7 @@ redo:
 			_cb.Append("while (");
 			VisitExpression(statement.Condition, false);
 			_cb.Append(") ");
-			VisitBlockStatement(statement.Body, addNewline);
+			VisitStatement(statement.Body, addNewline);
 			return null;
     	}
 
@@ -656,7 +664,7 @@ redo:
 				_cb.Append(statement.ParameterNames[i]);
 			}
 			_cb.Append(") ");
-			VisitBlockStatement(statement.Body, addNewline);
+			VisitStatement(statement.Body, addNewline);
 			return null;
 		}
 

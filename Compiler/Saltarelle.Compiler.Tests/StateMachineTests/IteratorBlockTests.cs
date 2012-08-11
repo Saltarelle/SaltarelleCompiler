@@ -16,7 +16,8 @@ lbl1:
 	e;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -56,7 +57,8 @@ lbl1:
 	yield break;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -90,7 +92,8 @@ lbl1:
 	d;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -152,7 +155,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -228,7 +232,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -301,7 +306,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -369,7 +375,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -460,7 +467,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -528,7 +536,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -667,7 +676,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -865,7 +875,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -1072,7 +1083,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -1270,7 +1282,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -1390,7 +1403,8 @@ disposer = function() {
 	}
 }",
 @"{
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -1516,7 +1530,8 @@ disposer = function() {
 	}
 };
 {
-	var $tmp1 = 0;
+	var $tmp1;
+	$tmp1 = 0;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {

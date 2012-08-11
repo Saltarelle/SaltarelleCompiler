@@ -715,6 +715,15 @@ namespace Saltarelle.Compiler.Tests
 		}
 
 		[Test]
+		public void ForEachInStatementsAreCorrectlyOutput() {
+			Assert.That(OutputFormatter.Format(new JsForEachInStatement("x", JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement, true)),
+			            Is.EqualTo("for (var x in o) {\r\n}\r\n"));
+
+			Assert.That(OutputFormatter.Format(new JsForEachInStatement("x", JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement, false)),
+			            Is.EqualTo("for (x in o) {\r\n}\r\n"));
+		}
+
+		[Test]
 		public void EmptyStatementIsCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsEmptyStatement()), Is.EqualTo(";\r\n"));
 		}

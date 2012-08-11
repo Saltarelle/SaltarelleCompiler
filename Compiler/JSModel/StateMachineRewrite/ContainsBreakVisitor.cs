@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public override JsStatement VisitForStatement(JsForStatement statement, object data) {
 			bool old = _unnamedIsMatch;
 			_unnamedIsMatch = false;
-			VisitBlockStatement(statement.Body, null);
+			VisitStatement(statement.Body, null);
 			_unnamedIsMatch = old;
 			return statement;
 		}
@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, object data) {
 			bool old = _unnamedIsMatch;
 			_unnamedIsMatch = false;
-			VisitBlockStatement(statement.Body, null);
+			VisitStatement(statement.Body, null);
 			_unnamedIsMatch = old;
 			return statement;
 		}
@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public override JsStatement VisitWhileStatement(JsWhileStatement statement, object data) {
 			bool old = _unnamedIsMatch;
 			_unnamedIsMatch = false;
-			VisitBlockStatement(statement.Body, null);
+			VisitStatement(statement.Body, null);
 			_unnamedIsMatch = old;
 			return statement;
 		}
@@ -35,7 +35,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public override JsStatement VisitDoWhileStatement(JsDoWhileStatement statement, object data) {
 			bool old = _unnamedIsMatch;
 			_unnamedIsMatch = false;
-			VisitBlockStatement(statement.Body, null);
+			VisitStatement(statement.Body, null);
 			_unnamedIsMatch = old;
 			return statement;
 		}
