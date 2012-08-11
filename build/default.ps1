@@ -6,10 +6,19 @@ properties {
 	$outDir = "$(Resolve-Path "".."")\bin"
 	$configuration = "Debug"
 	$releaseTagPattern = "release-(.*)"
-	$autoVersion = $true
 }
 
-Task default -Depends Build
+Task default -Depends Build-AutoVersion
+
+Task Build-AutoVersion {
+	$script:autoVersion = $true
+	Invoke-Task Build
+}
+
+Task Build-NoAutoVersion {
+	$script:autoVersion = $false
+	Invoke-Task Build
+}
 
 Task Clean {
 	if (Test-Path $outDir) {
@@ -53,7 +62,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<title>Saltarelle C# to JavaScript compiler</title>
 		<description>Installing this package will transform the project to compile to JavaScript.</description>
 		<authors>Erik Källén</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 	</metadata>
 	<files>
 		<file src="$baseDir\Compiler\License.txt" target=""/>
@@ -75,7 +84,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<description>Runtime library for projects compiled with Saltarelle.Compiler. This is a slightly modified version of the Script# runtime library by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari, Erik Källén</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
 			<dependency id="Saltarelle.Compiler" version="0.0"/>
 		</dependencies>
@@ -88,6 +97,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\bin\Script\mscorlib.debug.js" target=""/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.js" target=""/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.css" target=""/>
+		<file src="$baseDir\history.txt" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
 	</files>
@@ -103,7 +113,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<description>Import library for Linq.js (linqjs.codeplex.com) for projects compiled with Saltarelle.Compiler. Unfortunately the official version is slightly incompatible with the Saltarelle runtime so you have to use the JS files included in this package instead of the official linq.js release.</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>neue.cc, Erik Källén</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="0.0"/>
 		</dependencies>
@@ -127,7 +137,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<description>This is a package of the script loader from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="0.0"/>
 		</dependencies>
@@ -151,7 +161,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<description>This package contains the required metadata to develop web applications with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the web library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="0.0"/>
 		</dependencies>
@@ -173,7 +183,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<description>This package contains the required metadata to use jQuery with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the jQuery import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="0.0"/>
 			<dependency id="Saltarelle.Web" version="0.0"/>
@@ -197,7 +207,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<description>This package contains the required metadata to use jQuery UI with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the jQuery import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Ivaylo Gochkov, Erik Källén</authors>
-		<projectUrl>https://github.com/erik-kallen/SaltarelleCompiler</projectUrl>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="0.0"/>
 			<dependency id="Saltarelle.Web" version="0.0"/>
@@ -231,7 +241,7 @@ Task Configure -Depends Generate-VersionInfo {
 }
 
 Function Determine-PathVersion($RefCommit, $RefVersion, $Path) {
-	if ($autoVersion) {
+	if ($script:autoVersion) {
 		$RefVersion = New-Object System.Version(($RefVersion -Replace "-.*$",""))
 		if ($RefVersion.Build -lt 0) {
 			$RefVersion = New-Object System.Version($RefVersion.Major, $RefVersion.Minor, 0)
@@ -267,7 +277,7 @@ Function Determine-Ref {
 }
 
 Task Determine-Version {
-	if (-not $autoVersion) {
+	if (-not $script:autoVersion) {
 		if ((git log -1 --decorate=full --simplify-by-decoration --pretty=oneline HEAD |
 			 Select-String '\(' |
 			 % { ($_ -replace "^[^(]*\(([^)]*)\).*$","`$1" -replace " ", "").Split(',') } |

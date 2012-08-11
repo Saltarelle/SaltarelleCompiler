@@ -1,0 +1,8 @@
+Use !! for dynamic conversions to bool.
+Fixed internal error when implementing properties/events that are [NonScriptable]
+
+1.0.1
+Fixed project URL and included history in NuGet packages.
+
+1.0.0
+Initial version

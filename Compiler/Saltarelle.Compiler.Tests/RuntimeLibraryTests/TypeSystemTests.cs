@@ -1169,5 +1169,22 @@ public class C {
 		var v2 = !ss.referenceEquals(o1, o2);
 ");
 		}
+
+		[Test]
+		public void ConvertingDynamicToBoolUsesDoubleNegation() {
+			AssertSourceCorrect(@"
+using System;
+
+public class C {
+	private void M() {
+		dynamic d = null;
+		// BEGIN
+		bool b = d;
+		// END
+	}
+}",
+@"		var b = !!d;
+");
+		}
 	}
 }
