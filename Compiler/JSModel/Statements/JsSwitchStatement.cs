@@ -9,16 +9,16 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 	[Serializable]
     public class JsSwitchStatement : JsStatement {
         public JsExpression Expression { get; private set; }
-        public ReadOnlyCollection<JsSwitchSection> Clauses { get; private set; }
+        public ReadOnlyCollection<JsSwitchSection> Sections { get; private set; }
 
-        public JsSwitchStatement(JsExpression expression, IEnumerable<JsSwitchSection> clauses) {
+        public JsSwitchStatement(JsExpression expression, IEnumerable<JsSwitchSection> sections) {
             if (expression == null) throw new ArgumentNullException("test");
-            if (clauses == null) throw new ArgumentNullException("clauses");
+            if (sections == null) throw new ArgumentNullException("sections");
 
             Expression = expression;
-            Clauses    = clauses.AsReadOnly();
+            Sections   = sections.AsReadOnly();
 
-            if (Clauses.SelectMany(c => c.Values).Count(v => v == null) > 1) throw new ArgumentException("Can only have one default clause", "clauses");
+            if (Sections.SelectMany(c => c.Values).Count(v => v == null) > 1) throw new ArgumentException("Can only have one default clause", "sections");
         }
 
         public JsSwitchStatement(JsExpression expression, params JsSwitchSection[] clauses) : this(expression, (IEnumerable<JsSwitchSection>)clauses) {

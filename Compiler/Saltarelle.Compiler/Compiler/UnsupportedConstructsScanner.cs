@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private bool _result;
 
 		public UnsupportedConstructsScanner(IErrorReporter errorReporter, bool isCorelibCompilation) {
-			this._errorReporter = errorReporter;
+			_errorReporter = errorReporter;
 			_isCorelibCompilation = isCorelibCompilation;
 		}
 
@@ -15,16 +15,6 @@ namespace Saltarelle.Compiler.Compiler {
 			_result = true;
 			syntaxTree.AcceptVisitor(this);
 			return _result;
-		}
-
-		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
-			_errorReporter.Message(7998, yieldReturnStatement.GetRegion(), "yield return");
-			_result = false;
-		}
-
-		public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
-			_errorReporter.Message(7998, yieldBreakStatement.GetRegion(), "yield break");
-			_result = false;
 		}
 
 		public override void VisitUnaryOperatorExpression(UnaryOperatorExpression unaryOperatorExpression) {
@@ -46,6 +36,5 @@ namespace Saltarelle.Compiler.Compiler {
 				base.VisitTypeDeclaration(typeDeclaration);
 			}
 		}
-
 	}
 }

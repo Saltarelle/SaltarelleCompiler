@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
         public bool IsLoopVariableDeclared { get; private set; }
         public string LoopVariableName { get; private set; }
         public JsExpression ObjectToIterateOver { get; private set; }
-        public JsStatement Body { get; private set; }
+        public JsBlockStatement Body { get; private set; }
 
         public JsForEachInStatement(string loopVariableName, JsExpression objectToIterateOver, JsStatement body, bool isLoopVariableDeclared = true) {
             if (loopVariableName == null) throw new ArgumentNullException("loopVariableName");
@@ -21,7 +21,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 
             LoopVariableName       = loopVariableName;
             ObjectToIterateOver    = objectToIterateOver;
-            Body                   = body;
+            Body                   = JsBlockStatement.MakeBlock(body);
             IsLoopVariableDeclared = isLoopVariableDeclared;
         }
 

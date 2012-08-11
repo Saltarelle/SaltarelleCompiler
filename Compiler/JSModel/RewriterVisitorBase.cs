@@ -27,15 +27,34 @@ namespace Saltarelle.Compiler.JSModel
             return list ?? orig;
         }
 
-        public virtual IList<JsExpression> Visit(IList<JsExpression> expressions, TData data) {
+        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, IList<T>> visitor) {
+            List<T> list = null;
+            for (int i = 0; i < orig.Count; i++) {
+                var before = orig[i];
+				IList<T> after = visitor(before);
+
+                if (list != null) {
+                    list.AddRange(after);
+                }
+                else if (after.Count != 1 || !ReferenceEquals(before, after[0])) {
+                    list = new List<T>();
+                    for (int j = 0; j < i; j++)
+                        list.Add(orig[j]);
+                    list.AddRange(after);
+                }
+            }
+            return list ?? orig;
+        }
+
+        public virtual IList<JsExpression> VisitExpressions(IList<JsExpression> expressions, TData data) {
             return VisitCollection(expressions, expr => VisitExpression(expr, data));
         }
 
-        public virtual IList<JsObjectLiteralProperty> Visit(IList<JsObjectLiteralProperty> values, TData data) {
-            return VisitCollection(values, v => Visit(v, data));
+        public virtual IList<JsObjectLiteralProperty> VisitObjectLiteralProperties(IList<JsObjectLiteralProperty> values, TData data) {
+            return VisitCollection(values, v => VisitObjectLiteralProperty(v, data));
         }
 
-        public virtual JsObjectLiteralProperty Visit(JsObjectLiteralProperty value, TData data) {
+        public virtual JsObjectLiteralProperty VisitObjectLiteralProperty(JsObjectLiteralProperty value, TData data) {
             var after = VisitExpression(value.Value, data);
             return ReferenceEquals(after, value.Value) ? value : new JsObjectLiteralProperty(value.Name, after);
         }
@@ -45,7 +64,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsExpression VisitArrayLiteralExpression(JsArrayLiteralExpression expression, TData data) {
-            var after  = Visit(expression.Elements, data);
+            var after  = VisitExpressions(expression.Elements, data);
             return ReferenceEquals(after, expression.Elements) ? expression : JsExpression.ArrayLiteral(after);
         }
 
@@ -56,7 +75,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsExpression VisitCommaExpression(JsCommaExpression expression, TData data) {
-            var after = Visit(expression.Expressions, data);
+            var after = VisitExpressions(expression.Expressions, data);
             return ReferenceEquals(after, expression.Expressions) ? expression : JsExpression.Comma(after);
         }
 
@@ -72,7 +91,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, TData data) {
-            var body = VisitBlockStatement(expression.Body, data);
+            var body = VisitStatement(expression.Body, data);
             return ReferenceEquals(body, expression.Body) ? expression : JsExpression.FunctionDefinition(expression.ParameterNames, body, expression.Name);
         }
 
@@ -82,12 +101,12 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsExpression VisitInvocationExpression(JsInvocationExpression expression, TData data) {
             var method    = VisitExpression(expression.Method, data);
-            var arguments = Visit(expression.Arguments, data);
+            var arguments = VisitExpressions(expression.Arguments, data);
             return ReferenceEquals(method, expression.Method) && ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Invocation(method, arguments);
         }
 
         public virtual JsExpression VisitObjectLiteralExpression(JsObjectLiteralExpression expression, TData data) {
-            var values = Visit(expression.Values, data);
+            var values = VisitObjectLiteralProperties(expression.Values, data);
             return ReferenceEquals(values, expression.Values) ? expression : JsExpression.ObjectLiteral(values);
         }
 
@@ -98,7 +117,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsExpression VisitNewExpression(JsNewExpression expression, TData data) {
             var constructor = VisitExpression(expression.Constructor, data);
-            var arguments   = Visit(expression.Arguments, data);
+            var arguments   = VisitExpressions(expression.Arguments, data);
             return ReferenceEquals(constructor, expression.Constructor) && ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.New(constructor, arguments);
         }
 
@@ -116,34 +135,41 @@ namespace Saltarelle.Compiler.JSModel
         }
 
 		public virtual JsExpression VisitLiteralExpression(JsLiteralExpression expression, TData data) {
-			var arguments = Visit(expression.Arguments, data);
+			var arguments = VisitExpressions(expression.Arguments, data);
 			return ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Literal(expression.Format, arguments);
 		}
 
-        public virtual IList<JsStatement> Visit(IList<JsStatement> statements, TData data) {
-            return VisitCollection(statements, s => VisitStatement(s, data));
+        public virtual IList<JsStatement> VisitStatements(IList<JsStatement> statements, TData data) {
+            return VisitCollection(statements, s => {
+				var after = VisitStatement(s, data);
+				var afterBlock = after as JsBlockStatement;
+				if (afterBlock != null && afterBlock.MergeWithParent)
+					return afterBlock.Statements;
+				else
+					return new[] { after };
+			});
         }
 
-        public virtual IList<JsSwitchSection> Visit(IList<JsSwitchSection> clauses, TData data) {
-            return VisitCollection(clauses, c => Visit(c, data));
+        public virtual IList<JsSwitchSection> VisitSwitchSections(IList<JsSwitchSection> clauses, TData data) {
+            return VisitCollection(clauses, c => VisitSwitchSection(c, data));
         }
 
-        public virtual IList<JsVariableDeclaration> Visit(IList<JsVariableDeclaration> declarations, TData data) {
-            return VisitCollection(declarations, d => Visit(d, data));
+        public virtual IList<JsVariableDeclaration> VisitVariableDeclarations(IList<JsVariableDeclaration> declarations, TData data) {
+            return VisitCollection(declarations, d => VisitVariableDeclaration(d, data));
         }
 
-        public virtual JsSwitchSection Visit(JsSwitchSection clause, TData data) {
+        public virtual JsSwitchSection VisitSwitchSection(JsSwitchSection clause, TData data) {
             var values = VisitCollection(clause.Values, x => x != null ? x.Accept(this, data) : null);
-            var body  = VisitBlockStatement(clause.Body, data);
+            var body  = VisitStatement(clause.Body, data);
             return ReferenceEquals(values, clause.Values) && ReferenceEquals(body, clause.Body) ? clause : new JsSwitchSection(values, body);
         }
 
-        public virtual JsCatchClause Visit(JsCatchClause clause, TData data) {
-            var body = VisitBlockStatement(clause.Body, data);
+        public virtual JsCatchClause VisitCatchClause(JsCatchClause clause, TData data) {
+            var body = VisitStatement(clause.Body, data);
             return ReferenceEquals(body, clause.Body) ? clause : new JsCatchClause(clause.Identifier, body);
         }
 
-        public virtual JsVariableDeclaration Visit(JsVariableDeclaration declaration, TData data) {
+        public virtual JsVariableDeclaration VisitVariableDeclaration(JsVariableDeclaration declaration, TData data) {
             var after = (declaration.Initializer != null ? VisitExpression(declaration.Initializer, data) : null);
             return ReferenceEquals(after, declaration.Initializer) ? declaration : new JsVariableDeclaration(declaration.Name, after);
         }
@@ -157,8 +183,8 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement VisitBlockStatement(JsBlockStatement statement, TData data) {
-            var after = Visit(statement.Statements, data);
-            return ReferenceEquals(after, statement.Statements) ? statement : new JsBlockStatement(after);
+            var after = VisitStatements(statement.Statements, data);
+            return ReferenceEquals(after, statement.Statements) ? statement : new JsBlockStatement(after, statement.MergeWithParent);
         }
 
         public virtual JsStatement VisitBreakStatement(JsBreakStatement statement, TData data) {
@@ -171,7 +197,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement VisitDoWhileStatement(JsDoWhileStatement statement, TData data) {
             var condition = VisitExpression(statement.Condition, data);
-            var body      = VisitBlockStatement(statement.Body, data);
+            var body      = VisitStatement(statement.Body, data);
             return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsDoWhileStatement(condition, body);
         }
 
@@ -191,10 +217,10 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement VisitForStatement(JsForStatement statement, TData data) {
-            var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)       : null;
+            var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)        : null;
             var condition     = statement.ConditionExpression != null ? VisitExpression(statement.ConditionExpression, data) : null;
             var iterator      = statement.IteratorExpression  != null ? VisitExpression(statement.IteratorExpression, data)  : null;
-            var body          = VisitBlockStatement(statement.Body, data);
+            var body          = VisitStatement(statement.Body, data);
             return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
                  ? statement
                  : new JsForStatement(initStatement, condition, iterator, body);
@@ -202,8 +228,8 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement VisitIfStatement(JsIfStatement statement, TData data) {
             var test  = VisitExpression(statement.Test, data);
-            var then  = VisitBlockStatement(statement.Then, data);
-            var @else = statement.Else != null ? VisitBlockStatement(statement.Else, data) : null;
+            var then  = VisitStatement(statement.Then, data);
+            var @else = statement.Else != null ? VisitStatement(statement.Else, data) : null;
             return ReferenceEquals(test, statement.Test) && ReferenceEquals(then, statement.Then) && ReferenceEquals(@else, statement.Else) ? statement : new JsIfStatement(test, then, @else);
         }
 
@@ -214,8 +240,8 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsStatement VisitSwitchStatement(JsSwitchStatement statement, TData data) {
             var test = VisitExpression(statement.Expression, data);
-            var clauses = Visit(statement.Clauses, data);
-            return ReferenceEquals(test, statement.Expression) && ReferenceEquals(clauses, statement.Clauses) ? statement : new JsSwitchStatement(test, clauses);
+            var clauses = VisitSwitchSections(statement.Sections, data);
+            return ReferenceEquals(test, statement.Expression) && ReferenceEquals(clauses, statement.Sections) ? statement : new JsSwitchStatement(test, clauses);
         }
 
         public virtual JsStatement VisitThrowStatement(JsThrowStatement statement, TData data) {
@@ -224,20 +250,20 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual JsStatement VisitTryStatement(JsTryStatement statement, TData data) {
-            var guarded  = VisitBlockStatement(statement.GuardedStatement, data);
-            var @catch   = statement.Catch != null ? Visit(statement.Catch, data) : null;
-            var @finally = statement.Finally != null ? VisitBlockStatement(statement.Finally, data) : null;
+            var guarded  = VisitStatement(statement.GuardedStatement, data);
+            var @catch   = statement.Catch != null ? VisitCatchClause(statement.Catch, data) : null;
+            var @finally = statement.Finally != null ? VisitStatement(statement.Finally, data) : null;
             return ReferenceEquals(guarded, statement.GuardedStatement) && ReferenceEquals(@catch, statement.Catch) && ReferenceEquals(@finally, statement.Finally) ? statement : new JsTryStatement(guarded, @catch, @finally);
         }
 
         public virtual JsStatement VisitVariableDeclarationStatement(JsVariableDeclarationStatement statement, TData data) {
-            var declarations = Visit(statement.Declarations, data);
+            var declarations = VisitVariableDeclarations(statement.Declarations, data);
             return ReferenceEquals(declarations, statement.Declarations) ? statement : new JsVariableDeclarationStatement(declarations);
         }
 
         public virtual JsStatement VisitWhileStatement(JsWhileStatement statement, TData data) {
             var condition = VisitExpression(statement.Condition, data);
-            var body      = VisitBlockStatement(statement.Body, data);
+            var body      = VisitStatement(statement.Body, data);
             return ReferenceEquals(condition, statement.Condition) && ReferenceEquals(body, statement.Body) ? statement : new JsWhileStatement(condition, body);
         }
 
@@ -253,7 +279,7 @@ namespace Saltarelle.Compiler.JSModel
     	}
 
 		public virtual JsStatement VisitFunctionStatement(JsFunctionStatement statement, TData data) {
-			var body = VisitBlockStatement(statement.Body, data);
+			var body = VisitStatement(statement.Body, data);
 			return ReferenceEquals(body, statement.Body) ? statement : new JsFunctionStatement(statement.Name, statement.ParameterNames, body);
 		}
 

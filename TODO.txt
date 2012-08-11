@@ -1,12 +1,7 @@
 TODO:
-v1:
 Understand why R# doesn't get the define symbols right.
 Convert between JsDictionary and Dictionary
-
-v2:
-yield
 async
-goto
 Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.

@@ -1,11 +1,15 @@
 ﻿using NUnit.Framework;
+using MC = Saltarelle.Compiler.Compiler.MethodCompiler;
 
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTests {
 	[TestFixture]
 	public class YieldStatementTests : MethodCompilerTestBase {
 		[Test]
 		public void YieldReturnWithoutAdditionalStatementsWorks() {
-			AssertCorrect(
+			try {
+				MC.DisableStateMachineRewriteTestingUseOnly = true;
+				
+				AssertCorrect(
 @"public IEnumerable<int> M() {
 	int i = 1;
 	// BEGIN
@@ -14,11 +18,18 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.StatementTes
 }",
 @"	yield return $i;
 ");
+			}
+			finally {
+				MC.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void YieldReturnWithAdditionalStatementsWorks() {
-			AssertCorrect(
+			try {
+				MC.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(
 @"int MyProperty { get; set; }
 public IEnumerable<int> M() {
 	int i = 1;
@@ -29,11 +40,18 @@ public IEnumerable<int> M() {
 @"	this.set_$MyProperty($i);
 	yield return $i;
 ");
+			}
+			finally {
+				MC.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void YieldBreakWorks() {
-			AssertCorrect(
+			try {
+				MC.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(
 @"public IEnumerable<int> M() {
 	// BEGIN
 	yield break;
@@ -41,6 +59,10 @@ public IEnumerable<int> M() {
 }",
 @"	yield break;
 ");
+			}
+			finally {
+				MC.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 	}
 }

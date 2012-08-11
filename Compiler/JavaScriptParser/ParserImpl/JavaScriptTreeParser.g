@@ -95,6 +95,7 @@ public statement returns [JsStatement result]
 	  | s=throwStatement
 	  | s=tryStatement
 	  | s=gotoStatement
+	  | s=yieldStatement
 	  ) { $result = s; };
 
 number returns [JsExpression result]
@@ -294,3 +295,6 @@ switchSection returns [JsSwitchSection result]
 
 gotoStatement returns [JsStatement result]
 	: ^('goto' l=Identifier) { $result = new JsGotoStatement(l.Text); };
+
+yieldStatement returns [JsStatement result]
+	: ^('yield' a=expression?) { $result = new JsYieldStatement(a); };
