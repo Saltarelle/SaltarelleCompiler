@@ -134,7 +134,61 @@ in finally
 
 		[Test]
 		public void ExceptionInIteratorBodyExecutesFinallyBlocks() {
-			Assert.Fail("TODO");
+			var result = ExecuteCSharp(@"
+using System;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+
+public class C {
+	private StringBuilder _sb;
+
+	public C(StringBuilder sb) {
+		_sb = sb;
+	}
+
+	IEnumerator<int> GetEnumerator(int n) {
+		try {
+			_sb.AppendLine(""yielding 1"");
+			yield return 1;
+			_sb.AppendLine(""yielding 2"");
+			yield return 2;
+			_sb.AppendLine(""throwing"");
+			throw new Exception(""test"");
+			_sb.AppendLine(""yielding 3"");
+			yield return 3;
+		}
+		finally {
+			_sb.AppendLine(""in finally"");
+		}
+	}
+
+	public static string M() {
+		var sb = new StringBuilder();
+		var enm = new C(sb).GetEnumerator(5);
+
+		try {
+			for (;;) {
+				enm.MoveNext();
+				sb.AppendLine(""got "" + enm.Current);
+			}
+		}
+		catch (Exception) {
+			sb.AppendLine(""caught exception"");
+		}
+
+		return sb.ToString();
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(
+@"yielding 1
+got 1
+yielding 2
+got 2
+throwing
+in finally
+caught exception
+"));
 		}
 	}
 }

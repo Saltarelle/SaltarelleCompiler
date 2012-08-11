@@ -25,8 +25,7 @@ public void M() {
 	goto lbl1;
 }",
 @"function() {
-	var $tmp1, $a, $b, $c;
-	$tmp1 = 0;
+	var $tmp1 = 0, $a, $b, $c;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -78,8 +77,7 @@ public C() {
 	goto lbl1;
 }",
 @"function() {
-	var $tmp1, $a, $b, $c;
-	$tmp1 = 0;
+	var $tmp1 = 0, $a, $b, $c;
 	$loop1:
 	for (;;) {
 		switch ($tmp1) {
@@ -125,12 +123,11 @@ public System.Collections.Generic.IEnumerator M() {
 	}
 }",
 @"function() {
-	var $result, $tmp1;
+	var $result, $tmp1 = 0;
 	$finally1 = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({Object}, function() {
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
@@ -182,12 +179,11 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 	}
 }",
 @"function($x) {
-	var $result, $tmp1;
+	var $result, $tmp1 = 0;
 	$finally1 = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({Int32}, function() {
-		$tmp1 = 0;
 		$loop1:
 		for (;;) {
 			switch ($tmp1) {
