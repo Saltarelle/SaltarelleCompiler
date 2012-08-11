@@ -53,6 +53,24 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private class IsIteratorBlockVisitor : RewriterVisitorBase<object> {
+			private bool _result;
+
+			public override JsStatement VisitYieldStatement(JsYieldStatement statement, object data) {
+				_result = true;
+				return statement;
+			}
+
+			private IsIteratorBlockVisitor() {
+			}
+
+			public static bool Analyze(JsStatement statement) {
+				var obj = new IsIteratorBlockVisitor();
+				obj.VisitStatement(statement, null);
+				return obj._result;
+			}
+		}
+
         private readonly INamingConventionResolver _namingConvention;
         private readonly IErrorReporter _errorReporter;
         private readonly ICompilation _compilation;
@@ -64,6 +82,7 @@ namespace Saltarelle.Compiler.Compiler {
         internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 		private ISet<string> _usedNames;
+		private string _thisAlias;
 
         public MethodCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
             _namingConvention = namingConvention;
@@ -75,6 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, string thisAlias) {
+			_thisAlias = thisAlias;
             _usedNames = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namingConvention.GetTypeParameterName(p))) : new HashSet<string>();
 			if (entity != null) {
 				var x = new VariableGatherer(_resolver, _namingConvention, _errorReporter).GatherVariables(entity, method, _usedNames);
@@ -89,18 +109,38 @@ namespace Saltarelle.Compiler.Compiler {
 
 		internal static bool DisableStateMachineRewriteTestingUseOnly;
 
-		private JsFunctionDefinitionExpression PerformStateMachineRewrite(JsFunctionDefinitionExpression function) {
+		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, bool isIEnumerable) {
+			throw new NotImplementedException();
+		}
+
+		private JsFunctionDefinitionExpression PerformStateMachineRewrite(IMethod method, JsFunctionDefinitionExpression function) {
 			if (DisableStateMachineRewriteTestingUseOnly)
 				return function;
 
 			int loopLabelIndex = 0;
-			var stateMachine = StateMachineRewriter.Rewrite(function.Body, ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process, () => _namingConvention.GetVariableName(null, _usedNames), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)));
-			return ReferenceEquals(stateMachine, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, stateMachine, function.Name);
+			JsBlockStatement body;
+			if (IsIteratorBlockVisitor.Analyze(function.Body)) {
+				int finallyBlockIndex = 0;
+				body = StateMachineRewriter.RewriteIteratorBlock(function.Body,
+				                                                 ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+				                                                 () => _namingConvention.GetVariableName(null, _usedNames),
+				                                                 () => "$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture),
+				                                                 () => "$finally" + (++finallyBlockIndex).ToString(CultureInfo.InvariantCulture),
+				                                                 x => JsExpression.Assign(JsExpression.Identifier("$result"), x),
+				                                                 sm => MakeIteratorBody(sm, method.ReturnType.IsKnownType(KnownTypeCode.IEnumerable) || method.ReturnType.IsKnownType(KnownTypeCode.IEnumerableOfT)));
+			}
+			else {
+				body = StateMachineRewriter.Rewrite(function.Body,
+				                                    ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+				                                    () => _namingConvention.GetVariableName(null, _usedNames),
+				                                    () => "$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture));
+			}
+			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
         public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
 			CreateCompilationContext(entity, method, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namingConvention.ThisAlias : null));
-            return PerformStateMachineRewrite(_statementCompiler.CompileMethod(method.Parameters, variables, body));
+            return PerformStateMachineRewrite(method, _statementCompiler.CompileMethod(method.Parameters, variables, body));
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
@@ -153,7 +193,7 @@ namespace Saltarelle.Compiler.Compiler {
 					body = StaticMethodConstructorReturnPatcher.Process(body, _namingConvention.ThisAlias).AsReadOnly();
 				}
 
-				return PerformStateMachineRewrite(JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
+				return PerformStateMachineRewrite(constructor, JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex, filename, location);

@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			                                                   new JsTryStatement(
 			                                                       GenerateBody(stateVariableName, n.Children),
 			                                                       null,
-			                                                       new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier(n.HandlerName)))))));
+			                                                       new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier(n.HandlerName), "call"), JsExpression.This))))));
 		}
 
 		public static JsBlockStatement GenerateDisposer(string stateVariableName, List<Tuple<int, List<string>>> stateFinallyHandlers) {

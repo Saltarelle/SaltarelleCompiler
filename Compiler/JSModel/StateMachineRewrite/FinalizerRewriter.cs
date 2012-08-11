@@ -46,7 +46,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				var current = remaining.Peek();
 				remaining = remaining.Pop();
 				result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1))));
-				result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier(current.Item2))));
+				result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier(current.Item2), "call"), JsExpression.This)));
 			}
 
 			if (targetState.StateValue == -1) {

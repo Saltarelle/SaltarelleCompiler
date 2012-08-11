@@ -9,19 +9,11 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		private readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		private readonly Func<string> _allocateTempVariable;
 		private readonly Func<string> _allocateLoopLabel;
-		private readonly Func<string> _allocateFinallyHandler;
-		private readonly Func<JsExpression, JsExpression> _makeSetCurrent;
-		private readonly Func<IteratorStateMachine, JsBlockStatement> _makeIteratorBody;
 
-		private readonly List<Tuple<string, JsFunctionDefinitionExpression>> _finallyHandlers = new List<Tuple<string, JsFunctionDefinitionExpression>>();
-
-		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, Func<IteratorStateMachine, JsBlockStatement> makeIteratorBody) {
+		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
 			_allocateLoopLabel = allocateLoopLabel;
-			_allocateFinallyHandler = allocateFinallyHandler;
-			_makeSetCurrent = makeSetCurrent;
-			_makeIteratorBody = makeIteratorBody;
 		}
 
 		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
@@ -48,14 +40,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		}
 
 		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, null, null, null);
+			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel);
 			return obj.DoRewrite((JsBlockStatement)obj.VisitStatement(block, null));
 		}
 
 		public static JsBlockStatement RewriteIteratorBlock(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, Func<IteratorStateMachine, JsBlockStatement> makeIteratorBody) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel, allocateFinallyHandler, makeSetCurrent, makeIteratorBody);
+			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel);
 			var singleRewriter = new SingleStateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateLoopLabel);
-			var sm = singleRewriter.ProcessIteratorBlock(block, allocateFinallyHandler, makeSetCurrent);
+			var sm = singleRewriter.ProcessIteratorBlock((JsBlockStatement)obj.VisitStatement(block, null), allocateFinallyHandler, makeSetCurrent);
 			return makeIteratorBody(sm);
 		}
 	}
