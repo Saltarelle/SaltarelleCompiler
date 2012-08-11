@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, IType, IType, JsExpression> CloneDelegate { get; set; }
 		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
-		public Func<IType, JsFunctionDefinitionExpression, JsFunctionDefinitionExpression, JsFunctionDefinitionExpression, JsExpression> MakeEnumerator { get; set; }
+		public Func<IType, JsExpression, JsExpression, JsExpression, JsExpression> MakeEnumerator { get; set; }
 		
 		JsExpression IRuntimeLibrary.GetScriptType(IType type, TypeContext context) {
 			return GetScriptType(type, context);
@@ -174,7 +174,7 @@ namespace Saltarelle.Compiler.Tests {
 			return BindBaseCall(baseType, methodName, typeArguments, @this);
 		}
 
-		JsExpression IRuntimeLibrary.MakeEnumerator(IType yieldType, JsFunctionDefinitionExpression moveNext, JsFunctionDefinitionExpression getCurrent, JsFunctionDefinitionExpression dispose) {
+		JsExpression IRuntimeLibrary.MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
 			return MakeEnumerator(yieldType, moveNext, getCurrent, dispose);
 		}
 	}

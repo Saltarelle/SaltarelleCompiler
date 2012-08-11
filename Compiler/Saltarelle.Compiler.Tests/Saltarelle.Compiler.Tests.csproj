@@ -219,6 +219,7 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
+    <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\SwitchStatementTests.cs" />

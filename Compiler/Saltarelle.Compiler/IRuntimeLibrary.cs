@@ -172,6 +172,6 @@ namespace Saltarelle.Compiler {
 		/// <param name="moveNext">Function to invoke when <see cref="IEnumerator.MoveNext"/> is invoked on the enumerator.</param>
 		/// <param name="getCurrent">Function that returns the current value of the enumerator.</param>
 		/// <param name="dispose">Function to invoke when <see cref="IDisposable.Dispose"/> is invoked on the enumerator, or null if no dispose is required.</param>
-		JsExpression MakeEnumerator(IType yieldType, JsFunctionDefinitionExpression moveNext, JsFunctionDefinitionExpression getCurrent, JsFunctionDefinitionExpression dispose);
+		JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose);
 	}
 }

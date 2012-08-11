@@ -265,8 +265,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), @this, method);
 		}
 
-		public JsExpression MakeEnumerator(IType yieldType, JsFunctionDefinitionExpression moveNext, JsFunctionDefinitionExpression getCurrent, JsFunctionDefinitionExpression dispose) {
-			throw new NotImplementedException();
+		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
+			return JsExpression.New(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Collections.Generic.IteratorBlockEnumerator`1")), moveNext, getCurrent, dispose ?? (JsExpression)JsExpression.Null, JsExpression.This);
 		}
 	}
 }

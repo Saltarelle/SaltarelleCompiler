@@ -16,30 +16,6 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 		}
 
 		[Test]
-		public void YieldReturnIsReportedAsUnsupported() {
-			AssertCorrect(@"
-using System.Collections.Generic;
-class C {
-	public IEnumerable<object> M() {
-		yield return null;
-	}
-}
-", "yield return");
-		}
-
-		[Test]
-		public void YieldBreakIsReportedAsUnsupported() {
-			AssertCorrect(@"
-using System.Collections.Generic;
-class C {
-	public IEnumerable<object> M() {
-		yield break;
-	}
-}
-", "yield break");
-		}
-
-		[Test]
 		public void AwaitIsReportedAsUnsupported() {
 			AssertCorrect(@"
 using System.Threading;
