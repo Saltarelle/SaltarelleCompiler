@@ -40,6 +40,10 @@ lbl2:
 			case 2: {
 				e;
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -119,6 +123,10 @@ lbl2:
 															}
 															case 4: {
 																d;
+																$tmp1 = -1;
+																break $loop4;
+															}
+															default: {
 																break $loop4;
 															}
 														}
@@ -133,6 +141,10 @@ lbl2:
 											}
 											case 5: {
 												h;
+												$tmp1 = -1;
+												break $loop3;
+											}
+											default: {
 												break $loop3;
 											}
 										}
@@ -147,6 +159,10 @@ lbl2:
 							}
 							case 6: {
 								l;
+								$tmp1 = -1;
+								break $loop2;
+							}
+							default: {
 								break $loop2;
 							}
 						}
@@ -164,6 +180,10 @@ lbl2:
 							}
 							case 8: {
 								o;
+								$tmp1 = -1;
+								break $loop5;
+							}
+							default: {
 								break $loop5;
 							}
 						}
@@ -181,11 +201,19 @@ lbl2:
 							}
 							case 10: {
 								q;
+								$tmp1 = -1;
+								break $loop6;
+							}
+							default: {
 								break $loop6;
 							}
 						}
 					}
 				}
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -250,18 +278,30 @@ lbl2:
 											}
 											case 1: {
 												h;
+												$tmp1 = -1;
+												break $loop1;
+											}
+											default: {
 												break $loop1;
 											}
 										}
 									}
 								};
 								i;
+								$tmp2 = -1;
+								break $loop2;
+							}
+							default: {
 								break $loop2;
 							}
 						}
 					}
 				};
 				j;
+				$tmp3 = -1;
+				break $loop3;
+			}
+			default: {
 				break $loop3;
 			}
 		}
@@ -319,6 +359,9 @@ lbl2:
 												$tmp1 = 4;
 												continue $loop2;
 											}
+											default: {
+												break $loop3;
+											}
 										}
 									}
 								}
@@ -333,6 +376,10 @@ lbl2:
 							}
 							case 4: {
 								f;
+								$tmp1 = -1;
+								break $loop2;
+							}
+							default: {
 								break $loop2;
 							}
 						}
@@ -340,6 +387,10 @@ lbl2:
 				}
 				catch (g) {
 				}
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -390,6 +441,9 @@ lbl1:
 			case 1: {
 				$tmp1 = 1;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}

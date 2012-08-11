@@ -71,6 +71,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				n;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -148,6 +152,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				n;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -194,10 +202,12 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 				}
 				else if (a === f) {
 					g;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				else if (a === h || a === i) {
 					j;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				else if (a === k) {
@@ -205,14 +215,20 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 					$tmp1 = 2;
 					continue $loop1;
 				}
+				$tmp1 = -1;
 				break $loop1;
 			}
 			case 1: {
 				e;
+				$tmp1 = -1;
 				break $loop1;
 			}
 			case 2: {
 				m;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -288,6 +304,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				n;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -335,12 +355,16 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				f;
+				$tmp1 = -1;
 				break $loop1;
 			}
 			case 3: {
 				e;
 				$tmp1 = 1;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}
@@ -387,12 +411,16 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				f;
+				$tmp1 = -1;
 				break $loop1;
 			}
 			case 3: {
 				e;
 				$tmp1 = 1;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}
@@ -444,6 +472,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				g;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -500,6 +532,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -552,6 +588,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				n;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -617,6 +657,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				i;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -684,6 +728,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				i;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -749,6 +797,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				i;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}

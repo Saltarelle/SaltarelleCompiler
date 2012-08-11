@@ -173,5 +173,12 @@ namespace Saltarelle.Compiler {
 		/// <param name="getCurrent">Function that returns the current value of the enumerator.</param>
 		/// <param name="dispose">Function to invoke when <see cref="IDisposable.Dispose"/> is invoked on the enumerator, or null if no dispose is required.</param>
 		JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose);
+
+		/// <summary>
+		/// Generates an object that implements the <see cref="IEnumerable{T}"/> interface using the supplied methods.
+		/// </summary>
+		/// <param name="yieldType">The yield type of the enumerable. <see cref="object"/> if the enumerable is non-generic.</param>
+		/// <param name="getEnumerator">Function to invoke when <see cref="IEnumerable.GetEnumerator"/> is invoked on the enumerator.</param>
+		JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator);
 	}
 }

@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
 		private enum OutputType { None, GeneratedScript, Html };
 
-		private OutputType Output = OutputType.None;
+		private OutputType Output = OutputType.Html;
 
 		private HtmlPage GeneratePage(string script, bool includeLinq) {
 			WebClient client = new WebClient();

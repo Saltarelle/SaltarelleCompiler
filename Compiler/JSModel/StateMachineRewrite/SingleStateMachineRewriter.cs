@@ -150,7 +150,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				                       new JsSwitchStatement(JsExpression.Identifier(_stateVariableName),
 				                           sections.Select(b => new JsSwitchSection(
 				                                                    new[] { JsExpression.Number(b.State.StateValue) },
-				                                                    new JsBlockStatement(b.Statements))))))
+				                                                    new JsBlockStatement(b.Statements)))
+				                                   .Concat(new[] { new JsSwitchSection(new JsExpression[] { null }, new JsBreakStatement(_currentLoopLabel)) }))))
 				           };
 				return body;
 			}

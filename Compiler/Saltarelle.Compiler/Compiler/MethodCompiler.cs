@@ -120,6 +120,10 @@ namespace Saltarelle.Compiler.Compiler {
 			                                                              JsExpression.FunctionDefinition(new string[0], sm.MainBlock),
 			                                                              JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Identifier("$result"))),
 			                                                              sm.Disposer != null ? JsExpression.FunctionDefinition(new string[0], sm.Disposer) : null)));
+			if (isIEnumerable) {
+				body = new List<JsStatement> { new JsReturnStatement(_runtimeLibrary.MakeEnumerable(yieldType, JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };
+			}
+
 			return new JsBlockStatement(body);
 		}
 

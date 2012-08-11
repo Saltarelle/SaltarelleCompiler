@@ -38,6 +38,10 @@ lbl1:
 				case 2: {
 					$tmp1 = -1;
 					e;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -73,6 +77,10 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					c;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -109,8 +117,13 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					c;
+					$tmp1 = -1;
 					break $loop1;
 					d;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -187,6 +200,10 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					e;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -265,6 +282,10 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					e;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -334,6 +355,10 @@ lbl1:
 				case 2: {
 					$tmp1 = -1;
 					$finally1.call(this);
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -410,6 +435,10 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					e;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -455,6 +484,9 @@ lbl1:
 					$tmp1 = 2;
 					continue $loop2;
 				}
+				default: {
+					break $loop2;
+				}
 			}
 		}
 	};
@@ -496,6 +528,10 @@ lbl1:
 				case 3: {
 					$tmp1 = -1;
 					d;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -562,6 +598,7 @@ lbl1:
 					b;
 					$tmp1 = -1;
 					$finally1.call(this);
+					$tmp1 = -1;
 					break $loop1;
 					c;
 					$tmp1 = 3;
@@ -576,6 +613,10 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					e;
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -717,6 +758,7 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					o;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				case 8: {
@@ -730,6 +772,7 @@ lbl1:
 					$finally2.call(this);
 					$tmp1 = -1;
 					$finally1.call(this);
+					$tmp1 = -1;
 					break $loop1;
 					g;
 					$tmp1 = 11;
@@ -772,6 +815,9 @@ lbl1:
 					j;
 					$tmp1 = 7;
 					continue $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
 		}
@@ -917,6 +963,7 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					o;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				case 8: {
@@ -931,6 +978,7 @@ lbl1:
 						$finally2.call(this);
 						$tmp1 = -1;
 						$finally1.call(this);
+						$tmp1 = -1;
 						break $loop1;
 						g1;
 					}
@@ -942,6 +990,7 @@ lbl1:
 						$finally2.call(this);
 						$tmp1 = -1;
 						$finally1.call(this);
+						$tmp1 = -1;
 						break $loop1;
 						g2;
 					}
@@ -985,6 +1034,9 @@ lbl1:
 					j;
 					$tmp1 = 7;
 					continue $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
 		}
@@ -1126,6 +1178,7 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					o;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				case 8: {
@@ -1180,6 +1233,9 @@ lbl1:
 					j;
 					$tmp1 = 7;
 					continue $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
 		}
@@ -1326,6 +1382,7 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					o;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				case 8: {
@@ -1393,6 +1450,9 @@ lbl1:
 					$tmp1 = 7;
 					continue $loop1;
 				}
+				default: {
+					break $loop1;
+				}
 			}
 		}
 		return false;
@@ -1426,12 +1486,18 @@ lbl1:
 					a;
 					try {
 						b;
+						$tmp1 = -1;
 						break $loop1;
 					}
 					catch (e) {
 						c;
+						$tmp1 = -1;
 						break $loop1;
 					}
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -1576,6 +1642,7 @@ lbl1:
 				case 1: {
 					$tmp1 = -1;
 					o;
+					$tmp1 = -1;
 					break $loop1;
 				}
 				case 8: {
@@ -1631,6 +1698,9 @@ lbl1:
 					$tmp1 = 7;
 					continue $loop1;
 				}
+				default: {
+					break $loop1;
+				}
 			}
 		}
 		return false;
@@ -1641,7 +1711,8 @@ lbl1:
 
 		[Test]
 		public void IteratorWithOnlyYieldBreakWorks() {
-			AssertCorrect(@"{
+			AssertCorrect(
+@"{
 	yield break;
 }",
 @"{
@@ -1651,6 +1722,42 @@ lbl1:
 		for (;;) {
 			switch ($tmp1) {
 				case 0: {
+					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", isIteratorBlock: true);
+
+		}
+
+		[Test]
+		public void IteratorWithYieldReturnAsLastStatement() {
+			AssertCorrect(
+@"{
+	a;
+	yield return 1;
+}",
+@"{
+	var $tmp1 = 0;
+	{
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = -1;
+					a;
+					setCurrent(1);
+					$tmp1 = -1;
+					return true;
+				}
+				default: {
 					break $loop1;
 				}
 			}

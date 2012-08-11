@@ -140,6 +140,7 @@ public System.Collections.Generic.IEnumerator M() {
 				case 2: {
 					$tmp1 = -1;
 					$finally1.call(this);
+					$tmp1 = -1;
 					break $loop1;
 				}
 			}
@@ -196,6 +197,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 				case 2: {
 					$tmp1 = -1;
 					$finally1.call(this);
+					$tmp1 = -1;
 					break $loop1;
 				}
 			}

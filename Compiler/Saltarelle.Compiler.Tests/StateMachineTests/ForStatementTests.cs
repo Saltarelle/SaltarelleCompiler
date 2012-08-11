@@ -46,6 +46,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -98,6 +102,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -128,6 +136,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				if (!b) {
+					$tmp1 = -1;
 					break $loop1;
 				}
 				d;
@@ -143,6 +152,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 				c;
 				$tmp1 = 1;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}
@@ -192,6 +204,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -243,6 +259,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -288,6 +308,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 2: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -340,6 +364,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -383,6 +411,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 				$tmp1 = 1;
 				continue $loop1;
 			}
+			default: {
+				break $loop1;
+			}
 		}
 	}
 }
@@ -411,6 +442,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				if (!b) {
+					$tmp1 = -1;
 					break $loop1;
 				}
 				d;
@@ -421,6 +453,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 				e;
 				$tmp1 = 1;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}
@@ -452,6 +487,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 				e;
 				$tmp1 = 0;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}
@@ -502,6 +540,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -548,6 +590,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 2: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -595,6 +641,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -632,6 +682,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -683,6 +737,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				f;
+				$tmp1 = -1;
+				break $loop1;
+			}
+			default: {
 				break $loop1;
 			}
 		}
@@ -739,6 +797,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 3: {
 				i;
+				$tmp1 = -1;
 				break $loop1;
 			}
 			case 6: {
@@ -750,6 +809,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 				f;
 				$tmp1 = 4;
 				continue $loop1;
+			}
+			default: {
+				break $loop1;
 			}
 		}
 	}

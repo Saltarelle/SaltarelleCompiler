@@ -60,6 +60,7 @@ namespace Saltarelle.Compiler.Tests {
 			CallBase                 = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.Instantiation), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
 			BindBaseCall             = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.Instantiation), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
 			MakeEnumerator           = (yt, mn, gc, d) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.Instantiation), mn, gc, d ?? (JsExpression)JsExpression.Null });
+			MakeEnumerable           = (yt, ge)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.Instantiation), ge });
 		}
 
 		public Func<IType, TypeContext, JsExpression> GetScriptType { get; set; }
@@ -85,6 +86,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
 		public Func<IType, JsExpression, JsExpression, JsExpression, JsExpression> MakeEnumerator { get; set; }
+		public Func<IType, JsExpression, JsExpression> MakeEnumerable { get; set; }
 		
 		JsExpression IRuntimeLibrary.GetScriptType(IType type, TypeContext context) {
 			return GetScriptType(type, context);
@@ -176,6 +178,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
 			return MakeEnumerator(yieldType, moveNext, getCurrent, dispose);
+		}
+
+		JsExpression IRuntimeLibrary.MakeEnumerable(IType yieldType, JsExpression getEnumerator) {
+			return MakeEnumerable(yieldType, getEnumerator);
 		}
 	}
 }

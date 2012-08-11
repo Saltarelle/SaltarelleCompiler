@@ -49,13 +49,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier(current.Item2), "call"), JsExpression.This)));
 			}
 
-			if (targetState.StateValue == -1) {
-				result.Add(new JsBreakStatement(targetState.LoopLabelName));
-			}
-			else {
-				result.Add(MakeSetNextStateStatement(targetState.StateValue));
-				result.Add(new JsContinueStatement(targetState.LoopLabelName));
-			}
+			result.Add(MakeSetNextStateStatement(targetState.StateValue));
+			result.Add(targetState.StateValue == -1 ? (JsStatement)new JsBreakStatement(targetState.LoopLabelName) : new JsContinueStatement(targetState.LoopLabelName));
 			return new JsBlockStatement(result, mergeWithParent: true);
 		}
 
