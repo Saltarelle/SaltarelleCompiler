@@ -112,5 +112,119 @@ public C() {
 	}
 }", methodName: ".ctor");
 		}
+
+		[Test]
+		public void IteratorBlockReturningIEnumeratorWorks() {
+			AssertCorrect(@"
+public System.Collections.Generic.IEnumerator M() {
+	try {
+		yield return 1;
+	}
+	finally {
+		var a = 1;
+	}
+}",
+@"function() {
+	var $result, $tmp1;
+	$finally1 = function() {
+		var $a = 1;
+	};
+	return $MakeEnumerator({Object}, function() {
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = 1;
+					$result = 1;
+					$tmp1 = 2;
+					return true;
+				}
+				case 2: {
+					$tmp1 = -1;
+					$finally1.call(this);
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}, function() {
+		return $result;
+	}, function() {
+		try {
+			switch ($tmp1) {
+				case 1:
+				case 2: {
+					try {
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	});
+}");
+		}
+
+		[Test]
+		public void IteratorBlockReturningIEnumeratorOfTWorks() {
+			AssertCorrect(@"
+public System.Collections.Generic.IEnumerator<int> M(int x) {
+	try {
+		yield return 1;
+	}
+	finally {
+		var a = 1;
+	}
+}",
+@"function($x) {
+	var $result, $tmp1;
+	$finally1 = function() {
+		var $a = 1;
+	};
+	return $MakeEnumerator({Int32}, function() {
+		$tmp1 = 0;
+		$loop1:
+		for (;;) {
+			switch ($tmp1) {
+				case 0: {
+					$tmp1 = 1;
+					$result = 1;
+					$tmp1 = 2;
+					return true;
+				}
+				case 2: {
+					$tmp1 = -1;
+					$finally1.call(this);
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}, function() {
+		return $result;
+	}, function() {
+		try {
+			switch ($tmp1) {
+				case 1:
+				case 2: {
+					try {
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$tmp1 = -1;
+		}
+	});
+}");
+		}
 	}
 }
