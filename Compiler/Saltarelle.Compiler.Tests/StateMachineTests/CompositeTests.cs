@@ -227,8 +227,7 @@ lbl2:
 			case 1: {
 				b;
 				c = function() {
-					var $tmp2, f;
-					$tmp2 = 0;
+					var $tmp2 = 0, f;
 					$loop2:
 					for (;;) {
 						switch ($tmp2) {

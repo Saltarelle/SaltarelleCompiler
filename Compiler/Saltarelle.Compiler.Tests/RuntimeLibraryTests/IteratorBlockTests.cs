@@ -85,7 +85,51 @@ in finally
 
 		[Test]
 		public void PrematureDisposalOfIteratorExecutesFinallyBlocks() {
-			Assert.Fail("TODO");
+			var result = ExecuteCSharp(@"
+using System;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+
+public class C {
+	private StringBuilder _sb;
+
+	public C(StringBuilder sb) {
+		_sb = sb;
+	}
+
+	IEnumerator<int> GetEnumerator(int n) {
+		try {
+			for (int i = 0; i < n; i++) {
+				_sb.AppendLine(""yielding "" + i);
+				yield return i;
+			}
+		}
+		finally {
+			_sb.AppendLine(""in finally"");
+		}
+	}
+
+	public static string M() {
+		var sb = new StringBuilder();
+		var enm = new C(sb).GetEnumerator(5);
+
+		for (int i = 0; i < 2; i++) {
+			enm.MoveNext();
+			sb.AppendLine(""got "" + enm.Current);
+		}
+		enm.Dispose();
+
+		return sb.ToString();
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(
+@"yielding 0
+got 0
+yielding 1
+got 1
+in finally
+"));
 		}
 
 		[Test]
