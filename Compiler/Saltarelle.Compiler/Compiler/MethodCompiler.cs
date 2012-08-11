@@ -109,7 +109,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		internal static bool DisableStateMachineRewriteTestingUseOnly;
 
-		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, IType methodReturnType) {
+		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, IType methodReturnType, IList<string> methodParameterNames) {
 			IType yieldType     = methodReturnType is ParameterizedType ? ((ParameterizedType)methodReturnType).TypeArguments[0] : _compilation.FindType(KnownTypeCode.Object);
 			bool  isIEnumerable = methodReturnType.IsKnownType(KnownTypeCode.IEnumerable) || methodReturnType.IsKnownType(KnownTypeCode.IEnumerableOfT);
 
@@ -121,7 +121,21 @@ namespace Saltarelle.Compiler.Compiler {
 			                                                              JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Identifier("$result"))),
 			                                                              sm.Disposer != null ? JsExpression.FunctionDefinition(new string[0], sm.Disposer) : null)));
 			if (isIEnumerable) {
-				body = new List<JsStatement> { new JsReturnStatement(_runtimeLibrary.MakeEnumerable(yieldType, JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };
+				body = new List<JsStatement> {
+				    new JsReturnStatement(_runtimeLibrary.MakeEnumerable(
+				        yieldType,
+				        JsExpression.FunctionDefinition(new string[0],
+				            new JsReturnStatement(
+				                JsExpression.Invocation(
+				                    JsExpression.MemberAccess(
+				                        JsExpression.FunctionDefinition(methodParameterNames, new JsBlockStatement(body)),
+				                        "call"),
+				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(p => JsExpression.Identifier(p)))
+				                )
+				            )
+				        )
+				    ))
+				};
 			}
 
 			return new JsBlockStatement(body);
@@ -141,7 +155,7 @@ namespace Saltarelle.Compiler.Compiler {
 				                                                 () => "$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture),
 				                                                 () => "$finally" + (++finallyBlockIndex).ToString(CultureInfo.InvariantCulture),
 				                                                 x => JsExpression.Assign(JsExpression.Identifier("$result"), x),
-				                                                 sm => MakeIteratorBody(sm, method.ReturnType));
+				                                                 sm => MakeIteratorBody(sm, method.ReturnType, function.ParameterNames));
 			}
 			else {
 				body = StateMachineRewriter.Rewrite(function.Body,

@@ -54,6 +54,9 @@ public void M() {
 				$tmp1 = 1;
 				continue $loop1;
 			}
+			default: {
+				break $loop1;
+			}
 		}
 	}
 }");
@@ -106,6 +109,9 @@ public C() {
 				$tmp1 = 1;
 				continue $loop1;
 			}
+			default: {
+				break $loop1;
+			}
 		}
 	}
 }", methodName: ".ctor");
@@ -114,7 +120,7 @@ public C() {
 		[Test]
 		public void IteratorBlockReturningIEnumeratorWorks() {
 			AssertCorrect(@"
-public System.Collections.Generic.IEnumerator M() {
+public System.Collections.IEnumerator M() {
 	try {
 		yield return 1;
 	}
@@ -141,6 +147,9 @@ public System.Collections.Generic.IEnumerator M() {
 					$tmp1 = -1;
 					$finally1.call(this);
 					$tmp1 = -1;
+					break $loop1;
+				}
+				default: {
 					break $loop1;
 				}
 			}
@@ -200,6 +209,9 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 					$tmp1 = -1;
 					break $loop1;
 				}
+				default: {
+					break $loop1;
+				}
 			}
 		}
 		return false;
@@ -221,6 +233,134 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 		finally {
 			$tmp1 = -1;
 		}
+	});
+}");
+		}
+
+		[Test]
+		public void IteratorBlockReturningIEnumerableWorks() {
+			AssertCorrect(@"
+public System.Collections.IEnumerable M() {
+	try {
+		yield return 1;
+	}
+	finally {
+		var a = 1;
+	}
+}",
+@"function() {
+	return $MakeEnumerable({Object}, function() {
+		return (function() {
+			var $result, $tmp1 = 0;
+			$finally1 = function() {
+				var $a = 1;
+			};
+			return $MakeEnumerator({Object}, function() {
+				$loop1:
+				for (;;) {
+					switch ($tmp1) {
+						case 0: {
+							$tmp1 = 1;
+							$result = 1;
+							$tmp1 = 2;
+							return true;
+						}
+						case 2: {
+							$tmp1 = -1;
+							$finally1.call(this);
+							$tmp1 = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+				return false;
+			}, function() {
+				return $result;
+			}, function() {
+				try {
+					switch ($tmp1) {
+						case 1:
+						case 2: {
+							try {
+							}
+							finally {
+								$finally1.call(this);
+							}
+						}
+					}
+				}
+				finally {
+					$tmp1 = -1;
+				}
+			});
+		}).call(this);
+	});
+}");
+		}
+
+		[Test]
+		public void IteratorBlockReturningIEnumerableOfTWorks() {
+			AssertCorrect(@"
+public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
+	try {
+		yield return 1;
+	}
+	finally {
+		var a = 1;
+	}
+}",
+@"function($x, $y) {
+	return $MakeEnumerable({Int32}, function() {
+		return (function($x, $y) {
+			var $result, $tmp1 = 0;
+			$finally1 = function() {
+				var $a = 1;
+			};
+			return $MakeEnumerator({Int32}, function() {
+				$loop1:
+				for (;;) {
+					switch ($tmp1) {
+						case 0: {
+							$tmp1 = 1;
+							$result = 1;
+							$tmp1 = 2;
+							return true;
+						}
+						case 2: {
+							$tmp1 = -1;
+							$finally1.call(this);
+							$tmp1 = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+				return false;
+			}, function() {
+				return $result;
+			}, function() {
+				try {
+					switch ($tmp1) {
+						case 1:
+						case 2: {
+							try {
+							}
+							finally {
+								$finally1.call(this);
+							}
+						}
+					}
+				}
+				finally {
+					$tmp1 = -1;
+				}
+			});
+		}).call(this, $x, $y);
 	});
 }");
 		}

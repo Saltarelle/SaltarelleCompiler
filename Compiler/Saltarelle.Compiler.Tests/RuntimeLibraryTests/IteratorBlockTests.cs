@@ -303,11 +303,11 @@ public class C {
 
 	public static string M() {
 		var sb = new StringBuilder();
-		int i = 0;
+		int n = 0;
 		foreach (var i in new C(sb).GetEnumerable(5)) {
-			if (++i == 2)
-				break;
 			sb.AppendLine(""got "" + i);
+			if (++n == 2)
+				break;
 		}
 
 		return sb.ToString();
@@ -399,8 +399,7 @@ public class C {
 
 	IEnumerable<int> GetEnumerable(int n) {
 		for (; n > 0; n--) {
-			while (n > 0)
-				yield return n;
+			yield return n;
 		}
 	}
 
