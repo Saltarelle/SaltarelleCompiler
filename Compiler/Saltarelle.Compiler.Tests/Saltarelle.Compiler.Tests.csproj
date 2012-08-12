@@ -220,7 +220,7 @@
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="ExeTests\CommandLineArgumentTests.cs" />
-    <Compile Include="MinimizationTests\MinimizerTests.cs" />
+    <Compile Include="MinificationTests\MinifierTests.cs" />
     <Compile Include="MockNamer.cs" />
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />

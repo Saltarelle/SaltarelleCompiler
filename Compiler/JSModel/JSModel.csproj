@@ -51,7 +51,7 @@
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
-    <Compile Include="Minimization\Minimizer.cs" />
+    <Compile Include="Minification\Minifier.cs" />
     <Compile Include="StateMachineRewrite\ContainsBreakVisitor.cs" />
     <Compile Include="StateMachineRewrite\DisposeGenerator.cs" />
     <Compile Include="StateMachineRewrite\FinalizerRewriter.cs" />

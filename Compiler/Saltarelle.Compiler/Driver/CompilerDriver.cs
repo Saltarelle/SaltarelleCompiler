@@ -14,6 +14,7 @@ using System.Linq;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
@@ -171,7 +172,7 @@ namespace Saltarelle.Compiler.Driver {
 			_errorReporter = errorReporter;
 		}
 
-		public class Executor : MarshalByRefObject {
+		private class Executor : MarshalByRefObject {
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
 				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
 				try {
@@ -227,7 +228,7 @@ namespace Saltarelle.Compiler.Driver {
 						}
 					}
 
-					string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
+					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(Minifier.Process(s)) : OutputFormatter.Format(s)));
 					try {
 						File.WriteAllText(outputScriptPath, script);
 					}

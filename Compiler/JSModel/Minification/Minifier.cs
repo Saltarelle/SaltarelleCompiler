@@ -6,9 +6,9 @@ using ICSharpCode.NRefactory.Utils;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.JSModel.Minimization
+namespace Saltarelle.Compiler.JSModel.Minification
 {
-	public class Minimizer {
+	public static class Minifier {
 		internal struct Function : IEquatable<Function> {
 			public JsFunctionDefinitionExpression Expr { get; private set; }
 			public JsFunctionStatement Stmt { get; private set; }
@@ -123,12 +123,12 @@ namespace Saltarelle.Compiler.JSModel.Minimization
 			}
 		}
 
-		internal class IdentifierMinimizerRewriter : RewriterVisitorBase<Tuple<Dictionary<string, string>, HashSet<string>>> {
+		internal class IdentifierMinifierRewriter : RewriterVisitorBase<Tuple<Dictionary<string, string>, HashSet<string>>> {
 			private Dictionary<Function, HashSet<string>> _locals;
 			private Dictionary<Function, HashSet<string>> _globals;
 			private readonly Func<string, HashSet<string>, string> _generateName;
 
-			private IdentifierMinimizerRewriter(Dictionary<Function, HashSet<string>> locals, Dictionary<Function, HashSet<string>> globals, Func<string, HashSet<string>, string> generateName) {
+			private IdentifierMinifierRewriter(Dictionary<Function, HashSet<string>> locals, Dictionary<Function, HashSet<string>> globals, Func<string, HashSet<string>, string> generateName) {
 				_locals = locals;
 				_globals = globals;
 				_generateName = generateName;
@@ -193,7 +193,7 @@ namespace Saltarelle.Compiler.JSModel.Minimization
 			}
 
 			public static JsStatement Process(JsStatement statement, Dictionary<Function, HashSet<string>> locals, Dictionary<Function, HashSet<string>> globals, Func<string, HashSet<string>, string> generateName) {
-				var obj = new IdentifierMinimizerRewriter(locals, globals, generateName);
+				var obj = new IdentifierMinifierRewriter(locals, globals, generateName);
 				return obj.VisitStatement(statement, obj.BuildMap(null, new Function()));
 			}
 		}
@@ -217,10 +217,10 @@ namespace Saltarelle.Compiler.JSModel.Minimization
 			return result;
 		}
 
-		public JsStatement Process(JsStatement statement) {
+		public static JsStatement Process(JsStatement statement) {
 			var locals  = LocalVariableGatherer.Analyze(statement);
 			var globals = ImplicitGlobalsGatherer.Analyze(statement, locals);
-			return IdentifierMinimizerRewriter.Process(statement, locals, globals, GenerateName);
+			return IdentifierMinifierRewriter.Process(statement, locals, globals, GenerateName);
 		}
 	}
 }

@@ -255,7 +255,7 @@ public class C1 {
 		[Test]
 		public void MinimizeScriptWorks() {
 			UsingFiles(() => {
-				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
+				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M(int someVariable) {} }");
 				var options = new CompilerOptions {
 					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
@@ -269,10 +269,12 @@ public class C1 {
 
 				Assert.That(result, Is.True);
 				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("Class1"), Is.True);
+				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("someVariable"), Is.True);
+				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains(" "), Is.True);
 			}, "File.cs", "Test.dll", "Test.js");
 
 			UsingFiles(() => {
-				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
+				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M(int someVariable) {} }");
 				var options = new CompilerOptions {
 					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
@@ -286,6 +288,8 @@ public class C1 {
 
 				Assert.That(result, Is.True);
 				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("Class1"), Is.False);
+				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("someVariable"), Is.False);
+				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains(" "), Is.False);
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
