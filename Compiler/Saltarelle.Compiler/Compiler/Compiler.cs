@@ -28,7 +28,8 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-        private readonly INamingConventionResolver _namingConvention;
+        private readonly IMetadataImporter _metadataImporter;
+        private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
@@ -46,8 +47,9 @@ namespace Saltarelle.Compiler.Compiler {
                 MethodCompiled(method, result, mc);
         }
 
-        public Compiler(INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
-            _namingConvention = namingConvention;
+        public Compiler(IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
+            _metadataImporter = metadataImporter;
+			_namer            = namer;
             _errorReporter    = errorReporter;
         	_runtimeLibrary   = runtimeLibrary;
         }
@@ -66,9 +68,9 @@ namespace Saltarelle.Compiler.Compiler {
         private JsClass GetJsClass(ITypeDefinition typeDefinition) {
             JsClass result;
             if (!_types.TryGetValue(typeDefinition, out result)) {
-                var semantics = _namingConvention.GetTypeSemantics(typeDefinition);
+                var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
-					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _namingConvention).ToList();
+					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _metadataImporter).ToList();
 					if (unusableTypes.Count > 0) {
 						foreach (var ut in unusableTypes)
 							_errorReporter.Message(7500, typeDefinition.Region, ut.FullName, typeDefinition.FullName);
@@ -80,7 +82,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? _runtimeLibrary.GetScriptType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class), TypeContext.Inheritance) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
 						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.Inheritance)).Where(t => t != null).ToList();
-						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
+						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namer.GetTypeParameterName(a)).ToList();
 						result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
 					}
                 }
@@ -108,14 +110,14 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private JsEnum ConvertEnum(ITypeDefinition type) {
-            var semantics = _namingConvention.GetTypeSemantics(type);
+            var semantics = _metadataImporter.GetTypeSemantics(type);
 			if (!semantics.GenerateCode)
 				return null;
 
             var values = new List<JsEnumValue>();
             foreach (var f in type.Fields) {
                 if (f.ConstantValue != null) {
-					var sem = _namingConvention.GetFieldSemantics(f);
+					var sem = _metadataImporter.GetFieldSemantics(f);
 					if (sem.Type == FieldScriptSemantics.ImplType.Field) {
 						values.Add(new JsEnumValue(sem.Name, Convert.ToInt64(f.ConstantValue)));
 					}
@@ -170,7 +172,7 @@ namespace Saltarelle.Compiler.Compiler {
         public IEnumerable<JsType> Compile(PreparedCompilation compilation) {
 			_compilation = compilation.Compilation;
 
-			_namingConvention.Prepare(_compilation.GetAllTypeDefinitions(), _compilation.MainAssembly, _errorReporter);
+			_metadataImporter.Prepare(_compilation.GetAllTypeDefinitions(), _compilation.MainAssembly, _errorReporter);
 
             _types = new Dictionary<ITypeDefinition, JsClass>();
             _constructorDeclarations = new HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>>();
@@ -238,7 +240,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private MethodCompiler CreateMethodCompiler() {
-            return new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary, _definedSymbols);
+            return new MethodCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, _runtimeLibrary, _definedSymbols);
         }
 
         private void AddCompiledMethodToType(JsClass jsClass, IMethod method, MethodScriptSemantics options, JsMethod jsMethod) {
@@ -252,7 +254,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void MaybeCompileAndAddMethodToType(JsClass jsClass, EntityDeclaration node, BlockStatement body, IMethod method, MethodScriptSemantics options) {
             if (options.GenerateCode) {
-                var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(tp)).ToList();
+                var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
 				JsMethod jsMethod;
 				if (method.IsAbstract) {
 					jsMethod = new JsMethod(method, options.Name, typeParamNames, null);
@@ -295,7 +297,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private void MaybeAddDefaultConstructorToType(JsClass jsClass, IMethod constructor) {
-            var options = _namingConvention.GetConstructorSemantics(constructor);
+            var options = _metadataImporter.GetConstructorSemantics(constructor);
             if (options.GenerateCode) {
                 var mc = CreateMethodCompiler();
                 var compiled = mc.CompileDefaultConstructor(constructor, TryGetInstanceInitStatements(jsClass), options);
@@ -392,7 +394,7 @@ namespace Saltarelle.Compiler.Compiler {
                 return;
 
             if (method.IsAbstract || !methodDeclaration.Body.IsNull) {	// The second condition is used to ignore partial method parts without definitions.
-                MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _namingConvention.GetMethodSemantics(method));
+                MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
             }
         }
 
@@ -412,7 +414,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _namingConvention.GetMethodSemantics(method));
+            MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
         }
 
         private void HandleConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
@@ -435,7 +437,7 @@ namespace Saltarelle.Compiler.Compiler {
                 jsClass.StaticInitStatements.AddRange(CompileMethod(constructorDeclaration, constructorDeclaration.Body, method, MethodScriptSemantics.NormalMethod("X")).Body.Statements);
             }
             else {
-                MaybeCompileAndAddConstructorToType(jsClass, constructorDeclaration, method, _namingConvention.GetConstructorSemantics(method));
+                MaybeCompileAndAddConstructorToType(jsClass, constructorDeclaration, method, _metadataImporter.GetConstructorSemantics(method));
             }
         }
 
@@ -461,14 +463,14 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            var impl = _namingConvention.GetPropertySemantics(property);
+            var impl = _metadataImporter.GetPropertySemantics(property);
 
             switch (impl.Type) {
                 case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
                     if (!property.IsAbstract && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
                         // Auto-property
                         if ((impl.GetMethod != null && impl.GetMethod.GenerateCode) || (impl.SetMethod != null && impl.SetMethod.GenerateCode)) {
-                            var fieldName = _namingConvention.GetAutoPropertyBackingFieldName(property);
+                            var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
                             AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
                             CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
                         }
@@ -515,7 +517,7 @@ namespace Saltarelle.Compiler.Compiler {
                 if (jsClass == null)
                     return;
 
-                var impl = _namingConvention.GetEventSemantics(evt);
+                var impl = _metadataImporter.GetEventSemantics(evt);
                 switch (impl.Type) {
                     case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
                         if ((impl.AddMethod != null && impl.AddMethod.GenerateCode) || (impl.RemoveMethod != null && impl.RemoveMethod.GenerateCode)) {
@@ -526,7 +528,7 @@ namespace Saltarelle.Compiler.Compiler {
 									AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.Name, null, null));
 							}
 							else {
-	                            var fieldName = _namingConvention.GetAutoEventBackingFieldName(evt);
+	                            var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
 		                        if (singleEvt.Initializer.IsNull) {
 			                        AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.ReturnType, evt.DeclaringTypeDefinition, evt.IsStatic);
 				                }
@@ -568,7 +570,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            var impl = _namingConvention.GetEventSemantics(evt);
+            var impl = _metadataImporter.GetEventSemantics(evt);
 
             switch (impl.Type) {
                 case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
@@ -608,7 +610,7 @@ namespace Saltarelle.Compiler.Compiler {
                 if (jsClass == null)
                     return;
 
-                var impl = _namingConvention.GetFieldSemantics(field);
+                var impl = _metadataImporter.GetFieldSemantics(field);
 				if (impl.GenerateCode) {
                     if (v.Initializer.IsNull) {
                         AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.ReturnType, field.DeclaringTypeDefinition, field.IsStatic);
@@ -637,7 +639,7 @@ namespace Saltarelle.Compiler.Compiler {
             if (jsClass == null)
                 return;
 
-            var impl = _namingConvention.GetPropertySemantics(prop);
+            var impl = _metadataImporter.GetPropertySemantics(prop);
 
             switch (impl.Type) {
                 case PropertyScriptSemantics.ImplType.GetAndSetMethods: {

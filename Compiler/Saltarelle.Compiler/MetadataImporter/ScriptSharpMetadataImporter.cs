@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
-using Saltarelle.Compiler.JSModel;
-using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
-	public class ScriptSharpMetadataImporter : INamingConventionResolver, IScriptSharpMetadataImporter {
+	public class ScriptSharpMetadataImporter : IMetadataImporter, IScriptSharpMetadataImporter {
 		private const string ScriptSkipAttribute                    = "System.Runtime.CompilerServices.ScriptSkipAttribute";
 		private const string ScriptAliasAttribute                   = "System.Runtime.CompilerServices.ScriptAliasAttribute";
 		private const string InlineCodeAttribute                    = "System.Runtime.CompilerServices.InlineCodeAttribute";
@@ -210,7 +206,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		private static readonly HashSet<string> _keywords = new HashSet<string>() { "abstract", "as", "boolean", "break", "byte", "case", "catch", "char", "class", "continue", "const", "debugger", "default", "delete", "do", "double", "else", "enum", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "is", "long", "namespace", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "use", "var", "void", "volatile", "while", "with", };
 
 		public static string EncodeNumber(int i, bool ensureValidIdentifier) {
 			if (ensureValidIdentifier) {
@@ -219,7 +214,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					i /= _encodeNumberTable.Length - 10;
 					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
 				}
-				return _keywords.Contains(result) ? "_" + result : result;
+				return JSModel.Utils.IsJavaScriptReservedWord(result) ? "_" + result : result;
 			}
 			else {
 				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
@@ -1122,7 +1117,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
 				}
 				else if (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames)) {
-					object value = Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
+					object value = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
 					if (value is bool)
 						_fieldSemantics[field] = FieldScriptSemantics.BooleanConstant((bool)value, name);
 					else if (value is double)
@@ -1245,34 +1240,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			result = GetBackingFieldName(evt.DeclaringTypeDefinition, evt.Name);
 			_eventBackingFieldNames[evt] = result;
 			return result;
-		}
-
-		public string GetVariableName(IVariable variable, ISet<string> usedNames) {
-			if (_minimizeNames) {
-				// We know that (as long as all used names come from us), all names are generated in sequence. Therefore, the number of used name is a good starting guess for a unique name.
-				int i = usedNames.Count;
-				string name;
-				do {
-					name = EncodeNumber(i++, true);
-				} while (usedNames.Contains(name));
-				return name;
-			}
-			else {
-                string baseName = (variable != null ? variable.Name.Replace("<>", "$") : "$t");
-                if (variable != null && !usedNames.Contains(baseName))
-                    return baseName;
-                int i = 1;
-				string name;
-				do {
-					name = baseName + (i++).ToString(CultureInfo.InvariantCulture);
-				} while (usedNames.Contains(name));
-
-                return name;
-			}
-		}
-
-		public string ThisAlias {
-			get { return _minimizeNames ? "$_" : "$this"; }
 		}
 
 		public bool IsNamedValues(ITypeDefinition t) {

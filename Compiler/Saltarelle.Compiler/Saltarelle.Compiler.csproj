@@ -46,8 +46,10 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="Compiler\DefaultNamer.cs" />
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
+    <Compile Include="Compiler\INamer.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
@@ -66,7 +68,7 @@
     <Compile Include="Compiler\ExpressionOrderer.cs" />
     <Compile Include="ScriptSemantics\FieldScriptSemantics.cs" />
     <Compile Include="IErrorReporter.cs" />
-    <Compile Include="INamingConventionResolver.cs" />
+    <Compile Include="IMetadataImporter.cs" />
     <Compile Include="Compiler\IResolveResultVisitor.cs" />
     <Compile Include="IRuntimeLibrary.cs" />
     <Compile Include="ISourceFile.cs" />

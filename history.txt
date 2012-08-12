@@ -1,6 +1,7 @@
 Use !! for dynamic conversions to bool.
 Fixed internal error when implementing properties/events that are [NonScriptable]
 Implemented support for iterator blocks (yield)
+Minification improvements
 
 1.0.1
 Fixed project URL and included history in NuGet packages.

@@ -18,26 +18,26 @@ lbl2:
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
 				b;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				c;
 				d;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				e;
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -56,17 +56,17 @@ lbl2:
 	lbl: a;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				a;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -93,26 +93,26 @@ lbl2:
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
 				b;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 1: {
 				c;
 				d;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				e;
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -136,10 +136,10 @@ lbl1:
 	e;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
 				b;
@@ -148,7 +148,7 @@ lbl1:
 			case 1: {
 				d;
 				e;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -172,10 +172,10 @@ lbl1:
 	d;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
 				b;
@@ -184,7 +184,7 @@ lbl1:
 			case 1: {
 				c;
 				d;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -221,14 +221,14 @@ lbl1:
 	h;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
 				b;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
@@ -236,7 +236,7 @@ lbl1:
 					c;
 				}
 				d;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
@@ -245,14 +245,14 @@ lbl1:
 					f;
 					{
 						g;
-						$tmp1 = 3;
+						$state1 = 3;
 						continue $loop1;
 					}
 				}
 			}
 			case 3: {
 				h;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {

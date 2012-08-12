@@ -8,7 +8,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 namespace Saltarelle.Compiler.Compiler {
     public class VariableGatherer : DepthFirstAstVisitor {
         private readonly CSharpAstResolver _resolver;
-        private readonly INamingConventionResolver _namingConvention;
+        private readonly INamer _namer;
         private readonly IErrorReporter _errorReporter;
         private HashSet<string> _usedNames;
         private Dictionary<IVariable, VariableData> _result;
@@ -17,9 +17,9 @@ namespace Saltarelle.Compiler.Compiler {
         private AstNode _currentMethod;
 		private bool _isInsideLoop;
 
-        public VariableGatherer(CSharpAstResolver resolver, INamingConventionResolver namingConvention, IErrorReporter errorReporter) {
+        public VariableGatherer(CSharpAstResolver resolver, INamer namer, IErrorReporter errorReporter) {
             _resolver = resolver;
-            _namingConvention = namingConvention;
+            _namer = namer;
             _errorReporter = errorReporter;
         }
 
@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Compiler {
     	}
 
 		private void AddVariable(IVariable v, bool isUsedByReference = false) {
-    		string n = _namingConvention.GetVariableName(v, _usedNames);
+    		string n = _namer.GetVariableName(v.Name, _usedNames);
     		_usedNames.Add(n);
     		_result.Add(v, new VariableData(n, _currentMethod, isUsedByReference));
 			if (_isInsideLoop)

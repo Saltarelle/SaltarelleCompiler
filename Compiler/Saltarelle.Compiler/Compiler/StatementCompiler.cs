@@ -15,7 +15,8 @@ using ExpressionType = System.Linq.Expressions.ExpressionType;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class StatementCompiler : DepthFirstAstVisitor {
-		private readonly INamingConventionResolver _namingConvention;
+		private readonly IMetadataImporter _metadataImporter;
+		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
 		private readonly ICompilation _compilation;
 		private readonly CSharpAstResolver _resolver;
@@ -37,13 +38,14 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols)
-			: this(namingConvention, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, methodBeingCompiled, definedSymbols, null, null, null, null)
+		public StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols)
+			: this(metadataImporter, namer, errorReporter, compilation, resolver, variables, nestedFunctions, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, methodBeingCompiled, definedSymbols, null, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(INamingConventionResolver namingConvention, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
-			_namingConvention           = namingConvention;
+		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethod methodBeingCompiled, ISet<string> definedSymbols, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, IVariable currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
+			_metadataImporter           = metadataImporter;
+			_namer                      = namer;
 			_errorReporter              = errorReporter;
 			_compilation                = compilation;
 			_resolver                   = resolver;
@@ -60,7 +62,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, namingConvention, runtimeLibrary, errorReporter, variables, nestedFunctions, v => CreateTemporaryVariable(v, new DomRegion(_filename, _location, _location)), c => new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _definedSymbols), thisAlias, nestedFunctionContext, null, _methodBeingCompiled);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(compilation, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, v => CreateTemporaryVariable(v, new DomRegion(_filename, _location, _location)), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _definedSymbols), thisAlias, nestedFunctionContext, null, _methodBeingCompiled);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -192,11 +194,11 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _methodBeingCompiled, _definedSymbols, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
+			return new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _methodBeingCompiled, _definedSymbols, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
 		private IVariable CreateTemporaryVariable(IType type, DomRegion region) {
-			string name = _namingConvention.GetVariableName(null, _usedVariableNames);
+			string name = _namer.GetVariableName(null, _usedVariableNames);
 			IVariable variable = new SimpleVariable(type, "temporary", region);
 			_variables[variable] = new VariableData(name, null, false);
 			_usedVariableNames.Add(name);
@@ -498,7 +500,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError("Property Array.Length not found.", _filename, foreachStatement.StartLocation);
 					return;
 				}
-				var lengthSem = _namingConvention.GetPropertySemantics(length);
+				var lengthSem = _metadataImporter.GetPropertySemantics(length);
 				if (lengthSem.Type != PropertyScriptSemantics.ImplType.Field) {
 					_errorReporter.InternalError("Property Array.Length is not implemented as a field.", _filename, foreachStatement.StartLocation);
 					return;
@@ -809,7 +811,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var rr = _resolver.Resolve(v.Expression);
 						object value = rr.ConstantValue;
 						if (rr is MemberResolveResult && ((MemberResolveResult)rr).Member is IField) {
-							var sem = _namingConvention.GetFieldSemantics((IField)((MemberResolveResult)rr).Member);
+							var sem = _metadataImporter.GetFieldSemantics((IField)((MemberResolveResult)rr).Member);
 							if (sem.Type == FieldScriptSemantics.ImplType.Constant)
 								value = sem.Value;
 						}
