@@ -233,7 +233,7 @@
     <Compile Include="StateMachineTests\WhileStatementTests.cs" />
     <Compile Include="JavaScriptParserTests\JavaScriptParserTests.cs" />
     <Compile Include="MockErrorReporter.cs" />
-    <Compile Include="MockNamingConventionResolver.cs" />
+    <Compile Include="MockMetadataImporter.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />
     <Compile Include="MockScriptSharpMetadataImporter.cs" />
     <Compile Include="MockSourceFile.cs" />

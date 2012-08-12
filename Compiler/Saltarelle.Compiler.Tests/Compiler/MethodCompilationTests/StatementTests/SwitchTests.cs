@@ -310,7 +310,7 @@ public void M() {
 			break;
 		}
 	}
-", namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.DeclaringType.Name == "E" ? FieldScriptSemantics.StringConstant(f.Name) : FieldScriptSemantics.Field(f.Name) });
+", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.DeclaringType.Name == "E" ? FieldScriptSemantics.StringConstant(f.Name) : FieldScriptSemantics.Field(f.Name) });
 		}
 	}
 }

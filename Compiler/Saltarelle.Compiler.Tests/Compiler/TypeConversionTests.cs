@@ -382,24 +382,24 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
         [Test]
         public void ClassesWithGenerateCodeSetToFalseAndTheirNestedClassesAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
-            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
+            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
 
-            namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
-            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, namingConvention: namingConvention);
+            metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
+            Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
             CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
         }
 
         [Test]
         public void EnumsWithGenerateCodeSetToFalseAreNotInTheOutput() {
-            var namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
-            Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
+            Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.Should().Be("C1");
 
-            namingConvention = new MockNamingConventionResolver { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
-            Compile(new[] { "enum C1 {} enum C2 {}" }, namingConvention);
+            metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
+            Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Name.Should().Be("C1");
         }
@@ -412,44 +412,44 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
 		[Test]
 		public void ClassThatIsNotUsableFromScriptCannotBeUsedAsABaseClassForAUsableClass() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "B1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "B1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class B1 {} class D1 : B1 {}" }, namingConvention: nc, errorReporter: er);
+			Compile(new[] { "class B1 {} class D1 : B1 {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("B1") && er.AllMessagesText[0].Contains("D1"));
 
-			nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "B1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "B1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			er = new MockErrorReporter(false);
-			Compile(new[] { "class B1<T> {} class D1 : B1<int> {}" }, namingConvention: nc, errorReporter: er);
+			Compile(new[] { "class B1<T> {} class D1 : B1<int> {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("B1") && er.AllMessagesText[0].Contains("D1"));
 		}
 
 		[Test]
 		public void InterfaceThatIsNotUsableFromScriptCannotBeImplementedByAUsableClass() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "I1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "I1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "interface I1 {} class C1 : I1 {}" }, namingConvention: nc, errorReporter: er);
+			Compile(new[] { "interface I1 {} class C1 : I1 {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("I1") && er.AllMessagesText[0].Contains("C1"));
 		}
 
 		[Test]
 		public void ClassThatIsNotUsableFromScriptCannotBeUsedAsGenericArgumentForABaseClassOrImplementedInterface() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
 
-			Compile(new[] { "class C1 {} class B1<T> {} class D1 : B1<C1> {}" }, namingConvention: nc, errorReporter: er);
+			Compile(new[] { "class C1 {} class B1<T> {} class D1 : B1<C1> {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("D1"));
 
 			er = new MockErrorReporter(false);
-			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<C1> {}" }, namingConvention: nc, errorReporter: er);
+			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<C1> {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("D1"));
 
 			er = new MockErrorReporter(false);
-			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<I1<C1>> {}" }, namingConvention: nc, errorReporter: er);
+			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<I1<C1>> {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("D1"));
 		}
@@ -457,15 +457,15 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
 		[Test]
 		public void UsingUnusableClassAsABaseClassForAnotherUnusableClassIsNotAnError() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => TypeScriptSemantics.NotUsableFromScript() };
-			Compile(new[] { "class B {} class D : B {}" }, namingConvention: nc);
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NotUsableFromScript() };
+			Compile(new[] { "class B {} class D : B {}" }, metadataImporter: metadataImporter);
 			// No errors is good enough
 		}
 
 		[Test]
 		public void IgnoreGenericArgumentsInTheTypeSemanticsRemovesGenericArgumentsFromTheType() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) };
-            Compile(new[] { "class C1<T1, T2> {}" }, namingConvention: nc);
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) };
+            Compile(new[] { "class C1<T1, T2> {}" }, metadataImporter: metadataImporter);
             FindClass("C1").TypeArgumentNames.Should().BeEmpty();
 		}
 

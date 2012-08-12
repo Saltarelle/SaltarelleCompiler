@@ -3,7 +3,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.MetadataImporter;
 
 namespace Saltarelle.Compiler.Tests {
-	public class MockScriptSharpMetadataImporter : MockNamingConventionResolver, IScriptSharpMetadataImporter {
+	public class MockScriptSharpMetadataImporter : MockMetadataImporter, IScriptSharpMetadataImporter {
 		public MockScriptSharpMetadataImporter() {
 			IsNamedVaules          = t => false;
 			IsResources            = t => false;

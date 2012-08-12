@@ -48,7 +48,7 @@ public void M() {
 		[Test]
 		public void ReadingNotUsableFieldGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableField; public void M() { int x = UnusableField; } }" }, namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableField; public void M() { int x = UnusableField; } }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableField")));
 		}
 
@@ -75,7 +75,7 @@ public void M() {
 	// END
 }",
 @"	var $i = get_this_;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_"), MethodScriptSemantics.InlineCode("set_{this}_{value}_")) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_"), MethodScriptSemantics.InlineCode("set_{this}_{value}_")) });
 		}
 
 		[Test]
@@ -134,7 +134,7 @@ class D : B {
 		[Test]
 		public void ReadingNotUsablePropertyGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
 		}
 
@@ -163,7 +163,7 @@ public void M() {
 	// END
 }",
 @"	add_this_$h;
-", namingConvention: new MockNamingConventionResolver() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_{this}_{value}"), MethodScriptSemantics.InlineCode("remove_{this}_{value}")) });
+", metadataImporter: new MockMetadataImporter() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_{this}_{value}"), MethodScriptSemantics.InlineCode("remove_{this}_{value}")) });
 		}
 
 		[Test]
@@ -191,7 +191,7 @@ public void M() {
 	// END
 }",
 @"	remove_this_$h;
-", namingConvention: new MockNamingConventionResolver() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_{this}_{value}"), MethodScriptSemantics.InlineCode("remove_{this}_{value}")) });
+", metadataImporter: new MockMetadataImporter() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_{this}_{value}"), MethodScriptSemantics.InlineCode("remove_{this}_{value}")) });
 		}
 
 		[Test]
@@ -273,7 +273,7 @@ public void M() {
 	// END
 }",
 @"	var $c = this[$a];
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -305,28 +305,28 @@ class D : B {
 		[Test]
 		public void SubscribingToNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent += null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent += null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void UnsubscribingFromNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent -= null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent -= null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void  RaisingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent(null, null); } }" }, namingConvention: new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent(null, null); } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void ReadingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, namingConvention: new MockNamingConventionResolver { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
 		}
 
@@ -351,7 +351,7 @@ public void M() {
 	var $f2 = 'abcd';
 	var $f3 = 1234.5;
 	var $f4 = true;
-", namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : (f.Name == "F2" ? FieldScriptSemantics.StringConstant("abcd") : (f.Name == "F3" ? FieldScriptSemantics.NumericConstant(1234.5) : (f.Name == "F4" ? FieldScriptSemantics.BooleanConstant(true) : FieldScriptSemantics.Field(f.Name)))) });
+", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : (f.Name == "F2" ? FieldScriptSemantics.StringConstant("abcd") : (f.Name == "F3" ? FieldScriptSemantics.NumericConstant(1234.5) : (f.Name == "F4" ? FieldScriptSemantics.BooleanConstant(true) : FieldScriptSemantics.Field(f.Name)))) });
 		}
 
 		[Test]
@@ -365,7 +365,7 @@ public void M() {
 		F1 = 1;
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
 			
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
@@ -379,7 +379,7 @@ public void M() {
 		F1 += 1;
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
 			
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));

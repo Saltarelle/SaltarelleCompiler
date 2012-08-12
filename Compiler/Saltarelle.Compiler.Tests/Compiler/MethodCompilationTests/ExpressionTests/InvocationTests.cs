@@ -116,7 +116,7 @@ public void M() {
 	// END
 }",
 @"	$F($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, isGlobal: m.Name == "F") });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, isGlobal: m.Name == "F") });
 		}
 
 		[Test]
@@ -146,7 +146,7 @@ public void M() {
 	// END
 }",
 @"	this.$F($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
 		}
 
 		[Test]
@@ -326,7 +326,7 @@ public void M() {
 	// END
 }",
 @"	var $i = this[$a];
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -380,7 +380,7 @@ public void M() {
 	// END
 }",
 @"	{C}.$F(this, $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -395,7 +395,7 @@ public void M() {
 	// END
 }",
 @"	$F(this, $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, isGlobal: true) : MethodScriptSemantics.NormalMethod(m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, isGlobal: true) : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -411,7 +411,7 @@ public void M() {
 	// END
 }",
 @"	$InstantiateGenericType({X}, {Int32}).$F(this.$FX(), $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -426,7 +426,7 @@ public void M() {
 	// END
 }",
 @"	$InstantiateGenericMethod({C}.$F, {Int32}, {String}).call(null, this, $a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -447,7 +447,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	{C}.$F(this, 1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -464,7 +464,7 @@ public void M() {
 	// END
 }",
 @"	$a.$F($b, $c);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -485,7 +485,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	this.$F4().$F(2, 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -502,7 +502,7 @@ public void M() {
 	// END
 }",
 @"	_{Int32}_{Byte}_{String}_$o_$a_$b_$c_;
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{T1}_{T2}_{T3}_{this}_{x}_{y}_{z}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{T1}_{T2}_{T3}_{this}_{x}_{y}_{z}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -523,13 +523,13 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2_;
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{a}_{b}_{c}_{d}_{e}_{f}_{g}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{a}_{b}_{c}_{d}_{e}_{f}_{g}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
 		public void InvokingMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
 		}
 
@@ -698,7 +698,7 @@ class D2 : D {
 
 		[Test]
 		public void CannotUseNotUsableTypeAsAGenericArgument() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var nc = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] {
@@ -708,7 +708,7 @@ class C {
 	public void M() {
 		F1<C1>();
 	}
-}" }, namingConvention: nc, errorReporter: er);
+}" }, metadataImporter: nc, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("generic argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("F1"));
@@ -722,7 +722,7 @@ class C {
 	public void M() {
 		F1<I1<I1<C1>>>();
 	}
-}" }, namingConvention: nc, errorReporter: er);
+}" }, metadataImporter: nc, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("generic argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("F1"));
 		}
@@ -763,7 +763,7 @@ public void M() {
 	// END
 }",
 @"	this.$F(4, 8, 59, 12, 4);
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
 		}
 
 		[Test]
@@ -776,7 +776,7 @@ public void M() {
 	public void M() {
 		F(4, 8, new[] { 59, 12, 4 });
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
@@ -895,7 +895,7 @@ public void M() {
 		dynamic d = null;
 		d.someMethod(a: 123, b: 465);
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
@@ -911,7 +911,7 @@ public void M() {
 		dynamic d = null;
 		d(a: 123, b: 465);
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
@@ -994,7 +994,7 @@ class C {
 		var a = x.F(123, d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name + "$" + string.Join("$", m.Parameters.Select(p => p.Type.Name))) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name + "$" + string.Join("$", m.Parameters.Select(p => p.Type.Name))) }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("same script name")));
@@ -1017,7 +1017,7 @@ class C {
 		var a = x.F(123, d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.Name == "F" && m.Parameters[1].Type.Name == "String" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" && m.Parameters[1].Type.Name == "String" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("not a normal method")));

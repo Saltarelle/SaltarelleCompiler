@@ -71,7 +71,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-        private readonly INamingConventionResolver _namingConvention;
+        private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
         private readonly IErrorReporter _errorReporter;
         private readonly ICompilation _compilation;
@@ -85,8 +85,8 @@ namespace Saltarelle.Compiler.Compiler {
 		private ISet<string> _usedNames;
 		private string _thisAlias;
 
-        public MethodCompiler(INamingConventionResolver namingConvention, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
-            _namingConvention = namingConvention;
+        public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
+            _metadataImporter = metadataImporter;
 			_namer    = namer;
             _errorReporter    = errorReporter;
             _compilation      = compilation;
@@ -106,7 +106,7 @@ namespace Saltarelle.Compiler.Compiler {
             nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
-			_statementCompiler = new StatementCompiler(_namingConvention, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, _definedSymbols);
+			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, _definedSymbols);
 		}
 
 		internal static bool DisableStateMachineRewriteTestingUseOnly;

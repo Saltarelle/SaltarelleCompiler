@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 class C {
 	" + csharp + @"
-}", expected, referenceSystemCore: true, addSkeleton: false, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2) => e });
+}", expected, referenceSystemCore: true, addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2) => e });
 
 		}
 

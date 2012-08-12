@@ -8,7 +8,7 @@ using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
-    public interface INamingConventionResolver {
+    public interface IMetadataImporter {
 		/// <summary>
 		/// Prepare to handle the specified types.
 		/// </summary>

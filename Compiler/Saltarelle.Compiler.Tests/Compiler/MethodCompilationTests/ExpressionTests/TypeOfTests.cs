@@ -129,7 +129,7 @@ class Y : X<C> {
 
 		[Test]
 		public void CannotUseNotUsableTypeInATypeOfExpression() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] {
@@ -138,7 +138,7 @@ class C {
 	public void M() {
 		var t = typeof(C1);
 	}
-}" }, namingConvention: nc, errorReporter: er);
+}" }, metadataImporter: metadataImporter, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("typeof") && er.AllMessagesText[0].Contains("C1"));
@@ -151,7 +151,7 @@ class C {
 	public void M() {
 		var t= typeof(I1<I1<C1>>);
 	}
-}" }, namingConvention: nc, errorReporter: er);
+}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("typeof") && er.AllMessagesText[0].Contains("C1"));
 		}

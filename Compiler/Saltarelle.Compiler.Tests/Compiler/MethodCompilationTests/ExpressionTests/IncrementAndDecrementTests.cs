@@ -4,9 +4,9 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
 	public class IncrementAndDecrementTests : MethodCompilerTestBase {
-		protected void AssertCorrectForBoth(string csharp, string expected, INamingConventionResolver namingConvention = null) {
-			AssertCorrect(csharp, expected, namingConvention);
-			AssertCorrect(csharp.Replace("+", "-"), expected.Replace("+", "-"), namingConvention);
+		protected void AssertCorrectForBoth(string csharp, string expected, IMetadataImporter metadataImporter = null) {
+			AssertCorrect(csharp, expected, metadataImporter);
+			AssertCorrect(csharp.Replace("+", "-"), expected.Replace("+", "-"), metadataImporter);
 		}
 
 		[Test]
@@ -427,7 +427,7 @@ public void M() {
 	// END
 }",
 @"	$j = ++this[$i];
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -441,7 +441,7 @@ public void M() {
 	// END
 }",
 @"	$j = this[$i]++;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -551,7 +551,7 @@ public void M() {
 	// END
 }",
 @"	set_this_$i_$j_(get_this_$i_$j) + 1;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -565,7 +565,7 @@ public void M() {
 	// END
 }",
 @"	set_this_$i_$j_(get_this_$i_$j) + 1;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -579,7 +579,7 @@ public void M() {
 	// END
 }",
 @"	set_this_(get_this) + 1;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
 		}
 
 		[Test]
@@ -593,7 +593,7 @@ public void M() {
 	// END
 }",
 @"	set_this_(get_this) + 1;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
 		}
 
 		[Test]
@@ -1015,7 +1015,7 @@ public void M() {
 	// END
 }",
 @"	this[$i] = $Lift(this[$i] + 1);
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -1029,7 +1029,7 @@ public void M() {
 	// END
 }",
 @"	this[$i] = $Lift(this[$i] + 1);
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -1043,7 +1043,7 @@ public void M() {
 	// END
 }",
 @"	var $x = this[$i] = $Lift(this[$i] + 1);
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -1059,7 +1059,7 @@ public void M() {
 @"	var $tmp1 = this[$i];
 	this[$i] = $Lift($tmp1 + 1);
 	var $x = $tmp1;
-", namingConvention: new MockNamingConventionResolver { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]

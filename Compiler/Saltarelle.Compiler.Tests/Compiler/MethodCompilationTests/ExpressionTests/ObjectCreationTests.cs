@@ -71,7 +71,7 @@ public void M() {
 	// END
 }",
 @"	var $c = new {X}.$ctor2();
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ public void M() {
 	// END
 }",
 @"	var $t = new {X}.$ctor2($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
 		[Test]
@@ -111,7 +111,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	var $x = new {X}.$ctor2(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -125,7 +125,7 @@ public void M() {
 	// END
 }",
 @"	var $c = {X}.create_X();
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
 		[Test]
@@ -141,7 +141,7 @@ public void M() {
 	// END
 }",
 @"	var $t = {X}.create_X($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
 		[Test]
@@ -165,7 +165,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	var $x = {X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -181,7 +181,7 @@ public void M() {
 	// END
 }",
 @"	var $t = create_X($a, $b, $c);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name, isGlobal: true) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name, isGlobal: true) });
 		}
 
 
@@ -206,13 +206,13 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	var $x = __CreateX_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2__;
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_{a}_{b}_{c}_{d}_{e}_{f}_{g}__"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_{a}_{b}_{c}_{d}_{e}_{f}_{g}__"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
 		public void UsingConstructorMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);
+			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);
 			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("constructor")));
 		}
 
@@ -379,7 +379,7 @@ public void M() {
 
 		[Test]
 		public void CannotUseNotUsableTypeAsATypeArgument() {
-			var nc = new MockNamingConventionResolver { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var nc = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] {
@@ -388,7 +388,7 @@ class C {
 	public void M() {
 		var c = new C1();
 	}
-}" }, namingConvention: nc, errorReporter: er);
+}" }, metadataImporter: nc, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("instance") && er.AllMessagesText[0].Contains("C1"));
@@ -401,7 +401,7 @@ class C {
 	public void M() {
 		var x = new C2<C2<C1>>();
 	}
-}" }, namingConvention: nc, errorReporter: er);
+}" }, metadataImporter: nc, errorReporter: er);
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("type argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("C2"));
 		}
@@ -442,7 +442,7 @@ public void M() {
 	// END
 }",
 @"	var $c = new {C1}(4, 8, 59, 12, 4);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
 		[Test]
@@ -457,7 +457,7 @@ public void M() {
 	var c = new C1(4, 8, new[] { 59, 12, 4 });
 	// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("constructor") && er.AllMessagesText[0].Contains("expanded form"));
@@ -478,7 +478,7 @@ public void M() {
 @"	var $tmp1 = this.F();
 	this.set_P($tmp1);
 	var $c = { $a: $tmp1, $b: 'X' };
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(new IMember[0]) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(new IMember[0]) });
 		}
 
 		[Test]
@@ -498,7 +498,7 @@ public void M() {
 	var $tmp1 = this.F2();
 	this.set_P($tmp1);
 	var $c = { $a2: $tmp2, $b2: $tmp1 };
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.DeclaringType.Name == "C1" ? ConstructorScriptSemantics.Json(new[] { c.DeclaringType.GetFields().Single(f => f.Name == "a2"), c.DeclaringType.GetFields().Single(f => f.Name == "b2") }) : ConstructorScriptSemantics.Unnamed() });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "C1" ? ConstructorScriptSemantics.Json(new[] { c.DeclaringType.GetFields().Single(f => f.Name == "a2"), c.DeclaringType.GetFields().Single(f => f.Name == "b2") }) : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -524,7 +524,7 @@ public void M() {
 	var $tmp1 = this.F2();
 	this.set_P($tmp1);
 	var $x = { $d2: $tmp2, $g2: $tmp1, $f2: this.F3(), $b2: this.F4(), $a2: 1, $c2: 3, $e2: 5 };
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
 		}
 
 		[Test]
@@ -541,7 +541,7 @@ public void M() {
 	// END
 }",
 @"	var $x = { $a2: 123, $b2: 456, $c2: 789, $d2: 987 };
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
 		}
 
 		[Test]
@@ -558,7 +558,7 @@ public void M() {
 	// END
 }",
 @"	var $x = { $a2: 123, $c2: 789, $b2: 987 };
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) });
 		}
 
 		[Test]
@@ -576,7 +576,7 @@ class C {
 		var x = new X(123) { a2 = 789 };
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("a2") && er.AllMessagesText[0].Contains("initializer") && er.AllMessagesText[0].Contains("constructor call"));
@@ -627,7 +627,7 @@ public void M() {
 	// END
 }",
 @"	var $c = new {C1}($d);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
 		}
 
 		[Test]
@@ -645,7 +645,7 @@ public void M() {
 	// END
 }",
 @"	var $c = new {C1}.X($d);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", generateCode: false) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", generateCode: false) });
 		}
 
 		[Test]
@@ -663,7 +663,7 @@ public void M() {
 	// END
 }",
 @"	var $c = {C1}.X($d);
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", generateCode: false) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", generateCode: false) });
 		}
 
 		[Test]
@@ -685,7 +685,7 @@ public void M() {
 @"	var $tmp1 = new {C1}($d);
 	$tmp1.set_P($i);
 	var $c = $tmp1;
-", namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
 		}
 
 		[Test]
@@ -704,7 +704,7 @@ public class C {
 		var c = new C1(x: d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) }, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7526));
 		}
@@ -725,7 +725,7 @@ public class C {
 		var c = new C1(x: d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count == 0 || c.Parameters[0].Type.Name == "Int32" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("X") }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 || c.Parameters[0].Type.Name == "Int32" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("X") }, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7526));
 		}
@@ -746,7 +746,7 @@ public class C {
 		var c = new C1(d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count > 0 ? ConstructorScriptSemantics.Named("C$" + c.Parameters[0].Type.Name) : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count > 0 ? ConstructorScriptSemantics.Named("C$" + c.Parameters[0].Type.Name) : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
 
@@ -764,7 +764,7 @@ public class C {
 		var c = new C1(d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => c.Parameters.Count > 0 ? ConstructorScriptSemantics.StaticMethod("C$" + c.Parameters[0].Type.Name) : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count > 0 ? ConstructorScriptSemantics.StaticMethod("C$" + c.Parameters[0].Type.Name) : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
 		}
@@ -785,7 +785,7 @@ public class C {
 		var c = new C1(d);
 		// END
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("X") }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("X") }, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
 		}

@@ -20,16 +20,16 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void DefaultConstructorImplementedAsStaticMethodWorks() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.StaticMethod("X") };
-            Compile(new[] { "class C { }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.StaticMethod("X") };
+            Compile(new[] { "class C { }" }, metadataImporter: metadataImporter);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindNamedConstructor("C.X").Should().BeNull();
         }
 
         [Test]
         public void DefaultConstructorIsNotInsertedIfOtherConstructorIsDefined() {
-			var namingConvention = new MockNamingConventionResolver() { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
-            Compile(new[] { "class C { C(int i) {} }" }, namingConvention: namingConvention);
+			var metadataImporter = new MockMetadataImporter() { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
+            Compile(new[] { "class C { C(int i) {} }" }, metadataImporter: metadataImporter);
             var cls = FindClass("C");
             cls.UnnamedConstructor.Should().BeNull();
             cls.NamedConstructors.Should().HaveCount(1);
@@ -39,8 +39,8 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor") };
-            Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor") };
+            Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, metadataImporter: metadataImporter);
             FindClass("C").NamedConstructors.Should().HaveCount(1);
             FindClass("C").StaticMethods.Should().HaveCount(1);
             FindNamedConstructor("C.StringCtor").Should().NotBeNull();
@@ -49,36 +49,36 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void ConstructorImplementedAsStaticMethodGetsAddedToTheStaticMethodsCollectionAndNotTheConstructors() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.StaticMethod("X") };
-            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.StaticMethod("X") };
+            Compile(new[] { "class C { public C() {} }" }, metadataImporter: metadataImporter);
             FindStaticMethod("C.X").Should().NotBeNull();
             FindNamedConstructor("C.X").Should().BeNull();
         }
 
         [Test]
         public void ConstructorImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.NotUsableFromScript() };
-            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.NotUsableFromScript() };
+            Compile(new[] { "class C { public C() {} }" }, metadataImporter: metadataImporter);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]
         public void ConstructorImplementedAsInlineCodeDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.InlineCode("X") };
-            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.InlineCode("X") };
+            Compile(new[] { "class C { public C() {} }" }, metadataImporter: metadataImporter);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]
         public void ConstructorImplementedAsJsonDoesNotAppearOnTheType() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json(new IMember[0]) };
-            Compile(new[] { "class C { public C() {} }" }, namingConvention: namingConvention);
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json(new IMember[0]) };
+            Compile(new[] { "class C { public C() {} }" }, metadataImporter: metadataImporter);
             FindClass("C").UnnamedConstructor.Should().BeNull();
         }
 
         [Test]
         public void StaticConstructorBodyGetsAddedLastInTheStaticInitStatements() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
             Compile(new[] {
 @"class C {
     static int x = 0;
@@ -86,7 +86,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
         int z = 2;
     }
     static int y = 1;
-}" }, namingConvention: namingConvention);
+}" }, metadataImporter: metadataImporter);
 
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
             cctor.Replace("\r\n", "\n").Should().Be(
@@ -98,13 +98,13 @@ var $z = 2;
 
         [Test]
         public void StaticFieldsWithoutInitializersAreInitializedToDefault() {
-            var namingConvention = new MockNamingConventionResolver { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
+            var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
             Compile(new[] {
 @"class C<T> {
     static T x;
     static int y;
 	static string z;
-}" }, namingConvention: namingConvention);
+}" }, metadataImporter: metadataImporter);
 
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
         	cctor.Replace("\r\n", "\n").Should().Be(

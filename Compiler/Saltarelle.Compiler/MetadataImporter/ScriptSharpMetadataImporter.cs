@@ -8,7 +8,7 @@ using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
-	public class ScriptSharpMetadataImporter : INamingConventionResolver, IScriptSharpMetadataImporter {
+	public class ScriptSharpMetadataImporter : IMetadataImporter, IScriptSharpMetadataImporter {
 		private const string ScriptSkipAttribute                    = "System.Runtime.CompilerServices.ScriptSkipAttribute";
 		private const string ScriptAliasAttribute                   = "System.Runtime.CompilerServices.ScriptAliasAttribute";
 		private const string InlineCodeAttribute                    = "System.Runtime.CompilerServices.InlineCodeAttribute";

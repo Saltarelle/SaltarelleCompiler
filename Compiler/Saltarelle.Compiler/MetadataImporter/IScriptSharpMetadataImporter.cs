@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 	}
 
-	public interface IScriptSharpMetadataImporter : INamingConventionResolver {
+	public interface IScriptSharpMetadataImporter : IMetadataImporter {
 		bool IsNamedValues(ITypeDefinition t);
 		bool IsResources(ITypeDefinition t);
 		bool IsSerializable(ITypeDefinition t);

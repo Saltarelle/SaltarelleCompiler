@@ -14,8 +14,8 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
         protected MethodCompiler MethodCompiler { get; private set; }
         protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
-        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, bool referenceSystemCore = false) {
-            Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, namingConvention: namingConvention, namer: namer, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
+        protected void CompileMethod(string source, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, bool referenceSystemCore = false) {
+            Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, metadataImporter: metadataImporter, namer: namer, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;
@@ -26,8 +26,8 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
         }
 
-		protected void AssertCorrect(string csharp, string expected, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, bool referenceSystemCore = false, string methodName = "M") {
-			CompileMethod(csharp, namingConvention: namingConvention ?? new MockNamingConventionResolver {
+		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, bool referenceSystemCore = false, string methodName = "M") {
+			CompileMethod(csharp, metadataImporter: metadataImporter ?? new MockMetadataImporter {
 				GetPropertySemantics = p => {
 					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
 						return PropertyScriptSemantics.Field("$" + p.Name);

@@ -3,16 +3,16 @@
 namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests.ExpressionTests {
 	[TestFixture]
 	public class BinaryNonAssignmentOperatorTests : MethodCompilerTestBase {
-		protected void AssertCorrectForBulkOperators(string csharp, string expected, bool includeEqualsAndNotEquals, INamingConventionResolver namingConvention = null) {
+		protected void AssertCorrectForBulkOperators(string csharp, string expected, bool includeEqualsAndNotEquals, IMetadataImporter metadataImporter = null) {
 			// Bulk operators are all except for division, shift right, coalesce and the logical operators.
 			foreach (var op in new[] { "*", "%", "+", "-", "<<", "<", ">", "<=", ">=", "&", "^", "|" }) {
 				var jsOp = (op == "==" || op == "!=" ? op + "=" : op);	// Script should use strict equals (===) rather than normal equals (==)
-				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", jsOp), namingConvention);
+				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", jsOp), metadataImporter);
 			}
 
 			if (includeEqualsAndNotEquals) {
-				AssertCorrect(csharp.Replace("+", "=="), expected.Replace("+", "==="), namingConvention);
-				AssertCorrect(csharp.Replace("+", "!="), expected.Replace("+", "!=="), namingConvention);
+				AssertCorrect(csharp.Replace("+", "=="), expected.Replace("+", "==="), metadataImporter);
+				AssertCorrect(csharp.Replace("+", "!="), expected.Replace("+", "!=="), metadataImporter);
 			}
 		}
 

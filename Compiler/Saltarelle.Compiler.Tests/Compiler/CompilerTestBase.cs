@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
-        protected void Compile(IEnumerable<string> sources, INamingConventionResolver namingConvention = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUnsupportedConstructs = true, bool referenceSystemCore = false) {
+        protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUnsupportedConstructs = true, bool referenceSystemCore = false) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
@@ -35,7 +35,7 @@ namespace Saltarelle.Compiler.Tests.Compiler {
                 errorReporter = new MockErrorReporter(true);
             }
 
-        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(namingConvention ?? new MockNamingConventionResolver(), namer ?? new MockNamer(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter) { AllowUnsupportedConstructs = allowUnsupportedConstructs };
+        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(metadataImporter ?? new MockMetadataImporter(), namer ?? new MockNamer(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter) { AllowUnsupportedConstructs = allowUnsupportedConstructs };
         	if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 

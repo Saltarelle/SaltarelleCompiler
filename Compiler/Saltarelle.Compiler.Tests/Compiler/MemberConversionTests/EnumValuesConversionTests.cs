@@ -56,8 +56,8 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void EnumValueWhichIsNotUsableFromScriptIsNotImported() {
-			var nc = new MockNamingConventionResolver { GetFieldSemantics = f => f.Name == "Member2" ? FieldScriptSemantics.NotUsableFromScript() : FieldScriptSemantics.Field("$" + f.Name) };
-            Compile(new[] { "enum MyEnum { Member1, Member2, Member3 }" }, namingConvention: nc);
+			var md = new MockMetadataImporter { GetFieldSemantics = f => f.Name == "Member2" ? FieldScriptSemantics.NotUsableFromScript() : FieldScriptSemantics.Field("$" + f.Name) };
+            Compile(new[] { "enum MyEnum { Member1, Member2, Member3 }" }, metadataImporter: md);
 			FindEnum("MyEnum").Values.Select(v => v.Name).Should().BeEquivalentTo(new[] { "$Member1", "$Member3" });
         }
     }

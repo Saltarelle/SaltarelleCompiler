@@ -23,22 +23,22 @@ namespace Saltarelle.Compiler {
 			return IsPublic(member.DeclaringType.GetDefinition()) && (member.Accessibility == Accessibility.Public || member.Accessibility == Accessibility.Protected || member.Accessibility == Accessibility.ProtectedOrInternal);
 		}
 
-		private static void FindUsedUnusableTypes(IEnumerable<IType> types, INamingConventionResolver namingConvention, HashSet<ITypeDefinition> result) {
+		private static void FindUsedUnusableTypes(IEnumerable<IType> types, IMetadataImporter metadataImporter, HashSet<ITypeDefinition> result) {
 			foreach (var t in types) {
 				if (t is ITypeDefinition) {
-					if (namingConvention.GetTypeSemantics((ITypeDefinition)t).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
+					if (metadataImporter.GetTypeSemantics((ITypeDefinition)t).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
 						result.Add((ITypeDefinition)t);
 				}
 				else if (t is ParameterizedType) {
 					var pt = (ParameterizedType)t;
-					FindUsedUnusableTypes(new[] { pt.GetDefinition() }.Concat(pt.TypeArguments), namingConvention, result);
+					FindUsedUnusableTypes(new[] { pt.GetDefinition() }.Concat(pt.TypeArguments), metadataImporter, result);
 				}
 			}
 		}
 
-		public static IEnumerable<ITypeDefinition> FindUsedUnusableTypes(IEnumerable<IType> types, INamingConventionResolver namingConvention) {
+		public static IEnumerable<ITypeDefinition> FindUsedUnusableTypes(IEnumerable<IType> types, IMetadataImporter metadataImporter) {
 			var s = new HashSet<ITypeDefinition>();
-			FindUsedUnusableTypes(types, namingConvention, s);
+			FindUsedUnusableTypes(types, metadataImporter, s);
 			return s;
 		}
     }

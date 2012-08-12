@@ -6,8 +6,8 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests {
-	public class MockNamingConventionResolver : INamingConventionResolver {
-		public MockNamingConventionResolver() {
+	public class MockMetadataImporter : IMetadataImporter {
+		public MockMetadataImporter() {
 			GetTypeSemantics           = t => {
 			                             	if (t.DeclaringTypeDefinition == null)
 			                             		return TypeScriptSemantics.NormalType(t.FullName);
@@ -46,38 +46,38 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
 		public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
 
-		void INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
+		void IMetadataImporter.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
 		}
 
-		TypeScriptSemantics INamingConventionResolver.GetTypeSemantics(ITypeDefinition typeDefinition) {
+		TypeScriptSemantics IMetadataImporter.GetTypeSemantics(ITypeDefinition typeDefinition) {
 			return GetTypeSemantics(typeDefinition);
 		}
 
-		MethodScriptSemantics INamingConventionResolver.GetMethodSemantics(IMethod method) {
+		MethodScriptSemantics IMetadataImporter.GetMethodSemantics(IMethod method) {
 			return GetMethodSemantics(method);
 		}
 
-		ConstructorScriptSemantics INamingConventionResolver.GetConstructorSemantics(IMethod method) {
+		ConstructorScriptSemantics IMetadataImporter.GetConstructorSemantics(IMethod method) {
 			return GetConstructorSemantics(method);
 		}
 
-		PropertyScriptSemantics INamingConventionResolver.GetPropertySemantics(IProperty property) {
+		PropertyScriptSemantics IMetadataImporter.GetPropertySemantics(IProperty property) {
 			return GetPropertySemantics(property);
 		}
 
-		string INamingConventionResolver.GetAutoPropertyBackingFieldName(IProperty property) {
+		string IMetadataImporter.GetAutoPropertyBackingFieldName(IProperty property) {
 			return GetAutoPropertyBackingFieldName(property);
 		}
 
-		FieldScriptSemantics INamingConventionResolver.GetFieldSemantics(IField field) {
+		FieldScriptSemantics IMetadataImporter.GetFieldSemantics(IField field) {
 			return GetFieldSemantics(field);
 		}
 
-		EventScriptSemantics INamingConventionResolver.GetEventSemantics(IEvent evt) {
+		EventScriptSemantics IMetadataImporter.GetEventSemantics(IEvent evt) {
 			return GetEventSemantics(evt);
 		}
 
-		string INamingConventionResolver.GetAutoEventBackingFieldName(IEvent evt) {
+		string IMetadataImporter.GetAutoEventBackingFieldName(IEvent evt) {
 			return GetAutoEventBackingFieldName(evt);
 		}
 	}

@@ -63,7 +63,7 @@ public void M() {
 	// END
 }",
 @"	var $i = $this.$x;
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 
 		[Test]
@@ -79,7 +79,7 @@ public void M() {
 	};
 }",
 @"		var $i = $this.$x;
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
 
 		[Test]
@@ -91,7 +91,7 @@ public void M() {
 	public void M(int i, int j, params int[] myParamArray) {
 		int x = myParamArray[3];
 	}
-}" }, namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText[0].Contains("myParamArray") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));

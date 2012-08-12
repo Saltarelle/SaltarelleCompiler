@@ -538,7 +538,7 @@ void M() {
 	// END
 }",
 @"	var $c3 = $c1 + $c2;
-", namingConvention: new MockNamingConventionResolver { GetMethodSemantics = m => m.IsOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod(m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.IsOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 	}
 }
