@@ -216,6 +216,7 @@
     <Compile Include="Compiler\MethodCompilationTests\StatementTests\YieldStatementTests.cs" />
     <Compile Include="Compiler\MethodCompilationTests\VariableGatheringTests.cs" />
     <Compile Include="Compiler\UnsupportedConstructsScannerTests.cs" />
+    <Compile Include="DefaultNamerTests\GetStateMachineLoopLabelTests.cs" />
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />

@@ -25,6 +25,15 @@ namespace Saltarelle.Compiler.Compiler
 			return name;
 		}
 
+		public string GetStateMachineLoopLabel(ISet<string> usedNames) {
+			string result;
+			int i = 0;
+			do {
+				result = "$sm" + (++i).ToString(CultureInfo.InvariantCulture);
+			} while (usedNames.Contains(result));
+			return result;
+		}
+
 		public string ThisAlias {
 			get { return "$this"; }
 		}
