@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
             var er = new MockErrorReporter(true);
 			PreparedCompilation compilation = null;
 			var rtl = new ScriptSharpRuntimeLibrary(md, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
-            var compiler = new Saltarelle.Compiler.Compiler.Compiler(md, n, rtl, er);
+            var compiler = new Compiler.Compiler(md, n, rtl, er);
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
@@ -90,7 +90,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			compilation = compiler.CreateCompilation(new[] { sourceFile }, references, null);
 			var compiledTypes = compiler.Compile(compilation);
 
-			var js = new OOPEmulator.ScriptSharpOOPEmulator(md, er).Rewrite(compiledTypes, compilation.Compilation);
+			var js = new OOPEmulator.ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
 			js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
