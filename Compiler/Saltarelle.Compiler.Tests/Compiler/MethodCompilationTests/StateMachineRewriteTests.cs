@@ -130,7 +130,7 @@ public System.Collections.IEnumerator M() {
 }",
 @"function() {
 	var $result, $tmp1 = 0;
-	$finally1 = function() {
+	$finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({Object}, function() {
@@ -145,7 +145,7 @@ public System.Collections.IEnumerator M() {
 				}
 				case 2: {
 					$tmp1 = -1;
-					$finally1.call(this);
+					$finally.call(this);
 					$tmp1 = -1;
 					break $loop1;
 				}
@@ -165,7 +165,7 @@ public System.Collections.IEnumerator M() {
 					try {
 					}
 					finally {
-						$finally1.call(this);
+						$finally.call(this);
 					}
 				}
 			}
@@ -190,7 +190,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 }",
 @"function($x) {
 	var $result, $tmp1 = 0;
-	$finally1 = function() {
+	$finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({Int32}, function() {
@@ -205,7 +205,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 				}
 				case 2: {
 					$tmp1 = -1;
-					$finally1.call(this);
+					$finally.call(this);
 					$tmp1 = -1;
 					break $loop1;
 				}
@@ -225,7 +225,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 					try {
 					}
 					finally {
-						$finally1.call(this);
+						$finally.call(this);
 					}
 				}
 			}
@@ -252,7 +252,7 @@ public System.Collections.IEnumerable M() {
 	return $MakeEnumerable({Object}, function() {
 		return (function() {
 			var $result, $tmp1 = 0;
-			$finally1 = function() {
+			$finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({Object}, function() {
@@ -267,7 +267,7 @@ public System.Collections.IEnumerable M() {
 						}
 						case 2: {
 							$tmp1 = -1;
-							$finally1.call(this);
+							$finally.call(this);
 							$tmp1 = -1;
 							break $loop1;
 						}
@@ -287,7 +287,7 @@ public System.Collections.IEnumerable M() {
 							try {
 							}
 							finally {
-								$finally1.call(this);
+								$finally.call(this);
 							}
 						}
 					}
@@ -316,7 +316,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 	return $MakeEnumerable({Int32}, function() {
 		return (function($x, $y) {
 			var $result, $tmp1 = 0;
-			$finally1 = function() {
+			$finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({Int32}, function() {
@@ -331,7 +331,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 						}
 						case 2: {
 							$tmp1 = -1;
-							$finally1.call(this);
+							$finally.call(this);
 							$tmp1 = -1;
 							break $loop1;
 						}
@@ -351,7 +351,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 							try {
 							}
 							finally {
-								$finally1.call(this);
+								$finally.call(this);
 							}
 						}
 					}

@@ -23,12 +23,6 @@ namespace Saltarelle.Compiler {
         TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition);
 
         /// <summary>
-        /// Gets the name by which a type parameter should be known. This method must not return null.
-        /// </summary>
-        /// <param name="typeParameter">Type parameter to get the name for.</param>
-		string GetTypeParameterName(ITypeParameter typeParameter);
-
-        /// <summary>
         /// Gets the implementation of a method. Might store away the returned name in some kind of cache (eg. to ensure that multiple calls to the same overloaded method return the exact same name).
         /// Must not return null.
         /// </summary>
@@ -65,18 +59,5 @@ namespace Saltarelle.Compiler {
         /// Returns the name of the backing field for the specified property. Must not return null.
         /// </summary>
         string GetAutoEventBackingFieldName(IEvent evt);
-
-        /// <summary>
-        /// Gets the name of a variable, constrained to not used any of the names in the supplied set. Must not return null.
-        /// This method can assume that it will only be called once for each variable.
-        /// </summary>
-        /// <param name="variable">Variable to get the name for. Can be null in order to get a name for a temporary variable.</param>
-        /// <param name="usedNames">All names that are used, and thus not possible to use as the variable name.</param>
-        string GetVariableName(IVariable variable, ISet<string> usedNames);
-
-		/// <summary>
-		/// Returns the alias for "this" whenever it has to be aliased, eg. inside a static method with this as first argument.
-		/// </summary>
-		string ThisAlias { get; }
     }
 }

@@ -46,8 +46,10 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="Compiler\DefaultNamer.cs" />
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
+    <Compile Include="Compiler\INamer.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />

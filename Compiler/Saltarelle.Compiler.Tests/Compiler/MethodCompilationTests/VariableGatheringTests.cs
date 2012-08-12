@@ -631,7 +631,7 @@ public void M(int p) {
 
 		[Test]
 		public void UsedNamesIsCorrectWhenGeneratingTemporaryVariables() {
-            CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namingConvention: new MockNamingConventionResolver { GetVariableName = (v, used) => new string('x', used.Count + 1) });
+            CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
             MethodCompiler.variables
                 .OrderBy(kvp => kvp.Key.Region.Begin)
                 .Select(kvp => kvp.Value.Name)

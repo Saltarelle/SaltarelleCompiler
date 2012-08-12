@@ -138,8 +138,9 @@ class C2 : C3 {}
 class C1 : C2, I1 {}
 ");
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var n = new MockNamer();
             var er = new MockErrorReporter(true);
-			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, new MockRuntimeLibrary(), er).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
+			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
 
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////

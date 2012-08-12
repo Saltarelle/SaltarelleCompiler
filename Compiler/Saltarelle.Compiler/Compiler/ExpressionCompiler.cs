@@ -126,6 +126,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private readonly ICompilation _compilation;
 		private readonly INamingConventionResolver _namingConvention;
+		private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<IVariable, VariableData> _variables;
@@ -149,11 +150,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled) {
+		public ExpressionCompiler(ICompilation compilation, INamingConventionResolver namingConvention, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
 			_namingConvention = namingConvention;
+			_namer = namer;
 			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
 			_variables = variables;
@@ -223,7 +225,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _namingConvention, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled).Compile(_filename, _location, expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _namingConvention, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled).Compile(_filename, _location, expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -1205,7 +1207,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Identifier(_thisAlias);
 			}
 			else if (_nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Count != 0) {
-				return JsExpression.MemberAccess(JsExpression.This, _namingConvention.ThisAlias);
+				return JsExpression.MemberAccess(JsExpression.This, _namer.ThisAlias);
 			}
 			else {
 				return JsExpression.This;
@@ -1243,7 +1245,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (newContext.CapturedByRefVariables.Count > 0) {
 				var toCapture = newContext.CapturedByRefVariables.Select(v => new JsObjectLiteralProperty(_variables[v].Name, CompileLocal(v, true))).ToList();
 				if (captureThis)
-					toCapture.Add(new JsObjectLiteralProperty(_namingConvention.ThisAlias, CompileThis()));
+					toCapture.Add(new JsObjectLiteralProperty(_namer.ThisAlias, CompileThis()));
 				captureObject = JsExpression.ObjectLiteral(toCapture);
 			}
 			else if (captureThis) {

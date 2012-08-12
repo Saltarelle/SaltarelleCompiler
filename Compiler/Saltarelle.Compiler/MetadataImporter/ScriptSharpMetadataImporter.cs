@@ -2,12 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
-using Saltarelle.Compiler.JSModel;
-using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -1246,6 +1242,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return result;
 		}
 
+		[Obsolete]
 		public string GetVariableName(IVariable variable, ISet<string> usedNames) {
 			if (_minimizeNames) {
 				// We know that (as long as all used names come from us), all names are generated in sequence. Therefore, the number of used name is a good starting guess for a unique name.
@@ -1270,6 +1267,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
+		[Obsolete]
 		public string ThisAlias {
 			get { return _minimizeNames ? "$_" : "$this"; }
 		}

@@ -220,6 +220,7 @@
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="Exe\CommandLineArgumentTests.cs" />
     <Compile Include="MinimizationTests\MinimizerTests.cs" />
+    <Compile Include="MockNamer.cs" />
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
@@ -257,7 +258,6 @@
     <Compile Include="ScriptSharpMetadataImporter\ConstructorTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\EventTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\FieldTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporter\GetTypeParameterNameTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\GetVariableNameTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\IndexerTests.cs" />
     <Compile Include="ScriptSharpMetadataImporter\MinimizedNamesTests.cs" />

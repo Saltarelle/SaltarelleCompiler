@@ -15,7 +15,7 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests {
         protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
 
         protected void Compile(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
-            Compile(new[] { source }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
+            Compile(new[] { source }, namingConvention: namingConvention, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
 				if (m.IsConstructor && (m.Attributes.Any() || useFirstConstructor)) {
 					Constructor = m;
 					MethodCompiler = mc;

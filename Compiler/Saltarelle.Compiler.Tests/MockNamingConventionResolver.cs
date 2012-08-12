@@ -14,7 +14,6 @@ namespace Saltarelle.Compiler.Tests {
 			                             	else
 			                             		return TypeScriptSemantics.NormalType(GetTypeSemantics(t.DeclaringTypeDefinition).Name + "$" + t.Name);
 			                             };
-			GetTypeParameterName       = t => "$" + t.Name;
 			GetMethodSemantics         = m => MethodScriptSemantics.NormalMethod(m.Name);
 			GetConstructorSemantics    = c => {
 			                             	if (c.DeclaringType.Kind == TypeKind.Anonymous)
@@ -36,28 +35,9 @@ namespace Saltarelle.Compiler.Tests {
 			GetFieldSemantics               = f => FieldScriptSemantics.Field("$" + f.Name);
 			GetEventSemantics               = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
 			GetAutoEventBackingFieldName    = e => "$" + e.Name;
-			GetVariableName                 = (v, used) => {
-			                                      string baseName;
-		                                          if (v != null) {
-		                                              baseName = v.Name.Replace("<>", "$");
-		                                              if (!baseName.StartsWith("$"))
-		                                                  baseName = "$" + baseName;
-		                                          }
-		                                          else {
-		                                              baseName = "$tmp";
-		                                          }
-			                                      if (v != null && !used.Contains(baseName))
-			                                          return baseName;
-			                                      int i = (v == null ? 1 : 2);
-			                                      while (used.Contains(baseName + i.ToString(CultureInfo.InvariantCulture)))
-			                                          i++;
-			                                      return baseName + i.ToString(CultureInfo.InvariantCulture);
-			                                  };
-			ThisAlias                       = "$this";
 		}
 
 		public Func<ITypeDefinition, TypeScriptSemantics> GetTypeSemantics { get; set; }
-		public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
 		public Func<IMethod, MethodScriptSemantics> GetMethodSemantics { get; set; }
 		public Func<IMethod, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
 		public Func<IProperty, PropertyScriptSemantics> GetPropertySemantics { get; set; }
@@ -65,18 +45,12 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IField, FieldScriptSemantics> GetFieldSemantics { get; set; }
 		public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
 		public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
-		public Func<IVariable, ISet<string>, string> GetVariableName { get; set; }
-		public string ThisAlias { get; set; }
 
 		void INamingConventionResolver.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
 		}
 
 		TypeScriptSemantics INamingConventionResolver.GetTypeSemantics(ITypeDefinition typeDefinition) {
 			return GetTypeSemantics(typeDefinition);
-		}
-
-		string INamingConventionResolver.GetTypeParameterName(ITypeParameter typeDefinition) {
-			return GetTypeParameterName(typeDefinition);
 		}
 
 		MethodScriptSemantics INamingConventionResolver.GetMethodSemantics(IMethod method) {
@@ -105,14 +79,6 @@ namespace Saltarelle.Compiler.Tests {
 
 		string INamingConventionResolver.GetAutoEventBackingFieldName(IEvent evt) {
 			return GetAutoEventBackingFieldName(evt);
-		}
-
-		string INamingConventionResolver.GetVariableName(IVariable variable, ISet<string> usedNames) {
-			return GetVariableName(variable, usedNames);
-		}
-
-		string INamingConventionResolver.ThisAlias {
-			get { return ThisAlias; }
 		}
 	}
 }

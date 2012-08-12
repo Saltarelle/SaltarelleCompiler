@@ -78,10 +78,11 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 		private Tuple<string, ICompilation, INamingConventionResolver> Compile(string source, bool includeLinq = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var n = new DefaultNamer();
             var er = new MockErrorReporter(true);
 			PreparedCompilation compilation = null;
-			var rtl = new ScriptSharpRuntimeLibrary(nc, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, nc.GetTypeSemantics(t).Name); });
-            var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, rtl, er);
+			var rtl = new ScriptSharpRuntimeLibrary(nc, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, nc.GetTypeSemantics(t).Name); });
+            var compiler = new Saltarelle.Compiler.Compiler.Compiler(nc, n, rtl, er);
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 

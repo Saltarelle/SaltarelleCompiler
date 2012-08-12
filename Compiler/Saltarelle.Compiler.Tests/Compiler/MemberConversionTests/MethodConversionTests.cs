@@ -127,29 +127,31 @@ namespace Saltarelle.Compiler.Tests.Compiler.MemberConversionTests {
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForInstanceMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
-            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
+            var namer = new MockNamer { GetTypeParameterName = tp => "$$" + tp.Name };
+            Compile(new[] { "class C { public void X<U, V>() {} }" }, namer: namer);
             FindInstanceMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForInstanceMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
-            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true) };
+			var namer = new MockNamer { GetTypeParameterName = tp => "$$" + tp.Name };
+            Compile(new[] { "class C { public void X<U, V>() {} }" }, namingConvention: namingConvention, namer: namer);
             FindInstanceMethod("C.X").TypeParameterNames.Should().BeEmpty();
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIncludedForStaticMethods() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X"), GetTypeParameterName = tp => "$$" + tp.Name };
-            Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
+            var namer = new MockNamer { GetTypeParameterName = tp => "$$" + tp.Name };
+            Compile(new[] { "class C { public static void X<U, V>() {} }" }, namer: namer);
             FindStaticMethod("C.X").TypeParameterNames.Should().Equal(new[] { "$$U", "$$V" });
         }
 
         [Test]
         public void GenericMethodTypeArgumentsAreIgnoredForStaticMethodsIfTheMethodImplOptionsSaySo() {
-            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true), GetTypeParameterName = tp => "$$" + tp.Name };
-            Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention);
+            var namingConvention = new MockNamingConventionResolver { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("X", ignoreGenericArguments: true) };
+			var namer = new MockNamer { GetTypeParameterName = tp => "$$" + tp.Name };
+            Compile(new[] { "class C { public static void X<U, V>() {} }" }, namingConvention: namingConvention, namer: namer);
             FindStaticMethod("C.X").TypeParameterNames.Should().BeEmpty();
         }
 

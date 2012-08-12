@@ -29,6 +29,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private readonly INamingConventionResolver _namingConvention;
+        private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
         private readonly IErrorReporter _errorReporter;
         private ICompilation _compilation;
@@ -46,8 +47,9 @@ namespace Saltarelle.Compiler.Compiler {
                 MethodCompiled(method, result, mc);
         }
 
-        public Compiler(INamingConventionResolver namingConvention, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
+        public Compiler(INamingConventionResolver namingConvention, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
             _namingConvention = namingConvention;
+			_namer    = namer;
             _errorReporter    = errorReporter;
         	_runtimeLibrary   = runtimeLibrary;
         }
@@ -80,7 +82,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? _runtimeLibrary.GetScriptType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class), TypeContext.Inheritance) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
 						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.Inheritance)).Where(t => t != null).ToList();
-						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namingConvention.GetTypeParameterName(a)).ToList();
+						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namer.GetTypeParameterName(a)).ToList();
 						result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
 					}
                 }
@@ -238,7 +240,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         private MethodCompiler CreateMethodCompiler() {
-            return new MethodCompiler(_namingConvention, _errorReporter, _compilation, _resolver, _runtimeLibrary, _definedSymbols);
+            return new MethodCompiler(_namingConvention, _namer, _errorReporter, _compilation, _resolver, _runtimeLibrary, _definedSymbols);
         }
 
         private void AddCompiledMethodToType(JsClass jsClass, IMethod method, MethodScriptSemantics options, JsMethod jsMethod) {
@@ -252,7 +254,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void MaybeCompileAndAddMethodToType(JsClass jsClass, EntityDeclaration node, BlockStatement body, IMethod method, MethodScriptSemantics options) {
             if (options.GenerateCode) {
-                var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namingConvention.GetTypeParameterName(tp)).ToList();
+                var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
 				JsMethod jsMethod;
 				if (method.IsAbstract) {
 					jsMethod = new JsMethod(method, options.Name, typeParamNames, null);

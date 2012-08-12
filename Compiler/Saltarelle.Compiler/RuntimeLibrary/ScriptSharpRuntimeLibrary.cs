@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.MetadataImporter;
@@ -11,10 +12,12 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.RuntimeLibrary {
 	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
+		private readonly Func<ITypeParameter, string> _getTypeParameterName;
 		private readonly Func<ITypeReference, JsExpression> _createTypeReferenceExpression;
 
-		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
+		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, Func<ITypeParameter, string> getTypeParameterName, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
 			_metadataImporter = metadataImporter;
+			_getTypeParameterName = getTypeParameterName;
 			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
 
@@ -34,7 +37,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
 			else if (type is ITypeParameter) {
-				return JsExpression.Identifier(_metadataImporter.GetTypeParameterName((ITypeParameter)type));
+				return JsExpression.Identifier(_getTypeParameterName((ITypeParameter)type));
 			}
 			else if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;

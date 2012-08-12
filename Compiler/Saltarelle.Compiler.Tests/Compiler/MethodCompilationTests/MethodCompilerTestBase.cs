@@ -14,8 +14,8 @@ namespace Saltarelle.Compiler.Tests.Compiler.MethodCompilationTests
         protected MethodCompiler MethodCompiler { get; private set; }
         protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
-        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, bool referenceSystemCore = false) {
-            Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, namingConvention, runtimeLibrary, errorReporter, (m, res, mc) => {
+        protected void CompileMethod(string source, INamingConventionResolver namingConvention = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, bool referenceSystemCore = false) {
+            Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, namingConvention: namingConvention, namer: namer, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;
