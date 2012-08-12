@@ -147,7 +147,6 @@ namespace Saltarelle.Compiler.Compiler {
 			if (DisableStateMachineRewriteTestingUseOnly)
 				return function;
 
-			int loopLabelIndex = 0;
 			JsBlockStatement body;
 			var usedLoopLabels = new HashSet<string>();
 			if (IsIteratorBlockVisitor.Analyze(function.Body)) {
