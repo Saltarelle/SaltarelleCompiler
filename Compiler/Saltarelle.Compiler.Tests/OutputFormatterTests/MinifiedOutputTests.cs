@@ -53,18 +53,18 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
         [Test]
         public void NewArgumentListContainsNoSpaces() {
-			Assert.Fail("TODO");
+			AssertCorrect(JsExpression.New(JsExpression.Identifier("x"), JsExpression.Number(1), JsExpression.Number(2), JsExpression.Number(3)), "new x(1,2,3)");
         }
 
         [Test]
         public void InvocationArgumentListContainsNoSpaces() {
-			Assert.Fail("TODO");
+			AssertCorrect(JsExpression.Invocation(JsExpression.Identifier("x"), JsExpression.Number(1), JsExpression.Number(2), JsExpression.Number(3)), "x(1,2,3)");
         }
 
         [Test]
         public void ObjectLiteralsContainNoEmbeddedSpaces() {
             AssertCorrect(JsExpression.ObjectLiteral(), "{}");
-            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1))), "{ x: 1 }");
+            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1))), "{x:1}");
             AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
                                                      new JsObjectLiteralProperty("y", JsExpression.Number(2)),
                                                      new JsObjectLiteralProperty("z", JsExpression.Number(3))),
@@ -76,18 +76,18 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
             AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
                                                      new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], new JsReturnStatement())),
                                                      new JsObjectLiteralProperty("z", JsExpression.Number(3))),
-                          "{x:1,y:function(){return;},z: 3}");
+                          "{x:1,y:function(){return;},z:3}");
         }
 
         [Test]
 		public void FunctionDefinitionExpressionIsOutputCorrectly() {
-            AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function(){return null}");
-            AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, new JsReturnStatement(JsExpression.Null)), "function(a,b) {return null;}");
+            AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function(){return null;}");
+            AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, new JsReturnStatement(JsExpression.Null)), "function(a,b){return null;}");
             AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null), name: "myFunction"), "function myFunction(){return null;}");
         }
 
         [Test]
-        public void BinaryOperatorsAreCorrectlyOutput() {
+        public void UnaryOperatorsAreCorrectlyOutput() {
             var operators = new Dictionary<ExpressionNodeType, string> { { ExpressionNodeType.TypeOf, "typeof({0})" },
                                                                          { ExpressionNodeType.LogicalNot, "!{0}" },
                                                                          { ExpressionNodeType.Negate, "-{0}" },
@@ -109,7 +109,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
         }
 
         [Test]
-        public void UnaryOperatorssAreCorrectlyOutput() {
+        public void BinaryOperatorsAreCorrectlyOutput() {
             var operators = new Dictionary<ExpressionNodeType, string> { { ExpressionNodeType.LogicalAnd, "{0}&&{1}" },
                                                                          { ExpressionNodeType.LogicalOr, "{0}||{1}" },
                                                                          { ExpressionNodeType.NotEqual, "{0}!={1}" },
@@ -157,7 +157,10 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
         [Test]
         public void ASpaceIsInsertedBetweenBinaryAndUnaryPlusAndMinusToAvoidParseAsIncrementOrDecrement() {
-			Assert.Fail("TODO");
+			AssertCorrect(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("a"), JsExpression.Unary(ExpressionNodeType.Positive, JsExpression.Identifier("b"))), "a+ +b");
+			AssertCorrect(JsExpression.Binary(ExpressionNodeType.Subtract, JsExpression.Identifier("a"), JsExpression.Unary(ExpressionNodeType.Negate, JsExpression.Identifier("b"))), "a- -b");
+			AssertCorrect(JsExpression.Binary(ExpressionNodeType.Subtract, JsExpression.Identifier("a"), JsExpression.Unary(ExpressionNodeType.Positive, JsExpression.Identifier("b"))), "a-+b");
+			AssertCorrect(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("a"), JsExpression.Unary(ExpressionNodeType.Negate, JsExpression.Identifier("b"))), "a+-b");
         }
 
 		[Test]
@@ -169,7 +172,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		public void BlockStatementsAreCorrectlyOutput() {
 			AssertCorrect(new JsBlockStatement(new JsStatement[0]), "{}");
 			AssertCorrect(new JsBlockStatement(new[] { new JsExpressionStatement(JsExpression.Identifier("X")) }), "{X;}");
-			AssertCorrect(new JsBlockStatement(new[] { new JsExpressionStatement(JsExpression.Identifier("X")), new JsExpressionStatement(JsExpression.Identifier("Y")) }), "{X;Y}");
+			AssertCorrect(new JsBlockStatement(new[] { new JsExpressionStatement(JsExpression.Identifier("X")), new JsExpressionStatement(JsExpression.Identifier("Y")) }), "{X;Y;}");
 		}
 
 		[Test]
@@ -198,7 +201,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			                                 JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
 			                                 JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
 			                                 JsBlockStatement.EmptyStatement),
-			              "for(i=0;i<10; i++){}");
+			              "for(i=0;i<10;i++){}");
 
 			AssertCorrect(new JsForStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", JsExpression.Number(1))),
 			                                 JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
@@ -238,7 +241,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect(new JsIfStatement(JsExpression.Identifier("a"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))),
 			                                       new JsIfStatement(JsExpression.Identifier("b"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1))),
 												       new JsIfStatement(JsExpression.Identifier("c"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3)))))),
-			              "if(a){i=0;}else if(b){i = 1;}else if(c){i=2;}else{i=3;}");
+			              "if(a){i=0;}else if(b){i=1;}else if(c){i=2;}else{i=3;}");
 		}
 
 		[Test]
@@ -298,14 +301,20 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		}
 
 		[Test]
-		public void FunctionDefinitionStatementWorks() {
-			AssertCorrect(new JsFunctionStatement("f", new[] { "a, b, c" }, new JsExpressionStatement(JsExpression.Identifier("x"))),
+		public void FunctionDefinitionStatementIsCorrectlyOutput() {
+			AssertCorrect(new JsFunctionStatement("f", new[] { "a", "b", "c" }, new JsExpressionStatement(JsExpression.Identifier("x"))),
 			              "function f(a,b,c){x;}");
 		}
 
 		[Test]
 		public void WithStatementIsCorrectlyOutput() {
 			AssertCorrect(new JsWithStatement(JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement), "with(o){}");
+		}
+
+		[Test]
+		public void LabelledStatementIsCorrectlyOutput() {
+			AssertCorrect(new JsBlockStatement(new JsLabelledStatement("lbl", new JsExpressionStatement(JsExpression.Identifier("X")))),
+			              "{lbl:X;}");
 		}
     }
 }

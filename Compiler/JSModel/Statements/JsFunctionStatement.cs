@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -17,6 +18,8 @@ namespace Saltarelle.Compiler.JSModel.Statements {
             if (body == null) throw new ArgumentNullException("body");
 
             ParameterNames = parameterNames.AsReadOnly();
+			if (ParameterNames.Any(n => !n.IsValidJavaScriptIdentifier()))
+				throw new ArgumentException("parameterNames");
             Body = JsBlockStatement.MakeBlock(body);
             Name = name;
         }

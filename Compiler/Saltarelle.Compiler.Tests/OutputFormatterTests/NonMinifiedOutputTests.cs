@@ -372,12 +372,18 @@ else {
 
 		[Test]
 		public void FunctionDefinitionStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsFunctionStatement("f", new[] { "a, b, c" }, new JsExpressionStatement(JsExpression.Identifier("x"))), "function f(a, b, c) {\n\tx;\n}\n");
+			AssertCorrect(new JsFunctionStatement("f", new[] { "a", "b", "c" }, new JsExpressionStatement(JsExpression.Identifier("x"))), "function f(a, b, c) {\n\tx;\n}\n");
 		}
 
 		[Test]
 		public void WithStatementIsCorrectlyOutput() {
 			AssertCorrect(new JsWithStatement(JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement), "with (o) {\n}\n");
+		}
+
+		[Test]
+		public void LabelledStatementIsCorrectlyOutput() {
+			AssertCorrect(new JsBlockStatement(new JsLabelledStatement("lbl", new JsExpressionStatement(JsExpression.Identifier("X")))),
+			              "{\n\tlbl:\n\tX;\n}\n");
 		}
     }
 }
