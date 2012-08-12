@@ -1,7 +1,9 @@
+1.1.0
 Use !! for dynamic conversions to bool.
 Fixed internal error when implementing properties/events that are [NonScriptable]
 Implemented support for iterator blocks (yield)
 Minification improvements
+DateTime is now an immutable struct, MutableDateTime is a mutable date class.
 
 1.0.1
 Fixed project URL and included history in NuGet packages.

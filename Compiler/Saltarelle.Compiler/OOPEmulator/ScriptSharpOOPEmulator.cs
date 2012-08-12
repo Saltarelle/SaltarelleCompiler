@@ -25,10 +25,12 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
+		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
 
-		public ScriptSharpOOPEmulator(IScriptSharpMetadataImporter metadataImporter, IErrorReporter errorReporter) {
+		public ScriptSharpOOPEmulator(IScriptSharpMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
 			_metadataImporter = metadataImporter;
+			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
 		}
 
@@ -76,7 +78,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				foreach (var category in tests.GroupBy(t => t.Item2).Select(g => new { Category = g.Key, Tests = g.Select(x => new { Description = x.Item1, IsAsync = x.Item3, ExpectedAssertionCount = x.Item4, Function = x.Item5 }) }).OrderBy(x => x.Category)) {
 					if (category.Category != null)
 						testInvocations.Add(JsExpression.Invocation(JsExpression.Identifier("module"), JsExpression.String(category.Category)));
-					testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), t.Function } : new JsExpression[] { JsExpression.String(t.Description), t.Function })));
+					testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), _runtimeLibrary.Bind(t.Function, JsExpression.This) } : new JsExpression[] { JsExpression.String(t.Description), _runtimeLibrary.Bind(t.Function, JsExpression.This) })));
 				}
 
 				instanceMethodList.Add(new JsMethod(null, "runTests", null, JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(testInvocations.Select(t => new JsExpressionStatement(t))))));
