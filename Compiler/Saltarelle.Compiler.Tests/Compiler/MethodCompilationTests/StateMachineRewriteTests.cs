@@ -25,33 +25,33 @@ public void M() {
 	goto lbl1;
 }",
 @"function() {
-	var $tmp1 = 0, $a, $b, $c;
+	var $state = 0, $a, $b, $c;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state) {
 			case 0: {
 				$a = 0, $b = 0, $c = 0;
-				$tmp1 = 1;
+				$state = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if ($a === 1) {
-					$tmp1 = 2;
+					$state = 2;
 					continue $loop1;
 				}
 				else {
-					$tmp1 = 3;
+					$state = 3;
 					continue $loop1;
 				}
 			}
 			case 2: {
 				$b = 0;
-				$tmp1 = 3;
+				$state = 3;
 				continue $loop1;
 			}
 			case 3: {
 				$c = 0;
-				$tmp1 = 1;
+				$state = 1;
 				continue $loop1;
 			}
 			default: {
@@ -80,33 +80,33 @@ public C() {
 	goto lbl1;
 }",
 @"function() {
-	var $tmp1 = 0, $a, $b, $c;
+	var $state = 0, $a, $b, $c;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state) {
 			case 0: {
 				$a = 0, $b = 0, $c = 0;
-				$tmp1 = 1;
+				$state = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if ($a === 1) {
-					$tmp1 = 2;
+					$state = 2;
 					continue $loop1;
 				}
 				else {
-					$tmp1 = 3;
+					$state = 3;
 					continue $loop1;
 				}
 			}
 			case 2: {
 				$b = 0;
-				$tmp1 = 3;
+				$state = 3;
 				continue $loop1;
 			}
 			case 3: {
 				$c = 0;
-				$tmp1 = 1;
+				$state = 1;
 				continue $loop1;
 			}
 			default: {
@@ -129,24 +129,24 @@ public System.Collections.IEnumerator M() {
 	}
 }",
 @"function() {
-	var $result, $tmp1 = 0;
+	var $result, $state = 0;
 	$finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({Object}, function() {
 		$loop1:
 		for (;;) {
-			switch ($tmp1) {
+			switch ($state) {
 				case 0: {
-					$tmp1 = 1;
+					$state = 1;
 					$result = 1;
-					$tmp1 = 2;
+					$state = 2;
 					return true;
 				}
 				case 2: {
-					$tmp1 = -1;
+					$state = -1;
 					$finally.call(this);
-					$tmp1 = -1;
+					$state = -1;
 					break $loop1;
 				}
 				default: {
@@ -159,7 +159,7 @@ public System.Collections.IEnumerator M() {
 		return $result;
 	}, function() {
 		try {
-			switch ($tmp1) {
+			switch ($state) {
 				case 1:
 				case 2: {
 					try {
@@ -171,7 +171,7 @@ public System.Collections.IEnumerator M() {
 			}
 		}
 		finally {
-			$tmp1 = -1;
+			$state = -1;
 		}
 	});
 }");
@@ -189,24 +189,24 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 	}
 }",
 @"function($x) {
-	var $result, $tmp1 = 0;
+	var $result, $state = 0;
 	$finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({Int32}, function() {
 		$loop1:
 		for (;;) {
-			switch ($tmp1) {
+			switch ($state) {
 				case 0: {
-					$tmp1 = 1;
+					$state = 1;
 					$result = 1;
-					$tmp1 = 2;
+					$state = 2;
 					return true;
 				}
 				case 2: {
-					$tmp1 = -1;
+					$state = -1;
 					$finally.call(this);
-					$tmp1 = -1;
+					$state = -1;
 					break $loop1;
 				}
 				default: {
@@ -219,7 +219,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 		return $result;
 	}, function() {
 		try {
-			switch ($tmp1) {
+			switch ($state) {
 				case 1:
 				case 2: {
 					try {
@@ -231,7 +231,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 			}
 		}
 		finally {
-			$tmp1 = -1;
+			$state = -1;
 		}
 	});
 }");
@@ -251,24 +251,24 @@ public System.Collections.IEnumerable M() {
 @"function() {
 	return $MakeEnumerable({Object}, function() {
 		return (function() {
-			var $result, $tmp1 = 0;
+			var $result, $state = 0;
 			$finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({Object}, function() {
 				$loop1:
 				for (;;) {
-					switch ($tmp1) {
+					switch ($state) {
 						case 0: {
-							$tmp1 = 1;
+							$state = 1;
 							$result = 1;
-							$tmp1 = 2;
+							$state = 2;
 							return true;
 						}
 						case 2: {
-							$tmp1 = -1;
+							$state = -1;
 							$finally.call(this);
-							$tmp1 = -1;
+							$state = -1;
 							break $loop1;
 						}
 						default: {
@@ -281,7 +281,7 @@ public System.Collections.IEnumerable M() {
 				return $result;
 			}, function() {
 				try {
-					switch ($tmp1) {
+					switch ($state) {
 						case 1:
 						case 2: {
 							try {
@@ -293,7 +293,7 @@ public System.Collections.IEnumerable M() {
 					}
 				}
 				finally {
-					$tmp1 = -1;
+					$state = -1;
 				}
 			});
 		}).call(this);
@@ -315,24 +315,24 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 @"function($x, $y) {
 	return $MakeEnumerable({Int32}, function() {
 		return (function($x, $y) {
-			var $result, $tmp1 = 0;
+			var $result, $state = 0;
 			$finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({Int32}, function() {
 				$loop1:
 				for (;;) {
-					switch ($tmp1) {
+					switch ($state) {
 						case 0: {
-							$tmp1 = 1;
+							$state = 1;
 							$result = 1;
-							$tmp1 = 2;
+							$state = 2;
 							return true;
 						}
 						case 2: {
-							$tmp1 = -1;
+							$state = -1;
 							$finally.call(this);
-							$tmp1 = -1;
+							$state = -1;
 							break $loop1;
 						}
 						default: {
@@ -345,7 +345,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 				return $result;
 			}, function() {
 				try {
-					switch ($tmp1) {
+					switch ($state) {
 						case 1:
 						case 2: {
 							try {
@@ -357,7 +357,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 					}
 				}
 				finally {
-					$tmp1 = -1;
+					$state = -1;
 				}
 			});
 		}).call(this, $x, $y);

@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler.Compiler
 			get { return "$finally"; }
 		}
 
-		public string StateVariableName {
+		public string StateVariableDesiredName {
 			get { return "$state"; }
 		}
 

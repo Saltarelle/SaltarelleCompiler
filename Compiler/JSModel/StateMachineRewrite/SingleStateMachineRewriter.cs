@@ -22,13 +22,15 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		readonly Func<string> _allocateTempVariable;
+		readonly Func<string> _allocateStateVariable;
 		readonly Func<string> _allocateLoopLabel;
 		Func<string> _allocateFinallyHandler;
 		Func<JsExpression, JsExpression> _makeSetCurrent;
 
-		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateLoopLabel) {
+		public SingleStateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
+			_allocateStateVariable = allocateStateVariable;
 			_allocateLoopLabel = allocateLoopLabel;
 		}
 
@@ -105,7 +107,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private JsBlockStatement Process(JsBlockStatement statement, bool isIteratorBlock) {
-			_stateVariableName = _allocateTempVariable();
+			_stateVariableName = _allocateStateVariable();
 			_nextStateIndex = 0;
 			_isIteratorBlock = isIteratorBlock;
 			_processedStates = new HashSet<State>();

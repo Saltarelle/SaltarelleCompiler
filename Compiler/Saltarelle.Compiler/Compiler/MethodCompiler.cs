@@ -155,6 +155,7 @@ namespace Saltarelle.Compiler.Compiler {
 				body = StateMachineRewriter.RewriteIteratorBlock(function.Body,
 				                                                 ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
 				                                                 () => { var result = _namer.GetVariableName(null, _usedNames); _usedNames.Add(result); return result; },
+				                                                 () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedNames); _usedNames.Add(result); return result; },
 				                                                 () => "$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture),
 				                                                 () => { var result = _namer.GetVariableName(_namer.FinallyHandlerDesiredName, _usedNames); _usedNames.Add(result); return result; },
 				                                                 x => JsExpression.Assign(JsExpression.Identifier(yieldResultVariable), x),
@@ -164,6 +165,7 @@ namespace Saltarelle.Compiler.Compiler {
 				body = StateMachineRewriter.Rewrite(function.Body,
 				                                    ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
 				                                    () => { var result = _namer.GetVariableName(null, _usedNames); _usedNames.Add(result); return result; },
+				                                    () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedNames); _usedNames.Add(result); return result; },
 				                                    () => "$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture));
 			}
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);

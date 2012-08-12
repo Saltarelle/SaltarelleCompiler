@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.Compiler
 		string GetVariableName(string desiredName, ISet<string> usedNames);
 		string ThisAlias { get; }
 		string FinallyHandlerDesiredName { get; }
-		string StateVariableName { get; }
+		string StateVariableDesiredName { get; }
 		string YieldResultVariableDesiredName { get; }
 //		public string StateMachineLoopLabel { get; }
 	}

@@ -15,24 +15,24 @@ lbl1:
 	d;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
 					b;
-					$tmp1 = 1;
+					$state1 = 1;
 					continue $loop1;
 				}
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			case 1: {
 				c;
 				d;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -58,29 +58,29 @@ lbl1:
 	e;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
 					b;
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 2: {
 				c;
 				d;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				e;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -106,29 +106,29 @@ lbl1:
 	lbl2: e;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
 					b;
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 2: {
 				c;
 				d;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				e;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -158,35 +158,35 @@ lbl1:
 }
 ", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
 				else {
 					c;
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 			}
 			case 2: {
 				b;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				d;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				e;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -214,30 +214,30 @@ lbl1:
 }
 ", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
-					$tmp1 = 1;
+					$state1 = 1;
 					continue $loop1;
 				}
 				else {
 					b;
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				d;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -265,30 +265,30 @@ lbl1:
 }
 ", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
 				else {
 					c;
-					$tmp1 = 1;
+					$state1 = 1;
 					continue $loop1;
 				}
 			}
 			case 2: {
 				b;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				d;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -335,21 +335,21 @@ lbl1:
 	m;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (x) {
 					a;
 					if (y) {
 						b;
-						$tmp1 = 3;
+						$state1 = 3;
 						continue $loop1;
 					}
 					else {
 						d;
-						$tmp1 = 4;
+						$state1 = 4;
 						continue $loop1;
 					}
 				}
@@ -357,49 +357,49 @@ lbl1:
 					g;
 					if (z) {
 						h;
-						$tmp1 = 6;
+						$state1 = 6;
 						continue $loop1;
 					}
 					else {
 						j;
-						$tmp1 = 7;
+						$state1 = 7;
 						continue $loop1;
 					}
 				}
 			}
 			case 3: {
 				c;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				f;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 6: {
 				i;
-				$tmp1 = 5;
+				$state1 = 5;
 				continue $loop1;
 			}
 			case 7: {
 				k;
-				$tmp1 = 5;
+				$state1 = 5;
 				continue $loop1;
 			}
 			case 5: {
 				l;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				m;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {

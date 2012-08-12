@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests
 			                       };
 			ThisAlias                      = "$this";
 			FinallyHandlerDesiredName      = "$finally";
-			StateVariableName              = "$state";
+			StateVariableDesiredName              = "$state";
 			YieldResultVariableDesiredName = "$result";
 		}
 
@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Tests
 
 		public string ThisAlias { get; set; }
 		public string FinallyHandlerDesiredName { get; set; }
-		public string StateVariableName { get; set; }
+		public string StateVariableDesiredName { get; set; }
 		public string YieldResultVariableDesiredName { get; set; }
 
 		string INamer.GetTypeParameterName(ITypeParameter typeParameter) {

@@ -16,37 +16,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -72,37 +72,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -125,32 +125,32 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = -1;
+					$state1 = -1;
 					break $loop1;
 				}
 				d;
-				$tmp1 = 3;
+				$state1 = 3;
 				continue $loop1;
 			}
 			case 3: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			default: {
@@ -174,37 +174,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	lbl2: f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -229,37 +229,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -283,32 +283,32 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				if (!b) {
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 3;
+				$state1 = 3;
 				continue $loop1;
 			}
 			case 3: {
 				e;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				c;
-				$tmp1 = 0;
+				$state1 = 0;
 				continue $loop1;
 			}
 			case 2: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -334,37 +334,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -387,28 +387,28 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				d;
-				$tmp1 = 3;
+				$state1 = 3;
 				continue $loop1;
 			}
 			case 3: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			default: {
@@ -431,27 +431,27 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = -1;
+					$state1 = -1;
 					break $loop1;
 				}
 				d;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				e;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			default: {
@@ -474,18 +474,18 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	}
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				d;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				e;
-				$tmp1 = 0;
+				$state1 = 0;
 				continue $loop1;
 			}
 			default: {
@@ -510,37 +510,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -565,32 +565,32 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 3;
+				$state1 = 3;
 				continue $loop1;
 			}
 			case 3: {
 				e;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 2: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -615,33 +615,33 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -666,23 +666,23 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				d;
-				$tmp1 = 2;
+				$state1 = 2;
 				continue $loop1;
 			}
 			case 2: {
 				e;
-				$tmp1 = 0;
+				$state1 = 0;
 				continue $loop1;
 			}
 			case 1: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -707,37 +707,37 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	f;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				e;
-				$tmp1 = 3;
+				$state1 = 3;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				f;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			default: {
@@ -763,51 +763,51 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	i;
 }", 
 @"{
-	var $tmp1 = 0;
+	var $state1 = 0;
 	$loop1:
 	for (;;) {
-		switch ($tmp1) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 1: {
 				if (!b) {
-					$tmp1 = 3;
+					$state1 = 3;
 					continue $loop1;
 				}
 				d;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			case 4: {
 				if (!e) {
-					$tmp1 = 2;
+					$state1 = 2;
 					continue $loop1;
 				}
 				g;
-				$tmp1 = 6;
+				$state1 = 6;
 				continue $loop1;
 			}
 			case 2: {
 				c;
-				$tmp1 = 1;
+				$state1 = 1;
 				continue $loop1;
 			}
 			case 3: {
 				i;
-				$tmp1 = -1;
+				$state1 = -1;
 				break $loop1;
 			}
 			case 6: {
 				h;
-				$tmp1 = 5;
+				$state1 = 5;
 				continue $loop1;
 			}
 			case 5: {
 				f;
-				$tmp1 = 4;
+				$state1 = 4;
 				continue $loop1;
 			}
 			default: {
