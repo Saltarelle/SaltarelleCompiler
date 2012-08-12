@@ -222,6 +222,8 @@
     <Compile Include="ExeTests\CommandLineArgumentTests.cs" />
     <Compile Include="MinimizationTests\MinimizerTests.cs" />
     <Compile Include="MockNamer.cs" />
+    <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
+    <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
@@ -238,7 +240,7 @@
     <Compile Include="MockRuntimeLibrary.cs" />
     <Compile Include="MockScriptSharpMetadataImporter.cs" />
     <Compile Include="MockSourceFile.cs" />
-    <Compile Include="OutputFormatterTests.cs" />
+    <Compile Include="OutputFormatterTests\ParenthesationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CompilerTests\TypeConversionTests.cs" />
     <Compile Include="ReferenceImporterTests\GlobalNamespaceReferenceImporterTests.cs" />

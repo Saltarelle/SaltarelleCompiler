@@ -9,9 +9,6 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.JSModel.Minimization
 {
 	public class Minimizer {
-		private readonly bool _minimizeIdentifiers;
-		private readonly bool _stripComments;
-
 		internal struct Function : IEquatable<Function> {
 			public JsFunctionDefinitionExpression Expr { get; private set; }
 			public JsFunctionStatement Stmt { get; private set; }
@@ -201,24 +198,6 @@ namespace Saltarelle.Compiler.JSModel.Minimization
 			}
 		}
 
-		internal class CommentStripper : RewriterVisitorBase<object> {
-			private CommentStripper() {
-			}
-
-			public static JsStatement Process(JsStatement statement) {
-				return new CommentStripper().VisitStatement(statement, null);
-			}
-
-			public override JsStatement VisitComment(JsComment comment, object data) {
-				return new JsBlockStatement(new JsStatement[0], mergeWithParent: true);
-			}
-		}
-
-		public Minimizer(bool minimizeIdentifiers, bool stripComments) {
-			_minimizeIdentifiers = minimizeIdentifiers;
-			_stripComments = stripComments;
-		}
-
 		private const string _encodeNumberTable = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		internal static string EncodeNumber(int i) {
 			string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
@@ -239,16 +218,9 @@ namespace Saltarelle.Compiler.JSModel.Minimization
 		}
 
 		public JsStatement Process(JsStatement statement) {
-			var result = statement;
-			if (_minimizeIdentifiers) {
-				var locals  = LocalVariableGatherer.Analyze(statement);
-				var globals = ImplicitGlobalsGatherer.Analyze(statement, locals);
-				result = IdentifierMinimizerRewriter.Process(statement, locals, globals, GenerateName);
-			}
-			if (_stripComments) {
-				result = CommentStripper.Process(result);
-			}
-			return result;
+			var locals  = LocalVariableGatherer.Analyze(statement);
+			var globals = ImplicitGlobalsGatherer.Analyze(statement, locals);
+			return IdentifierMinimizerRewriter.Process(statement, locals, globals, GenerateName);
 		}
 	}
 }

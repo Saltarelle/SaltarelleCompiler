@@ -179,7 +179,7 @@ namespace Saltarelle.Compiler.Tests.MinimizationTests
 	}
 	j;
 }"));
-			var result = new Minimizer(true, false).Process(stmt);
+			var result = new Minimizer().Process(stmt);
 			string actual = OutputFormatter.Format(result);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(
 @"{
@@ -211,25 +211,6 @@ namespace Saltarelle.Compiler.Tests.MinimizationTests
 		});
 	}
 	j;
-}
-".Replace("\r\n", "\n")));
-		}
-
-		[Test]
-		public void StrippingCommentsWorks() {
-			var stmt = new JsBlockStatement(
-				new JsComment("Comment 1"),
-				new JsExpressionStatement(JsExpression.Identifier("a")),
-				new JsComment("Comment 2"),
-				new JsExpressionStatement(JsExpression.Identifier("b"))
-			);
-
-			var result = new Minimizer(false, true).Process(stmt);
-			string actual = OutputFormatter.Format(result);
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(
-@"{
-	a;
-	b;
 }
 ".Replace("\r\n", "\n")));
 		}

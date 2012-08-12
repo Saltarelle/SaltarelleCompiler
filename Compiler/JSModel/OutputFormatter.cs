@@ -10,20 +10,34 @@ namespace Saltarelle.Compiler.JSModel
 {
     public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
     	private readonly bool _allowIntermediates;
+		private readonly bool _minify;
     	private CodeBuilder _cb = new CodeBuilder();
 
-        private OutputFormatter(bool allowIntermediates) {
+        private OutputFormatter(bool allowIntermediates, bool minify) {
 			_allowIntermediates = allowIntermediates;
+			_minify = minify;
 		}
 
     	public static string Format(JsExpression expression, bool allowIntermediates = false) {
-            var fmt = new OutputFormatter(allowIntermediates);
+            var fmt = new OutputFormatter(allowIntermediates, false);
             fmt.VisitExpression(expression, false);
             return fmt._cb.ToString();
         }
 
         public static string Format(JsStatement statement, bool allowIntermediates = false) {
-            var fmt = new OutputFormatter(allowIntermediates);
+            var fmt = new OutputFormatter(allowIntermediates, false);
+            fmt.VisitStatement(statement, true);
+            return fmt._cb.ToString();
+        }
+
+    	public static string FormatMinified(JsExpression expression, bool allowIntermediates = false) {
+            var fmt = new OutputFormatter(allowIntermediates, true);
+            fmt.VisitExpression(expression, false);
+            return fmt._cb.ToString();
+        }
+
+        public static string FormatMinified(JsStatement statement, bool allowIntermediates = false) {
+            var fmt = new OutputFormatter(allowIntermediates, true);
             fmt.VisitStatement(statement, true);
             return fmt._cb.ToString();
         }
@@ -646,8 +660,12 @@ redo:
 			return null;
     	}
 
-    	public object VisitWithStatement(JsWithStatement statement, bool data) {
-    		throw new NotImplementedException();
+    	public object VisitWithStatement(JsWithStatement statement, bool addNewline) {
+			_cb.Append("with (");
+			VisitExpression(statement.Object, false);
+			_cb.Append(") ");
+			VisitStatement(statement.Body, addNewline);
+			return null;
     	}
 
     	public object VisitLabelledStatement(JsLabelledStatement statement, bool addNewline) {
