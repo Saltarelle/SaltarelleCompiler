@@ -377,18 +377,18 @@ $.fn.method2 = function(y) {
 		Y;
 	},
 	runTests: function() {
-		test('TestMethod description', function(x1) {
+		test('TestMethod description', $Bind(function(x1) {
 			X1;
-		});
-		asyncTest('AsyncTestMethod description', function(x2) {
+		}, this));
+		asyncTest('AsyncTestMethod description', $Bind(function(x2) {
 			X2;
-		});
-		test('TestMethodWithAssertionCount description', 3, function(x3) {
+		}, this));
+		test('TestMethodWithAssertionCount description', 3, $Bind(function(x3) {
 			X3;
-		});
-		asyncTest('AsyncTestMethodWithAssertionCount description', 3, function(x4) {
+		}, this));
+		asyncTest('AsyncTestMethodWithAssertionCount description', 3, $Bind(function(x4) {
 			X4;
-		});
+		}, this));
 	}
 };
 {MyClass}.registerClass('MyClass');
@@ -412,26 +412,26 @@ $.fn.method2 = function(y) {
 };
 {MyClass}.prototype = {
 	runTests: function() {
-		test('Test1 description', function(x1) {
+		test('Test1 description', $Bind(function(x1) {
 			X1;
-		});
-		test('Test4 description', function(x4) {
+		}, this));
+		test('Test4 description', $Bind(function(x4) {
 			X4;
-		});
+		}, this));
 		module('Category1');
-		test('Test2 description', function(x2) {
+		test('Test2 description', $Bind(function(x2) {
 			X2;
-		});
-		test('Test5 description', function(x5) {
+		}, this));
+		test('Test5 description', $Bind(function(x5) {
 			X5;
-		});
+		}, this));
 		module('Category2');
-		test('Test3 description', function(x3) {
+		test('Test3 description', $Bind(function(x3) {
 			X3;
-		});
-		test('Test6 description', function(x6) {
+		}, this));
+		test('Test6 description', $Bind(function(x6) {
 			X6;
-		});
+		}, this));
 	}
 };
 {MyClass}.registerClass('MyClass');

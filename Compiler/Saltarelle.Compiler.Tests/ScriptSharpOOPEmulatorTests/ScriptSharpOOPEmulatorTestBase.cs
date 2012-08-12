@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			proj = proj.AddAssemblyReferences(new[] { Common.Mscorlib });
 			var comp = proj.CreateCompilation();
 			var er = new MockErrorReporter(true);
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator(metadataImporter, er);
+			var obj = new OOPEmulator.ScriptSharpOOPEmulator(metadataImporter, new MockRuntimeLibrary(), er);
 			Assert.That(er.AllMessages, Is.Empty, "Should not have errors");
 			var rewritten = obj.Rewrite(types, comp);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
