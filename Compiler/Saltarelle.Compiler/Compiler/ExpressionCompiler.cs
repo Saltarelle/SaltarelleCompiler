@@ -833,7 +833,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case FieldScriptSemantics.ImplType.Field:
 						return JsExpression.MemberAccess(InnerCompile(rr.TargetResult, false), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
-						return Utils.MakeConstantExpression(impl.Value);
+						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
 						_errorReporter.Message(7509, _filename, _location, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
 						return JsExpression.Number(0);
@@ -1197,7 +1197,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (rr.ConstantValue == null && rr.Type.IsReferenceType != true)
 				return _runtimeLibrary.Default(rr.Type);
 			else
-				return Utils.MakeConstantExpression(rr.ConstantValue);
+				return JSModel.Utils.MakeConstantExpression(rr.ConstantValue);
 		}
 
 		private JsExpression CompileThis() {

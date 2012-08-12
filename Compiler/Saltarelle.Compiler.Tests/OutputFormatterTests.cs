@@ -670,6 +670,11 @@ namespace Saltarelle.Compiler.Tests
 		}
 
 		[Test]
+		public void ExpressionStatementsContainingOnlyAFunctionDefinitionParenthesizesThatDefinition() {
+			Assert.That(OutputFormatter.Format(new JsExpressionStatement(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement))), Is.EqualTo("(function() {\r\n});\r\n"));
+		}
+
+		[Test]
 		public void ForStatementsAreCorrectlyOutput() {
 			Assert.That(OutputFormatter.Format(new JsForStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("i", JsExpression.Number(0))),
 			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),

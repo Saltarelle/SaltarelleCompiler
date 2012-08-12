@@ -210,7 +210,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		private static readonly HashSet<string> _keywords = new HashSet<string>() { "abstract", "as", "boolean", "break", "byte", "case", "catch", "char", "class", "continue", "const", "debugger", "default", "delete", "do", "double", "else", "enum", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "is", "long", "namespace", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "use", "var", "void", "volatile", "while", "with", };
 
 		public static string EncodeNumber(int i, bool ensureValidIdentifier) {
 			if (ensureValidIdentifier) {
@@ -219,7 +218,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					i /= _encodeNumberTable.Length - 10;
 					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
 				}
-				return _keywords.Contains(result) ? "_" + result : result;
+				return JSModel.Utils.IsJavaScriptReservedWord(result) ? "_" + result : result;
 			}
 			else {
 				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
@@ -1122,7 +1121,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
 				}
 				else if (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames)) {
-					object value = Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
+					object value = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
 					if (value is bool)
 						_fieldSemantics[field] = FieldScriptSemantics.BooleanConstant((bool)value, name);
 					else if (value is double)

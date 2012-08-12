@@ -498,7 +498,7 @@ namespace Saltarelle.Compiler.JSModel
     	}
 
     	public object VisitExpressionStatement(JsExpressionStatement statement, bool addNewline) {
-    		VisitExpression(statement.Expression, false);
+    		VisitExpression(statement.Expression, statement.Expression is JsFunctionDefinitionExpression);
 			_cb.Append(";");
 			if (addNewline)
 				_cb.AppendLine();

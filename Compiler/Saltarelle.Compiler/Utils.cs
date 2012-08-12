@@ -41,50 +41,5 @@ namespace Saltarelle.Compiler {
 			FindUsedUnusableTypes(types, namingConvention, s);
 			return s;
 		}
-
-		public static object ConvertToDoubleOrStringOrBoolean(object value) {
-			if (value is bool || value is string || value == null)
-				return value;
-			else if (value is sbyte)
-				return (double)(sbyte)value;
-			else if (value is byte)
-				return (double)(byte)value;
-			else if (value is char)
-				return (double)(char)value;
-			else if (value is short)
-				return (double)(short)value;
-			else if (value is ushort)
-				return (double)(ushort)value;
-			else if (value is int)
-				return (double)(int)value;
-			else if (value is uint)
-				return (double)(uint)value;
-			else if (value is long)
-				return (double)(long)value;
-			else if (value is ulong)
-				return (double)(ulong)value;
-			else if (value is float)
-				return (double)(float)value;
-			else if (value is double)
-				return (double)value;
-			else if (value is decimal)
-				return (double)(decimal)value;
-			else
-				throw new NotSupportedException("Unsupported constant " + value.ToString() + "(" + value.GetType().ToString() + ")");
-		}
-
-		public static JsExpression MakeConstantExpression(object value) {
-			value = Utils.ConvertToDoubleOrStringOrBoolean(value);
-			if (value is bool)
-				return (bool)value ? JsExpression.True : JsExpression.False;
-			else if (value is double)
-				return JsExpression.Number((double)value);
-			if (value is string)
-				return JsExpression.String((string)value);
-			else if (value == null)
-				return JsExpression.Null;
-			else
-				throw new ArgumentException("value");
-		}
     }
 }
