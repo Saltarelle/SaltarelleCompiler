@@ -348,6 +348,44 @@ public class C1 {
 		}
 
 		[Test]
+		public void CanCompileIteratorBlock() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"using System.Collections.Generic; public class C1 { public IEnumerable<int> M() { yield return 0; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options, false);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void CanCompileLockStatement() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"using System.Collections.Generic; public class C1 { public void M() { lock (new object()) {} } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options, false);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void TheAssemblyNameIsCorrect() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
