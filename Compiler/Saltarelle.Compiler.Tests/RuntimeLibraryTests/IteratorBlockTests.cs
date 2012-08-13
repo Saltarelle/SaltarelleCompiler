@@ -72,7 +72,7 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"yielding 0
 got 0
 yielding 1
@@ -80,7 +80,7 @@ got 1
 yielding -1
 got -1
 in finally
-"));
+");
 		}
 
 		[Test]
@@ -123,13 +123,13 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"yielding 0
 got 0
 yielding 1
 got 1
 in finally
-"));
+");
 		}
 
 		[Test]
@@ -180,7 +180,7 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"yielding 1
 got 1
 yielding 2
@@ -188,17 +188,8 @@ got 2
 throwing
 in finally
 caught exception
-"));
+");
 		}
-
-
-
-
-
-
-
-
-
 
 		[Test]
 		public void TypeReturnedByIteratorBlockReturningIEnumerableImplementsThatInterface() {
@@ -263,7 +254,7 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"yielding 0
 got 0
 yielding 1
@@ -271,7 +262,7 @@ got 1
 yielding -1
 got -1
 in finally
-"));
+");
 		}
 
 		[Test]
@@ -313,13 +304,13 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"yielding 0
 got 0
 yielding 1
 got 1
 in finally
-"));
+");
 		}
 
 		[Test]
@@ -371,7 +362,7 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"yielding 1
 got 1
 yielding 2
@@ -379,7 +370,7 @@ got 2
 throwing
 in finally
 caught exception
-"));
+");
 		}
 
 		[Test]
@@ -415,14 +406,14 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"3
 2
 1
 3
 2
 1
-"));
+");
 		}
 
 		[Test]
@@ -463,7 +454,7 @@ public class C {
 		return sb.ToString();
 	}
 }", "C.M");
-			Assert.That(result, Is.EqualTo(
+			AssertStringsEqual((string)result,
 @"0
 0
 1
@@ -472,7 +463,7 @@ public class C {
 2
 -1
 -1
-"));
+");
 		}
 	}
 }

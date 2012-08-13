@@ -19,6 +19,10 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 		private OutputType Output = OutputType.None;
 
+		protected void AssertStringsEqual(string expected, string actual) {
+			Assert.That(expected.Replace("\r\n", "\n"), Is.EqualTo(actual.Replace("\r\n", "\n")));
+		}
+
 		private HtmlPage GeneratePage(string script, bool includeLinq) {
 			WebClient client = new WebClient();
 			try {
