@@ -1,3 +1,6 @@
+1.1.1
+Added type NotSupportedException (required for the iterator blocks feature).
+
 1.1.0
 Use !! for dynamic conversions to bool.
 Fixed internal error when implementing properties/events that are [NonScriptable]
