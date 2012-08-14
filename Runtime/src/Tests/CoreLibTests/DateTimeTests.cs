@@ -240,33 +240,61 @@ namespace CoreLibTests {
 		[Test]
 		public void ParseExactWorks() {
 			var dt = DateTime.ParseExact("2012-12-08", "yyyy-dd-MM");
-			Assert.AreEqual(dt.GetFullYear(), 2012);
-			Assert.AreEqual(dt.GetMonth(), 7);
-			Assert.AreEqual(dt.GetDate(), 12);
+			Assert.IsTrue(dt.HasValue);
+			Assert.AreEqual(dt.Value.GetFullYear(), 2012);
+			Assert.AreEqual(dt.Value.GetMonth(), 7);
+			Assert.AreEqual(dt.Value.GetDate(), 12);
+		}
+
+		[Test]
+		public void ParseExactReturnsNullIfTheInputIsInvalid() {
+			var dt = DateTime.ParseExact("X", "yyyy-dd-MM");
+			Assert.IsFalse(dt.HasValue);
 		}
 
 		[Test]
 		public void ParseExactWithCultureWorks() {
 			var dt = DateTime.ParseExact("2012-12-08", "yyyy-dd-MM", CultureInfo.InvariantCulture);
-			Assert.AreEqual(dt.GetFullYear(), 2012);
-			Assert.AreEqual(dt.GetMonth(), 7);
-			Assert.AreEqual(dt.GetDate(), 12);
+			Assert.IsTrue(dt.HasValue);
+			Assert.AreEqual(dt.Value.GetFullYear(), 2012);
+			Assert.AreEqual(dt.Value.GetMonth(), 7);
+			Assert.AreEqual(dt.Value.GetDate(), 12);
+		}
+
+		[Test]
+		public void ParseExactWithCultureReturnsNullIfTheInputIsInvalid() {
+			var dt = DateTime.ParseExact("X", "yyyy-dd-MM", CultureInfo.InvariantCulture);
+			Assert.IsFalse(dt.HasValue);
 		}
 
 		[Test]
 		public void ParseExactUtcWorks() {
 			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM");
-			Assert.AreEqual(dt.GetUtcFullYear(), 2012);
-			Assert.AreEqual(dt.GetUtcMonth(), 7);
-			Assert.AreEqual(dt.GetUtcDate(), 12);
+			Assert.IsTrue(dt.HasValue);
+			Assert.AreEqual(dt.Value.GetUtcFullYear(), 2012);
+			Assert.AreEqual(dt.Value.GetUtcMonth(), 7);
+			Assert.AreEqual(dt.Value.GetUtcDate(), 12);
+		}
+
+		[Test]
+		public void ParseExactUtcReturnsNullIfTheInputIsInvalid() {
+			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM");
+			Assert.IsFalse(dt.HasValue);
 		}
 
 		[Test]
 		public void ParseExactUtcWithCultureWorks() {
 			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM", CultureInfo.InvariantCulture);
-			Assert.AreEqual(dt.GetUtcFullYear(), 2012);
-			Assert.AreEqual(dt.GetUtcMonth(), 7);
-			Assert.AreEqual(dt.GetUtcDate(), 12);
+			Assert.IsTrue(dt.HasValue);
+			Assert.AreEqual(dt.Value.GetUtcFullYear(), 2012);
+			Assert.AreEqual(dt.Value.GetUtcMonth(), 7);
+			Assert.AreEqual(dt.Value.GetUtcDate(), 12);
+		}
+
+		[Test]
+		public void ParseExactUtcWithCultureReturnsNullIfTheInputIsInvalid() {
+			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM", CultureInfo.InvariantCulture);
+			Assert.IsFalse(dt.HasValue);
 		}
 
 		[Test]
