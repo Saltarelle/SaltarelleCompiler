@@ -11,10 +11,10 @@ namespace Saltarelle.Compiler.Compiler {
 
 		internal class ParsedSourceFile {
 			public SyntaxTree SyntaxTree { get; private set; }
-			public CSharpParsedFile ParsedFile { get; private set; }
+			public CSharpUnresolvedFile ParsedFile { get; private set; }
 			public ISet<string> DefinedSymbols { get; private set; }
 
-			public ParsedSourceFile(SyntaxTree syntaxTree, CSharpParsedFile parsedFile, ISet<string> definedSymbols) {
+			public ParsedSourceFile(SyntaxTree syntaxTree, CSharpUnresolvedFile parsedFile, ISet<string> definedSymbols) {
 				SyntaxTree     = syntaxTree;
 				ParsedFile     = parsedFile;
 				DefinedSymbols = definedSymbols;

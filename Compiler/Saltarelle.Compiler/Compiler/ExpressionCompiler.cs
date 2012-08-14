@@ -548,6 +548,15 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		public override JsExpression VisitResolveResult(ResolveResult rr, bool data) {
+			if (rr.IsError) {
+				_errorReporter.InternalError("ResolveResult " + rr.ToString() + " is an error.", _filename, _location);
+				return JsExpression.Number(0);
+			}
+			else
+				return base.VisitResolveResult(rr, data);
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			if (rr.UserDefinedOperatorMethod != null) {
 				var impl = _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod);

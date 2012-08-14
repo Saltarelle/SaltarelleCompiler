@@ -155,7 +155,7 @@ namespace Saltarelle.Compiler.Compiler {
                                                         var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
                                                         syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
                                                         var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
-                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpParsedFile(f.FileName, new UsingScope()), definedSymbols);
+                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.FileName, new UsingScope()), definedSymbols);
                                                     }
                                                 }).ToList();
 

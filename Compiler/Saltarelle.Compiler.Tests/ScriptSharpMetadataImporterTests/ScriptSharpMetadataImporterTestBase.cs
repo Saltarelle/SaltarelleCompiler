@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
             var parser = new CSharpParser();
 
             using (var rdr = new StringReader(source)) {
-				var pf = new CSharpParsedFile("File.cs");
+				var pf = new CSharpUnresolvedFile("File.cs");
 				var syntaxTree = parser.Parse(rdr, pf.FileName);
 				syntaxTree.AcceptVisitor(new TypeSystemConvertVisitor(pf));
 				project = project.UpdateProjectContent(null, pf);
