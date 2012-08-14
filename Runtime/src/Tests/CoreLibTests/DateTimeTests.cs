@@ -278,7 +278,7 @@ namespace CoreLibTests {
 
 		[Test]
 		public void ParseExactUtcReturnsNullIfTheInputIsInvalid() {
-			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM");
+			var dt = DateTime.ParseExactUtc("X", "yyyy-dd-MM");
 			Assert.IsFalse(dt.HasValue);
 		}
 
@@ -293,7 +293,7 @@ namespace CoreLibTests {
 
 		[Test]
 		public void ParseExactUtcWithCultureReturnsNullIfTheInputIsInvalid() {
-			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM", CultureInfo.InvariantCulture);
+			var dt = DateTime.ParseExactUtc("X", "yyyy-dd-MM", CultureInfo.InvariantCulture);
 			Assert.IsFalse(dt.HasValue);
 		}
 
