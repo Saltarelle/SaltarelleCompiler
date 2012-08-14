@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="transfer" namespace="effect" type="effect">
+	<desc>Transfers the outline of an element to another element</desc>
+	<longdesc>
+		Very useful when trying to visualize interaction between two elements.
+		<p>The transfer element iself has the class name "ui-effects-transfer", and needs to be styled by you, for example by adding a background or border.</p>
+	</longdesc>
+	<options>
+		<option name="className" type="String">
+			<desc>Optional class name the transfer element will receive.</desc>
+		</option>
+		<option name="to" type="String">
+			<desc>jQuery selector, the element to transfer to.</desc>
+		</option>
+		<option name="duration" type="Number" default="400">
+			<desc>The number of ms the animation will run for</desc>
+		</option>
+		<option name="easing" type="String" default="swing">
+			<desc>The easing function to use</desc>
+		</option>
+		<option name="complete" type="function">
+			<desc>A callback function, executed when the effect completes</desc>
+		</option>
+	</options>
+	<example>
+		<desc>Clicking on the green element transfers to the other.</desc>
+		<code><![CDATA[
+$("div").click(function () {
+      var i = 1 - $("div").index(this);
+      $(this).effect("transfer", { to: $("div").eq(i) }, 1000);
+});
+]]></code>
+		<html><![CDATA[
+<div></div>
+]]></html>
+	</example>
+	<category slug="effects"/>
+</entry>

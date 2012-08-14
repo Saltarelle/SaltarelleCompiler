@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
+
+namespace System.Collections.Generic
+{
+	[Imported(IsRealType = true)]
+	[IgnoreGenericArguments]
+	[ScriptNamespace("ss")]
+	internal class IteratorBlockEnumerator<T> : IEnumerator<T> {
+		public T Current { get { return default(T); } }
+		object IEnumerator.Current { get { return null; } }
+		public bool MoveNext() { return false; }
+		public void Reset() {}
+		public void Dispose() {}
+	}
+}

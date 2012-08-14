@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="slider" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>Drag a handle to select a numeric value</desc>
+	<longdesc>
+		<p>The jQuery UI Slider plugin makes selected elements into sliders. There are various options such as multiple handles, and ranges. The handle can be moved with the mouse or the arrow keys.</p>
+
+		The start, slide, and stop callbacks receive two arguments: The original browser event and a prepared ui object, view below for a documentation of this object (if you name your second argument 'ui'):
+
+		The slider widget will create handle elements with the class 'ui-slider-handle' on initialization. You can specify custom handle elements by creating and appending the elements and adding the 'ui-slider-handle' class before init. It will only create the number of handles needed to match the length of value/values. For example, if you specify 'values: [1, 5, 18]' and create one custom handle, the plugin will create the other two.
+
+		<ul>
+		  <li><b>ui.handle</b>: DOMElement - the current focused handle</li>
+		  <li><b>ui.value</b>: Integer - the current handle's value</li>
+		</ul>
+
+		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+	</longdesc>
+	<created>1.0</created>
+	<options>
+		<option name="animate" default='false'>
+			<desc>Whether to slide handle smoothly when user click outside handle on the bar. Will also accept a string representing one of the three predefined speeds ("slow", "normal", or "fast") or the number of milliseconds to run the animation (e.g. 1000).</desc>
+			<type name="Boolean" />
+			<type name="String" />
+			<type name="Number" />
+		</option>
+		<option name="disabled" default="false">
+			<desc>Disables the slider if set to true.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="max" default='100'>
+			<desc>The maximum value of the slider.</desc>
+			<type name="Number" />
+		</option>
+		<option name="min" default='0'>
+			<desc>The minimum value of the slider.</desc>
+			<type name="Number" />
+		</option>
+		<option name="orientation" default='"horizontal"'>
+			<desc>This option determines whether the slider has the min at the left, the max at the right or the min at the bottom, the max at the top. Possible values: 'horizontal', 'vertical'.</desc>
+			<type name="String" />
+		</option>
+		<option name="range" default='false'>
+			<desc>If set to true, the slider will detect if you have two handles and create a stylable range element between these two. Two other possible values are 'min' and 'max'. A min range goes from the slider min to one handle. A max range goes from one handle to the slider max.</desc>
+			<type name="Boolean" />
+			<type name="String" />
+		</option>
+		<option name="step" default='1'>
+			<desc>Determines the size or amount of each interval or step the slider takes between min and max. The full specified value range of the slider (max - min) needs to be evenly divisible by the step.</desc>
+			<type name="Number" />
+		</option>
+		<option name="value" default='0'>
+			<desc>Determines the value of the slider, if there's only one handle. If there is more than one handle, determines the value of the first handle.</desc>
+			<type name="Number" />
+		</option>
+		<option name="values" default='null'>
+			<desc>This option can be used to specify multiple handles. If range is set to true, the length of 'values' should be 2.</desc>
+			<type name="Array" />
+		</option>
+
+	</options>
+	<events>
+		<event name="create">
+			<desc>
+				This event is triggered when the slider is created.
+			</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+		<event name="start" type="slidestart">
+			<desc>This event is triggered when the user starts sliding.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="handle" type="jQuery">
+					<desc>The jQuery object representing the handle being slid</desc>
+				</property>
+				<property name="value" type="Number">
+					<desc>The current value of the slider</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="slide" type="slide">
+			<desc>This event is triggered on every mouse move during slide. Use ui.value (single-handled sliders) to obtain the value of the current handle, $(..).slider('value', index) to get another handles' value.
+
+Return false in order to prevent a slide, based on ui.value.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="handle" type="jQuery">
+					<desc>The jQuery object representing the handle being slid</desc>
+				</property>
+				<property name="value" type="Number">
+					<desc>The current value of the slider</desc>
+				</property>
+				<property name="values" type="Array">
+					<desc>An array of the current values of a multi-handled slider</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="change" type="slidechange">
+			<desc>This event is triggered on slide stop, or if the value is changed programmatically (by the <code>value</code> method).  Takes arguments event and ui.  Use event.originalEvent to detect whether the value changed by mouse, keyboard, or programmatically. Use ui.value (single-handled sliders) to obtain the value of the current handle, $(this).slider('values', index) to get another handle's value.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="handle" type="jQuery">
+					<desc>The jQuery object representing the handle that was slid</desc>
+				</property>
+				<property name="value" type="Number">
+					<desc>The current value of the slider</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="stop" type="slidestop">
+			<desc>This event is triggered when the user stops sliding.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="handle" type="jQuery">
+					<desc>The jQuery object representing the handle that was slid</desc>
+				</property>
+				<property name="value" type="Number">
+					<desc>The current value of the slider</desc>
+				</property>
+			</argument>
+		</event>
+
+	</events>
+	<methods>
+		<widget-inherit id="widget-destroy" />
+		<widget-inherit id="widget-disable" />
+		<widget-inherit id="widget-enable" />
+		<widget-inherit id="widget-get-options" />
+		<widget-inherit id="widget-get-option" />
+		<widget-inherit id="widget-set-option" />
+		<widget-inherit id="widget-set-options" />
+		<method name="value">
+			<desc>Gets or sets the value of the slider. For single handle sliders.</desc>
+			<argument name="value" type="Number" optional="true">
+				<desc></desc>
+			</argument>
+		</method>
+		<method name="values">
+			<desc>Number</desc>
+			<argument name="index" type="Integer">
+				<desc></desc>
+			</argument>
+			<argument name="value" type="Number" optional="true">
+				<desc></desc>
+			</argument>
+		</method>
+		<widget-inherit id="widget-widget" />
+	</methods>
+	<example>
+
+		<desc>A simple jQuery UI Slider.</desc>
+		<inhead><![CDATA[  <style type="text/css">
+    #slider { margin: 10px; }
+  </style>]]></inhead>
+		<code><![CDATA[$("#slider").slider();]]></code>
+		<html><![CDATA[
+<div id="slider"></div>
+
+]]></html>
+
+	</example>
+	<category slug="widgets"/>
+</entry>

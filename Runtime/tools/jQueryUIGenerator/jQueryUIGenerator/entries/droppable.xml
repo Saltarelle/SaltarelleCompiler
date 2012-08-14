@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="droppable" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>Create targets for draggable elements</desc>
+	<longdesc>
+		<p>The jQuery UI Droppable plugin makes selected elements droppable (meaning they accept being dropped on by draggables). You can specify which (individually) or which kind of draggables each will accept.</p>
+	</longdesc>
+	<created>1.0</created>
+	<options>
+		<option name="accept" default='"*"'>
+			<desc>All draggables that match the selector will be accepted. If a function is specified, the function will be called for each draggable on the page (passed as the first argument to the function), to provide a custom filter. The function should return true if the draggable should be accepted.</desc>
+			<type name="Selector" />
+			<type name="Function" />
+		</option>
+		<option name="activeClass" default='false'>
+			<desc>If specified, the class will be added to the droppable while an acceptable draggable is being dragged.</desc>
+			<type name="String" />
+		</option>
+		<option name="addClasses" default='true'>
+			<desc>If set to false, will prevent the ui-droppable class from being added. This may be desired as a performance optimization when calling .droppable() init on many hundreds of elements.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="disabled" default="false">
+			<desc>Disables the droppable if set to true.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="greedy" default='false'>
+			<desc>If true, will prevent event propagation on nested droppables.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="hoverClass" default='false'>
+			<desc>If specified, the class will be added to the droppable while an acceptable draggable is being hovered.</desc>
+			<type name="String" />
+		</option>
+		<option name="scope" default='"default"'>
+			<desc>Used to group sets of draggable and droppable items, in addition to droppable's accept option. A draggable with the same scope value as a droppable will be accepted.</desc>
+			<type name="String" />
+		</option>
+		<option name="tolerance" default='"intersect"'>
+			<desc>
+				Specifies which mode to use for testing whether a draggable is 'over' a droppable. Possible values: 'fit', 'intersect', 'pointer', 'touch'.
+				<ul>
+					<li>'''fit''': draggable overlaps the droppable entirely</li>
+					<li>'''intersect''': draggable overlaps the droppable at least 50%</li>
+					<li>'''pointer''': mouse pointer overlaps the droppable</li>
+					<li>'''touch''': draggable overlaps the droppable any amount</li>
+				</ul>
+			</desc>
+			<type name="String" />
+		</option>
+
+	</options>
+	<events>
+		<event name="create">
+			<desc>
+				This event is triggered when the droppable is created.
+			</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+		<event name="activate" type="dropactivate">
+			<desc>This event is triggered any time an accepted draggable starts dragging. This can be useful if you want to make the droppable 'light up' when it can be dropped on.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="draggable" type="jQuery">
+				  <desc>current draggable element</desc>
+				</property>
+				<property name="helper" type="jQuery">
+				  <desc>current draggable helper</desc>
+				</property>
+				<property name="position" type="Object">
+				  <desc>current position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+				<property name="offset" type="Object">
+				  <desc>current absolute position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+			</argument>
+		</event>
+		<event name="deactivate" type="dropdeactivate">
+			<desc>This event is triggered any time an accepted draggable stops dragging.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="draggable" type="jQuery">
+				  <desc>current draggable element</desc>
+				</property>
+				<property name="helper" type="jQuery">
+				  <desc>current draggable helper</desc>
+				</property>
+				<property name="position" type="Object">
+				  <desc>current position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+				<property name="offset" type="Object">
+				  <desc>current absolute position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+			</argument>
+		</event>
+		<event name="over" type="dropover">
+			<desc>This event is triggered as an accepted draggable is dragged 'over' (within the tolerance of) this droppable.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="draggable" type="jQuery">
+				  <desc>current draggable element</desc>
+				</property>
+				<property name="helper" type="jQuery">
+				  <desc>current draggable helper</desc>
+				</property>
+				<property name="position" type="Object">
+				  <desc>current position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+				<property name="offset" type="Object">
+				  <desc>current absolute position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+			</argument>
+		</event>
+		<event name="out" type="dropout">
+			<desc>This event is triggered when an accepted draggable is dragged out (within the tolerance of) this droppable.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+			</argument>
+		</event>
+		<event name="drop" type="drop">
+			<desc>This event is triggered when an accepted draggable is dropped 'over' (within the tolerance of) this droppable. In the callback, $(this) represents the droppable the draggable is dropped on.
+ui.draggable represents the draggable.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="draggable" type="jQuery">
+				  <desc>current draggable element</desc>
+				</property>
+				<property name="helper" type="jQuery">
+				  <desc>current draggable helper</desc>
+				</property>
+				<property name="position" type="Object">
+				  <desc>current position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+				<property name="offset" type="Object">
+				  <desc>current absolute position of the draggable helper <code>{ top: , left: }</code></desc>
+				</property>
+			</argument>
+		</event>
+
+	</events>
+	<methods>
+		<widget-inherit id="widget-destroy" />
+		<widget-inherit id="widget-disable" />
+		<widget-inherit id="widget-enable" />
+		<widget-inherit id="widget-get-options" />
+		<widget-inherit id="widget-get-option" />
+		<widget-inherit id="widget-set-option" />
+		<widget-inherit id="widget-set-options" />
+		<widget-inherit id="widget-widget" />
+	</methods>
+	<example>
+		<desc>Makes the div droppable (a drop target for a draggable).</desc>
+		<inhead><![CDATA[<style type="text/css">
+    #draggable { width: 75px; height: 25px; background: silver; padding: 10px; }
+    #droppable { position: absolute; left: 250px; top: 0; width: 125px; height: 75px; background: gray; color: white; padding: 10px; }
+  </style>]]></inhead>
+		<code><![CDATA[$("#draggable").draggable();
+    $("#droppable").droppable({
+      drop: function() { alert('dropped'); }
+    });]]></code>
+		<html><![CDATA[
+<div id="droppable">Drop here</div>
+<div id="draggable">Drag me</div>
+
+]]></html>
+
+	</example>
+	<category slug="interactions"/>
+</entry>

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{94534671-7C55-4F3F-9209-3ECD2D3145D7}</ProjectGuid>
+    <ToolsPath>..\..\..\tools\</ToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\..\bin\Script\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\..\bin\Script\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="loader.js" />
+  </ItemGroup>
+  <Target Name="Build">
+    <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)loader.js /output:$(OutputPath)\ssloader.debug.js" />
+    <Exec Command="$(ToolsPath)\sspp.exe /nologo /stripCommentsOnly /crlf /input:$(ProjectDir)loader.js /output:$(OutputPath)\ssloader.rel.js" />
+    <Exec Command="$(ToolsPath)\ajaxmin.exe -clobber:true $(OutputPath)\ssloader.rel.js -out $(OutputPath)\ssloader.js" />
+  </Target>
+  <Target Name="Clean">
+  </Target>
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+  <Target Name="GetNativeManifest"> 
+  </Target>
+  <Target Name="GetCopyToOutputDirectoryItems"> 
+  </Target>
+</Project>

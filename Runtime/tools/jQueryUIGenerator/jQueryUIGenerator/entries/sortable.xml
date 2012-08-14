@@ -1,0 +1,540 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="sortable" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>Reorder elements in a list or grid using the mouse</desc>
+	<longdesc>
+		<p>The jQuery UI Sortable plugin makes selected elements sortable by dragging with the mouse.</p>
+		<p>All callbacks receive two arguments: The original browser event and a prepared ui object.</p>
+	</longdesc>
+	<created>1.0</created>
+	<options>
+		<option name="appendTo" default='"parent"'>
+			<desc>Defines where the helper that moves with the mouse is being appended to during the drag (for example, to resolve overlap/zIndex issues).</desc>
+			<type name="String" />
+		</option>
+		<option name="axis" default='false'>
+			<desc>If defined, the items can be dragged only horizontally or vertically. Possible values:'x', 'y'.</desc>
+			<type name="String" />
+		</option>
+		<option name="cancel" default='":input,button"'>
+			<desc>Prevents sorting if you start on elements matching the selector.</desc>
+			<type name="Selector" />
+		</option>
+		<option name="connectWith" default='false'>
+			<desc>Takes a jQuery selector with items that also have sortables applied. If used, the sortable is now connected to the other one-way, so you can drag from this sortable to the other.</desc>
+			<type name="Selector" />
+		</option>
+		<option name="containment" default='false'>
+			<desc>
+				Constrains dragging to within the bounds of the specified element - can be a DOM element, 'parent', 'document', 'window', or a jQuery selector.
+
+				<p>Note: the element specified for containment must have a calculated width and height (though it need not be explicit), so for example, if you have float:left sortable children and specify containment:'parent' be sure to have float:left on the sortable/parent container as well or it will have height: 0, causing undefined behavior.</p>
+			</desc>
+			<type name="Element" />
+			<type name="String" />
+			<type name="Selector" />
+		</option>
+		<option name="cursor" default='"auto"'>
+			<desc>Defines the cursor that is being shown while sorting.</desc>
+			<type name="String" />
+		</option>
+		<option name="cursorAt" default='false'>
+			<desc>Moves the sorting element or helper so the cursor always appears to drag from the same position. Coordinates can be given as a hash using a combination of one or two keys: <code>{ top, left, right, bottom }</code>.</desc>
+			<type name="Object" />
+		</option>
+		<option name="delay" default='0'>
+			<desc>Time in milliseconds to define when the sorting should start. It helps preventing unwanted drags when clicking on an element.</desc>
+			<type name="Number" />
+		</option>
+		<option name="disabled" default="false">
+			<desc>Disables the sortable if set to true.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="distance" default='1'>
+			<desc>Tolerance, in pixels, for when sorting should start. If specified, sorting will not start until after mouse is dragged beyond distance. Can be used to allow for clicks on elements within a handle.</desc>
+			<type name="Number" />
+		</option>
+		<option name="dropOnEmpty" default='true'>
+			<desc>If false items from this sortable can't be dropped to an empty linked sortable.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="forceHelperSize" default='false'>
+			<desc>If true, forces the helper to have a size.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="forcePlaceholderSize" default='false'>
+			<desc>If true, forces the placeholder to have a size.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="grid" default='false'>
+			<desc>Snaps the sorting element or helper to a grid, every x and y pixels. Array values: [x, y]</desc>
+			<type name="Array" />
+		</option>
+		<option name="handle" default='false'>
+			<desc>Restricts sort start click to the specified element.</desc>
+			<type name="Selector" />
+			<type name="Element" />
+		</option>
+		<option name="helper" default='"original"'>
+			<desc>Allows for a helper element to be used for dragging display. The supplied function receives the event and the element being sorted, and should return a DOMElement to be used as a custom proxy helper. Possible values: 'original', 'clone'</desc>
+			<type name="String" />
+			<type name="Function" />
+		</option>
+		<option name="items" default=''> *''>
+			<desc>Specifies which items inside the element should be sortable.</desc>
+			<type name="Selector" />
+		</option>
+		<option name="opacity" default='false'>
+			<desc>Defines the opacity of the helper while sorting. From 0.01 to 1</desc>
+			<type name="Number" />
+		</option>
+		<option name="placeholder" default='false'>
+			<desc>Class that gets applied to the otherwise white space.</desc>
+			<type name="String" />
+		</option>
+		<option name="revert" default='false'>
+			<desc>If set to true, the item will be reverted to its new DOM position with a smooth animation. Optionally, it can also be set to a number that controls the duration of the animation in ms.</desc>
+			<type name="Boolean" />
+			<type name="Number" />
+		</option>
+		<option name="scroll" default='true'>
+			<desc>If set to true, the page scrolls when coming to an edge.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="scrollSensitivity" default='20'>
+			<desc>Defines how near the mouse must be to an edge to start scrolling.</desc>
+			<type name="Number" />
+		</option>
+		<option name="scrollSpeed" default='20'>
+			<desc>The speed at which the window should scroll once the mouse pointer gets within the scrollSensitivity distance.</desc>
+			<type name="Number" />
+		</option>
+		<option name="tolerance" default='"intersect"'>
+			<desc>
+				This is the way the reordering behaves during drag. Possible values: 'intersect', 'pointer'. In some setups, 'pointer' is more natural.
+				<ul>
+					<li>'''intersect''': draggable overlaps the droppable at least 50%</li>
+					<li>'''pointer''': mouse pointer overlaps the droppable</li>
+				</ul>
+			</desc>
+			<type name="String" />
+		</option>
+		<option name="zIndex" default='1000'>
+			<desc>Z-index for element/helper while being sorted.</desc>
+			<type name="Number" />
+		</option>
+	</options>
+	<events>
+		<event name="create">
+			<desc>
+				This event is triggered when the sortable is created.
+			</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+		<event name="start" type="sortstart">
+			<desc>This event is triggered when sorting starts.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="sort" type="sort">
+			<desc>This event is triggered during sorting.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="change" type="sortchange">
+			<desc>This event is triggered during sorting, but only when the DOM position has changed.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="beforeStop" type="sortbeforestop">
+			<desc>This event is triggered when sorting stops, but when the placeholder/helper is still available.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="stop" type="sortstop">
+			<desc>This event is triggered when sorting has stopped.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="update" type="sortupdate">
+			<desc>This event is triggered when the user stopped sorting and the DOM position has changed.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="receive" type="sortreceive">
+			<desc>This event is triggered when a connected sortable list has received an item from another list.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="remove" type="sortremove">
+			<desc>This event is triggered when a sortable item has been dragged out from the list and into another.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="over" type="sortover">
+			<desc>This event is triggered when a sortable item is moved into a connected list.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="out" type="sortout">
+			<desc>This event is triggered when a sortable item is moved away from a connected list.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="activate" type="sortactivate">
+			<desc>This event is triggered when using connected lists, every connected list on drag start receives it.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="deactivate" type="sortdeactivate">
+			<desc>This event is triggered when sorting was stopped, is propagated to all possible connected lists.</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper being sorted</desc>
+				</property>
+				<property name="item" type="jQuery">
+					<desc>The jQuery object representing the current dragged element</desc>
+				</property>
+				<property name="offset" type="Object">
+					<desc>The current absolute position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position of the helper represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The original position of the element represented as <code>{ top, left }</code></desc>
+				</property>
+				<property name="sender" type="jQuery">
+					<desc>The sortable that the item comes from if moving from one sortable to another</desc>
+				</property>
+			</argument>
+		</event>
+
+	</events>
+	<methods>
+		<method name="cancel">
+			<desc>
+				Cancels a change in the current sortable and reverts it to the state prior to when the current sort was started. Useful in the stop and receive callback functions.
+
+				<p>If the sortable item is not being moved from one connected sortable to another:</p>
+				<pre><![CDATA[$(this).sortable('cancel');]]></pre>
+				will cancel the change.
+
+				<p>If the sortable item is being moved from one connected sortable to another:</p>
+				<pre><![CDATA[$(ui.sender).sortable('cancel');]]></pre>
+				will cancel the change. Useful in the 'receive' callback.
+			</desc>
+		</method>
+		<widget-inherit id="widget-destroy" />
+		<widget-inherit id="widget-disable" />
+		<widget-inherit id="widget-enable" />
+		<widget-inherit id="widget-get-options" />
+		<widget-inherit id="widget-get-option" />
+		<widget-inherit id="widget-set-option" />
+		<widget-inherit id="widget-set-options" />
+		<method name="refresh">
+			<desc>Refresh the sortable items. Custom trigger the reloading of all sortable items, causing new items to be recognized.</desc>
+		</method>
+		<method name="refreshPositions">
+			<desc>Refresh the cached positions of the sortables' items. Calling this method refreshes the cached item positions of all sortables. This is usually done automatically by the script and slows down performance. Use wisely.</desc>
+		</method>
+		<method name="serialize">
+			<desc>
+				Serializes the sortable's item id's into a form/ajax submittable string. Calling this method produces a hash that can be appended to any url to easily submit a new item order back to the server.
+
+				<p>It works by default by looking at the id of each item in the format 'setname_number', and it spits out a hash like "setname[]=number&amp;setname[]=number".</p>
+
+				<p>You can also give in a option hash as second argument to custom define how the function works. The possible options are: 'key' (replaces part1[] with whatever you want), 'attribute' (test another attribute than 'id') and 'expression' (use your own regexp).</p>
+
+				<p>If serialize returns an empty string, make sure the id attributes include an underscore.  They must be in the form: "set_number" For example, a 3 element list with id attributes foo_1, foo_5, foo_2 will serialize to foo[]=1&amp;foo[]=5&amp;foo[]=2. You can use an underscore, equal sign or hyphen to separate the set and number.  For example foo=1 or foo-1 or foo_1 all serialize to foo[]=1.</p>
+			</desc>
+			<argument name="options" type="Hash" optional="true">
+				<desc></desc>
+			</argument>
+		</method>
+		<method name="toArray">
+			<desc>Serializes the sortable's item id's into an array of string. If you have
+
+<pre><![CDATA[
+<ul id="a_sortable"><br/>
+	<li id="hello">Hello</li><br/>
+	<li id="goodbye">Good bye</li><br/>
+</ul>
+]]></pre>
+
+and do
+
+<pre><![CDATA[var result = $('#a_sortable').sortable('toArray');]]></pre>
+
+then <code>result[0]</code> will contain "hello" and <code>result[1]</code> will contain "goodbye".
+			</desc>
+		</method>
+		<widget-inherit id="widget-widget" />
+	</methods>
+	<example>
+
+		<desc>A simple jQuery UI Sortable.</desc>
+		<code><![CDATA[$("#sortable").sortable();]]></code>
+		<html><![CDATA[
+<ul id="sortable">
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+<li>Item 4</li>
+<li>Item 5</li>
+</ul>
+
+]]></html>
+
+	</example>
+	<category slug="interactions"/>
+</entry>
