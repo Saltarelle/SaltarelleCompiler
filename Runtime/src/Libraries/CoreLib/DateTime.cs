@@ -202,21 +202,21 @@ namespace System {
             return null;
         }
 
-		public static DateTime ParseExact(string value, string format) {
+		public static DateTime? ParseExact(string value, string format) {
 			return null;
 		}
 
-		public static DateTime ParseExact(string value, string format, CultureInfo culture) {
-			return null;
-		}
-
-		[ScriptName("parseExactUTC")]
-		public static DateTime ParseExactUtc(string value, string format) {
+		public static DateTime? ParseExact(string value, string format, CultureInfo culture) {
 			return null;
 		}
 
 		[ScriptName("parseExactUTC")]
-		public static DateTime ParseExactUtc(string value, string format, CultureInfo culture) {
+		public static DateTime? ParseExactUtc(string value, string format) {
+			return null;
+		}
+
+		[ScriptName("parseExactUTC")]
+		public static DateTime? ParseExactUtc(string value, string format, CultureInfo culture) {
 			return null;
 		}
 
