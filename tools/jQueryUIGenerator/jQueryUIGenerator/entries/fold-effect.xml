@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="fold" namespace="effect" type="effect">
+	<desc>
+		The fold effect hides or shows an element by folding it.
+	</desc>
+	<options>
+		<option name="mode" type="String" default='"hide"'>
+			<desc>
+				<p>UI Effect Mode</p>
+				<p>Possible Values: </p>
+				<dl>
+					<dt>hide</dt>
+					<dd>Hides the element.</dd>
+					<dt>show</dt>
+					<dd>Shows the element.</dd>
+					<dt>toggle</dt>
+					<dd>Will use <code>hide</code> or <code>show</code> depending on the current visibility of the element</dd>
+				</dl>
+			</desc>
+		</option>
+		<option name="duration" type="Number" default="400">
+			<desc>The number of ms the animation will run for</desc>
+		</option>
+		<option name="easing" type="String" default='"swing"'>
+			<desc>The easing function to use</desc>
+		</option>
+		<option name="complete" type="function">
+			<desc>A callback function, executed when the effect completes</desc>
+		</option>
+		<option name="size" type="Number|String" default="15">
+			<desc>The size of the "folded" element, can be a number representing px, or a string containing a percentage I.E. "50%"</desc>
+		</option>
+		<option name="horizFirst" type="Boolean" default="false">
+			<desc>If the horizontal direction happens first when hiding. Remember, showing inverts hiding.</desc>
+		</option>
+	</options>
+	<category slug="effects"/>
+</entry>

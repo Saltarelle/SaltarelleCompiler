@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="shake" namespace="effect" type="effect">
+	<desc>Shakes the element multiple times, vertically or horizontally.</desc>
+	<options>
+		<option name="direction" type="String" default="both">
+			<desc>The direction of the effect. Can be "left", "right", "up", "down".</desc>
+		</option>
+		<option name="distance" type="Number" default="20">
+			<desc>Distance to shake.</desc>
+		</option>
+		<option name="times" type="Number" default="3">
+			<desc>Times to shake.</desc>
+		</option>
+		<option name="duration" type="Number" default="400">
+			<desc>The number of ms the animation will run for</desc>
+		</option>
+		<option name="easing" type="String" default="swing">
+			<desc>The easing function to use</desc>
+		</option>
+		<option name="complete" type="function">
+			<desc>A callback function, executed when the effect completes</desc>
+		</option>
+	</options>
+	<example>
+		<desc>Shakes 3 times when clicking on the element.</desc>
+		<code><![CDATA[
+$("div").click(function () {
+      $(this).effect("shake", { times:3 }, 300);
+});
+]]></code>
+		<html><![CDATA[
+<div></div>
+]]></html>
+	</example>
+	<category slug="effects"/>
+</entry>

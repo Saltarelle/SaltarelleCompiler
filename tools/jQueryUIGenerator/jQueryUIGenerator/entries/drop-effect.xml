@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="drop" namespace="effect" type="effect">
+	<desc>
+		The drop effect hides or shows an element fading in/out and sliding in a direction.
+	</desc>
+	<options>
+		<option name="mode" type="String" default='"hide"'>
+			<desc>
+				<p>UI Effect Mode</p>
+				<p>Possible Values: </p>
+				<dl>
+					<dt>hide</dt>
+					<dd>Hides the element by dropping in the direction</dd>
+					<dt>show</dt>
+					<dd>Shows the element by undropping from the direction. This seems inverted from the hide.</dd>
+					<dt>toggle</dt>
+					<dd>Will use <code>hide</code> or <code>show</code> depending on the current visibility of the element</dd>
+				</dl>
+			</desc>
+		</option>
+		<option name="direction" type="String" default='"left"'>
+			<desc>
+				<p>The direction the element will fall to "hide" the element, or the direction from which the element will be revealed.</p>
+				<p>Possible Values</p>
+				<dl>
+					<dt>up</dt>
+					<dt>down</dt>
+					<dt>left</dt>
+					<dt>right</dt>
+				</dl>
+			</desc>
+		</option>
+		<option name="duration" type="Number" default="400">
+			<desc>The number of ms the animation will run for</desc>
+		</option>
+		<option name="easing" type="String" default='"swing"'>
+			<desc>The easing function to use</desc>
+		</option>
+		<option name="complete" type="function">
+			<desc>A callback function, executed when the effect completes</desc>
+		</option>
+	</options>
+	<category slug="effects"/>
+</entry>

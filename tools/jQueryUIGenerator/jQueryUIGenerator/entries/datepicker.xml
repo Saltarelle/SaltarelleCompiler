@@ -1,0 +1,296 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="datepicker" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>Select a date from a popup or inline calendar</desc>
+	<longdesc>
+		<p>The jQuery UI Datepicker is a highly configurable plugin that adds datepicker functionality to your pages. You can customize the date format and language, restrict the selectable date ranges and add in buttons and other navigation options easily.</p>
+
+		<p>By default, the datepicker calendar opens in a small overlay onFocus and closes automatically onBlur or when a date is selected. For an inline calendar, simply attach the datepicker to a div or span.</p>
+
+		<p>You can use keyboard shortcuts to drive the datepicker:</p>
+
+		<ul>
+		 <li>page up/down - previous/next month</li>
+		 <li>ctrl+page up/down - previous/next year</li>
+		 <li>ctrl+home - current month or open when closed</li>
+		 <li>ctrl+left/right - previous/next day</li>
+		 <li>ctrl+up/down - previous/next week</li>
+		 <li>enter - accept the selected date</li>
+		 <li>ctrl+end - close and erase the date</li>
+		 <li>escape - close the datepicker without selection</li>
+		</ul>
+
+		<h3 id="utility-functions">Utility functions</h3>
+		<ul>
+		 <li>$.datepicker.setDefaults( settings ) - Set settings for all datepicker instances.</li>
+		 <li>$.datepicker.formatDate( format, date, settings ) - Format a date into a string value with a specified format.</li>
+		 <li>$.datepicker.parseDate( format, value, settings )  - Extract a date from a string value with a specified format.</li>
+		 <li>$.datepicker.iso8601Week( date ) - Determine the week of the year for a given date: 1 to 53.</li>
+		 <li>$.datepicker.noWeekends - Set as beforeShowDay function to prevent selection of weekends.</li>
+		</ul>
+
+		<h3>Localization</h3>
+		<p>Datepicker provides support for localizing its content to cater for different languages
+			and date formats. Each localization is contained within its own file with the
+			language code appended to the name, e.g. <code>jquery.ui.datepicker-fr.js</code> for French.
+			The desired localization file should be included after the main datepicker code. They add their settings to the set
+			of available localizations and automatically apply them as defaults for all instances.</p>
+		<p>The <code>$.datepicker.regional</code> attribute holds an array of localizations,
+			indexed by language code, with "" referring to the default (English). Each entry is
+			an object with the following attributes: <code>closeText</code>, <code>prevText</code>,
+			<code>nextText</code>, <code>currentText</code>, <code>monthNames</code>,
+			<code>monthNamesShort</code>, <code>dayNames</code>, <code>dayNamesShort</code>,
+			<code>dayNamesMin</code>, <code>weekHeader</code>, <code>dateFormat</code>,
+			<code>firstDay</code>, <code>isRTL</code>, <code>showMonthAfterYear</code>,
+			and <code>yearSuffix</code>.</p>
+		<p>You can restore the default localizations with:</p>
+		<code>$.datepicker.setDefaults($.datepicker.regional[""]);</code>
+		<p>And can then override an individual datepicker for a specific locale:</p>
+		<code>$(selector).datepicker($.datepicker.regional['fr']);</code>
+
+		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+	</longdesc>
+	<created>1.0</created>
+	<options>
+		<option name="altField" type="Selector, jQuery, Element" default='""'>
+			<desc>The jQuery selector for another field that is to be updated with the selected date from the datepicker. Use the <code>[[UI/Datepicker#option-altFormat|altFormat]]</code> setting to change the format of the date within this field. Leave as blank for no alternate field.</desc>
+		</option>
+		<option name="altFormat" type="String" default='""'>
+			<desc>The <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code> to be used for the <code>[[UI/Datepicker#option-altField|altField]]</code> option. This allows one date format to be shown to the user for selection purposes, while a different format is actually sent behind the scenes. For a full list of the possible formats see the [[UI/Datepicker/formatDate|formatDate]] function</desc>
+		</option>
+		<option name="appendText" type="String" default='""'>
+			<desc>The text to display after each date field, e.g. to show the required format.</desc>
+		</option>
+		<option name="autoSize" type="Boolean" default='false'>
+			<desc>Set to true to automatically resize the input field to accommodate dates in the current <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code>.</desc>
+		</option>
+		<option name="buttonImage" type="String" default='""'>
+			<desc>The URL for the popup button image. If set, <code>[[UI/Datepicker#option-buttonText|buttonText]]</code> becomes the ''alt'' value and is not directly displayed.</desc>
+		</option>
+		<option name="buttonImageOnly" type="Boolean" default='false'>
+			<desc>Set to true to place an image after the field to use as the trigger without it appearing on a button.</desc>
+		</option>
+		<option name="buttonText" type="String" default='"..."'>
+			<desc>The text to display on the trigger button. Use in conjunction with <code>[[UI/Datepicker#option-showOn|showOn]]</code> equal to 'button' or 'both'.</desc>
+		</option>
+		<option name="calculateWeek" type="Function|$.datepicker.iso8601Week" default='A function to calculate the week of the year for a given date. The default implementation uses the ISO 8601 definition: weeks start on a Monday; the first week of the year contains the first Thursday of the year.'>
+			<desc>myWeekCalc</desc>
+		</option>
+		<option name="changeMonth" type="Boolean" default='false'>
+			<desc>Allows you to change the month by selecting from a drop-down list. You can enable this feature by setting the attribute to true.</desc>
+		</option>
+		<option name="changeYear" type="Boolean" default='false'>
+			<desc>Allows you to change the year by selecting from a drop-down list. You can enable this feature by setting the attribute to true. Use the <code>[[UI/Datepicker#option-yearRange|yearRange]]</code> option to control which years are made available for selection.</desc>
+		</option>
+		<option name="closeText" type="String" default='"Done"'>
+			<desc>The text to display for the close link. This attribute is one of the regionalisation attributes. Use the <code>[[UI/Datepicker#option-showButtonPanel|showButtonPanel]]</code> to display this button.</desc>
+		</option>
+		<option name="constrainInput" type="Boolean" default='true'>
+			<desc>When true entry in the input field is constrained to those characters allowed by the current <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code>.</desc>
+		</option>
+		<option name="currentText" type="String" default='"Today"'>
+			<desc>The text to display for the current day link. This attribute is one of the regionalisation attributes. Use the <code>[[UI/Datepicker#option-showButtonPanel|showButtonPanel]]</code> to display this button.</desc>
+		</option>
+		<option name="dateFormat" type="String" default='"mm/dd/yy"'>
+			<desc>The format for parsed and displayed dates. This attribute is one of the regionalisation attributes. For a full list of the possible formats see the <code>[[UI/Datepicker/formatDate|formatDate]]</code> function.</desc>
+		</option>
+		<option name="dayNames" type="Array" default='["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]'>
+			<desc>The list of long day names, starting from Sunday, for use as requested via the <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code> setting. They also appear as popup hints when hovering over the corresponding column headings. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="dayNamesMin" type="Array" default='["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]'>
+			<desc>The list of minimised day names, starting from Sunday, for use as column headers within the datepicker. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="dayNamesShort" type="Array" default='["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]'>
+			<desc>The list of abbreviated day names, starting from Sunday, for use as requested via the <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code> setting. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="defaultDate" type="Date, Number, String" default='null'>
+			<desc>Set the date to highlight on first opening if the field is blank. Specify either an actual date via a Date object or as a string in the current <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code>, or a number of days from today (e.g. +7) or a string of values and periods ('y' for years, 'm' for months, 'w' for weeks, 'd' for days, e.g. '+1m +7d'), or null for today.</desc>
+		</option>
+		<option name="duration" type="String, Number" default='"normal"'>
+			<desc>Control the speed at which the datepicker appears, it may be a time in milliseconds or a string representing one of the three predefined speeds ("slow", "normal", "fast").</desc>
+		</option>
+		<option name="firstDay" type="Number" default='0'>
+			<desc>Set the first day of the week: Sunday is 0, Monday is 1, ... This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="gotoCurrent" type="Boolean" default='false'>
+			<desc>When true the current day link moves to the currently selected date instead of today.</desc>
+		</option>
+		<option name="hideIfNoPrevNext" type="Boolean" default='false'>
+			<desc>Normally the previous and next links are disabled when not applicable (see <code>[[UI/Datepicker#option-minDate|minDate]]</code>/<code>[[UI/Datepicker#option-maxDate|maxDate]]</code>). You can hide them altogether by setting this attribute to true.</desc>
+		</option>
+		<option name="isRTL" type="Boolean" default='false'>
+			<desc>True if the current language is drawn from right to left. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="maxDate" type="Date, Number, String" default='null'>
+			<desc>Set a maximum selectable date via a Date object or as a string in the current <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code>, or a number of days from today (e.g. +7) or a string of values and periods ('y' for years, 'm' for months, 'w' for weeks, 'd' for days, e.g. '+1m +1w'), or null for no limit.</desc>
+		</option>
+		<option name="minDate" type="Date, Number, String" default='null'>
+			<desc>Set a minimum selectable date via a Date object or as a string in the current <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code>, or a number of days from today (e.g. +7) or a string of values and periods ('y' for years, 'm' for months, 'w' for weeks, 'd' for days, e.g. '-1y -1m'), or null for no limit.</desc>
+		</option>
+		<option name="monthNames" type="Array" default='["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]'>
+			<desc>The list of full month names, for use as requested via the <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code> setting. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="monthNamesShort" type="Array" default='["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]'>
+			<desc>The list of abbreviated month names, as used in the month header on each datepicker and as requested via the <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code> setting. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="navigationAsDateFormat" type="Boolean" default='false'>
+			<desc>When true the <code>[[UI/Datepicker/formatDate|formatDate]]</code> function is applied to the <code>[[UI/Datepicker#option-prevText|prevText]]</code>, <code>[[UI/Datepicker#option-nextText|nextText]]</code>, and <code>[[UI/Datepicker#option-currentText|currentText]]</code> values before display, allowing them to display the target month names for example.</desc>
+		</option>
+		<option name="nextText" type="String" default='"Next"'>
+			<desc>The text to display for the next month link. This attribute is one of the regionalisation attributes. With the standard ThemeRoller styling, this value is replaced by an icon.</desc>
+		</option>
+		<option name="numberOfMonths" type="Number, Array" default='1'>
+			<desc>Set how many months to show at once. The value can be a straight integer, or can be a two-element array to define the number of rows and columns to display.</desc>
+		</option>
+		<option name="prevText" type="String" default='"Prev"'>
+			<desc>The text to display for the previous month link. This attribute is one of the regionalisation attributes. With the standard ThemeRoller styling, this value is replaced by an icon.</desc>
+		</option>
+		<option name="selectOtherMonths" type="Boolean" default='false'>
+			<desc>When true days in other months shown before or after the current month are selectable. This only applies if <code>[[UI/Datepicker#option-showOtherMonths|showOtherMonths]]</code> is also true.</desc>
+		</option>
+		<option name="shortYearCutoff" type="String, Number" default='"+10"'>
+			<desc>Set the cutoff year for determining the century for a date (used in conjunction with <code>[[UI/Datepicker#option-dateFormat|dateFormat]]</code> 'y'). If a numeric value (0-99) is provided then this value is used directly. If a string value is provided then it is converted to a number and added to the current year. Once the cutoff year is calculated, any dates entered with a year value less than or equal to it are considered to be in the current century, while those greater than it are deemed to be in the previous century.</desc>
+		</option>
+		<option name="showAnim" type="String" default='"show"'>
+			<desc>Set the name of the animation used to show/hide the datepicker. Use 'show' (the default), 'slideDown', 'fadeIn', any of the show/hide [http://docs.jquery.com/UI/Effects jQuery UI effects], or "" for no animation.</desc>
+		</option>
+		<option name="showButtonPanel" type="Boolean" default='false'>
+			<desc>Whether to show the button panel.</desc>
+		</option>
+		<option name="showCurrentAtPos" type="Number" default='0'>
+			<desc>Specify where in a [[UI/Datepicker#option-numberOfMonths|multi-month]] display the current month shows, starting from 0 at the top/left.</desc>
+		</option>
+		<option name="showMonthAfterYear" type="Boolean" default='false'>
+			<desc>Whether to show the month after the year in the header. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+		<option name="showOn" type="String" default='"focus"'>
+			<desc>Have the datepicker appear automatically when the field receives focus ("focus"), appear only when a button is clicked ("button"), or appear when either event taks place ("both").</desc>
+		</option>
+		<option name="showOptions" type="Options" default='{}'>
+			<desc>If using one of the jQuery UI effects for <code>[[UI/Datepicker#option-showAnim|showAnim]]</code>, you can provide additional settings for that animation via this option.</desc>
+		</option>
+		<option name="showOtherMonths" type="Boolean" default='false'>
+			<desc>Display dates in other months (non-selectable) at the start or end of the current month. To make these days selectable use <code>[[UI/Datepicker#option-selectOtherMonths|selectOtherMonths]]</code>.</desc>
+		</option>
+		<option name="showWeek" type="Boolean" default='false'>
+			<desc>When true a column is added to show the week of the year. The <code>[[UI/Datepicker#option-calculateWeek|calculateWeek]]</code> option determines how the week of the year is calculated. You may also want to change the <code>[[UI/Datepicker#option-firstDay|firstDay]]</code> option.</desc>
+		</option>
+		<option name="stepMonths" type="Number" default='1'>
+			<desc>Set how many months to move when clicking the Previous/Next links.</desc>
+		</option>
+		<option name="weekHeader" type="String" default='"Wk"'>
+			<desc>The text to display for the week of the year column heading. This attribute is one of the regionalisation attributes. Use <code>[[UI/Datepicker#option-showWeek|showWeek]]</code> to display this column.</desc>
+		</option>
+		<option name="yearRange" type="String" default='"c-10:c+10"'>
+			<desc>Control the range of years displayed in the year drop-down: either relative to today's year (-nn:+nn), relative to the currently selected year (c-nn:c+nn), absolute (nnnn:nnnn), or combinations of these formats (nnnn:-nn). Note that this option only affects what appears in the drop-down, to restrict which dates may be selected use the <code>[[UI/Datepicker#option-minDate|minDate]]</code> and/or <code>[[UI/Datepicker#option-maxDate|maxDate]]</code> options.</desc>
+		</option>
+		<option name="yearSuffix" type="String" default='""'>
+			<desc>Additional text to display after the year in the month headers. This attribute is one of the regionalisation attributes.</desc>
+		</option>
+
+	</options>
+	<events>
+<p><b>Known issue: Datepicker does not trigger a create event.</b></p>		<event name="beforeShow" type="function(input, inst)">
+			<desc>Can be a function that takes an input field and current datepicker instance and returns an options object to update the datepicker with. It is called just before the datepicker is displayed.
+</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+			</argument>
+		</event>
+		<event name="beforeShowDay" type="function(date)">
+			<desc>The function takes a date as a parameter and must return an array with [0] equal to true/false indicating whether or not this date is selectable, [1] equal to a CSS class name(s) or "" for the default presentation, and [2] an optional popup tooltip for this date. It is called for each day in the datepicker before it is displayed.
+</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+			</argument>
+		</event>
+		<event name="onChangeMonthYear" type="function(year, month, inst)">
+			<desc>Allows you to define your own event when the datepicker moves to a new month and/or year. The function receives the selected year, month (1-12), and the datepicker instance as parameters. <code>this</code> refers to the associated input field.
+</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+			</argument>
+		</event>
+		<event name="onClose" type="function(dateText, inst)">
+			<desc>Allows you to define your own event when the datepicker is closed, whether or not a date is selected. The function receives the selected date as text ("" if none) and the datepicker instance as parameters. <code>this</code> refers to the associated input field.
+</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+			</argument>
+		</event>
+		<event name="onSelect" type="function(dateText, inst)">
+			<desc>Allows you to define your own event when the datepicker is selected. The function receives the selected date as text and the datepicker instance as parameters. <code>this</code> refers to the associated input field.
+</desc>
+			<argument name="event" type="Event">
+				<desc></desc>
+			</argument>
+			<argument name="ui" type="Object">
+				<desc></desc>
+			</argument>
+		</event>
+
+	</events>
+	<methods>
+		<widget-inherit id="widget-destroy" />
+		<method name="dialog">
+			<desc>Function</desc>
+			<argument name="date" type="String or Date">
+				<desc></desc>
+			</argument>
+			<argument name="onSelect" type="Function" optional="true">
+				<desc></desc>
+			</argument>
+			<argument name="settings" type="Options" optional="true">
+				<desc></desc>
+			</argument>
+			<argument name="pos" type="Number[2] or MouseEvent" optional="true">
+				<desc></desc>
+			</argument>
+		</method>
+		<method name="isDisabled">
+			<desc>Determine whether a date picker has been disabled.</desc>
+		</method>
+		<method name="hide">
+			<desc>Close a previously opened date picker.</desc>
+		</method>
+		<method name="show">
+			<desc>Call up a previously attached date picker. If the datepicker is attached to an input, the input must be visible for the datepicker to be shown.</desc>
+		</method>
+		<method name="refresh">
+			<desc>Redraw a date picker, after having made some external modifications.</desc>
+		</method>
+		<method name="getDate">
+			<desc>Returns the current date for the datepicker or null if no date has been selected.</desc>
+		</method>
+		<method name="setDate">
+			<desc>Sets the current date for the datepicker. The new date may be a Date object or a string in the current [[UI/Datepicker#option-dateFormat|date format]] (e.g. '01/26/2009'), a number of days from today (e.g. +7) or a string of values and periods ('y' for years, 'm' for months, 'w' for weeks, 'd' for days, e.g. '+1m +7d'), or null to clear the selected date.</desc>
+			<argument name="date" type="Date">
+				<desc>The new current date.</desc>
+			</argument>
+		</method>
+
+	</methods>
+	<example>
+
+		<desc>A simple jQuery UI Datepicker.</desc>
+		<code><![CDATA[$("#datepicker").datepicker();]]></code>
+		<html><![CDATA[
+<div id="datepicker"></div>
+
+]]></html>
+
+	</example>
+	<category slug="widgets"/>
+</entry>
