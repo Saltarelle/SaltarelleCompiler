@@ -49,7 +49,7 @@ Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generat
 
 Task Run-Tests -Depends Build-Compiler, Build-Runtime {
 	$runner = (dir "$baseDir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
-	Exec { & "$runner" "$baseDir\Compiler\Compiler.sln" -nologo -xml "$outDir\CompilerTestResults.xml" }
+	Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
 	Exec { & "$runner" "$baseDir\Runtime\src\Tests\RuntimeLibrary.Tests\RuntimeLibrary.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
 }
 
@@ -293,7 +293,6 @@ Task Determine-Version {
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler"
 
-	cd ""
 	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\CoreLib","$baseDir\Runtime\src\Core\CoreScript"
 	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LinqJS","$baseDir\Runtime\src\Core\LinqJSScript"
 	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LoaderLib","$baseDir\Runtime\src\Core\LoaderScript"
