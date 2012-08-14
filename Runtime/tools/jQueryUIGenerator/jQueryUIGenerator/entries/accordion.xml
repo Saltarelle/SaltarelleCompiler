@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="accordion" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>Convert a pair of headers and content panels into an accordion.</desc>
+	<longdesc>
+		<p>Make the selected elements Accordion widgets.</p>
+		<p>The markup of your accordion container needs pairs of headers and content panels:</p>
+
+		<pre><![CDATA[
+	<div id="accordion">
+		<h3><a href="#">First header</a></h3>
+		<div>First content</div>
+		<h3><a href="#">Second header</a></h3>
+		<div>Second content</div>
+	</div>
+		]]></pre>
+
+		<p>If you use a different element for the header, specify the header-option with an appropriate selector, eg. header: 'a.header'. The content element must be always next to its header.</p>
+		<p>If you have links inside a accordion panel and use a-elements as headers, add a class to them and use that as the header, eg. header: 'a.header'.</p>
+		<p>Use activate(Number) to change the active panel programmatically.</p>
+
+		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+	</longdesc>
+	<created>1.0</created>
+	<options>
+		<option name="active" default='0'>
+			<desc>
+				The zero-based index of the panel that is active (open). A negative value select panels going backward from the last panel.
+				<p>When collapsible is set to true, a false value closes the accordion, otherwise nothing happens</p>
+			</desc>
+			<type name="Boolean" />
+			<type name="Number" />
+		</option>
+		<option name="animate" default="{}">
+			<desc>
+				If and how to animate changing panels:
+				<ul>
+					<li>string; name of easing to use with default duration</li>
+					<li>number, duration in milliseconds with default easing</li>
+					<li>object with easing and duration options</li>
+					<li>can also contain a down option with any of the above options</li>
+					<li>"down" animations occur when the panel being activated has a lower index than the currently active panel</li>
+					<li>null/false disables animation</li>
+				</ul>
+			</desc>
+			<type name="Boolean" />
+			<type name="Number" />
+			<type name="Object" />
+			<type name="String" />
+		</option>
+		<option name="collapsible" default='false'>
+			<desc>Whether all the sections can be closed at once. Allows collapsing the active section.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="disabled" default="false">
+			<desc>Disables the accordion if set to true.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="event" default='"click"'>
+			<desc>The event on which to trigger the accordion.</desc>
+			<type name="String" />
+		</option>
+		<option name="header" default="> li > :first-child,> :not(li):even">
+			<desc>
+				Selector for the header element.
+				<p>Must be a selector that applies to the accordion container element, via .find()</p>
+				<p>The default covers both ul/li accordions, as well as flat structures like dl/dt/dd</p>
+			</desc>
+			<type name="String" />
+		</option>
+		<option name="heightStyle" default="auto">
+			<desc>
+				Controls the height of the accordion and each panel. Possible values:
+				<ul>
+					<li>auto: all panels will be set to the height of the tallest panel</li>
+					<li>fill: expand to the available height based on the accordion's parent height</li>
+					<li>content: each panel will be only as tall as its content</li>
+				</ul>
+			</desc>
+			<type name="String" />
+		</option>
+		<option name="icons" default='{ "header": "ui-icon-triangle-1-e", "headerSelected": "ui-icon-triangle-1-s" }'>
+			<desc>
+				Icons to use for headers, matching an icon defined by the jQuery UI CSS Framework. Set to false to have no icons displayed.
+				<ul>
+					<li>header (string, default: "ui-icon-triangle-1-e")</li>
+					<li>activeHeader (string, default: "ui-icon-triangle-1-s")</li>
+				</ul>
+			</desc>
+			<type name="Object" />
+		</option>
+	</options>
+	<events>
+		<event name="beforeActivate" type="accordionbeforeactivate">
+			<desc>Triggered after a accordion panel has been activated (after animation completes).</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+				<property name="newHeader"></property>
+				<property name="oldHeader"></property>
+				<property name="newPanel"></property>
+				<property name="oldPanel"></property>
+			</argument>
+		</event>
+		<event name="activate" type="accordionactivate">
+			<desc>Triggered directly after a panel is activated. Can be cancelled to prevent the panel from activating.</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+				<desc>
+					Extra event data for the activate event.
+				</desc>
+				<property name="newHeader"></property>
+				<property name="oldHeader"></property>
+				<property name="newPanel"></property>
+				<property name="oldPanel"></property>
+			</argument>
+		</event>
+		<event name="create">
+			<desc>
+				This event is triggered when the accordion is created.
+			</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+	</events>
+	<methods>
+		<widget-inherit id="widget-destroy" />
+		<widget-inherit id="widget-disable" />
+		<widget-inherit id="widget-enable" />
+		<widget-inherit id="widget-get-options" />
+		<widget-inherit id="widget-get-option" />
+		<widget-inherit id="widget-set-option" />
+		<widget-inherit id="widget-set-options" />
+		<method name="refresh">
+			<desc>Recompute heights of the accordion panels. Results depend on the content and the <code>heightStyle</code> option.</desc>
+		</method>
+		<widget-inherit id="widget-widget" />
+	</methods>
+	<example>
+
+		<desc>A simple jQuery UI Accordion.</desc>
+		<code><![CDATA[$("#accordion").accordion();]]></code>
+		<html><![CDATA[
+<div id="accordion">
+	<h3><a href="#">Section 1</a></h3>
+	<div>
+		<p>
+		Mauris mauris ante, blandit et, ultrices a, suscipit eget, quam. Integer
+		ut neque. Vivamus nisi metus, molestie vel, gravida in, condimentum sit
+		amet, nunc. Nam a nibh. Donec suscipit eros. Nam mi. Proin viverra leo ut
+		odio. Curabitur malesuada. Vestibulum a velit eu ante scelerisque vulputate.
+		</p>
+	</div>
+	<h3><a href="#">Section 2</a></h3>
+	<div>
+		<p>
+		Sed non urna. Donec et ante. Phasellus eu ligula. Vestibulum sit amet
+		purus. Vivamus hendrerit, dolor at aliquet laoreet, mauris turpis porttitor
+		velit, faucibus interdum tellus libero ac justo. Vivamus non quam. In
+		suscipit faucibus urna.
+		</p>
+	</div>
+	<h3><a href="#">Section 3</a></h3>
+	<div>
+		<p>
+		Nam enim risus, molestie et, porta ac, aliquam ac, risus. Quisque lobortis.
+		Phasellus pellentesque purus in massa. Aenean in pede. Phasellus ac libero
+		ac tellus pellentesque semper. Sed ac felis. Sed commodo, magna quis
+		lacinia ornare, quam ante aliquam nisi, eu iaculis leo purus venenatis dui.
+		</p>
+		<ul>
+			<li>List item one</li>
+			<li>List item two</li>
+			<li>List item three</li>
+		</ul>
+	</div>
+	<h3><a href="#">Section 4</a></h3>
+	<div>
+		<p>
+		Cras dictum. Pellentesque habitant morbi tristique senectus et netus
+		et malesuada fames ac turpis egestas. Vestibulum ante ipsum primis in
+		faucibus orci luctus et ultrices posuere cubilia Curae; Aenean lacinia
+		mauris vel est.
+		</p>
+		<p>
+		Suspendisse eu nisl. Nullam ut libero. Integer dignissim consequat lectus.
+		Class aptent taciti sociosqu ad litora torquent per conubia nostra, per
+		inceptos himenaeos.
+		</p>
+	</div>
+</div>
+
+]]></html>
+
+	</example>
+	<category slug="widgets"/>
+</entry>

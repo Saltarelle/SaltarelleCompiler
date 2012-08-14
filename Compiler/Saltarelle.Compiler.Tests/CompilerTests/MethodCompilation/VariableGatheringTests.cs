@@ -457,7 +457,7 @@ public void M() {
 			CompileMethod(@"
 				class X { public X(int a, out int b) { b = 0; } }
 				public void M(int x, int y) {
-					new X(x, ref y);
+					new X(x, out y);
 				}
 			");
 			AssertNotUsedByReference("$x");

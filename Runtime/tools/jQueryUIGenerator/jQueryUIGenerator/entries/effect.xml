@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="effect" namespace="fn" widgetnamespace="ui" type="ui">
+	<desc></desc>
+	<longdesc></longdesc>
+	<methods>
+        <method name="effect">
+            <desc></desc>
+            <argument name="effect" type="String"></argument>
+            <argument name="options" type="Object"></argument>
+            <argument name="speed" type="String, Number"></argument>
+            <argument name="callback" type="Function"></argument>
+        </method>
+		<method name="addClass">
+			<desc></desc>
+			<argument name="classNames" type="String"></argument>
+            <argument name="speed" type="String, Number"></argument>
+            <argument name="easing" type="Object"></argument>
+            <argument name="callback" type="Function"></argument>
+		</method>
+        <method name="removeClass">
+          <desc></desc>
+            <argument name="classNames" type="String"></argument>
+            <argument name="speed" type="String, Number"></argument>
+            <argument name="easing" type="Object"></argument>
+            <argument name="callback" type="Function"></argument>
+        </method>
+        <method name="toggleClass">
+          <desc></desc>
+            <argument name="classNames" type="String"></argument>
+            <argument name="force" type="Boolean"></argument>
+            <argument name="speed" type="String, Number"></argument>
+            <argument name="easing" type="Object"></argument>
+            <argument name="callback" type="Function"></argument>
+        </method>
+        <method name="switchClass">
+          <desc></desc>
+            <argument name="remove" type="String"></argument>
+            <argument name="add" type="String"></argument>
+            <argument name="speed" type="String, Number"></argument>
+            <argument name="easing" type="Object"></argument>
+            <argument name="callback" type="Function"></argument>
+        </method>
+        <method name="save">
+            <desc></desc>
+            <argument name="element" type="Object"></argument>
+            <argument name="set" type="Object"></argument>
+        </method>
+        <method name="restore">
+            <desc></desc>
+            <argument name="element" type="Object"></argument>
+            <argument name="set" type="Object"></argument>
+        </method>
+        <method name="setMode">
+            <desc></desc>
+            <argument name="el" type="Object"></argument>
+            <argument name="mode" type="Object"></argument>
+        </method>
+        <method name="getBaseline">
+            <desc></desc>
+            <argument name="origin" type="Object"></argument>
+            <argument name="original" type="Object"></argument>
+        </method>
+        <method name="createWrapper">
+            <desc></desc>
+            <argument name="element" type="Object"></argument>
+        </method>
+        <method name="removeWrapper">
+            <desc></desc>
+            <argument name="element" type="Object"></argument>
+        </method>
+        <method name="setTransition">
+            <desc></desc>
+            <argument name="element" type="Object"></argument>
+            <argument name="list" type="Object"></argument>
+            <argument name="factor" type="Object"></argument>
+            <argument name="value" type="Object"></argument>
+        </method>
+        <method name="show">
+            <desc></desc>
+            <argument name="speed" type="String, Number"></argument>
+        </method>
+        <method name="hide">
+            <desc></desc>
+            <argument name="speed" type="String, Number"></argument>
+        </method>
+        <method name="toggle">
+            <desc></desc>
+            <argument name="speed" type="String, Number"></argument>
+        </method>
+        <method name="cssUnit">
+            <desc></desc>
+            <argument name="key" type="String"></argument>
+        </method>
+	</methods>
+	<category slug="effects"/>
+</entry>

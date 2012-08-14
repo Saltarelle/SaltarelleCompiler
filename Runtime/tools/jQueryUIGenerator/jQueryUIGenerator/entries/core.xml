@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="ui" namespace="fn" widgetnamespace="ui">
+	<desc></desc>
+	<longdesc></longdesc>
+	<methods>
+		<method name="focus" return="jQuery">
+			<desc></desc>
+			<argument name="delay" type="Integer"></argument>
+		</method>
+    <method name="scrollParent" return="jQuery, Function">
+      <desc></desc>
+    </method>
+    <method name="zIndex">
+      <desc></desc>
+      <argument name="zIndex" type="Integer"></argument>
+    </method>
+    <method name="uniqueId" return="jQuery">
+      <desc></desc>
+    </method>
+    <method name="removeUniqueId" return="jQuery">
+      <desc></desc>
+    </method>
+    <method name="disableSelection" return="jQuery">
+      <desc></desc>
+    </method>
+    <method name="enableSelection" return="jQuery">
+      <desc></desc>
+    </method>
+	</methods>
+	<category slug=""/>
+</entry>

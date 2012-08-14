@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="button" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>Themable button and buttonsets</desc>
+	<longdesc>
+		<p>Button enhances standard form elements like button, input of type submit or reset or anchors to themable buttons with appropiate mouseover and active styles.</p>
+
+		<p>In addition to basic push buttons, radio buttons and checkboxes (inputs of type radio and checkbox) can be converted to buttons: Their associated label is styled to appear as the button, while the underlying input is updated on click.</p>
+
+		<p>In order to group radio buttons, Button also provides an additional widget-method, called buttonset. Its used by selecting a container element (which contains the radio buttons) and calling buttonset(). Buttonset will also provide visual grouping, and therefore should be used whenever you have a group of buttons. It works by selecting all descendents and applying button() to them. You can enable and disable a buttonset, which will enable and disable all contained buttons. Destroying a buttonset also calls each button's destroy method.</p>
+
+		<p>When using an input of type button, submit or reset, support is limited to plain text labels with no icons.</p>
+
+		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+	</longdesc>
+	<created>1.0</created>
+	<options>
+		<option name="disabled" default="false">
+			<desc>Disables the button if set to true.</desc>
+			<type name="Boolean" />
+		</option>
+		<option name="icons" default='{ primary: null, secondary: null }'>
+			<desc>Icons to display, with or without text (see text option). The primary icon is displayed by default on the left of the label text, the secondary by default is on the right. Value for the primary and secondary properties must be a classname (String), eg. "ui-icon-gear". For using only one icon: icons: {primary:'ui-icon-locked'}. For using two icons: icons: {primary:'ui-icon-gear',secondary:'ui-icon-triangle-1-s'}</desc>
+			<type name="Options" />
+		</option>
+		<option name="label" default='HTML content of the button, or value attribute'>
+			<desc>Text to show on the button. When not specified (null), the element's html content is used, or its value attribute when it's an input element of type submit or reset; or the html content of the associated label element if its an input of type radio or checkbox</desc>
+			<type name="String" />
+		</option>
+		<option name="text" default='true'>
+			<desc>Whether to show any text - when set to false (display no text), icons (see icons option) must be enabled, otherwise it'll be ignored.</desc>
+			<type name="Boolean" />
+		</option>
+	</options>
+	<events>
+		<event name="create">
+			<desc>
+				This event is triggered when the button is created.
+			</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+	</events>
+	<methods>
+		<widget-inherit id="widget-destroy" />
+		<widget-inherit id="widget-disable" />
+		<widget-inherit id="widget-enable" />
+		<method name="refresh">
+			<desc>Refreshes the visual state of the button. Useful for updating button state after the native element's checked or disabled state is changed programatically.</desc>
+		</method>
+		<widget-inherit id="widget-get-options" />
+		<widget-inherit id="widget-get-option" />
+		<widget-inherit id="widget-set-option" />
+		<widget-inherit id="widget-set-options" />
+		<widget-inherit id="widget-widget" />
+	</methods>
+	<example>
+
+		<desc>A simple jQuery UI Button.</desc>
+		<code><![CDATA[$("button").button();]]></code>
+		<html><![CDATA[
+<button>Button label</button>
+
+]]></html>
+
+		<desc>A simple jQuery UI Button.</desc>
+		<code><![CDATA[$("#radio").buttonset();]]></code>
+		<html><![CDATA[
+<div id="radio">
+	<input type="radio" id="radio1" name="radio" /><label for="radio1">Choice 1</label>
+	<input type="radio" id="radio2" name="radio" checked="checked" /><label for="radio2">Choice 2</label>
+	<input type="radio" id="radio3" name="radio" /><label for="radio3">Choice 3</label>
+</div>
+
+]]></html>
+
+	</example>
+	<category slug="widgets"/>
+</entry>

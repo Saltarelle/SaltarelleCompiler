@@ -49,7 +49,7 @@ Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generat
 
 Task Run-Tests -Depends Build-Compiler, Build-Runtime {
 	$runner = (dir "$baseDir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
-	Exec { & "$runner" "$baseDir\Compiler\Compiler.sln" -nologo -xml "$outDir\CompilerTestResults.xml" }
+	Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
 	Exec { & "$runner" "$baseDir\Runtime\src\Tests\RuntimeLibrary.Tests\RuntimeLibrary.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
 }
 
@@ -290,19 +290,15 @@ Task Determine-Version {
 		}
 	}
 
-	$olddir = pwd
-	cd "$baseDir\Compiler"
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler"
 
-	cd "$baseDir\Runtime"
-	$runtimeRefCommit = git log --reverse --pretty=format:%H | Select-Object -First 1
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
-	$script:LinqVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\LinqJS","src\Core\LinqJSScript"
-	$script:LoaderVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
-	$script:WebVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\Web"
-	$script:JQueryVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
-	$script:JQueryUIVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "tools\jQueryUIGenerator"
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\CoreLib","$baseDir\Runtime\src\Core\CoreScript"
+	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LinqJS","$baseDir\Runtime\src\Core\LinqJSScript"
+	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LoaderLib","$baseDir\Runtime\src\Core\LoaderScript"
+	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Web"
+	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core"
+	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\tools\jQueryUIGenerator"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
@@ -311,8 +307,6 @@ Task Determine-Version {
 	"Web version: $script:WebVersion"
 	"jQuery version: $script:jQueryVersion"
 	"jQuery UI version: $script:jQueryUIVersion"
-
-	cd $olddir
 }
 
 Function Generate-VersionFile($Path, $Version) {

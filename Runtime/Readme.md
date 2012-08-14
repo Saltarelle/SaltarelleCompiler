@@ -1,0 +1,1 @@
+This is a copy of the Script# runtime for use as the runtime library for the Saltarelle C# to JavaScript compiler. The Saltarelle project is located at https://github.com/erik-kallen/SaltarelleCompiler, and Script# can be found at https://github.com/nikhilk/scriptsharp.

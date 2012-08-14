@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="scale" namespace="effect" type="effect">
+	<desc>
+		Shrink or grow an element by a percentage factor.
+	</desc>
+	<options>
+		<option name="direction" type="String" default="both">
+			<desc>The direction of the effect. Can be "both", "vertical" or "horizontal".</desc>
+		</option>
+		<option name="origin" type="Array" default="['middle','center']">
+			<desc>The vanishing point, default for show/hide.</desc>
+		</option>
+		<option name="percent" type="Number" default="0/100">
+			<desc>The percentage to scale to.</desc>
+		</option>
+		<option name="scale" type="String" default="both">
+			<desc>Which areas of the element will be resized: 'both', 'box', 'content' Box resizes the border and padding of the element Content resizes any content inside of the element</desc>
+		</option>
+		<option name="duration" type="Number" default="400">
+			<desc>The number of ms the animation will run for</desc>
+		</option>
+		<option name="easing" type="String" default="swing">
+			<desc>The easing function to use</desc>
+		</option>
+		<option name="complete" type="function">
+			<desc>A callback function, executed when the effect completes</desc>
+		</option>
+	</options>
+	<example>
+		<desc>Scale the element to 0%, with the hide method (center vanishing point).</desc>
+		<code><![CDATA[
+$("div").click(function () {
+    $(this).hide("scale", {}, 1000);
+});
+]]></code>
+		<html><![CDATA[
+<div></div>
+]]></html>
+	</example>
+	<example>
+		<desc>Scale the element to 200%, only horizontal.</desc>
+		<code><![CDATA[
+$("div").click(function () {
+      $(this).effect("scale", { percent: 200, direction: 'horizontal' }, 1000);
+});
+]]></code>
+		<html><![CDATA[
+<div></div>
+]]></html>
+	</example>
+	<category slug="effects"/>
+</entry>

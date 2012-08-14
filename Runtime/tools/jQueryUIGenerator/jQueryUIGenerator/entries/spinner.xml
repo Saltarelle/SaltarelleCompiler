@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
+<entry name="spinner" namespace="fn" type="Widget" widgetnamespace="ui">
+	<desc>
+		Enhance a text input for entering numeric values, with up/down buttons and arrow key handling.
+	</desc>
+	<longdesc>
+		<p>Spinner wraps a input of type text, adds two buttons to increment and decrement the current value, along with handling key events for the same purpose. It delegates to <a href="https://github.com/jquery/globalize">Globalize</a> for number formatting and parsing.</p>
+
+		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+	</longdesc>
+	<created>1.9</created>
+	<options>
+		<option name="culture" default="null">
+			<desc>
+				Sets the culture to use for parsing and formatting the value, if null, the currently set culture in Globalization is used, see Globalization docs for available cultures. Only relevant if the <code>numberFormat</code> option is set.</desc>
+			<type name="String" />
+		</option>
+		<option name="disabled" type="Boolean" default="false">
+			<desc>Disables the spinner if set to true.</desc>
+		</option>
+		<option name="incremental" default="true">
+			<desc>
+				Controls the number of steps taken when holding down a spin button.
+				<ul>
+					<li>
+						a boolean
+						<ul>
+							<li>when set to true, the stepping delta will increase when spun incessantly</li>
+							<li>when set to false, all steps are equal (as defined by the step option)</li>
+						</ul>
+					</li>
+					<li>
+						a function
+						<ul>
+							<li>receives the number of spins that have occurred as a parameter</li>
+							<li>must return the number of steps that should occur for the current spin</li>
+						</ul>
+					</li>
+				</ul>
+			</desc>
+			<type name="Boolean" />
+			<type name="Function" />
+		</option>
+		<option name="max" default="null">
+			<desc>
+				The maximum allowed value.
+				<p>The element's <code>max</code> attribute is used if it exists and the option is not explicitly set.</p>
+				<p>The max option can be passed as string which will be parsed based on numberFormat and culture or just using native parseFloat.</p>
+				<p>If null, there is no maximum enforced.</p>
+			</desc>
+			<type name="Number" />
+			<type name="String" />
+		</option>
+		<option name="min" default="null">
+			<desc>
+				The minimum allowed value.
+				<p>The element's <code>min</code> attribute is used if it exists and the option is not explicitly set.</p>
+				<p>The min option can be passed as string which will be parsed based on numberFormat and culture or just using native parseFloat.</p>
+				<p>If null, there is no minimum enforced.</p>
+			</desc>
+			<type name="Number" />
+			<type name="String" />
+		</option>
+		<option name="numberFormat" default="null">
+			<desc>Format of numbers passed to Globalize, if available. Most common are 'n' for a decimal number and 'C' for a currency value.</desc>
+			<type name="String" />
+		</option>
+		<option name="page" default="null">
+			<desc>The number of steps to take when paging via the pageUp()/pageDown() methods.</desc>
+			<type name="Number" />
+		</option>
+		<option name="step" default="null">
+			<desc>
+				The size of step to take when spinning via buttons or via the stepUp()/stepDown() methods.
+				<p>The element's <code>step</code> attribute is used if it exists and the option is not explicitly set.</p>
+				<p>Can be passed as string which will be parsed based on numberFormat and culture or just using native parseFloat.</p>
+			</desc>
+			<type name="Number" />
+			<type name="String" />
+		</option>
+	</options>
+	<methods>
+		<widget-inherit id="widget-destroy" />
+		<widget-inherit id="widget-disable" />
+		<widget-inherit id="widget-enable" />
+		<widget-inherit id="widget-get-options" />
+		<widget-inherit id="widget-get-option" />
+		<widget-inherit id="widget-set-option" />
+		<widget-inherit id="widget-set-options" />
+		<method name="pageDown">
+			<desc>
+				Decrements the value by the specified number of pages, as defined by the page-option. Without the parameter, a single page is decremented.
+			</desc>
+			<argument name="pages" type="Number" optional="true">
+				<desc>Number of pages to decrement, defaults to 1.</desc>
+			</argument>
+		</method>
+		<method name="pageUp">
+			<desc>
+				Increments the value by the specified number of pages, as defined by the page-option. Without the parameter, a single page is incremented.
+			</desc>
+			<argument name="pages" type="Number" optional="true">
+				<desc>Number of pages to increment, defaults to 1.</desc>
+			</argument>
+		</method>
+		<method name="stepDown">
+			<desc>
+				Decrements the value by the specified number of steps. Without the parameter, a single step is decremented.
+				<p>If the resulting value is above the max or below the min, the value will be adjusted to the closest max or min.</p>
+				<p>If the resulting value is a step mismatch, the value will be adjusted to the closest step.</p>
+			</desc>
+			<argument name="steps" type="Number" optional="true">
+				<desc>Number of steps to decrement, defaults to 1.</desc>
+			</argument>
+		</method>
+		<method name="stepUp">
+			<desc>
+				Increments the value by the specified number of steps. Without the parameter, a single step is incremented.
+				<o>If the resulting value is above the max or below the min, the value will be adjusted to the closest max or min.</o>
+				<p>If the resulting value is a step mismatch, the value will be adjusted to the closest step.</p>
+			</desc>
+			<argument name="steps" type="Number" optional="true">
+				<desc>Number of steps to increment, defaults to 1.</desc>
+			</argument>
+		</method>
+		<method name="value">
+			<desc>
+				Get or set the current value. Without the value parameter, returns the current value as a parsed number. Otherwise, sets the value.
+				<p>If the value parameter is a string, its parsed based on the <code>numberFormat</code> and <code>culture</code> options.</p>
+			</desc>
+			<argument name="value" type="Number" optional="true">
+				<desc>The value to set.</desc>
+			</argument>
+		</method>
+		<widget-inherit id="widget-widget" />
+	</methods>
+	<events>
+		<event name="create">
+			<desc>
+				This event is triggered when the spinner is created.
+			</desc>
+			<argument name="event" type="Event">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+		<event name="start" type="spinstart">
+			<desc>
+				Triggered before a spin. Can be cancelled, preventing all other events to fire.
+			</desc>
+			<argument name="event" type="Event" null="true">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+		<event name="spin" type="spin">
+			<desc>
+				Triggered during increment/decrement (to determine direction of spin compare current value with ui.value).
+				<p>Can be cancelled, preventing the provided value to be set, firing <code>stop</code> and, if appropiate, <code>change</code> events.</p>
+			</desc>
+			<argument name="event" type="Event" null="true">
+			</argument>
+			<argument name="ui" type="Object">
+				<desc>
+					Extra event data for the spin event
+				</desc>
+				<property name="value" type="Number">
+					<desc>The new value to be set, unless the event is cancelled.</desc>
+				</property>
+			</argument>
+		</event>
+		<event name="stop" type="spinstop">
+			<desc>
+				Triggered after a spin.
+			</desc>
+			<argument name="event" type="Event" null="true">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+		<event name="change" type="spinchange">
+			<desc>
+				Triggered when the value of the spinner has changed and the input is no longer focused.
+			</desc>
+			<argument name="event" type="Event" null="true">
+			</argument>
+			<argument name="ui" type="Object">
+			</argument>
+		</event>
+	</events>
+	<category slug="widgets"/>
+</entry>
