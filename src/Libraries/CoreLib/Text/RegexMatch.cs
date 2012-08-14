@@ -10,9 +10,22 @@ namespace System.Text.RegularExpressions {
 		public int Index { get; set; }
 
 		[IntrinsicProperty]
+		public int Length { get; set; }
+
+		[IntrinsicProperty]
 		public string Input { get; set; }
 
 		[IntrinsicProperty]
 		public string this[int index] { get { return null; } set {} }
+
+		[ScriptSkip]
+		public static implicit operator string[](RegexMatch rm) {
+			return null;
+		}
+
+		[ScriptSkip]
+		public static explicit operator RegexMatch(string[] a) {
+			return null;
+		}
 	}
 }
