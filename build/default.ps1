@@ -290,18 +290,16 @@ Task Determine-Version {
 		}
 	}
 
-	$olddir = pwd
-	cd "$baseDir\Compiler"
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler"
 
-	cd "$baseDir\Runtime"
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
-	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LinqJS","src\Core\LinqJSScript"
-	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
-	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\Web"
-	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
-	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "tools\jQueryUIGenerator"
+	cd ""
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\CoreLib","$baseDir\Runtime\src\Core\CoreScript"
+	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LinqJS","$baseDir\Runtime\src\Core\LinqJSScript"
+	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LoaderLib","$baseDir\Runtime\src\Core\LoaderScript"
+	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Web"
+	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core"
+	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\tools\jQueryUIGenerator"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
@@ -310,8 +308,6 @@ Task Determine-Version {
 	"Web version: $script:WebVersion"
 	"jQuery version: $script:jQueryVersion"
 	"jQuery UI version: $script:jQueryUIVersion"
-
-	cd $olddir
 }
 
 Function Generate-VersionFile($Path, $Version) {
