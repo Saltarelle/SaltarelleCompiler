@@ -296,13 +296,12 @@ Task Determine-Version {
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler"
 
 	cd "$baseDir\Runtime"
-	$runtimeRefCommit = git log --reverse --pretty=format:%H | Select-Object -First 1
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
-	$script:LinqVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\LinqJS","src\Core\LinqJSScript"
-	$script:LoaderVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
-	$script:WebVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\Web"
-	$script:JQueryVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
-	$script:JQueryUIVersion = Determine-PathVersion -RefCommit "$runtimeRefCommit" -RefVersion $refs[1] -Path "tools\jQueryUIGenerator"
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\CoreLib","src\Core\CoreScript"
+	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LinqJS","src\Core\LinqJSScript"
+	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\LoaderLib","src\Core\LoaderScript"
+	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\Web"
+	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "src\Libraries\jQuery\jQuery.Core"
+	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "tools\jQueryUIGenerator"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
