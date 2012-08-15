@@ -583,7 +583,7 @@ class C {
 		}
 
 		[Test]
-		public void CreatingANewDelegateFromAnOldOneWorks() {
+		public void CreatingANewDelegateFromAnOldOneWorks1() {
 			AssertCorrect(
 @"delegate void D1(int i);
 delegate void D2(int i);
@@ -596,6 +596,30 @@ public void M() {
 }",
 @"	var $d2 = $CloneDelegate($d1);
 ");
+		}
+
+		[Test]
+		public void CreatingANewDelegateFromAnOldOneWorks2() {
+			AssertCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class C {
+	delegate int D(int a);
+	public void F(D f) {
+	}
+	int x;
+	private void M() {
+		object o = null;
+		// BEGIN
+		F(new D((Func<int, int>)(a => x)));
+		// END
+	}
+}",
+@"	this.$F($CloneDelegate($Bind(function($a) {
+		return this.$x;
+	}, this)));
+", addSkeleton: false);
 		}
 
 		[Test]

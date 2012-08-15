@@ -162,7 +162,7 @@ namespace Saltarelle.Compiler.Compiler {
             foreach (var f in files) {
                 var tcv = new TypeSystemConvertVisitor(f.ParsedFile);
                 f.SyntaxTree.AcceptVisitor(tcv);
-                project = project.UpdateProjectContent(null, f.ParsedFile);
+                project = project.AddOrUpdateFiles(f.ParsedFile);
             }
             project = project.AddAssemblyReferences(references);
 
