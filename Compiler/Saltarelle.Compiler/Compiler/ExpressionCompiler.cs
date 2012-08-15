@@ -1421,7 +1421,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
 
-				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && rr.Conversion.Method == mgrr.TargetResult.Type.GetDelegateInvokeMethod())
+				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && Equals(rr.Conversion.Method, mgrr.TargetResult.Type.GetDelegateInvokeMethod()))
 					return _runtimeLibrary.CloneDelegate(InnerCompile(mgrr.TargetResult, false), rr.Conversion.Method.DeclaringType, rr.Type);	// new D2(d1)
 
 				var impl = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);

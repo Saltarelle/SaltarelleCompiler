@@ -485,7 +485,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
 			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
-			if (inExpression.Type == systemArray || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
+			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
 				var arrayResult = _expressionCompiler.Compile(_filename, foreachStatement.StartLocation, ResolveWithConversion(foreachStatement.InExpression), true);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;

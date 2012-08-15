@@ -246,7 +246,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
-			if (sourceType == targetType) {
+			if (Equals(sourceType, targetType)) {
 				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
 				return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "clone"), source);
 			}
