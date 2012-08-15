@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 				var pf = new CSharpUnresolvedFile("File.cs");
 				var syntaxTree = parser.Parse(rdr, pf.FileName);
 				syntaxTree.AcceptVisitor(new TypeSystemConvertVisitor(pf));
-				project = project.UpdateProjectContent(null, pf);
+				project = project.AddOrUpdateFiles(pf);
             }
             project = project.AddAssemblyReferences(new[] { Common.Mscorlib });
 
