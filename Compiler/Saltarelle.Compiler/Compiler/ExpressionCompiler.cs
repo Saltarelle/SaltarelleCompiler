@@ -420,7 +420,8 @@ namespace Saltarelle.Compiler.Compiler {
 							else {
 								List<JsExpression> thisAndArguments;
 								if (property.IsIndexer) {
-									thisAndArguments = CompileThisAndArgumentListForMethodCall((CSharpInvocationResolveResult)target, oldValueIsImportant, oldValueIsImportant, false);
+									var invocation = (CSharpInvocationResolveResult)target;
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.TargetResult, oldValueIsImportant, oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
 								}
 								else {
 									thisAndArguments = new List<JsExpression> { InnerCompile(mrr.TargetResult, oldValueIsImportant) };
@@ -866,10 +867,6 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(CSharpInvocationResolveResult invocation, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, bool expandParams) {
-			return CompileThisAndArgumentListForMethodCall(invocation.TargetResult, targetUsedMultipleTimes, argumentsUsedMultipleTimes, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), expandParams);
-		}
-
 		private static readonly ConcurrentDictionary<int, IList<int>> argumentToParameterMapCache = new ConcurrentDictionary<int, IList<int>>();
 		private IList<int> CreateIdentityArgumentToParameterMap(int argCount) {
 			IList<int> result;
@@ -945,7 +942,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (impl != null && impl.ExpandParams && !isExpandedForm) {
 				_errorReporter.Message(7514, _filename, _location, method.DeclaringType.FullName + "." + method.Name);
 			}
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method.IsStatic ? new TypeResolveResult(method.DeclaringType) : targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
 			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsOverridable && !isVirtualCall, isExpandedForm);
 		}
 

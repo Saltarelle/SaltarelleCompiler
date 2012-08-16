@@ -106,6 +106,46 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingBaseStaticMemberFromDerivedClassWorks() {
+			AssertCorrect(@"
+public class Class1 {
+    public static void Test1() {}
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		// BEGIN
+        Test1();
+		// END
+    }
+}",
+@"	{Class1}.$Test1();
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingBaseStaticMemberThroughDerivedClassWorks() {
+			AssertCorrect(@"
+public class Class1 {
+    public static void Test1() {}
+}
+
+public class Class2 : Class1 {
+}
+
+public class C
+{
+    static void M() {
+		// BEGIN
+        Class2.Test1();
+		// END
+    }
+}",
+@"	{Class1}.$Test1();
+", addSkeleton: false);
+		}
+
+		[Test]
 		public void GlobalStaticMethodInvocationWithArgumentsWorks() {
 			AssertCorrect(
 @"static void F(int x, int y, int z) {}
