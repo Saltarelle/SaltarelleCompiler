@@ -6,6 +6,16 @@ properties {
 	$outDir = "$(Resolve-Path "".."")\bin"
 	$configuration = "Debug"
 	$releaseTagPattern = "release-(.*)"
+	$skipTests = $false
+}
+
+Function Get-DotNetVersion($RawVersion) {
+	Return New-Object System.Version(($RawVersion -Replace "-.*$","")) # Remove any pre-release information
+}
+
+Function Get-DependencyVersion($RawVersion) {
+	$netVersion = Get-DotNetVersion -RawVersion $RawVersion
+	Return New-Object System.Version($netVersion.Major, $netVersion.Minor)
 }
 
 Task default -Depends Build-AutoVersion
@@ -48,9 +58,11 @@ Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generat
 }
 
 Task Run-Tests -Depends Build-Compiler, Build-Runtime {
-	$runner = (dir "$baseDir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
-	Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
-	Exec { & "$runner" "$baseDir\Runtime\src\Tests\RuntimeLibrary.Tests\RuntimeLibrary.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
+	if (-not $skipTests) {
+		$runner = (dir "$baseDir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
+		Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
+		Exec { & "$runner" "$baseDir\Runtime\src\Tests\RuntimeLibrary.Tests\RuntimeLibrary.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
+	}
 }
 
 Task Build-NuGetPackages -Depends Determine-Version {
@@ -66,6 +78,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	</metadata>
 	<files>
 		<file src="$baseDir\Compiler\License.txt" target=""/>
+		<file src="$baseDir\history.txt" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Compiler\install.ps1" target="tools"/>
 		<file src="$outDir\SCTask.dll" target="tools"/>
@@ -86,7 +99,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<authors>Nikhil Kothari, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
-			<dependency id="Saltarelle.Compiler" version="0.0"/>
+			<dependency id="Saltarelle.Compiler" version="$(Get-DependencyVersion $script:CompilerVersion)"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -97,7 +110,6 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\bin\Script\mscorlib.debug.js" target=""/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.js" target=""/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.css" target=""/>
-		<file src="$baseDir\history.txt" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
 	</files>
@@ -115,7 +127,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<authors>neue.cc, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="0.0"/>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -139,7 +151,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<authors>Nikhil Kothari</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="0.0"/>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -163,7 +175,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<authors>Nikhil Kothari</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="0.0"/>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -185,8 +197,8 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<authors>Nikhil Kothari</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="0.0"/>
-			<dependency id="Saltarelle.Web" version="0.0"/>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
+			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -209,9 +221,9 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<authors>Ivaylo Gochkov, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="0.0"/>
-			<dependency id="Saltarelle.Web" version="0.0"/>
-			<dependency id="Saltarelle.jQuery" version="0.0"/>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
+			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
+			<dependency id="Saltarelle.jQuery" version="$(Get-DependencyVersion $script:JQueryVersion)"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -310,10 +322,9 @@ Task Determine-Version {
 }
 
 Function Generate-VersionFile($Path, $Version) {
-	$Version = $Version -Replace "-.*$","" # Remove any pre-release information
-
+	$Version = Get-DotNetVersion -RawVersion $Version
 @"
-[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+[assembly: System.Reflection.AssemblyVersion("$($Version.Major).$($Version.Minor).0.0")]
 [assembly: System.Reflection.AssemblyFileVersion("$Version")]
 "@ | Out-File $Path -Encoding "UTF8"
 }

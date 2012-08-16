@@ -386,6 +386,37 @@ public class C1 {
 		}
 
 		[Test]
+		public void CanSwitchOnString() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"
+using System.Collections.Generic;
+public class C1 {
+	string F() { return ""X""; }
+	public int M() {
+		switch (F()) {
+			case ""X"": return 1;
+			case ""Y"": return 2;
+			case ""Z"": return 3;
+			default:    return 0;
+		}
+	}
+}");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options, false);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void TheAssemblyNameIsCorrect() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
