@@ -4,6 +4,9 @@ namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
 	[Imported(IsRealType = true)]
 	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue>  {
+		[NonScriptable]
+		public Dictionary(int capacity) {}
+
 		[ScriptName("")]
 		public Dictionary() {}
 		[ScriptName("")]
