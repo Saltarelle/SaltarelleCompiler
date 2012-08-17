@@ -214,11 +214,11 @@ namespace System {
             return 0;
         }
 
+        [InlineCode("{this}.indexOf({$System.String}.fromCharCode({ch}), {startIndex})")]
         public int IndexOf(char ch, int startIndex) {
             return 0;
         }
 
-        [InlineCode("{this}.indexOf({$System.String}.fromCharCode({ch}), {startIndex})")]
         public int IndexOf(string ch, int startIndex) {
             return 0;
         }
