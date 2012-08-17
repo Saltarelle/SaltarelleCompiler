@@ -34,6 +34,7 @@ namespace Saltarelle.Compiler.SCTask {
 			result.OutputScriptPath      =  this.OutputScript;
 			result.TreatWarningsAsErrors =  this.TreatWarningsAsErrors;
 			result.WarningLevel          =  this.WarningLevel;
+			result.AlreadyCompiled       =  this.AlreadyCompiled;
 
 			if (this.WarningLevel < 0 || this.WarningLevel > 4) {
 				Log.LogError("Warning level must be between 0 and 4.");
@@ -112,5 +113,7 @@ namespace Saltarelle.Compiler.SCTask {
 		public string WarningsAsErrors { get; set; }
 
 		public string WarningsNotAsErrors { get; set; }
+
+		public bool AlreadyCompiled { get; set; }
 	}
 }

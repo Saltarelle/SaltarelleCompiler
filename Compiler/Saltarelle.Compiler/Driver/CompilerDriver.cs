@@ -182,28 +182,30 @@ namespace Saltarelle.Compiler.Driver {
 					if (er.HasErrors)
 						return false;
 
-					var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
-					var d = new Mono.CSharp.Driver(ctx);
-					d.Compile();
-
-					if (er.HasErrors)
-						return false;
+					if (!options.AlreadyCompiled) {
+						// Compile the assembly
+						var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
+						var d = new Mono.CSharp.Driver(ctx);
+						d.Compile();
+						if (er.HasErrors)
+							return false;
+					}
 
 					// Compile the script
-					var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
+					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 					var n = new DefaultNamer();
 					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(nc, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, nc.GetTypeSemantics(t).Name); });
-					var compiler = new Compiler.Compiler(nc, n, rtl, er);
+					var rtl = new ScriptSharpRuntimeLibrary(md, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
+					var compiler = new Compiler.Compiler(md, n, rtl, er);
 
-					var references = LoadReferences(ctx.Settings.AssemblyReferences, er);
+					var references = LoadReferences(settings.AssemblyReferences, er);
 					if (references == null)
 						return false;
 
 					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
-					var js = new ScriptSharpOOPEmulator(nc, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
+					var js = new ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
 					js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
 
 					if (er.HasErrors)
@@ -212,20 +214,22 @@ namespace Saltarelle.Compiler.Driver {
 					string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
 					string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
 
-					try {
-						File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
-					}
-					catch (IOException ex) {
-						er.Message(7950, null, TextLocation.Empty, ex.Message);
-						return false;
-					}
-					if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+					if (!options.AlreadyCompiled) {
 						try {
-							File.Copy(intermediateDocFile, options.DocumentationFile, true);
+							File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 						}
 						catch (IOException ex) {
-							er.Message(7952, null, TextLocation.Empty, ex.Message);
+							er.Message(7950, null, TextLocation.Empty, ex.Message);
 							return false;
+						}
+						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+							try {
+								File.Copy(intermediateDocFile, options.DocumentationFile, true);
+							}
+							catch (IOException ex) {
+								er.Message(7952, null, TextLocation.Empty, ex.Message);
+								return false;
+							}
 						}
 					}
 
@@ -244,8 +248,10 @@ namespace Saltarelle.Compiler.Driver {
 					return false;
 				}
 				finally {
-					try { File.Delete(intermediateAssemblyFile); } catch {}
-					try { File.Delete(intermediateDocFile); } catch {}
+					if (!options.AlreadyCompiled) {
+						try { File.Delete(intermediateAssemblyFile); } catch {}
+						try { File.Delete(intermediateDocFile); } catch {}
+					}
 				}
 			}
 		}
