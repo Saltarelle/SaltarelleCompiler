@@ -51,7 +51,7 @@ public void M() {
 		}
 	}
 }",
-@"	{Ex}.$F($a, $b, $c);
+@"	{sm_Ex}.$F($a, $b, $c);
 ", addSkeleton: false);
 		}
 
@@ -73,7 +73,7 @@ public void M() {
 		}
 	}
 }",
-@"	{Ex}.$F($a, $c, $b, 0);
+@"	{sm_Ex}.$F($a, $c, $b, 0);
 ", addSkeleton: false);
 		}
 
@@ -101,7 +101,7 @@ public void M() {
 	F(a, b, c);
 	// END
 }",
-@"	{C}.$F($a, $b, $c);
+@"	{sm_C}.$F($a, $b, $c);
 ");
 		}
 
@@ -119,7 +119,7 @@ public class Class2 : Class1 {
 		// END
     }
 }",
-@"	{Class1}.$Test1();
+@"	{sm_Class1}.$Test1();
 ", addSkeleton: false);
 		}
 
@@ -141,7 +141,7 @@ public class C
 		// END
     }
 }",
-@"	{Class1}.$Test1();
+@"	{sm_Class1}.$Test1();
 ", addSkeleton: false);
 		}
 
@@ -170,7 +170,7 @@ public void M() {
 	F(a, b, c);
 	// END
 }",
-@"	$InstantiateGenericMethod(this.$F, {Int32}, {String}).call(this, $a, $b, $c);
+@"	$InstantiateGenericMethod(this.$F, {ga_Int32}, {ga_String}).call(this, $a, $b, $c);
 ");
 		}
 
@@ -202,7 +202,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.$FX();
-	$InstantiateGenericMethod($tmp1.$F, {Int32}, {String}).call($tmp1, $a, $b, $c);
+	$InstantiateGenericMethod($tmp1.$F, {ga_Int32}, {ga_String}).call($tmp1, $a, $b, $c);
 ");
 		}
 
@@ -220,7 +220,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.$FX();
-	$InstantiateGenericMethod($tmp1.$F, {Int32}, {String}).call($tmp1, $a, $b, $c);
+	$InstantiateGenericMethod($tmp1.$F, {ga_Int32}, {ga_String}).call($tmp1, $a, $b, $c);
 ");
 		}
 
@@ -235,7 +235,7 @@ public void M() {
 	F(a, b, c);
 	// END
 }",
-@"	$InstantiateGenericMethod({C}.$F, {Int32}, {String}).call(null, $a, $b, $c);
+@"	$InstantiateGenericMethod({sm_C}.$F, {ga_Int32}, {ga_String}).call(null, $a, $b, $c);
 ");
 		}
 
@@ -419,7 +419,7 @@ public void M() {
 	F(a, b, c);
 	// END
 }",
-@"	{C}.$F(this, $a, $b, $c);
+@"	{sm_C}.$F(this, $a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -450,7 +450,7 @@ public void M() {
 	FX().F(a, b, c);
 	// END
 }",
-@"	$InstantiateGenericType({X}, {Int32}).$F(this.$FX(), $a, $b, $c);
+@"	sm_$InstantiateGenericType({X}, {ga_Int32}).$F(this.$FX(), $a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -465,7 +465,7 @@ public void M() {
 	F(a, b, c);
 	// END
 }",
-@"	$InstantiateGenericMethod({C}.$F, {Int32}, {String}).call(null, this, $a, $b, $c);
+@"	$InstantiateGenericMethod({sm_C}.$F, {ga_Int32}, {ga_String}).call(null, this, $a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -486,7 +486,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	{C}.$F(this, 1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	{sm_C}.$F(this, 1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -541,7 +541,7 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_{Int32}_{Byte}_{String}_$o_$a_$b_$c_;
+@"	_{ga_Int32}_{ga_Byte}_{ga_String}_$o_$a_$b_$c_;
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{T1}_{T2}_{T3}_{this}_{x}_{y}_{z}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -591,7 +591,7 @@ class D : B {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase({B}, '$F', [], [this, $c, $d]);
+	$CallBase({bind_B}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -614,7 +614,7 @@ class D : B<string> {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase($InstantiateGenericType({B}, {String}), '$F', [], [this, $c, $d]);
+	$CallBase(bind_$InstantiateGenericType({B}, {ga_String}), '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -637,7 +637,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase($InstantiateGenericType({B}, $T2), '$F', [], [this, $c, $d]);
+	$CallBase(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -658,8 +658,8 @@ class D : B {
 	}
 }
 ",
-@"	$InstantiateGenericMethod(this.$F, {Int32}).call(this, $a, $b);
-	$CallBase({B}, '$F', [{Int32}], [this, $c, $d]);
+@"	$InstantiateGenericMethod(this.$F, {ga_Int32}).call(this, $a, $b);
+	$CallBase({bind_B}, '$F', [{ga_Int32}], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -680,8 +680,8 @@ class D<T2> : B<T2> {
 	}
 }
 ",
-@"	$InstantiateGenericMethod(this.$F, {Int32}).call(this, $a, $b);
-	$CallBase($InstantiateGenericType({B}, $T2), '$F', [{Int32}], [this, $c, $d]);
+@"	$InstantiateGenericMethod(this.$F, {ga_Int32}).call(this, $a, $b);
+	$CallBase(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [{ga_Int32}], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -706,7 +706,7 @@ class D2 : D {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase({B}, '$F', [], [this, $c, $d]);
+	$CallBase({bind_B}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -732,7 +732,7 @@ class D2 : D {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase({D}, '$F', [], [this, $c, $d]);
+	$CallBase({bind_D}, '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -990,7 +990,7 @@ public void M() {
 	var a = x[123, d];
 	// END
 }",
-@"	var $a = $x.get_$Item(123, $Cast($d, {String}));
+@"	var $a = $x.get_$Item(123, $Cast($d, {ct_String}));
 ");
 		}
 
@@ -1085,7 +1085,7 @@ class Derived : Middle {
 		// END
 	}
 }",
-@"	$CallBase({Middle}, '$M', [], [this, $d]);
+@"	$CallBase({bind_Middle}, '$M', [], [this, $d]);
 ", addSkeleton: false);
 
 		}

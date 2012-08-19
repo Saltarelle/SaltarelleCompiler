@@ -144,7 +144,7 @@ public void M() {
 @"	{
 		this.set_$MyProperty($a);
 		var $d = $a;
-		var $tmp1 = $Cast($d, {IDisposable});
+		var $tmp1 = $Cast($d, {ct_IDisposable});
 		try {
 			var $x = 0;
 		}

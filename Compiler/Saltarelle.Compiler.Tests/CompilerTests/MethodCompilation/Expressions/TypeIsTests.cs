@@ -15,7 +15,7 @@ void M() {
 	// END
 }
 ",
-@"	var $b = $TypeIs($o, $InstantiateGenericType({X}, {Int32}));
+@"	var $b = $TypeIs($o, ct_$InstantiateGenericType({X}, {ga_Int32}));
 ");
 		}
 
@@ -31,7 +31,7 @@ void M() {
 	// END
 }
 ",
-@"	var $b = $TypeIs($o, {Int32});
+@"	var $b = $TypeIs($o, {ct_Int32});
 ");
 		}
 
@@ -47,7 +47,7 @@ void M() {
 	// END
 }
 ",
-@"	var $b = $TypeIs($o, {Int32});
+@"	var $b = $TypeIs($o, {ct_Int32});
 ");
 		}
 
@@ -66,9 +66,9 @@ public void M<T>() where T : D {
 	bool b3 = d is T;
 	// END
 }",
-@"	var $b1 = $TypeIs($o, $T);
-	var $b2 = $TypeIs($b, $T);
-	var $b3 = $TypeIs($d, $T);
+@"	var $b1 = $TypeIs($o, ct_$T);
+	var $b2 = $TypeIs($b, ct_$T);
+	var $b3 = $TypeIs($d, ct_$T);
 ");
 
 			AssertCorrect(
@@ -84,9 +84,9 @@ public void M<T>() where T : class, D {
 	bool b3 = d is T;
 	// END
 }",
-@"	var $b1 = $TypeIs($o, $T);
-	var $b2 = $TypeIs($b, $T);
-	var $b3 = $TypeIs($d, $T);
+@"	var $b1 = $TypeIs($o, ct_$T);
+	var $b2 = $TypeIs($b, ct_$T);
+	var $b3 = $TypeIs($d, ct_$T);
 ");
 		}
 
@@ -100,7 +100,7 @@ public void M<T>() {
 	bool b = i is T;
 	// END
 }",
-@"	var $b = $TypeIs($i, $T);
+@"	var $b = $TypeIs($i, ct_$T);
 ");
 
 			AssertCorrect(
@@ -111,7 +111,7 @@ public void M<T>() where T : class {
 	bool b = i is T;
 	// END
 }",
-@"	var $b = $TypeIs($i, $T);
+@"	var $b = $TypeIs($i, ct_$T);
 ");
 		}
 
@@ -125,7 +125,7 @@ public void M<T>() {
 	bool b = t is I;
 	// END
 }",
-@"	var $b = $TypeIs($t, {I});
+@"	var $b = $TypeIs($t, {ct_I});
 ");
 
 			AssertCorrect(
@@ -136,7 +136,7 @@ public void M<T>() where T : class {
 	bool b = t is I;
 	// END
 }",
-@"	var $b = $TypeIs($t, {I});
+@"	var $b = $TypeIs($t, {ct_I});
 ");
 		}
 
@@ -149,7 +149,7 @@ public void M<T>() where T : class {
 	bool b = t is U;
 	// END
 }",
-@"	var $b = $TypeIs($t, $U);
+@"	var $b = $TypeIs($t, ct_$U);
 ");
 
 			AssertCorrect(
@@ -159,7 +159,7 @@ public void M<T>() where T : class {
 	bool b = t is U;
 	// END
 }",
-@"	var $b = $TypeIs($t, $U);
+@"	var $b = $TypeIs($t, ct_$U);
 ");
 
 			AssertCorrect(
@@ -169,7 +169,7 @@ public void M<T>() where T : class {
 	bool b = t is U;
 	// END
 }",
-@"	var $b = $TypeIs($t, $U);
+@"	var $b = $TypeIs($t, ct_$U);
 ");
 		}
 	}

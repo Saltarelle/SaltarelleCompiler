@@ -91,7 +91,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         public void InheritanceWorks() {
             Compile(@"class BaseClass {}
                       class Test : BaseClass { }");
-            Stringify(FindClass("Test").BaseClass).Should().Be("{BaseClass}");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{inh_BaseClass}");
         }
 
         [Test]
@@ -99,15 +99,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
             Compile(@"class Test1 : object {}
                       class Test2 {}");
             CompiledTypes.Should().HaveCount(2);
-            Stringify(FindClass("Test1").BaseClass).Should().Be("{Object}");
-            Stringify(FindClass("Test2").BaseClass).Should().Be("{Object}");
+            Stringify(FindClass("Test1").BaseClass).Should().Be("{inh_Object}");
+            Stringify(FindClass("Test2").BaseClass).Should().Be("{inh_Object}");
         }
 
         [Test]
-        public void StructsShouldInheritValueObject() {
+        public void StructsShouldInheritValueType() {
             Compile(@"struct Test {}");
             CompiledTypes.Should().HaveCount(1);
-            Stringify(FindClass("Test").BaseClass).Should().Be("{ValueType}");
+            Stringify(FindClass("Test").BaseClass).Should().Be("{inh_ValueType}");
         }
 
         [Test]
@@ -122,8 +122,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                       interface ITest2 {}
                       class Test : ITest1, ITest2 { }");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{Object}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}" });
+            Stringify(cls.BaseClass).Should().Be("{inh_Object}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}" });
         }
 
         [Test]
@@ -133,50 +133,50 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                       class BaseClass {}
                       class Test : ITest1, BaseClass, ITest2 { }");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{BaseClass}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}" });
+            Stringify(cls.BaseClass).Should().Be("{inh_BaseClass}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}" });
         }
 
         [Test]
         public void ClassCanInheritGenericClass() {
             Compile("class Base<T> {} class Test : Base<int> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, {Int32})");
+            Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, {ga_Int32})");
         }
 
         [Test]
         public void ClassCanImplementGenericInterface() {
             Compile("interface IMyInterface<T> {} class Test : IMyInterface<int> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("$InstantiateGenericType({IMyInterface}, {Int32})");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("inh_$InstantiateGenericType({IMyInterface}, {ga_Int32})");
         }
 
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithTypeParameter() {
             Compile("interface IMyInterface<T> {} class Test<T> : IMyInterface<T> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("$InstantiateGenericType({IMyInterface}, $T)");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("inh_$InstantiateGenericType({IMyInterface}, ga_$T)");
         }
 
         [Test]
         public void ClassCanImplementGenericInterfaceConstructedWithSelf() {
             Compile("interface IMyInterface<T> {} class Test : IMyInterface<Test> {}");
-            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("$InstantiateGenericType({IMyInterface}, {Test})");
+            Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("inh_$InstantiateGenericType({IMyInterface}, {ga_Test})");
         }
 
         [Test]
         public void ClassCanUseOwnTypeParameterInBaseClass() {
             Compile("class Base<T> {} class Test<U> : Base<U> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, $U)");
+            Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, ga_$U)");
         }
 
         [Test]
         public void ClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test : Base<Test> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, {Test})");
+            Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, {ga_Test})");
         }
 
         [Test]
         public void GenericClassCanUseSelfAsTypeParameterToBaseClass() {
             Compile("class Base<T> {} class Test<T> : Base<Test<T>> {}");
-            Stringify(FindClass("Test").BaseClass).Should().Be("$InstantiateGenericType({Base}, $InstantiateGenericType({Test}, $T))");
+            Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, ga_$InstantiateGenericType({Test}, ga_$T))");
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                       interface ITest : ITest1, ITest2 { }");
             var cls = FindClass("ITest");
             cls.BaseClass.Should().BeNull();
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}" });
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}" });
         }
 
         [Test]
@@ -195,8 +195,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                       interface ITest2 {}
                       struct Test : ITest1, ITest2 { }");
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("{ValueType}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}" });
+            Stringify(cls.BaseClass).Should().Be("{inh_ValueType}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}" });
         }
 
         [Test]
@@ -220,12 +220,12 @@ class ArrayList : IList, ICloneable {}",
 @"partial class TestClass : ArrayList, ISerializable { }",
 @"partial class TestClass : IEnumarator { }");
             var cls = FindClass("TestClass");
-            Stringify(cls.BaseClass).Should().Be("{ArrayList}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{IList}",
-                                                                                        "{ICollection}",
-                                                                                        "{IEnumerable}",
-                                                                                        "{ICloneable}",
-                                                                                        "{ISerializable}" });
+            Stringify(cls.BaseClass).Should().Be("{inh_ArrayList}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_IList}",
+                                                                                        "{inh_ICollection}",
+                                                                                        "{inh_IEnumerable}",
+                                                                                        "{inh_ICloneable}",
+                                                                                        "{inh_ISerializable}" });
         }
 
         [Test]
@@ -243,14 +243,14 @@ class ArrayList : IList, ICloneable {}",
 @"partial class TestClass : ArrayList, System.Collections.IEnumerable { }",
 @"partial class TestClass : IList<string> { }");
             var cls = FindClass("TestClass");
-            Stringify(cls.BaseClass).Should().Be("{ArrayList}");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{IList}",
-                                                                                        "{ICollection}",
-                                                                                        "{IEnumerable}",
-                                                                                        "{ICloneable}",
-                                                                                        "$InstantiateGenericType({IList}, {String})",
-                                                                                        "$InstantiateGenericType({ICollection}, {String})",
-                                                                                        "$InstantiateGenericType({IEnumerable}, {String})" });
+            Stringify(cls.BaseClass).Should().Be("{inh_ArrayList}");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_IList}",
+                                                                                        "{inh_ICollection}",
+                                                                                        "{inh_IEnumerable}",
+                                                                                        "{inh_ICloneable}",
+                                                                                        "inh_$InstantiateGenericType({IList}, {ga_String})",
+                                                                                        "inh_$InstantiateGenericType({ICollection}, {ga_String})",
+                                                                                        "inh_$InstantiateGenericType({IEnumerable}, {ga_String})" });
         }
 
         [Test]
@@ -260,8 +260,8 @@ class ArrayList : IList, ICloneable {}",
                       interface ITest3 : ITest1, ITest2 {}
                       class Test : ITest3 {}
                       interface ITest : ITest3 {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}", "{ITest3}" });
-            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{ITest1}", "{ITest2}", "{ITest3}" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}", "{inh_ITest3}" });
+            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}", "{inh_ITest3}" });
         }
 
         [Test]
@@ -271,8 +271,8 @@ class ArrayList : IList, ICloneable {}",
                       interface ITest3<T1, T2> : ITest1<T1>, ITest2<T2> {}
                       class Test : ITest3<int, string> {}
                       interface ITest<T> : ITest3<T, T> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({ITest1}, {Int32})", "$InstantiateGenericType({ITest2}, {String})", "$InstantiateGenericType({ITest3}, {Int32}, {String})" });
-            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({ITest1}, $T)", "$InstantiateGenericType({ITest2}, $T)", "$InstantiateGenericType({ITest3}, $T, $T)" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({ITest1}, {ga_Int32})", "inh_$InstantiateGenericType({ITest2}, {ga_String})", "inh_$InstantiateGenericType({ITest3}, {ga_Int32}, {ga_String})" });
+            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({ITest1}, ga_$T)", "inh_$InstantiateGenericType({ITest2}, ga_$T)", "inh_$InstantiateGenericType({ITest3}, ga_$T, ga_$T)" });
         }
 
         [Test]
@@ -289,14 +289,14 @@ interface IDeserializationCallback {}
 interface ISerializable {}
 class Dictionary<T1, T2> : IDictionary<T1, T2>, IDeserializationCallback, ISerializable {}
 			class Test<T> : Dictionary<T, int> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IDictionary}, $T, {Int32})",
-                                                                                                      "$InstantiateGenericType({ICollection}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
-                                                                                                      "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
-                                                                                                      "{IDictionary}",
-                                                                                                      "{ICollection}",
-                                                                                                      "{IEnumerable}",
-                                                                                                      "{ISerializable}",
-                                                                                                      "{IDeserializationCallback}" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, ga_$T, {ga_Int32})",
+                                                                                                      "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
+                                                                                                      "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
+                                                                                                      "{inh_IDictionary}",
+                                                                                                      "{inh_ICollection}",
+                                                                                                      "{inh_IEnumerable}",
+                                                                                                      "{inh_ISerializable}",
+                                                                                                      "{inh_IDeserializationCallback}" });
         }
 
         [Test]
@@ -308,10 +308,10 @@ interface IEnumerable<T> : IEnumerable {}
 interface ICollection<T> : IEnumerable<T> {}
 interface IDictionary<T1, T2> : ICollection<KeyValuePair<T1, T2>> {}
 class Test<T> : IDictionary<T, int> {}");
-            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IDictionary}, $T, {Int32})",
-                                                                                                      "$InstantiateGenericType({ICollection}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
-                                                                                                      "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({KeyValuePair}, $T, {Int32}))",
-                                                                                                      "{IEnumerable}" });
+            FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, ga_$T, {ga_Int32})",
+                                                                                                      "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
+                                                                                                      "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
+                                                                                                      "{inh_IEnumerable}" });
         }
 
         [Test]
@@ -323,10 +323,10 @@ interface IEnumerable<T> : IEnumerable {}
 interface ICollection<T> : IEnumerable<T> {}
 interface IDictionary<T1, T2> : ICollection<KeyValuePair<T1, T2>> {}
 interface ITest : IDictionary<string, int> {}");
-            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IDictionary}, {String}, {Int32})",
-                                                                                                       "$InstantiateGenericType({ICollection}, $InstantiateGenericType({KeyValuePair}, {String}, {Int32}))",
-                                                                                                       "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({KeyValuePair}, {String}, {Int32}))",
-                                                                                                       "{IEnumerable}" });
+            FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, {ga_String}, {ga_Int32})",
+                                                                                                       "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, {ga_String}, {ga_Int32}))",
+                                                                                                       "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, {ga_String}, {ga_Int32}))",
+                                                                                                       "{inh_IEnumerable}" });
         }
 
         [Test]
@@ -345,13 +345,13 @@ class List<T> : IList<T> {}
 class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
             var cls = FindClass("Test");
-            Stringify(cls.BaseClass).Should().Be("$InstantiateGenericType({List}, $InstantiateGenericType({Dictionary}, $T1, $T2))");
-            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "$InstantiateGenericType({IList}, $InstantiateGenericType({Dictionary}, $T1, $T2))",
-                                                                                        "$InstantiateGenericType({ICollection}, $InstantiateGenericType({Dictionary}, $T1, $T2))",
-                                                                                        "$InstantiateGenericType({IEnumerable}, $InstantiateGenericType({Dictionary}, $T1, $T2))",
-                                                                                        "{IList}",
-                                                                                        "{ICollection}",
-                                                                                        "{IEnumerable}" });
+            Stringify(cls.BaseClass).Should().Be("inh_$InstantiateGenericType({List}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))");
+            cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IList}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))",
+                                                                                        "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))",
+                                                                                        "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))",
+                                                                                        "{inh_IList}",
+                                                                                        "{inh_ICollection}",
+                                                                                        "{inh_IEnumerable}" });
             
         }
 

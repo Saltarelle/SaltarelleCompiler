@@ -90,8 +90,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
             cctor.Replace("\r\n", "\n").Should().Be(
-@"{C}.$x = 0;
-{C}.$y = 1;
+@"{sm_C}.$x = 0;
+{sm_C}.$y = 1;
 var $z = 2;
 ".Replace("\r\n", "\n"));
         }
@@ -108,9 +108,9 @@ var $z = 2;
 
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
         	cctor.Replace("\r\n", "\n").Should().Be(
-@"$InstantiateGenericType({C}, $T).$x = $Default($T);
-$InstantiateGenericType({C}, $T).$y = 0;
-$InstantiateGenericType({C}, $T).$z = null;
+@"sm_$InstantiateGenericType({C}, ga_$T).$x = $Default(def_$T);
+sm_$InstantiateGenericType({C}, ga_$T).$y = 0;
+sm_$InstantiateGenericType({C}, ga_$T).$z = null;
 ".Replace("\r\n", "\n"));
         }
     }

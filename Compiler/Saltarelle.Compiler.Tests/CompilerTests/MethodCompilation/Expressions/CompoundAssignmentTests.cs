@@ -203,7 +203,7 @@ public void M() {
 	P += i;
 	// END
 }",
-@"	{C}.set_$P({C}.get_$P() + $i);
+@"	{sm_C}.set_$P({sm_C}.get_$P() + $i);
 ");
 		}
 
@@ -217,7 +217,7 @@ public void M() {
 	F += i;
 	// END
 }",
-@"	{C}.$F += $i;
+@"	{sm_C}.$F += $i;
 ");
 		}
 
@@ -359,7 +359,7 @@ public void M() {
 	a += b += i;
 	// END
 }",
-@"	{C}.$a += {C}.$b += $i;
+@"	{sm_C}.$a += {sm_C}.$b += $i;
 ");
 		}
 
@@ -918,7 +918,7 @@ public void M() {
 	a += b;
 	// END
 }",
-@"	$a = {Delegate}.$Combine($a, $b);
+@"	$a = {sm_Delegate}.$Combine($a, $b);
 ");
 		}
 
@@ -932,7 +932,7 @@ public void M() {
 	a -= b;
 	// END
 }",
-@"	$a = {Delegate}.$Remove($a, $b);
+@"	$a = {sm_Delegate}.$Remove($a, $b);
 ");
 		}
 
@@ -950,7 +950,7 @@ class D : B {
 		// END
 	}
 }",
-@"	$CallBase({B}, 'set_$P', [], [this, $CallBase({B}, 'get_$P', [], [this]) + 10]);
+@"	$CallBase({bind_B}, 'set_$P', [], [this, $CallBase({bind_B}, 'get_$P', [], [this]) + 10]);
 ", addSkeleton: false);
 		}
 

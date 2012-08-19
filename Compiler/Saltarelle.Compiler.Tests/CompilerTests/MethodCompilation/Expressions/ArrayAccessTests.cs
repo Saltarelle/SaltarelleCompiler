@@ -52,7 +52,7 @@ void M() {
 	var x = arr[d];
 	// END
 }",
-@"	var $x = $arr[$FromNullable($Cast($d, {Int32}))];
+@"	var $x = $arr[$FromNullable($Cast($d, {ct_Int32}))];
 ");
 		}
 	}

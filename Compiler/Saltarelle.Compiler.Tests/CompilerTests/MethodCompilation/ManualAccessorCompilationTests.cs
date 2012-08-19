@@ -30,12 +30,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(getter.Definition,
 @"function() {
-	return {C}.$myField;
+	return {sm_C}.$myField;
 }");
 
 			AssertCorrect(setter.Definition,
 @"function($value) {
-	{C}.$myField = $value;
+	{sm_C}.$myField = $value;
 }");
 		}
 
@@ -66,12 +66,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(getter.Definition,
 @"function($value) {
-	this.$myField = {Delegate}.Combine(this.$myField, $value);
+	this.$myField = {sm_Delegate}.Combine(this.$myField, $value);
 }");
 
 			AssertCorrect(setter.Definition,
 @"function($value) {
-	this.$myField = {Delegate}.Remove(this.$myField, $value);
+	this.$myField = {sm_Delegate}.Remove(this.$myField, $value);
 }");
 		}
 
@@ -84,12 +84,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(adder.Definition,
 @"function($value) {
-	{C}.$myField = {Delegate}.Combine({C}.$myField, $value);
+	{sm_C}.$myField = {sm_Delegate}.Combine({sm_C}.$myField, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($value) {
-	{C}.$myField = {Delegate}.Remove({C}.$myField, $value);
+	{sm_C}.$myField = {sm_Delegate}.Remove({sm_C}.$myField, $value);
 }");
 		}
 	}

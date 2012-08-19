@@ -126,8 +126,8 @@ class D : B {
 }",
 @"	this.set_$P(1);
 	var $i1 = this.get_$P();
-	$CallBase({B}, 'set_$P', [], [this, 2]);
-	var $i2 = $CallBase({B}, 'get_$P', [], [this]);
+	$CallBase({bind_B}, 'set_$P', [], [this, 2]);
+	var $i2 = $CallBase({bind_B}, 'get_$P', [], [this]);
 ", addSkeleton: false);
 		}
 
@@ -217,7 +217,7 @@ public void M() {
 	var b = MyEvent != null;
 	// END
 }",
-@"	var $b = {MulticastDelegate}.$op_Inequality($Upcast(this.$MyEvent, {MulticastDelegate}), null);
+@"	var $b = {sm_MulticastDelegate}.$op_Inequality($Upcast(this.$MyEvent, {ct_MulticastDelegate}), null);
 ");
 		}
 
@@ -243,8 +243,8 @@ class D : B {
 }",
 @"	this.add_$MyEvent($h);
 	this.remove_$MyEvent($h);
-	$CallBase({B}, 'add_$MyEvent', [], [this, $h]);
-	$CallBase({B}, 'remove_$MyEvent', [], [this, $h]);
+	$CallBase({bind_B}, 'add_$MyEvent', [], [this, $h]);
+	$CallBase({bind_B}, 'remove_$MyEvent', [], [this, $h]);
 ", addSkeleton: false);
 		}
 
@@ -297,8 +297,8 @@ class D : B {
 }",
 @"	this.set_$Item(0, 1);
 	var $i1 = this.get_$Item(2);
-	$CallBase({B}, 'set_$Item', [], [this, 3, 4]);
-	var $i2 = $CallBase({B}, 'get_$Item', [], [this, 5]);
+	$CallBase({bind_B}, 'set_$Item', [], [this, 3, 4]);
+	var $i2 = $CallBase({bind_B}, 'get_$Item', [], [this, 5]);
 ", addSkeleton: false);
 		}
 
