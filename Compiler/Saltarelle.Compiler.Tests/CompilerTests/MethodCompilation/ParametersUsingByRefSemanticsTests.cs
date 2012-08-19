@@ -60,10 +60,10 @@ void M() {
 		$a = { $: $a };
 		$d = { $: $d };
 		$c.$ = 0;
-		{C}.$F($a);
-		{C}.$F($b);
-		{C}.$F($c);
-		{C}.$F($d);
+		{sm_C}.$F($a);
+		{sm_C}.$F($b);
+		{sm_C}.$F($c);
+		{sm_C}.$F($d);
 	};
 }");
 		}
@@ -87,10 +87,10 @@ void M() {
 		$a = { $: $a };
 		$d = { $: $d };
 		$c.$ = 0;
-		{C}.$F($a);
-		{C}.$F($b);
-		{C}.$F($c);
-		{C}.$F($d);
+		{sm_C}.$F($a);
+		{sm_C}.$F($b);
+		{sm_C}.$F($c);
+		{sm_C}.$F($d);
 	};
 }");
 		}
@@ -106,7 +106,7 @@ void M() {
 @"function() {
 	var $x = function($a) {
 		$a = { $: $a };
-		{C}.$F($a);
+		{sm_C}.$F($a);
 	};
 }");
 		}
@@ -128,12 +128,12 @@ class C : B {
 @"function($a, $b, $c, $d, $e) {
 	$a = { $: $a };
 	$d = { $: $d };
-	{B}.call(this);
+	{inst_B}.call(this);
 	$c.$ = 0;
-	{C}.F($a);
-	{C}.F($b);
-	{C}.F($c);
-	{C}.F($d);
+	{sm_C}.F($a);
+	{sm_C}.F($b);
+	{sm_C}.F($c);
+	{sm_C}.F($d);
 }", "C");
 		}
 	}

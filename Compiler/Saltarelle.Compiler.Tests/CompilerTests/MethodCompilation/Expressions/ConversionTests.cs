@@ -773,12 +773,12 @@ public void M() {
 }",
 @"function() {
 	var $o = null;
-	var $x1 = $FromNullable($Cast($o, {Int32}));
-	var $x2 = $Cast($o, {Int32});
-	var $x3 = $FromNullable($Cast($o, {Double}));
-	var $x4 = $Cast($o, {Double});
-	var $x5 = $FromNullable($Cast($o, {Boolean}));
-	var $x6 = $Cast($o, {Boolean});
+	var $x1 = $FromNullable($Cast($o, {ct_Int32}));
+	var $x2 = $Cast($o, {ct_Int32});
+	var $x3 = $FromNullable($Cast($o, {ct_Double}));
+	var $x4 = $Cast($o, {ct_Double});
+	var $x5 = $FromNullable($Cast($o, {ct_Boolean}));
+	var $x6 = $Cast($o, {ct_Boolean});
 }");
 		}
 
@@ -793,7 +793,7 @@ public void M() {
 	D d = (D)b;
 	// END
 }",
-@"	var $d = $Cast($b, {D});
+@"	var $d = $Cast($b, {ct_D});
 ");
 		}
 
@@ -807,7 +807,7 @@ public void M() {
 	var d = (System.Collections.Generic.IEnumerable<object>)b;
 	// END
 }",
-@"	var $d = $Cast($b, $InstantiateGenericType({IEnumerable}, {Object}));
+@"	var $d = $Cast($b, ct_$InstantiateGenericType({IEnumerable}, {ga_Object}));
 ");
 		}
 
@@ -821,7 +821,7 @@ public void M() {
 	var i2 = (System.Collections.Generic.IEnumerable<object>)i;
 	// END
 }",
-@"	var $i2 = $Cast($i, $InstantiateGenericType({IEnumerable}, {Object}));
+@"	var $i2 = $Cast($i, ct_$InstantiateGenericType({IEnumerable}, {ga_Object}));
 ");
 		}
 
@@ -837,8 +837,8 @@ public void M() {
 	B b2 = (B)d;
 	// END
 }",
-@"	var $b1 = $Upcast($d, {B});
-	var $b2 = $Upcast($d, {B});
+@"	var $b1 = $Upcast($d, {ct_B});
+	var $b2 = $Upcast($d, {ct_B});
 ");
 		}
 
@@ -853,8 +853,8 @@ public void M() {
 	System.Collections.Generic.IEnumerable<object> i2 = c;
 	// END
 }",
-@"	var $i1 = $Upcast($c, $InstantiateGenericType({IEnumerable}, {Object}));
-	var $i2 = $Upcast($c, $InstantiateGenericType({IEnumerable}, {Object}));
+@"	var $i1 = $Upcast($c, ct_$InstantiateGenericType({IEnumerable}, {ga_Object}));
+	var $i2 = $Upcast($c, ct_$InstantiateGenericType({IEnumerable}, {ga_Object}));
 ");
 		}
 
@@ -868,7 +868,7 @@ public void M() {
 	D d = (D)i;
 	// END
 }",
-@"	var $d = $Cast($i, {D});
+@"	var $d = $Cast($i, {ct_D});
 ");
 		}
 
@@ -882,7 +882,7 @@ public void M() {
 	D d = (D)i;
 	// END
 }",
-@"	var $d = $Cast($i, {D});
+@"	var $d = $Cast($i, {ct_D});
 ");
 		}
 
@@ -899,9 +899,9 @@ public void M() {
 	object o3 = arr;
 	// END
 }",
-@"	var $o1 = $Upcast($c, {Object});
-	var $o2 = $Upcast($c, {Object});
-	var $o3 = $Upcast($arr, {Object});
+@"	var $o1 = $Upcast($c, {ct_Object});
+	var $o2 = $Upcast($c, {ct_Object});
+	var $o3 = $Upcast($arr, {ct_Object});
 ");
 		}
 
@@ -916,8 +916,8 @@ public void M() {
 	object[] arr = (object[])o;
 	// END
 }",
-@"	var $d = $Cast($o, {D});
-	var $arr = $Cast($o, $Array({Object}));
+@"	var $d = $Cast($o, {ct_D});
+	var $arr = $Cast($o, ct_$Array({ga_Object}));
 ");
 		}
 
@@ -980,8 +980,8 @@ public void M() {
 	Array a2 = (Array)c;
 	// END
 }",
-@"	var $a1 = $Upcast($c, {Array});
-	var $a2 = $Upcast($c, {Array});
+@"	var $a1 = $Upcast($c, {ct_Array});
+	var $a2 = $Upcast($c, {ct_Array});
 ");
 		}
 
@@ -995,7 +995,7 @@ public void M() {
 	D[] d = (D[])a;
 	// END
 }",
-@"	var $d = $Cast($a, $Array({D}));
+@"	var $d = $Cast($a, ct_$Array({ga_D}));
 ");
 		}
 
@@ -1011,8 +1011,8 @@ public void M() {
 	System.Collections.Generic.IEnumerable<object> o2 = c2;
 	// END
 }",
-@"	var $o1 = $Upcast($c1, $InstantiateGenericType({IEnumerable}, {Object}));
-	var $o2 = $Upcast($c2, $InstantiateGenericType({IEnumerable}, {Object}));
+@"	var $o1 = $Upcast($c1, ct_$InstantiateGenericType({IEnumerable}, {ga_Object}));
+	var $o2 = $Upcast($c2, ct_$InstantiateGenericType({IEnumerable}, {ga_Object}));
 ");
 		}
 
@@ -1057,7 +1057,7 @@ public void M() {
 	System.Collections.Generic.List<object> l = (System.Collections.Generic.List<object>)d;
 	// END
 }",
-@"	var $l = $Cast($d, $InstantiateGenericType({List}, {Object}));
+@"	var $l = $Cast($d, ct_$InstantiateGenericType({List}, {ga_Object}));
 ");
 		}
 
@@ -1073,9 +1073,9 @@ public void M() {
 	bool? x3 = (bool?)d;
 	// END
 }",
-@"	var $x1 = $Cast($d, {Int32});
-	var $x2 = $Cast($d, {Double});
-	var $x3 = $Cast($d, {Boolean});
+@"	var $x1 = $Cast($d, {ct_Int32});
+	var $x2 = $Cast($d, {ct_Double});
+	var $x3 = $Cast($d, {ct_Boolean});
 ");
 		}
 
@@ -1091,9 +1091,9 @@ public void M() {
 	bool x3 = (bool)d;
 	// END
 }",
-@"	var $x1 = $FromNullable($Cast($d, {Int32}));
-	var $x2 = $FromNullable($Cast($d, {Double}));
-	var $x3 = $FromNullable($Cast($d, {Boolean}));
+@"	var $x1 = $FromNullable($Cast($d, {ct_Int32}));
+	var $x2 = $FromNullable($Cast($d, {ct_Double}));
+	var $x3 = $FromNullable($Cast($d, {ct_Boolean}));
 ");
 		}
 
@@ -1108,8 +1108,8 @@ public void M() {
 	ValueType v2 = (ValueType)i;
 	// END
 }",
-@"	var $v1 = $Upcast($i, {ValueType});
-	var $v2 = $Upcast($i, {ValueType});
+@"	var $v1 = $Upcast($i, {ct_ValueType});
+	var $v2 = $Upcast($i, {ct_ValueType});
 ");
 		}
 
@@ -1124,8 +1124,8 @@ public void M() {
 	int? i2 = (int?)v;
 	// END
 }",
-@"	var $i1 = $FromNullable($Cast($v, {Int32}));
-	var $i2 = $Cast($v, {Int32});
+@"	var $i1 = $FromNullable($Cast($v, {ct_Int32}));
+	var $i2 = $Cast($v, {ct_Int32});
 ");
 		}
 
@@ -1159,10 +1159,10 @@ public void M() {
 	System.Collections.Generic.IList<D> l4 = (System.Collections.Generic.IList<D>)src;
 	// END
 }",
-@"	var $l1 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
-	var $l2 = $Upcast($src, $InstantiateGenericType({IList}, {B}));
-	var $l3 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
-	var $l4 = $Upcast($src, $InstantiateGenericType({IList}, {D}));
+@"	var $l1 = $Upcast($src, ct_$InstantiateGenericType({IList}, {ga_B}));
+	var $l2 = $Upcast($src, ct_$InstantiateGenericType({IList}, {ga_B}));
+	var $l3 = $Upcast($src, ct_$InstantiateGenericType({IList}, {ga_D}));
+	var $l4 = $Upcast($src, ct_$InstantiateGenericType({IList}, {ga_D}));
 ");
 		}
 
@@ -1178,7 +1178,7 @@ public void M() {
 	System.Collections.Generic.IList<D> l = (System.Collections.Generic.IList<D>)src;
 	// END
 }",
-@"	var $l = $Cast($src, $InstantiateGenericType({IList}, {D}));
+@"	var $l = $Cast($src, ct_$InstantiateGenericType({IList}, {ga_D}));
 ");
 		}
 
@@ -1192,8 +1192,8 @@ public void M() {
 	Delegate d2 = f;
 	// END
 }",
-@"	var $d1 = $Upcast($f, {Delegate});
-	var $d2 = $Upcast($f, {Delegate});
+@"	var $d1 = $Upcast($f, {ct_Delegate});
+	var $d2 = $Upcast($f, {ct_Delegate});
 ");
 		}
 
@@ -1223,7 +1223,7 @@ public void M() {
 	var f = (Func<int>)d;
 	// END
 }",
-@"	var $f = $Cast($d, $InstantiateGenericType({Func}, {Int32}));
+@"	var $f = $Cast($d, ct_$InstantiateGenericType({Func}, {ga_Int32}));
 ");
 		}
 
@@ -1243,12 +1243,12 @@ public void M<T>() where T : D, I {
 	I i2 = t;
 	// END
 }",
-@"	var $o1 = $Upcast($t, {Object});
-	var $o2 = $Upcast($t, {Object});
-	var $d1 = $Upcast($t, {D});
-	var $d2 = $Upcast($t, {D});
-	var $i1 = $Upcast($t, {I});
-	var $i2 = $Upcast($t, {I});
+@"	var $o1 = $Upcast($t, {ct_Object});
+	var $o2 = $Upcast($t, {ct_Object});
+	var $d1 = $Upcast($t, {ct_D});
+	var $d2 = $Upcast($t, {ct_D});
+	var $i1 = $Upcast($t, {ct_I});
+	var $i2 = $Upcast($t, {ct_I});
 ");
 
 			AssertCorrect(
@@ -1265,12 +1265,12 @@ public void M<T>() where T : class, D, I {
 	I i2 = t;
 	// END
 }",
-@"	var $o1 = $Upcast($t, {Object});
-	var $o2 = $Upcast($t, {Object});
-	var $d1 = $Upcast($t, {D});
-	var $d2 = $Upcast($t, {D});
-	var $i1 = $Upcast($t, {I});
-	var $i2 = $Upcast($t, {I});
+@"	var $o1 = $Upcast($t, {ct_Object});
+	var $o2 = $Upcast($t, {ct_Object});
+	var $d1 = $Upcast($t, {ct_D});
+	var $d2 = $Upcast($t, {ct_D});
+	var $i1 = $Upcast($t, {ct_I});
+	var $i2 = $Upcast($t, {ct_I});
 ");
 		}
 
@@ -1284,8 +1284,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, $U);
-	var $u2 = $Upcast($t, $U);
+@"	var $u1 = $Upcast($t, ct_$U);
+	var $u2 = $Upcast($t, ct_$U);
 ");
 
 			AssertCorrect(
@@ -1296,8 +1296,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, $U);
-	var $u2 = $Upcast($t, $U);
+@"	var $u1 = $Upcast($t, ct_$U);
+	var $u2 = $Upcast($t, ct_$U);
 ");
 		}
 
@@ -1316,9 +1316,9 @@ public void M<T>() where T : D {
 	T t3 = (T)d;
 	// END
 }",
-@"	var $t1 = $Cast($o, $T);
-	var $t2 = $Cast($b, $T);
-	var $t3 = $Cast($d, $T);
+@"	var $t1 = $Cast($o, ct_$T);
+	var $t2 = $Cast($b, ct_$T);
+	var $t3 = $Cast($d, ct_$T);
 ");
 
 			AssertCorrect(
@@ -1334,9 +1334,9 @@ public void M<T>() where T : class, D {
 	T t3 = (T)d;
 	// END
 }",
-@"	var $t1 = $Cast($o, $T);
-	var $t2 = $Cast($b, $T);
-	var $t3 = $Cast($d, $T);
+@"	var $t1 = $Cast($o, ct_$T);
+	var $t2 = $Cast($b, ct_$T);
+	var $t3 = $Cast($d, ct_$T);
 ");
 		}
 
@@ -1350,7 +1350,7 @@ public void M<T>() {
 	T t = (T)i;
 	// END
 }",
-@"	var $t = $Cast($i, $T);
+@"	var $t = $Cast($i, ct_$T);
 ");
 
 			AssertCorrect(
@@ -1361,7 +1361,7 @@ public void M<T>() where T : class {
 	T t = (T)i;
 	// END
 }",
-@"	var $t = $Cast($i, $T);
+@"	var $t = $Cast($i, ct_$T);
 ");
 		}
 
@@ -1375,7 +1375,7 @@ public void M<T>() {
 	I i = (I)t;
 	// END
 }",
-@"	var $i = $Cast($t, {I});
+@"	var $i = $Cast($t, {ct_I});
 ");
 
 			AssertCorrect(
@@ -1386,7 +1386,7 @@ public void M<T>() where T : class {
 	I i = (I)t;
 	// END
 }",
-@"	var $i = $Cast($t, {I});
+@"	var $i = $Cast($t, {ct_I});
 ");
 		}
 
@@ -1399,7 +1399,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, $U);
+@"	var $u = $Cast($t, ct_$U);
 ");
 
 			AssertCorrect(
@@ -1409,7 +1409,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, $U);
+@"	var $u = $Cast($t, ct_$U);
 ");
 
 			AssertCorrect(
@@ -1419,7 +1419,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, $U);
+@"	var $u = $Cast($t, ct_$U);
 ");
 		}
 
@@ -1439,8 +1439,8 @@ public void M() {
 	C1 c12 = (C1)c2;
 	// END
 }",
-@"	var $c11 = {C2}.$op_Implicit($c2);
-	var $c12 = {C2}.$op_Implicit($c2);
+@"	var $c11 = {sm_C2}.$op_Implicit($c2);
+	var $c12 = {sm_C2}.$op_Implicit($c2);
 ");
 		}
 
@@ -1459,7 +1459,7 @@ public void M() {
 	C1 c1 = (C1)c2;
 	// END
 }",
-@"	var $c1 = {C2}.$op_Explicit($c2);
+@"	var $c1 = {sm_C2}.$op_Explicit($c2);
 ");
 		}
 
@@ -1486,10 +1486,10 @@ public void M() {
 	C1 c3 = (C1)i;
 	// END
 }",
-@"	var $ni1 = {C1}.$op_Implicit($c1);
-	var $ni2 = {C1}.$op_Implicit($c1);
-	var $c2 = {C1}.$op_Implicit($i);
-	var $c3 = {C1}.$op_Implicit($i);
+@"	var $ni1 = {sm_C1}.$op_Implicit($c1);
+	var $ni2 = {sm_C1}.$op_Implicit($c1);
+	var $c2 = {sm_C1}.$op_Implicit($i);
+	var $c3 = {sm_C1}.$op_Implicit($i);
 ");
 		}
 
@@ -1514,8 +1514,8 @@ public void M() {
 	C1 c2 = (C1)i;
 	// END
 }",
-@"	var $ni = {C1}.$op_Explicit($c1);
-	var $c2 = {C1}.$op_Explicit($i);
+@"	var $ni = {sm_C1}.$op_Explicit($c1);
+	var $c2 = {sm_C1}.$op_Explicit($i);
 ");
 		}
 

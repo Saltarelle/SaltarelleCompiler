@@ -1,7 +1,7 @@
 Serializable types no longer have to be sealed (but they still cannot use virtual/override)
 Fixed issue with Visual Studio IntelliSense
 Fixed issue that causes s.IndexOf("x", 1) to be compiled to s.indexOf(String.fromCharCode('/'), 1)
-Fixed issue calling static methods through subclasses of the declaring type.
+Fixed issue using static members through subclasses of the declaring type.
 Added new assembly-level ScriptSharpCompatibiliyAttribute.
 Added equality and inequality operators to System.DateTime.
 

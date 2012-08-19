@@ -263,7 +263,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				if (property.IsStatic) {
 					CreateCompilationContext(null, null, null);
-					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.Instantiation);
+					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.UseStaticMember);
 					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.MemberAccess(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -285,7 +285,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				if (property.IsStatic) {
 					CreateCompilationContext(null, null, null);
-					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.Instantiation);
+					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.UseStaticMember);
 					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -309,7 +309,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.GetScriptType(@event.DeclaringType, TypeContext.Instantiation);
+					target = _runtimeLibrary.GetScriptType(@event.DeclaringType, TypeContext.UseStaticMember);
 					args = new[] { valueName };
 				}
 				else if (impl.AddMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -341,7 +341,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.GetScriptType(@event.DeclaringType, TypeContext.Instantiation);
+					target = _runtimeLibrary.GetScriptType(@event.DeclaringType, TypeContext.UseStaticMember);
 					args = new[] { valueName };
 				}
 				else if (impl.RemoveMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {

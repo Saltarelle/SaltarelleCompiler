@@ -15,7 +15,7 @@ void M() {
 	// END
 }
 ",
-@"	var $r = $TryCast($o, $InstantiateGenericType({X}, {Int32}));
+@"	var $r = $TryCast($o, ct_$InstantiateGenericType({X}, {ga_Int32}));
 ");
 		}
 
@@ -31,7 +31,7 @@ void M() {
 	// END
 }
 ",
-@"	var $x = $TryCast($o, {Int32});
+@"	var $x = $TryCast($o, {ct_Int32});
 ");
 		}
 
@@ -50,9 +50,9 @@ public void M<T>() where T : D {
 	T t3 = d as T;
 	// END
 }",
-@"	var $t1 = $TryCast($o, $T);
-	var $t2 = $TryCast($b, $T);
-	var $t3 = $TryCast($d, $T);
+@"	var $t1 = $TryCast($o, ct_$T);
+	var $t2 = $TryCast($b, ct_$T);
+	var $t3 = $TryCast($d, ct_$T);
 ");
 
 			AssertCorrect(
@@ -68,9 +68,9 @@ public void M<T>() where T : class, D {
 	T t3 = d as T;
 	// END
 }",
-@"	var $t1 = $TryCast($o, $T);
-	var $t2 = $TryCast($b, $T);
-	var $t3 = $TryCast($d, $T);
+@"	var $t1 = $TryCast($o, ct_$T);
+	var $t2 = $TryCast($b, ct_$T);
+	var $t3 = $TryCast($d, ct_$T);
 ");
 		}
 
@@ -84,7 +84,7 @@ public void M<T>() where T : class {
 	T t = i as T;
 	// END
 }",
-@"	var $t = $TryCast($i, $T);
+@"	var $t = $TryCast($i, ct_$T);
 ");
 		}
 
@@ -98,7 +98,7 @@ public void M<T>() {
 	I i = t as I;
 	// END
 }",
-@"	var $i = $TryCast($t, {I});
+@"	var $i = $TryCast($t, {ct_I});
 ");
 
 			AssertCorrect(
@@ -109,7 +109,7 @@ public void M<T>() where T : class {
 	I i = t as I;
 	// END
 }",
-@"	var $i = $TryCast($t, {I});
+@"	var $i = $TryCast($t, {ct_I});
 ");
 		}
 
@@ -122,7 +122,7 @@ public void M<T>() where T : class {
 	U u = t as U;
 	// END
 }",
-@"	var $u = $TryCast($t, $U);
+@"	var $u = $TryCast($t, ct_$U);
 ");
 
 			AssertCorrect(
@@ -132,7 +132,7 @@ public void M<T>() where T : class {
 	U u = t as U;
 	// END
 }",
-@"	var $u = $TryCast($t, $U);
+@"	var $u = $TryCast($t, ct_$U);
 ");
 		}
 

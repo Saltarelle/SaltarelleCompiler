@@ -35,16 +35,16 @@ void M() {
 	z = x >> i;
 	// END
 }",
-@"	$z = {C1}.$op_Addition($x, $y);
-	$z = {C1}.$op_Subtraction($x, $y);
-	$z = {C1}.$op_Multiply($x, $y);
-	$z = {C1}.$op_Division($x, $y);
-	$z = {C1}.$op_Modulus($x, $y);
-	$z = {C1}.$op_BitwiseAnd($x, $y);
-	$z = {C1}.$op_BitwiseOr($x, $y);
-	$z = {C1}.$op_ExclusiveOr($x, $y);
-	$z = {C1}.$op_LeftShift($x, $i);
-	$z = {C1}.$op_RightShift($x, $i);
+@"	$z = {sm_C1}.$op_Addition($x, $y);
+	$z = {sm_C1}.$op_Subtraction($x, $y);
+	$z = {sm_C1}.$op_Multiply($x, $y);
+	$z = {sm_C1}.$op_Division($x, $y);
+	$z = {sm_C1}.$op_Modulus($x, $y);
+	$z = {sm_C1}.$op_BitwiseAnd($x, $y);
+	$z = {sm_C1}.$op_BitwiseOr($x, $y);
+	$z = {sm_C1}.$op_ExclusiveOr($x, $y);
+	$z = {sm_C1}.$op_LeftShift($x, $i);
+	$z = {sm_C1}.$op_RightShift($x, $i);
 ");
 		}
 
@@ -79,16 +79,16 @@ void M() {
 	z = x >> i;
 	// END
 }",
-@"	$z = $Lift({C1}.$op_Addition($x, $y));
-	$z = $Lift({C1}.$op_Subtraction($x, $y));
-	$z = $Lift({C1}.$op_Multiply($x, $y));
-	$z = $Lift({C1}.$op_Division($x, $y));
-	$z = $Lift({C1}.$op_Modulus($x, $y));
-	$z = $Lift({C1}.$op_BitwiseAnd($x, $y));
-	$z = $Lift({C1}.$op_BitwiseOr($x, $y));
-	$z = $Lift({C1}.$op_ExclusiveOr($x, $y));
-	$z = $Lift({C1}.$op_LeftShift($x, $i));
-	$z = $Lift({C1}.$op_RightShift($x, $i));
+@"	$z = $Lift({sm_C1}.$op_Addition($x, $y));
+	$z = $Lift({sm_C1}.$op_Subtraction($x, $y));
+	$z = $Lift({sm_C1}.$op_Multiply($x, $y));
+	$z = $Lift({sm_C1}.$op_Division($x, $y));
+	$z = $Lift({sm_C1}.$op_Modulus($x, $y));
+	$z = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
+	$z = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
+	$z = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
+	$z = $Lift({sm_C1}.$op_LeftShift($x, $i));
+	$z = $Lift({sm_C1}.$op_RightShift($x, $i));
 ");
 		}
 
@@ -123,16 +123,16 @@ void M() {
 	x >>= i;
 	// END
 }",
-@"	$x = {C1}.$op_Addition($x, $y);
-	$x = {C1}.$op_Subtraction($x, $y);
-	$x = {C1}.$op_Multiply($x, $y);
-	$x = {C1}.$op_Division($x, $y);
-	$x = {C1}.$op_Modulus($x, $y);
-	$x = {C1}.$op_BitwiseAnd($x, $y);
-	$x = {C1}.$op_BitwiseOr($x, $y);
-	$x = {C1}.$op_ExclusiveOr($x, $y);
-	$x = {C1}.$op_LeftShift($x, $i);
-	$x = {C1}.$op_RightShift($x, $i);
+@"	$x = {sm_C1}.$op_Addition($x, $y);
+	$x = {sm_C1}.$op_Subtraction($x, $y);
+	$x = {sm_C1}.$op_Multiply($x, $y);
+	$x = {sm_C1}.$op_Division($x, $y);
+	$x = {sm_C1}.$op_Modulus($x, $y);
+	$x = {sm_C1}.$op_BitwiseAnd($x, $y);
+	$x = {sm_C1}.$op_BitwiseOr($x, $y);
+	$x = {sm_C1}.$op_ExclusiveOr($x, $y);
+	$x = {sm_C1}.$op_LeftShift($x, $i);
+	$x = {sm_C1}.$op_RightShift($x, $i);
 ");
 		}
 
@@ -167,16 +167,16 @@ void M() {
 	x >>= i;
 	// END
 }",
-@"	$x = $Lift({C1}.$op_Addition($x, $y));
-	$x = $Lift({C1}.$op_Subtraction($x, $y));
-	$x = $Lift({C1}.$op_Multiply($x, $y));
-	$x = $Lift({C1}.$op_Division($x, $y));
-	$x = $Lift({C1}.$op_Modulus($x, $y));
-	$x = $Lift({C1}.$op_BitwiseAnd($x, $y));
-	$x = $Lift({C1}.$op_BitwiseOr($x, $y));
-	$x = $Lift({C1}.$op_ExclusiveOr($x, $y));
-	$x = $Lift({C1}.$op_LeftShift($x, $i));
-	$x = $Lift({C1}.$op_RightShift($x, $i));
+@"	$x = $Lift({sm_C1}.$op_Addition($x, $y));
+	$x = $Lift({sm_C1}.$op_Subtraction($x, $y));
+	$x = $Lift({sm_C1}.$op_Multiply($x, $y));
+	$x = $Lift({sm_C1}.$op_Division($x, $y));
+	$x = $Lift({sm_C1}.$op_Modulus($x, $y));
+	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
+	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
+	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
+	$x = $Lift({sm_C1}.$op_LeftShift($x, $i));
+	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
 ");
 		}
 
@@ -198,10 +198,10 @@ void M() {
 	y = ~x;
 	// END
 }",
-@"	$y = {C1}.$op_UnaryPlus($x);
-	$y = {C1}.$op_UnaryNegation($x);
-	$y = {C1}.$op_LogicalNot($x);
-	$y = {C1}.$op_OnesComplement($x);
+@"	$y = {sm_C1}.$op_UnaryPlus($x);
+	$y = {sm_C1}.$op_UnaryNegation($x);
+	$y = {sm_C1}.$op_LogicalNot($x);
+	$y = {sm_C1}.$op_OnesComplement($x);
 ");
 		}
 
@@ -223,10 +223,10 @@ void M() {
 	y = ~x;
 	// END
 }",
-@"	$y = $Lift({C1}.$op_UnaryPlus($x));
-	$y = $Lift({C1}.$op_UnaryNegation($x));
-	$y = $Lift({C1}.$op_LogicalNot($x));
-	$y = $Lift({C1}.$op_OnesComplement($x));
+@"	$y = $Lift({sm_C1}.$op_UnaryPlus($x));
+	$y = $Lift({sm_C1}.$op_UnaryNegation($x));
+	$y = $Lift({sm_C1}.$op_LogicalNot($x));
+	$y = $Lift({sm_C1}.$op_OnesComplement($x));
 ");
 		}
 
@@ -267,10 +267,10 @@ void M() {
 	--c;
 	// END
 }",
-@"	$c = {C1}.$op_Increment($c);
-	$c = {C1}.$op_Increment($c);
-	$c = {C1}.$op_Decrement($c);
-	$c = {C1}.$op_Decrement($c);
+@"	$c = {sm_C1}.$op_Increment($c);
+	$c = {sm_C1}.$op_Increment($c);
+	$c = {sm_C1}.$op_Decrement($c);
+	$c = {sm_C1}.$op_Decrement($c);
 ");
 		}
 
@@ -288,8 +288,8 @@ void M() {
 	C1 c2 = --c;
 	// END
 }",
-@"	var $c1 = $c = {C1}.$op_Increment($c);
-	var $c2 = $c = {C1}.$op_Decrement($c);
+@"	var $c1 = $c = {sm_C1}.$op_Increment($c);
+	var $c2 = $c = {sm_C1}.$op_Decrement($c);
 ");
 		}
 
@@ -308,10 +308,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = $c;
-	$c = {C1}.$op_Increment($tmp1);
+	$c = {sm_C1}.$op_Increment($tmp1);
 	var $c1 = $tmp1;
 	var $tmp2 = $c;
-	$c = {C1}.$op_Decrement($tmp2);
+	$c = {sm_C1}.$op_Decrement($tmp2);
 	var $c2 = $tmp2;
 ");
 		}
@@ -332,10 +332,10 @@ void M() {
 	--P;
 	// END
 }",
-@"	this.set_$P({C1}.$op_Increment(this.get_$P()));
-	this.set_$P({C1}.$op_Increment(this.get_$P()));
-	this.set_$P({C1}.$op_Decrement(this.get_$P()));
-	this.set_$P({C1}.$op_Decrement(this.get_$P()));
+@"	this.set_$P({sm_C1}.$op_Increment(this.get_$P()));
+	this.set_$P({sm_C1}.$op_Increment(this.get_$P()));
+	this.set_$P({sm_C1}.$op_Decrement(this.get_$P()));
+	this.set_$P({sm_C1}.$op_Decrement(this.get_$P()));
 ");
 		}
 
@@ -353,10 +353,10 @@ void M() {
 	C1 c2 = --P;
 	// END
 }",
-@"	var $tmp1 = {C1}.$op_Increment(this.get_$P());
+@"	var $tmp1 = {sm_C1}.$op_Increment(this.get_$P());
 	this.set_$P($tmp1);
 	var $c1 = $tmp1;
-	var $tmp2 = {C1}.$op_Decrement(this.get_$P());
+	var $tmp2 = {sm_C1}.$op_Decrement(this.get_$P());
 	this.set_$P($tmp2);
 	var $c2 = $tmp2;
 ");
@@ -377,10 +377,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P({C1}.$op_Increment($tmp1));
+	this.set_$P({sm_C1}.$op_Increment($tmp1));
 	var $c1 = $tmp1;
 	var $tmp2 = this.get_$P();
-	this.set_$P({C1}.$op_Decrement($tmp2));
+	this.set_$P({sm_C1}.$op_Decrement($tmp2));
 	var $c2 = $tmp2;
 ");
 		}
@@ -401,10 +401,10 @@ void M() {
 	--c;
 	// END
 }",
-@"	$c = $Lift({C1}.$op_Increment($c));
-	$c = $Lift({C1}.$op_Increment($c));
-	$c = $Lift({C1}.$op_Decrement($c));
-	$c = $Lift({C1}.$op_Decrement($c));
+@"	$c = $Lift({sm_C1}.$op_Increment($c));
+	$c = $Lift({sm_C1}.$op_Increment($c));
+	$c = $Lift({sm_C1}.$op_Decrement($c));
+	$c = $Lift({sm_C1}.$op_Decrement($c));
 ");
 		}
 
@@ -422,8 +422,8 @@ void M() {
 	C1? c2 = --c;
 	// END
 }",
-@"	var $c1 = $c = $Lift({C1}.$op_Increment($c));
-	var $c2 = $c = $Lift({C1}.$op_Decrement($c));
+@"	var $c1 = $c = $Lift({sm_C1}.$op_Increment($c));
+	var $c2 = $c = $Lift({sm_C1}.$op_Decrement($c));
 ");
 		}
 
@@ -442,10 +442,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = $c;
-	$c = $Lift({C1}.$op_Increment($tmp1));
+	$c = $Lift({sm_C1}.$op_Increment($tmp1));
 	var $c1 = $tmp1;
 	var $tmp2 = $c;
-	$c = $Lift({C1}.$op_Decrement($tmp2));
+	$c = $Lift({sm_C1}.$op_Decrement($tmp2));
 	var $c2 = $tmp2;
 ");
 		}
@@ -466,10 +466,10 @@ void M() {
 	--P;
 	// END
 }",
-@"	this.set_$P($Lift({C1}.$op_Increment(this.get_$P())));
-	this.set_$P($Lift({C1}.$op_Increment(this.get_$P())));
-	this.set_$P($Lift({C1}.$op_Decrement(this.get_$P())));
-	this.set_$P($Lift({C1}.$op_Decrement(this.get_$P())));
+@"	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
+	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
+	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
+	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
 ");
 		}
 
@@ -487,10 +487,10 @@ void M() {
 	C1? c2 = --P;
 	// END
 }",
-@"	var $tmp1 = $Lift({C1}.$op_Increment(this.get_$P()));
+@"	var $tmp1 = $Lift({sm_C1}.$op_Increment(this.get_$P()));
 	this.set_$P($tmp1);
 	var $c1 = $tmp1;
-	var $tmp2 = $Lift({C1}.$op_Decrement(this.get_$P()));
+	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()));
 	this.set_$P($tmp2);
 	var $c2 = $tmp2;
 ");
@@ -511,10 +511,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P($Lift({C1}.$op_Increment($tmp1)));
+	this.set_$P($Lift({sm_C1}.$op_Increment($tmp1)));
 	var $c1 = $tmp1;
 	var $tmp2 = this.get_$P();
-	this.set_$P($Lift({C1}.$op_Decrement($tmp2)));
+	this.set_$P($Lift({sm_C1}.$op_Decrement($tmp2)));
 	var $c2 = $tmp2;
 ");
 		}

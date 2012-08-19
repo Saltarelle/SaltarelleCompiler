@@ -291,9 +291,9 @@ public void M() {
 		var $j = { $: 0 };
 		var $g = function() {
 			var $k = { $: 0 };
-			{C}.$F($k);
+			{sm_C}.$F($k);
 		};
-		{C}.$F($j);
+		{sm_C}.$F($j);
 	};
 ");
 		}

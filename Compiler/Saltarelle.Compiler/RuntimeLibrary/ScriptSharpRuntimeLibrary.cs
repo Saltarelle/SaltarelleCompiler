@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
 			}
-			else if (type.Kind == TypeKind.Enum && (context == TypeContext.CastTarget || context == TypeContext.Instantiation)) {
+			else if (type.Kind == TypeKind.Enum && (context == TypeContext.CastTarget || context == TypeContext.InvokeConstructor)) {
 				var def = type.GetDefinition();
 				return _createTypeReferenceExpression(def.EnumUnderlyingType.ToTypeReference());
 			}
@@ -262,7 +262,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
-			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.BindBaseCall), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);
@@ -271,7 +271,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
-			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.BindBaseCall), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);

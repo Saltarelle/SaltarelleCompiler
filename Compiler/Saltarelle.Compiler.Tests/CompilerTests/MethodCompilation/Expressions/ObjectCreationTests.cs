@@ -16,7 +16,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new {X}();
+@"	var $c = new {inst_X}();
 ");
 		}
 
@@ -32,7 +32,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new {X}($a, $b, $c);
+@"	var $t = new {inst_X}($a, $b, $c);
 ");
 		}
 
@@ -56,7 +56,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new {X}(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new {inst_X}(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ");
 		}
 
@@ -70,7 +70,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = new {X}.$ctor2();
+@"	var $c = new {inst_X}.$ctor2();
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -86,7 +86,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = new {X}.$ctor2($a, $b, $c);
+@"	var $t = new {inst_X}.$ctor2($a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2") });
 		}
 
@@ -110,7 +110,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = new {X}.$ctor2(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = new {inst_X}.$ctor2(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("$ctor2"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -124,7 +124,7 @@ public void M() {
 	var c = new X();
 	// END
 }",
-@"	var $c = {X}.create_X();
+@"	var $c = {sm_X}.create_X();
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
@@ -140,7 +140,7 @@ public void M() {
 	var t = new X(a, b, c);
 	// END
 }",
-@"	var $t = {X}.create_X($a, $b, $c);
+@"	var $t = {sm_X}.create_X($a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name) });
 		}
 
@@ -164,7 +164,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = {X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $x = {sm_X}.create_X(1, this.$F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -226,7 +226,7 @@ public void M() {
 	var x = new X { x = i, P = j };
 	// END
 }",
-@"	var $tmp1 = new {X}();
+@"	var $tmp1 = new {inst_X}();
 	$tmp1.$x = $i;
 	$tmp1.set_$P($j);
 	var $x = $tmp1;
@@ -246,7 +246,7 @@ public void M() {
 	var x = new X { i, j };
 	// END
 }",
-@"	var $tmp1 = new {X}();
+@"	var $tmp1 = new {inst_X}();
 	$tmp1.$Add($i);
 	$tmp1.$Add($j);
 	var $x = $tmp1;
@@ -267,7 +267,7 @@ public void M() {
 	var x = new X { { i, s }, { j, t } };
 	// END
 }",
-@"	var $tmp1 = new {X}();
+@"	var $tmp1 = new {inst_X}();
 	$tmp1.$Add($i, $s);
 	$tmp1.$Add($j, $t);
 	var $x = $tmp1;
@@ -295,7 +295,7 @@ class Test {
 		// END
 	}
 }",
-@"	var $tmp1 = new {Test}();
+@"	var $tmp1 = new {inst_Test}();
 	$tmp1.get_$Pos().$X = 1;
 	$tmp1.get_$Pos().$Y = 2;
 	$tmp1.get_$List().$Add('Hello');
@@ -327,21 +327,21 @@ class Test {
 		// END
 	}
 }",
-@"	var $tmp1 = new {Test}();
-	var $tmp2 = new {Point}();
+@"	var $tmp1 = new {inst_Test}();
+	var $tmp2 = new {inst_Point}();
 	$tmp2.$X = 1;
 	$tmp2.$Y = 2;
-	var $tmp3 = new {Color}();
+	var $tmp3 = new {inst_Color}();
 	$tmp3.$R = 4;
 	$tmp3.$G = 5;
 	$tmp3.$B = 6;
 	$tmp2.$Color = $tmp3;
 	$tmp1.set_$Pos($tmp2);
-	var $tmp4 = new ($InstantiateGenericType({List}, {String}))();
+	var $tmp4 = new (inst_$InstantiateGenericType({List}, {ga_String}))();
 	$tmp4.$Add('Hello');
 	$tmp4.$Add('World');
 	$tmp1.set_$List($tmp4);
-	var $tmp5 = new ($InstantiateGenericType({Dictionary}, {String}, {Int32}))();
+	var $tmp5 = new (inst_$InstantiateGenericType({Dictionary}, {ga_String}, {ga_Int32}))();
 	$tmp5.$Add('A', 1);
 	$tmp1.set_$Dict($tmp5);
 	var $x = $tmp1;
@@ -415,7 +415,7 @@ public void M() {
 	var c = new C1(4, 8, 59, 12, 4);
 	// END
 }",
-@"	var $c = new {C1}(4, 8, [59, 12, 4]);
+@"	var $c = new {inst_C1}(4, 8, [59, 12, 4]);
 ");
 		}
 
@@ -428,7 +428,7 @@ public void M() {
 	var c = new C1(4, 8, new[] { 59, 12, 4 });
 	// END
 }",
-@"	var $c = new {C1}(4, 8, [59, 12, 4]);
+@"	var $c = new {inst_C1}(4, 8, [59, 12, 4]);
 ");
 		}
 
@@ -441,7 +441,7 @@ public void M() {
 	var c = new C1(4, 8, 59, 12, 4);
 	// END
 }",
-@"	var $c = new {C1}(4, 8, 59, 12, 4);
+@"	var $c = new {inst_C1}(4, 8, 59, 12, 4);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
@@ -650,7 +650,7 @@ public void M() {
 	var c = new C1(d);
 	// END
 }",
-@"	var $c = new {C1}($d);
+@"	var $c = new {inst_C1}($d);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
 		}
 
@@ -668,7 +668,7 @@ public void M() {
 	var c = new C1(d);
 	// END
 }",
-@"	var $c = new {C1}.X($d);
+@"	var $c = new {inst_C1}.X($d);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", generateCode: false) });
 		}
 
@@ -686,7 +686,7 @@ public void M() {
 	var c = new C1(d);
 	// END
 }",
-@"	var $c = {C1}.X($d);
+@"	var $c = {sm_C1}.X($d);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", generateCode: false) });
 		}
 
@@ -706,7 +706,7 @@ public void M() {
 	var c = new C1(d) { P = i; };
 	// END
 }",
-@"	var $tmp1 = new {C1}($d);
+@"	var $tmp1 = new {inst_C1}($d);
 	$tmp1.set_P($i);
 	var $c = $tmp1;
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });

@@ -129,7 +129,7 @@ public System.Collections.IEnumerator M() {
 	$finally = function() {
 		var $a = 1;
 	};
-	return $MakeEnumerator({Object}, function() {
+	return $MakeEnumerator({ga_Object}, function() {
 		$loop1:
 		for (;;) {
 			switch ($state) {
@@ -189,7 +189,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 	$finally = function() {
 		var $a = 1;
 	};
-	return $MakeEnumerator({Int32}, function() {
+	return $MakeEnumerator({ga_Int32}, function() {
 		$loop1:
 		for (;;) {
 			switch ($state) {
@@ -245,13 +245,13 @@ public System.Collections.IEnumerable M() {
 	}
 }",
 @"function() {
-	return $MakeEnumerable({Object}, function() {
+	return $MakeEnumerable({ga_Object}, function() {
 		return (function() {
 			var $result, $state = 0;
 			$finally = function() {
 				var $a = 1;
 			};
-			return $MakeEnumerator({Object}, function() {
+			return $MakeEnumerator({ga_Object}, function() {
 				$loop1:
 				for (;;) {
 					switch ($state) {
@@ -309,13 +309,13 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 	}
 }",
 @"function($x, $y) {
-	return $MakeEnumerable({Int32}, function() {
+	return $MakeEnumerable({ga_Int32}, function() {
 		return (function($x, $y) {
 			var $result, $state = 0;
 			$finally = function() {
 				var $a = 1;
 			};
-			return $MakeEnumerator({Int32}, function() {
+			return $MakeEnumerator({ga_Int32}, function() {
 				$loop1:
 				for (;;) {
 					switch ($state) {

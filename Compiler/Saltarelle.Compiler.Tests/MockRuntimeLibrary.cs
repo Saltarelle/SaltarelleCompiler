@@ -7,32 +7,46 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests {
 	public class MockRuntimeLibrary : IRuntimeLibrary {
+		private string GetTypeContextShortName(TypeContext c) {
+			switch (c) {
+				case TypeContext.InvokeConstructor: return "inst";
+				case TypeContext.GenericArgument:   return "ga";
+				case TypeContext.TypeOf:            return "to";
+				case TypeContext.Inheritance:       return "inh";
+				case TypeContext.CastTarget:        return "ct";
+				case TypeContext.GetDefaultValue:   return "def";
+				case TypeContext.UseStaticMember:   return "sm";
+				case TypeContext.BindBaseCall:      return "bind";
+				default: throw new ArgumentException("c");
+			}
+		}
+
 		public MockRuntimeLibrary() {
 			GetScriptType = (t, c) => {
+			                    string context = GetTypeContextShortName(c);
 			                	if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && c == TypeContext.TypeOf) {
 			                		// This handles open generic types ( typeof(C<,>) )
 			                		var def = t.GetDefinition();
-			                		return new JsTypeReferenceExpression(def.ParentAssembly, def.FullName);
+			                		return new JsTypeReferenceExpression(def.ParentAssembly, context + "_" + def.Name);
 			                	}
 			                	else if (t is ArrayType) {
-			                		return JsExpression.Invocation(JsExpression.Identifier("$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument));
+			                		return JsExpression.Invocation(JsExpression.Identifier(context + "_$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument));
 			                	}
 			                	else if (t is ParameterizedType) {
 			                		var pt = (ParameterizedType)t;
 			                		var def = pt.GetDefinition();
-		                			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, t.Name) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+		                			return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, t.Name) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 			                	}
 			                	else if (t is ITypeDefinition) {
 			                		var td = (ITypeDefinition)t;
-			                		var jsref = new JsTypeReferenceExpression(td.ParentAssembly, t.Name);
 			                		if (td.TypeParameterCount > 0)
-			                			return JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), new[] { jsref }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
+			                			return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(td.ParentAssembly, t.Name) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
 			                		else {
-			                			return jsref;
+			                			return new JsTypeReferenceExpression(td.ParentAssembly, context + "_" + t.Name);
 			                		}
 			                	}
 			                	else if (t is ITypeParameter) {
-			                		return JsExpression.Identifier("$" + ((ITypeParameter)t).Name);
+			                		return JsExpression.Identifier(context + "_$" + ((ITypeParameter)t).Name);
 			                	}
 			                	else {
 			                		throw new ArgumentException("Unsupported type + " + t.ToString());
@@ -57,10 +71,10 @@ namespace Saltarelle.Compiler.Tests {
 			Default                  = (t)             => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
 			CreateArray              = (s)             => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
 			CloneDelegate            = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
-			CallBase                 = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.Instantiation), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
-			BindBaseCall             = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.Instantiation), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
-			MakeEnumerator           = (yt, mn, gc, d) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.Instantiation), mn, gc, d ?? (JsExpression)JsExpression.Null });
-			MakeEnumerable           = (yt, ge)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.Instantiation), ge });
+			CallBase                 = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
+			BindBaseCall             = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
+			MakeEnumerator           = (yt, mn, gc, d) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument), mn, gc, d ?? (JsExpression)JsExpression.Null });
+			MakeEnumerable           = (yt, ge)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument), ge });
 		}
 
 		public Func<IType, TypeContext, JsExpression> GetScriptType { get; set; }

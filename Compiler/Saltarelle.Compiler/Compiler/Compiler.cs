@@ -337,7 +337,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), fieldType));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), fieldType));
             }
             else {
                 AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
@@ -346,7 +346,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), initializer));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), initializer));
             }
             else {
                 AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));

@@ -274,7 +274,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	{C}.set_$P({C}.get_$P() + 1);
+@"	{sm_C}.set_$P({sm_C}.get_$P() + 1);
 ");
 		}
 
@@ -288,7 +288,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	{C}.set_$P({C}.get_$P() + 1);
+@"	{sm_C}.set_$P({sm_C}.get_$P() + 1);
 ");
 		}
 
@@ -302,7 +302,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	++{C}.$F;
+@"	++{sm_C}.$F;
 ");
 		}
 
@@ -316,7 +316,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	{C}.$F++;
+@"	{sm_C}.$F++;
 ");
 		}
 
@@ -634,7 +634,7 @@ public void M() {
 	++a;
 	// END
 }",
-@"	++{C}.$a;
+@"	++{sm_C}.$a;
 ");
 		}
 
@@ -648,7 +648,7 @@ public void M() {
 	a++;
 	// END
 }",
-@"	{C}.$a++;
+@"	{sm_C}.$a++;
 ");
 		}
 
@@ -862,7 +862,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	{C}.set_$P($Lift({C}.get_$P() + 1));
+@"	{sm_C}.set_$P($Lift({sm_C}.get_$P() + 1));
 ");
 		}
 
@@ -876,7 +876,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	{C}.set_$P($Lift({C}.get_$P() + 1));
+@"	{sm_C}.set_$P($Lift({sm_C}.get_$P() + 1));
 ");
 		}
 
@@ -890,7 +890,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	{C}.$F = $Lift({C}.$F + 1);
+@"	{sm_C}.$F = $Lift({sm_C}.$F + 1);
 ");
 		}
 
@@ -904,7 +904,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	{C}.$F = $Lift({C}.$F + 1);
+@"	{sm_C}.$F = $Lift({sm_C}.$F + 1);
 ");
 		}
 
@@ -1188,7 +1188,7 @@ public void M() {
 	++a;
 	// END
 }",
-@"	{C}.$a = $Lift({C}.$a + 1);
+@"	{sm_C}.$a = $Lift({sm_C}.$a + 1);
 ");
 		}
 
@@ -1202,7 +1202,7 @@ public void M() {
 	a++;
 	// END
 }",
-@"	{C}.$a = $Lift({C}.$a + 1);
+@"	{sm_C}.$a = $Lift({sm_C}.$a + 1);
 ");
 		}
 
@@ -1220,8 +1220,8 @@ class D : B {
 		// END
 	}
 }",
-@"	var $tmp1 = $CallBase({B}, 'get_$P', [], [this]) + 1;
-	$CallBase({B}, 'set_$P', [], [this, $tmp1]);
+@"	var $tmp1 = $CallBase({bind_B}, 'get_$P', [], [this]) + 1;
+	$CallBase({bind_B}, 'set_$P', [], [this, $tmp1]);
 	var $i = $tmp1;
 ", addSkeleton: false);
 		}
@@ -1240,8 +1240,8 @@ class D : B {
 		// END
 	}
 }",
-@"	var $tmp1 = $CallBase({B}, 'get_$P', [], [this]);
-	$CallBase({B}, 'set_$P', [], [this, $tmp1 + 1]);
+@"	var $tmp1 = $CallBase({bind_B}, 'get_$P', [], [this]);
+	$CallBase({bind_B}, 'set_$P', [], [this, $tmp1 + 1]);
 	var $i = $tmp1;
 ", addSkeleton: false);
 		}

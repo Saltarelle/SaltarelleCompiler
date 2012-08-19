@@ -154,7 +154,7 @@ public void M() {
 	P = i;
 	// END
 }",
-@"	{C}.set_$P($i);
+@"	{sm_C}.set_$P($i);
 ");
 		}
 
@@ -168,7 +168,7 @@ public void M() {
 	F = i;
 	// END
 }",
-@"	{C}.$F = $i;
+@"	{sm_C}.$F = $i;
 ");
 		}
 
@@ -289,7 +289,7 @@ public void M() {
 	a = b = i;
 	// END
 }",
-@"	{C}.$a = {C}.$b = $i;
+@"	{sm_C}.$a = {sm_C}.$b = $i;
 ");
 		}
 
@@ -451,7 +451,7 @@ class D : B {
 		// END
 	}
 }",
-@"	$CallBase({B}, 'set_$P', [], [this, 10]);
+@"	$CallBase({bind_B}, 'set_$P', [], [this, 10]);
 ", addSkeleton: false);
 		}
 
