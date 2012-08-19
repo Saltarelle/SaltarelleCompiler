@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return _createTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {
-				throw new NotImplementedException();
+				throw new InvalidOperationException("Could not determine the script type for " + type.ToString() + ", context " + context);
 			}
 		}
 
@@ -100,6 +100,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
+			if (_metadataImporter.OmitDowncasts)
+				return expression;
+
 			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
 			var jsTarget = GetCastTarget(sourceType, targetType);
@@ -219,6 +222,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression FromNullable(JsExpression expression) {
+			if (_metadataImporter.OmitNullableChecks)
+				return expression;
+
 			if (expression.NodeType == ExpressionNodeType.LogicalNot)
 				return expression;	// This is a little hacky. The problem we want to solve is that 'bool b = myDynamic' should compile to !!myDynamic, but the actual call is unbox(convert(myDynamic, bool)), where convert() will return the !!. Anyway, in JS, the !expression will never be null anyway.
 
