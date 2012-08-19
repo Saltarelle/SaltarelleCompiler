@@ -222,6 +222,24 @@ class D : B {
 		}
 
 		[Test]
+		public void ChainingToConstructorImplementedAsJsonFromUnnamedConstructorIsAnError() {
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(0, ""X"") {
+		M();
+	}
+
+	public C(int x, string s) {
+	}
+}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(new IMember[0]) });
+			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+		}
+
+		[Test]
 		public void ChainingToConstructorImplementedAsInlineCodeFromStaticMethodConstructorWorks() {
 			AssertCorrect(
 @"class C {
@@ -269,6 +287,34 @@ class D : B {
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+		}
+
+		[Test]
+		public void ChainingToJsonConstructorFromStaticMethodConstructorWorks() {
+			AssertCorrect(
+@"class C {
+	static int F1() { return 0; }
+	static int F2() { return 0; }
+	static int F3() { return 0; }
+	static int F4() { return 0; }
+
+	public int A, B, C, D, E, F, G;
+
+	public void M() {}
+
+	public C(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {
+	}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(d: F1(), g: F2(), f: F3(), b: F4()) {
+		M();
+	}
+}",
+@"function() {
+	var $this = { $D: {C}.F1(), $G: {C}.F2(), $F: {C}.F3(), $B: {C}.F4(), $A: 1, $C: 3, $E: 5 };
+	$this.M();
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("X") : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
 		[Test]

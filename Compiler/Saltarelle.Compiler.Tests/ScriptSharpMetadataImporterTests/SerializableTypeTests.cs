@@ -16,21 +16,44 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		}
 
 		[Test]
-		public void SerializableTypesMustBeSealed() {
-			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class C1 {}", expectErrors: true);
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("must be sealed")));
+		public void TypeWithSerializableAttributeCanInheritFromObjectOrRecordOrAnotherSerializableTypeButNotFromNonSerializableType() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] class C1 : Object {}", expectErrors: false);
+			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] class C1 : Record {}", expectErrors: false);
+			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class B {} [Serializable] class C1 : B {}", expectErrors: false);
+			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
 
-			Prepare(@"class C1 : System.Record {}", expectErrors: true);
+			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] class C1 : B {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("must be sealed")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("must inherit from another serializable type, System.Object or System.Record")));
 		}
 
 		[Test]
-		public void TypeWithSerializableAttributeMustNotHaveABaseClass() {
-			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] sealed class C1 : B {}", expectErrors: true);
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("must inherit from either System.Object or System.Record")));
+		public void TypeWithoutSerializableAttributeCanInheritRecordButNotOtherSerializableType() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; class C1 : Record {}", expectErrors: false);
+			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class B {} class C1 : B {}", expectErrors: true);
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("B") && m.Contains("cannot inherit from the serializable type")));
+		}
+
+		[Test]
+		public void SerializableTypesCannotDeclareVirtualMembers() {
+			TestBothKinds(@"public virtual int M1() {}", () => {
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("M1") && m.Contains("cannot declare") && m.Contains("virtual")));
+			}, expectErrors: true);
+
+			TestBothKinds(@"public virtual int P1 { get; set; }", () => {
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("P1") && m.Contains("cannot declare") && m.Contains("virtual")));
+			}, expectErrors: true);
+		}
+
+		[Test]
+		public void SerializableTypesCannotOverrideMembers() {
+			TestBothKinds(@"public override string ToString() { return null; }", () => {
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("ToString") && m.Contains("cannot override")));
+			}, expectErrors: true);
 		}
 
 		[Test]

@@ -304,6 +304,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private void ProcessType(ITypeDefinition typeDefinition) {
 			if (_typeSemantics.ContainsKey(typeDefinition))
 				return;
+			foreach (var b in typeDefinition.DirectBaseTypes)
+				ProcessType(b.GetDefinition());
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, true, false, null, false);
@@ -378,11 +380,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			string mixinArg = null;
 
 			if (isSerializable) {
-				if (!typeDefinition.IsSealed) {
-					Message(7008, typeDefinition);
-					isSerializable = false;
-				}
-				if (!typeDefinition.DirectBaseTypes.Contains(_systemObject) && !typeDefinition.DirectBaseTypes.Contains(_systemRecord)) {
+				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
+				if (!baseClass.Equals(_systemObject) && !baseClass.Equals(_systemRecord) && !_typeSemantics[baseClass].IsSerializable) {
 					Message(7009, typeDefinition);
 					isSerializable = false;
 				}
@@ -394,8 +393,21 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7011, typeDefinition);
 					isSerializable = false;
 				}
+				foreach (var m in typeDefinition.Members.Where(m => m.IsVirtual)) {
+					Message(7023, typeDefinition, m.Name);
+					isSerializable = false;
+				}
+				foreach (var m in typeDefinition.Members.Where(m => m.IsOverride)) {
+					Message(7024, typeDefinition, m.Name);
+					isSerializable = false;
+				}
 			}
 			else {
+				var baseClass = typeDefinition.DirectBaseTypes.SingleOrDefault(c => c.Kind == TypeKind.Class);
+				if (baseClass != null && _typeSemantics[baseClass.GetDefinition()].IsSerializable) {
+					Message(7008, typeDefinition, baseClass.FullName);
+				}
+
 				var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
 				var mixinAttr = GetAttributePositionalArgs(typeDefinition, MixinAttribute);
 				if (mixinAttr != null) {
@@ -447,14 +459,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (!_instanceMemberNamesByType.TryGetValue(typeDefinition, out result))
 				ProcessTypeMembers(typeDefinition);
 			return _instanceMemberNamesByType[typeDefinition];
-		}
-
-		private HashSet<string> GetInstanceMemberNames(IEnumerable<ITypeDefinition> typeDefinitions) {
-			var result = new HashSet<string>();
-			foreach (var n in typeDefinitions.SelectMany(t => GetInstanceMemberNames(t))) {
-				result.Add(n);
-			}
-			return result;
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {

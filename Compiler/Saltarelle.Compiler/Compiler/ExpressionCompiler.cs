@@ -213,6 +213,10 @@ namespace Saltarelle.Compiler.Compiler {
 						_errorReporter.Message(7504, _filename, _location);
 						break;
 
+					case ConstructorScriptSemantics.ImplType.Json:
+						_errorReporter.Message(7532, _filename, _location);
+						break;
+
 					default:
 						_errorReporter.Message(7505, _filename, _location);
 						break;
