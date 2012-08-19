@@ -49,5 +49,8 @@ namespace Saltarelle.Compiler.Tests {
 		TestMethodData IScriptSharpMetadataImporter.GetTestData(IMethod m) {
 			return GetTestData(m);
 		}
+
+		public bool OmitDowncasts { get; set; }
+		public bool OmitNullableChecks { get; set; }
 	}
 }

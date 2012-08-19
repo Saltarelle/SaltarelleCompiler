@@ -34,5 +34,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		/// Returns null for methods that are not test methods.
 		/// </summary>
 		TestMethodData GetTestData(IMethod m);
+
+		bool OmitNullableChecks { get; }
+		bool OmitDowncasts { get; }
 	}
 }
