@@ -384,5 +384,249 @@ public void M() {
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
 		}
+
+		[Test]
+		public void UsingBaseStaticFieldFromDerivedClassWorks1() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1;
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		// BEGIN
+        Test1 = Test1 + 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticFieldThroughDerivedClassWorks1() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1;
+}
+
+public class Class2 : Class1 {
+}
+
+public class C {
+    static void M() {
+		// BEGIN
+        Class2.Test1 = Class2.Test1 + 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticFieldFromDerivedClassWorks2() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1;
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		// BEGIN
+        Test1 += 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 += 1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticFieldThroughDerivedClassWorks2() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1;
+}
+
+public class Class2 : Class1 {
+}
+
+public class C {
+    static void M() {
+		// BEGIN
+        Class2.Test1 += 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 += 1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticPropertyFromDerivedClassWorks1() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1 { get; set; }
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		// BEGIN
+        Test1 = Test1 + 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.set_$Test1({sm_Class1}.get_$Test1() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticPropertyThroughDerivedClassWorks1() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1 { get; set; }
+}
+
+public class Class2 : Class1 {
+}
+
+public class C {
+    static void M() {
+		// BEGIN
+        Class2.Test1 = Class2.Test1 + 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.set_$Test1({sm_Class1}.get_$Test1() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticPropertyFromDerivedClassWorks2() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1 { get; set; }
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		// BEGIN
+        Test1 = Test1 + 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
+		}
+
+		[Test]
+		public void UsingBaseStaticPropertyThroughDerivedClassWorks2() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1 { get; set; }
+}
+
+public class Class2 : Class1 {
+}
+
+public class C {
+    static void M() {
+		// BEGIN
+        Class2.Test1 = Class2.Test1 + 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
+		}
+
+		[Test]
+		public void UsingBaseStaticPropertyFromDerivedClassWorks3() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1 { get; set; }
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		// BEGIN
+        Test1 += 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 += 1;
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
+		}
+
+		[Test]
+		public void UsingBaseStaticPropertyThroughDerivedClassWorks3() {
+			AssertCorrect(@"
+public class Class1 {
+    public static int Test1 { get; set; }
+}
+
+public class Class2 : Class1 {
+}
+
+public class C {
+    static void M() {
+		// BEGIN
+        Class2.Test1 += 1;
+		// END
+    }
+}",
+@"	{sm_Class1}.$Test1 += 1;
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
+		}
+
+		[Test]
+		public void UsingBaseStaticEventFromDerivedClassWorks() {
+			AssertCorrect(@"
+using System;
+public class Class1 {
+    public static event Action Test1;
+}
+
+public class Class2 : Class1 {
+    static void M() {
+		Action a = null, b = null;
+		// BEGIN
+        Test1 += a;
+		Test1 -= b;
+		Test1();
+		// END
+    }
+}",
+@"	{sm_Class1}.add_$Test1($a);
+	{sm_Class1}.remove_$Test1($b);
+	{sm_Class1}.$Test1();
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingBaseStaticEventThroughDerivedClassWorks() {
+			AssertCorrect(@"
+using System;
+public class Class1 {
+    public static event Action Test1;
+}
+
+public class Class2 : Class1 {
+}
+
+public class C {
+    static void M() {
+		Action a = null, b = null;
+		// BEGIN
+        Class2.Test1 += a;
+		Class2.Test1 -= b;
+		// END
+    }
+}",
+@"	{sm_Class1}.add_$Test1($a);
+	{sm_Class1}.remove_$Test1($b);
+", addSkeleton: false);
+		}
 	}
 }

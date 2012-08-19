@@ -335,7 +335,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var jsTarget = InnerCompile(target.TargetResult, compoundFactory == null);
+			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.GetScriptType(target.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(target.TargetResult, compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.MemberAccess(jsTarget, fieldName);
 			if (compoundFactory != null) {
@@ -422,10 +422,10 @@ namespace Saltarelle.Compiler.Compiler {
 								List<JsExpression> thisAndArguments;
 								if (property.IsIndexer) {
 									var invocation = (CSharpInvocationResolveResult)target;
-									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.TargetResult, oldValueIsImportant, oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
 								}
 								else {
-									thisAndArguments = new List<JsExpression> { InnerCompile(mrr.TargetResult, oldValueIsImportant) };
+									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.GetScriptType(mrr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
 								}
 
 								JsExpression oldValue, jsOtherOperand;
@@ -831,8 +831,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileMethodInvocation(impl.GetMethod, getter, rr.TargetResult, new ResolveResult[0], new int[0], rr.IsVirtualCall, false);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyScriptSemantics.ImplType.Field: {
-						var jsTarget = InnerCompile(rr.TargetResult, false);
-						return JsExpression.MemberAccess(jsTarget, impl.FieldName);
+						return JsExpression.MemberAccess(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.FieldName);
 					}
 					default: {
 						_errorReporter.Message(7512, _region, rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
@@ -844,7 +843,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetFieldSemantics((IField)rr.Member);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.MemberAccess(InnerCompile(rr.TargetResult, false), impl.Name);
+						return JsExpression.MemberAccess(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
@@ -860,7 +859,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
 
 				var fname = _metadataImporter.GetAutoEventBackingFieldName((IEvent)rr.Member);
-				return JsExpression.MemberAccess(VisitResolveResult(rr.TargetResult, true), fname);
+				return JsExpression.MemberAccess(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : VisitResolveResult(rr.TargetResult, true), fname);
 			}
 			else {
 				_errorReporter.InternalError("Invalid member " + rr.Member.ToString(), _region);
@@ -937,16 +936,12 @@ namespace Saltarelle.Compiler.Compiler {
 			return expressions;
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(ResolveResult target, bool targetUsedMultipleTimes, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool expandParams) {
-			return CompileThisAndArgumentListForMethodCall(InnerCompile(target, targetUsedMultipleTimes), argumentsUsedMultipleTimes, argumentsForCall, argumentToParameterMap, expandParams);
-		}
-
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall, bool isExpandedForm) {
 			var typeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : new IType[0];
 			if (impl != null && impl.ExpandParams && !isExpandedForm) {
 				_errorReporter.Message(7514, _region, method.DeclaringType.FullName + "." + method.Name);
 			}
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method.IsStatic ? new TypeResolveResult(method.DeclaringType) : targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0 && !method.IsStatic, false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method.IsStatic ? _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
 			return CompileMethodInvocation(impl, method, thisAndArguments, typeArguments, method.IsOverridable && !isVirtualCall, isExpandedForm);
 		}
 
@@ -1307,9 +1302,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
-//			throw new NotSupportedException("TypeResolveResult should be handled elsewhere");
-			#warning TODO
-			return _runtimeLibrary.GetScriptType(rr.Type, TypeContext.UseStaticMember);
+			throw new NotSupportedException(rr + " should be handled elsewhere");
 		}
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {

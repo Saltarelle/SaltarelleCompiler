@@ -133,8 +133,7 @@ public class Class1 {
 public class Class2 : Class1 {
 }
 
-public class C
-{
+public class C {
     static void M() {
 		// BEGIN
         Class2.Test1();
