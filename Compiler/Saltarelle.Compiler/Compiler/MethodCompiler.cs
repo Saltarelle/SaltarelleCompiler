@@ -177,8 +177,7 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
-			string       filename = ctor != null ? ctor.GetRegion().FileName : constructor.DeclaringTypeDefinition.Region.FileName;
-			TextLocation location = ctor != null ? ctor.StartLocation : constructor.DeclaringTypeDefinition.Region.Begin;
+			DomRegion region = ctor != null ? ctor.GetRegion() : constructor.DeclaringTypeDefinition.Region;
 
 			try {
 				CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
@@ -191,7 +190,7 @@ namespace Saltarelle.Compiler.Compiler {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 					}
 					else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(filename, location, constructor.DeclaringType, true));
+						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(region, constructor.DeclaringType, true));
 					}
 					else {
 						body.Add(new JsVariableDeclarationStatement(_namer.ThisAlias, JsExpression.ObjectLiteral()));
@@ -212,7 +211,7 @@ namespace Saltarelle.Compiler.Compiler {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 					}
 					else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(filename, location, constructor.DeclaringType, false));
+						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(region, constructor.DeclaringType, false));
 					}
 				}
 
@@ -229,7 +228,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return PerformStateMachineRewrite(constructor, JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, filename, location);
+				_errorReporter.InternalError(ex, region);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
         }
@@ -238,24 +237,24 @@ namespace Saltarelle.Compiler.Compiler {
             return CompileConstructor(null, constructor, instanceInitStatements, impl);
         }
 
-        public IList<JsStatement> CompileFieldInitializer(string filename, TextLocation location, JsExpression field, Expression expression) {
+        public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
 			try {
 	            CreateCompilationContext(expression, null, null);
-		        return _statementCompiler.CompileFieldInitializer(filename, location, field, expression);
+		        return _statementCompiler.CompileFieldInitializer(region, field, expression);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, filename, location);
+				_errorReporter.InternalError(ex, region);
 				return new JsStatement[0];
 			}
         }
 
-        public IList<JsStatement> CompileDefaultFieldInitializer(string filename, TextLocation location, JsExpression field, IType type) {
+        public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
 			try {
 	            CreateCompilationContext(null, null, null);
-		        return _statementCompiler.CompileDefaultFieldInitializer(filename, location, field, type);
+		        return _statementCompiler.CompileDefaultFieldInitializer(region, field, type);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, filename, location);
+				_errorReporter.InternalError(ex, region);
 				return new JsStatement[0];
 			}
         }
@@ -323,7 +322,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
-				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.AddAccessor.Region.FileName, @event.AddAccessor.Region.Begin, bfAccessor, JsExpression.Identifier(valueName));
+				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.AddAccessor.Region, bfAccessor, JsExpression.Identifier(valueName));
 				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 			}
 			catch (Exception ex) {
@@ -355,7 +354,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
-				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.RemoveAccessor.Region.FileName, @event.RemoveAccessor.Region.Begin, bfAccessor, JsExpression.Identifier(valueName));
+				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.RemoveAccessor.Region, bfAccessor, JsExpression.Identifier(valueName));
 				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 			}
 			catch (Exception ex) {

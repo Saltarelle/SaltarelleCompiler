@@ -53,7 +53,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				return Path.GetFullPath(file);
 			}
-			er.Message(7997, null, TextLocation.Empty, filename);
+			er.Message(7997, new DomRegion(), filename);
 			return null;
 		}
 
@@ -96,7 +96,7 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddWarningOnly(w);
 
 			if (result.AssemblyReferencesAliases.Count > 0)	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
-				er.Message(7998, null, TextLocation.Empty, "aliased reference");
+				er.Message(7998, new DomRegion(), "aliased reference");
 
 			return result;
 		}
@@ -110,7 +110,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			public override void Print(AbstractMessage msg, bool showFullPath) {
 				base.Print(msg, showFullPath);
-				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Location.NameFullPath, new TextLocation(msg.Location.Row, msg.Location.Column), msg.Text.Replace("{", "{{").Replace("}", "}}"));
+				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, new DomRegion(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column), msg.Text.Replace("{", "{{").Replace("}", "}}"));
 			}
 		}
 
@@ -152,19 +152,19 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 
-			public void Message(MessageSeverity severity, int code, string file, TextLocation location, string message, params object[] args) {
-				WithActualOut(() => _er.Message(severity, code, file, location, message, args));
+			public void Message(MessageSeverity severity, int code, DomRegion region, string message, params object[] args) {
+				WithActualOut(() => _er.Message(severity, code, region, message, args));
 				if (severity == MessageSeverity.Error)
 					HasErrors = true;
 			}
 
-			public void InternalError(string text, string file, TextLocation location) {
-				WithActualOut(() => _er.InternalError(text, file, location));
+			public void InternalError(string text, DomRegion region) {
+				WithActualOut(() => _er.InternalError(text, region));
 				HasErrors = true;
 			}
 
-			public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
-				WithActualOut(() => _er.InternalError(ex, file, location, additionalText));
+			public void InternalError(Exception ex, DomRegion region, string additionalText = null) {
+				WithActualOut(() => _er.InternalError(ex, region, additionalText));
 				HasErrors = true;
 			}
 		}
@@ -219,7 +219,7 @@ namespace Saltarelle.Compiler.Driver {
 							File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 						}
 						catch (IOException ex) {
-							er.Message(7950, null, TextLocation.Empty, ex.Message);
+							er.Message(7950, new DomRegion(), ex.Message);
 							return false;
 						}
 						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
@@ -227,7 +227,7 @@ namespace Saltarelle.Compiler.Driver {
 								File.Copy(intermediateDocFile, options.DocumentationFile, true);
 							}
 							catch (IOException ex) {
-								er.Message(7952, null, TextLocation.Empty, ex.Message);
+								er.Message(7952, new DomRegion(), ex.Message);
 								return false;
 							}
 						}
@@ -238,7 +238,7 @@ namespace Saltarelle.Compiler.Driver {
 						File.WriteAllText(outputScriptPath, script);
 					}
 					catch (IOException ex) {
-						er.Message(7951, null, TextLocation.Empty, ex.Message);
+						er.Message(7951, new DomRegion(), ex.Message);
 						return false;
 					}
 					return true;
@@ -288,7 +288,7 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, null, TextLocation.Empty);
+				_errorReporter.InternalError(ex, new DomRegion());
 				return false;
 			}
 		}

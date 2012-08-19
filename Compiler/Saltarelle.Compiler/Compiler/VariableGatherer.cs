@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Compiler {
     	private void AddVariable(AstNode variableNode, string variableName) {
 			var resolveResult = _resolver.Resolve(variableNode);
             if (!(resolveResult is LocalResolveResult)) {
-                _errorReporter.InternalError("Variable " + variableName + " does not resolve to a local (resolves to " + (resolveResult != null ? resolveResult.ToString() : "null") + ")", variableNode.GetRegion().FileName, variableNode.StartLocation);
+                _errorReporter.InternalError("Variable " + variableName + " does not resolve to a local (resolves to " + (resolveResult != null ? resolveResult.ToString() : "null") + ")", variableNode.GetRegion());
                 return;
             }
 			AddVariable(((LocalResolveResult)resolveResult).Variable);

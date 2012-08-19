@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Compiler {
         private Dictionary<ITypeDefinition, JsClass> _types;
         private HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>> _constructorDeclarations;
         private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
-		private TextLocation _location;
+		private AstNode _currentNode;
 		private ISet<string> _definedSymbols;
 
         public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
@@ -196,7 +196,7 @@ namespace Saltarelle.Compiler.Compiler {
 			        f.SyntaxTree.AcceptVisitor(this);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, f.ParsedFile.FileName, _location);
+					_errorReporter.InternalError(ex, _currentNode.GetRegion());
 				}
             }
 
@@ -337,19 +337,19 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region.FileName, member.Region.Begin, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), fieldType));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), fieldType));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region.FileName, member.Region.Begin, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
             }
         }
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), initializer));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), initializer));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
             }
         }
 
@@ -359,7 +359,7 @@ namespace Saltarelle.Compiler.Compiler {
 				// Store next to allow the loop to continue
 				// if the visitor removes/replaces child.
 				next = child.NextSibling;
-				_location = child.StartLocation;
+				_currentNode = child;
 				child.AcceptVisitor (this);
 			}
 		}
