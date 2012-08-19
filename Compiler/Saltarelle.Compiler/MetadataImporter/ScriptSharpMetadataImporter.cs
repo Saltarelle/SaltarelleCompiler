@@ -31,12 +31,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ResourcesAttribute                     = "System.Runtime.CompilerServices.ResourcesAttribute";
 		private const string MixinAttribute                         = "System.Runtime.CompilerServices.MixinAttribute";
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
+		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
 		private const string AsyncTestAttribute                     = "System.Testing.AsyncTestAttribute";
-		private const string CategoryPropertyName = "Category";
+		private const string CategoryPropertyName               = "Category";
 		private const string ExpectedAssertionCountPropertyName = "ExpectedAssertionCount";
-		private const string IsRealTypePropertyName = "IsRealType";
+		private const string IsRealTypePropertyName             = "IsRealType";
+		private const string OmitDowncastsPropertyName          = "OmitDowncasts";
+		private const string OmitNullableChecksPropertyName     = "OmitNullableChecks";
 		private const string Function = "Function";
 		private const string Array    = "Array";
 
@@ -157,6 +160,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private IType _systemObject;
 		private IType _systemRecord;
 		private ICompilation _compilation;
+		private bool _omitDowncasts;
+		private bool _omitNullableChecks;
 
 		private readonly bool _minimizeNames;
 
@@ -1164,6 +1169,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
+			var sca = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptSharpCompatibilityAttribute);
+			if (sca != null) {
+				var oc = sca.NamedArguments.SingleOrDefault(x => x.Key.Name == OmitDowncastsPropertyName).Value;
+				if (oc != null)
+					_omitDowncasts = (bool)oc.ConstantValue;
+				var on = sca.NamedArguments.SingleOrDefault(x => x.Key.Name == OmitNullableChecksPropertyName).Value;
+				if (on != null)
+					_omitNullableChecks = (bool)on.ConstantValue;
+			}
+
 			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
 					ProcessType(t);
@@ -1280,6 +1295,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			TestMethodData result;
 			_methodTestData.TryGetValue(m, out result);
 			return result;
+		}
+
+		public bool OmitDowncasts {
+			get {  return _omitDowncasts; }
+		}
+
+		public bool OmitNullableChecks {
+			get {  return _omitNullableChecks; }
 		}
 	}
 }

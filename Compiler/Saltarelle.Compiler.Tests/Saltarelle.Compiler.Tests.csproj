@@ -226,6 +226,7 @@
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporterTests\ScriptSharpCompatibilityTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\SwitchStatementTests.cs" />
