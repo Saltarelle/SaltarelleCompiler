@@ -2,6 +2,8 @@ Serializable types no longer have to be sealed (but they still cannot use virtua
 Fixed issue with Visual Studio IntelliSense
 Fixed issue that causes s.IndexOf("x", 1) to be compiled to s.indexOf(String.fromCharCode('/'), 1)
 Fixed issue calling static methods through subclasses of the declaring type.
+Added new assembly-level ScriptSharpCompatibiliyAttribute.
+Added equality and inequality operators to System.DateTime.
 
 1.1.4
 Fixed NuGet dependency versions. Installing Runtime will now always install the latest version of the compiler and so on.

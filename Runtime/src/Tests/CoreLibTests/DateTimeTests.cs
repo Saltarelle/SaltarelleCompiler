@@ -398,12 +398,39 @@ namespace CoreLibTests {
 		}
 
 		[Test]
-		public void DateEqualityWorks() {
+		public void AreEqualWorks() {
 			Assert.IsTrue(DateTime.AreEqual(new DateTime(2011, 7, 12), new DateTime(2011, 7, 12)));
 			Assert.IsFalse(DateTime.AreEqual(new DateTime(2011, 7, 12), new DateTime(2011, 7, 13)));
 			Assert.AreStrictEqual(DateTime.AreEqual(new DateTime(2011, 7, 12), (DateTime?)null), false);
 			Assert.AreStrictEqual(DateTime.AreEqual((DateTime?)null, new DateTime(2011, 7, 12)), false);
 			Assert.AreStrictEqual(DateTime.AreEqual((DateTime?)null, (DateTime?)null), true);
+		}
+
+		[Test]
+		public void AreNotEqualWorks() {
+			Assert.IsFalse(DateTime.AreNotEqual(new DateTime(2011, 7, 12), new DateTime(2011, 7, 12)));
+			Assert.IsTrue(DateTime.AreNotEqual(new DateTime(2011, 7, 12), new DateTime(2011, 7, 13)));
+			Assert.AreStrictEqual(DateTime.AreNotEqual(new DateTime(2011, 7, 12), (DateTime?)null), true);
+			Assert.AreStrictEqual(DateTime.AreNotEqual((DateTime?)null, new DateTime(2011, 7, 12)), true);
+			Assert.AreStrictEqual(DateTime.AreNotEqual((DateTime?)null, (DateTime?)null), false);
+		}
+
+		[Test]
+		public void DateEqualityWorks() {
+			Assert.IsTrue(new DateTime(2011, 7, 12) == new DateTime(2011, 7, 12));
+			Assert.IsFalse(new DateTime(2011, 7, 12) == new DateTime(2011, 7, 13));
+			Assert.AreStrictEqual(new DateTime(2011, 7, 12) == (DateTime?)null, false);
+			Assert.AreStrictEqual((DateTime?)null == new DateTime(2011, 7, 12), false);
+			Assert.AreStrictEqual((DateTime?)null == (DateTime?)null, true);
+		}
+
+		[Test]
+		public void DateInequalityWorks() {
+			Assert.IsFalse(new DateTime(2011, 7, 12) != new DateTime(2011, 7, 12));
+			Assert.IsTrue(new DateTime(2011, 7, 12) != new DateTime(2011, 7, 13));
+			Assert.AreStrictEqual(new DateTime(2011, 7, 12) != (DateTime?)null, true);
+			Assert.AreStrictEqual((DateTime?)null != new DateTime(2011, 7, 12), true);
+			Assert.AreStrictEqual((DateTime?)null != (DateTime?)null, false);
 		}
 
 		[Test]

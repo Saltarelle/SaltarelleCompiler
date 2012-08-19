@@ -310,7 +310,49 @@ namespace System {
 			return false;
 		}
 
-		// Unfortunately we can't define the equality and inequality operators, because 1) the JS versions are terrible (use reference equality), and 2) if we define them as a static method, hell breaks loose when lifting it.
+		public static bool AreNotEqual(DateTime? a, DateTime? b) {
+			return false;
+		}
+
+		[ScriptName("areEqual")]
+		public static bool operator==(DateTime a, DateTime b) {
+			return false;
+		}
+
+		[ScriptName("areEqual")]
+		public static bool operator==(DateTime? a, DateTime b) {
+			return false;
+		}
+
+		[ScriptName("areEqual")]
+		public static bool operator==(DateTime a, DateTime? b) {
+			return false;
+		}
+
+		[ScriptName("areEqual")]
+		public static bool operator==(DateTime? a, DateTime? b) {
+			return false;
+		}
+
+		[ScriptName("areNotEqual")]
+		public static bool operator!=(DateTime a, DateTime b) {
+			return false;
+		}
+
+		[ScriptName("areNotEqual")]
+		public static bool operator!=(DateTime? a, DateTime b) {
+			return false;
+		}
+
+		[ScriptName("areNotEqual")]
+		public static bool operator!=(DateTime a, DateTime? b) {
+			return false;
+		}
+
+		[ScriptName("areNotEqual")]
+		public static bool operator!=(DateTime? a, DateTime? b) {
+			return false;
+		}
 
         /// <summary>
         /// Compares two dates

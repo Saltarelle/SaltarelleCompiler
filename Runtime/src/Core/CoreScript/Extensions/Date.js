@@ -25,6 +25,10 @@ Date.areEqual = function#? DEBUG Date$areEqual##(a, b) {
         return a.valueOf() === b.valueOf();
 }
 
+Date.areNotEqual = function#? DEBUG Date$areNotEqual##(a, b) {
+    return !Date.areEqual(a, b);
+}
+
 Date.prototype.format = function#? DEBUG Date$format##(format) {
     if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
         return this.toString();

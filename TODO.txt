@@ -1,5 +1,4 @@
 TODO:
-Understand why R# doesn't get the define symbols right.
 Convert between JsDictionary and Dictionary
 async
 Other reference importers.
@@ -12,7 +11,6 @@ Use the entire location instead of just the start location in error messages.
 NAnt task
 Allow a class to inherit from two types with a member with the same name IFF both the members are implemented by the same method.
 Some kind of attribute to put on delegates to indicate that they will be called with the wrong 'this', thus forcing a capture to a local variable on method group conversion. Should not be able to convert from delegate without this option to delegate with it.
-Somehow enable the equality and inequality operators on DateTime
 
 v3:
 Source mapping
