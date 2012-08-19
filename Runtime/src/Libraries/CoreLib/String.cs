@@ -27,7 +27,6 @@ namespace System {
         /// <summary>
         /// An empty zero-length string.
         /// </summary>
-        [PreserveCase]
         public static readonly String Empty = "";
 
         /// <summary>
@@ -120,8 +119,8 @@ namespace System {
         /// Returns the unencoded version of a complete encoded URI.
         /// </summary>
         /// <returns>The unencoded string.</returns>
-        [ScriptName("decodeURI")]
-        public string DecodeUri() {
+        [ScriptAlias("decodeURI")]
+        public static string DecodeUri(string s) {
             return null;
         }
 
@@ -129,8 +128,8 @@ namespace System {
         /// Returns the unencoded version of a single part or component of an encoded URI.
         /// </summary>
         /// <returns>The unencoded string.</returns>
-        [ScriptName("decodeURIComponent")]
-        public string DecodeUriComponent() {
+        [ScriptAlias("decodeURIComponent")]
+        public static string DecodeUriComponent(string s) {
             return null;
         }
 
@@ -138,8 +137,8 @@ namespace System {
         /// Encodes the complete URI.
         /// </summary>
         /// <returns>The encoded string.</returns>
-        [ScriptName("encodeURI")]
-        public string EncodeUri() {
+        [ScriptAlias("encodeURI")]
+        public static string EncodeUri(string s) {
             return null;
         }
 
@@ -147,8 +146,8 @@ namespace System {
         /// Encodes a single part or component of a URI.
         /// </summary>
         /// <returns>The encoded string.</returns>
-        [ScriptName("encodeURIComponent")]
-        public string EncodeUriComponent() {
+        [ScriptAlias("encodeURIComponent")]
+        public static string EncodeUriComponent(string s) {
             return null;
         }
 
@@ -183,7 +182,8 @@ namespace System {
         /// Encodes a string by replacing punctuation, spaces etc. with their escaped equivalents.
         /// </summary>
         /// <returns>The escaped string.</returns>
-        public string Escape() {
+        [ScriptAlias("escape") ]
+        public static string Escape(string s) {
             return null;
         }
 
@@ -321,12 +321,12 @@ namespace System {
         }
 
         [ScriptName("replace")]
-        public string ReplaceRegex(Regex regex, string replaceText) {
+        public string Replace(Regex regex, string replaceText) {
             return null;
         }
 
         [ScriptName("replace")]
-        public string ReplaceRegex(Regex regex, StringReplaceCallback callback) {
+        public string Replace(Regex regex, StringReplaceCallback callback) {
             return null;
         }
 
@@ -377,6 +377,10 @@ namespace System {
             return null;
         }
 
+        public string Substring(int startIndex) {
+            return null;
+        }
+
         public string Substring(int startIndex, int endIndex) {
             return null;
         }
@@ -423,17 +427,16 @@ namespace System {
         /// Decodes a string by replacing escaped parts with their equivalent textual representation.
         /// </summary>
         /// <returns>The unescaped string.</returns>
-        public string Unescape() {
+        [ScriptAlias("unescape")]
+        public static string Unescape(string s) {
             return null;
         }
 
-        /// <internalonly />
         [IntrinsicOperator]
         public static bool operator ==(string s1, string s2) {
             return false;
         }
 
-        /// <internalonly />
         [IntrinsicOperator]
         public static bool operator !=(string s1, string s2) {
             return false;

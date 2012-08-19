@@ -4,6 +4,7 @@ Fixed issue that causes s.IndexOf("x", 1) to be compiled to s.indexOf(String.fro
 Fixed issue using static members through subclasses of the declaring type.
 Added new assembly-level ScriptSharpCompatibiliyAttribute.
 Added equality and inequality operators to System.DateTime.
+Some fixes to System.String
 
 1.1.4
 Fixed NuGet dependency versions. Installing Runtime will now always install the latest version of the compiler and so on.

@@ -68,6 +68,8 @@
   }
 })();
 
+#include "TypeSystem\Type.js"
+
 #include "Extensions\Object.js"
 
 #include "Extensions\Boolean.js"
@@ -87,8 +89,6 @@
 #include "Extensions\Function.js"
 
 #include "BCL\Debug.js"
-
-#include "TypeSystem\Type.js"
 
 #include "BCL\Enum.js"
 

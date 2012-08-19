@@ -13,8 +13,8 @@ namespace System.Html {
 	[ScriptName("Element")]
     [Imported(IsRealType = true)]
     public class Element {
-
-        internal Element() {
+		[NonScriptable]
+        protected Element() {
         }
 
         [IntrinsicProperty]

@@ -1,8 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // String Extensions
 
-String.__typeName = 'String';
-String.Empty = '';
+String.registerClass('String');
+
+String.empty = '';
 
 String.compare = function#? DEBUG String$compare##(s1, s2, ignoreCase) {
     if (ignoreCase) {
