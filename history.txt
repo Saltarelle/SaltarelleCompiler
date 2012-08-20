@@ -1,3 +1,4 @@
+Removed implicit conversion of char to string because that caused issues with csc. Added error message when char is boxed because this is very unlikely to yield undesired behaviour.
 Serializable types no longer have to be sealed (but they still cannot use virtual/override)
 Fixed issue with Visual Studio IntelliSense
 Fixed issue that causes s.IndexOf("x", 1) to be compiled to s.indexOf(String.fromCharCode('/'), 1)

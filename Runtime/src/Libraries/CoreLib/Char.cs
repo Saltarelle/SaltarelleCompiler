@@ -37,8 +37,18 @@ namespace System {
             return null;
         }
 
+        /// <summary>
+        /// Converts the value to its string representation.
+        /// </summary>
+        /// <returns>The string representation of the value.</returns>
+        [InlineCode("{$System.String}.fromCharCode({this})")]
+        [PreserveName]
+        public new string ToLocaleString() {
+            return null;
+        }
+
         [InlineCode("{$System.String}.fromCharCode({ch})")]
-        public static implicit operator String(char ch) {
+        public static explicit operator String(char ch) {
             return null;
         }
     }

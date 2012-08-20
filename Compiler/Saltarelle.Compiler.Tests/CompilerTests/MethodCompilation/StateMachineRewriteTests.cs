@@ -135,7 +135,7 @@ public System.Collections.IEnumerator M() {
 			switch ($state) {
 				case 0: {
 					$state = 1;
-					$result = 1;
+					$result = $Upcast(1, {ct_Object});
 					$state = 2;
 					return true;
 				}
@@ -257,7 +257,7 @@ public System.Collections.IEnumerable M() {
 					switch ($state) {
 						case 0: {
 							$state = 1;
-							$result = 1;
+							$result = $Upcast(1, {ct_Object});
 							$state = 2;
 							return true;
 						}

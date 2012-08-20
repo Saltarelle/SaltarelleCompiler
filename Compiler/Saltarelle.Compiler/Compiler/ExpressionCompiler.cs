@@ -1455,10 +1455,13 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsBoxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Type.Kind != TypeKind.Dynamic && (rr.Type is ITypeParameter || rr.Type.Equals(_compilation.FindType(KnownTypeCode.ValueType))))
-					result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
-				else if (rr.Input.Type is ITypeParameter)
-					result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
+				if (rr.Type.Kind != TypeKind.Dynamic) {
+					if (rr.Input.Type.GetAllBaseTypes().Contains(rr.Type))	// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
+						result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
+					else
+						result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
+						
+				}
 				return result;
 			}
 			else if (rr.Conversion.IsUnboxingConversion) {

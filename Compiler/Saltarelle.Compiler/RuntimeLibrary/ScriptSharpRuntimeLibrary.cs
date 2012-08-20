@@ -12,11 +12,13 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.RuntimeLibrary {
 	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
+		private readonly IErrorReporter _errorReporter;
 		private readonly Func<ITypeParameter, string> _getTypeParameterName;
 		private readonly Func<ITypeReference, JsExpression> _createTypeReferenceExpression;
 
-		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, Func<ITypeParameter, string> getTypeParameterName, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
+		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, IErrorReporter errorReporter, Func<ITypeParameter, string> getTypeParameterName, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
 			_metadataImporter = metadataImporter;
+			_errorReporter = errorReporter;
 			_getTypeParameterName = getTypeParameterName;
 			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
@@ -110,6 +112,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
+			if (sourceType.IsKnownType(KnownTypeCode.Char))
+				_errorReporter.Message(7700);
 			return expression;
 		}
 

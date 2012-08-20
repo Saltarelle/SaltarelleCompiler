@@ -725,7 +725,7 @@ public void M() {
 		}
 
 		[Test]
-		public void BoxingDoesNothing() {
+		public void BoxingIsUpcast() {
 			AssertCorrect(
 @"public void M() {
 	int x1 = 0;
@@ -749,12 +749,12 @@ public void M() {
 	var $x4 = 0;
 	var $x5 = false;
 	var $x6 = false;
-	var $o1 = $x1;
-	var $o2 = $x2;
-	var $o3 = $x3;
-	var $o4 = $x4;
-	var $o5 = $x5;
-	var $o6 = $x6;
+	var $o1 = $Upcast($x1, {ct_Object});
+	var $o2 = $Upcast($x2, {ct_Object});
+	var $o3 = $Upcast($x3, {ct_Object});
+	var $o4 = $Upcast($x4, {ct_Object});
+	var $o5 = $Upcast($x5, {ct_Object});
+	var $o6 = $Upcast($x6, {ct_Object});
 }");
 		}
 

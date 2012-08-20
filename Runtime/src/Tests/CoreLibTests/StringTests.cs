@@ -44,7 +44,7 @@ namespace CoreLibTests {
 
 		[Test]
 		public void CharCodeAtWorks() {
-			Assert.AreEqual("abcd".CharCodeAt(2), 'c');
+			Assert.AreEqual((int)"abcd".CharCodeAt(2), (int)'c');
 		}
 
 		[Test]
@@ -483,20 +483,20 @@ namespace CoreLibTests {
 
 		[Test]
 		public void StringEqualityWorks() {
-			string s1 = "abc";
+			string s1 = "abc", s2 = null, s3 = null;
 			Assert.IsTrue(s1 == "abc");
 			Assert.IsFalse(s1 == "aBc");
-			Assert.IsFalse(s1 == null);
-			Assert.IsTrue((string)null == (string)null);
+			Assert.IsFalse(s1 == s2);
+			Assert.IsTrue(s2 == s3);
 		}
 
 		[Test]
 		public void StringInequalityWorks() {
-			string s1 = "abc";
+			string s1 = "abc", s2 = null, s3 = null;
 			Assert.IsFalse(s1 != "abc");
 			Assert.IsTrue(s1 != "aBc");
-			Assert.IsTrue(s1 != null);
-			Assert.IsFalse((string)null != (string)null);
+			Assert.IsTrue(s1 != s2);
+			Assert.IsFalse(s2 != s3);
 		}
 	}
 }

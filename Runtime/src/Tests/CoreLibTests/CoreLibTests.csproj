@@ -34,6 +34,7 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CharTests.cs" />
     <Compile Include="StringTests.cs" />
     <Compile Include="MutableDateTimeTests.cs" />
     <Compile Include="DateTimeTests.cs" />

@@ -204,7 +204,7 @@ namespace Saltarelle.Compiler.Driver {
 					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 					var n = new DefaultNamer();
 					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(md, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
+					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
 					var compiler = new Compiler.Compiler(md, n, rtl, er);
 
 					var references = LoadReferences(settings.AssemblyReferences, er);
