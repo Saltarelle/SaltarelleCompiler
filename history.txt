@@ -1,3 +1,4 @@
+1.2.0
 Fixed compiling instance methods on serializable types.
 Insert parentheses around number when a member is being accessed (eg. (1).member).
 Removed implicit conversion of char to string because that caused issues with csc. Added error message when char is boxed because this is very unlikely to yield undesired behaviour.
