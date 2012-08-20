@@ -46,7 +46,7 @@ namespace RuntimeLibrary.Tests
 				if (print)
 					Console.Write(html);
 
-				var tempFile = Path.GetTempFileName();
+				var tempFile = Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString("N") + ".htm");
 				try {
 					File.WriteAllText(tempFile, html);
 					var result = (HtmlPage)client.getPage("file://" + tempFile.Replace("\\", "/"));
