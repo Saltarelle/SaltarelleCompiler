@@ -70,7 +70,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_errorReporter.Region = region;
 		}
 
-		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body) {
+		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument) {
 			SetRegion(body.GetRegion());
 			try {
 				_result = MethodCompiler.FixByRefParameters(parameters, variables);
@@ -80,7 +80,7 @@ namespace Saltarelle.Compiler.Compiler {
 					jsbody = (JsBlockStatement)_result[0];
 				else
 					jsbody = new JsBlockStatement(_result);
-	            return JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), jsbody);
+	            return JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Select(p => variables[p].Name)), jsbody);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
