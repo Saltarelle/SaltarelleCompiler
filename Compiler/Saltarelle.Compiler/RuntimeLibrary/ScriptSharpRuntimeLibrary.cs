@@ -12,11 +12,13 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.RuntimeLibrary {
 	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
+		private readonly IErrorReporter _errorReporter;
 		private readonly Func<ITypeParameter, string> _getTypeParameterName;
 		private readonly Func<ITypeReference, JsExpression> _createTypeReferenceExpression;
 
-		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, Func<ITypeParameter, string> getTypeParameterName, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
+		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, IErrorReporter errorReporter, Func<ITypeParameter, string> getTypeParameterName, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
 			_metadataImporter = metadataImporter;
+			_errorReporter = errorReporter;
 			_getTypeParameterName = getTypeParameterName;
 			_createTypeReferenceExpression = createTypeReferenceExpression;
 		}
@@ -26,7 +28,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
 			}
-			else if (type.Kind == TypeKind.Enum && (context == TypeContext.CastTarget || context == TypeContext.Instantiation)) {
+			else if (type.Kind == TypeKind.Enum && (context == TypeContext.CastTarget || context == TypeContext.InvokeConstructor)) {
 				var def = type.GetDefinition();
 				return _createTypeReferenceExpression(def.EnumUnderlyingType.ToTypeReference());
 			}
@@ -75,7 +77,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return _createTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {
-				throw new NotImplementedException();
+				throw new InvalidOperationException("Could not determine the script type for " + type.ToString() + ", context " + context);
 			}
 		}
 
@@ -100,6 +102,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
+			if (_metadataImporter.OmitDowncasts)
+				return expression;
+
 			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
 			var jsTarget = GetCastTarget(sourceType, targetType);
@@ -107,6 +112,8 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
+			if (sourceType.IsKnownType(KnownTypeCode.Char))
+				_errorReporter.Message(7700);
 			return expression;
 		}
 
@@ -219,6 +226,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression FromNullable(JsExpression expression) {
+			if (_metadataImporter.OmitNullableChecks)
+				return expression;
+
 			if (expression.NodeType == ExpressionNodeType.LogicalNot)
 				return expression;	// This is a little hacky. The problem we want to solve is that 'bool b = myDynamic' should compile to !!myDynamic, but the actual call is unbox(convert(myDynamic, bool)), where convert() will return the !!. Anyway, in JS, the !expression will never be null anyway.
 
@@ -256,7 +266,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
-			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.BindBaseCall), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);
@@ -265,7 +275,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
-			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.Instantiation), "prototype"), methodName);
+			JsExpression method = JsExpression.MemberAccess(JsExpression.MemberAccess(GetScriptType(baseType, TypeContext.BindBaseCall), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);

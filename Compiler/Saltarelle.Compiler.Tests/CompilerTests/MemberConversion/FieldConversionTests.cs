@@ -93,7 +93,7 @@ class C<T1, T2> where T1 : class {
 			Assert.That(FindStaticFieldInitializer("C.$f17"), Is.EqualTo("null"));
 			Assert.That(FindStaticFieldInitializer("C.$f18"), Is.EqualTo("null"));
 			Assert.That(FindStaticFieldInitializer("C.$f19"), Is.EqualTo("null"));
-			Assert.That(FindStaticFieldInitializer("C.$f20"), Is.EqualTo("$Default($T2)"));
+			Assert.That(FindStaticFieldInitializer("C.$f20"), Is.EqualTo("$Default(def_$T2)"));
 		}
     }
 }

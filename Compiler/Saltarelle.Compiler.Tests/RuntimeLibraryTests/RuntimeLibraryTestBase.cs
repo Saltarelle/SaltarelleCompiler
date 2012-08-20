@@ -79,20 +79,25 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 			return ConvertResult(result);
 		}
 
-		private Tuple<string, ICompilation, IMetadataImporter> Compile(string source, bool includeLinq = false) {
+		internal Tuple<string, ICompilation, IMetadataImporter, MockErrorReporter> Compile(string source, bool includeLinq = false, bool expectErrors = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var n = new DefaultNamer();
-            var er = new MockErrorReporter(true);
+            var er = new MockErrorReporter(!expectErrors);
 			PreparedCompilation compilation = null;
-			var rtl = new ScriptSharpRuntimeLibrary(md, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
+			var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
             var compiler = new Compiler.Compiler(md, n, rtl, er);
-
-            er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
             var references = includeLinq ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
 			compilation = compiler.CreateCompilation(new[] { sourceFile }, references, null);
 			var compiledTypes = compiler.Compile(compilation);
+
+			if (expectErrors) {
+				Assert.That(er.AllMessages, Is.Not.Empty, "Compile should have generated errors");
+				return Tuple.Create((string)null, compilation.Compilation, (IMetadataImporter)md, er);
+			}
+
+            er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
 			var js = new OOPEmulator.ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
 			js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
@@ -101,7 +106,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 			if (Output == OutputType.GeneratedScript)
 				Console.WriteLine(script);
-			return Tuple.Create(script, compilation.Compilation, (IMetadataImporter)md);
+			return Tuple.Create(script, compilation.Compilation, (IMetadataImporter)md, er);
 		}
 
 		protected object ExecuteCSharp(string source, string methodName, bool includeLinq = false) {

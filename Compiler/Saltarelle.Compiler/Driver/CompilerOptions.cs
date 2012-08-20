@@ -40,6 +40,7 @@ namespace Saltarelle.Compiler.Driver {
 		public List<int> WarningsNotAsErrors    { get; private set; }
 		public string KeyContainer              { get; set; }
 		public string KeyFile                   { get; set; }
+		public bool AlreadyCompiled             { get; set; }
 
 		public CompilerOptions() {
 			AdditionalLibPaths  = new List<string>();

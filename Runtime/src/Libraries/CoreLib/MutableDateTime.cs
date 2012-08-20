@@ -367,7 +367,7 @@ namespace System {
         /// <summary>
         /// Compares two dates
         /// </summary>
-        [InlineCode("!{$System.DateTime}.areEqual({a}, {b})")]
+        [InlineCode("{$System.DateTime}.areNotEqual({a}, {b})")]
         public static bool operator !=(MutableDateTime a, MutableDateTime b) {
             return false;
         }

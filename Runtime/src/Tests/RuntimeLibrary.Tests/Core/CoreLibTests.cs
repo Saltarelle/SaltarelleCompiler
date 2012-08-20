@@ -24,4 +24,12 @@ namespace RuntimeLibrary.Tests.Core {
 	[TestFixture]
 	public class MutableDateTimeTests : CoreLibTestBase {
 	}
+
+	[TestFixture]
+	public class StringTests : CoreLibTestBase {
+	}
+
+	[TestFixture]
+	public class CharTests : CoreLibTestBase {
+	}
 }

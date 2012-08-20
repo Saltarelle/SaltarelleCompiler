@@ -15,12 +15,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(adder.Definition,
 @"function($value) {
-	this.$MyEvent = {Delegate}.Combine(this.$MyEvent, $value);
+	this.$MyEvent = {sm_Delegate}.Combine(this.$MyEvent, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($value) {
-	this.$MyEvent = {Delegate}.Remove(this.$MyEvent, $value);
+	this.$MyEvent = {sm_Delegate}.Remove(this.$MyEvent, $value);
 }");
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
@@ -38,12 +38,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(adder.Definition,
 @"function($this, $value) {
-	$this.$MyEvent = {Delegate}.Combine($this.$MyEvent, $value);
+	$this.$MyEvent = {sm_Delegate}.Combine($this.$MyEvent, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($this, $value) {
-	$this.$MyEvent = {Delegate}.Remove($this.$MyEvent, $value);
+	$this.$MyEvent = {sm_Delegate}.Remove($this.$MyEvent, $value);
 }");
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
@@ -61,17 +61,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(adder.Definition,
 @"function($value) {
-	{C}.$MyEvent = {Delegate}.Combine({C}.$MyEvent, $value);
+	{sm_C}.$MyEvent = {sm_Delegate}.Combine({sm_C}.$MyEvent, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($value) {
-	{C}.$MyEvent = {Delegate}.Remove({C}.$MyEvent, $value);
+	{sm_C}.$MyEvent = {sm_Delegate}.Remove({sm_C}.$MyEvent, $value);
 }");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{C}.$MyEvent = null;" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{sm_C}.$MyEvent = null;" + Environment.NewLine));
 		}
 
 		[Test]
@@ -83,17 +83,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(adder.Definition,
 @"function($value) {
-	$InstantiateGenericType({C}, $T).$MyEvent = {Delegate}.Combine($InstantiateGenericType({C}, $T).$MyEvent, $value);
+	sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = {sm_Delegate}.Combine(sm_$InstantiateGenericType({C}, ga_$T).$MyEvent, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($value) {
-	$InstantiateGenericType({C}, $T).$MyEvent = {Delegate}.Remove($InstantiateGenericType({C}, $T).$MyEvent, $value);
+	sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = {sm_Delegate}.Remove(sm_$InstantiateGenericType({C}, ga_$T).$MyEvent, $value);
 }");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("$InstantiateGenericType({C}, $T).$MyEvent = null;" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = null;" + Environment.NewLine));
 		}
 	}
 }

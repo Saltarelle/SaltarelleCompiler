@@ -44,8 +44,8 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentException})) {
-			var $ex = $Cast($tmp1, {ArgumentException});
+		if ($TypeIs($tmp1, {ct_ArgumentException})) {
+			var $ex = $Cast($tmp1, {ct_ArgumentException});
 			var $y = 0;
 		}
 		else {
@@ -74,7 +74,7 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentException})) {
+		if ($TypeIs($tmp1, {ct_ArgumentException})) {
 			var $y = 0;
 		}
 		else {
@@ -200,11 +200,11 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentNullException})) {
-			var $ex = $Cast($tmp1, {ArgumentNullException});
+		if ($TypeIs($tmp1, {ct_ArgumentNullException})) {
+			var $ex = $Cast($tmp1, {ct_ArgumentNullException});
 			var $y = 0;
 		}
-		else if ($TypeIs($tmp1, {ArgumentException})) {
+		else if ($TypeIs($tmp1, {ct_ArgumentException})) {
 			var $z = 0;
 		}
 		else {
@@ -240,11 +240,11 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentNullException})) {
+		if ($TypeIs($tmp1, {ct_ArgumentNullException})) {
 			var $y = 0;
 		}
-		else if ($TypeIs($tmp1, {ArgumentException})) {
-			var $ex = $Cast($tmp1, {ArgumentException});
+		else if ($TypeIs($tmp1, {ct_ArgumentException})) {
+			var $ex = $Cast($tmp1, {ct_ArgumentException});
 			var $z = 0;
 		}
 		else {
@@ -280,11 +280,11 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentNullException})) {
+		if ($TypeIs($tmp1, {ct_ArgumentNullException})) {
 			var $y = 0;
 		}
-		else if ($TypeIs($tmp1, {ArgumentException})) {
-			var $ex = $Cast($tmp1, {ArgumentException});
+		else if ($TypeIs($tmp1, {ct_ArgumentException})) {
+			var $ex = $Cast($tmp1, {ct_ArgumentException});
 			var $z = 0;
 		}
 		else {
@@ -321,10 +321,10 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentNullException})) {
+		if ($TypeIs($tmp1, {ct_ArgumentNullException})) {
 			var $y = 0;
 		}
-		else if ($TypeIs($tmp1, {ArgumentException})) {
+		else if ($TypeIs($tmp1, {ct_ArgumentException})) {
 			var $z = 0;
 		}
 		else {
@@ -366,10 +366,10 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentNullException})) {
+		if ($TypeIs($tmp1, {ct_ArgumentNullException})) {
 			var $y = 0;
 		}
-		else if ($TypeIs($tmp1, {ArgumentException})) {
+		else if ($TypeIs($tmp1, {ct_ArgumentException})) {
 			var $z = 0;
 		}
 		else {
@@ -429,7 +429,7 @@ public void M() {
 	}
 	catch ($tmp1) {
 		$tmp1 = $MakeException($tmp1);
-		if ($TypeIs($tmp1, {ArgumentException})) {
+		if ($TypeIs($tmp1, {ct_ArgumentException})) {
 			var $y = 0;
 		}
 		else {

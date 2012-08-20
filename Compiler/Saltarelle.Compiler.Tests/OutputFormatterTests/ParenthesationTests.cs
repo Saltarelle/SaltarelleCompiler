@@ -239,14 +239,14 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
             AssertCorrect(JsExpression.MemberAccess(
                               JsExpression.MemberAccess(
                                   JsExpression.MemberAccess(
-                                      JsExpression.Number(1),
+                                      JsExpression.Identifier("x"),
                                       "Member1"
                                   ),
                                   "Member2"
                               ),
                               "Member3"
                           ),
-                          "1.Member1.Member2.Member3");
+                          "x.Member1.Member2.Member3");
         }
 
         [Test]
@@ -451,6 +451,11 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ExpressionStatementsContainingOnlyAFunctionDefinitionParenthesizesThatDefinition() {
 			AssertCorrect(new JsExpressionStatement(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)), "(function() {\r\n});\r\n");
+		}
+
+		[Test]
+		public void NumberIsParenthesizedWhenUsedAsMemberAccessTarget() {
+			AssertCorrect(JsExpression.MemberAccess(JsExpression.Number(1), "X"), "(1).X");
 		}
     }
 }

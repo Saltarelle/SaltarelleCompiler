@@ -19,7 +19,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitUnaryOperatorExpression(UnaryOperatorExpression unaryOperatorExpression) {
 			if (unaryOperatorExpression.Operator == UnaryOperatorType.Await) {
-				_errorReporter.Message(7998, unaryOperatorExpression.GetRegion(), "await");
+				_errorReporter.Region = unaryOperatorExpression.GetRegion();
+				_errorReporter.Message(7998, "await");
 				_result = false;
 			}
 			else {
@@ -29,7 +30,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitTypeDeclaration(TypeDeclaration typeDeclaration) {
 			if (typeDeclaration.ClassType == ClassType.Struct && !_isCorelibCompilation) {
-				_errorReporter.Message(7998, typeDeclaration.GetRegion(), "user-defined value type (struct)");
+				_errorReporter.Region = typeDeclaration.GetRegion();
+				_errorReporter.Message(7998, "user-defined value type (struct)");
 				_result = false;
 			}
 			else {

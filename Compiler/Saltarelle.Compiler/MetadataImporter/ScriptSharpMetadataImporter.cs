@@ -31,12 +31,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ResourcesAttribute                     = "System.Runtime.CompilerServices.ResourcesAttribute";
 		private const string MixinAttribute                         = "System.Runtime.CompilerServices.MixinAttribute";
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
+		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
 		private const string AsyncTestAttribute                     = "System.Testing.AsyncTestAttribute";
-		private const string CategoryPropertyName = "Category";
+		private const string CategoryPropertyName               = "Category";
 		private const string ExpectedAssertionCountPropertyName = "ExpectedAssertionCount";
-		private const string IsRealTypePropertyName = "IsRealType";
+		private const string IsRealTypePropertyName             = "IsRealType";
+		private const string OmitDowncastsPropertyName          = "OmitDowncasts";
+		private const string OmitNullableChecksPropertyName     = "OmitNullableChecks";
 		private const string Function = "Function";
 		private const string Array    = "Array";
 
@@ -157,20 +160,25 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private IType _systemObject;
 		private IType _systemRecord;
 		private ICompilation _compilation;
+		private bool _omitDowncasts;
+		private bool _omitNullableChecks;
 
 		private readonly bool _minimizeNames;
 
 		private void Message(int code, DomRegion r, params object[] additionalArgs) {
-			_errorReporter.Message(code, r, additionalArgs);
+			_errorReporter.Region = r;
+			_errorReporter.Message(code, additionalArgs);
 		}
 
 		private void Message(int code, ITypeDefinition t, params object[] additionalArgs) {
-			_errorReporter.Message(code, t.Region, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
+			_errorReporter.Region = t.Region;
+			_errorReporter.Message(code, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
 		}
 
 		private void Message(int code, IMember m, params object[] additionalArgs) {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
-			_errorReporter.Message(code, m.Region, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
+			_errorReporter.Region = m.Region;
+			_errorReporter.Message(code, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
 		}
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
@@ -304,6 +312,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private void ProcessType(ITypeDefinition typeDefinition) {
 			if (_typeSemantics.ContainsKey(typeDefinition))
 				return;
+			foreach (var b in typeDefinition.DirectBaseTypes)
+				ProcessType(b.GetDefinition());
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, true, false, null, false);
@@ -378,11 +388,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			string mixinArg = null;
 
 			if (isSerializable) {
-				if (!typeDefinition.IsSealed) {
-					Message(7008, typeDefinition);
-					isSerializable = false;
-				}
-				if (!typeDefinition.DirectBaseTypes.Contains(_systemObject) && !typeDefinition.DirectBaseTypes.Contains(_systemRecord)) {
+				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
+				if (!baseClass.Equals(_systemObject) && !baseClass.Equals(_systemRecord) && !_typeSemantics[baseClass].IsSerializable) {
 					Message(7009, typeDefinition);
 					isSerializable = false;
 				}
@@ -394,8 +401,21 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7011, typeDefinition);
 					isSerializable = false;
 				}
+				foreach (var m in typeDefinition.Members.Where(m => m.IsVirtual)) {
+					Message(7023, typeDefinition, m.Name);
+					isSerializable = false;
+				}
+				foreach (var m in typeDefinition.Members.Where(m => m.IsOverride)) {
+					Message(7024, typeDefinition, m.Name);
+					isSerializable = false;
+				}
 			}
 			else {
+				var baseClass = typeDefinition.DirectBaseTypes.SingleOrDefault(c => c.Kind == TypeKind.Class);
+				if (baseClass != null && _typeSemantics[baseClass.GetDefinition()].IsSerializable) {
+					Message(7008, typeDefinition, baseClass.FullName);
+				}
+
 				var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
 				var mixinAttr = GetAttributePositionalArgs(typeDefinition, MixinAttribute);
 				if (mixinAttr != null) {
@@ -447,14 +467,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (!_instanceMemberNamesByType.TryGetValue(typeDefinition, out result))
 				ProcessTypeMembers(typeDefinition);
 			return _instanceMemberNamesByType[typeDefinition];
-		}
-
-		private HashSet<string> GetInstanceMemberNames(IEnumerable<ITypeDefinition> typeDefinitions) {
-			var result = new HashSet<string>();
-			foreach (var n in typeDefinitions.SelectMany(t => GetInstanceMemberNames(t))) {
-				result.Add(n);
-			}
-			return result;
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
@@ -1160,13 +1172,24 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
+			var sca = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptSharpCompatibilityAttribute);
+			if (sca != null) {
+				var oc = sca.NamedArguments.SingleOrDefault(x => x.Key.Name == OmitDowncastsPropertyName).Value;
+				if (oc != null)
+					_omitDowncasts = (bool)oc.ConstantValue;
+				var on = sca.NamedArguments.SingleOrDefault(x => x.Key.Name == OmitNullableChecksPropertyName).Value;
+				if (on != null)
+					_omitNullableChecks = (bool)on.ConstantValue;
+			}
+
 			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
 					ProcessType(t);
 					ProcessTypeMembers(t);
 				}
 				catch (Exception ex) {
-					errorReporter.InternalError(ex, t.Region, "Error importing type " + t.FullName);
+					errorReporter.Region = t.Region;
+					errorReporter.InternalError(ex, "Error importing type " + t.FullName);
 				}
 			}
 		}
@@ -1276,6 +1299,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			TestMethodData result;
 			_methodTestData.TryGetValue(m, out result);
 			return result;
+		}
+
+		public bool OmitDowncasts {
+			get {  return _omitDowncasts; }
+		}
+
+		public bool OmitNullableChecks {
+			get {  return _omitNullableChecks; }
 		}
 	}
 }

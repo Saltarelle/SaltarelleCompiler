@@ -224,7 +224,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case InlineCodeToken.TokenType.TypeRef:
-						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text), TypeContext.Instantiation);
+						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text), TypeContext.GenericArgument);
 						if (typeRef == null) {
 							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation.");
 						}

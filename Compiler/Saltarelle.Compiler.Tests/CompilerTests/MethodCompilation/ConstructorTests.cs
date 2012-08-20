@@ -80,7 +80,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {B}.ctor();
+	var $this = {sm_B}.ctor();
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
@@ -100,7 +100,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {B}.ctor();
+	var $this = {sm_B}.ctor();
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
@@ -150,7 +150,7 @@ class D : B {
 	}
 }",
 @"function($x) {
-	{C}.call(this);
+	{inst_C}.call(this);
 	this.M();
 }");
 		}
@@ -175,10 +175,10 @@ class D : B {
 	}
 }",
 @"function() {
-	var $tmp1 = {C}.F1();
-	var $tmp2 = {C}.F2();
-	var $tmp3 = {C}.F3();
-	{C}.call(this, 1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $tmp1 = {sm_C}.F1();
+	var $tmp2 = {sm_C}.F2();
+	var $tmp3 = {sm_C}.F3();
+	{inst_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
 		}
@@ -198,7 +198,7 @@ class D : B {
 	}
 }",
 @"function() {
-	{C}.ctor$Int32.call(this, 0);
+	{inst_C}.ctor$Int32.call(this, 0);
 	this.M();
 }");
 		}
@@ -218,6 +218,24 @@ class D : B {
 	public C(int x, string s) {
 	}
 }" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
+			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+		}
+
+		[Test]
+		public void ChainingToConstructorImplementedAsJsonFromUnnamedConstructorIsAnError() {
+			var rpt = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(0, ""X"") {
+		M();
+	}
+
+	public C(int x, string s) {
+	}
+}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(new IMember[0]) });
 			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -262,13 +280,41 @@ class D : B {
 	}
 }",
 @"function() {
-	var $tmp1 = {C}.F1();
-	var $tmp2 = {C}.F2();
-	var $tmp3 = {C}.F3();
-	var $this = {C}.ctor$7(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $tmp1 = {sm_C}.F1();
+	var $tmp2 = {sm_C}.F2();
+	var $tmp3 = {sm_C}.F3();
+	var $this = {sm_C}.ctor$7(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+		}
+
+		[Test]
+		public void ChainingToJsonConstructorFromStaticMethodConstructorWorks() {
+			AssertCorrect(
+@"class C {
+	static int F1() { return 0; }
+	static int F2() { return 0; }
+	static int F3() { return 0; }
+	static int F4() { return 0; }
+
+	public int A, B, C, D, E, F, G;
+
+	public void M() {}
+
+	public C(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {
+	}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(d: F1(), g: F2(), f: F3(), b: F4()) {
+		M();
+	}
+}",
+@"function() {
+	var $this = { $D: {sm_C}.F1(), $G: {sm_C}.F2(), $F: {sm_C}.F3(), $B: {sm_C}.F4(), $A: 1, $C: 3, $E: 5 };
+	$this.M();
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("X") : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
 		[Test]
@@ -291,10 +337,10 @@ class D : B {
 	}
 }",
 @"function() {
-	var $tmp1 = {C}.F1();
-	var $tmp2 = {C}.F2();
-	var $tmp3 = {C}.F3();
-	var $this = ctor$7(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $tmp1 = {sm_C}.F1();
+	var $tmp2 = {sm_C}.F2();
+	var $tmp3 = {sm_C}.F3();
+	var $this = ctor$7(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), isGlobal: true) });
@@ -365,7 +411,7 @@ class D : B {
 	}
 }",
 @"function() {
-	{B}.call(this);
+	{inst_B}.call(this);
 	this.M();
 }");
 		}
@@ -416,10 +462,10 @@ class D : B {
 	}
 }",
 @"function() {
-	var $tmp1 = {C}.F1();
-	var $tmp2 = {C}.F2();
-	var $tmp3 = {C}.F3();
-	var $this = new {C}(1, {C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $tmp1 = {sm_C}.F1();
+	var $tmp2 = {sm_C}.F2();
+	var $tmp3 = {sm_C}.F3();
+	var $this = new {inst_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
@@ -439,7 +485,7 @@ class D : B {
 	}
 }",
 @"function() {
-	{B}.call(this);
+	{inst_B}.call(this);
 	this.M();
 }");
 		}
@@ -488,10 +534,10 @@ class D : B {
 	}
 }",
 @"function() {
-	var $tmp1 = {D}.F1();
-	var $tmp2 = {D}.F2();
-	var $tmp3 = {D}.F3();
-	{B}.call(this, 1, {D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $tmp1 = {sm_D}.F1();
+	var $tmp2 = {sm_D}.F2();
+	var $tmp3 = {sm_D}.F3();
+	{inst_B}.call(this, 1, {sm_D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed() });
 		}
@@ -541,7 +587,7 @@ class D : B {
 	}
 }",
 @"function($x) {
-	{C}.call(this);
+	{inst_C}.call(this);
 	this.M();
 }");
 		}
@@ -581,7 +627,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {B}.ctor();
+	var $this = {sm_B}.ctor();
 	$this.$x = 1;
 	$this.M();
 	return $this;
@@ -604,7 +650,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{B}.call(this);
+	{inst_B}.call(this);
 	this.M();
 }");
 		}
@@ -625,7 +671,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{B}.call(this);
+	{inst_B}.call(this);
 	this.M();
 }");
 		}
@@ -638,7 +684,7 @@ class D : B {
 class D : B {
 }",
 @"function() {
-	{B}.call(this);
+	{inst_B}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -661,7 +707,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{B}.call(this);
+	{inst_B}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -675,7 +721,7 @@ class C {
 	X x = new X { P = 10 };
 }",
 @"function() {
-	var $tmp1 = new {X}();
+	var $tmp1 = new {inst_X}();
 	$tmp1.set_P(10);
 	this.$x = $tmp1;
 }", useFirstConstructor: true);
@@ -705,8 +751,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = $Default($T);
-	this.$t2 = $Default($T);
+	this.$t1 = $Default(def_$T);
+	this.$t2 = $Default(def_$T);
 }", useFirstConstructor: true);
         }
 
@@ -753,7 +799,7 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
-	{C1}.x.call(this, 4, 8, [59, 12, 4]);
+	{inst_C1}.x.call(this, 4, 8, [59, 12, 4]);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
@@ -767,7 +813,7 @@ class C {
 	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
 }",
 @"function() {
-	{C1}.x.call(this, 4, 8, [59, 12, 4]);
+	{inst_C1}.x.call(this, 4, 8, [59, 12, 4]);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
@@ -781,7 +827,7 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
-	{C1}.x.call(this, 4, 8, 59, 12, 4);
+	{inst_C1}.x.call(this, 4, 8, 59, 12, 4);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 		}
 

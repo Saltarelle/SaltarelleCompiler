@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
         public void BackingFieldsForInstanceAutoEventsWithInitializerUseThatInitializer() {
             Compile(new[] { "class C { public static System.EventHandler GetHandler() { return null; } public event System.EventHandler Event1 = null, Event2 = GetHandler(), Event3 = (s, e) => {}; }" });
             FindInstanceFieldInitializer("C.$Event1").Should().Be("null");
-            FindInstanceFieldInitializer("C.$Event2").Should().Be("{C}.GetHandler()");
+            FindInstanceFieldInitializer("C.$Event2").Should().Be("{sm_C}.GetHandler()");
             FindInstanceFieldInitializer("C.$Event3").Should().Be("function($s, $e) {\r\n}");
         }
 
@@ -108,7 +108,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
         public void BackingFieldsForStaticAutoEventsWithInitializerUseThatInitializer() {
             Compile(new[] { "class C { public static System.EventHandler GetHandler() { return null; } public static event System.EventHandler Event1 = null, Event2 = GetHandler(), Event3 = (s, e) => {}; }" });
             FindStaticFieldInitializer("C.$Event1").Should().Be("null");
-            FindStaticFieldInitializer("C.$Event2").Should().Be("{C}.GetHandler()");
+            FindStaticFieldInitializer("C.$Event2").Should().Be("{sm_C}.GetHandler()");
             FindStaticFieldInitializer("C.$Event3").Should().Be("function($s, $e) {\r\n}");
         }
 

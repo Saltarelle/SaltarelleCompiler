@@ -1,3 +1,15 @@
+1.2.0
+Fixed compiling instance methods on serializable types.
+Insert parentheses around number when a member is being accessed (eg. (1).member).
+Removed implicit conversion of char to string because that caused issues with csc. Added error message when char is boxed because this is very unlikely to yield undesired behaviour.
+Serializable types no longer have to be sealed (but they still cannot use virtual/override)
+Fixed issue with Visual Studio IntelliSense
+Fixed issue that causes s.IndexOf("x", 1) to be compiled to s.indexOf(String.fromCharCode('/'), 1)
+Fixed issue using static members through subclasses of the declaring type.
+Added new assembly-level ScriptSharpCompatibiliyAttribute.
+Added equality and inequality operators to System.DateTime.
+Some fixes to System.String
+
 1.1.4
 Fixed NuGet dependency versions. Installing Runtime will now always install the latest version of the compiler and so on.
 

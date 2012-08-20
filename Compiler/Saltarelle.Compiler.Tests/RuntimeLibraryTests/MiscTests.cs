@@ -118,5 +118,16 @@ public class C {
 }", "C.M", includeLinq: true);
 			Assert.That(result, Is.EqualTo(new[] { "445", "556", "778" }));
 		}
+
+		[Test]
+		public void UpcastCharToObjectIsAnError() {
+			var result = Compile(@"
+public class C {
+	public static void M() {
+		string s = ""X"" + 'c';
+	}
+}", expectErrors: true);
+			Assert.That(result.Item4.AllMessages.Select(m => m.Code), Is.EqualTo(new[] { 7700 }));
+		}
 	}
 }

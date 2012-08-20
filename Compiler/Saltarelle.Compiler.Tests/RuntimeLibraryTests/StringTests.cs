@@ -38,7 +38,7 @@ public class C {
 using System;
 public class C {
 	public static string M() {
-		return ""ab"" + 15 + 'x';
+		return ""ab"" + 15 + ""x"";
 	}
 }", "C.M");
 			Assert.That(result, Is.EqualTo("ab15x"));

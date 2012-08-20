@@ -1,9 +1,17 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
 	[Imported(IsRealType = true)]
 	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue>  {
+		/// <summary>
+		/// This constructor cannot be used, but is required to avoid problems in mcs and csc when switching on strings.
+		/// </summary>
+		[NonScriptable]
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public Dictionary(int capacity) {}
+
 		[ScriptName("")]
 		public Dictionary() {}
 		[ScriptName("")]

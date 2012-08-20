@@ -1023,10 +1023,13 @@ namespace System.Collections.Generic {
 	/// </summary>
 	[NonScriptable]
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public class EqualityComparer<T> : IEqualityComparer<T> {
+	public abstract class EqualityComparer<T> : IEqualityComparer<T> {
 		public static EqualityComparer<T> Default { get { return null; } }
 
-		public bool Equals(T x, T y) { return false; }
-		public int GetHashCode(T obj) { return 0; }
+		public abstract bool Equals(T x, T y);
+		public abstract int GetHashCode(T obj);
+
+		bool IEqualityComparer.Equals(object x, object y) { return false; }
+		int IEqualityComparer.GetHashCode(object obj) { return 0; }
 	}
 }

@@ -13,7 +13,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }
 ",
-@"	var $x = {C};
+@"	var $x = {to_C};
 ");
 		}
 
@@ -27,7 +27,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = {X};
+@"	var $x = {to_X};
 ");
 		}
 
@@ -42,7 +42,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $InstantiateGenericType({X}, {C}, {D});
+@"	var $x = to_$InstantiateGenericType({X}, {ga_C}, {ga_D});
 ");
 		}
 
@@ -57,7 +57,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $InstantiateGenericType({X}, $InstantiateGenericType({X}, {C}, {D}), $InstantiateGenericType({X}, {D}, {C}));
+@"	var $x = to_$InstantiateGenericType({X}, ga_$InstantiateGenericType({X}, {ga_C}, {ga_D}), ga_$InstantiateGenericType({X}, {ga_D}, {ga_C}));
 ");
 		}
 
@@ -72,7 +72,7 @@ public void M() {
 	}
 }
 ",
-@"	var $x = $T1;
+@"	var $x = to_$T1;
 ");
 		}
 
@@ -85,7 +85,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = $T1;
+@"	var $x = to_$T1;
 ");
 		}
 
@@ -103,7 +103,7 @@ public void M() {
 	}
 }
 ",
-@"	var $x = $T1;
+@"	var $x = to_$T1;
 ");
 		}
 
@@ -123,7 +123,7 @@ class Y : X<C> {
 	}
 }
 ",
-@"	var $x = $InstantiateGenericType({X2}, {C}, {D});
+@"	var $x = to_$InstantiateGenericType({X2}, {ga_C}, {ga_D});
 ");
 		}
 

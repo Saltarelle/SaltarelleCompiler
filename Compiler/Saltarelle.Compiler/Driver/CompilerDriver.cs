@@ -53,7 +53,8 @@ namespace Saltarelle.Compiler.Driver {
 
 				return Path.GetFullPath(file);
 			}
-			er.Message(7997, null, TextLocation.Empty, filename);
+			er.Region = DomRegion.Empty;
+			er.Message(7997, filename);
 			return null;
 		}
 
@@ -95,8 +96,10 @@ namespace Saltarelle.Compiler.Driver {
 			foreach (var w in options.WarningsNotAsErrors)
 				result.AddWarningOnly(w);
 
-			if (result.AssemblyReferencesAliases.Count > 0)	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
-				er.Message(7998, null, TextLocation.Empty, "aliased reference");
+			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
+				er.Region = DomRegion.Empty;
+				er.Message(7998, "aliased reference");
+			}
 
 			return result;
 		}
@@ -110,7 +113,8 @@ namespace Saltarelle.Compiler.Driver {
 
 			public override void Print(AbstractMessage msg, bool showFullPath) {
 				base.Print(msg, showFullPath);
-				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Location.NameFullPath, new TextLocation(msg.Location.Row, msg.Location.Column), msg.Text.Replace("{", "{{").Replace("}", "}}"));
+				_errorReporter.Region = new DomRegion(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column);
+				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Text.Replace("{", "{{").Replace("}", "}}"));
 			}
 		}
 
@@ -152,19 +156,24 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 
-			public void Message(MessageSeverity severity, int code, string file, TextLocation location, string message, params object[] args) {
-				WithActualOut(() => _er.Message(severity, code, file, location, message, args));
+			public DomRegion Region {
+				get { return _er.Region; }
+				set { _er.Region = value; }
+			}
+
+			public void Message(MessageSeverity severity, int code, string message, params object[] args) {
+				WithActualOut(() => _er.Message(severity, code, message, args));
 				if (severity == MessageSeverity.Error)
 					HasErrors = true;
 			}
 
-			public void InternalError(string text, string file, TextLocation location) {
-				WithActualOut(() => _er.InternalError(text, file, location));
+			public void InternalError(string text) {
+				WithActualOut(() => _er.InternalError(text));
 				HasErrors = true;
 			}
 
-			public void InternalError(Exception ex, string file, TextLocation location, string additionalText = null) {
-				WithActualOut(() => _er.InternalError(ex, file, location, additionalText));
+			public void InternalError(Exception ex, string additionalText = null) {
+				WithActualOut(() => _er.InternalError(ex, additionalText));
 				HasErrors = true;
 			}
 		}
@@ -182,28 +191,30 @@ namespace Saltarelle.Compiler.Driver {
 					if (er.HasErrors)
 						return false;
 
-					var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
-					var d = new Mono.CSharp.Driver(ctx);
-					d.Compile();
-
-					if (er.HasErrors)
-						return false;
+					if (!options.AlreadyCompiled) {
+						// Compile the assembly
+						var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
+						var d = new Mono.CSharp.Driver(ctx);
+						d.Compile();
+						if (er.HasErrors)
+							return false;
+					}
 
 					// Compile the script
-					var nc = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
+					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 					var n = new DefaultNamer();
 					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(nc, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, nc.GetTypeSemantics(t).Name); });
-					var compiler = new Compiler.Compiler(nc, n, rtl, er);
+					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
+					var compiler = new Compiler.Compiler(md, n, rtl, er);
 
-					var references = LoadReferences(ctx.Settings.AssemblyReferences, er);
+					var references = LoadReferences(settings.AssemblyReferences, er);
 					if (references == null)
 						return false;
 
 					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
-					var js = new ScriptSharpOOPEmulator(nc, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
+					var js = new ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
 					js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
 
 					if (er.HasErrors)
@@ -212,20 +223,24 @@ namespace Saltarelle.Compiler.Driver {
 					string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
 					string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
 
-					try {
-						File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
-					}
-					catch (IOException ex) {
-						er.Message(7950, null, TextLocation.Empty, ex.Message);
-						return false;
-					}
-					if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+					if (!options.AlreadyCompiled) {
 						try {
-							File.Copy(intermediateDocFile, options.DocumentationFile, true);
+							File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 						}
 						catch (IOException ex) {
-							er.Message(7952, null, TextLocation.Empty, ex.Message);
+							er.Region = DomRegion.Empty;
+							er.Message(7950, ex.Message);
 							return false;
+						}
+						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+							try {
+								File.Copy(intermediateDocFile, options.DocumentationFile, true);
+							}
+							catch (IOException ex) {
+								er.Region = DomRegion.Empty;
+								er.Message(7952, ex.Message);
+								return false;
+							}
 						}
 					}
 
@@ -234,18 +249,22 @@ namespace Saltarelle.Compiler.Driver {
 						File.WriteAllText(outputScriptPath, script);
 					}
 					catch (IOException ex) {
-						er.Message(7951, null, TextLocation.Empty, ex.Message);
+						er.Region = DomRegion.Empty;
+						er.Message(7951, ex.Message);
 						return false;
 					}
 					return true;
 				}
 				catch (Exception ex) {
-					er.InternalError(ex.ToString(), DomRegion.Empty);
+					er.Region = DomRegion.Empty;
+					er.InternalError(ex.ToString());
 					return false;
 				}
 				finally {
-					try { File.Delete(intermediateAssemblyFile); } catch {}
-					try { File.Delete(intermediateDocFile); } catch {}
+					if (!options.AlreadyCompiled) {
+						try { File.Delete(intermediateAssemblyFile); } catch {}
+						try { File.Delete(intermediateDocFile); } catch {}
+					}
 				}
 			}
 		}
@@ -282,7 +301,8 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, null, TextLocation.Empty);
+				_errorReporter.Region = new DomRegion();
+				_errorReporter.InternalError(ex);
 				return false;
 			}
 		}
@@ -302,8 +322,9 @@ namespace Saltarelle.Compiler.Driver {
 			var missingReferences = indirectReferences.Except(directReferences).ToList();
 
 			if (missingReferences.Count > 0) {
+				er.Region = DomRegion.Empty;
 				foreach (var r in missingReferences)
-					er.Message(7996, DomRegion.Empty, r);
+					er.Message(7996, r);
 				return null;
 			}
 

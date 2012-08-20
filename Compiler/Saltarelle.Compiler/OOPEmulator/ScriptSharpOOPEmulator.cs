@@ -210,7 +210,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					}
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, t.CSharpTypeDefinition.Region, "Error formatting type " + t.CSharpTypeDefinition.FullName);
+					_errorReporter.Region = t.CSharpTypeDefinition.Region;
+					_errorReporter.InternalError(ex, "Error formatting type " + t.CSharpTypeDefinition.FullName);
 				}
 			}
 
@@ -232,8 +233,9 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                     }
 			                                 }
 			                                 catch (Exception ex) {
-			                                     _errorReporter.InternalError(ex, c.CSharpTypeDefinition.Region, "Error formatting type " + c.CSharpTypeDefinition.FullName);
-												 return JsExpression.Number(0);
+			                                     _errorReporter.Region = c.CSharpTypeDefinition.Region;
+			                                     _errorReporter.InternalError(ex, "Error formatting type " + c.CSharpTypeDefinition.FullName);
+			                                     return JsExpression.Number(0);
 			                                 }
 			                             })
 			                .Select(expr => new JsExpressionStatement(expr)));

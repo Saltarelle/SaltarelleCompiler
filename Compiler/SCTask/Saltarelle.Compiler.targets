@@ -1,137 +1,114 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
+	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
-    <PropertyGroup>
-        <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-        <DefaultLanguageSourceExtension>.cs</DefaultLanguageSourceExtension>
-        <Language>C#</Language>
-		    <EmitDebugInformation>false</EmitDebugInformation>
-    </PropertyGroup>
-	
-  	<PropertyGroup Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'">
-    		<EmitDebugInformation>true</EmitDebugInformation>
-  	</PropertyGroup>
-   
-    <ItemGroup>
-        <DocFileItem Include="$(DocumentationFile)" Condition="'$(DocumentationFile)'!=''"/>
-        <IntermediateScript Include="$(IntermediateOutputPath)$(TargetName).js" Condition="'@(IntermediateScript)'==''"/>
-    </ItemGroup>
+	<UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
 
-    <Target Name="CreateManifestResourceNames" DependsOnTargets="$(CreateManifestResourceNamesDependsOn)">
-    </Target>
+	<ItemGroup>
+		<IntermediateScript Include="$(IntermediateOutputPath)$(TargetName).js" Condition="'@(IntermediateScript)'==''"/>
+	</ItemGroup>
 
-    <Target
-        Name="CoreCompile"
-        Inputs="$(MSBuildAllProjects);
+	<Target Name="AfterCompile" DependsOnTargets="CoreCompile"
+          Inputs="$(MSBuildAllProjects);
                 $(AssemblyOriginatorKeyFile);
                 @(Compile);
                 @(ReferencePath);
                 @(CustomAdditionalCompileInputs)"
-        Outputs="@(DocFileItem);
-                 @(IntermediateScript);
-                 @(IntermediateAssembly);
-                 @(CustomAdditionalCompileOutputs)"
-        Returns=""
-        DependsOnTargets="$(CoreCompileDependsOn)"
-    >
-        <!-- These two compiler warnings are raised when a reference is bound to a different version
-             than specified in the assembly reference version number.  MSBuild raises the same warning in this case,
-             so the compiler warning would be redundant. -->
-        <PropertyGroup Condition="('$(TargetFrameworkVersion)' != 'v1.0') and ('$(TargetFrameworkVersion)' != 'v1.1')">
-            <NoWarn>$(NoWarn);1701;1702</NoWarn>
-        </PropertyGroup>
+          Outputs="@(DocFileItem);
+                   @(IntermediateScript);
+                   @(IntermediateAssembly);
+                   @(CustomAdditionalCompileOutputs)"
+          Returns="">
+		<PropertyGroup>
+			<EmitDebugScript>false</EmitDebugScript>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'">
+			<EmitDebugScript>true</EmitDebugScript>
+		</PropertyGroup>
 
-        <SCTask  AdditionalLibPaths="$(AdditionalLibPaths)"
-                 DefineConstants="$(DefineConstants)"
-                 DisabledWarnings="$(NoWarn)"
-                 DocumentationFile="@(DocFileItem)"
-                 EmitDebugInformation="$(EmitDebugInformation)"
-                 KeyContainer="$(KeyContainerName)"
-                 KeyFile="$(KeyOriginatorFile)"
-                 OutputAssembly="@(IntermediateAssembly)"
-                 OutputScript="@(IntermediateScript)"
-                 References="@(ReferencePath)"
-                 Sources="@(Compile)"
-                 TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
-                 WarningLevel="$(WarningLevel)"
-                 WarningsAsErrors="$(WarningsAsErrors)"
-                 WarningsNotAsErrors="$(WarningsNotAsErrors)"
-                 />            
-                
-        <CallTarget Targets="$(TargetsTriggeredByCompilation)" Condition="'$(TargetsTriggeredByCompilation)' != ''"/>
-    </Target>
+		<SCTask AdditionalLibPaths="$(AdditionalLibPaths)"
+		        DefineConstants="$(DefineConstants)"
+		        DisabledWarnings="$(NoWarn)"
+		        DocumentationFile="@(DocFileItem)"
+		        EmitDebugInformation="$(EmitDebugScript)"
+		        KeyContainer="$(KeyContainerName)"
+		        KeyFile="$(KeyOriginatorFile)"
+		        OutputAssembly="@(IntermediateAssembly)"
+		        OutputScript="@(IntermediateScript)"
+		        References="@(ReferencePath);@(ReferenceDependencyPaths)"
+		        Sources="@(Compile)"
+		        TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
+		        WarningLevel="$(WarningLevel)"
+		        WarningsAsErrors="$(WarningsAsErrors)"
+		        WarningsNotAsErrors="$(WarningsNotAsErrors)"
+		        AlreadyCompiled="true"
+		        />
+  </Target>
 
-    <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
-
-    <Target
-        Name="CopyFilesToOutputDirectory"
-        DependsOnTargets="
-            ComputeIntermediateSatelliteAssemblies;
-            _CopyFilesMarkedCopyLocal;
-            _CopySourceItemsToOutputDirectory;
-            _CopyAppConfigFile;
-            _CopyManifestFiles;
-            _CheckForCompileOutputs;
-            _SGenCheckForOutputs">
-
-        <PropertyGroup>
-            <!-- By default we're not using Hard Links to copy to the output directory, and never when building in VS -->
-            <CreateHardLinksForCopyFilesToOutputDirectoryIfPossible Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)' == ''">false</CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>
-        </PropertyGroup>
-
-        <PropertyGroup>
-          <CopyBuildOutputToOutputDirectory Condition="'$(CopyBuildOutputToOutputDirectory)'==''">true</CopyBuildOutputToOutputDirectory>
-          <CopyOutputSymbolsToOutputDirectory Condition="'$(CopyOutputSymbolsToOutputDirectory)'==''">true</CopyOutputSymbolsToOutputDirectory>
-        </PropertyGroup>
-
-        <!-- Copy the build product (.dll or .exe). -->
-        <Copy
-            SourceFiles="@(IntermediateAssembly)"
-            DestinationFolder="$(OutDir)"
-            SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
-            OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
-            Retries="$(CopyRetryCount)"
-            RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-            UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
-            Condition="'$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)' != 'true'"
-            >
-
-            <Output TaskParameter="DestinationFiles" ItemName="MainAssembly"/>
-            <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
-
-        </Copy>
-
-        <!-- Copy the generated script. -->
-        <Copy
-            SourceFiles="@(IntermediateScript)"
-            DestinationFolder="$(OutDir)"
-            SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
-            OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
-            Retries="$(CopyRetryCount)"
-            RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-            UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
-            Condition="'$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)' != 'true'"
-            >
-
-            <Output TaskParameter="DestinationFiles" ItemName="MainScript"/>
-            <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
-        </Copy>
-
-        <Message Importance="High" Text="$(MSBuildProjectName) -&gt; @(MainAssembly->'%(FullPath)')" Condition="'$(SkipCopyBuildProduct)'!='true'" />
-
-        <!-- Copy the resulting XML documentation file, if any. -->
-        <Copy
-            SourceFiles="@(DocFileItem)"
-            DestinationFiles="@(FinalDocFile)"
-            SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
-            OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
-            Retries="$(CopyRetryCount)"
-            RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-            UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
-            Condition="'$(_DocumentationFileProduced)'=='true'">
-
-            <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
-
-        </Copy>
-    </Target>
+	<Target Name="CopyFilesToOutputDirectory"
+	        DependsOnTargets="
+	             ComputeIntermediateSatelliteAssemblies;
+	             _CopyFilesMarkedCopyLocal;
+	             _CopySourceItemsToOutputDirectory;
+	             _CopyAppConfigFile;
+	             _CopyManifestFiles;
+	             _CheckForCompileOutputs;
+	             _SGenCheckForOutputs">
+	
+		<PropertyGroup>
+			<!-- By default we're not using Hard Links to copy to the output directory, and never when building in VS -->
+			<CreateHardLinksForCopyFilesToOutputDirectoryIfPossible Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)' == ''">false</CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>
+		</PropertyGroup>
+	
+		<PropertyGroup>
+			<CopyBuildOutputToOutputDirectory Condition="'$(CopyBuildOutputToOutputDirectory)'==''">true</CopyBuildOutputToOutputDirectory>
+			<CopyOutputSymbolsToOutputDirectory Condition="'$(CopyOutputSymbolsToOutputDirectory)'==''">true</CopyOutputSymbolsToOutputDirectory>
+		</PropertyGroup>
+	
+		<!-- Copy the build product (.dll or .exe). -->
+		<Copy SourceFiles="@(IntermediateAssembly)"
+		      DestinationFolder="$(OutDir)"
+		      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+		      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+		      Retries="$(CopyRetryCount)"
+		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+		      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
+		      Condition="'$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)' != 'true'"
+		      >
+	
+			<Output TaskParameter="DestinationFiles" ItemName="MainAssembly"/>
+			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+	
+		</Copy>
+	
+		<!-- Copy the generated script. -->
+		<Copy SourceFiles="@(IntermediateScript)"
+		      DestinationFolder="$(OutDir)"
+		      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+		      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+		      Retries="$(CopyRetryCount)"
+		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+		      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
+		      Condition="'$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)' != 'true'"
+		      >
+		
+			<Output TaskParameter="DestinationFiles" ItemName="MainScript"/>
+			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+		</Copy>
+	
+	    <Message Importance="High" Text="$(MSBuildProjectName) -&gt; @(MainAssembly->'%(FullPath)')" Condition="'$(SkipCopyBuildProduct)'!='true'" />
+	
+		<!-- Copy the resulting XML documentation file, if any. -->
+		<Copy SourceFiles="@(DocFileItem)"
+		      DestinationFiles="@(FinalDocFile)"
+		      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+		      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+		      Retries="$(CopyRetryCount)"
+		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+		      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
+		      Condition="'$(_DocumentationFileProduced)'=='true'">
+	
+			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+	
+		</Copy>
+	</Target>
 </Project>

@@ -326,7 +326,7 @@ public void M() {
 	Action c = a + b;
 	// END
 }",
-@"	var $c = {Delegate}.$Combine($a, $b);
+@"	var $c = {sm_Delegate}.$Combine($a, $b);
 ");
 		}
 
@@ -340,7 +340,7 @@ public void M() {
 	Action c = a - b;
 	// END
 }",
-@"	var $c = {Delegate}.$Remove($a, $b);
+@"	var $c = {sm_Delegate}.$Remove($a, $b);
 ");
 		}
 
@@ -513,7 +513,7 @@ public void M() {
 	bool b = o1 == o2;
 	// END
 }",
-@"	var $b = $ReferenceEquals($Upcast($o1, {Object}), $Upcast($o2, {Object}));
+@"	var $b = $ReferenceEquals($Upcast($o1, {ct_Object}), $Upcast($o2, {ct_Object}));
 ");
 		}
 
@@ -537,7 +537,7 @@ public void M() {
 	bool b = o1 != o2;
 	// END
 }",
-@"	var $b = $ReferenceNotEquals($Upcast($o1, {Object}), $Upcast($o2, {Object}));
+@"	var $b = $ReferenceNotEquals($Upcast($o1, {ct_Object}), $Upcast($o2, {ct_Object}));
 ");
 		}
 	}

@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Compiler {
         private Dictionary<ITypeDefinition, JsClass> _types;
         private HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>> _constructorDeclarations;
         private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
-		private TextLocation _location;
+		private AstNode _currentNode;
 		private ISet<string> _definedSymbols;
 
         public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
@@ -72,8 +72,12 @@ namespace Saltarelle.Compiler.Compiler {
                 if (semantics.GenerateCode) {
 					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _metadataImporter).ToList();
 					if (unusableTypes.Count > 0) {
-						foreach (var ut in unusableTypes)
-							_errorReporter.Message(7500, typeDefinition.Region, ut.FullName, typeDefinition.FullName);
+						foreach (var ut in unusableTypes) {
+							var oldRegion = _errorReporter.Region;
+							_errorReporter.Region = typeDefinition.Region;
+							_errorReporter.Message(7500, ut.FullName, typeDefinition.FullName);
+							_errorReporter.Region = oldRegion;
+						}
 
 						result = new JsClass(typeDefinition, "X", ConvertClassType(typeDefinition.Kind), new string[0], null, null);
 					}
@@ -123,7 +127,8 @@ namespace Saltarelle.Compiler.Compiler {
 					}
                 }
                 else {
-                    _errorReporter.InternalError("Enum field " + type.FullName + "." + f.Name + " is not a DefaultResolvedField", f.Region);
+					_errorReporter.Region = f.Region;
+                    _errorReporter.InternalError("Enum field " + type.FullName + "." + f.Name + " is not a DefaultResolvedField");
                 }
             }
 
@@ -196,7 +201,8 @@ namespace Saltarelle.Compiler.Compiler {
 			        f.SyntaxTree.AcceptVisitor(this);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, f.ParsedFile.FileName, _location);
+					_errorReporter.Region = _currentNode.GetRegion();
+					_errorReporter.InternalError(ex);
 				}
             }
 
@@ -210,7 +216,8 @@ namespace Saltarelle.Compiler.Compiler {
 					HandleConstructorDeclaration(n.Item1);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, n.Item1.GetRegion());
+					_errorReporter.Region = n.Item1.GetRegion();
+					_errorReporter.InternalError(ex);
 				}
 			}
 
@@ -220,7 +227,8 @@ namespace Saltarelle.Compiler.Compiler {
 					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, toAdd.c.Region, "Error adding default constructor to type");
+					_errorReporter.Region = toAdd.c.Region;
+					_errorReporter.InternalError(ex, "Error adding default constructor to type");
 				}
 			}
 
@@ -232,7 +240,8 @@ namespace Saltarelle.Compiler.Compiler {
 					enums.Add(ConvertEnum(e.GetDefinition()));
 				}
 				catch (Exception ex) {
-					_errorReporter.InternalError(ex, e.GetDefinition().Region);
+					_errorReporter.Region = e.GetDefinition().Region;
+					_errorReporter.InternalError(ex);
 				}
 			}
 
@@ -271,7 +280,8 @@ namespace Saltarelle.Compiler.Compiler {
             switch (options.Type) {
                 case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
                     if (jsClass.UnnamedConstructor != null) {
-                        _errorReporter.Message(7501, constructor.Region, constructor.DeclaringType.FullName);
+						_errorReporter.Region = constructor.Region;
+                        _errorReporter.Message(7501, constructor.DeclaringType.FullName);
                     }
                     else {
                         jsClass.UnnamedConstructor = jsConstructor;
@@ -337,19 +347,19 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region.FileName, member.Region.Begin, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), fieldType));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), fieldType));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region.FileName, member.Region.Begin, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
             }
         }
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.Instantiation), fieldName), initializer));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), initializer));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion().FileName, initializer.StartLocation, JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
             }
         }
 
@@ -359,7 +369,7 @@ namespace Saltarelle.Compiler.Compiler {
 				// Store next to allow the loop to continue
 				// if the visitor removes/replaces child.
 				next = child.NextSibling;
-				_location = child.StartLocation;
+				_currentNode = child;
 				child.AcceptVisitor (this);
 			}
 		}
@@ -368,7 +378,8 @@ namespace Saltarelle.Compiler.Compiler {
             if (typeDeclaration.ClassType == ClassType.Class || typeDeclaration.ClassType == ClassType.Interface || typeDeclaration.ClassType == ClassType.Struct) {
                 var resolveResult = _resolver.Resolve(typeDeclaration);
                 if (!(resolveResult is TypeResolveResult)) {
-                    _errorReporter.InternalError("Type declaration " + typeDeclaration.Name + " does not resolve to a type.", typeDeclaration.GetRegion());
+					_errorReporter.Region = typeDeclaration.GetRegion();
+                    _errorReporter.InternalError("Type declaration " + typeDeclaration.Name + " does not resolve to a type.");
                     return;
                 }
                 GetJsClass(resolveResult.Type.GetDefinition());
@@ -380,12 +391,14 @@ namespace Saltarelle.Compiler.Compiler {
         public override void VisitMethodDeclaration(MethodDeclaration methodDeclaration) {
             var resolveResult = _resolver.Resolve(methodDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
-                _errorReporter.InternalError("Method declaration " + methodDeclaration.Name + " does not resolve to a member.", methodDeclaration.GetRegion());
+				_errorReporter.Region = methodDeclaration.GetRegion();
+                _errorReporter.InternalError("Method declaration " + methodDeclaration.Name + " does not resolve to a member.");
                 return;
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
-                _errorReporter.InternalError("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")", methodDeclaration.GetRegion());
+				_errorReporter.Region = methodDeclaration.GetRegion();
+                _errorReporter.InternalError("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
                 return;
             }
 
@@ -401,12 +414,14 @@ namespace Saltarelle.Compiler.Compiler {
         public override void VisitOperatorDeclaration(OperatorDeclaration operatorDeclaration) {
             var resolveResult = _resolver.Resolve(operatorDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
-                _errorReporter.InternalError("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a member.", operatorDeclaration.GetRegion());
+				_errorReporter.Region = operatorDeclaration.GetRegion();
+                _errorReporter.InternalError("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a member.");
                 return;
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
-                _errorReporter.InternalError("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")", operatorDeclaration.GetRegion());
+				_errorReporter.Region = operatorDeclaration.GetRegion();
+                _errorReporter.InternalError("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
                 return;
             }
 
@@ -420,12 +435,14 @@ namespace Saltarelle.Compiler.Compiler {
         private void HandleConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
             var resolveResult = _resolver.Resolve(constructorDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
-                _errorReporter.InternalError("Method declaration " + constructorDeclaration.Name + " does not resolve to a member.", constructorDeclaration.GetRegion());
+				_errorReporter.Region = constructorDeclaration.GetRegion();
+                _errorReporter.InternalError("Method declaration " + constructorDeclaration.Name + " does not resolve to a member.");
                 return;
             }
             var method = ((MemberResolveResult)resolveResult).Member as IMethod;
             if (method == null) {
-                _errorReporter.InternalError("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")", constructorDeclaration.GetRegion());
+				_errorReporter.Region = constructorDeclaration.GetRegion();
+                _errorReporter.InternalError("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
                 return;
             }
 
@@ -449,13 +466,15 @@ namespace Saltarelle.Compiler.Compiler {
         public override void VisitPropertyDeclaration(PropertyDeclaration propertyDeclaration) {
             var resolveResult = _resolver.Resolve(propertyDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
-                _errorReporter.InternalError("Property declaration " + propertyDeclaration.Name + " does not resolve to a member.", propertyDeclaration.GetRegion());
+				_errorReporter.Region = propertyDeclaration.GetRegion();
+                _errorReporter.InternalError("Property declaration " + propertyDeclaration.Name + " does not resolve to a member.");
                 return;
             }
 
             var property = ((MemberResolveResult)resolveResult).Member as IProperty;
             if (property == null) {
-                _errorReporter.InternalError("Property declaration " + propertyDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")", propertyDeclaration.GetRegion());
+				_errorReporter.Region = propertyDeclaration.GetRegion();
+                _errorReporter.InternalError("Property declaration " + propertyDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
                 return;
             }
 
@@ -503,13 +522,15 @@ namespace Saltarelle.Compiler.Compiler {
             foreach (var singleEvt in eventDeclaration.Variables) {
                 var resolveResult = _resolver.Resolve(singleEvt);
                 if (!(resolveResult is MemberResolveResult)) {
-                    _errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to a member.", eventDeclaration.GetRegion());
+					_errorReporter.Region = eventDeclaration.GetRegion();
+                    _errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to a member.");
                     return;
                 }
 
                 var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
                 if (evt == null) {
-                    _errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")", eventDeclaration.GetRegion());
+					_errorReporter.Region = eventDeclaration.GetRegion();
+                    _errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
                     return;
                 }
 
@@ -556,13 +577,15 @@ namespace Saltarelle.Compiler.Compiler {
         public override void VisitCustomEventDeclaration(CustomEventDeclaration eventDeclaration) {
             var resolveResult = _resolver.Resolve(eventDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
-                _errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to a member.", eventDeclaration.GetRegion());
+				_errorReporter.Region = eventDeclaration.GetRegion();
+                _errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to a member.");
                 return;
             }
 
             var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
             if (evt == null) {
-                _errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")", eventDeclaration.GetRegion());
+				_errorReporter.Region = eventDeclaration.GetRegion();
+                _errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
                 return;
             }
 
@@ -596,13 +619,15 @@ namespace Saltarelle.Compiler.Compiler {
             foreach (var v in fieldDeclaration.Variables) {
                 var resolveResult = _resolver.Resolve(v);
                 if (!(resolveResult is MemberResolveResult)) {
-                    _errorReporter.InternalError("Field declaration " + v.Name + " does not resolve to a member.", fieldDeclaration.GetRegion());
+					_errorReporter.Region = fieldDeclaration.GetRegion();
+                    _errorReporter.InternalError("Field declaration " + v.Name + " does not resolve to a member.");
                     return;
                 }
 
                 var field = ((MemberResolveResult)resolveResult).Member as IField;
                 if (field == null) {
-                    _errorReporter.InternalError("Field declaration " + v.Name + " does not resolve to a field (resolves to " + resolveResult.ToString() + ")", fieldDeclaration.GetRegion());
+					_errorReporter.Region = fieldDeclaration.GetRegion();
+                    _errorReporter.InternalError("Field declaration " + v.Name + " does not resolve to a field (resolves to " + resolveResult.ToString() + ")");
                     return;
                 }
 
@@ -625,13 +650,15 @@ namespace Saltarelle.Compiler.Compiler {
         public override void VisitIndexerDeclaration(IndexerDeclaration indexerDeclaration) {
             var resolveResult = _resolver.Resolve(indexerDeclaration);
             if (!(resolveResult is MemberResolveResult)) {
-                _errorReporter.InternalError("Event declaration " + indexerDeclaration.Name + " does not resolve to a member.", indexerDeclaration.GetRegion());
+				_errorReporter.Region = indexerDeclaration.GetRegion();
+                _errorReporter.InternalError("Event declaration " + indexerDeclaration.Name + " does not resolve to a member.");
                 return;
             }
 
             var prop = ((MemberResolveResult)resolveResult).Member as IProperty;
             if (prop == null) {
-                _errorReporter.InternalError("Event declaration " + indexerDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")", indexerDeclaration.GetRegion());
+				_errorReporter.Region = indexerDeclaration.GetRegion();
+                _errorReporter.InternalError("Event declaration " + indexerDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
                 return;
             }
 

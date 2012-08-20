@@ -42,7 +42,7 @@ public void M() {
 	f = F;
 	// END
 }",
-@"	$f = {C}.$F;
+@"	$f = {sm_C}.$F;
 ");
 		}
 
@@ -105,7 +105,7 @@ public void M() {
 	f = F<int>;
 	// END
 }",
-@"	$f = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
+@"	$f = $Bind($InstantiateGenericMethod(this.$F, {ga_Int32}), this);
 ");
 		}
 
@@ -119,7 +119,7 @@ public void M() {
 	f = F;
 	// END
 }",
-@"	$f = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
+@"	$f = $Bind($InstantiateGenericMethod(this.$F, {ga_Int32}), this);
 ");
 		}
 
@@ -148,7 +148,7 @@ public void M() {
 	f = F<int>;
 	// END
 }",
-@"	$f = $InstantiateGenericMethod({C}.$F, {Int32});
+@"	$f = $InstantiateGenericMethod({sm_C}.$F, {ga_Int32});
 ");
 		}
 
@@ -178,7 +178,7 @@ class D : B {
 }
 ",
 @"	$a = $Bind(this.$F, this);
-	$a = $BindBaseCall({B}, '$F', [], this);
+	$a = $BindBaseCall({bind_B}, '$F', [], this);
 ", addSkeleton: false);
 		}
 
@@ -200,7 +200,7 @@ class D : B<string> {
 }
 ",
 @"	$a = $Bind(this.$F, this);
-	$a = $BindBaseCall($InstantiateGenericType({B}, {String}), '$F', [], this);
+	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, {ga_String}), '$F', [], this);
 ", addSkeleton: false);
 		}
 
@@ -222,7 +222,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	$a = $Bind(this.$F, this);
-	$a = $BindBaseCall($InstantiateGenericType({B}, $T2), '$F', [], this);
+	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [], this);
 ", addSkeleton: false);
 		}
 
@@ -243,8 +243,8 @@ class D : B {
 	}
 }
 ",
-@"	$a = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
-	$a = $BindBaseCall({B}, '$F', [{Int32}], this);
+@"	$a = $Bind($InstantiateGenericMethod(this.$F, {ga_Int32}), this);
+	$a = $BindBaseCall({bind_B}, '$F', [{ga_Int32}], this);
 ", addSkeleton: false);
 		}
 
@@ -265,8 +265,8 @@ class D<T2> : B<T2> {
 	}
 }
 ",
-@"	$a = $Bind($InstantiateGenericMethod(this.$F, {Int32}), this);
-	$a = $BindBaseCall($InstantiateGenericType({B}, $T2), '$F', [{Int32}], this);
+@"	$a = $Bind($InstantiateGenericMethod(this.$F, {ga_Int32}), this);
+	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [{ga_Int32}], this);
 ", addSkeleton: false);
 		}
 
@@ -291,7 +291,7 @@ class D2 : D {
 }
 ",
 @"	$a = $Bind(this.$F, this);
-	$a = $BindBaseCall({B}, '$F', [], this);
+	$a = $BindBaseCall({bind_B}, '$F', [], this);
 ", addSkeleton: false);
 		}
 
@@ -317,7 +317,7 @@ class D2 : D {
 }
 ",
 @"	$a = $Bind(this.$F, this);
-	$a = $BindBaseCall({D}, '$F', [], this);
+	$a = $BindBaseCall({bind_D}, '$F', [], this);
 ", addSkeleton: false);
 		}
 

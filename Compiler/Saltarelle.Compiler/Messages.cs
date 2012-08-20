@@ -14,8 +14,8 @@ namespace Saltarelle.Compiler {
 			{ 7005, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it contains members that are not const fields.") },
 			{ 7006, Tuple.Create(MessageSeverity.Error, "{0}: The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.") },
 			{ 7007, Tuple.Create(MessageSeverity.Error, "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type {0}.") },
-			{ 7008, Tuple.Create(MessageSeverity.Error, "The serializable type {0} must be sealed.") },
-			{ 7009, Tuple.Create(MessageSeverity.Error, "The serializable type {0} must inherit from either System.Object or System.Record.") },
+			{ 7008, Tuple.Create(MessageSeverity.Error, "The non-serializable type {0} cannot inherit from the serializable type {1}.") },
+			{ 7009, Tuple.Create(MessageSeverity.Error, "The serializable type {0} must inherit from another serializable type, System.Object or System.Record.") },
 			{ 7010, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot implement interfaces.") },
 			{ 7011, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare instance events.") },
 			{ 7012, Tuple.Create(MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [MixinAttribute]") },
@@ -29,6 +29,8 @@ namespace Saltarelle.Compiler {
 			{ 7020, Tuple.Create(MessageSeverity.Error, "Method {0}: Methods decorated with a [TestAttribute] or [AsyncTestAttribute] must be public, non-generic, parameterless instance methods that return void.") },
 			{ 7021, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have both an [AsyncTestAttribute] and a [TestAttribute].") },
 			{ 7022, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [AsyncTestAttribute] or a [TestAttribute] because its declaring class does not have a [TestFixtureAttribute].") },
+			{ 7023, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.") },
+			{ 7024, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot override the member {1}.") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
 			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },
@@ -110,6 +112,9 @@ namespace Saltarelle.Compiler {
 			{ 7529, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because all the applicable methods do not have the same script name. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
 			{ 7530, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because at least one of the applicable methods is not a normal method. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
 			{ 7531, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.") },
+			{ 7532, Tuple.Create(MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.") },
+
+			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
 
 			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },

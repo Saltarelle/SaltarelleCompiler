@@ -365,4 +365,22 @@ namespace System.Runtime.CompilerServices {
 	[Imported]
 	public sealed class ObjectLiteralAttribute : Attribute {
 	}
+
+	/// <summary>
+	/// This attribute can be specified on an assembly to specify additional compatibility options to help migrating from Script#.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptSharpCompatibilityAttribute : Attribute {
+		/// <summary>
+		/// If true, code will not be generated for casts of type '(MyClass)someValue'. Code will still be generated for 'someValue is MyClass' and 'someValue as MyClass'.
+		/// </summary>
+		public bool OmitDowncasts { get; set; }
+
+		/// <summary>
+		/// If true, code will not be generated to verify that a nullable value is not null before converting it to its underlying type.
+		/// </summary>
+		public bool OmitNullableChecks { get; set; }
+	}
 }

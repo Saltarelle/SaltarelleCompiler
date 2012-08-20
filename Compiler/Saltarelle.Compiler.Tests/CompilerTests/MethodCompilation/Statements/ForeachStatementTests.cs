@@ -155,7 +155,7 @@ public void M() {
 		}
 	}
 	finally {
-		$Upcast($tmp1, {IDisposable}).$Dispose();
+		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
 	}
 ");
 		}
@@ -189,7 +189,7 @@ public void M() {
 		}
 	}
 	finally {
-		$Upcast($tmp1, {IDisposable}).$Dispose();
+		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
 	}
 ");
 		}
@@ -222,8 +222,8 @@ public void M() {
 		}
 	}
 	finally {
-		if ($TypeIs($tmp1, {IDisposable})) {
-			$Cast($tmp1, {IDisposable}).$Dispose();
+		if ($TypeIs($tmp1, {ct_IDisposable})) {
+			$Cast($tmp1, {ct_IDisposable}).$Dispose();
 		}
 	}
 ");
