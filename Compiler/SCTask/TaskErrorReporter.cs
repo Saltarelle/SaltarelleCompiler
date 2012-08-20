@@ -11,21 +11,23 @@ namespace Saltarelle.Compiler.SCTask {
 			_log = log;
 		}
 
-		public void Message(MessageSeverity severity, int code, DomRegion region, string message, params object[] args) {
+		public DomRegion Region { get; set; }
+
+		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
 			if (severity == MessageSeverity.Error) {
-				_log.LogError(null, string.Format("CS{0:0000}", code), null, region.FileName, region.BeginLine, region.BeginColumn, region.EndLine, region.EndColumn, message, args);
+				_log.LogError(null, string.Format("CS{0:0000}", code), null, Region.FileName, Region.BeginLine, Region.BeginColumn, Region.EndLine, Region.EndColumn, message, args);
 			}
 			else {
-				_log.LogWarning(null, string.Format("CS{0:0000}", code), null, region.FileName, region.BeginLine, region.BeginColumn, region.EndLine, region.EndColumn, message, args);
+				_log.LogWarning(null, string.Format("CS{0:0000}", code), null, Region.FileName, Region.BeginLine, Region.BeginColumn, Region.EndLine, Region.EndColumn, message, args);
 			}
 		}
 
-		public void InternalError(string text, DomRegion region) {
-			this.Message(7999, region, text);
+		public void InternalError(string text) {
+			this.Message(7999, text);
 		}
 
-		public void InternalError(Exception ex, DomRegion region, string additionalText = null) {
-			this.Message(7999, region, (additionalText != null ? additionalText + ": " : "") + ex.ToString());
+		public void InternalError(Exception ex, string additionalText = null) {
+			this.Message(7999, (additionalText != null ? additionalText + ": " : "") + ex.ToString());
 		}
 	}
 }

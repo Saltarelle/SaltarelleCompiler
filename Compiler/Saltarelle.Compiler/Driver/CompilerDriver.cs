@@ -53,7 +53,8 @@ namespace Saltarelle.Compiler.Driver {
 
 				return Path.GetFullPath(file);
 			}
-			er.Message(7997, new DomRegion(), filename);
+			er.Region = DomRegion.Empty;
+			er.Message(7997, filename);
 			return null;
 		}
 
@@ -95,8 +96,10 @@ namespace Saltarelle.Compiler.Driver {
 			foreach (var w in options.WarningsNotAsErrors)
 				result.AddWarningOnly(w);
 
-			if (result.AssemblyReferencesAliases.Count > 0)	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
-				er.Message(7998, new DomRegion(), "aliased reference");
+			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
+				er.Region = DomRegion.Empty;
+				er.Message(7998, "aliased reference");
+			}
 
 			return result;
 		}
@@ -110,7 +113,8 @@ namespace Saltarelle.Compiler.Driver {
 
 			public override void Print(AbstractMessage msg, bool showFullPath) {
 				base.Print(msg, showFullPath);
-				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, new DomRegion(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column), msg.Text.Replace("{", "{{").Replace("}", "}}"));
+				_errorReporter.Region = new DomRegion(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column);
+				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Text.Replace("{", "{{").Replace("}", "}}"));
 			}
 		}
 
@@ -152,19 +156,24 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 
-			public void Message(MessageSeverity severity, int code, DomRegion region, string message, params object[] args) {
-				WithActualOut(() => _er.Message(severity, code, region, message, args));
+			public DomRegion Region {
+				get { return _er.Region; }
+				set { _er.Region = value; }
+			}
+
+			public void Message(MessageSeverity severity, int code, string message, params object[] args) {
+				WithActualOut(() => _er.Message(severity, code, message, args));
 				if (severity == MessageSeverity.Error)
 					HasErrors = true;
 			}
 
-			public void InternalError(string text, DomRegion region) {
-				WithActualOut(() => _er.InternalError(text, region));
+			public void InternalError(string text) {
+				WithActualOut(() => _er.InternalError(text));
 				HasErrors = true;
 			}
 
-			public void InternalError(Exception ex, DomRegion region, string additionalText = null) {
-				WithActualOut(() => _er.InternalError(ex, region, additionalText));
+			public void InternalError(Exception ex, string additionalText = null) {
+				WithActualOut(() => _er.InternalError(ex, additionalText));
 				HasErrors = true;
 			}
 		}
@@ -219,7 +228,8 @@ namespace Saltarelle.Compiler.Driver {
 							File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 						}
 						catch (IOException ex) {
-							er.Message(7950, new DomRegion(), ex.Message);
+							er.Region = DomRegion.Empty;
+							er.Message(7950, ex.Message);
 							return false;
 						}
 						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
@@ -227,7 +237,8 @@ namespace Saltarelle.Compiler.Driver {
 								File.Copy(intermediateDocFile, options.DocumentationFile, true);
 							}
 							catch (IOException ex) {
-								er.Message(7952, new DomRegion(), ex.Message);
+								er.Region = DomRegion.Empty;
+								er.Message(7952, ex.Message);
 								return false;
 							}
 						}
@@ -238,13 +249,15 @@ namespace Saltarelle.Compiler.Driver {
 						File.WriteAllText(outputScriptPath, script);
 					}
 					catch (IOException ex) {
-						er.Message(7951, new DomRegion(), ex.Message);
+						er.Region = DomRegion.Empty;
+						er.Message(7951, ex.Message);
 						return false;
 					}
 					return true;
 				}
 				catch (Exception ex) {
-					er.InternalError(ex.ToString(), DomRegion.Empty);
+					er.Region = DomRegion.Empty;
+					er.InternalError(ex.ToString());
 					return false;
 				}
 				finally {
@@ -288,7 +301,8 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, new DomRegion());
+				_errorReporter.Region = new DomRegion();
+				_errorReporter.InternalError(ex);
 				return false;
 			}
 		}
@@ -308,8 +322,9 @@ namespace Saltarelle.Compiler.Driver {
 			var missingReferences = indirectReferences.Except(directReferences).ToList();
 
 			if (missingReferences.Count > 0) {
+				er.Region = DomRegion.Empty;
 				foreach (var r in missingReferences)
-					er.Message(7996, DomRegion.Empty, r);
+					er.Message(7996, r);
 				return null;
 			}
 

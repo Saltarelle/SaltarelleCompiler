@@ -65,8 +65,13 @@ namespace Saltarelle.Compiler.Compiler {
 			_result                     = new List<JsStatement>();
 		}
 
+		private void SetRegion(DomRegion region) {
+			_region = region;
+			_errorReporter.Region = region;
+		}
+
 		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body) {
-			_region = body.GetRegion();
+			SetRegion(body.GetRegion());
 			try {
 				_result = MethodCompiler.FixByRefParameters(parameters, variables);
 				VisitChildren(body);
@@ -78,13 +83,13 @@ namespace Saltarelle.Compiler.Compiler {
 	            return JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), jsbody);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, _region);
+				_errorReporter.InternalError(ex);
 	            return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement); 
 			}
 		}
 
 		public JsBlockStatement Compile(Statement statement) {
-			_region = statement.GetRegion();
+			SetRegion(statement.GetRegion());
 			try {
 				_result = new List<JsStatement>();
 				statement.AcceptVisitor(this);
@@ -94,72 +99,78 @@ namespace Saltarelle.Compiler.Compiler {
 					return new JsBlockStatement(_result);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, _region);
+				_errorReporter.InternalError(ex);
 				return new JsBlockStatement();
 			}
 		}
 
 		public IList<JsStatement> CompileConstructorInitializer(ConstructorInitializer initializer, bool currentIsStaticMethod) {
+			SetRegion(initializer.GetRegion());
 			try {
 				var rr = _resolver.Resolve(initializer);
 				if (rr is DynamicInvocationResolveResult) {
-					_errorReporter.Message(7998, _region, initializer.ConstructorInitializerType == ConstructorInitializerType.Base ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
+					_errorReporter.Message(7998, initializer.ConstructorInitializerType == ConstructorInitializerType.Base ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
 					return new JsStatement[0];
 				}
 				else {
 					var csirr = (CSharpInvocationResolveResult)rr;
-					return _expressionCompiler.CompileConstructorInitializer(initializer.GetRegion(), (IMethod)csirr.Member, csirr.GetArgumentsForCall(), csirr.GetArgumentToParameterMap(), csirr.InitializerStatements, currentIsStaticMethod, csirr.IsExpandedForm);
+					return _expressionCompiler.CompileConstructorInitializer((IMethod)csirr.Member, csirr.GetArgumentsForCall(), csirr.GetArgumentToParameterMap(), csirr.InitializerStatements, currentIsStaticMethod, csirr.IsExpandedForm);
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, initializer.GetRegion());
+				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
 		}
 
-		public IList<JsStatement> CompileImplicitBaseConstructorCall(DomRegion region, IType type, bool currentIsStaticMethod) {
+		public IList<JsStatement> CompileImplicitBaseConstructorCall(ITypeDefinition type, bool currentIsStaticMethod) {
+			SetRegion(type.Region);
 			try {
 				var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
-				return _expressionCompiler.CompileConstructorInitializer(region, baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod, false);
+				return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod, false);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, region);
+				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
 		}
 
         public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
+			SetRegion(region);
 			try {
-	            var result = _expressionCompiler.Compile(region, ResolveWithConversion(expression), true);
+	            var result = _expressionCompiler.Compile(ResolveWithConversion(expression), true);
 		        return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, region);
+				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
         }
 
 		public JsExpression CompileDelegateCombineCall(DomRegion region, JsExpression a, JsExpression b) {
+			SetRegion(region);
 			try {
-				return _expressionCompiler.CompileDelegateCombineCall(region, a, b);
+				return _expressionCompiler.CompileDelegateCombineCall(a, b);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, region);
+				_errorReporter.InternalError(ex);
 				return JsExpression.Number(0);
 			}
 		}
 
 		public JsExpression CompileDelegateRemoveCall(DomRegion region, JsExpression a, JsExpression b) {
+			SetRegion(region);
 			try {
-				return _expressionCompiler.CompileDelegateRemoveCall(region, a, b);
+				return _expressionCompiler.CompileDelegateRemoveCall(a, b);
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, region);
+				_errorReporter.InternalError(ex);
 				return JsExpression.Number(0);
 			}
 		}
 
 		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
+			SetRegion(region);
 			try {
 				JsExpression value;
 				if (type.IsReferenceType == true) {
@@ -187,7 +198,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
 			}
 			catch (Exception ex) {
-				_errorReporter.InternalError(ex, region);
+				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
 		}
@@ -213,7 +224,14 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {
-			return _expressionCompiler.Compile(expr.GetRegion(), ResolveWithConversion(expr), returnValueIsImportant);
+			var oldRegion = _errorReporter.Region;
+			try {
+				_errorReporter.Region = expr.GetRegion();
+				return _expressionCompiler.Compile(ResolveWithConversion(expr), returnValueIsImportant);
+			}
+			finally {
+				_errorReporter.Region = oldRegion;
+			}
 		}
 
 		protected override void VisitChildren(AstNode node) {
@@ -231,7 +249,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_result[index] = new JsLabelledStatement(name, _result[index]);
 				}
 				else {
-					_region = new DomRegion(_region.FileName, child.StartLocation, child.EndLocation);
+					SetRegion(child.GetRegion());
 					child.AcceptVisitor(this);
 				}
 			}
@@ -270,13 +288,15 @@ namespace Saltarelle.Compiler.Compiler {
 		public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
 			var declarations = new List<JsVariableDeclaration>();
 			foreach (var d in variableDeclarationStatement.Variables) {
+				SetRegion(d.GetRegion());
 				var variable = ((LocalResolveResult)_resolver.Resolve(d)).Variable;
 				var data = _variables[variable];
 				JsExpression jsInitializer;
 				if (!d.Initializer.IsNull) {
 					var initializer = ResolveWithConversion(d.Initializer);
 
-					var exprCompileResult = _expressionCompiler.Compile(d.Initializer.GetRegion(), initializer, true);
+					SetRegion(d.Initializer.GetRegion());
+					var exprCompileResult = _expressionCompiler.Compile(initializer, true);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
 						if (declarations.Count > 0) {
 							_result.Add(new JsVariableDeclarationStatement(declarations));
@@ -318,7 +338,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			var compiled = _expressionCompiler.Compile(expressionStatement.GetRegion(), resolveResult, false);
+			var compiled = _expressionCompiler.Compile(resolveResult, false);
 			_result.AddRange(compiled.AdditionalStatements);
 			_result.Add(new JsExpressionStatement(compiled.Expression));
 		}
@@ -485,7 +505,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
 			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
 			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
-				var arrayResult = _expressionCompiler.Compile(foreachStatement.GetRegion(), ResolveWithConversion(foreachStatement.InExpression), true);
+				var arrayResult = CompileExpression(foreachStatement.InExpression, true);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;
 				if (ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(array)) {
@@ -496,12 +516,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var length = systemArray.GetProperties().SingleOrDefault(p => p.Name == "Length");
 				if (length == null) {
-					_errorReporter.InternalError("Property Array.Length not found.", foreachStatement.GetRegion());
+					_errorReporter.InternalError("Property Array.Length not found.");
 					return;
 				}
 				var lengthSem = _metadataImporter.GetPropertySemantics(length);
 				if (lengthSem.Type != PropertyScriptSemantics.ImplType.Field) {
-					_errorReporter.InternalError("Property Array.Length is not implemented as a field.", foreachStatement.GetRegion());
+					_errorReporter.InternalError("Property Array.Length is not implemented as a field.");
 					return;
 				}
 
@@ -516,16 +536,16 @@ namespace Saltarelle.Compiler.Compiler {
 											   new JsBlockStatement(body)));
 			}
 			else {
-				var getEnumeratorCall = _expressionCompiler.Compile(foreachStatement.GetRegion(), ferr.GetEnumeratorCall, true);
+				var getEnumeratorCall = _expressionCompiler.Compile(ferr.GetEnumeratorCall, true);
 				_result.AddRange(getEnumeratorCall.AdditionalStatements);
 				var enumerator = CreateTemporaryVariable(ferr.EnumeratorType, foreachStatement.GetRegion());
 				_result.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[enumerator].Name, getEnumeratorCall.Expression)));
 
-				var moveNextInvocation = _expressionCompiler.Compile(foreachStatement.GetRegion(), new CSharpInvocationResolveResult(new LocalResolveResult(enumerator), ferr.MoveNextMethod, new ResolveResult[0]), true);
+				var moveNextInvocation = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new LocalResolveResult(enumerator), ferr.MoveNextMethod, new ResolveResult[0]), true);
 				if (moveNextInvocation.AdditionalStatements.Count > 0)
-					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.", foreachStatement.GetRegion());
+					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.");
 
-				var getCurrent = _expressionCompiler.Compile(foreachStatement.GetRegion(), new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
+				var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
 				var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrent.Expression)) }).ToList();
 				var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
 
@@ -539,9 +559,9 @@ namespace Saltarelle.Compiler.Compiler {
 				var disposableConversion = conversions.ImplicitConversion(enumerator.Type, systemIDisposable);
 				if (disposableConversion.IsValid) {
 					// If the enumerator is implicitly convertible to IDisposable, we should dispose it.
-					var compileResult = _expressionCompiler.Compile(foreachStatement.GetRegion(), new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), disposableConversion), disposeMethod, new ResolveResult[0]), false);
+					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), disposableConversion), disposeMethod, new ResolveResult[0]), false);
 					if (compileResult.AdditionalStatements.Count != 0)
-						_errorReporter.InternalError("Call to IDisposable.Dispose must not return additional statements.", foreachStatement.GetRegion());
+						_errorReporter.InternalError("Call to IDisposable.Dispose must not return additional statements.");
 					disposer = new JsExpressionStatement(compileResult.Expression);
 				}
 				else if (enumerator.Type.GetDefinition().IsSealed) {
@@ -550,10 +570,10 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				else {
 					// We don't know whether the enumerator is convertible to IDisposable, so we need to conditionally dispose it.
-					var test = _expressionCompiler.Compile(foreachStatement.GetRegion(), new TypeIsResolveResult(new LocalResolveResult(enumerator), systemIDisposable, _compilation.FindType(KnownTypeCode.Boolean)), true);
+					var test = _expressionCompiler.Compile(new TypeIsResolveResult(new LocalResolveResult(enumerator), systemIDisposable, _compilation.FindType(KnownTypeCode.Boolean)), true);
 					if (test.AdditionalStatements.Count > 0)
-						_errorReporter.InternalError("\"is\" test must not return additional statements.", foreachStatement.GetRegion());
-					var innerStatements = _expressionCompiler.Compile(foreachStatement.GetRegion(), new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), conversions.ExplicitConversion(enumerator.Type, systemIDisposable)), disposeMethod, new ResolveResult[0]), false);
+						_errorReporter.InternalError("\"is\" test must not return additional statements.");
+					var innerStatements = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), conversions.ExplicitConversion(enumerator.Type, systemIDisposable)), disposeMethod, new ResolveResult[0]), false);
 					disposer = new JsIfStatement(test.Expression, new JsBlockStatement(innerStatements.AdditionalStatements.Concat(new[] { new JsExpressionStatement(innerStatements.Expression) })), null);
 				}
 				JsStatement stmt = new JsWhileStatement(moveNextInvocation.Expression, body);
@@ -564,6 +584,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsBlockStatement GenerateUsingBlock(LocalResolveResult resource, Expression aquisitionExpression, DomRegion tempVariableRegion, JsBlockStatement body) {
+			SetRegion(aquisitionExpression.GetRegion());
 			var boolType = _compilation.FindType(KnownTypeCode.Boolean);
 			var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
 			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
@@ -579,20 +600,20 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (isDynamic) {
 				var newResource = CreateTemporaryVariable(systemIDisposable, tempVariableRegion);
-				var castExpr = _expressionCompiler.Compile(aquisitionExpression.GetRegion(), new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
+				var castExpr = _expressionCompiler.Compile(new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
 				stmts.AddRange(castExpr.AdditionalStatements);
 				stmts.Add(new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[newResource].Name, castExpr.Expression)));
 				resource = new LocalResolveResult(newResource);
 			}
 
-			var compiledDisposeCall = _expressionCompiler.Compile(aquisitionExpression.GetRegion(),
+			var compiledDisposeCall = _expressionCompiler.Compile(
 			                              new CSharpInvocationResolveResult(
 			                                  new ConversionResolveResult(systemIDisposable, resource, conversions.ImplicitConversion(resource, systemIDisposable)),
 			                                  disposeMethod,
 			                                  new ResolveResult[0]
 			                              ), false);
 			if (compiledDisposeCall.AdditionalStatements.Count > 0)
-				_errorReporter.InternalError("Type test cannot return additional statements.", aquisitionExpression.GetRegion());
+				_errorReporter.InternalError("Type test cannot return additional statements.");
 
 			JsStatement releaseStmt;
 			if (isDynamic) {
@@ -600,9 +621,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				// if (d != null) ((IDisposable)d).Dispose()
-				var compiledTest = _expressionCompiler.Compile(aquisitionExpression.GetRegion(), new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
+				var compiledTest = _expressionCompiler.Compile(new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
 				if (compiledTest.AdditionalStatements.Count > 0)
-					_errorReporter.InternalError("Null test cannot return additional statements.", aquisitionExpression.GetRegion());
+					_errorReporter.InternalError("Null test cannot return additional statements.");
 				releaseStmt = new JsIfStatement(compiledTest.Expression, new JsExpressionStatement(compiledDisposeCall.Expression), null);
 			}
 
@@ -639,6 +660,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsBlockStatement CompileCatchClause(LocalResolveResult catchVariable, CatchClause catchClause, bool isCatchAll, bool isOnly) {
+			SetRegion(catchClause.GetRegion());
 			JsStatement variableDeclaration = null;
 			if (!catchClause.VariableNameToken.IsNull) {
 				JsExpression compiledAssignment;
@@ -801,6 +823,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var caseClauses = new List<JsSwitchSection>();
 			foreach (var section in switchStatement.SwitchSections) {
+				SetRegion(section.GetRegion());
 				var values = new List<JsExpression>();
 				foreach (var v in section.CaseLabels) {
 					if (v.Expression.IsNull) {

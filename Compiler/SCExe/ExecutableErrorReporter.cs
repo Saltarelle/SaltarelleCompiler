@@ -15,16 +15,18 @@ namespace Saltarelle.Compiler {
 			_writer = writer;
 		}
 
-		public void Message(MessageSeverity severity, int code, DomRegion region, string message, params object[] args) {
-			_writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3} CS{4:0000}: {5}", region.FileName, region.BeginLine, region.BeginColumn, GetSeverityText(severity), code, string.Format(message, args)));
+		public DomRegion Region { get; set; }
+
+		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
+			_writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3} CS{4:0000}: {5}", Region.FileName, Region.BeginLine, Region.BeginColumn, GetSeverityText(severity), code, string.Format(message, args)));
 		}
 
-		public void InternalError(string text, DomRegion region) {
-			this.Message(7999, region, text);
+		public void InternalError(string text) {
+			this.Message(7999, text);
 		}
 
-		public void InternalError(Exception ex, DomRegion region, string additionalText = null) {
-			this.Message(7999, region, (additionalText != null ? additionalText + ": " : "") + ex.ToString());
+		public void InternalError(Exception ex, string additionalText = null) {
+			this.Message(7999, (additionalText != null ? additionalText + ": " : "") + ex.ToString());
 		}
 
 		private static string GetSeverityText(MessageSeverity severity) {

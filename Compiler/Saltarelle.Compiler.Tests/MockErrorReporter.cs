@@ -71,19 +71,21 @@ namespace Saltarelle.Compiler.Tests {
         	AllMessages   = new List<Message>();
         }
 
-		public void Message(MessageSeverity severity, int code, DomRegion region, string message, params object[] args) {
-			var msg = new Message(severity, code, region, message, args);
+		public DomRegion Region { get; set; }
+
+		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
+			var msg = new Message(severity, code, Region, message, args);
 			string s = msg.ToString();	// Ensure this does not throw an exception
 			AllMessages.Add(msg);
 			if (_logToConsole)
 				Console.WriteLine(s);
 		}
 
-		public void InternalError(string text, DomRegion region) {
+		public void InternalError(string text) {
 			throw new Exception("Internal error: " + text);
 		}
 
-		public void InternalError(Exception ex, DomRegion region, string additionalText = null) {
+		public void InternalError(Exception ex, string additionalText = null) {
 			throw ex;
 		}
 	}

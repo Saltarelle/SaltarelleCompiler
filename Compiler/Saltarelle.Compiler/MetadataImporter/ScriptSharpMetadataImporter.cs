@@ -166,16 +166,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private readonly bool _minimizeNames;
 
 		private void Message(int code, DomRegion r, params object[] additionalArgs) {
-			_errorReporter.Message(code, r, additionalArgs);
+			_errorReporter.Region = r;
+			_errorReporter.Message(code, additionalArgs);
 		}
 
 		private void Message(int code, ITypeDefinition t, params object[] additionalArgs) {
-			_errorReporter.Message(code, t.Region, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
+			_errorReporter.Region = t.Region;
+			_errorReporter.Message(code, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
 		}
 
 		private void Message(int code, IMember m, params object[] additionalArgs) {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
-			_errorReporter.Message(code, m.Region, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
+			_errorReporter.Region = m.Region;
+			_errorReporter.Message(code, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
 		}
 
 		public ScriptSharpMetadataImporter(bool minimizeNames) {
@@ -1185,7 +1188,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					ProcessTypeMembers(t);
 				}
 				catch (Exception ex) {
-					errorReporter.InternalError(ex, t.Region, "Error importing type " + t.FullName);
+					errorReporter.Region = t.Region;
+					errorReporter.InternalError(ex, "Error importing type " + t.FullName);
 				}
 			}
 		}
