@@ -21,6 +21,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ScriptNameAttribute                    = "System.Runtime.CompilerServices.ScriptNameAttribute";
 		private const string PreserveNameAttribute                  = "System.Runtime.CompilerServices.PreserveNameAttribute";
 		private const string PreserveCaseAttribute                  = "System.Runtime.CompilerServices.PreserveCaseAttribute";
+        private const string PreserveMemberCaseAttribute            = "System.Runtime.CompilerServices.PreserveMemberCaseAttribute";
 		private const string IntrinsicPropertyAttribute             = "System.Runtime.CompilerServices.IntrinsicPropertyAttribute";
 		private const string GlobalMethodsAttribute                 = "System.Runtime.CompilerServices.GlobalMethodsAttribute";
 		private const string ImportedAttribute                      = "System.Runtime.CompilerServices.ImportedAttribute";
@@ -514,8 +515,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					name = "$ctor";
 				return Tuple.Create(name, true);
 			}
-			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
-			if (pca != null)
+            var preserveCase =
+                GetAttributePositionalArgs(member, PreserveCaseAttribute) != null ||
+                GetAttributePositionalArgs(member.DeclaringTypeDefinition, PreserveMemberCaseAttribute) != null ||
+                member.ParentAssembly.AssemblyAttributes.FirstOrDefault(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) != null;
+
+			if (preserveCase)
 				return Tuple.Create(member.Name, true);
 
 			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null

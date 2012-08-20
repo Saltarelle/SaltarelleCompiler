@@ -535,6 +535,107 @@ namespace X.Y {
 		}
 
 		[Test]
+		public void PreserveMemberCaseOnTypeActsAsIfAllMembersHasPreserveCaseAttribute()
+		{
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[PreserveMemberCase]
+class C1 {
+	[PreserveName]
+	void Method1() {
+	}
+
+	void Method2() {
+	}
+
+	int Property3 { get; set; }
+
+	[IntrinsicProperty]
+	int Property4 { get; set; }
+
+	public string Field5;
+}");
+
+			var m1 = FindMethod("C1.Method1");
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("Method1"));
+
+			var m2 = FindMethod("C1.Method2");
+			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m2.Name, Is.EqualTo("Method2"));
+
+			var p3 = FindProperty("C1.Property3");
+			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_Property3"));
+			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_Property3"));
+
+			var p4 = FindProperty("C1.Property4");
+			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p4.FieldName, Is.EqualTo("Property4"));
+
+			var f5 = FindField("C1.Field5");
+			Assert.That(f5.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f5.Name, Is.EqualTo("Field5"));
+		}
+
+		[Test]
+		public void PreserveMemberCaseOnAssemblyActsAsIfAllMembersOfAllTypesHasPreserveCaseAttribute()
+		{
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[assembly:PreserveMemberCase]
+
+class C1 {
+	[PreserveName]
+	void Method1() {
+	}
+
+	void Method2() {
+	}
+
+	int Property3 { get; set; }
+
+	[IntrinsicProperty]
+	int Property4 { get; set; }
+
+	public string Field5;
+}
+
+[PreserveName]
+class C2 {
+	public int Field6;
+}
+");
+
+			var m1 = FindMethod("C1.Method1");
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("Method1"));
+
+			var m2 = FindMethod("C1.Method2");
+			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m2.Name, Is.EqualTo("Method2"));
+
+			var p3 = FindProperty("C1.Property3");
+			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_Property3"));
+			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_Property3"));
+
+			var p4 = FindProperty("C1.Property4");
+			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p4.FieldName, Is.EqualTo("Property4"));
+
+			var f5 = FindField("C1.Field5");
+			Assert.That(f5.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f5.Name, Is.EqualTo("Field5"));
+
+			var f6 = FindField("C2.Field6");
+			Assert.That(f6.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f6.Name, Is.EqualTo("Field6"));
+		}
+
+		[Test]
 		public void PreserveNameAttributePreventsMinimization() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
