@@ -209,7 +209,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public object VisitMemberAccessExpression(JsMemberAccessExpression expression, bool parenthesized) {
-            VisitExpression(expression.Target, (GetPrecedence(expression.Target.NodeType) > GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa)
+            VisitExpression(expression.Target, expression.Target.NodeType == ExpressionNodeType.Number || ((GetPrecedence(expression.Target.NodeType) > GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation)); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa). Also we need to make sure that we output "(1).X" for that expression.
             _cb.Append(".");
             _cb.Append(expression.Member);
             return null;
