@@ -10,9 +10,9 @@ namespace System {
     /// <summary>
     /// The char data type which is mapped to the Number type in Javascript.
     /// </summary>
-    [IgnoreNamespace]
-	[Imported(IsRealType = true)]
+    [ScriptNamespace("ss")]
     [ScriptName("Int32")]
+	[Imported(IsRealType = true)]
     public struct Char {
         public string Format(string format) {
             return null;
@@ -22,7 +22,7 @@ namespace System {
             return null;
         }
 
-        [ScriptAlias("{$System.String}.charCodeAt(0)")]
+        [InlineCode("{s}.charCodeAt(0)")]
         public static int Parse(string s) {
             return 0;
         }

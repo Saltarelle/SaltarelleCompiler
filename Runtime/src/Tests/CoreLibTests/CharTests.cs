@@ -26,8 +26,8 @@ namespace CoreLibTests {
 			char a = 'a', a2 = 'a', b = 'b';
 			Assert.IsTrue(a == a2);
 			Assert.IsFalse(a == b);
-			Assert.IsTrue(a != a2);
-			Assert.IsFalse(a != b);
+			Assert.IsFalse(a != a2);
+			Assert.IsTrue(a != b);
 			Assert.IsFalse(a < a2);
 			Assert.IsTrue(a < b);
 		}
