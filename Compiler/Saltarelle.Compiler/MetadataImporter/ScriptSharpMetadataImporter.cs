@@ -289,11 +289,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private Tuple<string, string> SplitName(string typeName) {
-			int dot = typeName.LastIndexOf('.');
-			return dot > 0 ? Tuple.Create(typeName.Substring(0, dot), typeName.Substring(dot + 1)) : Tuple.Create("", typeName);
-		}
-
 		private Tuple<string, string> SplitNamespacedName(string fullName) {
 			string nmspace;
 			string name;
@@ -635,6 +630,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			bool isSerializable = _typeSemantics[constructor.DeclaringTypeDefinition].IsSerializable;
+			bool isImported     = _typeSemantics[constructor.DeclaringTypeDefinition].IsImported;
 
 			var ica = GetAttributePositionalArgs(constructor, InlineCodeAttribute);
 			if (ica != null) {
@@ -685,6 +681,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7146, constructor.Region, constructor.DeclaringTypeDefinition.FullName);
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 				}
+				return;
+			}
+			else if (constructor.Parameters.Count == 1 && constructor.Parameters[0].Type is ArrayType && ((ArrayType)constructor.Parameters[0].Type).ElementType.IsKnownType(KnownTypeCode.Object) && constructor.Parameters[0].IsParams && isImported) {
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode("ss.mkdict({" + constructor.Parameters[0].Name + "})");
 				return;
 			}
 			else if (nameSpecified) {

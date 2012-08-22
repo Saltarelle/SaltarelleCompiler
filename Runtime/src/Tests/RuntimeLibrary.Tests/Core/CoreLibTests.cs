@@ -22,7 +22,7 @@ namespace RuntimeLibrary.Tests.Core {
 	}
 
 	[TestFixture]
-	public class MutableDateTimeTests : CoreLibTestBase {
+	public class JsDateTests : CoreLibTestBase {
 	}
 
 	[TestFixture]
@@ -31,5 +31,13 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class CharTests : CoreLibTestBase {
+	}
+
+	[TestFixture]
+	public class JsDictionaryTests : CoreLibTestBase {
+	}
+
+	[TestFixture]
+	public class GenericJsDictionaryTests : CoreLibTestBase {
 	}
 }

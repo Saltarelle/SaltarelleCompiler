@@ -231,5 +231,43 @@ class C1 {
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("ObjectLiteralAttribute")));
 		}
+
+		[Test]
+		public void ParamsObjectConstructorForImportedTypeIsTranslatedToInvocationOfSSMkdict() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+public class C1 {
+	public C1(params object[] args) {
+	}
+}
+[Imported]
+public class C2 {
+	public C2(params int[] args) {
+	}
+}
+[Imported]
+public class C3 {
+	public C3(object[] args) {
+	}
+}
+public class C4 {
+	public C4(params object[] args) {
+	}
+}");
+
+			var c1 = FindConstructor("C1", 1);
+			Assert.That(c1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+			Assert.That(c1.LiteralCode, Is.EqualTo("ss.mkdict({args})"));
+
+			var c2 = FindConstructor("C2", 1);
+			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+			var c3 = FindConstructor("C3", 1);
+			Assert.That(c3.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+			var c4 = FindConstructor("C4", 1);
+			Assert.That(c4.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+		}
 	}
 }

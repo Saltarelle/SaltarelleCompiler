@@ -464,7 +464,7 @@ namespace CoreLibTests {
 		[Test]
 		public void ConvertingDateToMutableDateReturnsANewButEqualInstance() {
 			var dt = new DateTime(2011, 7, 12);
-			MutableDateTime mdt = dt;
+			JsDate mdt = dt;
 			Assert.IsFalse((object)dt == (object)mdt);
 			Assert.AreEqual(mdt.GetFullYear(), 2011);
 			Assert.AreEqual(mdt.GetMonth(), 7);
@@ -473,7 +473,7 @@ namespace CoreLibTests {
 
 		[Test]
 		public void ConvertingMutableDateToDateReturnsANewButEqualInstance() {
-			var mdt = new MutableDateTime(2011, 7, 12);
+			var mdt = new JsDate(2011, 7, 12);
 			DateTime dt = mdt;
 			Assert.IsFalse((object)dt == (object)mdt);
 			Assert.AreEqual(mdt.GetFullYear(), 2011);

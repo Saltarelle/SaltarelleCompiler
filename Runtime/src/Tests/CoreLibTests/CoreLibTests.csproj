@@ -35,8 +35,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CharTests.cs" />
+    <Compile Include="GenericJsDictionaryTests.cs" />
+    <Compile Include="JsDictionaryTests.cs" />
     <Compile Include="StringTests.cs" />
-    <Compile Include="MutableDateTimeTests.cs" />
+    <Compile Include="JsDateTests.cs" />
     <Compile Include="DateTimeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

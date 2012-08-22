@@ -209,7 +209,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public object VisitMemberAccessExpression(JsMemberAccessExpression expression, bool parenthesized) {
-            VisitExpression(expression.Target, expression.Target.NodeType == ExpressionNodeType.Number || ((GetPrecedence(expression.Target.NodeType) > GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation)); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa). Also we need to make sure that we output "(1).X" for that expression.
+            VisitExpression(expression.Target, expression.Target.NodeType == ExpressionNodeType.Number || expression.Target.NodeType == ExpressionNodeType.New || ((GetPrecedence(expression.Target.NodeType) > GetPrecedence(expression.NodeType)) && expression.Target.NodeType != ExpressionNodeType.MemberAccess && expression.Target.NodeType != ExpressionNodeType.Invocation)); // Ugly code to ensure that nested member accesses are not parenthesized, but member access nested in new are (and vice versa). Also we need to make sure that we output "(1).X" for that expression.
             _cb.Append(".");
             _cb.Append(expression.Member);
             return null;
@@ -217,7 +217,23 @@ namespace Saltarelle.Compiler.JSModel
 
         public object VisitNewExpression(JsNewExpression expression, bool parenthesized) {
             _cb.Append("new ");
-            VisitExpression(expression.Constructor, GetPrecedence(expression.Constructor.NodeType) >= GetPrecedence(expression.NodeType));
+			bool needParens = GetPrecedence(expression.Constructor.NodeType) >= PrecedenceMemberOrNewOrInvocation;
+			if (expression.Constructor.NodeType == ExpressionNodeType.MemberAccess) {
+				// We don't need to parenthesize something like new a.b.c()
+				JsExpression expr = expression.Constructor;
+				for (;;) {
+					if (GetPrecedence(expr.NodeType) < PrecedenceMemberOrNewOrInvocation) {
+						needParens = false;
+						break;
+					}
+					else if (expr.NodeType == ExpressionNodeType.MemberAccess) {
+						expr = ((JsMemberAccessExpression)expr).Target;
+					}
+					else
+						break;
+				}
+			}
+            VisitExpression(expression.Constructor, needParens);
             _cb.Append("(");
             VisitExpressionList(expression.Arguments);
             _cb.Append(")");
@@ -424,8 +440,6 @@ namespace Saltarelle.Compiler.JSModel
                     return PrecedenceTerminal;
 
                 case ExpressionNodeType.MemberAccess:
-					return PrecedenceTerminal;
-
                 case ExpressionNodeType.New:
                 case ExpressionNodeType.Index:
 				case ExpressionNodeType.Invocation:
