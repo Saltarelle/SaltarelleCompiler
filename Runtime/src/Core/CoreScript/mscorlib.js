@@ -24,6 +24,15 @@
 
     referenceEquals: function (a, b) {
       return ss.isValue(a) ? a === b : !ss.isValue(b);
+    },
+
+    mkdict: function (a) {
+      a = (arguments.length != 1 ? arguments : arguments[0]);
+      var r = {};
+      for (var i = 0; i < a.length; i += 2) {
+        r[a[i]] = a[i + 1];
+      }
+      return r;
     }
   };
 

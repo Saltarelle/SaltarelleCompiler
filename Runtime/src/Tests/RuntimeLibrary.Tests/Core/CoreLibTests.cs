@@ -32,4 +32,12 @@ namespace RuntimeLibrary.Tests.Core {
 	[TestFixture]
 	public class CharTests : CoreLibTestBase {
 	}
+
+	[TestFixture]
+	public class JsDictionaryTests : CoreLibTestBase {
+	}
+
+	[TestFixture]
+	public class GenericJsDictionaryTests : CoreLibTestBase {
+	}
 }

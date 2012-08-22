@@ -18,6 +18,9 @@ namespace System.Collections.Generic {
         public JsDictionary() {
         }
 
+		public JsDictionary(params object[] nameValuePairs) {
+		}
+
 		public int Count {
 			[InlineCode("{$System.Object}.getKeyCount({this})")]
             get {
