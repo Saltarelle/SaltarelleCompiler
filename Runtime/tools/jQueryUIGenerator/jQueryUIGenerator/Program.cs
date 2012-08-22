@@ -40,7 +40,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator
             bool includeProjectFile = false;
 
             if (args.Length > 2) { 
-                includeProjectFile = (args[2].ToLower() == "/p");
+                includeProjectFile = (args[2].ToLowerInvariant() == "/p");
             }
 
             // parse sources

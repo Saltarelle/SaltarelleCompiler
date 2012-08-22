@@ -37,7 +37,14 @@ Task Clean {
 	md "$outDir" >$null
 }
 
-Task Build-Compiler -Depends Clean, Generate-VersionInfo {
+Task Fix-AntlrLocalization {
+	$lang = (Get-Culture).TwoLetterISOLanguageName
+	If (-not (Test-Path "$baseDir\Compiler\packages-manual\antlr\Tool\Templates\messages\languages\$lang.stg")) {
+		Copy "$baseDir\Compiler\packages-manual\antlr\Tool\Templates\messages\languages\en.stg" "$baseDir\Compiler\packages-manual\antlr\Tool\Templates\messages\languages\$lang.stg"
+	}
+}
+
+Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization {
 	Exec { msbuild "$baseDir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 	$exedir  = "$baseDir\Compiler\SCExe\bin"
 	$taskdir = "$baseDir\Compiler\SCTask\bin"

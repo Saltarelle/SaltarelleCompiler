@@ -96,7 +96,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 return @namespace;
             }
 
-            if (entry.Name.ToLower() == "widget" || entry.Category.ToLower() == "utilities") {
+            if (entry.Name.ToLowerInvariant() == "widget" || entry.Category.ToLowerInvariant() == "utilities") {
                 return @namespace;
             }
 
@@ -110,7 +110,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
         private static readonly Regex hashRegex = new Regex(@"\<code\>\s*{((?:\s*[a-zA-Z0-9]+\s*\:?\s*,?\s*)+)}</code>");
 
         private static string MapBaseType(string type, string currentWidget, string entryDoc) {
-            switch (type.ToLower()) {
+            switch (type.ToLowerInvariant()) {
                 case "integer":
                 case "number":
                     return "int";
@@ -122,7 +122,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 case "": {
                     var hashMatch = hashRegex.Match(entryDoc);
                     if (hashMatch.Success) {
-                        string hash = string.Join(",", hashMatch.Groups[1].Value.Split(',').Select(s => s.Trim(' ', ':', '\t').ToLower()).OrderBy(s => s));
+                        string hash = string.Join(",", hashMatch.Groups[1].Value.Split(',').Select(s => s.Trim(' ', ':', '\t').ToLowerInvariant()).OrderBy(s => s));
                         switch (hash) {
                             case "bottom,left,right,top":
                                 return "Box";
@@ -204,7 +204,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
         public static string GetDefaultValue(string type) {
             string csType = MapDataType(type, "X", "");
 
-            switch (csType.ToLower()) {
+            switch (csType.ToLowerInvariant()) {
                 case "int":
                 case "float":
                     return "0";
@@ -238,7 +238,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
             if (word.StartsWith("jQuery")) {
                 return word;
             } else {
-                return char.ToUpper(word[0]) + word.Substring(1);
+                return char.ToUpperInvariant(word[0]) + word.Substring(1);
             }
         }
 
