@@ -172,7 +172,7 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 
 		[Test]
 		public void InvocationWithSuffix() {
-			RoundtripExpression("f(a)(b)[c].d", "(f(a)(b)[c]).d");
+			RoundtripExpression("f(a)(b)[c].d");
 		}
 
 		[Test]
@@ -206,7 +206,7 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 
 		[Test]
 		public void MembersAndIndexing() {
-			RoundtripExpression("a[b].c[d].e", "((a[b]).c[d]).e");
+			RoundtripExpression("a[b].c[d].e");
 			RoundtripExpression("(new a()).b");
 		}
 

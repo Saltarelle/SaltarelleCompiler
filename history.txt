@@ -1,3 +1,5 @@
+Fixed issue causing instantiation of generic types with named constructors to not work (#18)
+
 1.2.0
 Fixed compiling instance methods on serializable types.
 Insert parentheses around number when a member is being accessed (eg. (1).member).

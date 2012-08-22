@@ -388,6 +388,45 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
                           "(new X())(1)");
         }
 
+		[Test]
+		public void ConstructorIsParenthesizedWhenItContainsAnInvocation() {
+			AssertCorrect(JsExpression.New(
+			                  JsExpression.Invocation(
+			                      JsExpression.Identifier("X"),
+			                      new JsExpression[0]
+			                  ),
+			                  new[] { JsExpression.Number(1) }
+			              ),
+			              "new (X())(1)");
+
+			AssertCorrect(JsExpression.New(
+			                  JsExpression.MemberAccess(
+			                      JsExpression.Invocation(
+			                          JsExpression.Identifier("X"),
+			                          new JsExpression[0]
+			                      ),
+			                      "a"
+			                  ),
+			                  new[] { JsExpression.Number(1) }
+			              ),
+			              "new (X().a)(1)");
+
+			AssertCorrect(JsExpression.New(
+			                  JsExpression.MemberAccess(
+			                      JsExpression.Invocation(
+			                          JsExpression.MemberAccess(
+			                              JsExpression.Identifier("a"),
+			                              "X"
+			                          ),
+			                          new JsExpression[0]
+			                      ),
+			                      "b"
+			                  ),
+			                  new[] { JsExpression.Number(1) }
+			              ),
+			              "new (a.X().b)(1)");
+		}
+
         [Test]
         public void CreatingObjectOfNestedTypeDoesNotCauseUnnecessaryParentheses() {
             // Just to get rid of ambiguities
@@ -456,6 +495,23 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void NumberIsParenthesizedWhenUsedAsMemberAccessTarget() {
 			AssertCorrect(JsExpression.MemberAccess(JsExpression.Number(1), "X"), "(1).X");
+		}
+
+		[Test]
+		public void IndexingDoesNotCauseUnnecessaryParentheses() {
+			AssertCorrect(JsExpression.MemberAccess(
+			                  JsExpression.Index(
+			                      JsExpression.MemberAccess(
+			                          JsExpression.Index(
+			                          JsExpression.Identifier("a"),
+			                          JsExpression.Identifier("b")
+			                      ),
+			                          "c"
+			                      ),
+			                      JsExpression.Identifier("d")
+			                  ),
+			                  "e"
+			              ), "a[b].c[d].e");
 		}
     }
 }
