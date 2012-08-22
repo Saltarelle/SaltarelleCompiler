@@ -387,18 +387,18 @@ namespace System {
         }
 
 		/// <summary>
-		/// Converts a DateTime to a MutableDateTime. Returns a copy of the immutable datetime.
+		/// Converts a DateTime to a JsDate. Returns a copy of the immutable datetime.
 		/// </summary>
 		[InlineCode("new Date({dt}.valueOf())")]
-		public static implicit operator DateTime(MutableDateTime dt) {
+		public static implicit operator DateTime(JsDate dt) {
 			return default(DateTime);
 		}
 
 		/// <summary>
-		/// Converts an ImmutableDateTime to a DateTime. Returns a copy of the mutable datetime.
+		/// Converts a JsDate to a DateTime. Returns a copy of the mutable datetime.
 		/// </summary>
 		[InlineCode("new Date({dt}.valueOf())")]
-		public static implicit operator MutableDateTime(DateTime dt) {
+		public static implicit operator JsDate(DateTime dt) {
 			return null;
 		}
     }

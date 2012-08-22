@@ -3,21 +3,27 @@
 // This source code is subject to terms and conditions of the Apache License, Version 2.0.
 //
 
+using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace System {
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[NonScriptable]
+	[Obsolete("This class cannot be used. If you want an immutable struct (.net semantics), use System.DateTime. If you want a mutable class that is more equivalent to JavaScript Date, use System.JsDate.", true)]
+	public sealed class Date {}
+
     /// <summary>
     /// Equivalent to the Date type in Javascript.
     /// </summary>
     [ScriptNamespace("ss")]
 	[Imported(IsRealType = true)]
-    public sealed class MutableDateTime {
+    public sealed class JsDate {
         /// <summary>
         /// Creates a new instance of Date initialized from the current time.
         /// </summary>
         [InlineCode("new Date()")]
-        public MutableDateTime() {
+        public JsDate() {
         }
 
         /// <summary>
@@ -25,7 +31,7 @@ namespace System {
         /// </summary>
         /// <param name="milliseconds">Milliseconds since January 1st, 1970.</param>
         [InlineCode("new Date({milliseconds})")]
-        public MutableDateTime(long milliseconds) {
+        public JsDate(long milliseconds) {
         }
 
         /// <summary>
@@ -33,7 +39,7 @@ namespace System {
         /// </summary>
         /// <param name="date"></param>
         [InlineCode("new Date({date})")]
-        public MutableDateTime(string date) {
+        public JsDate(string date) {
         }
 
         /// <summary>
@@ -43,7 +49,7 @@ namespace System {
         /// <param name="month">The month (0 through 11)</param>
         /// <param name="date">The day of the month (1 through # of days in the specified month)</param>
         [InlineCode("new Date({year}, {month}, {date})")]
-        public MutableDateTime(int year, int month, int date) {
+        public JsDate(int year, int month, int date) {
         }
 
         /// <summary>
@@ -54,7 +60,7 @@ namespace System {
         /// <param name="date">The day of the month (1 through # of days in the specified month)</param>
         /// <param name="hours">The hours (0 through 23)</param>
         [InlineCode("new Date({year}, {month}, {date}, {hours})")]
-        public MutableDateTime(int year, int month, int date, int hours) {
+        public JsDate(int year, int month, int date, int hours) {
         }
 
         /// <summary>
@@ -66,7 +72,7 @@ namespace System {
         /// <param name="hours">The hours (0 through 23)</param>
         /// <param name="minutes">The minutes (0 through 59)</param>
         [InlineCode("new Date({year}, {month}, {date}, {hours}, {minutes})")]
-        public MutableDateTime(int year, int month, int date, int hours, int minutes) {
+        public JsDate(int year, int month, int date, int hours, int minutes) {
         }
 
         /// <summary>
@@ -79,7 +85,7 @@ namespace System {
         /// <param name="minutes">The minutes (0 through 59)</param>
         /// <param name="seconds">The seconds (0 through 59)</param>
         [InlineCode("new Date({year}, {month}, {date}, {hours}, {minutes}, {seconds})")]
-        public MutableDateTime(int year, int month, int date, int hours, int minutes, int seconds) {
+        public JsDate(int year, int month, int date, int hours, int minutes, int seconds) {
         }
 
         /// <summary>
@@ -93,13 +99,13 @@ namespace System {
         /// <param name="seconds">The seconds (0 through 59)</param>
         /// <param name="milliseconds">The milliseconds (0 through 999)</param>
         [InlineCode("new Date({year}, {month}, {date}, {hours}, {minutes}, {seconds}, {milliseconds})")]
-        public MutableDateTime(int year, int month, int date, int hours, int minutes, int seconds, int milliseconds) {
+        public JsDate(int year, int month, int date, int hours, int minutes, int seconds, int milliseconds) {
         }
 
         /// <summary>
         /// Returns the current date and time.
         /// </summary>
-        public static MutableDateTime Now {
+        public static JsDate Now {
 			[InlineCode("{$System.DateTime}.get_now()")]
             get {
                 return null;
@@ -109,7 +115,7 @@ namespace System {
         /// <summary>
         /// Returns the current date with the time part set to 00:00:00.
         /// </summary>
-        public static MutableDateTime Today {
+        public static JsDate Today {
 			[InlineCode("{$System.DateTime}.get_today()")]
             get {
                 return null;
@@ -205,27 +211,27 @@ namespace System {
         }
 
         [InlineCode("{$System.DateTime}.parseDate({value})")]
-        public static MutableDateTime Parse(string value) {
+        public static JsDate Parse(string value) {
             return null;
         }
 
         [InlineCode("{$System.DateTime}.parseExact({value}, {format})")]
-		public static MutableDateTime ParseExact(string value, string format) {
+		public static JsDate ParseExact(string value, string format) {
 			return null;
 		}
 
         [InlineCode("{$System.DateTime}.parseExact({value}, {format}, {culture})")]
-		public static MutableDateTime ParseExact(string value, string format, CultureInfo culture) {
+		public static JsDate ParseExact(string value, string format, CultureInfo culture) {
 			return null;
 		}
 
         [InlineCode("{$System.DateTime}.parseExactUTC({value}, {format})")]
-		public static MutableDateTime ParseExactUtc(string value, string format) {
+		public static JsDate ParseExactUtc(string value, string format) {
 			return null;
 		}
 
         [InlineCode("{$System.DateTime}.parseExactUTC({value}, {format}, {culture})")]
-		public static MutableDateTime ParseExactUtc(string value, string format, CultureInfo culture) {
+		public static JsDate ParseExactUtc(string value, string format, CultureInfo culture) {
 			return null;
 		}
 
@@ -321,27 +327,27 @@ namespace System {
 		}
 
         [InlineCode("new Date(Date.UTC({year}, {month}, {day}))")]
-        public static MutableDateTime FromUtc(int year, int month, int day) {
+        public static JsDate FromUtc(int year, int month, int day) {
             return null;
         }
 
         [InlineCode("new Date(Date.UTC({year}, {month}, {day}, {hours}))")]
-        public static MutableDateTime FromUtc(int year, int month, int day, int hours) {
+        public static JsDate FromUtc(int year, int month, int day, int hours) {
             return null;
         }
 
         [InlineCode("new Date(Date.UTC({year}, {month}, {day}, {hours}, {minutes}))")]
-        public static MutableDateTime FromUtc(int year, int month, int day, int hours, int minutes) {
+        public static JsDate FromUtc(int year, int month, int day, int hours, int minutes) {
             return null;
         }
 
         [InlineCode("new Date(Date.UTC({year}, {month}, {day}, {hours}, {minutes}, {seconds}))")]
-        public static MutableDateTime FromUtc(int year, int month, int day, int hours, int minutes, int seconds) {
+        public static JsDate FromUtc(int year, int month, int day, int hours, int minutes, int seconds) {
             return null;
         }
 
         [InlineCode("new Date(Date.UTC({year}, {month}, {day}, {hours}, {minutes}, {seconds}, {milliseconds}))")]
-        public static MutableDateTime FromUtc(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds) {
+        public static JsDate FromUtc(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds) {
             return null;
         }
 
@@ -352,7 +358,7 @@ namespace System {
         /// Returns the difference in milliseconds between two dates.
         /// </summary>
         [IntrinsicOperator]
-        public static int operator -(MutableDateTime a, MutableDateTime b) {
+        public static int operator -(JsDate a, JsDate b) {
             return 0;
         }
 
@@ -360,7 +366,7 @@ namespace System {
         /// Compares two dates
         /// </summary>
         [InlineCode("{$System.DateTime}.areEqual({a}, {b})")]
-        public static bool operator ==(MutableDateTime a, MutableDateTime b) {
+        public static bool operator ==(JsDate a, JsDate b) {
             return false;
         }
 
@@ -368,7 +374,7 @@ namespace System {
         /// Compares two dates
         /// </summary>
         [InlineCode("{$System.DateTime}.areNotEqual({a}, {b})")]
-        public static bool operator !=(MutableDateTime a, MutableDateTime b) {
+        public static bool operator !=(JsDate a, JsDate b) {
             return false;
         }
 
@@ -376,7 +382,7 @@ namespace System {
         /// Compares two dates
         /// </summary>
         [IntrinsicOperator]
-        public static bool operator <(MutableDateTime a, MutableDateTime b) {
+        public static bool operator <(JsDate a, JsDate b) {
             return false;
         }
 
@@ -384,7 +390,7 @@ namespace System {
         /// Compares two dates
         /// </summary>
         [IntrinsicOperator]
-        public static bool operator >(MutableDateTime a, MutableDateTime b) {
+        public static bool operator >(JsDate a, JsDate b) {
             return false;
         }
 
@@ -392,7 +398,7 @@ namespace System {
         /// Compares two dates
         /// </summary>
         [IntrinsicOperator]
-        public static bool operator <=(MutableDateTime a, MutableDateTime b) {
+        public static bool operator <=(JsDate a, JsDate b) {
             return false;
         }
 
@@ -400,7 +406,7 @@ namespace System {
         /// Compares two dates
         /// </summary>
         [IntrinsicOperator]
-        public static bool operator >=(MutableDateTime a, MutableDateTime b) {
+        public static bool operator >=(JsDate a, JsDate b) {
             return false;
         }
     }

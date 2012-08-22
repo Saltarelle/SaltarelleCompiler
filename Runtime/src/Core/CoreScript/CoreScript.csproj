@@ -15,7 +15,7 @@
     <OutputPath>..\..\..\bin\Script\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="BCL\MutableDateTime.js" />
+    <Content Include="BCL\JsDate.js" />
     <Content Include="BCL\IteratorBlockEnumerable.js" />
     <Content Include="BCL\Enum.js" />
     <Content Include="BCL\IEqualityComparer.js" />

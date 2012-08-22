@@ -82,7 +82,7 @@
     <Compile Include="ComponentModel\IObserver.cs" />
     <Compile Include="ComponentModel\Observable.cs" />
     <Compile Include="ArrayEnumerator.cs" />
-    <Compile Include="MutableDateTime.cs" />
+    <Compile Include="JsDate.cs" />
     <Compile Include="NotSupportedException.cs" />
     <Compile Include="ObjectEnumerator.cs" />
     <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
