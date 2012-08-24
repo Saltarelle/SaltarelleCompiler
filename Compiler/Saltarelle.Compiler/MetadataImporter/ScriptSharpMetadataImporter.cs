@@ -515,12 +515,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					name = "$ctor";
 				return Tuple.Create(name, true);
 			}
-            var preserveCase =
-                GetAttributePositionalArgs(member, PreserveCaseAttribute) != null ||
-                GetAttributePositionalArgs(member.DeclaringTypeDefinition, PreserveMemberCaseAttribute) != null ||
-                member.ParentAssembly.AssemblyAttributes.FirstOrDefault(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) != null;
+			
+			if (GetAttributePositionalArgs(member, PreserveCaseAttribute) != null)
+				return Tuple.Create(member.Name, true);
 
-			if (preserveCase)
+			// PreserveMemberCase shouldn't apply to private, internal members and members with PreserveName attribute
+			if (!member.IsPrivate && !member.IsInternal &&
+				GetAttributePositionalArgs(member, PreserveNameAttribute) == null &&
+				(GetAttributePositionalArgs(member.DeclaringTypeDefinition, PreserveMemberCaseAttribute) != null ||
+				 member.ParentAssembly.AssemblyAttributes.FirstOrDefault(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) != null))
 				return Tuple.Create(member.Name, true);
 
 			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
@@ -534,7 +537,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
-			return Tuple.Create(defaultName, false);
+            return Tuple.Create(defaultName, false);
 		}
 
 		public string GetQualifiedMemberName(IMember member) {
