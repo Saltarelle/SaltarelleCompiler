@@ -134,7 +134,7 @@ namespace System.Html {
         [IntrinsicProperty]
         public DateTime TimeStamp {
             get {
-                return null;
+                return default(DateTime);
             }
         }
 
