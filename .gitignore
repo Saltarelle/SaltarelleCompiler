@@ -13,3 +13,4 @@ Compiler/JavaScriptParser/ParserImpl/JavaScriptLexer.cs
 Compiler/JavaScriptParser/ParserImpl/JavaScriptParser.cs
 Compiler/JavaScriptParser/ParserImpl/JavaScriptTreeParser.cs
 Compiler/JavaScriptParser/ParserImpl/JavaScriptTreeParser.tokens
+Compiler/packages-manual/antlr/Tool/Templates/messages/languages/*.stg

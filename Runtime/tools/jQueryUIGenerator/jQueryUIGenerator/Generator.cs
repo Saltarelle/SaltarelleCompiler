@@ -64,7 +64,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 Entry baseEntry = null;
                 if (!string.IsNullOrEmpty(entry.Type)) {
                     // find the base entry
-                    baseEntry = entries.SingleOrDefault(e => e.Name.ToLower() == entry.Type.ToLower());
+                    baseEntry = entries.SingleOrDefault(e => e.Name.ToLowerInvariant() == entry.Type.ToLowerInvariant());
                 }
 
                 RenderEntry(entry, baseEntry);
@@ -130,7 +130,7 @@ namespace {5} {{
 
             foreach (var method in entry.Methods
                                         // exclude the jQuery methods as they will be inherit
-                                        .Where(m => entry.Name.ToLower() == "widget" || !excludeJQueryMethods.Contains(m.Name.ToLower()))
+                                        .Where(m => entry.Name.ToLowerInvariant() == "widget" || !excludeJQueryMethods.Contains(m.Name.ToLowerInvariant()))
                                         .OrderBy(m => m.Name)) {
 
                 methodsContent.AppendLine();
@@ -181,7 +181,7 @@ namespace {5} {{
                     eventType = "jQueryUIEventHandler<jQueryObject>";
                 }
                 else {
-                    eventType = "jQueryUIEventHandler<" + Utils.PascalCase(@event.Type.Replace(@event.Name.ToLower(), Utils.PascalCase(@event.Name))) + "Event" + ">";
+                    eventType = "jQueryUIEventHandler<" + Utils.PascalCase(@event.Type.Replace(@event.Name.ToLowerInvariant(), Utils.PascalCase(@event.Name))) + "Event" + ">";
                 }
 
                 methodsContent.AppendLine();
@@ -251,7 +251,7 @@ namespace {3} {{
                         if (@event.Arguments.All(a => a.Properties.Count == 0)) {
                             eventType = "jQueryUIEventHandler<jQueryObject>";
                         } else {
-                            eventType = "jQueryUIEventHandler<" + Utils.PascalCase(@event.Type.Replace(@event.Name.ToLower(), Utils.PascalCase(@event.Name))) + "Event" + ">";
+                            eventType = "jQueryUIEventHandler<" + Utils.PascalCase(@event.Type.Replace(@event.Name.ToLowerInvariant(), Utils.PascalCase(@event.Name))) + "Event" + ">";
                         }
 
                     }
@@ -323,7 +323,7 @@ namespace {2} {{
                 if (@event.Type.StartsWith("function")) continue;
                 if (string.IsNullOrEmpty(@event.Type)) continue;
 
-                string eventType = @event.Type.Replace(@event.Name.ToLower(), Utils.PascalCase(@event.Name));
+                string eventType = @event.Type.Replace(@event.Name.ToLowerInvariant(), Utils.PascalCase(@event.Name));
 
                 foreach (Argument arg in @event.Arguments) {
                     if (arg.Name != "ui") continue;

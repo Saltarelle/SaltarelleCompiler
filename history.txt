@@ -1,3 +1,6 @@
+1.2.2
+Conversion between JsDate and DateTime are now explicit. Should solve issues involving nullable DateTimes.
+
 1.2.1
 Support constructors with a single 'params object[]' parameter for imported types to create a name-value collection.
 Renamed MutableDateTime to JsDate.

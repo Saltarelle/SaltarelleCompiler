@@ -129,5 +129,23 @@ public class C {
 }", expectErrors: true);
 			Assert.That(result.Item4.AllMessages.Select(m => m.Code), Is.EqualTo(new[] { 7700 }));
 		}
+
+		[Test]
+		public void ComparingNullableDateTimeToNullWorks() {
+			AssertSourceCorrect(@"
+using System;
+public class C {
+	DateTime? F() { return null; }
+	
+	DateTime? M() {
+		// BEGIN
+		bool b = F() != null;
+		// END
+	}	
+}
+",
+@"		var b = Date.areNotEqual(this.$f(), null);
+");
+		}
 	}
 }

@@ -96,7 +96,7 @@ namespace System {
         /// </summary>
         public static DateTime Now {
             get {
-                return null;
+                return default(DateTime);
             }
         }
 
@@ -105,7 +105,7 @@ namespace System {
         /// </summary>
         public static DateTime Today {
             get {
-                return null;
+                return default(DateTime);
             }
         }
 
@@ -199,7 +199,7 @@ namespace System {
 
         [ScriptName("parseDate")]
         public static DateTime Parse(string value) {
-            return null;
+            return default(DateTime);
         }
 
 		public static DateTime? ParseExact(string value, string format) {
@@ -390,7 +390,7 @@ namespace System {
 		/// Converts a DateTime to a JsDate. Returns a copy of the immutable datetime.
 		/// </summary>
 		[InlineCode("new Date({dt}.valueOf())")]
-		public static implicit operator DateTime(JsDate dt) {
+		public static explicit operator DateTime(JsDate dt) {
 			return default(DateTime);
 		}
 
@@ -398,7 +398,7 @@ namespace System {
 		/// Converts a JsDate to a DateTime. Returns a copy of the mutable datetime.
 		/// </summary>
 		[InlineCode("new Date({dt}.valueOf())")]
-		public static implicit operator JsDate(DateTime dt) {
+		public static explicit operator JsDate(DateTime dt) {
 			return null;
 		}
     }
