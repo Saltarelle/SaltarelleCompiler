@@ -21,6 +21,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ScriptNameAttribute                    = "System.Runtime.CompilerServices.ScriptNameAttribute";
 		private const string PreserveNameAttribute                  = "System.Runtime.CompilerServices.PreserveNameAttribute";
 		private const string PreserveCaseAttribute                  = "System.Runtime.CompilerServices.PreserveCaseAttribute";
+        private const string PreserveMemberCaseAttribute            = "System.Runtime.CompilerServices.PreserveMemberCaseAttribute";
 		private const string IntrinsicPropertyAttribute             = "System.Runtime.CompilerServices.IntrinsicPropertyAttribute";
 		private const string GlobalMethodsAttribute                 = "System.Runtime.CompilerServices.GlobalMethodsAttribute";
 		private const string ImportedAttribute                      = "System.Runtime.CompilerServices.ImportedAttribute";
@@ -509,8 +510,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					name = "$ctor";
 				return Tuple.Create(name, true);
 			}
-			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
-			if (pca != null)
+			
+			if (GetAttributePositionalArgs(member, PreserveCaseAttribute) != null)
+				return Tuple.Create(member.Name, true);
+
+			// PreserveMemberCase shouldn't apply to private, internal members and members with PreserveName attribute
+			if (!member.IsPrivate && !member.IsInternal &&
+				GetAttributePositionalArgs(member, PreserveNameAttribute) == null &&
+				(GetAttributePositionalArgs(member.DeclaringTypeDefinition, PreserveMemberCaseAttribute) != null ||
+				 member.ParentAssembly.AssemblyAttributes.FirstOrDefault(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) != null))
 				return Tuple.Create(member.Name, true);
 
 			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
@@ -524,7 +532,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (preserveName)
 				return Tuple.Create(MakeCamelCase(member.Name), true);
 
-			return Tuple.Create(defaultName, false);
+            return Tuple.Create(defaultName, false);
 		}
 
 		public string GetQualifiedMemberName(IMember member) {

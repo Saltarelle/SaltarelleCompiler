@@ -252,6 +252,18 @@ namespace System.Runtime.CompilerServices {
     }
 
     /// <summary>
+    /// This attribute allows suppressing the default behavior of converting
+    /// member names of attached type to camel-cased equivalents in the generated JavaScript.
+    /// When applied to an assembly, all types in the assembly are considered to have this
+    /// attribute by default</summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
+    [NonScriptable]
+    [Imported]
+    public sealed class PreserveMemberCaseAttribute : Attribute
+    {
+    }
+
+    /// <summary>
     /// This attribute allows suppressing the default behavior of minimizing
     /// private type names and member names in the generated JavaScript.
     /// </summary>
