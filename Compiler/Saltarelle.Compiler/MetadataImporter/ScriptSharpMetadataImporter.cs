@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -471,6 +472,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
+			bool preserveMemberCase = member.DeclaringTypeDefinition.Attributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) || member.ParentAssembly.AssemblyAttributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
+
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
 			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
 
@@ -479,13 +482,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				defaultName = "$ctor";
 			}
 			else if (Utils.IsPublic(member)) {
-				defaultName = MakeCamelCase(member.Name);
+				defaultName = preserveMemberCase ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {
 				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
 					defaultName = null;
 				else
-					defaultName = "$" + MakeCamelCase(member.Name);
+					defaultName = "$" + (preserveMemberCase ? member.Name : MakeCamelCase(member.Name));
 			}
 
 
@@ -519,11 +522,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (GetAttributePositionalArgs(member, PreserveCaseAttribute) != null)
 				return Tuple.Create(member.Name, true);
 
-			// PreserveMemberCase shouldn't apply to private, internal members and members with PreserveName attribute
-			if (!member.IsPrivate && !member.IsInternal &&
-				GetAttributePositionalArgs(member, PreserveNameAttribute) == null &&
-				(GetAttributePositionalArgs(member.DeclaringTypeDefinition, PreserveMemberCaseAttribute) != null ||
-				 member.ParentAssembly.AssemblyAttributes.FirstOrDefault(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) != null))
+			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
+			if (pca != null)
 				return Tuple.Create(member.Name, true);
 
 			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
@@ -535,7 +535,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                                                       || (typeSemantics.IsNamedValues && member is IField));
 
 			if (preserveName)
-				return Tuple.Create(MakeCamelCase(member.Name), true);
+				return Tuple.Create(preserveMemberCase ? member.Name : MakeCamelCase(member.Name), true);
 
             return Tuple.Create(defaultName, false);
 		}

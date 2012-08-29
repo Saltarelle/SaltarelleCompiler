@@ -536,13 +536,13 @@ namespace X.Y {
 
 
 		[Test]
-		public void PreserveMemberCaseOnTypeActsAsIfPublicProtectedMembersHasPreserveCaseAttribute()
-		{
+		public void PreserveMemberCaseOnTypeActsAsIfMembersHavePreserveCaseAttribute() {
 			Prepare(
-@"using System.Runtime.CompilerServices;
+@"using System;
+using System.Runtime.CompilerServices;
 
 [PreserveMemberCase]
-class C1 {
+public class C1 {
 	protected void Method1() {
 	}
 
@@ -555,6 +555,8 @@ class C1 {
 	public int Property4 { get; set; }
 
 	public string Field5;
+
+	public event Action Evt1;
 }");
 
 			var m1 = FindMethod("C1.Method1");
@@ -577,19 +579,22 @@ class C1 {
 			var f5 = FindField("C1.Field5");
 			Assert.That(f5.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f5.Name, Is.EqualTo("Field5"));
+
+			var e1 = FindEvent("C1.Evt1");
+			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e1.AddMethod.Name, Is.EqualTo("add_Evt1"));
+			Assert.That(e1.RemoveMethod.Name, Is.EqualTo("remove_Evt1"));
 		}
 
 		[Test]
-		public void PreserveMemberCaseOnAssemblyActsAsIfAllMembersOfAllTypesHasPreserveCaseAttribute()
-		{
+		public void PreserveMemberCaseOnAssemblyActsAsIfAllMembersOfAllTypesHasPreserveCaseAttribute() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
 [assembly:PreserveMemberCase]
 
-class C1 {
-	[PreserveName]
-	void Method1() {
+public class C1 {
+	public void Method1() {
 	}
 
 	public void Method2() {
@@ -601,17 +606,18 @@ class C1 {
 	public int Property4 { get; set; }
 
 	public string Field5;
+
+	public event Action Evt1;
 }
 
-[PreserveName]
-class C2 {
+public class C2 {
 	public int Field6;
 }
 ");
 
 			var m1 = FindMethod("C1.Method1");
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(m1.Name, Is.EqualTo("method1"));
+			Assert.That(m1.Name, Is.EqualTo("Method1"));
 
 			var m2 = FindMethod("C1.Method2");
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
@@ -630,14 +636,18 @@ class C2 {
 			Assert.That(f5.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f5.Name, Is.EqualTo("Field5"));
 
+			var e1 = FindEvent("C1.Evt1");
+			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e1.AddMethod.Name, Is.EqualTo("add_Evt1"));
+			Assert.That(e1.RemoveMethod.Name, Is.EqualTo("remove_Evt1"));
+
 			var f6 = FindField("C2.Field6");
 			Assert.That(f6.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f6.Name, Is.EqualTo("Field6"));
 		}
 
         [Test]
-        public void PreserveNameOverridesPreserveMemberCase()
-        {
+        public void PreserveNameInTypeWithPreserveMemberCaseActsAsPreserveCase() {
             Prepare(
 @"using System.Runtime.CompilerServices;
 
@@ -646,43 +656,19 @@ class C1 {
     [PreserveName]
 	public void Method1() {
 	}
-
-    [PreserveName]
-	protected int Property2 { get; set; }
-
-	[PreserveName]
-    [IntrinsicProperty]
-	public int Property3 { get; set; }
-
-    [PreserveName]
-	protected string Field4;
 }", minimizeNames: false);
 
             var m1 = FindMethod("C1.Method1");
             Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-            Assert.That(m1.Name, Is.EqualTo("method1"));
-
-            var p2 = FindProperty("C1.Property2");
-            Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
-            Assert.That(p2.GetMethod.Name, Is.EqualTo("get_Property2"));
-            Assert.That(p2.SetMethod.Name, Is.EqualTo("set_Property2"));
-
-            var p3 = FindProperty("C1.Property3");
-            Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
-            Assert.That(p3.FieldName, Is.EqualTo("property3"));
-
-            var f4 = FindField("C1.Field4");
-            Assert.That(f4.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
-            Assert.That(f4.Name, Is.EqualTo("field4"));
+            Assert.That(m1.Name, Is.EqualTo("Method1"));
         }
 
         [Test]
-        public void PreserveMemberCaseWorksWithImportedAndScriptName()
-        {
+        public void PreserveMemberCaseWorksWithImportedAndScriptName() {
             Prepare(
 @"using System.Runtime.CompilerServices;
 
-[Imported, PreserveMemberCase]
+[PreserveMemberCase]
 class C1 {
     [ScriptName(""mymethod1"")]
 	public void Method1() {
@@ -715,6 +701,37 @@ class C1 {
             Assert.That(f4.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
             Assert.That(f4.Name, Is.EqualTo("aField4"));
         }
+
+		[Test]
+		public void PerserveMemberCaseOnTypeDoesNotPreventMinification() {
+            Prepare(
+@"using System.Runtime.CompilerServices;
+
+[PreserveMemberCase]
+class C1 {
+	public void Method1() {
+	}
+}", minimizeNames: true);
+
+            var m1 = FindMethod("C1.Method1");
+            Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+            Assert.That(m1.Name, Is.EqualTo("$0"));
+		}
+
+		[Test]
+		public void PerserveMemberCaseOnAssemblyDoesNotPreventMinification() {
+            Prepare(
+@"using System.Runtime.CompilerServices;
+[assembly: PreserveMemberCase]
+class C1 {
+	public void Method1() {
+	}
+}", minimizeNames: true);
+
+            var m1 = FindMethod("C1.Method1");
+            Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+            Assert.That(m1.Name, Is.EqualTo("$0"));
+		}
 
 		[Test]
 		public void PreserveNameAttributePreventsMinimization() {
