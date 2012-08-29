@@ -1,5 +1,7 @@
+Added a PreserveMemberCaseAttribute that can be used to prevent camel-casing of members in an assembly or a type.
+
 1.2.2
-Conversion between JsDate and DateTime are now explicit. Should solve issues involving nullable DateTimes.
+Conversions between JsDate and DateTime are now explicit. Should solve issues involving nullable DateTimes.
 
 1.2.1
 Support constructors with a single 'params object[]' parameter for imported types to create a name-value collection.
