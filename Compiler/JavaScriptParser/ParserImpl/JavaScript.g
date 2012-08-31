@@ -16,8 +16,8 @@ options
 tokens {
 	POSTFIX_PLUSPLUS;
 	POSTFIX_MINUSMINUS;
-	BINARY_PLUS;
-	BINARY_MINUS;
+	UNARY_PLUS;
+	UNARY_MINUS;
 	MEMBER;
 	OBJECT_LITERAL;
 	ARRAY_LITERAL;
@@ -369,10 +369,8 @@ shiftExpression
 	;
 
 additiveExpression
-@init { int type = 0; }
-	: multiplicativeExpression (LT* ('+' { type = 1; } | '-' { type = 2; }) LT* multiplicativeExpression)* -> { type == 1 }? ^(BINARY_PLUS multiplicativeExpression+)
-	                                                                                                       -> { type == 2 }? ^(BINARY_MINUS multiplicativeExpression+)
-	                                                                                                       -> multiplicativeExpression;
+	: multiplicativeExpression (LT!* ('+' | '-')^ LT!* multiplicativeExpression)*
+	;
 
 multiplicativeExpression
 	: unaryExpression (LT!* ('*' | '/' | '%')^ LT!* unaryExpression)*
@@ -380,7 +378,9 @@ multiplicativeExpression
 
 unaryExpression
 	: postfixExpression
-	| ('delete' | 'void' | 'typeof' | '++' | '--' | '+' | '-' | '~' | '!')^ unaryExpression
+	| ('delete' | 'void' | 'typeof' | '++' | '--' | '~' | '!')^ unaryExpression
+	| '+' unaryExpression -> ^(UNARY_PLUS unaryExpression)
+	| '-' unaryExpression -> ^(UNARY_MINUS unaryExpression)
 	;
 	
 postfixExpression
