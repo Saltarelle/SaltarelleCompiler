@@ -1,3 +1,4 @@
+Fixed metadata bug causing jQuery.ExtendXX methods not to work
 Added a PreserveMemberCaseAttribute that can be used to prevent camel-casing of members in an assembly or a type.
 
 1.2.2
