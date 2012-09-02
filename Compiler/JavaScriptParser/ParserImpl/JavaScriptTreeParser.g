@@ -128,8 +128,8 @@ unary returns [JsExpression result]
 @init { System.Func<JsExpression, JsExpression> factory = null; }
 	: ^(( 'typeof'           { factory = JsExpression.TypeOf; }
 	    | '!'                { factory = JsExpression.LogicalNot; }
-	    | '-'                { factory = JsExpression.Negate; }
-	    | '+'                { factory = JsExpression.Positive; }
+	    | UNARY_MINUS        { factory = JsExpression.Negate; }
+	    | UNARY_PLUS         { factory = JsExpression.Positive; }
 	    | POSTFIX_PLUSPLUS   { factory = JsExpression.PostfixPlusPlus; }
 	    | POSTFIX_MINUSMINUS { factory = JsExpression.PostfixMinusMinus; }
 	    | '++'               { factory = JsExpression.PrefixPlusPlus; }
@@ -149,8 +149,8 @@ binary returns [JsExpression result]
 	    | '<'          { factory = JsExpression.Lesser; }
 	    | '>'          { factory = JsExpression.Greater; }
 	    | '=='         { factory = JsExpression.Equal; }
-	    | BINARY_MINUS { factory = JsExpression.Subtract; }
-	    | BINARY_PLUS  { factory = JsExpression.Add; }
+	    | '-'          { factory = JsExpression.Subtract; }
+	    | '+'          { factory = JsExpression.Add; }
 	    | '%'          { factory = JsExpression.Modulo; }
 	    | '/'          { factory = JsExpression.Divide; }
 	    | '*'          { factory = JsExpression.Multiply; }
@@ -176,7 +176,7 @@ binary returns [JsExpression result]
 	    | '&='         { factory = JsExpression.BitwiseAndAssign; }
 	    | '|='         { factory = JsExpression.BitwiseOrAssign; }
 	    | '^='         { factory = JsExpression.BitwiseXOrAssign; }
-	   ) a=expression b=expression) { $result = factory(a, b); };
+	   ) a=expression { $result = a; } (b=expression { $result = factory($result, b); })+);
 
 objectLiteral returns [JsExpression result]
 @init { var properties = new List<JsObjectLiteralProperty>(); }

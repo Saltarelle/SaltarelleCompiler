@@ -21,6 +21,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ScriptNameAttribute                    = "System.Runtime.CompilerServices.ScriptNameAttribute";
 		private const string PreserveNameAttribute                  = "System.Runtime.CompilerServices.PreserveNameAttribute";
 		private const string PreserveCaseAttribute                  = "System.Runtime.CompilerServices.PreserveCaseAttribute";
+		private const string PreserveMemberCaseAttribute            = "System.Runtime.CompilerServices.PreserveMemberCaseAttribute";
 		private const string IntrinsicPropertyAttribute             = "System.Runtime.CompilerServices.IntrinsicPropertyAttribute";
 		private const string GlobalMethodsAttribute                 = "System.Runtime.CompilerServices.GlobalMethodsAttribute";
 		private const string ImportedAttribute                      = "System.Runtime.CompilerServices.ImportedAttribute";
@@ -465,6 +466,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
+			bool preserveMemberCase = member.DeclaringTypeDefinition.Attributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) || member.ParentAssembly.AssemblyAttributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
+
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
 			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
 
@@ -473,13 +476,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				defaultName = "$ctor";
 			}
 			else if (Utils.IsPublic(member)) {
-				defaultName = MakeCamelCase(member.Name);
+				defaultName = preserveMemberCase ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {
 				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
 					defaultName = null;
 				else
-					defaultName = "$" + MakeCamelCase(member.Name);
+					defaultName = "$" + (preserveMemberCase ? member.Name : MakeCamelCase(member.Name));
 			}
 
 
@@ -522,7 +525,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                                                       || (typeSemantics.IsNamedValues && member is IField));
 
 			if (preserveName)
-				return Tuple.Create(MakeCamelCase(member.Name), true);
+				return Tuple.Create(preserveMemberCase ? member.Name : MakeCamelCase(member.Name), true);
 
 			return Tuple.Create(defaultName, false);
 		}

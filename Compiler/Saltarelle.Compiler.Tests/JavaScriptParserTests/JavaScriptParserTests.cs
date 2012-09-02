@@ -155,6 +155,13 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		}
 
 		[Test]
+		public void ChainingBinaryOperations() {
+			RoundtripExpression("a * b / c % d");
+			RoundtripExpression("a + b + c");
+			RoundtripExpression("a + b - c");
+		}
+
+		[Test]
 		public void Comma() {
 			RoundtripExpression("a, b, c");
 		}
