@@ -16,20 +16,44 @@ namespace System {
 	[Imported(IsRealType = true)]
     [ScriptName("Number")]
     public struct Decimal {
+        [ScriptName("MAX_VALUE")]
+        public const decimal MaxValue = 0;
 
-        public Decimal(double d) {
+        [ScriptName("MIN_VALUE")]
+        public const decimal MinValue = 0;
+
+        public static decimal Zero { [InlineCode("0")] get { return 0; } }
+        public static decimal One { [InlineCode("1")] get { return 0; } }
+        public static decimal MinusOne { [InlineCode("-1")] get { return 0; } }
+
+		[InlineCode("{d}")]
+		public Decimal(double d) {
         }
 
+		[InlineCode("{i}")]
         public Decimal(int i) {
         }
 
+        [CLSCompliant(false)]
+		[InlineCode("{i}")]
+        public Decimal(uint i) {
+        }
+
+		[InlineCode("{f}")]
         public Decimal(float f) {
         }
 
+		[InlineCode("{n}")]
         public Decimal(long n) {
         }
 
+        [CLSCompliant(false)]
+		[InlineCode("{n}")]
+        public Decimal(ulong n) {
+        }
+
         [EditorBrowsable(EditorBrowsableState.Never)]
+		[NonScriptable]
         public Decimal(int lo, int mid, int hi, bool isNegative, byte scale) {
         }
 
@@ -101,16 +125,6 @@ namespace System {
         /// <returns>The string representation of the value.</returns>
         public string ToPrecision(int precision) {
             return null;
-        }
-
-        [ScriptAlias("isFinite")]
-        public static bool IsFinite(decimal d) {
-            return false;
-        }
-
-        [ScriptAlias("isNaN")]
-        public static bool IsNaN(decimal d) {
-            return false;
         }
 
         /// <internalonly />
@@ -205,52 +219,52 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        public static explicit operator short(Decimal value) {
+        public static explicit operator short(decimal value) {
             return 0;
         }
 
         /// <internalonly />
         [ScriptSkip]
         [CLSCompliant(false)]
-        public static explicit operator ushort(Decimal value) {
+        public static explicit operator ushort(decimal value) {
             return 0;
         }
 
         /// <internalonly />
         [ScriptSkip]
-        public static explicit operator int(Decimal value) {
-            return 0;
-        }
-
-        /// <internalonly />
-        [ScriptSkip]
-        [CLSCompliant(false)]
-        public static explicit operator uint(Decimal value) {
-            return 0;
-        }
-
-        /// <internalonly />
-        [ScriptSkip]
-        public static explicit operator long(Decimal value) {
+        public static explicit operator int(decimal value) {
             return 0;
         }
 
         /// <internalonly />
         [ScriptSkip]
         [CLSCompliant(false)]
-        public static explicit operator ulong(Decimal value) {
+        public static explicit operator uint(decimal value) {
             return 0;
         }
 
         /// <internalonly />
         [ScriptSkip]
-        public static explicit operator float(Decimal value) {
+        public static explicit operator long(decimal value) {
             return 0;
         }
 
         /// <internalonly />
         [ScriptSkip]
-        public static explicit operator double(Decimal value) {
+        [CLSCompliant(false)]
+        public static explicit operator ulong(decimal value) {
+            return 0;
+        }
+
+        /// <internalonly />
+        [ScriptSkip]
+        public static explicit operator float(decimal value) {
+            return 0;
+        }
+
+        /// <internalonly />
+        [ScriptSkip]
+        public static explicit operator double(decimal value) {
             return 0;
         }
 
@@ -343,5 +357,50 @@ namespace System {
         public static bool operator <=(decimal d1, decimal d2) {
             return false;
         }
+
+		[InlineCode("{d1} + {d2}")]
+		public static decimal Add(decimal d1, decimal d2) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Math}.ceil({d})")]
+		public static decimal Ceiling(decimal d) {
+			return 0;
+		}
+
+		[InlineCode("{d1} / {d2}")]
+		public static decimal Divide(decimal d1, decimal d2) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Math}.floor({d})")]
+		public static decimal Floor(decimal d) {
+			return 0;
+		}
+
+		[InlineCode("{d1} % {d2}")]
+		public static decimal Remainder(decimal d1, decimal d2) {
+			return 0;
+		}
+
+		[InlineCode("{d1} * {d2}")]
+		public static decimal Multiply(decimal d1, decimal d2) {
+			return 0;
+		}
+
+		[InlineCode("-{d}")]
+		public static decimal Negate(decimal d) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Math}.round({d})")]
+		public static decimal Round(decimal d) {
+			return 0;
+		}
+
+		[InlineCode("{d1} - {d2}")]
+		public static decimal Subtract(decimal d1, decimal d2) {
+			return 0;
+		}
     }
 }

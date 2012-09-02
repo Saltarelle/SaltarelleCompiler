@@ -36,36 +36,9 @@
     }
   };
 
-  var started = false;
-  var startCallbacks = [];
-
-  function onStartup(cb) {
-    startCallbacks ? startCallbacks.push(cb) : setTimeout(cb, 0);
-  }
-  function startup() {
-    if (startCallbacks) {
-      var callbacks = startCallbacks;
-      startCallbacks = null;
-      for (var i = 0, l = callbacks.length; i < l; i++) {
-        callbacks[i]();
-      }
-    }
-  }
-  if (document.addEventListener) {
-    document.readyState == 'complete' ? startup() : document.addEventListener('DOMContentLoaded', startup, false);
-  }
-  else if (window.attachEvent) {
-    window.attachEvent('onload', function () {
-      startup();
-    });
-  }
-
   var ss = window.ss;
   if (!ss) {
-    window.ss = ss = {
-      init: onStartup,
-      ready: onStartup
-    };
+    window.ss = ss = {};
   }
   for (var n in globals) {
     ss[n] = globals[n];
@@ -183,7 +156,5 @@ ss.parseXml = function(markup) {
 }
 
 #include "BCL\CancelEventArgs.js"
-
-#include "BCL\Observable.js"
 
 #include "BCL\App.js"

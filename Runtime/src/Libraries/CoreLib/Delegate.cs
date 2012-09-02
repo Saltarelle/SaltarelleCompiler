@@ -24,6 +24,7 @@ namespace System {
             return null;
         }
 
+		[ScriptName("mkdel")]
         public static Delegate Create(object instance, Function f) {
             return null;
         }

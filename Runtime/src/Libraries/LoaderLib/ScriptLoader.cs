@@ -53,5 +53,23 @@ namespace System {
         [ScriptAlias("ss.registerScript")]
         public static void RegisterScript(ScriptInfo scriptInfo) {
         }
+
+        /// <summary>
+        /// Registers the specified callback to be invoked when the DOM is ready,
+        /// and before any script loading has begun.
+        /// </summary>
+        /// <param name="callback">The callback to invoke.</param>
+        [ScriptAlias("ss.init")]
+        public static void OnInit(Action callback) {
+        }
+
+        /// <summary>
+        /// Registers a callback to be invoked once any necessary scripts
+        /// have been loaded.
+        /// </summary>
+        /// <param name="callback">The callback to be invoked.</param>
+        [ScriptAlias("ss.ready")]
+        public static void OnReady(Action callback) {
+        }
     }
 }

@@ -473,14 +473,16 @@
     });
   }
 
-  window.ss = {
-    load: _startup,
-    loadScripts: loadScripts,
-    checkScripts: checkScripts,
-    registerScript: registerScript,
-    init: registerInitCallback,
-    ready: registerReadyCallback
-  };
+  if (!window.ss)
+	window.ss = {};
+
+  window.ss.load = _startup;
+  window.ss.loadScripts = loadScripts;
+  window.ss.checkScripts = checkScripts;
+  window.ss.registerScript = registerScript;
+  window.ss.init = registerInitCallback;
+  window.ss.ready = registerReadyCallback;
+
   if (document.addEventListener) {
     document.readyState == 'complete' ? _startup() : document.addEventListener('DOMContentLoaded', _startup, false);
   }

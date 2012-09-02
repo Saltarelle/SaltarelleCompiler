@@ -23,6 +23,18 @@ namespace System {
             return null;
         }
 
+        [ScriptAlias("parseInt")]
+		[CLSCompliant(false)]
+        public static uint Parse(string s) {
+            return 0;
+        }
+
+        [ScriptAlias("parseInt")]
+		[CLSCompliant(false)]
+        public static uint Parse(string s, int radix) {
+            return 0;
+        }
+
         /// <summary>
         /// Converts the value to its string representation.
         /// </summary>

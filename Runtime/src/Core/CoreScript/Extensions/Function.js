@@ -2,6 +2,7 @@
 // Function Extensions
 
 Function.__typeName = 'Function';
+Function.__class = true;
 
 Function.empty = function () { };
 

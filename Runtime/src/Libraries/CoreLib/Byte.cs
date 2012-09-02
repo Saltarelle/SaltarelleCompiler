@@ -23,6 +23,16 @@ namespace System {
             return null;
         }
 
+        [ScriptAlias("parseInt")]
+        public static byte Parse(string s) {
+            return 0;
+        }
+
+        [ScriptAlias("parseInt")]
+        public static byte Parse(string s, int radix) {
+            return 0;
+        }
+
         /// <summary>
         /// Converts the value to its string representation.
         /// </summary>

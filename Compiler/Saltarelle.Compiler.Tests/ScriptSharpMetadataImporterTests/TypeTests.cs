@@ -734,6 +734,21 @@ class C1 {
 		}
 
 		[Test]
+		public void PreserveMemberCaseWorksOnEnum() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[PreserveMemberCase]
+public enum E1 {
+	FirstValue
+}");
+
+			var f1 = FindField("E1.FirstValue");
+			Assert.That(f1.Name, Is.EqualTo("FirstValue"));
+		}
+
+		[Test]
 		public void PreserveNameAttributePreventsMinimization() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

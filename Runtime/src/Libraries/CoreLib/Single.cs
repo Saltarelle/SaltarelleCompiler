@@ -16,6 +16,20 @@ namespace System {
     [Imported(IsRealType = true)]
     [ScriptName("Number")]
     public struct Single {
+        [ScriptName("MAX_VALUE")]
+        public const float MaxValue = 0;
+
+        [ScriptName("MIN_VALUE")]
+        public const float MinValue = 0;
+
+        [PreserveCase]
+        public const float NaN = 0;
+
+        [ScriptName("NEGATIVE_INFINITY")]
+        public const float NegativeInfinity = 0;
+
+        [ScriptName("POSITIVE_INFINITY")]
+        public const float PositiveInfinity = 0;
 
         public string Format(string format) {
             return null;

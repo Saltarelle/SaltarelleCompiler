@@ -17,6 +17,7 @@ namespace System.Text {
         /// <summary>
         /// Initializes a new instance of the <see cref="StringBuilder"/> class.
         /// </summary>
+        [ScriptName("")]
         public StringBuilder() {
         }
 
@@ -26,6 +27,7 @@ namespace System.Text {
         /// <param name="initialText">
         /// The string that is used to initialize the value of the instance.
         /// </param>
+        [ScriptName("")]
         public StringBuilder(string initialText) {
         }
 
@@ -170,19 +172,6 @@ namespace System.Text {
         /// </summary>
         /// <returns>A string representation of the StringBuilder instance.</returns>
         public override string ToString() {
-            return null;
-        }
-
-        /// <summary>
-        /// Creates a string from the contents of a <see cref="StringBuilder"/> instance, and
-        /// optionally inserts a delimeter between each element of the created string.
-        /// </summary>
-        /// <param name="separator">A string to append between each element of the string that is returned.</param>
-        /// <returns>
-        /// A string representation of the StringBuilder instance. If <paramref name="separator"/>
-        /// is specified, the delimeter string is inserted between each element of the returned string.
-        /// </returns>
-        public string ToString(string separator) {
             return null;
         }
     }

@@ -256,7 +256,7 @@ namespace System.Runtime.CompilerServices {
     /// member names of attached type to camel-cased equivalents in the generated JavaScript.
     /// When applied to an assembly, all types in the assembly are considered to have this
     /// attribute by default</summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
     [NonScriptable]
     [Imported]
     public sealed class PreserveMemberCaseAttribute : Attribute

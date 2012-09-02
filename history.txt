@@ -1,3 +1,7 @@
+Fixed an issue causing object initializers to be ignored for constructors defined as inline code.
+Fixed issue causing enum fields not to be included in the enum type.
+
+1.2.3
 Fixed metadata bug causing jQuery.ExtendXX methods not to work
 Added a PreserveMemberCaseAttribute that can be used to prevent camel-casing of members in an assembly or a type.
 
