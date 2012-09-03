@@ -1,3 +1,4 @@
+ImportedAttribute now also counts as IgnoreGenericArgument by default (Script# compatibility issue).
 Fixed an issue causing object initializers to be ignored for constructors defined as inline code.
 Fixed issue causing enum fields not to be included in the enum type.
 

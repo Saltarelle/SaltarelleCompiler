@@ -35,7 +35,7 @@ namespace System.Runtime.CompilerServices {
 
     /// <summary>
     /// This attribute can be placed on types that should not be emitted into generated
-    /// script, as they represent existing script or native types. All members without another naming attribute are considered to use [PreserveName]
+    /// script, as they represent existing script or native types. All members without another naming attribute are considered to use [PreserveName].
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Struct)]
     [NonScriptable]
@@ -47,6 +47,11 @@ namespace System.Runtime.CompilerServices {
 		/// The default is false.
 		/// </summary>
 		public bool IsRealType { get; set; }
+
+		/// <summary>
+		/// This flag, set by default, applies an [IgnoreGenericArgument] attribute to the type and all its methods.
+		/// </summary>
+		public bool IgnoreGenericArguments { get; set; }
     }
 
     /// <summary>

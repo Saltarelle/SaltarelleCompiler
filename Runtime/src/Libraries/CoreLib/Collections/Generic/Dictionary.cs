@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
 	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue>  {
 		/// <summary>
 		/// This constructor cannot be used, but is required to avoid problems in mcs and csc when switching on strings.
@@ -12,11 +11,12 @@ namespace System.Collections.Generic {
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public Dictionary(int capacity) {}
 
-		[ScriptName("")]
+		[AlternateSignature]
 		public Dictionary() {}
-		[ScriptName("")]
+
+		[AlternateSignature]
 		public Dictionary(JsDictionary<TKey, TValue> dictionary) {}
-		[ScriptName("")]
+
 		public Dictionary(IDictionary<TKey, TValue> dictionary) {}
 
 		public int Count { get { return 0; } }

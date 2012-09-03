@@ -323,7 +323,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool isRealType = importedAttr == null || GetNamedArgument<bool>(importedAttr, IsRealTypePropertyName);
 			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
 
-			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null;
+			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null || isImported;
 			bool isResources = false;
 
 			if (GetAttributePositionalArgs(typeDefinition, ResourcesAttribute) != null) {
@@ -500,7 +500,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			var asa = GetAttributePositionalArgs(member, AlternateSignatureAttribute);
 			if (asa != null) {
-				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null).ToList();
+				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null && GetAttributePositionalArgs(m, NonScriptableAttribute) == null).ToList();
 				if (otherMembers.Count == 1) {
 					return DeterminePreferredMemberName(otherMembers[0]);
 				}
@@ -866,6 +866,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var epa = GetAttributePositionalArgs(method, ExpandParamsAttribute);
 			var asa = GetAttributePositionalArgs(method, AlternateSignatureAttribute);
 
+			bool isImported = _typeSemantics[method.DeclaringTypeDefinition].IsImported;
+
 			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 				return;
@@ -1047,7 +1049,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 					}
 					else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, ignoreGenericArguments: iga != null, expandParams: epa != null);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
 						return;
 					}
 					else {
@@ -1055,7 +1057,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						if (asa == null)
 							usedNames[name] = true;
 						if (_typeSemantics[method.DeclaringTypeDefinition].IsSerializable && !method.IsStatic) {
-							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
+							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
 						}
 						else {
 							if (_typeSemantics[method.DeclaringTypeDefinition].IsTestFixture && name == "runTests") {
@@ -1083,7 +1085,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 								}
 							}
 
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null, expandParams: epa != null);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
 						}
 					}
 				}

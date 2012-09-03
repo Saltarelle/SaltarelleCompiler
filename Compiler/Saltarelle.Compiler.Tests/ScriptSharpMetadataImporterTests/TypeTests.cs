@@ -866,6 +866,24 @@ class C1 {
 		}
 
 		[Test]
+		public void ImportedAttributeOnTypeActivatesIgnoreGenericArgumentsForTheTypeAndAllMethodsInIt() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+class C1<T> {
+	public void M<T2>() {
+	}
+}");
+			var t = FindType("C1`1");
+			Assert.That(t.Name, Is.EqualTo("C1"));
+			Assert.That(t.IgnoreGenericArguments, Is.True);
+
+			var m = FindMethod("C1`1.M");
+			Assert.That(m.Name, Is.EqualTo("m"));
+			Assert.That(m.IgnoreGenericArguments, Is.True);
+		}
+		
+		[Test]
 		public void NonScriptableOnATypeCausesTheTypeAndAnyNestedTypesAndAllMembersToBeNotUsableFromScript() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
