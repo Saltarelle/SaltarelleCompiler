@@ -23,8 +23,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(GetDefaultValue<long>(), 0);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsZero() {
 			Assert.AreStrictEqual(new long(), 0);
 		}

@@ -14,6 +14,9 @@ namespace System {
 	[ScriptName("Int32")]
 	[Imported(IsRealType = true)]
     public struct SByte {
+		[InlineCode("0")]
+		public SByte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
 
         public string Format(string format) {
             return null;

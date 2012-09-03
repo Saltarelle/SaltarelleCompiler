@@ -395,4 +395,13 @@ namespace System.Runtime.CompilerServices {
 		/// </summary>
 		public bool OmitNullableChecks { get; set; }
 	}
+
+	/// <summary>
+	/// If a constructor for a value type takes an instance of this type as a parameter, any attribute applied to that constructor will instead be applied to the default (undeclarable) constructor.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[Imported]
+	public sealed class DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor {
+		private DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor() {}
+	}
 }

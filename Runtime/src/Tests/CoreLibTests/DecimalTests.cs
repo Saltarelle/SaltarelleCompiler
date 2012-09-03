@@ -31,8 +31,7 @@ namespace CoreLibTests {
 			Assert.AreEqual(decimal.MinusOne, -1);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsZero() {
 			Assert.AreStrictEqual(new Decimal(), 0);
 		}

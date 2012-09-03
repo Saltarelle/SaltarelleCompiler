@@ -23,8 +23,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(GetDefaultValue<uint>(), 0);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsZero() {
 			Assert.AreStrictEqual(new uint(), 0);
 		}

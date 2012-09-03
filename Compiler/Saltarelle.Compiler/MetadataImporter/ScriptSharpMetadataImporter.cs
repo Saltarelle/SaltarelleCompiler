@@ -33,6 +33,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string MixinAttribute                         = "System.Runtime.CompilerServices.MixinAttribute";
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
 		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
+		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
 		private const string AsyncTestAttribute                     = "System.Testing.AsyncTestAttribute";
@@ -465,7 +466,18 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _instanceMemberNamesByType[typeDefinition];
 		}
 
+		private IMember UnwrapValueTypeConstructor(IMember m) {
+			if (m is IMethod && !m.IsStatic && m.DeclaringType.Kind == TypeKind.Struct && ((IMethod)m).IsConstructor && ((IMethod)m).Parameters.Count == 0) {
+				var other = m.DeclaringType.GetConstructors().SingleOrDefault(c => c.Parameters.Count == 1 && c.Parameters[0].Type.FullName == DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor);
+				if (other != null)
+					return other;
+			}
+			return m;
+		}
+
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
+			member = UnwrapValueTypeConstructor(member);
+
 			bool preserveMemberCase = member.DeclaringTypeDefinition.Attributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) || member.ParentAssembly.AssemblyAttributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
 
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
@@ -608,40 +620,47 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			var nsa = GetAttributePositionalArgs(constructor, NonScriptableAttribute);
-			var asa = GetAttributePositionalArgs(constructor, AlternateSignatureAttribute);
-			var epa = GetAttributePositionalArgs(constructor, ExpandParamsAttribute);
-			var ola = GetAttributePositionalArgs(constructor, ObjectLiteralAttribute);
-
-			if (nsa != null || _typeSemantics[constructor.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (constructor.Parameters.Count == 1 && constructor.Parameters[0].Type.FullName == DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
 				return;
 			}
 
-			if (constructor.DeclaringType.Kind == TypeKind.Delegate) {
+			var source = (IMethod)UnwrapValueTypeConstructor(constructor);
+
+			var nsa = GetAttributePositionalArgs(source, NonScriptableAttribute);
+			var asa = GetAttributePositionalArgs(source, AlternateSignatureAttribute);
+			var epa = GetAttributePositionalArgs(source, ExpandParamsAttribute);
+			var ola = GetAttributePositionalArgs(source, ObjectLiteralAttribute);
+
+			if (nsa != null || _typeSemantics[source.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
 				return;
 			}
 
-			if (constructor.IsStatic) {
+			if (source.DeclaringType.Kind == TypeKind.Delegate) {
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
+				return;
+			}
+
+			if (source.IsStatic) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();	// Whatever, it is not really used.
 				return;
 			}
 
-			if (epa != null && !constructor.Parameters.Any(p => p.IsParams)) {
+			if (epa != null && !source.Parameters.Any(p => p.IsParams)) {
 				Message(7102, constructor);
 			}
 
-			bool isSerializable = _typeSemantics[constructor.DeclaringTypeDefinition].IsSerializable;
-			bool isImported     = _typeSemantics[constructor.DeclaringTypeDefinition].IsImported;
+			bool isSerializable = _typeSemantics[source.DeclaringTypeDefinition].IsSerializable;
+			bool isImported     = _typeSemantics[source.DeclaringTypeDefinition].IsImported;
 
-			var ica = GetAttributePositionalArgs(constructor, InlineCodeAttribute);
+			var ica = GetAttributePositionalArgs(source, InlineCodeAttribute);
 			if (ica != null) {
 				string code = (string)ica[0] ?? "";
 
-				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(constructor, code, t => t.Resolve(_compilation).Kind != TypeKind.Unknown);
+				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, code, t => t.Resolve(_compilation).Kind != TypeKind.Unknown);
 				if (errors.Count > 0) {
-					Message(7103, constructor, string.Join(", ", errors));
+					Message(7103, source, string.Join(", ", errors));
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
@@ -653,12 +672,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null);
 				return;
 			}
-			else if (ola != null || (isSerializable && _typeSemantics[constructor.DeclaringTypeDefinition].IsImported)) {
+			else if (ola != null || (isSerializable && _typeSemantics[source.DeclaringTypeDefinition].IsImported)) {
 				if (isSerializable) {
 					bool hasError = false;
-					var members = constructor.DeclaringTypeDefinition.Members.Where(m => m.EntityType == EntityType.Property || m.EntityType == EntityType.Field).ToDictionary(m => m.Name.ToLowerInvariant());
+					var members = source.DeclaringTypeDefinition.Members.Where(m => m.EntityType == EntityType.Property || m.EntityType == EntityType.Field).ToDictionary(m => m.Name.ToLowerInvariant());
 					var parameterToMemberMap = new List<IMember>();
-					foreach (var p in constructor.Parameters) {
+					foreach (var p in source.Parameters) {
 						IMember member;
 						if (p.IsOut || p.IsRef) {
 							Message(7145, p.Region, p.Name);
@@ -674,20 +693,20 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							}
 						}
 						else {
-							Message(7143, p.Region, constructor.DeclaringTypeDefinition.FullName, p.Name);
+							Message(7143, p.Region, source.DeclaringTypeDefinition.FullName, p.Name);
 							hasError = true;
 						}
 					}
 					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap);
 				}
 				else {
-					Message(7146, constructor.Region, constructor.DeclaringTypeDefinition.FullName);
+					Message(7146, constructor.Region, source.DeclaringTypeDefinition.FullName);
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 				}
 				return;
 			}
-			else if (constructor.Parameters.Count == 1 && constructor.Parameters[0].Type is ArrayType && ((ArrayType)constructor.Parameters[0].Type).ElementType.IsKnownType(KnownTypeCode.Object) && constructor.Parameters[0].IsParams && isImported) {
-				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode("ss.mkdict({" + constructor.Parameters[0].Name + "})");
+			else if (source.Parameters.Count == 1 && source.Parameters[0].Type is ArrayType && ((ArrayType)source.Parameters[0].Type).ElementType.IsKnownType(KnownTypeCode.Object) && source.Parameters[0].IsParams && isImported) {
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode("ss.mkdict({" + source.Parameters[0].Name + "})");
 				return;
 			}
 			else if (nameSpecified) {
@@ -699,14 +718,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else {
-				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && !Utils.IsPublic(constructor))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
+				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && !Utils.IsPublic(source))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
 					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
 					usedNames["$ctor"] = true;
 					return;
 				}
 				else {
 					string name;
-					if (_minimizeNames && !Utils.IsPublic(constructor)) {
+					if (_minimizeNames && !Utils.IsPublic(source)) {
 						name = GetUniqueName(null, usedNames);
 					}
 					else {

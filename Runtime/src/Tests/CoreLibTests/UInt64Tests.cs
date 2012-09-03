@@ -23,8 +23,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(GetDefaultValue<ulong>(), 0);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsZero() {
 			Assert.AreStrictEqual(new ulong(), 0);
 		}

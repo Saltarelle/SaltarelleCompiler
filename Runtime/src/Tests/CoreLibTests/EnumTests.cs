@@ -48,8 +48,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(GetDefaultValue<TestEnum>(), 0);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorOfEnumTypeReturnsZero() {
 			Assert.AreStrictEqual(new TestEnum(), 0);
 		}

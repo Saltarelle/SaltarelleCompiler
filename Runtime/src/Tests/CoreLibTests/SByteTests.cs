@@ -23,8 +23,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(GetDefaultValue<sbyte>(), 0);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsZero() {
 			Assert.AreStrictEqual(new sbyte(), 0);
 		}

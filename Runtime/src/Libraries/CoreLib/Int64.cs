@@ -14,6 +14,9 @@ namespace System {
     [ScriptName("Int32")]
 	[Imported(IsRealType = true)]
     public struct Int64 {
+		[InlineCode("0")]
+		public Int64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
 
         public string Format(string format) {
             return null;

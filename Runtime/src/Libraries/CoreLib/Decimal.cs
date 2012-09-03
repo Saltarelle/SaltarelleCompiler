@@ -26,6 +26,10 @@ namespace System {
         public static decimal One { [InlineCode("1")] get { return 0; } }
         public static decimal MinusOne { [InlineCode("-1")] get { return 0; } }
 
+		[InlineCode("0")]
+		public Decimal(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
+
 		[InlineCode("{d}")]
 		public Decimal(double d) {
         }

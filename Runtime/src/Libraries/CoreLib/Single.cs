@@ -16,6 +16,10 @@ namespace System {
     [Imported(IsRealType = true)]
     [ScriptName("Number")]
     public struct Single {
+		[InlineCode("0")]
+		public Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
+
         [ScriptName("MAX_VALUE")]
         public const float MaxValue = 0;
 

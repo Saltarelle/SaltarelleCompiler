@@ -32,8 +32,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(float.NegativeInfinity, -1 / zero, "NegativeInfinity should be correct");
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsZero() {
 			Assert.AreStrictEqual(new float(), 0);
 		}

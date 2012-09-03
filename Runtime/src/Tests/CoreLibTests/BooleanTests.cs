@@ -28,8 +28,7 @@ namespace CoreLibTests {
 			Assert.AreStrictEqual(GetDefaultValue<bool>(), false);
 		}
 
-		#warning TODO: Fix and enable
-		//[Test]
+		[Test]
 		public void DefaultConstructorReturnsFalse() {
 		    Assert.AreStrictEqual(new bool(), false);
 		}
