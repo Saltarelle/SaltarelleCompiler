@@ -13,22 +13,13 @@ namespace System {
     [IgnoreNamespace]
     [Imported(IsRealType = true)]
     public sealed class Function {
-
-        /// <summary>
-        /// Creates a new function with the specified implementation.
-        /// </summary>
-        /// <param name="functionBody">The implementation of the function.</param>
-        public Function(string functionBody) {
-        }
-
         /// <summary>
         /// Creates a new function with the specified implementation, and the
         /// set of named parameters.
         /// </summary>
-        /// <param name="functionBody">The implementation of the function.</param>
-        /// <param name="argNames">The names of the arguments required by the function.</param>
+        /// <param name="argNamesAndBody">Argument names, followed by the function body.</param>
         [ExpandParams]
-        public Function(string functionBody, params string[] argNames) {
+        public Function(params string[] argNamesAndBody) {
         }
 
         /// <summary>

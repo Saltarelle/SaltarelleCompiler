@@ -60,5 +60,19 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
             Compile(new[] { "enum MyEnum { Member1, Member2, Member3 }" }, metadataImporter: md);
 			FindEnum("MyEnum").Values.Select(v => v.Name).Should().BeEquivalentTo(new[] { "$Member1", "$Member3" });
         }
+
+        [Test]
+        public void EnumMemberImplementedAsNumericConstantIsImported() {
+			var md = new MockMetadataImporter { GetFieldSemantics = f => f.Name == "Member2" ? FieldScriptSemantics.NumericConstant(123, "$" + f.Name) : FieldScriptSemantics.Field("$" + f.Name) };
+            Compile(new[] { "enum MyEnum { Member1, Member2, Member3 }" }, metadataImporter: md);
+			FindEnum("MyEnum").Values.Select(v => v.Name).Should().BeEquivalentTo(new[] { "$Member1", "$Member2", "$Member3" });
+        }
+
+        [Test]
+        public void EnumMemberImplementedAsStringConstantIsNotImported() {
+			var md = new MockMetadataImporter { GetFieldSemantics = f => f.Name == "Member2" ? FieldScriptSemantics.StringConstant("a", "$" + f.Name) : FieldScriptSemantics.Field("$" + f.Name) };
+            Compile(new[] { "enum MyEnum { Member1, Member2, Member3 }" }, metadataImporter: md);
+			FindEnum("MyEnum").Values.Select(v => v.Name).Should().BeEquivalentTo(new[] { "$Member1", "$Member3" });
+        }
     }
 }

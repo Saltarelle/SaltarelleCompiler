@@ -39,7 +39,6 @@
     <Content Include="Extensions\Date.js" />
     <Content Include="Extensions\Error.js" />
     <Content Include="BCL\App.js" />
-    <Content Include="BCL\Observable.js" />
     <Content Include="BCL\Debug.js" />
     <Content Include="BCL\ArrayEnumerator.js" />
     <Content Include="BCL\CancelEventArgs.js" />

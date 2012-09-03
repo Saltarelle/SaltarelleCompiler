@@ -34,7 +34,34 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ActivatorTests.cs" />
+    <Compile Include="ArgumentsTests.cs" />
+    <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
+    <Compile Include="Blank.cs" />
+    <Compile Include="BooleanTests.cs" />
+    <Compile Include="ByteTests.cs" />
+    <Compile Include="GenericDictionaryTests.cs" />
+    <Compile Include="JsonTests.cs" />
+    <Compile Include="RegexTests.cs" />
+    <Compile Include="StringBuilderTests.cs" />
+    <Compile Include="ListTests.cs" />
+    <Compile Include="UInt16Tests.cs" />
+    <Compile Include="UInt32Tests.cs" />
+    <Compile Include="UInt64Tests.cs" />
+    <Compile Include="TupleTests.cs" />
+    <Compile Include="SingleTests.cs" />
+    <Compile Include="ScriptTests.cs" />
+    <Compile Include="SByteTests.cs" />
+    <Compile Include="NullableTests.cs" />
+    <Compile Include="MathTests.cs" />
+    <Compile Include="Int64Tests.cs" />
+    <Compile Include="Int32Tests.cs" />
+    <Compile Include="Int16Tests.cs" />
+    <Compile Include="EnumTests.cs" />
+    <Compile Include="DoubleTests.cs" />
+    <Compile Include="DelegateTests.cs" />
+    <Compile Include="DecimalTests.cs" />
     <Compile Include="GenericJsDictionaryTests.cs" />
     <Compile Include="JsDictionaryTests.cs" />
     <Compile Include="StringTests.cs" />

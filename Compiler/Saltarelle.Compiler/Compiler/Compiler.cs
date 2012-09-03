@@ -125,6 +125,9 @@ namespace Saltarelle.Compiler.Compiler {
 					if (sem.Type == FieldScriptSemantics.ImplType.Field) {
 						values.Add(new JsEnumValue(sem.Name, Convert.ToInt64(f.ConstantValue)));
 					}
+					else if (sem.Type == FieldScriptSemantics.ImplType.Constant && sem.Name != null && sem.Value is double) {
+						values.Add(new JsEnumValue(sem.Name, Convert.ToInt64(sem.Value)));
+					}
                 }
                 else {
 					_errorReporter.Region = f.Region;

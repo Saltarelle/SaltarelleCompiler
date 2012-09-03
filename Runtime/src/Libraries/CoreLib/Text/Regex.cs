@@ -52,6 +52,7 @@ namespace System.Text.RegularExpressions {
         }
 
         [IntrinsicProperty]
+		[ScriptName("source")]
         public string Pattern {
             get {
                 return null;
@@ -66,10 +67,6 @@ namespace System.Text.RegularExpressions {
         }
 
         public RegexMatch Exec(string s) {
-            return null;
-        }
-
-        public static Regex Parse(string s) {
             return null;
         }
 

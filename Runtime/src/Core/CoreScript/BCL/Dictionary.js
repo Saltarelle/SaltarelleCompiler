@@ -39,7 +39,7 @@ ss.Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			return result;
 		},
 		get_item: function#? DEBUG Dictionary$2$get_item##(key) {
-			if (!Object.keys(this._o, key))
+			if (!Object.keyExists(this._o, key))
 				throw 'Key ' + key + ' does not exist.';
 			return this._o[key];
 		},
@@ -55,7 +55,9 @@ ss.Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			return new ss.ObjectEnumerator(this._o);
 		},
 		remove: function#? DEBUG Dictionary$2$remove##(key, value) {
+			var result = Object.keyExists(this._o, key);
 			delete this._o[key];
+			return result;
 		},
 		containsKey: function#? DEBUG Dictionary$2$containsKey##(key) {
 			return Object.keyExists(this._o, key);

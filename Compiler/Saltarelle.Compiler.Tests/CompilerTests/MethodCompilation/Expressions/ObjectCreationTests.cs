@@ -349,6 +349,26 @@ class Test {
 		}
 
 		[Test]
+		public void UsingCollectionInitializerWithInlineCodeConstructorWorks() {
+			AssertCorrect(
+@"class X : System.Collections.IEnumerable {
+	public void Add(int a) {}
+	public IEnumerator GetEnumerator() { return null; }
+}
+public void M() {
+	int i = 0, j = 0;
+	// BEGIN
+	var x = new X { i, j };
+	// END
+}",
+@"	var $tmp1 = __X__;
+	$tmp1.Add($i);
+	$tmp1.Add($j);
+	var $x = $tmp1;
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__X__") });
+		}
+
+		[Test]
 		public void CreatingDelegateWorks1() {
 			AssertCorrect(
 @"public void M() {

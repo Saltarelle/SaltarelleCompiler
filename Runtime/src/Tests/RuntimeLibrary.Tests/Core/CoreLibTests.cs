@@ -17,27 +17,109 @@ namespace RuntimeLibrary.Tests.Core {
 		}
 	}
 
-	[TestFixture]
-	public class DateTimeTests : CoreLibTestBase {
-	}
+	// System
 
 	[TestFixture]
-	public class JsDateTests : CoreLibTestBase {
-	}
+	public class ActivatorTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class StringTests : CoreLibTestBase {
-	}
+	public class ArgumentsTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class CharTests : CoreLibTestBase {
-	}
+	public class ArrayTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class JsDictionaryTests : CoreLibTestBase {
-	}
+	public class BooleanTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class GenericJsDictionaryTests : CoreLibTestBase {
-	}
+	public class ByteTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class CharTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class DateTimeTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class DecimalTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class DelegateTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class DoubleTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class EnumTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class Int16Tests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class Int32Tests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class Int64Tests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class JsDateTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class MathTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class NullableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class SByteTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ScriptTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class SingleTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class StringTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class TupleTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class UInt16Tests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class UInt32Tests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class UInt64Tests : CoreLibTestBase {}
+
+	// System.Collections
+
+	[TestFixture]
+	public class JsDictionaryTests : CoreLibTestBase {}
+
+	// System.Collections.Generic
+
+	[TestFixture]
+	public class ListTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class GenericDictionaryTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class GenericJsDictionaryTests : CoreLibTestBase {}
+
+	// System.Serialization
+
+	[TestFixture]
+	public class JsonTests : CoreLibTestBase {}
+
+	// System.Text
+
+	[TestFixture]
+	public class RegexTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class StringBuilderTests : CoreLibTestBase {}
 }

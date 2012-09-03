@@ -102,7 +102,7 @@ namespace System {
 	[Imported, IgnoreNamespace, ScriptName("Object")]
 	public static class Tuple {
 		[InlineCode("{{ item1: {item1} }}")]
-		public static Tuple<T1, T2> Create<T1, T2>(T1 item1) { return null; }
+		public static Tuple<T1> Create<T1>(T1 item1) { return null; }
 
 		[InlineCode("{{ item1: {item1}, item2: {item2} }}")]
 		public static Tuple<T1, T2> Create<T1, T2>(T1 item1, T2 item2) { return null; }

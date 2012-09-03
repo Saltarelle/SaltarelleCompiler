@@ -14,6 +14,9 @@ namespace System {
     [ScriptName("Int32")]
 	[Imported(IsRealType = true)]
     public struct Byte {
+		[InlineCode("0")]
+		public Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
 
         public string Format(string format) {
             return null;
@@ -21,6 +24,16 @@ namespace System {
 
         public string LocaleFormat(string format) {
             return null;
+        }
+
+        [ScriptAlias("parseInt")]
+        public static byte Parse(string s) {
+            return 0;
+        }
+
+        [ScriptAlias("parseInt")]
+        public static byte Parse(string s, int radix) {
+            return 0;
         }
 
         /// <summary>

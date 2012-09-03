@@ -269,5 +269,43 @@ public class C4 {
 			var c4 = FindConstructor("C4", 1);
 			Assert.That(c4.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
 		}
+
+		[Test]
+		public void TheDummyTypeHackCanBeUsedToApplyScriptNameAttributeToValueTypeConstructors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+public struct C1 {
+	[ScriptName(""someCtor"")]
+	public C1(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+	}
+}");
+
+			var c1 = FindConstructor("C1", 0);
+			Assert.That(c1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+			Assert.That(c1.Name, Is.EqualTo("someCtor"));
+
+			var c2 = FindConstructor("C1", 1);
+			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
+		public void TheDummyTypeHackCanBeUsedToApplyInlineCodeAttributeToValueTypeConstructors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+public struct C1 {
+	[InlineCode(""X"")]
+	public C1(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+	}
+}");
+
+			var c1 = FindConstructor("C1", 0);
+			Assert.That(c1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+			Assert.That(c1.LiteralCode, Is.EqualTo("X"));
+
+			var c2 = FindConstructor("C1", 1);
+			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+		}
 	}
 }
