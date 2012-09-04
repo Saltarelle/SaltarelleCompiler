@@ -52,11 +52,6 @@ namespace Saltarelle.Compiler.Compiler {
 				return base.VisitInvocationExpression(expression, data);
 			}
 
-			public override JsExpression VisitLiteralExpression(JsLiteralExpression expression, object data) {
-				Result.UsesExternalState = true;	// Literal code counts as external state since we don't know what it does.
-				return base.VisitLiteralExpression(expression, data);
-			}
-
 			public override JsExpression VisitMemberAccessExpression(JsMemberAccessExpression expression, object data) {
 				Result.UsesExternalState = true;	// Member access has to count as external state. Otherwise, what if someone does "var a = this" and then tries to order "a.i" and "this.i" (aliasing)
 				return base.VisitMemberAccessExpression(expression, data);

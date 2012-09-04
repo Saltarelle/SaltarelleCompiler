@@ -151,6 +151,15 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return result;
 		}
 
+		private JsExpression MakeNestedMemberAccess(string full) {
+			var parts = full.Split('.');
+			JsExpression result = JsExpression.Identifier(parts[0]);
+			for (int i = 1; i < parts.Length; i++) {
+				result = JsExpression.MemberAccess(result, parts[i]);
+			}
+			return result;
+		}
+
 		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
 			var netSystemType = compilation.FindType(KnownTypeCode.Type).GetDefinition();
 			var systemType = new JsTypeReferenceExpression(netSystemType.ParentAssembly, _metadataImporter.GetTypeSemantics(netSystemType).Name);
@@ -178,7 +187,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 								result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.MemberAccess(JsExpression.Identifier("window"), m.Name), m.Definition))));
 							}
 							else {
-								result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Literal(globalMethodsPrefix + "." + m.Name + " = {0}", m.Definition))));	// If we are good citizens and use assignment statements, we will get ugly parentheses around the assignee.
+								result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(MakeNestedMemberAccess(globalMethodsPrefix + "." + m.Name), m.Definition))));
 							}
 						}
 						else if (_metadataImporter.IsResources(t.CSharpTypeDefinition)) {

@@ -114,11 +114,6 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
             AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a\\b", JsExpression.Number(1))), "{ 'a\\\\b': 1 }");
         }
 
-		[Test]
-		public void LiteralExpressionIsOutputCorrectly() {
-			AssertCorrect(JsExpression.Literal("{0}_{2}_{1}", new[] { JsExpression.Identifier("X"), JsExpression.Identifier("Y"), JsExpression.Identifier("Z") }), "X_Z_Y");
-		}
-
         [Test]
 		public void FunctionDefinitionExpressionIsCorrectlyOutput() {
             AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function() {\n\treturn null;\n}");
@@ -198,12 +193,6 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ThisIsCorrectlyOutput() {
 			AssertCorrect(JsExpression.This, "this");
-		}
-
-		[Test]
-		public void LiteralCodeIsCorrectlyOutput() {
-			AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Literal("|{1}|{0}|{2}|", JsExpression.FunctionDefinition(new[] { "a", "b" }, new JsExpressionStatement(JsExpression.Identifier("X"))), JsExpression.Identifier("something"), JsExpression.Number(12)))),
-			              "function() {\n\t|something|function(a, b) {\n\t\tX;\n\t}|12|;\n}");
 		}
 
 		[Test]

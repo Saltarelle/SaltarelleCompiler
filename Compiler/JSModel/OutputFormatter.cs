@@ -284,23 +284,6 @@ namespace Saltarelle.Compiler.JSModel
 			return null;
         }
 
-		public object VisitLiteralExpression(JsLiteralExpression expression, bool parenthesized) {
-            int expressionPrecedence = GetPrecedence(expression.NodeType);
-			var oldCB = _cb;
-			var arguments = new string[expression.Arguments.Count];
-			for (int i = 0; i < expression.Arguments.Count; i++) {
-				_cb = new CodeBuilder(indentLevel: oldCB.IndentLevel);
-				_cb.PreventIndent();
-				VisitExpression(expression.Arguments[i], GetPrecedence(expression.Arguments[i].NodeType) > expressionPrecedence);
-				arguments[i] = _cb.ToString();
-			}
-			_cb = oldCB;
-
-			_cb.Append(string.Format(expression.Format, arguments));
-
-			return null;
-		}
-
         private static string GetBinaryOperatorString(ExpressionNodeType oper) {
             switch (oper) {
                 case ExpressionNodeType.Multiply:                 return "*";
