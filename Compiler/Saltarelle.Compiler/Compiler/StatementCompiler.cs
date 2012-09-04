@@ -321,11 +321,17 @@ namespace Saltarelle.Compiler.Compiler {
 				_result.Add(new JsVariableDeclarationStatement(declarations));
 		}
 
+		private bool IsPartialMethodDeclaration(IMethod method) {
+			var ur = (IUnresolvedMethod)method.UnresolvedMember;
+			return ur.IsPartial && !ur.HasBody;
+		}
+
 		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
 			var resolveResult = ResolveWithConversion(expressionStatement.Expression);
 			if (resolveResult is InvocationResolveResult && ((InvocationResolveResult)resolveResult).Member is IMethod) {
 				var member = ((InvocationResolveResult)resolveResult).Member;
-				if (((IUnresolvedMethod)((InvocationResolveResult)resolveResult).Member.UnresolvedMember).IsPartialMethodDeclaration) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
+				
+				if (IsPartialMethodDeclaration((IMethod)((InvocationResolveResult)resolveResult).Member)) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
 					// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
 					return;
 				}

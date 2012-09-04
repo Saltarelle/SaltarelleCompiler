@@ -9,8 +9,8 @@ using System.Security.Policy;
 using System.Text;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
-using Mono.CSharp;
 using System.Linq;
+using Mono.CSharp;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler.Driver {
 			result.FatalCounter              = 100;
 			result.WarningLevel              = options.WarningLevel;
 			result.AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList();
-			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => new Mono.CSharp.Tuple<string, string>(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList();
+			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => Tuple.Create(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList();
 			result.Encoding                  = Encoding.UTF8;
 			result.DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null;
 			result.OutputFile                = outputAssemblyPath;

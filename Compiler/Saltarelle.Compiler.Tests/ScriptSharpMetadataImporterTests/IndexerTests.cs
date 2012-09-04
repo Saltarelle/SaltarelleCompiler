@@ -229,8 +229,8 @@ interface I2<T> {
 }
 
 class C : I, I2<int> {
-	int this[int x] { get { return 0; } set; }
-	int this[int x, int y] { get { return 0; } set; }
+	public int this[int x] { get { return 0; } set; }
+	public int this[int x, int y] { get { return 0; } set; }
 }");
 
 			var p1 = FindIndexer("C", 1);
