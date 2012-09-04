@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
             AssertCorrect(JsExpression.ArrayLiteral(), "[]");
             AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1)), "[1]");
             AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), JsExpression.Number(2)), "[1, 2]");
+            AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), null, JsExpression.Number(2), null), "[1, , 2, ]");
         }
 
         [Test]
@@ -184,7 +185,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
                                                                          { ExpressionNodeType.RightShiftUnsignedAssign, "{0} >>>= {1}" },
                                                                          { ExpressionNodeType.BitwiseAndAssign, "{0} &= {1}" },
                                                                          { ExpressionNodeType.BitwiseOrAssign, "{0} |= {1}" },
-                                                                         { ExpressionNodeType.BitwiseXOrAssign, "{0} ^= {1}" },
+                                                                         { ExpressionNodeType.BitwiseXorAssign, "{0} ^= {1}" },
                                                                        };
 
             for (var oper = ExpressionNodeType.BinaryFirst; oper <= ExpressionNodeType.BinaryLast; oper++) {
