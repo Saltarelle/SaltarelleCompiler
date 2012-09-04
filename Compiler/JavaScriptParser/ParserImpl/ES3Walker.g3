@@ -132,6 +132,8 @@ public statement returns [JsStatement result]
 	| x=throwStatement
 	| x=tryStatement
 	| x=functionDeclaration
+	| x=gotoStatement
+	| x=yieldStatement
 	| SEMIC { x = new JsEmptyStatement(); } )
 	{ $result = x; }
 	;
@@ -229,6 +231,14 @@ catchClause returns [JsCatchClause result]
 	
 finallyClause returns [JsStatement result]
 	: ^( FINALLY b=block ) { $result = b; }
+	;
+
+gotoStatement returns [JsStatement result]
+	: ^( GOTO Identifier ) { $result = new JsGotoStatement($Identifier.Text); }
+	;
+
+yieldStatement returns [JsStatement result]
+	: ^( YIELD x=expression? ) { $result = new JsYieldStatement(x); }
 	;
 
 public expression returns [JsExpression result]

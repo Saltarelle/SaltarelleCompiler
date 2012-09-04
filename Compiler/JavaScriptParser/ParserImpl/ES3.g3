@@ -113,6 +113,9 @@ tokens
 	TRANSIENT 	= 'transient' ;
 	VOLATILE 	= 'volatile' ;
 
+// Made-up keywords
+	YIELD		= 'yield';
+
 // Punctuators
 	LBRACE		= '{' ;
 	RBRACE		= '}' ;
@@ -977,6 +980,8 @@ statementTail
 	| switchStatement
 	| throwStatement
 	| tryStatement
+	| gotoStatement
+	| yieldStatement
 	;
 
 // $<Block (12.1)
@@ -1323,3 +1328,13 @@ options
 // $>
 
 // $>
+
+/* CUSTOM STUFF
+*/
+gotoStatement
+	: GOTO^ Identifier semic!
+	;
+
+yieldStatement
+	: YIELD^ ((RETURN! expression) | BREAK!) semic!
+	;
