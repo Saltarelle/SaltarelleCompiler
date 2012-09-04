@@ -1,3 +1,4 @@
+1.2.5
 Refactored the handling of inline code. This means that unnecessary parentheses should no longer appear when using certain methods. It also means that the {,arg} modifier is removed ({*arg} now knows what to do), and inline code is verified to be syntactically valid.
 Re-added types Queue<T> and Stack<T> to the RTL
 
