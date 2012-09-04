@@ -65,6 +65,18 @@ Array.prototype.contains = function#? DEBUG Array$contains##(item) {
     return (index >= 0);
 }
 
+Array.prototype.peekFront = function#? DEBUG Array$peekFront##(item) {
+	if (this.length)
+		return this[0];
+	throw 'Array is empty';
+}
+
+Array.prototype.peekBack = function#? DEBUG Array$peekBack##(item) {
+	if (this.length)
+		return this[this.length - 1];
+	throw 'Array is empty';
+}
+
 if (!Array.prototype.every) {
     Array.prototype.every = function#? DEBUG Array$every##(callback, instance) {
         var length = this.length;

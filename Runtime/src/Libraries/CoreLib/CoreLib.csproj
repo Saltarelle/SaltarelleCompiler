@@ -63,11 +63,15 @@
     <Compile Include="Collections\Generic\IEnumerable.cs" />
     <Compile Include="Collections\Generic\IEnumerator.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerator.cs" />
+    <Compile Include="Collections\Generic\Queue.cs" />
+    <Compile Include="Collections\Generic\Stack.cs" />
     <Compile Include="Collections\ICollection.cs" />
     <Compile Include="Collections\IEqualityComparer.cs" />
     <Compile Include="Collections\IList.cs" />
     <Compile Include="Collections\JsDictionary.cs" />
     <Compile Include="Callback.cs" />
+    <Compile Include="Collections\Queue.cs" />
+    <Compile Include="Collections\Stack.cs" />
     <Compile Include="ComponentModel\IApplication.cs" />
     <Compile Include="ComponentModel\IEventManager.cs" />
     <Compile Include="ComponentModel\IInitializable.cs" />

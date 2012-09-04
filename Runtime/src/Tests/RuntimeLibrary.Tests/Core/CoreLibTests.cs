@@ -110,6 +110,12 @@ namespace RuntimeLibrary.Tests.Core {
 	[TestFixture]
 	public class GenericJsDictionaryTests : CoreLibTestBase {}
 
+	[TestFixture]
+	public class StackTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class QueueTests : CoreLibTestBase {}
+
 	// System.Serialization
 
 	[TestFixture]
