@@ -17,6 +17,5 @@ namespace Saltarelle.Compiler.JSModel {
         TReturn VisitUnaryExpression(JsUnaryExpression expression, TData data);
         TReturn VisitTypeReferenceExpression(JsTypeReferenceExpression expression, TData data);
 		TReturn VisitThisExpression(JsThisExpression expression, TData data);
-		TReturn VisitLiteralExpression(JsLiteralExpression expression, TData data);
     }
 }

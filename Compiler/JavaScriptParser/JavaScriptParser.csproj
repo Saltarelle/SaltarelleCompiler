@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-		<UseHostCompilerIfAvailable>False</UseHostCompilerIfAvailable>
+    <UseHostCompilerIfAvailable>False</UseHostCompilerIfAvailable>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
@@ -47,29 +47,31 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Parser.cs" />
+    <Compile Include="ParserImpl\ES3Lexer.Action.cs" />
+    <Compile Include="ParserImpl\ES3Parser.Action.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Antlr3 Include="ParserImpl\JavaScript.g">
-      <OutputFiles>ParserImpl\JavaScriptLexer.cs;ParserImpl\JavaScriptParser.cs</OutputFiles>
+    <Antlr3 Include="ParserImpl\ES3.g3">
+      <OutputFiles>ParserImpl\ES3.cs;ParserImpl\ES3.cs</OutputFiles>
     </Antlr3>
-    <Antlr3 Include="ParserImpl\JavaScriptTreeParser.g">
-      <OutputFiles>ParserImpl\JavaScriptTreeParser.cs</OutputFiles>
+    <Antlr3 Include="ParserImpl\ES3Walker.g3">
+      <OutputFiles>ParserImpl\ES3Walker.cs</OutputFiles>
     </Antlr3>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ParserImpl\JavaScriptLexer.cs">
-      <DependentUpon>JavaScript.g</DependentUpon>
+    <Compile Include="ParserImpl\ES3Lexer.cs">
+      <DependentUpon>ES3.g3</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="ParserImpl\JavaScriptParser.cs">
-      <DependentUpon>JavaScript.g</DependentUpon>
+    <Compile Include="ParserImpl\ES3Parser.cs">
+      <DependentUpon>ES3.g3</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="ParserImpl\JavaScriptTreeParser.cs">
-      <DependentUpon>JavaScriptTreeParser.g</DependentUpon>
+    <Compile Include="ParserImpl\ES3Walker.cs">
+      <DependentUpon>ES3Walker.g3</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
@@ -79,6 +81,9 @@
       <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
       <Name>JSModel</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ParserImpl\XebicLicense.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CleanAntlrCode">

@@ -52,6 +52,8 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			Assert.That(expr.NumberValue, Is.EqualTo(255));
 			expr = ParseExpression<JsConstantExpression>("1.375");
 			Assert.That(expr.NumberValue, Is.EqualTo(1.375));
+			expr = ParseExpression<JsConstantExpression>("0377");
+			Assert.That(expr.NumberValue, Is.EqualTo(255));
 		}
 
 		[Test]
@@ -72,7 +74,7 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			Assert.That(exprF.BooleanValue, Is.False);
 		}
 
-		[Test, Ignore("Not supported")]
+		[Test]
 		public void Regex() {
 			var expr = ParseExpression<JsConstantExpression>("/a/");
 			Assert.That(expr.RegexpValue.Pattern, Is.EqualTo("a"));
@@ -144,7 +146,7 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			                          Tuple.Create("x >>>= y", ExpressionNodeType.RightShiftUnsignedAssign),
 			                          Tuple.Create("x &= y", ExpressionNodeType.BitwiseAndAssign),
 			                          Tuple.Create("x |= y", ExpressionNodeType.BitwiseOrAssign),
-			                          Tuple.Create("x ^= y", ExpressionNodeType.BitwiseXOrAssign),
+			                          Tuple.Create("x ^= y", ExpressionNodeType.BitwiseXorAssign),
 			                        }
 			) {
 				var expr = ParseExpression<JsBinaryExpression>(t.Item1);
@@ -220,6 +222,7 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		[Test]
 		public void ArrayLiteral() {
 			RoundtripExpression("[1, 2, 3]");
+			RoundtripExpression("[1, , 3]");
 		}
 
 		[Test]
@@ -462,7 +465,7 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			Assert.That(OutputFormatter.Format(stmt.Expression), Is.EqualTo("a"));
 			Assert.That(stmt.Sections.Count, Is.EqualTo(1));
 			Assert.That(stmt.Sections[0].Values.Select(v => OutputFormatter.Format(v)), Is.EqualTo(new[] { "b" }));
-			Assert.That(stmt.Sections[0].Body.Statements[0], Is.InstanceOf<JsEmptyStatement>());
+			Assert.That(stmt.Sections[0].Body.Statements.Count, Is.EqualTo(0));
 		}
 
 		[Test]

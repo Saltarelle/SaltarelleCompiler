@@ -931,14 +931,14 @@ class C1 {
 @"using System.Runtime.CompilerServices;
 class C1<T1> {
 	class C2<T2> {
-		[InlineCode(""Some.[].Strange{{ }}'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"")]
+		[InlineCode(""_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"")]
 		public void SomeMethod<T3, T4>(int x, string y) {}
 	}
 }");
 
 			var impl = FindMethod("C1`1+C2`1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(impl.LiteralCode, Is.EqualTo("Some.[].Strange{{ }}'thing' {T1} {T2} {T3} {T4} {x} {y} {this}"));
+			Assert.That(impl.LiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
 		}
 
 		[Test]

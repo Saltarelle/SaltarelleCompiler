@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages-manual\antlr\Antlr3.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -92,6 +96,10 @@
     <Compile Include="Compiler\VariableGatherer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JavaScriptParser\JavaScriptParser.csproj">
+      <Project>{819223CA-D211-44C2-BC01-A2B955D4CA61}</Project>
+      <Name>JavaScriptParser</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JSModel\JSModel.csproj">
       <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
       <Name>JSModel</Name>

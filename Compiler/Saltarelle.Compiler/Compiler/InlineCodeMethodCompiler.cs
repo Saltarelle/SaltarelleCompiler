@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Antlr.Runtime;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.Compiler {
@@ -18,7 +20,6 @@ namespace Saltarelle.Compiler.Compiler {
 				TypeRef,
 				LiteralStringParameterToUseAsIdentifier,
 				ExpandedParamArrayParameter,
-				ExpandedParamArrayParameterWithCommaBefore,
 			}
 
 			public TokenType Type { get; private set; }
@@ -35,7 +36,7 @@ namespace Saltarelle.Compiler.Compiler {
 			private int _index;
 			public int Index {
 				get {
-					if (Type != TokenType.Parameter && Type != TokenType.TypeParameter && Type != TokenType.LiteralStringParameterToUseAsIdentifier && Type != TokenType.ExpandedParamArrayParameter && Type != TokenType.ExpandedParamArrayParameterWithCommaBefore)
+					if (Type != TokenType.Parameter && Type != TokenType.TypeParameter && Type != TokenType.LiteralStringParameterToUseAsIdentifier && Type != TokenType.ExpandedParamArrayParameter)
 						throw new InvalidOperationException();
 					return _index;
 				}
@@ -90,13 +91,13 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				catch (ReflectionNameParseException) {
 					errorReporter("Invalid type reference " + text);
-					return new InlineCodeToken(InlineCodeToken.TokenType.Text, text: text);
+					return null;
 				}
 			}
 			else if (text == "this")
 				return new InlineCodeToken(InlineCodeToken.TokenType.This);
 
-			string argName = text.TrimStart('@', '*', ',');
+			string argName = text.TrimStart('@', '*');
 
 			if (parameterNames != null) {
 				int i = FindParameter(argName, parameterNames);
@@ -105,8 +106,6 @@ namespace Saltarelle.Compiler.Compiler {
 						return new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: i);
 					else if (text[0] == '*')
 						return new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: i);
-					else if (text[0] == ',')
-						return new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore, index: i);
 					else
 						return new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: i);
 				}
@@ -119,7 +118,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			errorReporter("Unknown placeholder '{" + text + "}'");
-			return new InlineCodeToken(InlineCodeToken.TokenType.Text, text);
+			return null;
 		}
 
 		public static IList<InlineCodeToken> Tokenize(string code, IList<string> parameterNames, IList<string> typeParameterNames, Action<string> errorReporter) {
@@ -148,10 +147,14 @@ namespace Saltarelle.Compiler.Compiler {
 							i++;
 						}
 						if (i < code.Length) {
-							result.Add(ParsePlaceholder(currentChunk.ToString(), parameterNames, typeParameterNames, errorReporter));
+							var ph = ParsePlaceholder(currentChunk.ToString(), parameterNames, typeParameterNames, errorReporter);
+							if (ph == null)
+								return null;
+							result.Add(ph);
 						}
 						else {
 							errorReporter("expected '}'");
+							return null;
 						}
 						currentChunk.Clear();
 					}
@@ -174,90 +177,127 @@ namespace Saltarelle.Compiler.Compiler {
 			return "{" + index.ToString(CultureInfo.InvariantCulture) + "}";
 		}
 
-		private static string Escape(string s) {
-			return s.Replace("{", "{{").Replace("}", "}}");
-		}
-
 		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, TypeContext, JsExpression> getType, bool isParamArrayExpanded, Action<string> errorReporter) {
-			List<string> typeParameterNames = new List<string>();
-			List<IType>  typeArguments      = new List<IType>();
-			var parameterizedType = method.DeclaringType as ParameterizedType;
-			if (parameterizedType != null) {
-				typeParameterNames.AddRange(parameterizedType.GetDefinition().TypeParameters.Select(p => p.Name));
-				typeArguments.AddRange(parameterizedType.TypeArguments);
+			List<string>         typeParameterNames = new List<string>();
+			List<ITypeReference> typeArguments      = new List<ITypeReference>();
+
+			if (method.DeclaringTypeDefinition.TypeParameterCount > 0) {
+				var parameterizedType = method.DeclaringType as ParameterizedType;
+				typeParameterNames.AddRange(method.DeclaringTypeDefinition.TypeParameters.Select(p => p.Name));
+				if (parameterizedType != null) {
+					typeArguments.AddRange(parameterizedType.TypeArguments.Select(a => a.ToTypeReference()));
+				}
+				else {
+					typeArguments.AddRange(Enumerable.Repeat(ReflectionHelper.ParseReflectionName("System.Object"), method.DeclaringType.TypeParameterCount));
+				}
 			}
 
-			var specializedMethod = method as SpecializedMethod;
-			if (specializedMethod != null) {
-				typeParameterNames.AddRange(specializedMethod.TypeParameters.Select(p => p.Name).ToList());
-				typeArguments.AddRange(specializedMethod.TypeArguments);
+			if (method.TypeParameters.Count > 0) {
+				typeParameterNames.AddRange(method.TypeParameters.Select(p => p.Name).ToList());
+				var specializedMethod = method as SpecializedMethod;
+				if (specializedMethod != null) {
+					typeArguments.AddRange(specializedMethod.TypeArguments.Select(a => a.ToTypeReference()));
+				}
+				else {
+					typeArguments.AddRange(Enumerable.Repeat(ReflectionHelper.ParseReflectionName("System.Object"), method.TypeParameters.Count));
+				}
 			}
 
 			var tokens = Tokenize(literalCode, method.Parameters.Select(p => p.Name).ToList(), typeParameterNames, s => errorReporter("Error in literal code pattern: " + s));
+			if (tokens == null)
+				return JsExpression.Number(0);
 
-			var fmt = new StringBuilder();
-			var fmtargs = new List<JsExpression>();
+			var text = new StringBuilder();
+			var substitutions = new Dictionary<string, Tuple<JsExpression, bool>>();
+			bool hasErrors = false;
+
 			foreach (var token in tokens) {
 				switch (token.Type) {
 					case InlineCodeToken.TokenType.Text:
-						fmt.Append(Escape(token.Text));
+						text.Append(token.Text);
 						break;
 
-					case InlineCodeToken.TokenType.This:
+					case InlineCodeToken.TokenType.This: {
+						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
+						text.Append(s);
+
 						if (@this == null) {
+							hasErrors = true;
 							errorReporter("Cannot use {this} in the literal code for a static method");
+							substitutions[s] = Tuple.Create((JsExpression)JsExpression.Null, false);
 						}
 						else {
-							fmt.Append(CreatePlaceholder(fmtargs.Count));
-							fmtargs.Add(@this);
+							substitutions[s] = Tuple.Create(@this, false);
 						}
 						break;
+					}
 					
-					case InlineCodeToken.TokenType.Parameter:
-						fmt.Append(CreatePlaceholder(fmtargs.Count));
-						fmtargs.Add(arguments[token.Index]);
+					case InlineCodeToken.TokenType.Parameter: {
+						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
+						text.Append(s);
+						substitutions[s] = Tuple.Create(arguments[token.Index], false);
 						break;
+					}
 
-					case InlineCodeToken.TokenType.TypeParameter:
-						fmt.Append(CreatePlaceholder(fmtargs.Count));
-						fmtargs.Add(getType(typeArguments[token.Index].ToTypeReference(), TypeContext.GenericArgument));
+					case InlineCodeToken.TokenType.TypeParameter: {
+						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
+						text.Append(s);
+						substitutions[s] = Tuple.Create(getType(typeArguments[token.Index], TypeContext.GenericArgument), false);
 						break;
+					}
 
-					case InlineCodeToken.TokenType.TypeRef:
+					case InlineCodeToken.TokenType.TypeRef: {
+						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
+						text.Append(s);
+
 						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text), TypeContext.GenericArgument);
 						if (typeRef == null) {
-							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation.");
+							hasErrors = true;
+							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation");
+							substitutions[s] = Tuple.Create((JsExpression)JsExpression.Null, false);
 						}
 						else {
-							fmt.Append(CreatePlaceholder(fmtargs.Count));
-							fmtargs.Add(typeRef);
-						}
-						break;
-
-					case InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier: {
-						var jce = arguments[token.Index] as JsConstantExpression;
-						if (jce != null && jce.NodeType == ExpressionNodeType.String) {
-							fmt.Append(Escape(jce.StringValue));
-						}
-						else {
-							errorReporter("The argument specified for parameter " + method.Parameters[token.Index].Name + " must be a literal string.");
+							substitutions[s] = Tuple.Create(typeRef, false);
 						}
 						break;
 					}
 
-					case InlineCodeToken.TokenType.ExpandedParamArrayParameter:
-					case InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore: {
-						if (!isParamArrayExpanded) {
-							errorReporter("The method " + method.DeclaringType.FullName + "." + method.FullName + " can only be invoked with its params parameter expanded.");
+					case InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier: {
+						if (method.Parameters[token.Index].Type.FullName != "System.String") {
+							text.Append("X");	// Just something that should not cause an error.
+							hasErrors = true;
+							errorReporter("The type of the parameter " + method.Parameters[token.Index].Name + " must be string in order to use it with the '@' modifier.");
 						}
 						else {
-							var arr = (JsArrayLiteralExpression)arguments[token.Index];
-							for (int i = 0; i < arr.Elements.Count; i++) {
-								if (i > 0 || token.Type == InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore)
-									fmt.Append(", ");
-								fmt.Append(CreatePlaceholder(fmtargs.Count));
-								fmtargs.Add(arr.Elements[i]);
+							var jce = arguments[token.Index] as JsConstantExpression;
+							if (jce != null && jce.NodeType == ExpressionNodeType.String) {
+								text.Append(jce.StringValue);
 							}
+							else {
+								text.Append("X");	// Just something that should not cause an error.
+								hasErrors = true;
+								errorReporter("The argument specified for parameter " + method.Parameters[token.Index].Name + " must be a literal string");
+							}
+						}
+						break;
+					}
+
+					case InlineCodeToken.TokenType.ExpandedParamArrayParameter: {
+						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
+						text.Append(s);
+
+						if (!method.Parameters[token.Index].IsParams) {
+							hasErrors = true;
+							errorReporter("The parameter " + method.Parameters[token.Index].Name + " must be a param array in order to use it with the * modifier.");
+							substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
+						}
+						else if (!isParamArrayExpanded) {
+							hasErrors = true;
+							errorReporter("The method " + method.DeclaringType.FullName + "." + method.FullName + " can only be invoked with its params parameter expanded");
+							substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
+						}
+						else {
+							substitutions[s] = Tuple.Create(arguments[token.Index], true);
 						}
 						break;
 					}
@@ -266,9 +306,84 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			return JsExpression.Literal(fmt.ToString(), fmtargs);
+			if (hasErrors)
+				return JsExpression.Number(0);
+
+			try {
+				var expr = JavaScriptParser.Parser.ParseExpression(text.ToString());
+				return new Substituter(substitutions, errorReporter).Process(expr);
+			}
+			catch (RecognitionException) {
+				errorReporter("syntax error in inline code");
+				return JsExpression.Number(0);
+			}
 		}
 
+		private class Substituter : RewriterVisitorBase<object> {
+			private readonly Dictionary<string, Tuple<JsExpression, bool>> _substitutions;
+			private readonly Action<string> _errorReporter;
+
+			public Substituter(Dictionary<string, Tuple<JsExpression, bool>> substitutions, Action<string> errorReporter) {
+				_substitutions = substitutions;
+				_errorReporter = errorReporter;
+			}
+
+			private IList<JsExpression> VisitWithParamExpansion(IList<JsExpression> list) {
+				if (!_substitutions.Values.Any(v => v.Item2))
+					return base.VisitExpressions(list, null);
+
+				return VisitCollection(list, expr => {
+				           var ident = expr as JsIdentifierExpression;
+				           Tuple<JsExpression, bool> v;
+				           if (ident == null || !_substitutions.TryGetValue(ident.Name, out v) || !v.Item2)
+				               return new[] { VisitExpression(expr, null) };
+				           return ((JsArrayLiteralExpression)v.Item1).Elements;
+				       });
+			}
+
+			public override JsExpression VisitIdentifierExpression(JsIdentifierExpression expression, object data) {
+				Tuple<JsExpression, bool> value;
+				if (_substitutions.TryGetValue(expression.Name, out value)) {
+					if (value.Item2) {
+						_errorReporter("Expanded parameters in inline code can only be used in array literals, function invocations, or 'new' expressions");
+						return expression;
+					}
+					else
+						return value.Item1;
+				}
+				else {
+					return expression;
+				}
+			}
+
+			public override JsExpression VisitArrayLiteralExpression(JsArrayLiteralExpression expression, object data) {
+				var l = VisitWithParamExpansion(expression.Elements);
+				return ReferenceEquals(l, expression.Elements) ? expression : JsExpression.ArrayLiteral(l);
+			}
+
+			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
+				var m = VisitExpression(expression.Method, data);
+				var a = VisitWithParamExpansion(expression.Arguments);
+				return ReferenceEquals(m, expression.Method) && ReferenceEquals(a, expression.Arguments) ? expression : JsExpression.Invocation(m, a);
+			}
+
+			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
+				var c = VisitExpression(expression.Constructor, null);
+				var a = VisitWithParamExpansion(expression.Arguments);
+				return ReferenceEquals(c, expression.Constructor) && ReferenceEquals(a, expression.Arguments) ? expression : JsExpression.New(c, a);
+			}
+
+			public JsExpression Process(JsExpression expr) {
+				return VisitExpression(expr, null);
+			}
+		}
+
+		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, bool> doesTypeExist) {
+			var errors = new List<string>();
+			CompileInlineCodeMethodInvocation(method, literalCode, method.IsStatic ? null : JsExpression.Null, method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(), (t, c) => doesTypeExist(t) ? JsExpression.Null : null, true, errors.Add);
+			return errors;
+		}
+/*
 		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, bool> doesTypeExist) {
 			List<string> typeParameterNames = new List<string>();
 			typeParameterNames.AddRange(method.DeclaringType.GetDefinition().TypeParameters.Select(p => p.Name));
@@ -314,6 +429,6 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			return result;
-		}
+		}*/
 	}
 }

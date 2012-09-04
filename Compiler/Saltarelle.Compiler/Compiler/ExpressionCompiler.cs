@@ -624,7 +624,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.DivideAssign, JsExpression.Divide, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.ExclusiveOrAssign:
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXOrAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
+					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.LeftShiftAssign:
 					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.LeftShiftAssign, JsExpression.LeftShift, returnValueIsImportant, rr.IsLiftedOperator);

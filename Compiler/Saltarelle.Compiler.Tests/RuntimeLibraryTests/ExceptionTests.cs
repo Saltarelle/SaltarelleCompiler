@@ -72,7 +72,7 @@ public class E2 : E1 {
 }
 
 public class C {
-	[System.Runtime.CompilerServices.InlineCode(""throw 'The message'"")]
+	[System.Runtime.CompilerServices.InlineCode(""(function() {{ throw 'The message'; }})()"")]
 	private static void ThrowIt();
 
 	public static string M() {
@@ -103,7 +103,7 @@ public class E2 : E1 {
 }
 
 public class C {
-	[System.Runtime.CompilerServices.InlineCode(""throw 'The message'"")]
+	[System.Runtime.CompilerServices.InlineCode(""(function() {{ throw 'The message'; }})()"")]
 	private static void ThrowIt();
 
 	public static string M() {

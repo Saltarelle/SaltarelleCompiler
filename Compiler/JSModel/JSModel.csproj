@@ -47,7 +47,6 @@
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
     <Compile Include="CodeBuilder.cs" />
-    <Compile Include="Expressions\JsLiteralExpression.cs" />
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />

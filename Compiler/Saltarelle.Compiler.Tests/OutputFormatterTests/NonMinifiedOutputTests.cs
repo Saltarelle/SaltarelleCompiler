@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
             AssertCorrect(JsExpression.ArrayLiteral(), "[]");
             AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1)), "[1]");
             AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), JsExpression.Number(2)), "[1, 2]");
+            AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), null, JsExpression.Number(2), null), "[1, , 2, ]");
         }
 
         [Test]
@@ -113,11 +114,6 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
             AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a\\b", JsExpression.Number(1))), "{ 'a\\\\b': 1 }");
         }
 
-		[Test]
-		public void LiteralExpressionIsOutputCorrectly() {
-			AssertCorrect(JsExpression.Literal("{0}_{2}_{1}", new[] { JsExpression.Identifier("X"), JsExpression.Identifier("Y"), JsExpression.Identifier("Z") }), "X_Z_Y");
-		}
-
         [Test]
 		public void FunctionDefinitionExpressionIsCorrectlyOutput() {
             AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function() {\n\treturn null;\n}");
@@ -184,7 +180,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
                                                                          { ExpressionNodeType.RightShiftUnsignedAssign, "{0} >>>= {1}" },
                                                                          { ExpressionNodeType.BitwiseAndAssign, "{0} &= {1}" },
                                                                          { ExpressionNodeType.BitwiseOrAssign, "{0} |= {1}" },
-                                                                         { ExpressionNodeType.BitwiseXOrAssign, "{0} ^= {1}" },
+                                                                         { ExpressionNodeType.BitwiseXorAssign, "{0} ^= {1}" },
                                                                        };
 
             for (var oper = ExpressionNodeType.BinaryFirst; oper <= ExpressionNodeType.BinaryLast; oper++) {
@@ -197,12 +193,6 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ThisIsCorrectlyOutput() {
 			AssertCorrect(JsExpression.This, "this");
-		}
-
-		[Test]
-		public void LiteralCodeIsCorrectlyOutput() {
-			AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Literal("|{1}|{0}|{2}|", JsExpression.FunctionDefinition(new[] { "a", "b" }, new JsExpressionStatement(JsExpression.Identifier("X"))), JsExpression.Identifier("something"), JsExpression.Number(12)))),
-			              "function() {\n\t|something|function(a, b) {\n\t\tX;\n\t}|12|;\n}");
 		}
 
 		[Test]

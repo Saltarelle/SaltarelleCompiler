@@ -74,8 +74,8 @@ public void M() {
 	int i = P;
 	// END
 }",
-@"	var $i = get_this_;
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_"), MethodScriptSemantics.InlineCode("set_{this}_{value}_")) });
+@"	var $i = get_(this);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})"), MethodScriptSemantics.InlineCode("set_({this})._({value})")) });
 		}
 
 		[Test]
@@ -162,8 +162,8 @@ public void M() {
 	MyEvent += h;
 	// END
 }",
-@"	add_this_$h;
-", metadataImporter: new MockMetadataImporter() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_{this}_{value}"), MethodScriptSemantics.InlineCode("remove_{this}_{value}")) });
+@"	add_(this)._($h);
+", metadataImporter: new MockMetadataImporter() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_({this})._({value})"), MethodScriptSemantics.InlineCode("remove_({this})._({value})")) });
 		}
 
 		[Test]
@@ -190,8 +190,8 @@ public void M() {
 	MyEvent -= h;
 	// END
 }",
-@"	remove_this_$h;
-", metadataImporter: new MockMetadataImporter() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_{this}_{value}"), MethodScriptSemantics.InlineCode("remove_{this}_{value}")) });
+@"	remove_(this)._($h);
+", metadataImporter: new MockMetadataImporter() { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.InlineCode("add_({this})._({value})"), MethodScriptSemantics.InlineCode("remove_({this})._({value})")) });
 		}
 
 		[Test]

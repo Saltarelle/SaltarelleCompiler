@@ -540,8 +540,8 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_{ga_Int32}_{ga_Byte}_{ga_String}_$o_$a_$b_$c_;
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{T1}_{T2}_{T3}_{this}_{x}_{y}_{z}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+@"	_({ga_Int32})._({ga_Byte})._({ga_String})._($o)._($a)._($b)._($c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -561,8 +561,8 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2_;
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_{a}_{b}_{c}_{d}_{e}_{f}_{g}_") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+	_(1)._(this.$F4())._(3)._($tmp1)._(5)._($tmp3)._($tmp2);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})._({e})._({f})._({g})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]

@@ -43,7 +43,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         RightShiftUnsignedAssign,
         BitwiseAndAssign,
         BitwiseOrAssign,
-        BitwiseXOrAssign,
+        BitwiseXorAssign,
         // /Binary
 
         Comma,
@@ -85,9 +85,9 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 		Literal,
 
         AssignFirst = Assign,
-        AssignLast = BitwiseXOrAssign,
+        AssignLast = BitwiseXorAssign,
         BinaryFirst = LogicalAnd,
-        BinaryLast = BitwiseXOrAssign,
+        BinaryLast = BitwiseXorAssign,
         ConstantFirst = Number,
         ConstantLast = Null,
         UnaryFirst = TypeOf,
@@ -257,8 +257,8 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             return Binary(ExpressionNodeType.BitwiseOrAssign, left, right);
         }
 
-        public static JsBinaryExpression BitwiseXOrAssign(JsExpression left, JsExpression right) {
-            return Binary(ExpressionNodeType.BitwiseXOrAssign, left, right);
+        public static JsBinaryExpression BitwiseXorAssign(JsExpression left, JsExpression right) {
+            return Binary(ExpressionNodeType.BitwiseXorAssign, left, right);
         }
 
         public static JsCommaExpression Comma(IEnumerable<JsExpression> expressions) {
@@ -274,7 +274,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         }
 
         public static JsConstantExpression Regexp(string pattern, string options = null) {
-            return new JsConstantExpression(new JsConstantExpression.RegexpData(pattern, options));
+            return new JsConstantExpression(new JsConstantExpression.RegexpData(pattern, options ?? ""));
         }
 
         public static JsConstantExpression Number(double value) {
@@ -378,13 +378,5 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         }
 
 		public static JsThisExpression This { get { return JsThisExpression.This; } }
-
-		public static JsLiteralExpression Literal(string format, IEnumerable<JsExpression> arguments) {
-			return new JsLiteralExpression(format, arguments);
-		}
-
-		public static JsLiteralExpression Literal(string format, params JsExpression[] arguments) {
-			return new JsLiteralExpression(format, arguments);
-		}
     }
 }

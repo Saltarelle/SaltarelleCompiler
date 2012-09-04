@@ -254,10 +254,10 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = __Literal_0_'X'__;
+	var $this = __Literal_(0)._X__;
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_({x})._{@s}__") });
 		}
 
 		[Test]
