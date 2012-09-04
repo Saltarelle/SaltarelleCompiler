@@ -87,7 +87,7 @@ tokens
 	CHAR 		= 'char' ;
 	CLASS 		= 'class' ;
 	CONST 		= 'const' ;
-	DEBUGGER 	= 'debugger' ;
+//	DEBUGGER 	= 'debugger' ;
 	DOUBLE		= 'double' ;
 	ENUM 		= 'enum' ;
 	EXPORT 		= 'export' ;
@@ -196,6 +196,14 @@ tokens
 @parser::namespace { Xebic.Parsers.ES3 }
 
 @parser::header { #pragma warning disable 219, 162 }
+
+@lexer::members {
+	public override void ReportError(RecognitionException e) { throw e; }
+}
+
+@parser::members {
+	public override void ReportError(RecognitionException e) { throw e; }
+}
 
 //
 // $<	A.1 Lexical Grammar (7)
@@ -363,7 +371,7 @@ futureReservedWord
 	| CHAR
 	| CLASS
 	| CONST
-	| DEBUGGER
+//	| DEBUGGER
 	| DOUBLE
 	| ENUM
 	| EXPORT

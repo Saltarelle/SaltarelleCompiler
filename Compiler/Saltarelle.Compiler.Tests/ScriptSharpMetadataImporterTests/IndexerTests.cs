@@ -138,15 +138,15 @@ class C1 {
 @"using System.Runtime.CompilerServices;
 
 class C1 {
-	public int this[int x] { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
+	public int this[int x] { [InlineCode(""get_({this})"")] get { return 0; } [InlineCode(""set_({this})._({value})"")] set {} }
 }");
 
 			var p1 = FindIndexer("C1", 1);
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("|some code|"));
+			Assert.That(p1.GetMethod.LiteralCode, Is.EqualTo("get_({this})"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(p1.SetMethod.LiteralCode, Is.EqualTo("|setter|{value}"));
+			Assert.That(p1.SetMethod.LiteralCode, Is.EqualTo("set_({this})._({value})"));
 		}
 
 		[Test]

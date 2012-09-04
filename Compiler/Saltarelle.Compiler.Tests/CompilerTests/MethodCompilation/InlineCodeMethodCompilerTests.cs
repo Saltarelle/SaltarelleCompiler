@@ -348,7 +348,7 @@ public void M() {
 			Compile("class C<T1> { public void F<T2>(string s, int a, params string[] p) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			Assert.That(InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$System.Object}({T1}, {T2}, @s, {this}, {a}, {*p})", t => true), Is.Empty);
+			Assert.That(InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$System.Object}({T1}, {T2}, {@s}, {this}, {a}, {*p})", t => true), Is.Empty);
 		}
 
 		[Test]

@@ -550,8 +550,8 @@ public void M() {
 	++this[i, j];
 	// END
 }",
-@"	set_this_$i_$j_(get_this_$i_$j) + 1;
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
+@"	set_(this)._($i)._($j)._(get_(this)._($i)._($j) + 1);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})._({x})._({y})"), MethodScriptSemantics.InlineCode("set_({this})._({x})._({y})._({value})")) : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -564,8 +564,8 @@ public void M() {
 	++this[i, j];
 	// END
 }",
-@"	set_this_$i_$j_(get_this_$i_$j) + 1;
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}_{x}_{y}"), MethodScriptSemantics.InlineCode("set_{this}_{x}_{y}_{value}")) : PropertyScriptSemantics.Field(p.Name) });
+@"	set_(this)._($i)._($j)._(get_(this)._($i)._($j) + 1);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})._({x})._({y})"), MethodScriptSemantics.InlineCode("set_({this})._({x})._({y})._({value})")) : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -578,8 +578,8 @@ public void M() {
 	++P;
 	// END
 }",
-@"	set_this_(get_this) + 1;
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
+@"	set_(this)._(get_(this) + 1);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})"), MethodScriptSemantics.InlineCode("set_({this})._({value})")) });
 		}
 
 		[Test]
@@ -592,8 +592,8 @@ public void M() {
 	++P;
 	// END
 }",
-@"	set_this_(get_this) + 1;
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_{this}"), MethodScriptSemantics.InlineCode("set_{this}_{value}")) });
+@"	set_(this)._(get_(this) + 1);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})"), MethodScriptSemantics.InlineCode("set_({this})._({value})")) });
 		}
 
 		[Test]

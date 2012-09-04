@@ -205,8 +205,8 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	var $x = __CreateX_1_this.$F4()_3_$tmp1_5_$tmp3_$tmp2__;
-", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_{a}_{b}_{c}_{d}_{e}_{f}_{g}__"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+	var $x = __CreateX_(1)._(this.$F4())._(3)._($tmp1)._(5)._($tmp3)._($tmp2);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_({a})._({b})._({c})._({d})._({e})._({f})._({g})"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
