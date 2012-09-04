@@ -38,9 +38,10 @@
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
-    <Compile Include="Blank.cs" />
+    <Compile Include="QueueTests.cs" />
     <Compile Include="BooleanTests.cs" />
     <Compile Include="ByteTests.cs" />
+    <Compile Include="StackTests.cs" />
     <Compile Include="GenericDictionaryTests.cs" />
     <Compile Include="JsonTests.cs" />
     <Compile Include="RegexTests.cs" />

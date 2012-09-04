@@ -314,7 +314,7 @@ namespace System.Runtime.CompilerServices {
     /// <summary>
     /// The method is implemented as inline code, eg Debugger.Break() => debugger. Can use the parameters {this} (for instance methods), as well as all typenames and argument names in braces (eg. {arg0}, {TArg0}).
     /// If a parameter name is preceeded by an @ sign, {@arg0}, that argument must be a literal string during invocation, and the supplied string will be inserted as an identifier into the script (eg '{this}.set_{@arg0}({arg1})' can transform the call 'c.F("MyProp", v)' to 'c.set_MyProp(v)'.
-    /// If a parameter name is preceeded by an asterisk or a comma {*arg} or {,arg}, that parameter must be a param array, and all invocations of the method must use the expanded invocation form. The actual value supplied for the param array will be inserted into the call and if the identifier was {,arg}, a comma will be prepended if the param array is not empty.
+    /// If a parameter name is preceeded by an asterisk {*arg} that parameter must be a param array, and all invocations of the method must use the expanded invocation form. The entire array supplied for the parameter will be inserted into the call. Pretend that the parameter is a normal parameter, and commas will be inserted or omitted at the correct locations.
     /// The format string can also use identifiers starting with a dollar {$Namespace.Name} to construct type references. The name must be the fully qualified type name in this case.
     /// </summary>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = true, AllowMultiple = false)]

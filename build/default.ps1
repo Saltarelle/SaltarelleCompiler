@@ -48,8 +48,8 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization 
 	Exec { msbuild "$baseDir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 	$exedir  = "$baseDir\Compiler\SCExe\bin"
 	$taskdir = "$baseDir\Compiler\SCTask\bin"
-	Exec { & "$buildtoolsDir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$outDir\sc.exe" "/keyfile:$baseDir\Saltarelle.snk" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" }
-	Exec { & "$buildtoolsDir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$outDir\SCTask.dll" "/keyfile:$baseDir\Saltarelle.snk" "$taskdir\SCTask.dll" "$taskdir\Saltarelle.Compiler.JSModel.dll" "$taskdir\Saltarelle.Compiler.dll" "$taskdir\ICSharpCode.NRefactory.dll" "$taskdir\ICSharpCode.NRefactory.CSharp.dll" "$taskdir\Mono.Cecil.dll" }
+	Exec { & "$buildtoolsDir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$outDir\sc.exe" "/keyfile:$baseDir\Saltarelle.snk" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" "$exedir\JavaScriptParser.dll" "$exedir\Antlr3.Runtime.dll" }
+	Exec { & "$buildtoolsDir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$outDir\SCTask.dll" "/keyfile:$baseDir\Saltarelle.snk" "$taskdir\SCTask.dll" "$taskdir\Saltarelle.Compiler.JSModel.dll" "$taskdir\Saltarelle.Compiler.dll" "$taskdir\ICSharpCode.NRefactory.dll" "$taskdir\ICSharpCode.NRefactory.CSharp.dll" "$taskdir\Mono.Cecil.dll" "$exedir\JavaScriptParser.dll" "$exedir\Antlr3.Runtime.dll" }
 	copy "$baseDir\Compiler\SCTask\Saltarelle.Compiler.targets" "$outDir"
 }
 
@@ -85,6 +85,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	</metadata>
 	<files>
 		<file src="$baseDir\Compiler\License.txt" target=""/>
+		<file src="$baseDir\Compiler\JavaScriptParser\ParserImpl\XebicLicense.txt" target=""/>
 		<file src="$baseDir\history.txt" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Compiler\install.ps1" target="tools"/>

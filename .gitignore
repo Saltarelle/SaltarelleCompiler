@@ -8,9 +8,9 @@ _ReSharper*/
 *.user
 *.suo
 Compiler/CompilerVersion.cs
-Compiler/JavaScriptParser/ParserImpl/JavaScript.tokens
-Compiler/JavaScriptParser/ParserImpl/JavaScriptLexer.cs
-Compiler/JavaScriptParser/ParserImpl/JavaScriptParser.cs
-Compiler/JavaScriptParser/ParserImpl/JavaScriptTreeParser.cs
-Compiler/JavaScriptParser/ParserImpl/JavaScriptTreeParser.tokens
+Compiler/JavaScriptParser/ParserImpl/ES3.tokens
+Compiler/JavaScriptParser/ParserImpl/ES3Lexer.cs
+Compiler/JavaScriptParser/ParserImpl/ES3Parser.cs
+Compiler/JavaScriptParser/ParserImpl/ES3Walker.cs
+Compiler/JavaScriptParser/ParserImpl/ES3Walker.tokens
 Compiler/packages-manual/antlr/Tool/Templates/messages/languages/*.stg

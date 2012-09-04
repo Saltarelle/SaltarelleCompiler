@@ -65,7 +65,14 @@ namespace Saltarelle.Compiler.JSModel
 
         public object VisitArrayLiteralExpression(JsArrayLiteralExpression expression, bool parenthesized) {
             _cb.Append("[");
-            VisitExpressionList(expression.Elements);
+            bool first = true;
+            foreach (var x in expression.Elements) {
+                if (!first)
+                    _cb.Append("," + _space);
+				if (x != null)
+					VisitExpression(x, GetPrecedence(x.NodeType) >= PrecedenceComma); // We need to parenthesize comma expressions, eg. [1, (2, 3), 4]
+                first = false;
+            }
             _cb.Append("]");
             return null;
         }
@@ -277,23 +284,6 @@ namespace Saltarelle.Compiler.JSModel
 			return null;
         }
 
-		public object VisitLiteralExpression(JsLiteralExpression expression, bool parenthesized) {
-            int expressionPrecedence = GetPrecedence(expression.NodeType);
-			var oldCB = _cb;
-			var arguments = new string[expression.Arguments.Count];
-			for (int i = 0; i < expression.Arguments.Count; i++) {
-				_cb = new CodeBuilder(indentLevel: oldCB.IndentLevel);
-				_cb.PreventIndent();
-				VisitExpression(expression.Arguments[i], GetPrecedence(expression.Arguments[i].NodeType) > expressionPrecedence);
-				arguments[i] = _cb.ToString();
-			}
-			_cb = oldCB;
-
-			_cb.Append(string.Format(expression.Format, arguments));
-
-			return null;
-		}
-
         private static string GetBinaryOperatorString(ExpressionNodeType oper) {
             switch (oper) {
                 case ExpressionNodeType.Multiply:                 return "*";
@@ -330,7 +320,7 @@ namespace Saltarelle.Compiler.JSModel
                 case ExpressionNodeType.RightShiftUnsignedAssign: return ">>>=";
                 case ExpressionNodeType.BitwiseAndAssign:         return "&=";
                 case ExpressionNodeType.BitwiseOrAssign:          return "|=";
-                case ExpressionNodeType.BitwiseXOrAssign:         return "^=";
+                case ExpressionNodeType.BitwiseXorAssign:         return "^=";
                 case ExpressionNodeType.Index:
                 default:
                     throw new InvalidOperationException("Invalid operator " + oper.ToString());
@@ -416,7 +406,7 @@ namespace Saltarelle.Compiler.JSModel
                 case ExpressionNodeType.RightShiftUnsignedAssign:
                 case ExpressionNodeType.BitwiseAndAssign:
                 case ExpressionNodeType.BitwiseOrAssign:
-                case ExpressionNodeType.BitwiseXOrAssign:
+                case ExpressionNodeType.BitwiseXorAssign:
                     return PrecedenceAssignment;
 
                 case ExpressionNodeType.Comma:

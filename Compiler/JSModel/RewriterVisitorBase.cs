@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.JSModel
         }
 
         public virtual IList<JsExpression> VisitExpressions(IList<JsExpression> expressions, TData data) {
-            return VisitCollection(expressions, expr => VisitExpression(expr, data));
+            return VisitCollection(expressions, expr => expr != null ? VisitExpression(expr, data) : null);
         }
 
         public virtual IList<JsObjectLiteralProperty> VisitObjectLiteralProperties(IList<JsObjectLiteralProperty> values, TData data) {
@@ -133,11 +133,6 @@ namespace Saltarelle.Compiler.JSModel
         public virtual JsExpression VisitThisExpression(JsThisExpression expression, TData data) {
             return expression;
         }
-
-		public virtual JsExpression VisitLiteralExpression(JsLiteralExpression expression, TData data) {
-			var arguments = VisitExpressions(expression.Arguments, data);
-			return ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Literal(expression.Format, arguments);
-		}
 
         public virtual IList<JsStatement> VisitStatements(IList<JsStatement> statements, TData data) {
             return VisitCollection(statements, s => {

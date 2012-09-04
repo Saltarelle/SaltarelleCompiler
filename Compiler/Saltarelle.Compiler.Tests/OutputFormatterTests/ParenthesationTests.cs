@@ -480,14 +480,6 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
         }
 
 		[Test]
-		public void LiteralExpressionIsParenthesizedInsideCommaOperator() {
-			AssertCorrect(JsExpression.Comma(JsExpression.Identifier("a"),
-			                                 JsExpression.Literal("_{0}_", new[] { JsExpression.Identifier("X") }),
-			                                 JsExpression.Identifier("b")),
-			              "a, (_X_), b");
-		}
-
-		[Test]
 		public void ExpressionStatementsContainingOnlyAFunctionDefinitionParenthesizesThatDefinition() {
 			AssertCorrect(new JsExpressionStatement(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)), "(function() {\r\n});\r\n");
 		}

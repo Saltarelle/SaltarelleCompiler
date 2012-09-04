@@ -1,0 +1,392 @@
+/*
+
+Copyrights 2008-2009 Xebic Reasearch BV. All rights reserved (see license.txt).
+Original work by Patrick Hulsmeijer.
+
+*/
+
+tree grammar ES3Walker ;
+
+options
+{
+	ASTLabelType = CommonTree ;
+	tokenVocab = ES3 ;
+}
+
+@header {
+using System;
+using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.JSModel.Expressions;
+using System.Globalization;
+}
+
+@members {
+	public override void ReportError(RecognitionException e) { throw e; }
+
+	public string UnescapeStringLiteral(string orig) {
+		if (orig.IndexOf('\\') == -1)
+			return orig.Substring(1, orig.Length - 2);
+
+		var result = new System.Text.StringBuilder();
+		for (int i = 1; i < orig.Length - 1; i++) {
+			char ch = orig[i];
+			if (ch == '\\') {
+				ch = orig[++i];
+				if (ch == '\'')
+					result.Append('\'');
+				else if (ch == '\"')
+					result.Append('\"');
+				else if (ch == 'b')
+					result.Append('\b');
+				else if (ch == 'f')
+					result.Append('\f');
+				else if (ch == 'n')
+					result.Append('\n');
+				else if (ch == 'r')
+					result.Append('\r');
+				else if (ch == 't')
+					result.Append('\t');
+				else if (ch == 'v')
+					result.Append('\v');
+				else if (ch == '0')
+					result.Append('\0');
+				else if (ch == '/')
+					result.Append('/');
+				else
+					result.Append('\\').Append(ch);	// TODO: More escape sequences.
+			}
+			else
+				result.Append(ch);
+		}
+		return result.ToString();
+	}
+
+	public JsConstantExpression ParseRegexpLiteral(string orig) {
+		var pattern = new System.Text.StringBuilder();
+		int i = 1;
+		for (; i < orig.Length - 1; i++) {
+			char ch = orig[i];
+			if (ch == '\\') {
+				ch = orig[++i];
+				if (ch == '\'')
+					pattern.Append('\'');
+				else if (ch == '\"')
+					pattern.Append('\"');
+				else if (ch == 'b')
+					pattern.Append('\b');
+				else if (ch == 'f')
+					pattern.Append('\f');
+				else if (ch == 'n')
+					pattern.Append('\n');
+				else if (ch == 'r')
+					pattern.Append('\r');
+				else if (ch == 't')
+					pattern.Append('\t');
+				else if (ch == 'v')
+					pattern.Append('\v');
+				else if (ch == '0')
+					pattern.Append('\0');
+				else if (ch == '/')
+					pattern.Append('/');
+				else
+					pattern.Append('\\').Append(ch);	// TODO: More escape sequences.
+			}
+			else if (ch == '/')
+				break;
+			else
+				pattern.Append(ch);
+		}
+
+		string options = i < orig.Length - 1 ? orig.Substring(i + 1) : null;
+
+		return JsExpression.Regexp(pattern.ToString(), options);
+	}
+
+	public int DecodeOctalNumber(string value) {
+		int result = 0;
+		for (int i = 0; i < value.Length; i++)
+			result = result * 8 + (value[i] - '0');
+		return result;
+	}
+}
+
+public program returns [IList<JsStatement> result]
+@init { $result = new List<JsStatement>(); }
+	: (s = statement { $result.Add(s); })*
+	;
+
+public statement returns [JsStatement result]
+	: (x=block
+	| x=variableDeclaration
+	| e=expression { x = new JsExpressionStatement(e); }
+	| x=ifStatement
+	| x=doStatement
+	| x=whileStatement
+	| x=forStatement
+	| x=continueStatement
+	| x=breakStatement
+	| x=returnStatement
+	| x=withStatement
+	| x=labelledStatement
+	| x=switchStatement
+	| x=throwStatement
+	| x=tryStatement
+	| x=functionDeclaration
+	| x=gotoStatement
+	| x=yieldStatement
+	| SEMIC { x = new JsEmptyStatement(); } )
+	{ $result = x; }
+	;
+
+block returns [JsStatement result]
+@init { var stmts = new List<JsStatement>(); }
+	: ^( BLOCK (s=statement { stmts.Add(s); })* )
+	{ $result = new JsBlockStatement(stmts); }
+	;
+
+variableDeclaration returns [JsStatement result]
+@init { var vars = new List<JsVariableDeclaration>(); }
+	: ^( VAR ( i=Identifier { vars.Add(new JsVariableDeclaration(i.Text, null)); } | ^( ASSIGN i=Identifier x=expr { vars.Add(new JsVariableDeclaration(i.Text, x)); } ) )+ ) { $result = new JsVariableDeclarationStatement(vars); }
+	;
+
+ifStatement returns [JsStatement result]
+	: ^( IF x=expression a=statement b=statement? ) { $result = new JsIfStatement(x, a, b); }
+	;
+
+doStatement returns [JsStatement result]
+	: ^( DO s=statement x=expression ) { $result = new JsDoWhileStatement(x, s); }
+	;
+
+whileStatement returns [JsStatement result]
+	: ^( WHILE x=expression s=statement ) { $result = new JsWhileStatement(x, s); }
+	;
+
+forStatement returns [JsStatement result]
+	: ^(
+	FOR 
+	(
+		  ( ^( FORSTEP { JsStatement init = null; } ( x=exprOptClause { init = x != null ? (JsStatement)new JsExpressionStatement(x) : new JsEmptyStatement(); } | d=variableDeclaration { init = d; } ) x=exprOptClause y=exprOptClause ) s=statement { $result = new JsForStatement(init, x, y, s); } )
+		| ( ^( FORITER { bool isDeclared = false; } ( ^( EXPR i=Identifier ) | ^( VAR i=Identifier { isDeclared = true; } ) ) x=exprClause ) s=statement { $result = new JsForEachInStatement(i.Text, x, s, isDeclared); } )
+	)
+	);
+
+exprOptClause returns [JsExpression result]
+	: ^( EXPR x=expression? ) { $result = x; }
+	;
+
+exprClause returns [JsExpression result]
+	: ^( EXPR x=expression ) { $result = x; }
+	;
+
+continueStatement returns [JsStatement result]
+	: ^( CONTINUE i=Identifier? ) { $result = new JsContinueStatement(i != null ? i.Text : null); }
+	;
+
+breakStatement returns [JsStatement result]
+	: ^( BREAK i=Identifier? ) { $result = new JsBreakStatement(i != null ? i.Text : null); }
+	;
+
+returnStatement returns [JsStatement result]
+	: ^( RETURN x= expression? ) { $result = new JsReturnStatement(x); }
+	;
+
+withStatement returns [JsStatement result]
+	: ^( WITH x=expression s=statement ) { $result = new JsWithStatement(x, s); }
+	;
+
+labelledStatement returns [JsStatement result]
+	: ^( LABELLED Identifier s=statement ) { $result = new JsLabelledStatement($Identifier.Text, s); }
+	;
+
+switchStatement returns [JsStatement result]
+@init { var sections = new List<JsSwitchSection>(); }
+	: ^( SWITCH { var values = new List<JsExpression>(); List<JsStatement> stmts = null; } x=expression
+	     ((
+			d=defaultClause { values.Add(null); stmts = d; }
+		  | c=caseClause { values.Add(c.Item1); stmts = c.Item2; }
+         ) { if (stmts != null) { sections.Add(new JsSwitchSection(values, stmts.Count == 1 ? JsBlockStatement.MakeBlock(stmts[0]) : new JsBlockStatement(stmts))); values = new List<JsExpression>(); } } )*
+	   ) { if (values.Count > 0) { sections.Add(new JsSwitchSection(values, JsBlockStatement.EmptyStatement)); } $result = new JsSwitchStatement(x, sections); }
+	;
+
+defaultClause returns [List<JsStatement> result]
+	: ^( DEFAULT (s=statement { $result = $result ?? new List<JsStatement>(); $result.Add(s); })* )
+	;
+
+caseClause returns [Tuple<JsExpression, List<JsStatement>> result]
+@init { List<JsStatement> stmts = null; }
+	: ^( CASE x=expression (s=statement { stmts = stmts ?? new List<JsStatement>(); stmts.Add(s); })* ) { $result = Tuple.Create(x, stmts); }
+	;
+
+throwStatement returns [JsStatement result]
+	: ^( THROW x=expression ) { $result = new JsThrowStatement(x); }
+	;
+
+tryStatement returns [JsStatement result]
+	: ^( TRY a=block b=catchClause? c=finallyClause? ) { $result = new JsTryStatement(a, b, c); }
+	;
+	
+catchClause returns [JsCatchClause result]
+	: ^( CATCH Identifier b=block ) { $result = new JsCatchClause($Identifier.Text, b); }
+	;
+	
+finallyClause returns [JsStatement result]
+	: ^( FINALLY b=block ) { $result = b; }
+	;
+
+gotoStatement returns [JsStatement result]
+	: ^( GOTO Identifier ) { $result = new JsGotoStatement($Identifier.Text); }
+	;
+
+yieldStatement returns [JsStatement result]
+	: ^( YIELD x=expression? ) { $result = new JsYieldStatement(x); }
+	;
+
+public expression returns [JsExpression result]
+	: x=expr { $result = x; }
+	| ^( CEXPR { var list = new List<JsExpression>(); } (x=expr { list.Add(x); })+ { $result = JsExpression.Comma(list); })
+	;
+
+expr returns [JsExpression result]
+	: x=leftHandSideExpression { $result = x; }
+	
+	// Assignment operators
+	| ^( ASSIGN a=expr b=expr { $result = JsExpression.Assign(a, b); } )
+	| ^( MULASS a=expr b=expr { $result = JsExpression.MultiplyAssign(a, b); } )
+	| ^( DIVASS a=expr b=expr { $result = JsExpression.DivideAssign(a, b); } )
+	| ^( MODASS a=expr b=expr { $result = JsExpression.ModuloAssign(a, b); } )
+	| ^( ADDASS a=expr b=expr { $result = JsExpression.AddAssign(a, b); } )
+	| ^( SUBASS a=expr b=expr { $result = JsExpression.SubtractAssign(a, b); } )
+	| ^( SHLASS a=expr b=expr { $result = JsExpression.LeftShiftAssign(a, b); } )
+	| ^( SHRASS a=expr b=expr { $result = JsExpression.RightShiftSignedAssign(a, b); } )
+	| ^( SHUASS a=expr b=expr { $result = JsExpression.RightShiftUnsignedAssign(a, b); } )
+	| ^( ANDASS a=expr b=expr { $result = JsExpression.BitwiseAndAssign(a, b); } )
+	| ^( XORASS a=expr b=expr { $result = JsExpression.BitwiseXorAssign(a, b); } )
+	| ^( ORASS  a=expr b=expr { $result = JsExpression.BitwiseOrAssign(a, b); } )
+	
+	// Conditional operator
+	| ^( QUE a=expr b=expr c=expr  { $result = JsExpression.Conditional(a, b, c); } )
+	
+	// Logical operators
+	| ^( LOR        a=expr b=expr { $result = JsExpression.LogicalOr(a, b); } )
+	| ^( LAND       a=expr b=expr { $result = JsExpression.LogicalAnd(a, b); } )
+	
+	// Binary bitwise operators
+	| ^( AND        a=expr b=expr { $result = JsExpression.BitwiseAnd(a, b); } )
+	| ^( OR         a=expr b=expr { $result = JsExpression.BitwiseOr(a, b); } )
+	| ^( XOR        a=expr b=expr { $result = JsExpression.BitwiseXor(a, b); } )
+	
+	// Equality operators
+	| ^( EQ         a=expr b=expr { $result = JsExpression.Equal(a, b); } )
+	| ^( NEQ        a=expr b=expr { $result = JsExpression.NotEqual(a, b); } )
+	| ^( SAME       a=expr b=expr { $result = JsExpression.Same(a, b); } )
+	| ^( NSAME      a=expr b=expr { $result = JsExpression.NotSame(a, b); } )
+	
+	// Relational operator
+	| ^( LT         a=expr b=expr { $result = JsExpression.Lesser(a, b); } )
+	| ^( GT         a=expr b=expr { $result = JsExpression.Greater(a, b); } )
+	| ^( LTE        a=expr b=expr { $result = JsExpression.LesserOrEqual(a, b); } )
+	| ^( GTE        a=expr b=expr { $result = JsExpression.GreaterOrEqual(a, b); } )
+	| ^( INSTANCEOF a=expr b=expr { $result = JsExpression.InstanceOf(a, b); } )
+	| ^( IN         a=expr b=expr { $result = JsExpression.In(a, b); } )
+	
+	// Bitwise shift operator
+	| ^( SHL        a=expr b=expr { $result = JsExpression.LeftShift(a, b); } )
+	| ^( SHR        a=expr b=expr { $result = JsExpression.RightShiftSigned(a, b); } )
+	| ^( SHU        a=expr b=expr { $result = JsExpression.RightShiftUnsigned(a, b); } )
+	
+	// Additive operators
+	| ^( ADD        a=expr b=expr { $result = JsExpression.Add(a, b); } )
+	| ^( SUB        a=expr b=expr { $result = JsExpression.Subtract(a, b); } )
+	
+	// Multipiclative operators
+	| ^( MUL        a=expr b=expr { $result = JsExpression.Multiply(a, b); } )
+	| ^( DIV        a=expr b=expr { $result = JsExpression.Divide(a, b); } )
+	| ^( MOD        a=expr b=expr { $result = JsExpression.Modulo(a, b); } )
+	
+	// Unary operator
+	| ^( DELETE a=expr { $result = JsExpression.Delete(a); } )
+	| ^( VOID   a=expr { $result = JsExpression.Void(a); } )
+	| ^( TYPEOF a=expr { $result = JsExpression.TypeOf(a); } )
+	| ^( INC    a=expr { $result = JsExpression.PrefixPlusPlus(a); } )
+	| ^( DEC    a=expr { $result = JsExpression.PrefixMinusMinus(a); } )
+	| ^( POS    a=expr { $result = JsExpression.Positive(a); } )
+	| ^( NEG    a=expr { $result = JsExpression.Negate(a); } )
+	| ^( INV    a=expr { $result = JsExpression.BitwiseNot(a); } )
+	| ^( NOT    a=expr { $result = JsExpression.LogicalNot(a); } )
+	
+	// Postfix operators
+	| ^( PINC   a=expr { $result = JsExpression.PostfixPlusPlus(a); } )
+	| ^( PDEC   a=expr { $result = JsExpression.PostfixMinusMinus(a); } )
+	;
+
+leftHandSideExpression returns [JsExpression result]
+	: x=primaryExpression  { $result = x; }
+	| x=functionExpression { $result = x; }
+	| x=callExpression     { $result = x; }
+	| x=memberExpression   { $result = x; }
+	;
+
+functionExpression returns [JsExpression result]
+@init { var parms = new List<string>(); }
+	: ^( FUNCTION i=Identifier? ^( ARGS (p=Identifier { parms.Add(p.Text); })* ) b=block ) { $result = JsExpression.FunctionDefinition(parms, b, i != null ? i.Text : null); }
+	;
+
+functionDeclaration returns [JsStatement result]
+@init { var parms = new List<string>(); }
+	: ^( FUNCTIONDECLARATION i=Identifier ^( ARGS (p=Identifier { parms.Add(p.Text); })* ) b=block ) { $result = new JsFunctionStatement(i.Text, parms, b); }
+	;
+
+callExpression returns [JsExpression result]
+@init { var args = new List<JsExpression>(); }
+	: ^( CALL ^( NEW t=leftHandSideExpression ) ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.New(t, args); }
+	| ^( CALL t=leftHandSideExpression ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.Invocation(t, args); }
+	;
+	
+memberExpression returns [JsExpression result]
+	: ^( BYINDEX a=leftHandSideExpression b=expression { $result = JsExpression.Index(a, b); } )
+	| ^( BYFIELD a=leftHandSideExpression Identifier { $result = JsExpression.MemberAccess(a, $Identifier.Text); } )
+	;
+
+primaryExpression returns [JsExpression result]
+	: Identifier { $result = JsExpression.Identifier($Identifier.Text); }
+	| x=literal { $result = x; }
+	| ^(PAREXPR x=expression { $result = x; })
+	;
+
+literal returns [JsExpression result]
+	: THIS { $result = JsExpression.This; }
+	| NULL { $result = JsExpression.Null; }
+	| x=booleanLiteral { $result = x; }
+	| x=numericLiteral { $result = x; }
+	| StringLiteral { $result = JsExpression.String(UnescapeStringLiteral($StringLiteral.Text)); }
+	| RegularExpressionLiteral { $result = ParseRegexpLiteral($RegularExpressionLiteral.Text); }
+	| x=arrayLiteral { $result = x; }
+	| x=objectLiteral { $result = x; }
+	;
+
+booleanLiteral returns [JsExpression result]
+	: TRUE  { $result = JsExpression.True; }
+	| FALSE { $result = JsExpression.False; }
+	;
+
+numericLiteral returns [JsExpression result]
+	: DecimalLiteral      { $result = JsExpression.Number(double.Parse($DecimalLiteral.Text, NumberStyles.Float, CultureInfo.InvariantCulture)); }
+	| OctalIntegerLiteral { $result = JsExpression.Number(DecodeOctalNumber($OctalIntegerLiteral.Text)); }
+	| HexIntegerLiteral   { $result = JsExpression.Number(int.Parse($HexIntegerLiteral.Text.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture)); }
+	;
+
+arrayLiteral returns [JsExpression result]
+@init { var items = new List<JsExpression>(); }
+	: ^( ARRAY ( ^( ITEM { x = null; } x=expr? ) { items.Add(x); } )* ) { $result = JsExpression.ArrayLiteral(items); }
+	;
+
+objectLiteral returns [JsExpression result]
+@init { var props = new List<JsObjectLiteralProperty>(); }
+	: ^( OBJECT ( ^( NAMEDVALUE n=propertyName x=expr { props.Add(new JsObjectLiteralProperty(n, x)); } ) )* ) { $result = JsExpression.ObjectLiteral(props); }
+	;
+
+propertyName returns [ string result ]
+	: Identifier       { $result = $Identifier.Text; }
+	| StringLiteral	   { $result = $StringLiteral.Text.Substring(1, $StringLiteral.Text.Length - 2); }
+	| x=numericLiteral { $result = ((JsConstantExpression)x).NumberValue.ToString(CultureInfo.InvariantCulture); }
+	;

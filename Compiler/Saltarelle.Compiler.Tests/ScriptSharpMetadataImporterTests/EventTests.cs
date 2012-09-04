@@ -118,15 +118,15 @@ class C1 {
 @"using System.Runtime.CompilerServices;
 
 class C1 {
-	public event System.EventHandler Evt { [InlineCode(""|add|{value}"")] add {} [InlineCode(""|remove|{value}"")] remove {} }
+	public event System.EventHandler Evt { [InlineCode(""add_({this})._({value})"")] add {} [InlineCode(""remove_({this})._({value})"")] remove {} }
 }");
 
 			var e1 = FindEvent("C1.Evt");
 			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
 			Assert.That(e1.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(e1.AddMethod.LiteralCode, Is.EqualTo("|add|{value}"));
+			Assert.That(e1.AddMethod.LiteralCode, Is.EqualTo("add_({this})._({value})"));
 			Assert.That(e1.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
-			Assert.That(e1.RemoveMethod.LiteralCode, Is.EqualTo("|remove|{value}"));
+			Assert.That(e1.RemoveMethod.LiteralCode, Is.EqualTo("remove_({this})._({value})"));
 		}
 
 		[Test]
