@@ -85,6 +85,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	</metadata>
 	<files>
 		<file src="$baseDir\Compiler\License.txt" target=""/>
+		<file src="$baseDir\Compiler\JavaScriptParser\ParserImpl\XebicLicense.txt" target=""/>
 		<file src="$baseDir\history.txt" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Compiler\install.ps1" target="tools"/>
