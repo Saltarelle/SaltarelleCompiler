@@ -11,7 +11,6 @@ namespace System {
     /// The Script class contains various methods that represent global
     /// methods present in the underlying script engine.
     /// </summary>
-    [GlobalMethods]
     [IgnoreNamespace]
     [Imported(IsRealType = true)]
     public static class Script {
@@ -32,6 +31,7 @@ namespace System {
         /// </summary>
         /// <param name="s">The script to be evaluated.</param>
         /// <returns>The result of the evaluation.</returns>
+        [ScriptAlias("eval")]
         public static object Eval(string s) {
             return null;
         }
@@ -86,22 +86,11 @@ namespace System {
             return null;
         }
 
-        /// <summary>
-        /// Registers the specified callback to be invoked when the DOM is ready,
-        /// and before any script loading has begun.
-        /// </summary>
-        /// <param name="callback">The callback to invoke.</param>
-        [ScriptAlias("ss.init")]
-        public static void OnInit(Action callback) {
-        }
-
-        /// <summary>
-        /// Registers a callback to be invoked once any necessary scripts
-        /// have been loaded.
-        /// </summary>
-        /// <param name="callback">The callback to be invoked.</param>
-        [ScriptAlias("ss.ready")]
-        public static void OnReady(Action callback) {
-        }
+		/// <summary>
+		/// Returns the undefined object.
+		/// </summary>
+		public static object Undefined {
+			[InlineCode("undefined")] get { return null; }
+		}
     }
 }

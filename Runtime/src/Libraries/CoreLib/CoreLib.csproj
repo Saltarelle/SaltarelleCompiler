@@ -56,11 +56,6 @@
     <Compile Include="Collections\Generic\ListCallback.cs" />
     <Compile Include="Collections\Generic\ListItemFilterCallback.cs" />
     <Compile Include="Collections\Generic\ListFilterCallback.cs" />
-    <Compile Include="Collections\Generic\ListAggregator.cs" />
-    <Compile Include="Collections\Generic\ListItemAggregator.cs" />
-    <Compile Include="Collections\Generic\ObservableCollection.cs" />
-    <Compile Include="Collections\Generic\Stack.cs" />
-    <Compile Include="Collections\Generic\Queue.cs" />
     <Compile Include="Collections\Generic\JsDictionary.cs" />
     <Compile Include="Collections\Generic\KeyValuePair.cs" />
     <Compile Include="Collections\Generic\List.cs" />
@@ -69,18 +64,14 @@
     <Compile Include="Collections\Generic\IEnumerator.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerator.cs" />
     <Compile Include="Collections\ICollection.cs" />
+    <Compile Include="Collections\IEqualityComparer.cs" />
     <Compile Include="Collections\IList.cs" />
     <Compile Include="Collections\JsDictionary.cs" />
-    <Compile Include="Collections\ObservableCollection.cs" />
     <Compile Include="Callback.cs" />
     <Compile Include="ComponentModel\IApplication.cs" />
     <Compile Include="ComponentModel\IEventManager.cs" />
-    <Compile Include="ComponentModel\DependencyAttribute.cs" />
     <Compile Include="ComponentModel\IInitializable.cs" />
     <Compile Include="ComponentModel\IContainer.cs" />
-    <Compile Include="ComponentModel\ObserverManager.cs" />
-    <Compile Include="ComponentModel\IObserver.cs" />
-    <Compile Include="ComponentModel\Observable.cs" />
     <Compile Include="ArrayEnumerator.cs" />
     <Compile Include="JsDate.cs" />
     <Compile Include="NotSupportedException.cs" />
@@ -105,10 +96,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Array.cs" />
-    <Compile Include="Collections\ArrayAggregator.cs" />
     <Compile Include="Collections\ArrayCallback.cs" />
     <Compile Include="Collections\ArrayFilterCallback.cs" />
-    <Compile Include="Collections\ArrayItemAggregator.cs" />
     <Compile Include="Collections\ArrayItemCallback.cs" />
     <Compile Include="Collections\ArrayItemFilterCallback.cs" />
     <Compile Include="Collections\ArrayItemMapCallback.cs" />
@@ -141,12 +130,10 @@
     <Compile Include="Int64.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="Object.cs" />
-    <Compile Include="Collections\Queue.cs" />
     <Compile Include="Text\Regex.cs" />
     <Compile Include="SByte.cs" />
     <Compile Include="Script.cs" />
     <Compile Include="Single.cs" />
-    <Compile Include="Collections\Stack.cs" />
     <Compile Include="String.cs" />
     <Compile Include="Text\StringBuilder.cs" />
     <Compile Include="StringReplaceCallback.cs" />

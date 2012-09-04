@@ -76,8 +76,10 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 
 		[Test, Ignore("Debugging purposes")]
 		public void CanCompileProject() {
-			var opts = ReadProject(@"C:\Projects\EngineGit\Project\Search\Search.Client\Search.Client.csproj", @"C:\Projects\EngineGit\Project");
-			opts.DefineConstants.Add("CLIENT");
+			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
+			opts.References.Clear();
+			opts.References.Add(new Reference(Common.MscorlibPath));
+			opts.AlreadyCompiled = true;
 			try {
 				var er = new MockErrorReporter();
 				var d = new CompilerDriver(er);

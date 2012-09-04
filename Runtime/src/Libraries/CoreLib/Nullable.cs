@@ -36,15 +36,17 @@ namespace System {
 			return default(T);
 		}
 
-		[NonScriptable]
+		[InlineCode("{$System.Object}.coalesce({this}, {defaultValue})")]
 		public T GetValueOrDefault(T defaultValue) {
 			return default(T);
 		}
 
-        public static implicit operator T?(T value) {
+        [ScriptSkip]
+		public static implicit operator T?(T value) {
             return null;
         }
 
+		[InlineCode("{$System.Nullable`1}.unbox({value})")]
         public static explicit operator T(T? value) {
             return default(T);
         }

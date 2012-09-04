@@ -41,7 +41,11 @@ namespace System {
             return 0;
         }
 
-        public static int Abs(int d) {
+        public static int Abs(int i) {
+            return 0;
+        }
+
+        public static int Abs(long l) {
             return 0;
         }
 
@@ -61,7 +65,8 @@ namespace System {
             return 0;
         }
 
-        public static int Ceil(double d) {
+        [ScriptName("ceil")]
+		public static double Ceiling(double d) {
             return 0;
         }
 
@@ -73,7 +78,7 @@ namespace System {
             return 0;
         }
 
-        public static int Floor(double d) {
+        public static double Floor(double d) {
             return 0;
         }
 
@@ -92,12 +97,22 @@ namespace System {
         }
 
         [ExpandParams]
+		public static long Max(params long[] numbers) {
+            return 0;
+        }
+
+        [ExpandParams]
         public static double Min(params double[] numbers) {
             return 0;
         }
 
         [ExpandParams]
         public static int Min(params int[] numbers) {
+            return 0;
+        }
+
+        [ExpandParams]
+        public static int Min(params long[] numbers) {
             return 0;
         }
 

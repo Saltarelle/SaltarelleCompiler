@@ -35,7 +35,7 @@ namespace System.Runtime.CompilerServices {
 
     /// <summary>
     /// This attribute can be placed on types that should not be emitted into generated
-    /// script, as they represent existing script or native types. All members without another naming attribute are considered to use [PreserveName]
+    /// script, as they represent existing script or native types. All members without another naming attribute are considered to use [PreserveName].
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Struct)]
     [NonScriptable]
@@ -47,6 +47,11 @@ namespace System.Runtime.CompilerServices {
 		/// The default is false.
 		/// </summary>
 		public bool IsRealType { get; set; }
+
+		/// <summary>
+		/// This flag, set by default, applies an [IgnoreGenericArgument] attribute to the type and all its methods.
+		/// </summary>
+		public bool IgnoreGenericArguments { get; set; }
     }
 
     /// <summary>
@@ -256,7 +261,7 @@ namespace System.Runtime.CompilerServices {
     /// member names of attached type to camel-cased equivalents in the generated JavaScript.
     /// When applied to an assembly, all types in the assembly are considered to have this
     /// attribute by default</summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
     [NonScriptable]
     [Imported]
     public sealed class PreserveMemberCaseAttribute : Attribute
@@ -394,5 +399,14 @@ namespace System.Runtime.CompilerServices {
 		/// If true, code will not be generated to verify that a nullable value is not null before converting it to its underlying type.
 		/// </summary>
 		public bool OmitNullableChecks { get; set; }
+	}
+
+	/// <summary>
+	/// If a constructor for a value type takes an instance of this type as a parameter, any attribute applied to that constructor will instead be applied to the default (undeclarable) constructor.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[Imported]
+	public sealed class DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor {
+		private DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor() {}
 	}
 }

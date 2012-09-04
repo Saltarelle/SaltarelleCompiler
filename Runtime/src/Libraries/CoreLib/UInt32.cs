@@ -14,6 +14,9 @@ namespace System {
 	[ScriptName("Int32")]
     [Imported(IsRealType = true)]
     public struct UInt32 {
+		[InlineCode("0")]
+		public UInt32(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
 
         public string Format(string format) {
             return null;
@@ -21,6 +24,18 @@ namespace System {
 
         public string LocaleFormat(string format) {
             return null;
+        }
+
+        [ScriptAlias("parseInt")]
+		[CLSCompliant(false)]
+        public static uint Parse(string s) {
+            return 0;
+        }
+
+        [ScriptAlias("parseInt")]
+		[CLSCompliant(false)]
+        public static uint Parse(string s, int radix) {
+            return 0;
         }
 
         /// <summary>

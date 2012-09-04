@@ -14,6 +14,9 @@ namespace System {
 	[ScriptName("Int32")]
 	[Imported(IsRealType = true)]
     public struct SByte {
+		[InlineCode("0")]
+		public SByte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
 
         public string Format(string format) {
             return null;
@@ -23,6 +26,17 @@ namespace System {
             return null;
         }
 
+        [ScriptAlias("parseInt")]
+		[CLSCompliant(false)]
+        public static sbyte Parse(string s) {
+            return 0;
+        }
+
+        [ScriptAlias("parseInt")]
+		[CLSCompliant(false)]
+        public static sbyte Parse(string s, int radix) {
+            return 0;
+        }
         /// <summary>
         /// Converts the value to its string representation.
         /// </summary>

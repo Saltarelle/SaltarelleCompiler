@@ -14,6 +14,10 @@ namespace System {
     [ScriptName("Int32")]
 	[Imported(IsRealType = true)]
     public struct Char {
+		[InlineCode("0")]
+		public Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
+
         public string Format(string format) {
             return null;
         }

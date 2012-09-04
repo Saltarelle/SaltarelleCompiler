@@ -22,6 +22,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void DefaultConstructorReturnsZero() {
+			Assert.AreStrictEqual((int)new char(), 0);
+		}
+
+		[Test]
 		public void CharComparisonWorks() {
 			char a = 'a', a2 = 'a', b = 'b';
 			Assert.IsTrue(a == a2);

@@ -734,6 +734,21 @@ class C1 {
 		}
 
 		[Test]
+		public void PreserveMemberCaseWorksOnEnum() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[PreserveMemberCase]
+public enum E1 {
+	FirstValue
+}");
+
+			var f1 = FindField("E1.FirstValue");
+			Assert.That(f1.Name, Is.EqualTo("FirstValue"));
+		}
+
+		[Test]
 		public void PreserveNameAttributePreventsMinimization() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -850,6 +865,24 @@ class C1 {
 			Assert.That(t.GenerateCode, Is.False);
 		}
 
+		[Test]
+		public void ImportedAttributeOnTypeActivatesIgnoreGenericArgumentsForTheTypeAndAllMethodsInIt() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported]
+class C1<T> {
+	public void M<T2>() {
+	}
+}");
+			var t = FindType("C1`1");
+			Assert.That(t.Name, Is.EqualTo("C1"));
+			Assert.That(t.IgnoreGenericArguments, Is.True);
+
+			var m = FindMethod("C1`1.M");
+			Assert.That(m.Name, Is.EqualTo("m"));
+			Assert.That(m.IgnoreGenericArguments, Is.True);
+		}
+		
 		[Test]
 		public void NonScriptableOnATypeCausesTheTypeAndAnyNestedTypesAndAllMembersToBeNotUsableFromScript() {
 			Prepare(

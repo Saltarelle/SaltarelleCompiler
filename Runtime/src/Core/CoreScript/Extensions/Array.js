@@ -3,6 +3,7 @@
 
 Array.__typeName = 'Array';
 Array.__interfaces = [ ss.IEnumerable, ss.ICollection, ss.IList ];
+Array.__class = true;
 
 Array.prototype.get_item = function#? DEBUG Array$get_item##(index) {
 	return this[index];
@@ -14,6 +15,13 @@ Array.prototype.set_item = function#? DEBUG Array$set_item##(index, value) {
 
 Array.prototype.get_count = function#? DEBUG Array$get_count##() {
 	return this.length;
+}
+
+Array.prototype.extract = function#? DEBUG Array$extract##(start, count) {
+   if (!ss.isValue(count)) {
+       return this.slice(start);
+   }
+   return this.slice(start, start + count);
 }
 
 Array.prototype.add = function#? DEBUG Array$add##(item) {
@@ -39,16 +47,6 @@ Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
 	}
 }
 
-Array.prototype.aggregate = function#? DEBUG Array$aggregate##(seed, callback, instance) {
-    var length = this.length;
-    for (var i = 0; i < length; i++) {
-        if (i in this) {
-            seed = callback.call(instance, seed, this[i], i, this);
-        }
-    }
-    return seed;
-}
-
 Array.prototype.clear = function#? DEBUG Array$clear##() {
     this.length = 0;
 }
@@ -67,25 +65,6 @@ Array.prototype.contains = function#? DEBUG Array$contains##(item) {
     return (index >= 0);
 }
 
-Array.prototype.dequeue = function#? DEBUG Array$dequeue##() {
-    return this.shift();
-}
-
-Array.prototype.enqueue = function#? DEBUG Array$enqueue##(item) {
-    // We record that this array instance is a queue, so we
-    // can implement the right behavior in the peek method.
-    this._queue = true;
-    this.push(item);
-}
-
-Array.prototype.peek = function#? DEBUG Array$peek##() {
-    if (this.length) {
-        var index = this._queue ? 0 : this.length - 1;
-        return this[index];
-    }
-    return null;
-}
-
 if (!Array.prototype.every) {
     Array.prototype.every = function#? DEBUG Array$every##(callback, instance) {
         var length = this.length;
@@ -96,13 +75,6 @@ if (!Array.prototype.every) {
         }
         return true;
     }
-}
-
-Array.prototype.extract = function#? DEBUG Array$extract##(index, count) {
-    if (!count) {
-        return this.slice(index);
-    }
-    return this.slice(index, index + count);
 }
 
 if (!Array.prototype.filter) {
@@ -230,4 +202,16 @@ if (!Array.prototype.some) {
 
 Array.toArray = function#? DEBUG Array$toArray##(obj) {
     return Array.prototype.slice.call(obj);
+}
+
+Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {
+	var e = enm.getEnumerator(), r = [];
+	try {
+		while (e.moveNext())
+			r.push(e.get_current());
+	}
+	finally {
+		e.dispose();
+	}
+	return r;
 }

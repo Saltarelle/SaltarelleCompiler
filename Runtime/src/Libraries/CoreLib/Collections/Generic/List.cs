@@ -16,9 +16,11 @@ namespace System.Collections.Generic {
     [ScriptName("Array")]
     public sealed class List<T> : IList<T> {
 
-        public List() {
+        [InlineCode("[]")]
+		public List() {
         }
 
+        [InlineCode("[]")]
         public List(int capacity) {
         }
 
@@ -34,7 +36,11 @@ namespace System.Collections.Generic {
 		public List(List<T> items) {
         }
 
-        [IntrinsicProperty]
+		[InlineCode("{$System.Collections.Generic.List`1}.fromEnumerable({items})")]
+		public List(IEnumerable<T> items) {
+		}
+		
+		[IntrinsicProperty]
         [ScriptName("length")]
         public int Count {
             get {
@@ -68,20 +74,7 @@ namespace System.Collections.Generic {
         public void Add(T item) {
         }
 
-        public void AddRange(T[] items) {
-        }
-
-		public void AddRange(IList<T> items) {
-        }
-
-        [IgnoreGenericArguments]
-		public TAccumulated Aggregate<TAccumulated>(TAccumulated seed, ListAggregator<TAccumulated, T> aggregator) {
-            return default(TAccumulated);
-        }
-
-        [IgnoreGenericArguments]
-        public TAccumulated Aggregate<TAccumulated>(TAccumulated seed, ListItemAggregator<TAccumulated, T> aggregator) {
-            return default(TAccumulated);
+		public void AddRange(IEnumerable<T> items) {
         }
 
         public List<T> Clone() {
@@ -112,6 +105,14 @@ namespace System.Collections.Generic {
         }
 
         public List<T> Extract(int index, int count) {
+            return null;
+        }
+
+		public Array Slice(int start) {
+            return null;
+        }
+
+        public Array Slice(int start, int end) {
             return null;
         }
 
@@ -148,10 +149,7 @@ namespace System.Collections.Generic {
         public void Insert(int index, T item) {
         }
 
-        public void InsertRange(int index, T[] items) {
-        }
-
-        public void InsertRange(int index, IList<T> items) {
+        public void InsertRange(int index, IEnumerable<T> items) {
         }
 
         public string Join() {
@@ -202,15 +200,5 @@ namespace System.Collections.Generic {
 
         public void Sort(CompareCallback<T> compareCallback) {
         }
-
-        [ScriptSkip]
-        public static explicit operator Array(List<T> list) {
-            return null;
-        }
-
-        [ScriptSkip]
-		public static explicit operator List<T>(Array a) {
-			return null;
-		}
     }
 }

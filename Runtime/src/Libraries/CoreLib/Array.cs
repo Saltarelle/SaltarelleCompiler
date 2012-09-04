@@ -40,14 +40,6 @@ namespace System {
 			return null;
 		}
 
-        public object Aggregate(object seedValue, ArrayAggregator aggregator) {
-            return null;
-        }
-
-        public object Aggregate(object seedValue, ArrayItemAggregator aggregator) {
-            return null;
-        }
-
         public Array Clone() {
             return null;
         }
@@ -68,11 +60,19 @@ namespace System {
             return false;
         }
 
-        public Array Extract(int index) {
+		public Array Extract(int start) {
             return null;
         }
 
-        public Array Extract(int index, int count) {
+        public Array Extract(int start, int count) {
+            return null;
+        }
+
+		public Array Slice(int start) {
+            return null;
+        }
+
+        public Array Slice(int start, int end) {
             return null;
         }
 

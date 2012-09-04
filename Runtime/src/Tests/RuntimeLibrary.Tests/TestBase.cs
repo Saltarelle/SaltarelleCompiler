@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -67,7 +67,7 @@ namespace RuntimeLibrary.Tests
 			}
 		}
 
-		[Test, Ignore("Not a real test")]
+		//[Test, Ignore("Not a real test")]
 		public void WriteThePage() {
 			GeneratePage(true);
 		}

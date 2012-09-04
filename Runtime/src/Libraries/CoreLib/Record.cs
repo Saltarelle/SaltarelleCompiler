@@ -15,22 +15,22 @@ namespace System {
     public abstract class Record {
 
         [ScriptSkip]
-        public static implicit operator JsDictionary(Record r) {
+        public static explicit operator JsDictionary(Record r) {
             return null;
         }
 
         [ScriptSkip]
-        public static implicit operator JsDictionary<string, object>(Record r) {
+        public static explicit operator JsDictionary<string, object>(Record r) {
             return null;
         }
 
         [ScriptSkip]
-        public static implicit operator Record(JsDictionary d) {
+        public static explicit operator Record(JsDictionary d) {
             return null;
         }
 
         [ScriptSkip]
-        public static implicit operator Record(JsDictionary<string, object> d) {
+        public static explicit operator Record(JsDictionary<string, object> d) {
             return null;
         }
     }

@@ -13,6 +13,9 @@ namespace System {
     [IgnoreNamespace]
     [Imported(IsRealType = true)]
     public struct Boolean {
+		[InlineCode("false")]
+		public Boolean(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		}
 
         /// <summary>
         /// Enables you to parse a string representation of a boolean value.
