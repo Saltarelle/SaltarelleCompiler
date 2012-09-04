@@ -82,6 +82,9 @@
       <Name>JSModel</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="ParserImpl\license.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CleanAntlrCode">
     <Delete Files="%(Antlr3.OutputFiles)" />

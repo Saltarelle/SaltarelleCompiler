@@ -68,12 +68,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		}
 
 		[Test]
-		public void TokenizerCanDetectExpandedParamArrayWithCommaBeforeParameter() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{,p1}{,p2}", new[] { "p1", "p2" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore, index: 0), new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore, index: 1) }));
-		}
-
-		[Test]
 		public void TokenizerCanDetectTypeParameterNames() {
 			Assert.That(InlineCodeMethodCompiler.Tokenize("{T1}{T2}", new string[0], new[] { "T1", "T2" }, s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.TypeParameter, index: 0), new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.TypeParameter, index: 1) }));
@@ -94,8 +88,8 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{ {} };
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ {} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
+@"	{};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -107,8 +101,8 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	[ item1: 45, item2: 'test' ];
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ item1: {arg1}, item2: {arg2} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
+@"	{ item1: 45, item2: 'test' };
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {arg1}, item2: {arg2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -121,7 +115,7 @@ public void M() {
 	c.F();
 	// END
 }",
-@"	[ $c ];
+@"	[$c];
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ {this} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -134,8 +128,8 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	[ item1: {ga_Int32}, item2: {ga_String} ];
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ item1: {T1}, item2: {T2} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
+@"	{ item1: {ga_Int32}, item2: {ga_String} };
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -154,8 +148,8 @@ public void M() {
 	c.F();
 	// END
 }",
-@"	[ item1: {ga_Int32}, item2: {ga_String} ];
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ item1: {T1}, item2: {T2} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
+@"	{ item1: {ga_Int32}, item2: {ga_String} };
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -167,7 +161,7 @@ public void M() {
 	F();
 	// END
 }",
-@"	[ {ga_String}, {ga_Int32} ];
+@"	[{ga_String}, {ga_Int32}];
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ {$System.String}, {$System.Int32} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -203,8 +197,7 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingMethodWithExpandedParamArrayWorks() {
-			var er = new MockErrorReporter(false);
+		public void InvokingMethodWithExpandedParamArrayWorksForFunctionCalls() {
 			AssertCorrect(
 @"public void F(string p1, int p2, params string[] p3) {}
 public void M() {
@@ -214,10 +207,122 @@ public void M() {
 	F(""x"", 4, ""y"", ""z"");
 	// END
 }",
-@"	'x'*4();
-	'x'*4('y');
-	'x'*4('y', 'z');
+@"	'x' * 4();
+	'x' * 4('y');
+	'x' * 4('y', 'z');
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}({*p3})") : MethodScriptSemantics.NormalMethod(m.Name) });
+
+			AssertCorrect(
+@"public void F(string p1, int p2, params string[] p3) {}
+public void M() {
+	// BEGIN
+	F(""x"", 4);
+	F(""x"", 4, ""y"");
+	F(""x"", 4, ""y"", ""z"");
+	// END
+}",
+@"	'x' * 4(A);
+	'x' * 4(A, 'y');
+	'x' * 4(A, 'y', 'z');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}(A, {*p3})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodWithExpandedParamArrayWorksForNewExpressions() {
+			AssertCorrect(
+@"public void F(string p1, int p2, params string[] p3) {}
+public void M() {
+	// BEGIN
+	F(""x"", 4);
+	F(""x"", 4, ""y"");
+	F(""x"", 4, ""y"", ""z"");
+	// END
+}",
+@"	'x' * new 4();
+	'x' * new 4('y');
+	'x' * new 4('y', 'z');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}* new {p2}({*p3})") : MethodScriptSemantics.NormalMethod(m.Name) });
+
+			AssertCorrect(
+@"public void F(string p1, int p2, params string[] p3) {}
+public void M() {
+	// BEGIN
+	F(""x"", 4);
+	F(""x"", 4, ""y"");
+	F(""x"", 4, ""y"", ""z"");
+	// END
+}",
+@"	'x' * new 4(A);
+	'x' * new 4(A, 'y');
+	'x' * new 4(A, 'y', 'z');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}* new {p2}(A, {*p3})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodWithExpandedParamArrayWorksForArrayLiterals() {
+			AssertCorrect(
+@"public void F(string p1, int p2, params string[] p3) {}
+public void M() {
+	// BEGIN
+	F(""x"", 4);
+	F(""x"", 4, ""y"");
+	F(""x"", 4, ""y"", ""z"");
+	// END
+}",
+@"	'x' * 4 + [];
+	'x' * 4 + ['y'];
+	'x' * 4 + ['y', 'z'];
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2} + [{*p3}]") : MethodScriptSemantics.NormalMethod(m.Name) });
+
+			AssertCorrect(
+@"public void F(string p1, int p2, params string[] p3) {}
+public void M() {
+	// BEGIN
+	F(""x"", 4);
+	F(""x"", 4, ""y"");
+	F(""x"", 4, ""y"", ""z"");
+	// END
+}",
+@"	'x' * 4 + [A];
+	'x' * 4 + [A, 'y'];
+	'x' * 4 + [A, 'y', 'z'];
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2} + [A, {*p3}]") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void UsingExpandedParamArrayInOtherContextIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public void F(string p1, int p2, params string[] p3) {}
+	public void M() {
+		string[] args = null;
+		// BEGIN
+		F(""x"", 1, ""y"", ""z"");
+		// END
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2} + {*p3}") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.Contains("can only be used")));
+		}
+
+		[Test]
+		public void InlineCodeWithSyntaxErrorIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C {
+	public void F(string p1, int p2, params string[] p3) {}
+	public void M() {
+		string[] args = null;
+		// BEGIN
+		F(""x"", 1, ""y"", ""z"");
+		// END
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}+") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(m => m.Contains("syntax error")));
 		}
 
 		[Test]
@@ -238,53 +343,16 @@ public void M() {
 			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F") && m.Contains("expanded")));
 		}
 
-
-		[Test]
-		public void InvokingMethodWithExpandedParamArrayWithCommaBeforeWorks() {
-			var er = new MockErrorReporter(false);
-			AssertCorrect(
-@"public void F(string p1, int p2, params string[] p3) {}
-public void M() {
-	// BEGIN
-	F(""x"", 4);
-	F(""x"", 4, ""y"");
-	F(""x"", 4, ""y"", ""z"");
-	// END
-}",
-@"	[ 'x', 4 ];
-	[ 'x', 4, 'y' ];
-	[ 'x', 4, 'y', 'z' ];
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ {p1}, {p2}{,p3} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
-		}
-
-		[Test]
-		public void InvokingMethodWithExpandedParamWithCommaBeforeArrayInNonExpandedFormIsAnErro() {
-			var er = new MockErrorReporter(false);
-			Compile(new[] {
-@"class C {
-	public void F(string p1, int p2, params string[] p3) {}
-	public void M() {
-		string[] args = null;
-		// BEGIN
-		F(""x"", 1, new[] { ""y"", ""z"" });
-		// END
-	}
-}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ {p1}, {p2} {,p3} ]") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
-
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F") && m.Contains("expanded")));
-		}
-
 		[Test]
 		public void ValidateReturnsNoErrosWhenCalledWithAValidString() {
 			Compile("class C<T1> { public void F<T2>(string s, int a, params string[] p) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			Assert.That(InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$System.Object}({T1}, {T2}, @s, {this}, {a}, {*p}", t => true), Is.Empty);
+			Assert.That(InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$System.Object}({T1}, {T2}, @s, {this}, {a}, {*p})", t => true), Is.Empty);
 		}
 
 		[Test]
-		public void ValidateReturnsErrorWhenThereIsASyntaxError() {
+		public void ValidateReturnsAnErrorWhenThereIsAFormatStringError() {
 			Compile("class C { public void F() {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
@@ -330,17 +398,27 @@ public void M() {
 
 			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{*myArg}", t => true);
 			Assert.That(result.Count, Is.EqualTo(1));
-			Assert.That(result.Any(e => e.Contains("'*'") && e.Contains("myArg")));
+			Assert.That(result.Any(e => e.Contains("*") && e.Contains("myArg") && e.Contains("param array")));
 		}
 
 		[Test]
-		public void ValidateReturnsAnErrorWhenTheCommaModifierIsUsedWithAnArgumentThatIsNotAParamArray() {
-			Compile("class C { public static void F(string[] myArg) {} }");
+		public void ValidateReturnsAnErrorWhenThereIsASyntaxError() {
+			Compile("class C { public static void F(string x, int y) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{,myArg}", t => true);
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{x} + ", t => true);
 			Assert.That(result.Count, Is.EqualTo(1));
-			Assert.That(result.Any(e => e.Contains("','") && e.Contains("myArg")));
+			Assert.That(result.Any(e => e.Contains("syntax error")));
+		}
+
+		[Test]
+		public void ValidateReturnsAnErrorWhenAnExpandedParamArrayIsUsedInAnInvalidContext() {
+			Compile("class C { public static void F(string p1, int p2, params string[] p3) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{p1}*{p2} + {*p3}", t => true);
+			Assert.That(result.Count, Is.EqualTo(1));
+			Assert.That(result.Any(e => e.Contains("can only be used")));
 		}
 	}
 }
