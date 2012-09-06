@@ -247,6 +247,10 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), target, function);
 		}
 
+		public JsExpression BindFirstParameterToThis(JsExpression function) {
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "thisFix"), function);
+		}
+
 		public JsExpression Default(IType type) {
 			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(type, TypeContext.GetDefaultValue), "getDefaultValue"));
 		}

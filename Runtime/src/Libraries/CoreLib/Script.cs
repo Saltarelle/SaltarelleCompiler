@@ -92,5 +92,12 @@ namespace System {
 		public static object Undefined {
 			[InlineCode("undefined")] get { return null; }
 		}
+
+		/// <summary>
+		/// Returns the Javascript 'this'. Might be useful sometimes, but there are usually better ways of doing whatever is being done.
+		/// </summary>
+		public static object This {
+			[InlineCode("this")] get { return null; }
+		}
     }
 }

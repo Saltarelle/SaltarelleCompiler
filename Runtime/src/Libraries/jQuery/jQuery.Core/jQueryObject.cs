@@ -147,7 +147,25 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="cssFunction">The function that returns the CSS class to add.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject AddClass(StringFunctionWithContext cssFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Adds the CSS class returned by the specified function.
+        /// </summary>
+        /// <param name="cssFunction">The function that returns the CSS class to add.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject AddClass(StringReplaceFunction cssFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Adds the CSS class returned by the specified function.
+        /// </summary>
+        /// <param name="cssFunction">The function that returns the CSS class to add.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject AddClass(StringReplaceFunctionWithContext cssFunction) {
             return null;
         }
 
@@ -186,6 +204,16 @@ namespace jQueryApi {
         /// <param name="contentFunction">The function that returns the content to insert.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject After(StringFunction contentFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Insert content returned from the specified function after each element
+        /// of the matching elements.
+        /// </summary>
+        /// <param name="contentFunction">The function that returns the content to insert.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject After(StringFunctionWithContext contentFunction) {
             return null;
         }
 
@@ -385,7 +413,27 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="contentFunction">The function that returns the content to append.</param>
         /// <returns>The current jQueryObject</returns>
+        public jQueryObject Append(StringFunctionWithContext contentFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Insert content returned from the specified function to end end of each element
+        /// of the matching elements.
+        /// </summary>
+        /// <param name="contentFunction">The function that returns the content to append.</param>
+        /// <returns>The current jQueryObject</returns>
         public jQueryObject Append(StringReplaceFunction contentFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Insert content returned from the specified function to end end of each element
+        /// of the matching elements.
+        /// </summary>
+        /// <param name="contentFunction">The function that returns the content to append.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Append(StringReplaceFunctionWithContext contentFunction) {
             return null;
         }
 
@@ -442,20 +490,44 @@ namespace jQueryApi {
         /// <summary>
         /// Sets the specified attributes to the value returned from the specified function.
         /// </summary>
+        /// <param name="attributeName">The name of the attribute to set.</param>
         /// <param name="attrFunction">The function returning the attribute values.</param>
         /// <returns>The current jQueryObject.</returns>
         [ScriptName("attr")]
-        public jQueryObject Attribute(StringFunction attrFunction) {
+        public jQueryObject Attribute(string attributeName, StringFunction attrFunction) {
             return null;
         }
 
         /// <summary>
         /// Sets the specified attributes to the value returned from the specified function.
         /// </summary>
+        /// <param name="attributeName">The name of the attribute to set.</param>
         /// <param name="attrFunction">The function returning the attribute values.</param>
         /// <returns>The current jQueryObject.</returns>
         [ScriptName("attr")]
-        public jQueryObject Attribute(StringReplaceFunction attrFunction) {
+        public jQueryObject Attribute(string attributeName, StringFunctionWithContext attrFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the specified attributes to the value returned from the specified function.
+        /// </summary>
+        /// <param name="attributeName">The name of the attribute to set.</param>
+        /// <param name="attrFunction">The function returning the attribute values.</param>
+        /// <returns>The current jQueryObject.</returns>
+        [ScriptName("attr")]
+        public jQueryObject Attribute(string attributeName, StringReplaceFunction attrFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the specified attributes to the value returned from the specified function.
+        /// </summary>
+        /// <param name="attributeName">The name of the attribute to set.</param>
+        /// <param name="attrFunction">The function returning the attribute values.</param>
+        /// <returns>The current jQueryObject.</returns>
+        [ScriptName("attr")]
+        public jQueryObject Attribute(string attributeName, StringReplaceFunctionWithContext attrFunction) {
             return null;
         }
 
@@ -493,6 +565,16 @@ namespace jQueryApi {
         /// <param name="contentFunction">The function that returns the content to insert.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Before(StringFunction contentFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Insert content returned from the specified function before each element
+        /// of the matching elements.
+        /// </summary>
+        /// <param name="contentFunction">The function that returns the content to insert.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Before(StringFunctionWithContext contentFunction) {
             return null;
         }
 
@@ -548,10 +630,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the blur event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Blur(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the blur event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Blur(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the blur event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Blur(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -575,10 +676,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the change event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Change(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the change event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Change(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the change event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Change(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -619,10 +739,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the click event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Click(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the click event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Click(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the click event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Click(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -750,7 +889,31 @@ namespace jQueryApi {
         /// <param name="valueFunction">The function returning attribute values.</param>
         /// <returns>The current jQueryObject.</returns>
         [ScriptName("css")]
+        public jQueryObject CSS(string attributeName, StringFunctionWithContext valueFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the specified CSS attribute value to the values returned by the
+        /// specified function on the set of matched elements.
+        /// </summary>
+        /// <param name="attributeName">The name of the CSS attribute to set.</param>
+        /// <param name="valueFunction">The function returning attribute values.</param>
+        /// <returns>The current jQueryObject.</returns>
+        [ScriptName("css")]
         public jQueryObject CSS(string attributeName, StringReplaceFunction valueFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the specified CSS attribute value to the values returned by the
+        /// specified function on the set of matched elements.
+        /// </summary>
+        /// <param name="attributeName">The name of the CSS attribute to set.</param>
+        /// <param name="valueFunction">The function returning attribute values.</param>
+        /// <returns>The current jQueryObject.</returns>
+        [ScriptName("css")]
+        public jQueryObject CSS(string attributeName, StringReplaceFunctionWithContext valueFunction) {
             return null;
         }
 
@@ -802,10 +965,35 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="selector">The selector to match elements.</param>
         /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns></returns>
+        public jQueryObject Delegate([SyntaxValidation("cssSelector")] string selector, string eventName, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler for handling the specified event on elements matching the
+        /// specified selector within the matched set of elements, now or in the future.
+        /// </summary>
+        /// <param name="selector">The selector to match elements.</param>
+        /// <param name="eventName">The name of the event.</param>
         /// <param name="eventData">Any data that needs to be passed to the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns></returns>
         public jQueryObject Delegate([SyntaxValidation("cssSelector")] string selector, string eventName, JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler for handling the specified event on elements matching the
+        /// specified selector within the matched set of elements, now or in the future.
+        /// </summary>
+        /// <param name="selector">The selector to match elements.</param>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventData">Any data that needs to be passed to the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns></returns>
+        public jQueryObject Delegate([SyntaxValidation("cssSelector")] string selector, string eventName, JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -850,11 +1038,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the dblclick event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("dblclick")]
+        public jQueryObject DoubleClick(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the dblclick event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("dblclick")]
         public jQueryObject DoubleClick(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the dblclick event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("dblclick")]
+        public jQueryObject DoubleClick(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -884,6 +1093,17 @@ namespace jQueryApi {
         /// <param name="eventHandler">The event handler to be detached.</param>
         /// <returns></returns>
         public jQueryObject Die(string eventName, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Detaches the specified handler attached using Live for the specified event on the
+        /// matched set of elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventHandler">The event handler to be detached.</param>
+        /// <returns></returns>
+        public jQueryObject Die(string eventName, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -953,10 +1173,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the error event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Error(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the error event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Error(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the error event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Error(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -991,10 +1230,31 @@ namespace jQueryApi {
         /// Fades in the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeIn(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades in the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeIn(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades in the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeIn(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1021,10 +1281,31 @@ namespace jQueryApi {
         /// Fades in the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeIn(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades in the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeIn(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades in the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeIn(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1059,10 +1340,31 @@ namespace jQueryApi {
         /// Fades out the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeOut(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades out the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeOut(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades out the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeOut(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1089,10 +1391,31 @@ namespace jQueryApi {
         /// Fades out the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeOut(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades out the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeOut(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades out the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeOut(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1125,10 +1448,35 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="opacity">The opacity level between 0 and 1.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeTo(int duration, double opacity, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades the matching set of elements using a the specified duration to
+        /// the specified opacity.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeTo(int duration, double opacity, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades the matching set of elements using a the specified duration to
+        /// the specified opacity.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="opacity">The opacity level between 0 and 1.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeTo(int duration, double opacity, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1161,10 +1509,35 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration for the effect.</param>
         /// <param name="opacity">The opacity level between 0 and 1.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeTo(EffectDuration duration, double opacity, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades the matching set of elements using a the specified duration to
+        /// the specified opacity.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeTo(EffectDuration duration, double opacity, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades the matching set of elements using a the specified duration to
+        /// the specified opacity.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="opacity">The opacity level between 0 and 1.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeTo(EffectDuration duration, double opacity, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1203,10 +1576,33 @@ namespace jQueryApi {
         /// using the specified duration.
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeToggle(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by fading them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject FadeToggle(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by fading them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeToggle(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1232,6 +1628,17 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Toggles the visibility of the matching set of elements by fading them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeToggle(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
         /// Returns a new jQueryObject with elements matching the specified selector.
         /// </summary>
         /// <param name="selector">The selector used to match elements.</param>
@@ -1247,6 +1654,16 @@ namespace jQueryApi {
         /// <param name="filterFunction">The function used to filter elements.</param>
         /// <returns>The new jQueryObject.</returns>
         public jQueryObject Filter(ElementFilterCallback filterFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a new jQueryObject with elements for which the specified filter
+        /// function return true.
+        /// </summary>
+        /// <param name="filterFunction">The function used to filter elements.</param>
+        /// <returns>The new jQueryObject.</returns>
+        public jQueryObject Filter(ElementFilterCallbackWithContext filterFunction) {
             return null;
         }
 
@@ -1310,10 +1727,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the focus event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Focus(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the focus event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Focus(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the focus event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Focus(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -1339,11 +1775,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the focusin event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("focusin")]
+        public jQueryObject FocusIn(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the focusin event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("focusin")]
         public jQueryObject FocusIn(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the focusin event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("focusin")]
+        public jQueryObject FocusIn(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -1369,11 +1826,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the focusout event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("focusout")]
+        public jQueryObject FocusOut(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the focusout event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("focusout")]
         public jQueryObject FocusOut(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the focusout event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("focusout")]
+        public jQueryObject FocusOut(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -1683,10 +2161,31 @@ namespace jQueryApi {
         /// Hide the matched set of elements in an animated manner.
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Hide(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Hide the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Hide(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Hide the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Hide(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1713,10 +2212,31 @@ namespace jQueryApi {
         /// Hide the matched set of elements in an animated manner.
         /// </summary>
         /// <param name="duration">The duration of the animation.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Hide(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Hide the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Hide(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Hide the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration of the animation.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Hide(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1755,7 +2275,27 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="htmlFunction">The function that returns the HTML content.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Html(StringFunctionWithContext htmlFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the HTML content of the matched set of elements by calling the specified
+        /// function.
+        /// </summary>
+        /// <param name="htmlFunction">The function that returns the HTML content.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject Html(StringReplaceFunction htmlFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the HTML content of the matched set of elements by calling the specified
+        /// function.
+        /// </summary>
+        /// <param name="htmlFunction">The function that returns the HTML content.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Html(StringReplaceFunctionWithContext htmlFunction) {
             return null;
         }
 
@@ -1856,6 +2396,16 @@ namespace jQueryApi {
 
         /// <summary>
         /// Gets whether the at least one of the matched set of elements matches the specified
+        /// filter function.
+        /// </summary>
+        /// <param name="filter">The filter function to invoke for each element.</param>
+        /// <returns>True if there is a matching element; false otherwise.</returns>
+        public bool Is(BooleanFunctionWithContext filter) {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets whether the at least one of the matched set of elements matches the specified
         /// element.
         /// </summary>
         /// <param name="element">The element to compare against.</param>
@@ -1904,10 +2454,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the keydown event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Keydown(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the keydown event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Keydown(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the keydown event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Keydown(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -1931,10 +2500,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the keypress event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Keypress(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the keypress event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Keypress(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the keypress event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Keypress(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -1958,10 +2546,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the keyup event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Keyup(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the keyup event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Keyup(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the keyup event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Keyup(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -1985,6 +2592,17 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Attaches a handler for handling the specified event on the matched set of elements,
+        /// as well as other elements matching the current selector in the future.
+        /// </summary>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns></returns>
+        public jQueryObject Live(string eventName, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
         /// Attaches a handler for the specified event on the matched set of elements,
         /// as well as other elements matching the current selector in the future.
         /// </summary>
@@ -1993,6 +2611,18 @@ namespace jQueryApi {
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns></returns>
         public jQueryObject Live(string eventName, JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler for the specified event on the matched set of elements,
+        /// as well as other elements matching the current selector in the future.
+        /// </summary>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventData">Any data that needs to be passed to the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns></returns>
+        public jQueryObject Live(string eventName, JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2008,10 +2638,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the load event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Load(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the load event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Load(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the load event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Load(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2070,12 +2719,31 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Maps each element of the matching set using the specified callback.
+        /// </summary>
+        /// <param name="callback">The callback that performs the mapping.</param>
+        /// <returns>A new jQueryObject containing the mapped results.</returns>
+        public jQueryObject Map(ElementMapCallbackArray callback) {
+            return null;
+        }
+
+        /// <summary>
         /// Attaches a handler to the mousedown event on each of the matched set of elements.
         /// </summary>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mousedown")]
         public jQueryObject MouseDown(jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mousedown event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mousedown")]
+        public jQueryObject MouseDown(jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2110,6 +2778,17 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Attaches a handler to the mousedown event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mousedown")]
+        public jQueryObject MouseDown(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
         /// Triggers the mouseenter event on each of the matched set of elements.
         /// </summary>
         /// <returns>The current jQueryObject</returns>
@@ -2131,11 +2810,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the mouseenter event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseenter")]
+        public jQueryObject MouseEnter(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseenter event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mouseenter")]
         public jQueryObject MouseEnter(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseenter event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseenter")]
+        public jQueryObject MouseEnter(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2161,11 +2861,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the mouseleave event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseleave")]
+        public jQueryObject MouseLeave(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseleave event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mouseleave")]
         public jQueryObject MouseLeave(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseleave event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseleave")]
+        public jQueryObject MouseLeave(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2191,11 +2912,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the mousemove event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mousemove")]
+        public jQueryObject MouseMove(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mousemove event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mousemove")]
         public jQueryObject MouseMove(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mousemove event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mousemove")]
+        public jQueryObject MouseMove(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2221,11 +2963,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the mouseout event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseout")]
+        public jQueryObject MouseOut(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseout event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mouseout")]
         public jQueryObject MouseOut(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseout event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseout")]
+        public jQueryObject MouseOut(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2251,11 +3014,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the mouseover event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseover")]
+        public jQueryObject MouseOver(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseover event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mouseover")]
         public jQueryObject MouseOver(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseover event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseover")]
+        public jQueryObject MouseOver(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2281,11 +3065,32 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the mouseup event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseup")]
+        public jQueryObject MouseUp(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseup event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         [ScriptName("mouseup")]
         public jQueryObject MouseUp(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the mouseup event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        [ScriptName("mouseup")]
+        public jQueryObject MouseUp(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2389,6 +3194,16 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Returns a new jQueryObject with elements for which the specified filter
+        /// function return true removed from the matching set of elements.
+        /// </summary>
+        /// <param name="filterFunction">The function used to filter elements to remove.</param>
+        /// <returns>The new jQueryObject.</returns>
+        public jQueryObject Not(ElementFilterCallbackWithContext filterFunction) {
+            return null;
+        }
+
+        /// <summary>
         /// Removes an event handler which has been created by called On()
         /// </summary>
         /// <param name="eventsMap">A dictionary in which the string keys represent the event names, and the values represent the handler which was previously attached to that event</param>
@@ -2438,6 +3253,17 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Removes an event handler which has been created by called On()
+        /// </summary>
+        /// <param name="events">One or more space-separated event types and optional namespaces</param>
+        /// <param name="selector">A selector which should match the one originally passed to On()</param>
+        /// <param name="eventHandler">A handler function previously attached for the event(s)</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Off(string events, string selector, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
         /// Sets the position of the matched elements relative to the document.
         /// </summary>
         /// <param name="position">The coordinates to position the elements at.</param>
@@ -2462,7 +3288,27 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="positionFunction">The function returning the position for an element.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Offset(PositionFunctionWithContext positionFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the position of the matched elements relative to the document using values
+        /// returned from the specified function.
+        /// </summary>
+        /// <param name="positionFunction">The function returning the position for an element.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject Offset(PositionReplaceFunction positionFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the position of the matched elements relative to the document using values
+        /// returned from the specified function.
+        /// </summary>
+        /// <param name="positionFunction">The function returning the position for an element.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Offset(PositionReplaceFunctionWithContext positionFunction) {
             return null;
         }
 
@@ -2488,6 +3334,16 @@ namespace jQueryApi {
         /// Attaches an event handler function for one or more events to the selected elements.
         /// </summary>
         /// <param name="eventName">The name of the event</param>
+        /// <param name="eventHandler">The event handler to be invoked</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject On(string eventName, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches an event handler function for one or more events to the selected elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event</param>
         /// <param name="selector">A selector string to filter the descendants of the selected elements that trigger the event.</param>
         /// <param name="eventHandler">The event handler to be invoked</param>
         /// <returns>The current jQueryObject.</returns>
@@ -2500,10 +3356,33 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="eventName">The name of the event</param>
         /// <param name="selector">A selector string to filter the descendants of the selected elements that trigger the event.</param>
+        /// <param name="eventHandler">The event handler to be invoked</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject On(string eventName, string selector, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches an event handler function for one or more events to the selected elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event</param>
+        /// <param name="selector">A selector string to filter the descendants of the selected elements that trigger the event.</param>
         /// <param name="data">A custom data structure to be passed to the handler</param>
         /// <param name="eventHandler">The event handler to be invoked</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject On(string eventName, string selector, object data, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches an event handler function for one or more events to the selected elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event</param>
+        /// <param name="selector">A selector string to filter the descendants of the selected elements that trigger the event.</param>
+        /// <param name="data">A custom data structure to be passed to the handler</param>
+        /// <param name="eventHandler">The event handler to be invoked</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject On(string eventName, string selector, object data, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2549,6 +3428,17 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Attaches a handler for the handling the specified event once on the matched
+        /// set of elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns></returns>
+        public jQueryObject One(string eventName, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
         /// Attaches a handler for handling the specified event once on the matched set of elements.
         /// </summary>
         /// <param name="eventName">The name of the event.</param>
@@ -2556,6 +3446,17 @@ namespace jQueryApi {
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns></returns>
         public jQueryObject One(string eventName, JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler for handling the specified event once on the matched set of elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventData">Any data that needs to be passed to the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns></returns>
+        public jQueryObject One(string eventName, JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2665,7 +3566,27 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="contentFunction">The function that returns the content to prepend.</param>
         /// <returns>The current jQueryObject</returns>
+        public jQueryObject Prepend(StringFunctionWithContext contentFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Prepend content returned from the specified function to the beginning of each element
+        /// of the matching elements.
+        /// </summary>
+        /// <param name="contentFunction">The function that returns the content to prepend.</param>
+        /// <returns>The current jQueryObject</returns>
         public jQueryObject Prepend(StringReplaceFunction contentFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Prepend content returned from the specified function to the beginning of each element
+        /// of the matching elements.
+        /// </summary>
+        /// <param name="contentFunction">The function that returns the content to prepend.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Prepend(StringReplaceFunctionWithContext contentFunction) {
             return null;
         }
 
@@ -2843,7 +3764,25 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="cssFunction">The function that returns the CSS class to remove.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject RemoveClass(StringFunctionWithContext cssFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Removes the class returned from the specified function for each of the set of matched elements.
+        /// </summary>
+        /// <param name="cssFunction">The function that returns the CSS class to remove.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject RemoveClass(StringReplaceFunction cssFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Removes the class returned from the specified function for each of the set of matched elements.
+        /// </summary>
+        /// <param name="cssFunction">The function that returns the CSS class to remove.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject RemoveClass(StringReplaceFunctionWithContext cssFunction) {
             return null;
         }
 
@@ -2923,6 +3862,16 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Replace each element in the set of matched elements with the content returned from
+        /// the specified function.
+        /// </summary>
+        /// <param name="contetntFunction">The functio returning the HTML to replace with.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject ReplaceWith(StringFunctionWithContext contetntFunction) {
+            return null;
+        }
+
+        /// <summary>
         /// Triggers the resize event on each of the matched set of elements.
         /// </summary>
         /// <returns>The current jQueryObject</returns>
@@ -2942,10 +3891,28 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the resize event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Resize(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the resize event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Resize(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+        /// <summary>
+        /// Attaches a handler to the resize event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Resize(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -2969,10 +3936,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the scroll event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Scroll(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the scroll event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed in into the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Scroll(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the scroll event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed in into the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Scroll(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -3014,10 +4000,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the select event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Select(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the select event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed to the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Select(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the select event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed to the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Select(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -3069,10 +4074,31 @@ namespace jQueryApi {
         /// Show the matched set of elements in an animated manner.
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Show(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Show the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Show(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Show the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Show(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3099,10 +4125,31 @@ namespace jQueryApi {
         /// Show the matched set of elements in an animated manner.
         /// </summary>
         /// <param name="duration">The duration of the animation.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Show(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Show the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Show(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Show the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration of the animation.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Show(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3184,10 +4231,31 @@ namespace jQueryApi {
         /// Slides down the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideDown(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides down the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject SlideDown(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides down the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideDown(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3214,10 +4282,31 @@ namespace jQueryApi {
         /// Slides down the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideDown(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides down the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject SlideDown(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides down the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideDown(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3256,10 +4345,33 @@ namespace jQueryApi {
         /// using the specified duration.
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideToggle(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by sliding them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject SlideToggle(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by sliding them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideToggle(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3281,6 +4393,17 @@ namespace jQueryApi {
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject SlideToggle(EffectDuration duration, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by sliding them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideToggle(EffectDuration duration, ActionWithContext callback) {
             return null;
         }
 
@@ -3315,10 +4438,31 @@ namespace jQueryApi {
         /// Slides up the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideUp(int duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides up the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject SlideUp(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides up the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideUp(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3345,10 +4489,31 @@ namespace jQueryApi {
         /// Slides up the matching set of elements using a the specified duration.
         /// </summary>
         /// <param name="duration">The duration for the effect.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideUp(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides up the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject SlideUp(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides up the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject SlideUp(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3399,10 +4564,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the submit event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Submit(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the submit event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed to the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Submit(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the submit event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed to the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Submit(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -3432,7 +4616,27 @@ namespace jQueryApi {
         /// <param name="cssFunction">The function returning the class to toggle.</param>
         /// <param name="add">true if the class should be added; false otherwise.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject ToggleClass(StringFunctionWithContext cssFunction, bool add) {
+            return null;
+        }
+
+        /// <summary>
+        /// Adds or removes the class returned from the function for the set of matched elements.
+        /// </summary>
+        /// <param name="cssFunction">The function returning the class to toggle.</param>
+        /// <param name="add">true if the class should be added; false otherwise.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject ToggleClass(StringReplaceFunction cssFunction, bool add) {
+            return null;
+        }
+
+        /// <summary>
+        /// Adds or removes the class returned from the function for the set of matched elements.
+        /// </summary>
+        /// <param name="cssFunction">The function returning the class to toggle.</param>
+        /// <param name="add">true if the class should be added; false otherwise.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject ToggleClass(StringReplaceFunctionWithContext cssFunction, bool add) {
             return null;
         }
 
@@ -3461,7 +4665,27 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="textFunction">The function that returns the text content.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Text(StringFunctionWithContext textFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the text content of the matched set of elements by calling the specified
+        /// function.
+        /// </summary>
+        /// <param name="textFunction">The function that returns the text content.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject Text(StringReplaceFunction textFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the text content of the matched set of elements by calling the specified
+        /// function.
+        /// </summary>
+        /// <param name="textFunction">The function that returns the text content.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Text(StringReplaceFunctionWithContext textFunction) {
             return null;
         }
 
@@ -3510,6 +4734,16 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Sets the text content of the matched set of elements by calling the specified
+        /// function.
+        /// </summary>
+        /// <param name="textFunction">The function that returns the text content.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Text(StringReplaceFunctionWithContext textFunction) {
+            return null;
+        }
+
+        /// <summary>
         /// Toggle the visibility of the set of matched elements in an animated manner.
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
@@ -3517,6 +4751,17 @@ namespace jQueryApi {
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Toggle(int duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggle the visibility of the set of matched elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Toggle(int duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3543,10 +4788,31 @@ namespace jQueryApi {
         /// Toggle the visibility of the set of matched elements in an animated manner.
         /// </summary>
         /// <param name="duration">The duration of the animation.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Toggle(EffectDuration duration, ActionWithContext callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggle the visibility of the set of matched elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Toggle(EffectDuration duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggle the visibility of the set of matched elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration of the animation.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Toggle(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -3573,7 +4839,25 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="cssFunction">The function returning the class to toggle.</param>
         /// <returns>The current jQueryObject.</returns>
+        public jQueryObject ToggleClass(StringFunctionWithContext cssFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the class returned from the function for the set of matched elements.
+        /// </summary>
+        /// <param name="cssFunction">The function returning the class to toggle.</param>
+        /// <returns>The current jQueryObject.</returns>
         public jQueryObject ToggleClass(StringReplaceFunction cssFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the class returned from the function for the set of matched elements.
+        /// </summary>
+        /// <param name="cssFunction">The function returning the class to toggle.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject ToggleClass(StringReplaceFunctionWithContext cssFunction) {
             return null;
         }
 
@@ -3656,6 +4940,16 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Detaches a handler for the specified event on the matched set of elements.
+        /// </summary>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventHandler">The event handler to be detached.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Unbind(string eventName, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
         /// Detaches the "return false" handler that was bound earlier.
         /// </summary>
         /// <param name="eventName">The name of the event.</param>
@@ -3699,6 +4993,18 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Detaches the specified handler from handling the specified event on elements matching the
+        /// specified selector within the matched set of elements.
+        /// </summary>
+        /// <param name="selector">The selector to match elements.</param>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Undelegate([SyntaxValidation("cssSelector")] string selector, string eventName, jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
         /// Attaches a handler to the unload event on each of the matched set of elements.
         /// </summary>
         /// <param name="eventHandler">The event handler to be invoked.</param>
@@ -3710,10 +5016,29 @@ namespace jQueryApi {
         /// <summary>
         /// Attaches a handler to the unload event on each of the matched set of elements.
         /// </summary>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Unload(jQueryEventHandlerWithContext eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the unload event on each of the matched set of elements.
+        /// </summary>
         /// <param name="eventData">Data to be passed to the event handler.</param>
         /// <param name="eventHandler">The event handler to be invoked.</param>
         /// <returns>The current jQueryObject</returns>
         public jQueryObject Unload(JsDictionary eventData, jQueryEventHandler eventHandler) {
+            return null;
+        }
+
+        /// <summary>
+        /// Attaches a handler to the unload event on each of the matched set of elements.
+        /// </summary>
+        /// <param name="eventData">Data to be passed to the event handler.</param>
+        /// <param name="eventHandler">The event handler to be invoked.</param>
+        /// <returns>The current jQueryObject</returns>
+        public jQueryObject Unload(JsDictionary eventData, jQueryEventHandlerWithContext eventHandler) {
             return null;
         }
 
@@ -3754,7 +5079,29 @@ namespace jQueryApi {
         /// <param name="valueFunction">The function returning the values to set.</param>
         /// <returns>The current jQueryObject.</returns>
         [ScriptName("val")]
+        public jQueryObject Value(StringFunctionWithContext valueFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the value attribute of the matched set of elements using values returned
+        /// from the specified function.
+        /// </summary>
+        /// <param name="valueFunction">The function returning the values to set.</param>
+        /// <returns>The current jQueryObject.</returns>
+        [ScriptName("val")]
         public jQueryObject Value(StringReplaceFunction valueFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the value attribute of the matched set of elements using values returned
+        /// from the specified function.
+        /// </summary>
+        /// <param name="valueFunction">The function returning the values to set.</param>
+        /// <returns>The current jQueryObject.</returns>
+        [ScriptName("val")]
+        public jQueryObject Value(StringReplaceFunctionWithContext valueFunction) {
             return null;
         }
 
@@ -3810,6 +5157,16 @@ namespace jQueryApi {
         /// <param name="wrappingFunction">The functio returning the HTML to wrap with.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject Wrap(StringFunction wrappingFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Wraps an HTML structure around each of the matched set of elements as
+        /// returned from the specified wrapping function.
+        /// </summary>
+        /// <param name="wrappingFunction">The functio returning the HTML to wrap with.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject Wrap(StringFunctionWithContext wrappingFunction) {
             return null;
         }
 
@@ -3874,6 +5231,16 @@ namespace jQueryApi {
         /// <param name="wrappingFunction">The functio returning the HTML to wrap with.</param>
         /// <returns>The current jQueryObject.</returns>
         public jQueryObject WrapInner(StringFunction wrappingFunction) {
+            return null;
+        }
+
+        /// <summary>
+        /// Wraps an HTML structure around the content of each of the matched set of elements as
+        /// returned from the specified wrapping function.
+        /// </summary>
+        /// <param name="wrappingFunction">The functio returning the HTML to wrap with.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject WrapInner(StringFunctionWithContext wrappingFunction) {
             return null;
         }
     }

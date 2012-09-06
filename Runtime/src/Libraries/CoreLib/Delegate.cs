@@ -174,5 +174,10 @@ namespace System {
 		public static bool operator!=(Delegate a, Delegate b) {
 			return false;
 		}
+
+		[ScriptSkip]
+		public static explicit operator Function(Delegate d) {
+			return null;
+		}
     }
 }

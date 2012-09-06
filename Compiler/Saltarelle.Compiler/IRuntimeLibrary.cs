@@ -143,6 +143,11 @@ namespace Saltarelle.Compiler {
 		JsExpression Bind(JsExpression function, JsExpression target);
 
 		/// <summary>
+		/// Returns an expression that invokes the specified function, but the context ('this') in the Javascript will be the first parameter. Used eg. in the delegate argument to jQuery.each().
+		/// </summary>
+		JsExpression BindFirstParameterToThis(JsExpression function);
+
+		/// <summary>
 		/// Generates an expression that returns the default value for a type (C#: default(T)).
 		/// </summary>
 		JsExpression Default(IType type);

@@ -68,6 +68,7 @@ namespace Saltarelle.Compiler.Tests {
 			LiftedBooleanAnd         = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
 			LiftedBooleanOr          = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
 			Bind                     = (f, t)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+			BindFirstParameterToThis = (f)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
 			Default                  = (t)             => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
 			CreateArray              = (s)             => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
 			CloneDelegate            = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
@@ -94,6 +95,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanAnd { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanOr { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
+		public Func<JsExpression, JsExpression> BindFirstParameterToThis { get; set; }
 		public Func<IType, JsExpression> Default { get; set; }
 		public Func<JsExpression, JsExpression> CreateArray { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> CloneDelegate { get; set; }
@@ -168,6 +170,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.Bind(JsExpression function, JsExpression target) {
 			return Bind(function, target);
+		}
+
+		JsExpression IRuntimeLibrary.BindFirstParameterToThis(JsExpression function) {
+			return BindFirstParameterToThis(function);
 		}
 
 		JsExpression IRuntimeLibrary.Default(IType type) {
