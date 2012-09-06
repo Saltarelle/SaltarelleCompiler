@@ -69,7 +69,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				var xparms = string.Join(",", x.Parameters.Select(p => p.Type.FullName));
 				var yparms = string.Join(",", y.Parameters.Select(p => p.Type.FullName));
 
-				return string.CompareOrdinal(xparms, yparms);
+				var presult = string.CompareOrdinal(xparms, yparms);
+				if (presult != 0)
+					return presult;
+
+				return string.CompareOrdinal(x.ReturnType.FullName, y.ReturnType.FullName);
 			}
 
 			public int Compare(IMember x, IMember y) {
