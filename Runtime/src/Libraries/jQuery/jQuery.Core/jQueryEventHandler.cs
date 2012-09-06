@@ -4,6 +4,7 @@
 //
 
 using System;
+using System.Html;
 using System.Runtime.CompilerServices;
 
 namespace jQueryApi {
@@ -12,4 +13,10 @@ namespace jQueryApi {
     /// Handles a jQuery event.
     /// </summary>
     public delegate void jQueryEventHandler(jQueryEvent e);
+
+	/// <summary>
+	/// Handles a jQuery event, and promotes the 'this' in Javascript to a parameter.
+	/// </summary>
+	[BindThisToFirstParameter]
+	public delegate void jQueryEventHandlerWithContext(Element elem, jQueryEvent e);
 }
