@@ -248,7 +248,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression BindFirstParameterToThis(JsExpression function) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Delegate), "thisFix"), function);
 		}
 
 		public JsExpression Default(IType type) {
