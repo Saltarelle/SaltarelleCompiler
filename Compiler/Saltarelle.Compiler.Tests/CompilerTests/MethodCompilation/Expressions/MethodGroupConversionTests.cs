@@ -322,7 +322,7 @@ class D2 : D {
 		}
 
 		[Test]
-		public void CannotPerformMethodGroupConversionOnMethodThatExpandsParams() {
+		public void CannotPerformMethodGroupConversionOnMethodThatExpandsParamsToDelegateThatDoesNot() {
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] {
@@ -334,7 +334,36 @@ class D2 : D {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
 			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));
+			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("System.Action") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnMethodThatExpandsParamsToDelegateThatAlsoDoes() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	System.Action<int, int, int[]> f;
+	// BEGIN
+	f = F;
+	// END
+}",
+@"	$f = $Bind(this.$F, this);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F"), GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void BindFirstParameterToThisWorks() {
+			AssertCorrect(
+@"private int i;
+public int F(int _this, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Func<int, int, int> f = F;
+	// END
+}
+",
+@"	var $f = $BindFirstParameterToThis($Bind(this.F, this));
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
 		}
 	}
 }

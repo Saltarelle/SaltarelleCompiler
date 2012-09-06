@@ -20,12 +20,19 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Compiler {
 	public class NestedFunctionContext {
 		public ReadOnlySet<IVariable> CapturedByRefVariables { get; private set; }
+		public ReadOnlySet<IVariable> ExpandParamsVariables { get; private set; }
 
-		public NestedFunctionContext(IEnumerable<IVariable> capturedByRefVariables) {
-			var s = new HashSet<IVariable>();
+		public NestedFunctionContext(IEnumerable<IVariable> capturedByRefVariables, IEnumerable<IVariable> expandParamsVariables) {
+			var crv = new HashSet<IVariable>();
 			foreach (var v in capturedByRefVariables)
-				s.Add(v);
-			CapturedByRefVariables = new ReadOnlySet<IVariable>(s);
+				crv.Add(v);
+
+			var epv = new HashSet<IVariable>();
+			foreach (var v in expandParamsVariables)
+				epv.Add(v);
+
+			CapturedByRefVariables = new ReadOnlySet<IVariable>(crv);
+			ExpandParamsVariables  = new ReadOnlySet<IVariable>(epv);
 		}
 	}
 
@@ -935,7 +942,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall, bool isExpandedForm) {
 			var typeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : new IType[0];
-			if (impl != null && impl.ExpandParams && !isExpandedForm) {
+			if (impl.ExpandParams && !isExpandedForm) {
 				_errorReporter.Message(7514, method.DeclaringType.FullName + "." + method.Name);
 			}
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method.IsStatic ? _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && typeArguments.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
@@ -952,54 +959,49 @@ namespace Saltarelle.Compiler.Compiler {
 
 			typeArguments = (impl != null && !impl.IgnoreGenericArguments ? typeArguments : new List<IType>());
 
-			if (impl == null) {
-				return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));	// Used for delegate invocations.
-			}
-			else {
-				switch (impl.Type) {
-					case MethodScriptSemantics.ImplType.NormalMethod: {
-						if (isNonVirtualInvocationOfVirtualMethod) {
-							return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments);
-						}
-						else {
-							var jsMethod = method.IsStatic && impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
-
-							if (typeArguments.Count > 0) {
-								var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
-								if (method.IsStatic)
-									thisAndArguments[0] = JsExpression.Null;
-								return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), thisAndArguments);
-							}
-							else {
-								return JsExpression.Invocation(jsMethod, thisAndArguments.Skip(1));
-							}
-						}
+			switch (impl.Type) {
+				case MethodScriptSemantics.ImplType.NormalMethod: {
+					if (isNonVirtualInvocationOfVirtualMethod) {
+						return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments);
 					}
+					else {
+						var jsMethod = method.IsStatic && impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
 
-					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-						var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), impl.Name);
 						if (typeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
-							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
+							if (method.IsStatic)
+								thisAndArguments[0] = JsExpression.Null;
+							return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), thisAndArguments);
 						}
 						else {
-							return JsExpression.Invocation(jsMethod, thisAndArguments);
+							return JsExpression.Invocation(jsMethod, thisAndArguments.Skip(1));
 						}
 					}
+				}
 
-					case MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument:
-						return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
-
-					case MethodScriptSemantics.ImplType.InlineCode:
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), (t, c) => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), c), isExpandedForm, s => _errorReporter.Message(7525, s));
-
-					case MethodScriptSemantics.ImplType.NativeIndexer:
-						return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
-
-					default: {
-						_errorReporter.Message(7516, method.DeclaringType.FullName + "." + method.Name);
-						return JsExpression.Number(0);
+				case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
+					var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), impl.Name);
+					if (typeArguments.Count > 0) {
+						var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
+						return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
 					}
+					else {
+						return JsExpression.Invocation(jsMethod, thisAndArguments);
+					}
+				}
+
+				case MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument:
+					return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
+
+				case MethodScriptSemantics.ImplType.InlineCode:
+					return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), (t, c) => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), c), isExpandedForm, s => _errorReporter.Message(7525, s));
+
+				case MethodScriptSemantics.ImplType.NativeIndexer:
+					return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
+
+				default: {
+					_errorReporter.Message(7516, method.DeclaringType.FullName + "." + method.Name);
+					return JsExpression.Number(0);
 				}
 			}
 		}
@@ -1156,9 +1158,18 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression HandleInvocation(IMember member, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool isVirtualCall, bool isExpandedForm) {
 			if (member is IMethod) {
-				if (member.Name == "Invoke" && member.DeclaringType.Kind == TypeKind.Delegate) {
-					// Invoke the underlying method instead of calling the Invoke method.
-					return CompileMethodInvocation(null, (IMethod)member, targetResult, argumentsForCall, argumentToParameterMap, isVirtualCall, isExpandedForm);
+				if (member.DeclaringType.Kind == TypeKind.Delegate && member.Equals(member.DeclaringType.GetDelegateInvokeMethod())) {
+					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringType);
+
+					if (sem.ExpandParams && !isExpandedForm) {
+						_errorReporter.Message(7534, member.DeclaringType.FullName);
+					}
+					var thisAndArguments = CompileThisAndArgumentListForMethodCall(InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap, sem.ExpandParams && isExpandedForm);
+
+					if (sem.BindThisToFirstParameter)
+						return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[0], "call"), thisAndArguments.Skip(1));
+					else
+						return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));
 				}
 				else {
 					var method = (IMethod)member;
@@ -1221,7 +1232,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return CompileThis();
 		}
 
-		private JsExpression CompileLambda(LambdaResolveResult rr, bool returnValue) {
+		private JsExpression CompileLambda(LambdaResolveResult rr, bool returnValue, DelegateScriptSemantics semantics) {
 			var f = _nestedFunctions[rr];
 
 			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedVariables.Where(v => _variables[v].UseByRefSemantics).ToList();
@@ -1231,16 +1242,22 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			bool captureThis = (_thisAlias == null && f.DirectlyOrIndirectlyUsesThis);
-			var newContext = new NestedFunctionContext(capturedByRefVariables);
+			IEnumerable<IVariable> expandParamsVariables = _nestedFunctionContext != null ? _nestedFunctionContext.ExpandParamsVariables : null;
+			if (semantics.ExpandParams) {
+				expandParamsVariables = expandParamsVariables != null ? new List<IVariable>(expandParamsVariables) : new List<IVariable>();
+				((List<IVariable>)expandParamsVariables).Add(rr.Parameters[rr.Parameters.Count - 1]);
+			}
+
+			var newContext = new NestedFunctionContext(capturedByRefVariables, expandParamsVariables ?? new IVariable[0]);
 
 			JsFunctionDefinitionExpression def;
 			if (f.BodyNode is Statement) {
 				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false);
 			}
 			else {
-				var result = CloneAndCompile(rr.Body, true, nestedFunctionContext: newContext);
-				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(result.Expression) : (JsStatement)new JsExpressionStatement(result.Expression));
-				var jsBody = new JsBlockStatement(MethodCompiler.FixByRefParameters(rr.Parameters, _variables).Concat(result.AdditionalStatements).Concat(new[] { lastStatement }));
+				var body = CloneAndCompile(rr.Body, true, nestedFunctionContext: newContext);
+				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(body.Expression) : (JsStatement)new JsExpressionStatement(body.Expression));
+				var jsBody = new JsBlockStatement(MethodCompiler.FixByRefParameters(rr.Parameters, _variables).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
 			}
 
@@ -1258,9 +1275,10 @@ namespace Saltarelle.Compiler.Compiler {
 				captureObject = null;
 			}
 
-			return captureObject != null
-			     ? _runtimeLibrary.Bind(def, captureObject)
-				 : def;
+			var result = captureObject != null ? _runtimeLibrary.Bind(def, captureObject) : def;
+			if (semantics.BindThisToFirstParameter)
+				result = _runtimeLibrary.BindFirstParameterToThis(result);
+			return result;
 		}
 
 		private JsExpression CompileLocal(IVariable variable, bool returnReference) {
@@ -1278,10 +1296,15 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Variable is IParameter && ((IParameter)rr.Variable).IsParams && _methodBeingCompiled != null) {
-				var impl = _metadataImporter.GetMethodSemantics(_methodBeingCompiled);
-				if (impl.ExpandParams) {
-					_errorReporter.Message(7521, rr.Variable.Name);
+			if (_nestedFunctionContext != null && _nestedFunctionContext.ExpandParamsVariables.Contains(rr.Variable)) {
+				_errorReporter.Message(7521, rr.Variable.Name);
+			}
+			else if (rr.Variable is IParameter && ((IParameter)rr.Variable).IsParams) {
+				if (_methodBeingCompiled != null) {
+				    var impl = _metadataImporter.GetMethodSemantics(_methodBeingCompiled);
+				    if (impl.ExpandParams) {
+				        _errorReporter.Message(7521, rr.Variable.Name);
+				    }
 				}
 			}
 
@@ -1358,7 +1381,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsAnonymousFunctionConversion) {
 				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
-				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)));
+				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)), _metadataImporter.GetDelegateSemantics(rr.Type));
 			}
 			else if (rr.Conversion.IsTryCast) {
 				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type);
@@ -1415,44 +1438,61 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
 
-				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && Equals(rr.Conversion.Method, mgrr.TargetResult.Type.GetDelegateInvokeMethod()))
-					return _runtimeLibrary.CloneDelegate(InnerCompile(mgrr.TargetResult, false), rr.Conversion.Method.DeclaringType, rr.Type);	// new D2(d1)
+				var delegateSemantics = _metadataImporter.GetDelegateSemantics(mgrr.Type);
 
-				var impl = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);
-				if (impl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
+				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && Equals(rr.Conversion.Method, mgrr.TargetResult.Type.GetDelegateInvokeMethod())) {
+					var sem1 = _metadataImporter.GetDelegateSemantics(mgrr.TargetResult.Type);
+					var sem2 = _metadataImporter.GetDelegateSemantics(rr.Type);
+					if (sem1.BindThisToFirstParameter != sem2.BindThisToFirstParameter) {
+						_errorReporter.Message(7533, mgrr.TargetType.FullName, rr.Type.FullName);
+						return JsExpression.Number(0);
+					}
+
+					return _runtimeLibrary.CloneDelegate(InnerCompile(mgrr.TargetResult, false), rr.Conversion.Method.DeclaringType, rr.Type);	// new D2(d1)
+				}
+
+				var methodSemantics = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);
+				if (methodSemantics.Type != MethodScriptSemantics.ImplType.NormalMethod) {
 					_errorReporter.Message(7523, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
 					return JsExpression.Number(0);
 				}
-				else if (impl.ExpandParams) {
-					_errorReporter.Message(7524, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
+				else if (methodSemantics.ExpandParams  != delegateSemantics.ExpandParams) {
+					_errorReporter.Message(7524, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name, rr.Type.FullName);
 					return JsExpression.Number(0);
 				}
 
-				var typeArguments = (rr.Conversion.Method is SpecializedMethod && !impl.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments : new List<IType>();
+				var typeArguments = (rr.Conversion.Method is SpecializedMethod && !methodSemantics.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments : new List<IType>();
+
+				JsExpression result;
 
 				if (rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup) {
 					// base.Method
 					var jsTarget = InnerCompile(mgrr.TargetResult, true);
-					return _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, impl.Name, typeArguments, jsTarget);
+					result = _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, methodSemantics.Name, typeArguments, jsTarget);
 				}
 				else {
 					JsExpression jsTarget, jsMethod;
 
 					if (rr.Conversion.Method.IsStatic) {
 						jsTarget = null;
-						jsMethod = JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember), impl.Name);
+						jsMethod = JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember), methodSemantics.Name);
 					}
 					else {
 						jsTarget = InnerCompile(mgrr.TargetResult, true);
-						jsMethod = JsExpression.MemberAccess(jsTarget, impl.Name);
+						jsMethod = JsExpression.MemberAccess(jsTarget, methodSemantics.Name);
 					}
 
 					if (typeArguments.Count > 0) {
 						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
 					}
 
-					return jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
+					result = jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
 				}
+
+				if (delegateSemantics.BindThisToFirstParameter)
+					result = _runtimeLibrary.BindFirstParameterToThis(result);
+
+				return result;
 			}
 			else if (rr.Conversion.IsBoxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);

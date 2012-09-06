@@ -822,6 +822,38 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingParamArrayDelegateThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"public delegate void F(int x, int y, params int[] args);
+public void M() {
+	F f = null;
+	// BEGIN
+	f(4, 8, 59, 12, 4);
+	// END
+}",
+@"	$f(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void InvokingParamArrayDelegateThatExpandsArgumentsInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public delegate void F(int x, int y, params int[] args);
+	public void M() {
+		F delegateVar = null;
+		delegateVar(4, 8, new[] { 59, 12, 4 });
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) }, errorReporter: er);
+
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
+		}
+
+		[Test]
 		public void InvokingDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1087,6 +1119,21 @@ class Derived : Middle {
 @"	$CallBase({bind_Middle}, '$M', [], [this, $d]);
 ", addSkeleton: false);
 
+		}
+
+		[Test]
+		public void InvokeDelegateWithBindThisToFirstParameterWorks() {
+			AssertCorrect(
+@"int i;
+public void M() {
+	Func<int, int, int> f = (_this, x) => _this + x + i;
+	int a = 1, b = 2;
+	// BEGIN
+	f(a, b);
+	// END
+}",
+@"	$f.call($a, $b);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
 		}
 	}
 }

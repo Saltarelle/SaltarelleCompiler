@@ -1250,6 +1250,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _propertySemantics[(IProperty)property.MemberDefinition];
 		}
 
+		public DelegateScriptSemantics GetDelegateSemantics(IType type) {
+			return new DelegateScriptSemantics();
+		}
+
 		private string GetBackingFieldName(ITypeDefinition declaringTypeDefinition, string memberName) {
 			int inheritanceDepth = declaringTypeDefinition.GetAllBaseTypes().Count(b => b.Kind != TypeKind.Interface) - 1;
 
