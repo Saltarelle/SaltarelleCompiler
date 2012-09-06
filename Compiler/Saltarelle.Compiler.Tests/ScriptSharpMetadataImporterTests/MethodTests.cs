@@ -1108,11 +1108,11 @@ public class C2 {
 		}
 
 		[Test]
-		public void MethodsOtherThanInvokeCannotBeUsedOnDelegateTypes() {
+		public void MethodsOnDelegateCannotBeUsed() {
 			Prepare("public delegate void Del();");
 			var del = AllTypes["Del"];
 
-			Assert.That(del.Methods.Where(m => !m.IsConstructor).Select(m => new { m.Name, Impl = Metadata.GetMethodSemantics(m) }).All(m => m.Impl.Type == (m.Name == "Invoke" ? MethodScriptSemantics.ImplType.NormalMethod : MethodScriptSemantics.ImplType.NotUsableFromScript)));
+			Assert.That(del.Methods.Where(m => !m.IsConstructor).Select(m => new { m.Name, Impl = Metadata.GetMethodSemantics(m) }).All(m => m.Impl.Type == MethodScriptSemantics.ImplType.NotUsableFromScript));
 		}
 
 		[Test]

@@ -1438,7 +1438,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
 
-				var delegateSemantics = _metadataImporter.GetDelegateSemantics(mgrr.Type.GetDefinition());
+				var delegateSemantics = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 
 				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && Equals(rr.Conversion.Method, mgrr.TargetResult.Type.GetDelegateInvokeMethod())) {
 					var sem1 = _metadataImporter.GetDelegateSemantics(mgrr.TargetResult.Type.GetDefinition());
