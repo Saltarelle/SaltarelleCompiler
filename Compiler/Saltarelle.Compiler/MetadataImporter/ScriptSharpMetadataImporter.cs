@@ -33,6 +33,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string MixinAttribute                         = "System.Runtime.CompilerServices.MixinAttribute";
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
 		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
+		private const string BindThisToFirstParameterAttribute      = "System.Runtime.CompilerServices.BindThisToFirstParameterAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
@@ -150,6 +151,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
+		private Dictionary<ITypeDefinition, DelegateScriptSemantics> _delegateSemantics;
 		private Dictionary<ITypeDefinition, HashSet<string>> _instanceMemberNamesByType;
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
@@ -310,7 +312,28 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return Tuple.Create(nmspace, name);
 		}
 
+		private void ProcessDelegate(ITypeDefinition delegateDefinition) {
+			bool bindThisToFirstParameter = GetAttributePositionalArgs(delegateDefinition, BindThisToFirstParameterAttribute) != null;
+			bool expandParams = GetAttributePositionalArgs(delegateDefinition, ExpandParamsAttribute) != null;
+
+			if (bindThisToFirstParameter && delegateDefinition.GetDelegateInvokeMethod().Parameters.Count == 0) {
+				Message(7147, delegateDefinition, delegateDefinition.FullName);
+				bindThisToFirstParameter = false;
+			}
+			if (expandParams && !delegateDefinition.GetDelegateInvokeMethod().Parameters.Any(p => p.IsParams)) {
+				Message(7148, delegateDefinition, delegateDefinition.FullName);
+				expandParams = false;
+			}
+
+			_delegateSemantics[delegateDefinition] = new DelegateScriptSemantics(expandParams: expandParams, bindThisToFirstParameter: bindThisToFirstParameter);
+		}
+
 		private void ProcessType(ITypeDefinition typeDefinition) {
+			if (typeDefinition.Kind == TypeKind.Delegate) {
+				ProcessDelegate(typeDefinition);
+				return;
+			}
+
 			if (_typeSemantics.ContainsKey(typeDefinition))
 				return;
 			foreach (var b in typeDefinition.DirectBaseTypes)
@@ -551,6 +574,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessTypeMembers(ITypeDefinition typeDefinition) {
+			if (typeDefinition.Kind == TypeKind.Delegate)
+				return;
+
 			var baseMembersByType = typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition).Select(t => new { Type = t, MemberNames = GetInstanceMemberNames(t) }).ToList();
 			for (int i = 0; i < baseMembersByType.Count; i++) {
 				var b = baseMembersByType[i];
@@ -1179,6 +1205,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_errorReporter = errorReporter;
 			_compilation = mainAssembly.Compilation;
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
+			_delegateSemantics = new Dictionary<ITypeDefinition, DelegateScriptSemantics>();
 			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
 			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
 			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
@@ -1250,8 +1277,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _propertySemantics[(IProperty)property.MemberDefinition];
 		}
 
-		public DelegateScriptSemantics GetDelegateSemantics(IType type) {
-			return new DelegateScriptSemantics();
+		public DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType) {
+			return _delegateSemantics[delegateType];
 		}
 
 		private string GetBackingFieldName(ITypeDefinition declaringTypeDefinition, string memberName) {

@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="delegateType"></param>
 		/// <returns></returns>
-		DelegateScriptSemantics GetDelegateSemantics(IType delegateType);
+		DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType);
 
         /// <summary>
         /// Returns the name of the backing field for the specified property. Must not return null.

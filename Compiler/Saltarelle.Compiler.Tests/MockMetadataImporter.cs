@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IMethod, MethodScriptSemantics> GetMethodSemantics { get; set; }
 		public Func<IMethod, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
 		public Func<IProperty, PropertyScriptSemantics> GetPropertySemantics { get; set; }
-		public Func<IType, DelegateScriptSemantics> GetDelegateSemantics { get; set; }
+		public Func<ITypeDefinition, DelegateScriptSemantics> GetDelegateSemantics { get; set; }
 		public Func<IProperty, string> GetAutoPropertyBackingFieldName { get; set; }
 		public Func<IField, FieldScriptSemantics> GetFieldSemantics { get; set; }
 		public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
@@ -67,7 +67,7 @@ namespace Saltarelle.Compiler.Tests {
 			return GetPropertySemantics(property);
 		}
 
-		DelegateScriptSemantics IMetadataImporter.GetDelegateSemantics(IType delegateType) {
+		DelegateScriptSemantics IMetadataImporter.GetDelegateSemantics(ITypeDefinition delegateType) {
 			return GetDelegateSemantics(delegateType);
 		}
 

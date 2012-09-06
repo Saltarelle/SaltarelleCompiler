@@ -79,6 +79,8 @@ namespace Saltarelle.Compiler {
 			{ 7144, Tuple.Create(MessageSeverity.Error, "The parameter {0} has the type {1} but the matching member has type {2}. The types must be the same.") },
 			{ 7145, Tuple.Create(MessageSeverity.Error, "The parameter {0} cannot be declared as ref or out.") },
 			{ 7146, Tuple.Create(MessageSeverity.Error, "The constructor cannot have an [ObjectLiteralAttribute] because the type {0} is not a serializable type.") },
+			{ 7147, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have a [BindThisToFirstParameterAttribute] because it does not have any parameters.") },
+			{ 7148, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
 
 			{ 7500, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.") },
 			{ 7501, Tuple.Create(MessageSeverity.Error, "More than one unnamed constructor for the type {0}.") },

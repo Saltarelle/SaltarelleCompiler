@@ -1159,7 +1159,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression HandleInvocation(IMember member, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool isVirtualCall, bool isExpandedForm) {
 			if (member is IMethod) {
 				if (member.DeclaringType.Kind == TypeKind.Delegate && member.Equals(member.DeclaringType.GetDelegateInvokeMethod())) {
-					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringType);
+					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringTypeDefinition);
 
 					if (sem.ExpandParams && !isExpandedForm) {
 						_errorReporter.Message(7534, member.DeclaringType.FullName);
@@ -1381,7 +1381,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsAnonymousFunctionConversion) {
 				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
-				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)), _metadataImporter.GetDelegateSemantics(rr.Type));
+				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)), _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsTryCast) {
 				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type);
@@ -1438,11 +1438,11 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
 
-				var delegateSemantics = _metadataImporter.GetDelegateSemantics(mgrr.Type);
+				var delegateSemantics = _metadataImporter.GetDelegateSemantics(mgrr.Type.GetDefinition());
 
 				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && Equals(rr.Conversion.Method, mgrr.TargetResult.Type.GetDelegateInvokeMethod())) {
-					var sem1 = _metadataImporter.GetDelegateSemantics(mgrr.TargetResult.Type);
-					var sem2 = _metadataImporter.GetDelegateSemantics(rr.Type);
+					var sem1 = _metadataImporter.GetDelegateSemantics(mgrr.TargetResult.Type.GetDefinition());
+					var sem2 = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 					if (sem1.BindThisToFirstParameter != sem2.BindThisToFirstParameter) {
 						_errorReporter.Message(7533, mgrr.TargetType.FullName, rr.Type.FullName);
 						return JsExpression.Number(0);
