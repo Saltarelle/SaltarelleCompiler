@@ -4734,12 +4734,12 @@ namespace jQueryApi {
         }
 
         /// <summary>
-        /// Sets the text content of the matched set of elements by calling the specified
-        /// function.
+        /// Toggle the visibility of the set of matched elements in an animated manner.
         /// </summary>
-        /// <param name="textFunction">The function that returns the text content.</param>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Text(StringReplaceFunctionWithContext textFunction) {
+        public jQueryObject Toggle(int duration, ActionWithContext callback) {
             return null;
         }
 
