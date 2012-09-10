@@ -252,15 +252,181 @@ public void M() {
 		}
 
 		[Test]
-		public void CoalesceWorks() {
+		public void CoalesceWorksForObjectThatCannotBeFalsy() {
 			AssertCorrect(
 @"public void M() {
-	int? a = 0, b = 0;
+	int[] a = null, b = null;
 	// BEGIN
 	var c = a ?? b;
 	// END
 }",
-@"	var $c = $Coalesce($a, $b);
+@"	var $c = $a || $b;
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForNumberWhenSecondOperandHasNoSideEffects() {
+			AssertCorrect(
+@"int? A { get; set; }
+public void M() {
+	int? b = null;
+	// BEGIN
+	var c = A ?? b;
+	// END
+}",
+@"	var $c = $Coalesce(this.get_$A(), $b);
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForNumbers() {
+			DoForAllNumericTypes(type => 
+				AssertCorrect(
+@"type? A { get; set; }
+type? B { get; set; }
+type C { get; set; }
+public void M() {
+	// BEGIN
+	var x = A ?? B;
+	var y = A ?? C;
+	// END
+}".Replace("type", type),
+@"	var $tmp1 = this.get_$A();
+	if ($ReferenceEquals($tmp1, null)) {
+		$tmp1 = this.get_$B();
+	}
+	var $x = $tmp1;
+	var $tmp2 = this.get_$A();
+	if ($ReferenceEquals($tmp2, null)) {
+		$tmp2 = this.get_$C();
+	}
+	var $y = $tmp2;
+"));
+		}
+
+		[Test]
+		public void CoalesceWorksForString() {
+			AssertCorrect(
+@"string A { get; set; }
+string B { get; set; }
+public void M() {
+	// BEGIN
+	var x = A ?? B;
+	// END
+}",
+@"	var $tmp1 = this.get_$A();
+	if ($ReferenceEquals($tmp1, null)) {
+		$tmp1 = this.get_$B();
+	}
+	var $x = $tmp1;
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForBoolean() {
+			AssertCorrect(
+@"bool? A { get; set; }
+bool? B { get; set; }
+bool C { get; set; }
+public void M() {
+	// BEGIN
+	var x = A ?? B;
+	var y = A ?? C;
+	// END
+}",
+@"	var $tmp1 = this.get_$A();
+	if ($ReferenceEquals($tmp1, null)) {
+		$tmp1 = this.get_$B();
+	}
+	var $x = $tmp1;
+	var $tmp2 = this.get_$A();
+	if ($ReferenceEquals($tmp2, null)) {
+		$tmp2 = this.get_$C();
+	}
+	var $y = $tmp2;
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForEnumTypes() {
+			AssertCorrect(
+@"enum E {}
+E? A { get; set; }
+E? B { get; set; }
+E C { get; set; }
+public void M() {
+	// BEGIN
+	var x = A ?? B;
+	var y = A ?? C;
+	// END
+}",
+@"	var $tmp1 = this.get_$A();
+	if ($ReferenceEquals($tmp1, null)) {
+		$tmp1 = this.get_$B();
+	}
+	var $x = $tmp1;
+	var $tmp2 = this.get_$A();
+	if ($ReferenceEquals($tmp2, null)) {
+		$tmp2 = this.get_$C();
+	}
+	var $y = $tmp2;
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForDynamicAndObjectAndValueTypeAndEnum() {
+			foreach (var type in new[] { "dynamic", "object", "System.ValueType", "System.Enum" })
+				AssertCorrect(
+@"type A { get; set; }
+type B { get; set; }
+public void M() {
+	// BEGIN
+	var x = A ?? B;
+	// END
+}".Replace("type", type),
+@"	var $tmp1 = this.get_$A();
+	if ($ReferenceEquals($tmp1, null)) {
+		$tmp1 = this.get_$B();
+	}
+	var $x = $tmp1;
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForNonFalsyTypeWhenTheSecondExpressionHasAdditionalStatements() {
+			AssertCorrect(
+@"int[] P { get; set; }
+public void M() {
+	int[] a = null, b = null;
+	// BEGIN
+	var c = a ?? (P = b);
+	// END
+}",
+@"	var $tmp1 = $a;
+	if ($ReferenceEquals($tmp1, null)) {
+		this.set_$P($b);
+		$tmp1 = $b;
+	}
+	var $c = $tmp1;
+");
+		}
+
+		[Test]
+		public void CoalesceWorksForNumberWhenTheSecondExpressionHasAdditionalStatements() {
+			AssertCorrect(
+@"int? P { get; set; }
+public void M() {
+	int? a = null, b = null;
+	// BEGIN
+	var c = a ?? (P = b);
+	// END
+}",
+@"	var $tmp1 = $a;
+	if ($ReferenceEquals($tmp1, null)) {
+		this.set_$P($b);
+		$tmp1 = $b;
+	}
+	var $c = $tmp1;
 ");
 		}
 

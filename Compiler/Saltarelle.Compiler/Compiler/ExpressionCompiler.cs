@@ -283,8 +283,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private bool IsIntegerType(IType type) {
-			if (IsNullableType(type))
-				type = GetNonNullableType(type);
+			type = UnpackNullable(type);
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.SByte))
@@ -298,8 +297,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private bool IsUnsignedType(IType type) {
-			if (IsNullableType(type))
-				type = GetNonNullableType(type);
+			type = UnpackNullable(type);
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt16))
@@ -307,17 +305,13 @@ namespace Saltarelle.Compiler.Compiler {
 				|| type.Equals(_compilation.FindType(KnownTypeCode.UInt64));
 		}
 
-		private bool IsNullableType(IType type) {
-			return Equals(type.GetDefinition(), _compilation.FindType(KnownTypeCode.NullableOfT));
-		}
-
-		private IType GetNonNullableType(IType nullableType) {
-			return ((ParameterizedType)nullableType).TypeArguments[0];
+		private IType UnpackNullable(IType type) {
+			return type.IsKnownType(KnownTypeCode.NullableOfT) ? ((ParameterizedType)type).TypeArguments[0] : type;
 		}
 
 		private bool IsNullableBooleanType(IType type) {
 			return Equals(type.GetDefinition(), _compilation.FindType(KnownTypeCode.NullableOfT))
-			    && Equals(GetNonNullableType(type), _compilation.FindType(KnownTypeCode.Boolean));
+			    && Equals(UnpackNullable(type), _compilation.FindType(KnownTypeCode.Boolean));
 		}
 
 		private bool IsAssignmentOperator(ExpressionType operatorType) {
@@ -541,6 +535,25 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private JsExpression CompileCoalesce(IType resultType, ResolveResult left, ResolveResult right) {
+			var jsLeft  = InnerCompile(left, false);
+			var jsRight = CloneAndCompile(right, true);
+
+			if (jsRight.AdditionalStatements.Count == 0 && !CanTypeBeFalsy(left.Type)) {
+				return JsExpression.LogicalOr(jsLeft, jsRight.Expression);
+			}
+			else if (jsRight.AdditionalStatements.Count == 0 && (jsRight.Expression.NodeType == ExpressionNodeType.Identifier || (jsRight.Expression.NodeType >= ExpressionNodeType.ConstantFirst && jsRight.Expression.NodeType <= ExpressionNodeType.ConstantLast))) {
+				return _runtimeLibrary.Coalesce(jsLeft, jsRight.Expression);
+			}
+			else {
+				var temp = _createTemporaryVariable(resultType);
+				var nullBlock  = new JsBlockStatement(jsRight.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), jsRight.Expression))  }));
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsLeft));
+				_additionalStatements.Add(new JsIfStatement(_runtimeLibrary.ReferenceEquals(JsExpression.Identifier(_variables[temp].Name), JsExpression.Null), nullBlock, null));
+				return JsExpression.Identifier(_variables[temp].Name);
+			}
+		}
+
 		private JsExpression CompileEventAddOrRemove(MemberResolveResult target, ResolveResult value, bool isAdd) {
 			var evt = (IEvent)target.Member;
 			var impl = _metadataImporter.GetEventSemantics(evt);
@@ -562,6 +575,13 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else
 				return base.VisitResolveResult(rr, data);
+		}
+
+		private bool CanTypeBeFalsy(IType type) {
+			type = UnpackNullable(type);
+			return IsIntegerType(type) || type.IsKnownType(KnownTypeCode.Single) || type.IsKnownType(KnownTypeCode.Double) || type.IsKnownType(KnownTypeCode.Decimal) || type.IsKnownType(KnownTypeCode.Boolean) || type.IsKnownType(KnownTypeCode.String) // Numbers, boolean and string have falsy values that are not null...
+			    || type.Kind == TypeKind.Enum || type.Kind == TypeKind.Dynamic // ... so do enum types...
+			    || type.IsKnownType(KnownTypeCode.Object) || type.IsKnownType(KnownTypeCode.ValueType) || type.IsKnownType(KnownTypeCode.Enum); // These reference types might contain types that have falsy values, so we need to be safe.
 		}
 
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
@@ -706,7 +726,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalAnd, false);	// Operator does not have a lifted version.
 
 				case ExpressionType.Coalesce:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.Coalesce(a, b), false);
+					return CompileCoalesce(rr.Type, rr.Operands[0], rr.Operands[1]);
 
 				case ExpressionType.Divide:
 					if (IsIntegerType(rr.Type))
@@ -1360,7 +1380,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
         public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
-			var targetType = IsNullableType(rr.TargetType) ? GetNonNullableType(rr.TargetType) : rr.TargetType;
+			var targetType = UnpackNullable(rr.TargetType);
 			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), rr.Input.Type, targetType);
         }
 
@@ -1385,7 +1405,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)), _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsTryCast) {
-				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, IsNullableType(rr.Type) ? GetNonNullableType(rr.Type) : rr.Type);
+				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, UnpackNullable(rr.Type));
 			}
 			else if (rr.Conversion.IsReferenceConversion) {
 				var input = VisitResolveResult(rr.Input, true);
@@ -1403,13 +1423,13 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsNumericConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (IsNullableType(rr.Input.Type) && !IsNullableType(rr.Type))
+				if (rr.Input.Type.IsKnownType(KnownTypeCode.NullableOfT) && !rr.Type.IsKnownType(KnownTypeCode.NullableOfT))
 					result = _runtimeLibrary.FromNullable(result);
 
 				if (!IsIntegerType(rr.Input.Type) && IsIntegerType(rr.Type)) {
 					result = _runtimeLibrary.FloatToInt(result);
 
-					if (IsNullableType(rr.Input.Type) && IsNullableType(rr.Type)) {
+					if (rr.Input.Type.IsKnownType(KnownTypeCode.NullableOfT) && rr.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
 						result = _runtimeLibrary.Lift(result);
 					}
 				}
@@ -1417,9 +1437,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsDynamicConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (IsNullableType(rr.Type)) {
+				if (rr.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(result, rr.Input.Type, GetNonNullableType(rr.Type));
+					return _runtimeLibrary.Downcast(result, rr.Input.Type, UnpackNullable(rr.Type));
 				}
 				else if (rr.Type.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
@@ -1432,7 +1452,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsNullableConversion || rr.Conversion.IsEnumerationConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (IsNullableType(rr.Input.Type) && !IsNullableType(rr.Type))
+				if (rr.Input.Type.IsKnownType(KnownTypeCode.NullableOfT) && !rr.Type.IsKnownType(KnownTypeCode.NullableOfT))
 					result = _runtimeLibrary.FromNullable(result);
 				return result;
 			}
@@ -1508,8 +1528,8 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsUnboxingConversion) {
 				var result = VisitResolveResult(rr.Input, true);
-				if (IsNullableType(rr.Type)) {
-					return _runtimeLibrary.Downcast(result, rr.Input.Type, GetNonNullableType(rr.Type));
+				if (rr.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
+					return _runtimeLibrary.Downcast(result, rr.Input.Type, UnpackNullable(rr.Type));
 				}
 				else {
 					result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);

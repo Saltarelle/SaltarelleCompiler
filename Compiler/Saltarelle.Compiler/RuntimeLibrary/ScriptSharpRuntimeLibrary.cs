@@ -156,7 +156,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b) {
-			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Object), "coalesce"), a, b);
+			return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("ss"), "coalesce"), a, b);
 		}
 
 		public JsExpression Lift(JsExpression expression) {
