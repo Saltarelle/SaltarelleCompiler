@@ -530,8 +530,9 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (trueResult.AdditionalStatements.Count > 0 || falseResult.AdditionalStatements.Count > 0) {
 				var temp = _createTemporaryVariable(truePath.Type);
-				var trueBlock  = new JsBlockStatement(trueResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp].Name, trueResult.Expression) }));
-				var falseBlock = new JsBlockStatement(falseResult.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(_variables[temp].Name, falseResult.Expression) }));
+				var trueBlock  = new JsBlockStatement(trueResult.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), trueResult.Expression))  }));
+				var falseBlock = new JsBlockStatement(falseResult.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), falseResult.Expression)) }));
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, null));
 				_additionalStatements.Add(new JsIfStatement(jsTest, trueBlock, falseBlock));
 				return JsExpression.Identifier(_variables[temp].Name);
 			}

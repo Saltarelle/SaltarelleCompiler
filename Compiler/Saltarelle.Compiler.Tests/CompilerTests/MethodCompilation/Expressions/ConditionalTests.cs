@@ -44,12 +44,13 @@ public void M() {
 	var t = b ? (P = x) : y;
 	// END
 }",
-@"	if ($b) {
+@"	var $tmp1;
+	if ($b) {
 		this.set_$P($x);
-		var $tmp1 = $x;
+		$tmp1 = $x;
 	}
 	else {
-		var $tmp1 = $y;
+		$tmp1 = $y;
 	}
 	var $t = $tmp1;
 ");
@@ -66,12 +67,13 @@ public void M() {
 	var t = b ? x : (P = y);
 	// END
 }",
-@"	if ($b) {
-		var $tmp1 = $x;
+@"	var $tmp1;
+	if ($b) {
+		$tmp1 = $x;
 	}
 	else {
 		this.set_$P($y);
-		var $tmp1 = $y;
+		$tmp1 = $y;
 	}
 	var $t = $tmp1;
 ");
@@ -91,13 +93,14 @@ public void M() {
 	// END
 }",
 @"	this.set_$P1($b);
+	var $tmp1;
 	if ($b) {
 		this.set_$P2($x);
-		var $tmp1 = $x;
+		$tmp1 = $x;
 	}
 	else {
 		this.set_$P3($y);
-		var $tmp1 = $y;
+		$tmp1 = $y;
 	}
 	var $t = $tmp1;
 ");

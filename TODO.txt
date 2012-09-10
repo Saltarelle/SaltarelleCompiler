@@ -9,7 +9,6 @@ Multi-dimensional arrays
 Ensure that type initializers are run in the correct order.
 NAnt task
 Allow a class to inherit from two types with a member with the same name IFF both the members are implemented by the same method.
-Some kind of attribute to put on delegates to indicate that they will be called with the wrong 'this', thus forcing a capture to a local variable on method group conversion. Should not be able to convert from delegate without this option to delegate with it.
 
 v3:
 Source mapping
@@ -23,11 +22,3 @@ Checked/unchecked
 Script# features to handle:
 ScriptQualifierAttribute.
 ScriptAssemblyAttribute.
-
-
-Runtime library:
-
-ObservableCollection: Inherit IList<T>, ensure works.
-Queue, Queue<T>: Ensure works
-Stack, Stack<T>: Ensure works
-Function: Should be convertible to Delegate.
