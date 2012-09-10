@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		}
 
 		[Test]
-		public void LogicalOperatorsWork() {
+		public void LogicalAndWorks() {
 			AssertCorrect(
 @"public void M() {
 	bool a = false, b = false;
@@ -40,7 +40,31 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 }",
 @"	var $c = $a && $b;
 ");
+		}
 
+		[Test]
+		public void LogicalAndWorksWhenTheSecondExpressionHasAdditionalStatements() {
+			AssertCorrect(
+@"public bool P { get; set; }
+
+public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	var c = a && (P = b);
+	// END
+}",
+@"	var $tmp1 = $a;
+	if ($tmp1) {
+		this.set_$P($b);
+		$tmp1 = $b;
+	}
+	var $c = $tmp1;
+");
+		}
+
+
+		[Test]
+		public void LogicalOrWorks() {
 			AssertCorrect(
 @"public void M() {
 	bool a = false, b = false;
@@ -49,6 +73,26 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	var $c = $a || $b;
+");
+		}
+
+		[Test]
+		public void LogicalOrWorksWhenTheSecondExpressionHasAdditionalStatements() {
+			AssertCorrect(
+@"public bool P { get; set; }
+
+public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	var c = a || (P = b);
+	// END
+}",
+@"	var $tmp1 = $a;
+	if (!$tmp1) {
+		this.set_$P($b);
+		$tmp1 = $b;
+	}
+	var $c = $tmp1;
 ");
 		}
 

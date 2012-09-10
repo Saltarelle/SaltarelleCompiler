@@ -584,6 +584,24 @@ namespace Saltarelle.Compiler.Compiler {
 			    || type.IsKnownType(KnownTypeCode.Object) || type.IsKnownType(KnownTypeCode.ValueType) || type.IsKnownType(KnownTypeCode.Enum); // These reference types might contain types that have falsy values, so we need to be safe.
 		}
 
+		private JsExpression CompileAndAlsoOrOrElse(ResolveResult left, ResolveResult right, bool isAndAlso) {
+			var jsLeft  = InnerCompile(left, false);
+			var jsRight = CloneAndCompile(right, true);
+			if (jsRight.AdditionalStatements.Count > 0) {
+				var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Boolean));
+				var ifBlock = new JsBlockStatement(jsRight.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), jsRight.Expression))  }));
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsLeft));
+				JsExpression test = JsExpression.Identifier(_variables[temp].Name);
+				if (!isAndAlso)
+					test = JsExpression.LogicalNot(test);
+				_additionalStatements.Add(new JsIfStatement(test, ifBlock, null));
+				return JsExpression.Identifier(_variables[temp].Name);
+			}
+			else {
+				return isAndAlso ? JsExpression.LogicalAnd(jsLeft, jsRight.Expression) : JsExpression.LogicalOr(jsLeft, jsRight.Expression);
+			}
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			if (rr.UserDefinedOperatorMethod != null) {
 				var impl = _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod);
@@ -723,7 +741,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd, rr.IsLiftedOperator);
 
 				case ExpressionType.AndAlso:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalAnd, false);	// Operator does not have a lifted version.
+					return CompileAndAlsoOrOrElse(rr.Operands[0], rr.Operands[1], true);
 
 				case ExpressionType.Coalesce:
 					return CompileCoalesce(rr.Type, rr.Operands[0], rr.Operands[1]);
@@ -772,7 +790,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr, rr.IsLiftedOperator);
 
 				case ExpressionType.OrElse:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LogicalOr, false);	// Operator does not have a lifted version.
+					return CompileAndAlsoOrOrElse(rr.Operands[0], rr.Operands[1], false);
 
 				case ExpressionType.RightShift:
 					if (IsUnsignedType(rr.Type))
