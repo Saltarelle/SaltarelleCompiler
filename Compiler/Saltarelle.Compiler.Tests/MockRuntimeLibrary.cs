@@ -52,30 +52,32 @@ namespace Saltarelle.Compiler.Tests {
 			                		throw new ArgumentException("Unsupported type + " + t.ToString());
 			                	}
 			                };
-			TypeIs                   = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, TypeContext.CastTarget));
-			TryDowncast              = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget));
-			Downcast                 = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, TypeContext.CastTarget));
-			Upcast                   = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, TypeContext.CastTarget));
-			ReferenceEquals          = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
-			ReferenceNotEquals       = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
-			InstantiateGenericMethod = (m, a)          => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument))));
-			MakeException            = (e)             => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
-			IntegerDivision          = (n, d)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-			FloatToInt               = (e)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
-			Coalesce                 = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-			Lift                     = (e)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
-			FromNullable             = (e)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
-			LiftedBooleanAnd         = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
-			LiftedBooleanOr          = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
-			Bind                     = (f, t)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
-			BindFirstParameterToThis = (f)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
-			Default                  = (t)             => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
-			CreateArray              = (s)             => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), s);
-			CloneDelegate            = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
-			CallBase                 = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
-			BindBaseCall             = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
-			MakeEnumerator           = (yt, mn, gc, d) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument), mn, gc, d ?? (JsExpression)JsExpression.Null });
-			MakeEnumerable           = (yt, ge)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument), ge });
+			TypeIs                        = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, TypeContext.CastTarget));
+			TryDowncast                   = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget));
+			Downcast                      = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, TypeContext.CastTarget));
+			Upcast                        = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, TypeContext.CastTarget));
+			ReferenceEquals               = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
+			ReferenceNotEquals            = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
+			InstantiateGenericMethod      = (m, a)          => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument))));
+			MakeException                 = (e)             => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+			IntegerDivision               = (n, d)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+			FloatToInt                    = (e)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
+			Coalesce                      = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+			Lift                          = (e)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+			FromNullable                  = (e)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
+			LiftedBooleanAnd              = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
+			LiftedBooleanOr               = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
+			Bind                          = (f, t)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+			BindFirstParameterToThis      = (f)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
+			Default                       = (t)             => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
+			CreateArray                   = (t, dim)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue) }.Concat(dim));
+			CloneDelegate                 = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
+			CallBase                      = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
+			BindBaseCall                  = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
+			MakeEnumerator                = (yt, mn, gc, d) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument), mn, gc, d ?? (JsExpression)JsExpression.Null });
+			MakeEnumerable                = (yt, ge)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument), ge });
+			GetMultiDimensionalArrayValue = (a, i)          => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
+			SetMultiDimensionalArrayValue = (a, i, v)       => JsExpression.Invocation(JsExpression.Identifier("$MultidimArraySet"), new[] { a }.Concat(i).Concat(new[] { v }));
 		}
 
 		public Func<IType, TypeContext, JsExpression> GetScriptType { get; set; }
@@ -97,12 +99,14 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
 		public Func<JsExpression, JsExpression> BindFirstParameterToThis { get; set; }
 		public Func<IType, JsExpression> Default { get; set; }
-		public Func<JsExpression, JsExpression> CreateArray { get; set; }
+		public Func<IType, IEnumerable<JsExpression>, JsExpression> CreateArray { get; set; }
 		public Func<JsExpression, IType, IType, JsExpression> CloneDelegate { get; set; }
 		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
 		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
 		public Func<IType, JsExpression, JsExpression, JsExpression, JsExpression> MakeEnumerator { get; set; }
 		public Func<IType, JsExpression, JsExpression> MakeEnumerable { get; set; }
+		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> GetMultiDimensionalArrayValue;
+		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression, JsExpression> SetMultiDimensionalArrayValue;
 		
 		JsExpression IRuntimeLibrary.GetScriptType(IType type, TypeContext context) {
 			return GetScriptType(type, context);
@@ -180,8 +184,8 @@ namespace Saltarelle.Compiler.Tests {
 			return Default(type);
 		}
 
-		JsExpression IRuntimeLibrary.CreateArray(JsExpression size) {
-			return CreateArray(size);
+		JsExpression IRuntimeLibrary.CreateArray(IType elementType, IEnumerable<JsExpression> size) {
+			return CreateArray(elementType, size);
 		}
 
 		JsExpression IRuntimeLibrary.CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
@@ -202,6 +206,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.MakeEnumerable(IType yieldType, JsExpression getEnumerator) {
 			return MakeEnumerable(yieldType, getEnumerator);
+		}
+
+		JsExpression IRuntimeLibrary.GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices) {
+			return GetMultiDimensionalArrayValue(array, indices);
+		}
+
+		JsExpression IRuntimeLibrary.SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value) {
+			return SetMultiDimensionalArrayValue(array, indices, value);
 		}
 	}
 }

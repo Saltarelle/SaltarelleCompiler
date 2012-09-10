@@ -423,6 +423,41 @@ public void M() {
 		}
 
 		[Test]
+		public void AssigningToMultiDimensionalArrayElementWorks() {
+			AssertCorrect(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	arr[i, j] = k;
+	// END
+}",
+@"	$MultidimArraySet($arr, $i, $j, $k);
+");
+		}
+
+		[Test]
+		public void AssigningToMultiDimensionalArrayEvaluatesExpressionsInTheCorrectOrderWhenUsingTheReturnValue() {
+			AssertCorrect(
+@"int[,] A() { return null; }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+public void M() {
+	// BEGIN
+	var x = A()[F1(), F2()] = F3();
+	// END
+}",
+@"	var $tmp1 = this.$A();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	var $tmp4 = this.$F3();
+	$MultidimArraySet($tmp1, $tmp2, $tmp3, $tmp4);
+	var $x = $tmp4;
+");
+		}
+
+		[Test]
 		public void AssigningToByRefLocalWorks() {
 			AssertCorrect(
 @"int[] arr;

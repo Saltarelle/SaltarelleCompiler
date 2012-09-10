@@ -597,6 +597,104 @@ public void M() {
 		}
 
 		[Test]
+		public void PrefixForMultiDimensionalArrayWorks() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1;
+	// BEGIN
+	++arr[i, j];
+	// END
+}",
+@"	$MultidimArraySet($arr, $i, $j, $MultidimArrayGet($arr, $i, $j) + 1);
+");
+		}
+
+		[Test]
+		public void PostfixForMultiDimensionalArrayWorks() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1;
+	// BEGIN
+	arr[i, j]++;
+	// END
+}",
+@"	$MultidimArraySet($arr, $i, $j, $MultidimArrayGet($arr, $i, $j) + 1);
+");
+		}
+
+		[Test]
+		public void PrefixForMultiDimensionalArrayWorksWhenUsingTheReturnValue() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1, k;
+	// BEGIN
+	k = ++arr[i, j];
+	// END
+}",
+@"	var $tmp1 = $MultidimArrayGet($arr, $i, $j) + 1;
+	$MultidimArraySet($arr, $i, $j, $tmp1);
+	$k = $tmp1;
+");
+		}
+
+		[Test]
+		public void PostfixForMultiDimensionalArrayWorksWhenUsingTheReturnValue() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr;
+	int i = 0, j = 1, k;
+	// BEGIN
+	k = arr[i, j]++;
+	// END
+}",
+@"	var $tmp1 = $MultidimArrayGet($arr, $i, $j);
+	$MultidimArraySet($arr, $i, $j, $tmp1 + 1);
+	$k = $tmp1;
+");
+		}
+
+		[Test]
+		public void PrefixForMultiDimensionalArrayOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
+			AssertCorrectForBoth(
+@"public int[,] A() { return null; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	++A()[F1(), F2()];
+	// END
+}",
+@"	var $tmp1 = this.$A();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	$MultidimArraySet($tmp1, $tmp2, $tmp3, $MultidimArrayGet($tmp1, $tmp2, $tmp3) + 1);
+");
+		}
+
+		[Test]
+		public void PostfixForMultiDimensionalArrayOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
+			AssertCorrectForBoth(
+@"public int[,] A() { return null; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	A()[F1(), F2()]++;
+	// END
+}",
+@"	var $tmp1 = this.$A();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	$MultidimArraySet($tmp1, $tmp2, $tmp3, $MultidimArrayGet($tmp1, $tmp2, $tmp3) + 1);
+");
+		}
+
+		[Test]
 		public void PrefixForInstanceFieldWorks() {
 			AssertCorrectForBoth(
 @"int a;

@@ -255,8 +255,14 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			return JsExpression.Invocation(JsExpression.MemberAccess(GetScriptType(type, TypeContext.GetDefaultValue), "getDefaultValue"));
 		}
 
-		public JsExpression CreateArray(JsExpression size) {
-			return JsExpression.New(_createTypeReferenceExpression(KnownTypeReference.Array), size);
+		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size) {
+			var sizeList = (size is IList<JsExpression>) ? (IList<JsExpression>)size : size.ToList();
+			if (sizeList.Count == 1) {
+				return JsExpression.New(_createTypeReferenceExpression(KnownTypeReference.Array), sizeList);
+			}
+			else {
+				throw new NotImplementedException();
+			}
 		}
 
 		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
@@ -293,6 +299,14 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 		public JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator) {
 			return JsExpression.New(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Collections.Generic.IteratorBlockEnumerable`1")), getEnumerator, JsExpression.This);
+		}
+
+		public JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices) {
+			throw new NotImplementedException();
+		}
+
+		public JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value) {
+			throw new NotImplementedException();
 		}
 	}
 }

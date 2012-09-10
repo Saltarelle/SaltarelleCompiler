@@ -93,7 +93,6 @@ namespace Saltarelle.Compiler {
 			{ 7507, Tuple.Create(MessageSeverity.Error, "Cannot use the property {0} from script.") },
 			{ 7508, Tuple.Create(MessageSeverity.Error, "The field {0} is constant in script and cannot be assigned to.") },
 			{ 7509, Tuple.Create(MessageSeverity.Error, "The field {0} is not usable from script.") },
-			{ 7510, Tuple.Create(MessageSeverity.Error, "Arrays have to be one-dimensional.") },
 			{ 7511, Tuple.Create(MessageSeverity.Error, "The event {0} is not usable from script.") },
 			{ 7512, Tuple.Create(MessageSeverity.Error, "The property {0} is not usable from script.") },
 			{ 7513, Tuple.Create(MessageSeverity.Error, "Only locals can be passed by reference.") },
