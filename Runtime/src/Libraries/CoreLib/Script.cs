@@ -99,5 +99,13 @@ namespace System {
 		public static object This {
 			[InlineCode("this")] get { return null; }
 		}
+
+		/// <summary>
+		/// Reinterpret an object as another type without performing any type checks. 'Script.Reinterpret&lt;SomeType&gt;(a)' will always compile to 'a' regardless of types.
+		/// </summary>
+		[ScriptSkip]
+		public static T Reinterpret<T>(object o) {
+			return default(T);
+		}
     }
 }

@@ -49,12 +49,12 @@ namespace System {
         }
 
         [InlineCode("new {type}({*arguments})")]
-		public static object CreateInstance(Type type, params object[] arguments) {
+        public static object CreateInstance(Type type, params object[] arguments) {
             return null;
         }
 
         [InlineCode("new {T}({*arguments})")]
-		public static T CreateInstance<T>(params object[] arguments) where T : class {
+        public static T CreateInstance<T>(params object[] arguments) where T : class {
             return null;
         }
 
@@ -63,7 +63,7 @@ namespace System {
         }
 
         [InlineCode("{instance}[{name}]")]
-		public static object GetField(object instance, string name) {
+        public static object GetField(object instance, string name) {
             return null;
         }
 
@@ -77,7 +77,7 @@ namespace System {
         }
 
         [ScriptAlias("typeof")]
-		public static string GetScriptType(object instance) {
+        public static string GetScriptType(object instance) {
             return null;
         }
 
@@ -86,12 +86,12 @@ namespace System {
         }
 
         [InlineCode("({name} in {instance})")]
-		public static bool HasField(object instance, string name) {
+        public static bool HasField(object instance, string name) {
             return false;
         }
 
         [InlineCode("(typeof({instance}[{name}]) === 'function')")]
-		public static bool HasMethod(object instance, string name) {
+        public static bool HasMethod(object instance, string name) {
             return false;
         }
 
@@ -100,7 +100,8 @@ namespace System {
         }
 
         [InlineCode("{instance}[{name}]({*args})")]
-		public static object InvokeMethod(object instance, string name, params object[] args) {
+        [Obsolete("Script# allows the instance parameter to be null, which is not supported by Saltarelle. Ensure that you are not using a null instance argument. It is recommended to modify your code to use 'dynamic' instead.")]
+        public static object InvokeMethod(object instance, string name, params object[] args) {
             return null;
         }
 
@@ -109,19 +110,19 @@ namespace System {
         }
 
         public bool IsClass {
-			get { return false; }
+            get { return false; }
         }
 
         public bool IsEnum {
-			get { return false; }
+            get { return false; }
         }
 
         public bool IsFlags {
-			get { return false; }
+            get { return false; }
         }
 
         public bool IsInterface {
-			get { return false; }
+            get { return false; }
         }
 
         public static bool IsNamespace(object obj) {
@@ -154,24 +155,24 @@ namespace System {
             return null;
         }
 
-		public static Type MakeGenericType(Type genericType, Type[] typeArguments) {
-			return null;
-		}
+        public static Type MakeGenericType(Type genericType, Type[] typeArguments) {
+            return null;
+        }
 
-		public Type GetGenericTypeDefinition() {
-			return null;
-		}
+        public Type GetGenericTypeDefinition() {
+            return null;
+        }
 
-		public bool IsGenericTypeDefinition {
-			get { return false; }
-		}
+        public bool IsGenericTypeDefinition {
+            get { return false; }
+        }
 
-		public int GenericParameterCount {
-			get { return 0; }
-		}
+        public int GenericParameterCount {
+            get { return 0; }
+        }
 
-		public Type[] GetGenericArguments() {
-			return null;
-		}
+        public Type[] GetGenericArguments() {
+            return null;
+        }
     }
 }

@@ -142,6 +142,13 @@ namespace jQueryApi {
         }
 
         /// <summary>
+        /// Handle custom Ajax options or modify existing options before each request is sent and before they are processed by $.ajax().
+        /// </summary>
+        /// <param name="handler">A handler to set default values for future Ajax requests.</param>
+        public static void AjaxPrefilter(AjaxPrefilterCallback handler) {
+		}
+
+        /// <summary>
         /// Issues an Ajax request.
         /// </summary>
         /// <param name="url">The endpoint to which the request is issued.</param>

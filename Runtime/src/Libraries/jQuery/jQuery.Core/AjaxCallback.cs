@@ -125,4 +125,12 @@ namespace jQueryApi {
     /// <param name="options">The Ajax options associated with the request.</param>
     /// <param name="error">The error information.</param>
     public delegate void AjaxErrorEventHandler<TData>(jQueryEvent e, jQueryDataHttpRequest<TData> request, jQueryAjaxOptions options, Exception error);
+
+	/// <summary>
+	/// Delegate used for <see cref="jQuery.AjaxPrefilter"/>
+	/// </summary>
+	/// <param name="options">The request options.</param>
+	/// <param name="originalOptions">The options as provided to the ajax method, unmodified and, thus, without defaults from ajaxSettings.</param>
+	/// <param name="jqXHR">The <see cref="jQueryXmlHttpRequest"/> object of the request.</param>
+	public delegate void AjaxPrefilterCallback(jQueryAjaxOptions options, jQueryAjaxOptions originalOptions, jQueryXmlHttpRequest jqXHR);
 }
