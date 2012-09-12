@@ -343,5 +343,22 @@ public void M() {
 	}, this));
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
 		}
+
+		[Test]
+		public void ExpressionLambdaThatSetsAPropertyValueIsCorrect() {
+			AssertCorrect(@"
+public string P { get; set; }
+public void M() {
+	string s = null;
+	// BEGIN
+	System.Action test = () => P = ""x"";
+	// END
+}
+",
+@"	var $test = $Bind(function() {
+		this.set_$P('x');
+	}, this);
+");
+		}
 	}
 }

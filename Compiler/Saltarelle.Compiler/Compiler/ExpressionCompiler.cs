@@ -1294,7 +1294,7 @@ namespace Saltarelle.Compiler.Compiler {
 				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false);
 			}
 			else {
-				var body = CloneAndCompile(rr.Body, true, nestedFunctionContext: newContext);
+				var body = CloneAndCompile(rr.Body, returnValue, nestedFunctionContext: newContext);
 				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(body.Expression) : (JsStatement)new JsExpressionStatement(body.Expression));
 				var jsBody = new JsBlockStatement(MethodCompiler.FixByRefParameters(rr.Parameters, _variables).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
