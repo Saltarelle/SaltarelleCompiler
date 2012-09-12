@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Saltarelle.Compiler {
     public interface ISourceFile {
-        string FileName { get; }
+        string Filename { get; }
         TextReader Open();
     }
 }

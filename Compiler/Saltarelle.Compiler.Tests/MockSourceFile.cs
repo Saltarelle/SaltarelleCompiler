@@ -6,16 +6,16 @@ using System.Text;
 
 namespace Saltarelle.Compiler.Tests {
 	class MockSourceFile : ISourceFile {
-        private readonly string _fileName;
+        private readonly string _filename;
         private readonly string _content;
 
-        public MockSourceFile(string fileName, string content) {
-            _fileName = fileName;
+        public MockSourceFile(string filename, string content) {
+            _filename = filename;
             _content  = content;
         }
 
-        public string FileName {
-            get { return _fileName; }
+        public string Filename {
+            get { return _filename; }
         }
 
         public TextReader Open() {

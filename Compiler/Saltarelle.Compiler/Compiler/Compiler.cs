@@ -159,11 +159,11 @@ namespace Saltarelle.Compiler.Compiler {
 
             var files = sourceFiles.Select(f => { 
                                                     using (var rdr = f.Open()) {
-                                                        var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.FileName);
+                                                        var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.Filename);
                                                         var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
                                                         syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
                                                         var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
-                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.FileName, new UsingScope()), definedSymbols);
+                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
                                                     }
                                                 }).ToList();
 

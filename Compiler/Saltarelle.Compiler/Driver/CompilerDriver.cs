@@ -119,18 +119,20 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private class SimpleSourceFile : ISourceFile {
+			private readonly Encoding _encoding;
 			private readonly string _filename;
 
-			public SimpleSourceFile(string filename) {
+			public SimpleSourceFile(string filename, Encoding encoding) {
 				_filename = filename;
+				_encoding = encoding;
 			}
 
-			public string FileName {
+			public string Filename {
 				get { return _filename; }
 			}
 
 			public TextReader Open() {
-				return new StreamReader(FileName);
+				return new StreamReader(Filename, _encoding);
 			}
 		}
 
@@ -211,7 +213,7 @@ namespace Saltarelle.Compiler.Driver {
 					if (references == null)
 						return false;
 
-					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), references, options.DefineConstants);
+					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
 					var js = new ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
@@ -246,7 +248,7 @@ namespace Saltarelle.Compiler.Driver {
 
 					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(Minifier.Process(s)) : OutputFormatter.Format(s)));
 					try {
-						File.WriteAllText(outputScriptPath, script);
+						File.WriteAllText(outputScriptPath, script, settings.Encoding);
 					}
 					catch (IOException ex) {
 						er.Region = DomRegion.Empty;
