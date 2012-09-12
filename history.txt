@@ -1,3 +1,4 @@
+Added conditions to project imports to work with NuGet package restore.
 Fixed problem invoking method on a class decorated with a [MixinAttribute].
 Fixed compilation of expression lambda containing a single property assignment.
 Fixed issue causing the property assignment to erroneously happen unconditionally in the statements "a && (P = b)" and "a || (P = b)".
