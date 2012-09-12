@@ -39,6 +39,9 @@ namespace KnockoutApi {
         public void SetValue(T value) {
         }
 
+        /// <summary>
+        /// Gets or sets the value within the observable object.
+        /// </summary>
         public T Value {
             [ScriptName("")]
             get { return default(T); }

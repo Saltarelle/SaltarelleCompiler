@@ -30,6 +30,9 @@ namespace KnockoutApi {
             return default(T);
         }
 
+        /// <summary>
+        /// Gets the current computed value.
+        /// </summary>
         public T Value {
             [ScriptName("")]
             get { return default(T); }
