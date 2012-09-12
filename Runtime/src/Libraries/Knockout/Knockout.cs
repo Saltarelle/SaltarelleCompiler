@@ -132,6 +132,13 @@ namespace KnockoutApi {
         public static DependentObservable<T> DependentObservable<T>(DependentObservableOptions<T> options) {
             return null;
         }
+                
+        /// <summary>
+        /// Creates an observable with a value computed from one or more other values.
+        /// </summary>
+        /// <param name="options">Options for the dependent observable.</param>
+        public static void Computed(Action options) {
+        }
 
         /// <summary>
         /// Creates an observable with a value computed from one or more other values.
