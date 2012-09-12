@@ -12,15 +12,16 @@ using System.Text.RegularExpressions;
 
 namespace KnockoutApi {
 
-    [Imported]
-    [IgnoreNamespace]
-    [ScriptName("ko.utils")]
+    [Imported(IsRealType = true)]
+    [ScriptNamespace("ko")]
+    [ScriptName("utils")]
     public static class KnockoutUtils {
 
         /// <summary>
         /// Returns the First Matching Item (predicate function) from the given array
         /// </summary>
-        public static void ArrayFirst<T>(IEnumerable<T> array, Func<T, bool> predicate, object owner) {
+        public static T ArrayFirst<T>(IEnumerable<T> array, Func<T, bool> predicate, object owner) {
+            return default(T);
         }
 
         /// <summary>
