@@ -13,8 +13,8 @@ using System.Text.RegularExpressions;
 namespace KnockoutApi {
 
     [Imported]
-    [IgnoreNamespace]
-    [ScriptName("ko.utils")]
+    [ScriptNamespace("ko")]
+    [ScriptName("utils")]
     public static class KnockoutUtils {
 
         /// <summary>
