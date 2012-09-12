@@ -1013,7 +1013,7 @@ public static class C<T> {
 		}
 
 		[Test]
-		public void MixinAttributeActsAsPerserveName() {
+		public void PreserveNameWorksWithMixin() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [Mixin(""$.fn"")]
@@ -1032,7 +1032,41 @@ public static class C {
 			Assert.That(FindMethod("C.Method1").Name, Is.EqualTo("method1"));
 			Assert.That(FindMethod("C.Method2").Name, Is.EqualTo("Method2"));
 			Assert.That(FindMethod("C.Method3").Name, Is.EqualTo("Renamed"));
-			Assert.That(FindMethod("C.Method4").Name, Is.EqualTo("method4"));
+			Assert.That(FindMethod("C.Method4").Name, Is.EqualTo("$0"));
+		}
+
+		[Test]
+		public void MixinAttributeSetsTheNameForTheClassAndMethodsAreNonGlobal() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	public static void Method1(int i) {}
+}");
+			Assert.That(FindType("C").Name, Is.EqualTo("$.fn"));
+			Assert.That(FindMethod("C.Method1").Name, Is.EqualTo("method1"));
+			Assert.That(FindMethod("C.Method1").IsGlobal, Is.False);
+		}
+
+		[Test]
+		public void MixinAttributeArgumentMustBeAValidNestedJavascriptIdentifier() {
+			Prepare(@"using System.Runtime.CompilerServices; [Mixin(""$.fn"")] public static class C1 { static void Method1(int i) {} }");
+			// No error is good enough
+
+			Prepare(@"using System.Runtime.CompilerServices; [Mixin(""$"")] public static class C1 { static void Method1(int i) {} }");
+			// No error is good enough
+
+			Prepare(@"using System.Runtime.CompilerServices; [Mixin(null)] public static class C1 { static void Method1(int i) {} }", expectErrors: true);
+			Assert.AreEqual(1, AllErrorTexts.Count);
+			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("valid Javascript nested identifier")));
+
+			Prepare(@"using System.Runtime.CompilerServices; [Mixin("""")] public static class C1 { static void Method1(int i) {} }", expectErrors: true);
+			Assert.AreEqual(1, AllErrorTexts.Count);
+			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("valid Javascript nested identifier")));
+
+			Prepare(@"using System.Runtime.CompilerServices; [Mixin(""§"")] public static class C1 { static void Method1(int i) {} }", expectErrors: true);
+			Assert.AreEqual(1, AllErrorTexts.Count);
+			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("valid Javascript nested identifier")));
 		}
 
 		[Test]
@@ -1166,13 +1200,11 @@ public class C1 : B1, I1 {}", expectErrors: false);
 
 		[Test]
 		public void GetGlobalMethodsPrefixMethodWorks() {
-			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [GlobalMethods] static class C2 {} [Mixin(null)] static class C3 {} [Mixin("""")] static class C4 {} [Mixin(""$.fn"")] static class C5 {}");
+			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [GlobalMethods] static class C2 {} [Mixin(""$.fn"")] static class C3 {}");
 
 			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C1"]), Is.Null);
 			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C2"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C3"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C4"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C5"]), Is.EqualTo("$.fn"));
+			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C3"]), Is.EqualTo("$.fn"));
 		}
 
 		[Test]

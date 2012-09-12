@@ -452,10 +452,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7014, typeDefinition);
 					}
+					else if (mixinAttr[0] == null || !((string)mixinAttr[0]).IsValidNestedJavaScriptIdentifier()) {
+						Message(7025, typeDefinition);
+					}
 					else {
-						nmspace = "";
-						globalMethods = true;
-						mixinArg = (string)mixinAttr[0] ?? "";
+						var split = SplitNamespacedName((string)mixinAttr[0]);
+						nmspace   = split.Item1;
+						typeName  = split.Item2;
+						mixinArg  = (string)mixinAttr[0];
 					}
 				}
 				else if (globalMethodsAttr != null) {
@@ -1070,7 +1074,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 					}
 					else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: _typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
 						return;
 					}
 					else {

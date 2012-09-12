@@ -38,6 +38,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			var attr = new Mock<IAttribute>(MockBehavior.Strict);
 			var attrType = new Mock<ITypeDefinition>();
 			typeDef.SetupGet(_ => _.Attributes).Returns(new[] { attr.Object });
+			typeDef.SetupGet(_ => _.FullName).Returns("SomeNamespace.InnerNamespace.MyEnum");
 			attr.Setup(_ => _.AttributeType).Returns(attrType.Object);
 			attr.Setup(_ => _.PositionalArguments).Returns(new ResolveResult[0]);
 			attrType.SetupGet(_ => _.FullName).Returns("System.FlagsAttribute");

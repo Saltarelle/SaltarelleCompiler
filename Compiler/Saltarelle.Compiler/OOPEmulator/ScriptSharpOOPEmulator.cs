@@ -177,7 +177,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(systemType, RegisterNamespace), JsExpression.String(ns))));
 						currentNs = ns;
 					}
-					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.Name));
+					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
 
 					var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, t.Name);
 					if (t is JsClass) {
