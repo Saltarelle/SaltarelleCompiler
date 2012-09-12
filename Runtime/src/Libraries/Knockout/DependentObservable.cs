@@ -25,8 +25,14 @@ namespace KnockoutApi {
         /// </summary>
         /// <returns>The current value.</returns>
         [ScriptName("")]
+        [Obsolete("Use the Value property instead.")]
         public T GetValue() {
             return default(T);
+        }
+
+        public T Value {
+            [ScriptName("")]
+            get { return default(T); }
         }
 
         /// <summary>

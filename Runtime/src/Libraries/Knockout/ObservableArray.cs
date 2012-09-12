@@ -49,6 +49,7 @@ namespace KnockoutApi {
         /// </summary>
         /// <returns>The collection of items.</returns>
         [ScriptName("")]
+        [Obsolete("Use the Value property instead.")]
         public T[] GetItems() {
             return null;
         }
@@ -57,6 +58,7 @@ namespace KnockoutApi {
         /// Sets the underlying items within the observable array.
         /// </summary>
         [ScriptName("")]
+        [Obsolete("Use the Value property instead.")]
         public void SetItems(T[] values) {
         }
 
