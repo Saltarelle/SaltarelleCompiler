@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace KnockoutApi {
 
-    [Imported]
+    [Imported(IsRealType = true)]
     [ScriptNamespace("ko")]
     [ScriptName("utils")]
     public static class KnockoutUtils {
