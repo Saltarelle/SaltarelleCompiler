@@ -23,7 +23,7 @@ namespace KnockoutApi {
         /// Provides access to the currently registered binding handlers.
         /// </summary>
         [IntrinsicProperty]
-        public static Dictionary<string, BindingHandler> BindingHandlers {
+        public static JsDictionary<string, BindingHandler> BindingHandlers {
             get {
                 return null;
             }
