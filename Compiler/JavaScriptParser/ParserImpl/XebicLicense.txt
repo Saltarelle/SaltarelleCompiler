@@ -1,4 +1,9 @@
-This is the license for the Xebic Javascript parser library which is used to parse inline code. It is therefore NOT to be considered the license of the compiler itself (which is Apache Public License).
+This is the license for the Xebic Javascript parser library which is used to parse inline code.
+It is therefore NOT to be considered the license of the compiler itself (which is Apache Public License).
+Additionally, the Saltarelle project has permission from the autor to use the grammar as APL.
+If you create a new compiler based on Saltarelle, you have to ask for this permission for yourself.
+
+---
 
 Software License Agreement (BSD License)
 
