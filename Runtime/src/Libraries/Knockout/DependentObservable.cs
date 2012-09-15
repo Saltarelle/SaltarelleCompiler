@@ -31,11 +31,14 @@ namespace KnockoutApi {
         }
 
         /// <summary>
-        /// Gets the current computed value.
+        /// Gets or sets the current computed value.
         /// </summary>
         public T Value {
             [ScriptName("")]
             get { return default(T); }
+
+            [ScriptName("")]
+            set { }
         }
 
         /// <summary>
