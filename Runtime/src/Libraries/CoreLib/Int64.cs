@@ -18,6 +18,14 @@ namespace System {
 		public Int64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		[Obsolete("This number is not representable in Javascript", true)]
+		[NonScriptable]
+		public static long MinValue { get { return 0; } }
+
+		[Obsolete("This number is not representable in Javascript", true)]
+		[NonScriptable]
+		public static long MaxValue { get { return 0; } }
+
         public string Format(string format) {
             return null;
         }

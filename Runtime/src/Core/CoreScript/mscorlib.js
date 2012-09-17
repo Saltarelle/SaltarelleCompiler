@@ -33,6 +33,10 @@
         r[a[i]] = a[i + 1];
       }
       return r;
+    },
+
+    coalesce: function (a, b) {
+      return ss.isValue(a) ? a : b;
     }
   };
 

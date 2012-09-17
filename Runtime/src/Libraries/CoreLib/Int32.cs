@@ -18,6 +18,10 @@ namespace System {
 		public Int32(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		public static int MinValue { [InlineCode("-2147483648")] get { return 0; } }
+
+		public static int MaxValue { [InlineCode("2147483647")] get { return 0; } }
+
         public string Format(string format) {
             return null;
         }

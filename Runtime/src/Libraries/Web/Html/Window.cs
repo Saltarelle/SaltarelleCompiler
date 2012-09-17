@@ -116,6 +116,10 @@ namespace System.Html {
             }
         }
 
+		[InlineCode("window.location = {url}")]
+		public static void SetLocation(string url) {
+		}
+
         [IntrinsicProperty]
         public static Navigator Navigator {
             get {

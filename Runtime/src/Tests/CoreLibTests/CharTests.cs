@@ -27,6 +27,12 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void ConstantsWork() {
+			Assert.AreEqual((int)char.MinValue, 0);
+			Assert.AreEqual((int)char.MaxValue, 65535);
+		}
+
+		[Test]
 		public void CharComparisonWorks() {
 			char a = 'a', a2 = 'a', b = 'b';
 			Assert.IsTrue(a == a2);

@@ -18,6 +18,12 @@ namespace System {
 		public SByte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		[CLSCompliant(false)]
+		public static sbyte MinValue { [InlineCode("-128")] get { return 0; } }
+
+		[CLSCompliant(false)]
+		public static sbyte MaxValue { [InlineCode("127")] get { return 0; } }
+
         public string Format(string format) {
             return null;
         }

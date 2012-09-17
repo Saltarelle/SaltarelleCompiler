@@ -31,6 +31,7 @@ namespace Saltarelle.Compiler {
 			{ 7022, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [AsyncTestAttribute] or a [TestAttribute] because its declaring class does not have a [TestFixtureAttribute].") },
 			{ 7023, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.") },
 			{ 7024, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot override the member {1}.") },
+			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must be a valid Javascript nested identifier.") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
 			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },
@@ -79,6 +80,8 @@ namespace Saltarelle.Compiler {
 			{ 7144, Tuple.Create(MessageSeverity.Error, "The parameter {0} has the type {1} but the matching member has type {2}. The types must be the same.") },
 			{ 7145, Tuple.Create(MessageSeverity.Error, "The parameter {0} cannot be declared as ref or out.") },
 			{ 7146, Tuple.Create(MessageSeverity.Error, "The constructor cannot have an [ObjectLiteralAttribute] because the type {0} is not a serializable type.") },
+			{ 7147, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have a [BindThisToFirstParameterAttribute] because it does not have any parameters.") },
+			{ 7148, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
 
 			{ 7500, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.") },
 			{ 7501, Tuple.Create(MessageSeverity.Error, "More than one unnamed constructor for the type {0}.") },
@@ -104,7 +107,7 @@ namespace Saltarelle.Compiler {
 			{ 7521, Tuple.Create(MessageSeverity.Error, "Cannot use the variable {0} because it is an expanded param array.") },
 			{ 7522, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in a typeof expression because it is marked as not usable from script.") },
 			{ 7523, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it is not a normal method.") },
-			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it expands its param array in script.") },
+			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot convert the method '{0}' to the delegate type '{1}' because the method and delegate type differ in whether they expand their param array.") },
 			{ 7525, Tuple.Create(MessageSeverity.Error, "Error in inline code compilation: {0}.") },
 			{ 7526, Tuple.Create(MessageSeverity.Error, "Dynamic invocations cannot use named arguments.") },
 			{ 7527, Tuple.Create(MessageSeverity.Error, "The member {0} cannot be initialized in an initializer statement because it was also initialized by the constructor call.") },
@@ -113,6 +116,8 @@ namespace Saltarelle.Compiler {
 			{ 7530, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because at least one of the applicable methods is not a normal method. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
 			{ 7531, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.") },
 			{ 7532, Tuple.Create(MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.") },
+			{ 7533, Tuple.Create(MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.") },
+			{ 7534, Tuple.Create(MessageSeverity.Error, "Delegates of type {0} must be invoked in expanded form for its its param array.") },
 
 			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
 

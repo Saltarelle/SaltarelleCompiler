@@ -643,6 +643,25 @@ public class C {
 		}
 
 		[Test]
+		public void CannotCreateADelegateThatBindsThisToFirstParameterFromOneThatDoesNot() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"delegate void D1(int i, int j);
+delegate void D2(int a, int b);
+
+class C {
+	public void M() {
+		D1 d1 = null;
+		D2 d2 = new D2(d1);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: d.Name == "D1") }, errorReporter: er);
+
+			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessagesText.Any(e => e.Contains("D1") && e.Contains("D2") && e.Contains("differ in whether the Javascript 'this'")));
+		}
+
+		[Test]
 		public void CreatingEnumGivesAZeroConstant() {
 			AssertCorrect(
 @"enum E {}

@@ -33,6 +33,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string MixinAttribute                         = "System.Runtime.CompilerServices.MixinAttribute";
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
 		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
+		private const string BindThisToFirstParameterAttribute      = "System.Runtime.CompilerServices.BindThisToFirstParameterAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
@@ -69,7 +70,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				var xparms = string.Join(",", x.Parameters.Select(p => p.Type.FullName));
 				var yparms = string.Join(",", y.Parameters.Select(p => p.Type.FullName));
 
-				return string.CompareOrdinal(xparms, yparms);
+				var presult = string.CompareOrdinal(xparms, yparms);
+				if (presult != 0)
+					return presult;
+
+				return string.CompareOrdinal(x.ReturnType.FullName, y.ReturnType.FullName);
 			}
 
 			public int Compare(IMember x, IMember y) {
@@ -146,6 +151,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
+		private Dictionary<ITypeDefinition, DelegateScriptSemantics> _delegateSemantics;
 		private Dictionary<ITypeDefinition, HashSet<string>> _instanceMemberNamesByType;
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
@@ -306,7 +312,28 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return Tuple.Create(nmspace, name);
 		}
 
+		private void ProcessDelegate(ITypeDefinition delegateDefinition) {
+			bool bindThisToFirstParameter = GetAttributePositionalArgs(delegateDefinition, BindThisToFirstParameterAttribute) != null;
+			bool expandParams = GetAttributePositionalArgs(delegateDefinition, ExpandParamsAttribute) != null;
+
+			if (bindThisToFirstParameter && delegateDefinition.GetDelegateInvokeMethod().Parameters.Count == 0) {
+				Message(7147, delegateDefinition, delegateDefinition.FullName);
+				bindThisToFirstParameter = false;
+			}
+			if (expandParams && !delegateDefinition.GetDelegateInvokeMethod().Parameters.Any(p => p.IsParams)) {
+				Message(7148, delegateDefinition, delegateDefinition.FullName);
+				expandParams = false;
+			}
+
+			_delegateSemantics[delegateDefinition] = new DelegateScriptSemantics(expandParams: expandParams, bindThisToFirstParameter: bindThisToFirstParameter);
+		}
+
 		private void ProcessType(ITypeDefinition typeDefinition) {
+			if (typeDefinition.Kind == TypeKind.Delegate) {
+				ProcessDelegate(typeDefinition);
+				return;
+			}
+
 			if (_typeSemantics.ContainsKey(typeDefinition))
 				return;
 			foreach (var b in typeDefinition.DirectBaseTypes)
@@ -425,10 +452,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7014, typeDefinition);
 					}
+					else if (mixinAttr[0] == null || !((string)mixinAttr[0]).IsValidNestedJavaScriptIdentifier()) {
+						Message(7025, typeDefinition);
+					}
 					else {
-						nmspace = "";
-						globalMethods = true;
-						mixinArg = (string)mixinAttr[0] ?? "";
+						var split = SplitNamespacedName((string)mixinAttr[0]);
+						nmspace   = split.Item1;
+						typeName  = split.Item2;
+						mixinArg  = (string)mixinAttr[0];
 					}
 				}
 				else if (globalMethodsAttr != null) {
@@ -515,9 +546,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
 				string name = (string)sna[0] ?? "";
-				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
-					if (typeSemantics.IsNamedValues)
-						return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an invalid value, which will only be used as the literal value for the field, not for the name.
+				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidNestedJavaScriptIdentifier())) {
+					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
+				}
+				else if (name != "" && !name.IsValidJavaScriptIdentifier()) {
 					Message(7101, member);
 				}
 				if (name == "" && isConstructor)
@@ -547,6 +579,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessTypeMembers(ITypeDefinition typeDefinition) {
+			if (typeDefinition.Kind == TypeKind.Delegate)
+				return;
+
 			var baseMembersByType = typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition).Select(t => new { Type = t, MemberNames = GetInstanceMemberNames(t) }).ToList();
 			for (int i = 0; i < baseMembersByType.Count; i++) {
 				var b = baseMembersByType[i];
@@ -633,11 +668,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var ola = GetAttributePositionalArgs(source, ObjectLiteralAttribute);
 
 			if (nsa != null || _typeSemantics[source.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
-				return;
-			}
-
-			if (source.DeclaringType.Kind == TypeKind.Delegate) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -991,7 +1021,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						Message(7133, method);
 					}
 
-					var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
+					var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
 					if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
 						var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
 						if (errorMethod != null) {
@@ -1016,10 +1046,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					return;
 				}
 				else {
-					if (method.DeclaringType.Kind == TypeKind.Delegate && method.Name != "Invoke") {
-						_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
-						return;
-					}
 					if (epa != null) {
 						if (!method.Parameters.Any(p => p.IsParams)) {
 							Message(7137, method);
@@ -1049,7 +1075,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 					}
 					else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: true, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: _typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
 						return;
 					}
 					else {
@@ -1175,6 +1201,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_errorReporter = errorReporter;
 			_compilation = mainAssembly.Compilation;
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
+			_delegateSemantics = new Dictionary<ITypeDefinition, DelegateScriptSemantics>();
 			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
 			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
 			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
@@ -1231,19 +1258,38 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
-			return _methodSemantics[(IMethod)method.MemberDefinition];
+			switch (method.DeclaringType.Kind) {
+				case TypeKind.Delegate:
+					return MethodScriptSemantics.NotUsableFromScript();
+				default:
+					return _methodSemantics[(IMethod)method.MemberDefinition];
+			}
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
-			if (method.DeclaringType.Kind == TypeKind.Anonymous)
-				return ConstructorScriptSemantics.Json(new IMember[0]);
-			return _constructorSemantics[(IMethod)method.MemberDefinition];
+			switch (method.DeclaringType.Kind) {
+				case TypeKind.Anonymous:
+					return ConstructorScriptSemantics.Json(new IMember[0]);
+				case TypeKind.Delegate:
+					return ConstructorScriptSemantics.NotUsableFromScript();
+				default:
+					return _constructorSemantics[(IMethod)method.MemberDefinition];
+			}
 		}
 
 		public PropertyScriptSemantics GetPropertySemantics(IProperty property) {
-			if (property.DeclaringType.Kind == TypeKind.Anonymous)
-				return PropertyScriptSemantics.Field(property.Name.Replace("<>", "$"));
-			return _propertySemantics[(IProperty)property.MemberDefinition];
+			switch (property.DeclaringType.Kind) {
+				case TypeKind.Anonymous:
+					return PropertyScriptSemantics.Field(property.Name.Replace("<>", "$"));
+				case TypeKind.Delegate:
+					return PropertyScriptSemantics.NotUsableFromScript();
+				default:
+					return _propertySemantics[(IProperty)property.MemberDefinition];
+			}
+		}
+
+		public DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType) {
+			return _delegateSemantics[delegateType];
 		}
 
 		private string GetBackingFieldName(ITypeDefinition declaringTypeDefinition, string memberName) {
@@ -1272,11 +1318,21 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public FieldScriptSemantics GetFieldSemantics(IField field) {
-			return _fieldSemantics[(IField)field.MemberDefinition];
+			switch (field.DeclaringType.Kind) {
+				case TypeKind.Delegate:
+					return FieldScriptSemantics.NotUsableFromScript();
+				default:
+					return _fieldSemantics[(IField)field.MemberDefinition];
+			}
 		}
 
 		public EventScriptSemantics GetEventSemantics(IEvent evt) {
-			return _eventSemantics[(IEvent)evt.MemberDefinition];
+			switch (evt.DeclaringType.Kind) {
+				case TypeKind.Delegate:
+					return EventScriptSemantics.NotUsableFromScript();
+				default:
+					return _eventSemantics[(IEvent)evt.MemberDefinition];
+			}
 		}
 
 		public string GetAutoEventBackingFieldName(IEvent evt) {

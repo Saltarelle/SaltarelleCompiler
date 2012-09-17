@@ -62,6 +62,9 @@ namespace RuntimeLibrary.Tests.Core {
 	public class Int64Tests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class IteratorBlockTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class JsDateTests : CoreLibTestBase {}
 
 	[TestFixture]

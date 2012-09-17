@@ -16,4 +16,12 @@ namespace jQueryApi {
     /// <param name="element">The element.</param>
     /// <returns>The object that the element is mapped to.</returns>
     public delegate object ElementMapCallback(int index, Element element);
+
+    /// <summary>
+    /// A callback to be invoked for each element in a jQueryObject being mapped.
+    /// </summary>
+    /// <param name="index">The index of the element.</param>
+    /// <param name="element">The element.</param>
+    /// <returns>An array of objects that the element is mapped to.</returns>
+    public delegate object[] ElementMapCallbackArray(int index, Element element);
 }

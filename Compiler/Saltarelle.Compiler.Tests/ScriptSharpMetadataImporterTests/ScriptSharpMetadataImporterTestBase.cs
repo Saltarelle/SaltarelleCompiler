@@ -57,6 +57,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			return Metadata.GetTypeSemantics(AllTypes[name]);
 		}
 
+		protected DelegateScriptSemantics FindDelegate(string name) {
+			return Metadata.GetDelegateSemantics(AllTypes[name]);
+		}
+
 		protected IEnumerable<IMember> FindMembers(string name) {
             var lastDot = name.LastIndexOf('.');
 			return AllTypes[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));

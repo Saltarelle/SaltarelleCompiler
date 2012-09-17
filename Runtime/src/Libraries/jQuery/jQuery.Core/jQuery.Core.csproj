@@ -41,6 +41,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BooleanFunction.cs" />
+    <Compile Include="ActionWithContext.cs" />
     <Compile Include="jQueryDataHttpRequest.cs" />
     <Compile Include="jQueryDeferredFilter.cs" />
     <Compile Include="jQueryXmlHttpRequest.cs" />

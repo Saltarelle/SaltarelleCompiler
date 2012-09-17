@@ -327,5 +327,38 @@ public void M() {
 	};
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
 		}
+
+		[Test]
+		public void BindFirstParameterToThisWorks() {
+			AssertCorrect(
+@"private int i;
+public void M() {
+	// BEGIN
+	Func<int, int, int> f = (_this, b) => _this + b + i;
+	// END
+}
+",
+@"	var $f = $BindFirstParameterToThis($Bind(function($_this, $b) {
+		return $_this + $b + this.$i;
+	}, this));
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
+		}
+
+		[Test]
+		public void ExpressionLambdaThatSetsAPropertyValueIsCorrect() {
+			AssertCorrect(@"
+public string P { get; set; }
+public void M() {
+	string s = null;
+	// BEGIN
+	System.Action test = () => P = ""x"";
+	// END
+}
+",
+@"	var $test = $Bind(function() {
+		this.set_$P('x');
+	}, this);
+");
+		}
 	}
 }

@@ -64,6 +64,7 @@ namespace jQueryApi {
         /// <returns>The jQueryObject represented by 'this' within a plugin.</returns>
         [ScriptAlias("this")]
         [IntrinsicProperty]
+		[Obsolete("jQuery.Current is fragile. Migrate your code to use the methods that supply the context as a parameter.")]
         public static jQueryObject Current {
             get {
                 return null;
@@ -87,6 +88,7 @@ namespace jQueryApi {
         /// <returns>The element represented by 'this' in a callback.</returns>
         [ScriptAlias("this")]
         [IntrinsicProperty]
+		[Obsolete("jQuery.Element is fragile. Migrate your code to use the methods that supply the context as a parameter.")]
         public static Element Element {
             get {
                 return null;
@@ -121,6 +123,7 @@ namespace jQueryApi {
         /// <returns>The jQueryObject for the element represented by 'this' in a callback.</returns>
         [ScriptAlias("$(this)")]
         [IntrinsicProperty]
+		[Obsolete("jQuery.This is fragile. Migrate your code to use the methods that supply the context as a parameter.")]
         public static jQueryObject This {
             get {
                 return null;
@@ -137,6 +140,13 @@ namespace jQueryApi {
                 return null;
             }
         }
+
+        /// <summary>
+        /// Handle custom Ajax options or modify existing options before each request is sent and before they are processed by $.ajax().
+        /// </summary>
+        /// <param name="handler">A handler to set default values for future Ajax requests.</param>
+        public static void AjaxPrefilter(AjaxPrefilterCallback handler) {
+		}
 
         /// <summary>
         /// Issues an Ajax request.

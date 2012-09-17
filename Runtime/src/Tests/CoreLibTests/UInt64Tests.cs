@@ -29,6 +29,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void ConstantsWork() {
+			Assert.AreEqual(ulong.MinValue, 0);
+		}
+
+		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((ulong)0x123).Format("x"), "123");
 		}

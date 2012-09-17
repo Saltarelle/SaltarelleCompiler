@@ -44,7 +44,3 @@ else {
 Object.getObjectEnumerator = function#? DEBUG Object$getObjectEnumerator##(d) {
 	return new ss.ObjectEnumerator(d);
 }
-
-Object.coalesce = function#? DEBUG Object$coalesce##(a, b) {
-	return ss.isValue(a) ? a : b;
-}

@@ -60,6 +60,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 			DoForAllUnsignedIntegerTypes(a);
 		}
 
+		protected void DoForAllNumericTypes(Action<string> a) {
+			DoForAllIntegerTypes(a);
+			DoForAllFloatingPointTypes(a);
+		}
+
 		protected void DoForAllFloatingPointTypes(Action<string> a) {
 			foreach (var type in new[] { "float", "double", "decimal" })
 				a(type);

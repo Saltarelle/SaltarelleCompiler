@@ -41,5 +41,38 @@ public class C {
 }", "C.M");
 			Assert.That(result, Is.EqualTo(new object[] { false, 2 }));
 		}
+
+		[Test]
+		public void DelegateWithBindThisToFirstParameterWorksWhenInvokedFromScript() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+[BindThisToFirstParameter]
+public delegate int D(int a, int b);
+public class C {
+	public static int M() {
+		D d = (a, b) => a + b;
+		Function f = (Function)d;
+		return (int)f.Call(10, 20);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(30));
+		}
+
+		[Test]
+		public void DelegateWithBindThisToFirstParameterWorksWhenInvokedFromCode() {
+			var result = ExecuteCSharp(@"
+using System;
+using System.Runtime.CompilerServices;
+[BindThisToFirstParameter]
+public delegate int D(int a, int b);
+public class C {
+	public static int M() {
+		D d = (a, b) => a + b;
+		return d(10, 20);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo(30));
+		}
 	}
 }

@@ -804,6 +804,14 @@ namespace System.Threading {
 		public static void Exit(object obj) {
 		}
 	}
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [NonScriptable]
+    [Imported]
+	public class Thread {
+		public int ManagedThreadId { get { return 0; } }
+		public static Thread CurrentThread { get { return null; } }
+	}
 }
 
 namespace System.Security.Permissions {

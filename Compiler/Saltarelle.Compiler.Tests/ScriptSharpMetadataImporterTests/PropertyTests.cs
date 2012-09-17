@@ -305,8 +305,8 @@ interface I2<T> {
 }
 
 class C : I, I2<int> {
-	int P1 { get; set; }
-	int P2 { get; set; }
+	public int P1 { get; set; }
+	public int P2 { get; set; }
 }");
 
 			var p1 = FindProperty("C.P1");

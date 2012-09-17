@@ -36,7 +36,7 @@ namespace System {
 			return default(T);
 		}
 
-		[InlineCode("{$System.Object}.coalesce({this}, {defaultValue})")]
+		[InlineCode("ss.coalesce({this}, {defaultValue})")]
 		public T GetValueOrDefault(T defaultValue) {
 			return default(T);
 		}

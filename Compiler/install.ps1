@@ -30,8 +30,15 @@ if (-not $newLocation) {
 		$newLocation = $msbuild.Xml.Children | Select-Object -Last 1
 	}
 }
-$newImport = $msbuild.Xml.CreateImportElement("`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Saltarelle.Compiler.targets"")))")
+$newImportPath = "`$(SolutionDir)$(MakeRelativePath -Origin $project.DTE.Solution.FullName -Target ([System.IO.Path]::Combine($toolsPath, ""Saltarelle.Compiler.targets"")))"
+$newImport = $msbuild.Xml.CreateImportElement($newImportPath)
+$newImport.Condition = "Exists('$newImportPath')"
+$newImportCSharp = $msbuild.Xml.CreateImportElement("`$(MSBuildToolsPath)\Microsoft.CSharp.targets")
+$newImportCSharp.Condition = "!Exists('$newImportPath')"
+
 $msbuild.Xml.InsertAfterChild($newImport, $newLocation)
+$msbuild.Xml.InsertAfterChild($newImportCSharp, $newLocation)
+
 if ($toRemove) {
 	$toRemove | % { $msbuild.Xml.RemoveChild($_) }
 }

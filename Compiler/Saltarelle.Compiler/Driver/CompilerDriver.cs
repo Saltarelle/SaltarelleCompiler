@@ -9,8 +9,8 @@ using System.Security.Policy;
 using System.Text;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
-using Mono.CSharp;
 using System.Linq;
+using Mono.CSharp;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler.Driver {
 			result.FatalCounter              = 100;
 			result.WarningLevel              = options.WarningLevel;
 			result.AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList();
-			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => new Mono.CSharp.Tuple<string, string>(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList();
+			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => Tuple.Create(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList();
 			result.Encoding                  = Encoding.UTF8;
 			result.DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null;
 			result.OutputFile                = outputAssemblyPath;
@@ -119,18 +119,20 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private class SimpleSourceFile : ISourceFile {
+			private readonly Encoding _encoding;
 			private readonly string _filename;
 
-			public SimpleSourceFile(string filename) {
+			public SimpleSourceFile(string filename, Encoding encoding) {
 				_filename = filename;
+				_encoding = encoding;
 			}
 
-			public string FileName {
+			public string Filename {
 				get { return _filename; }
 			}
 
 			public TextReader Open() {
-				return new StreamReader(FileName);
+				return new StreamReader(Filename, _encoding);
 			}
 		}
 
@@ -211,7 +213,7 @@ namespace Saltarelle.Compiler.Driver {
 					if (references == null)
 						return false;
 
-					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f)), references, options.DefineConstants);
+					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
 					var js = new ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
@@ -246,7 +248,7 @@ namespace Saltarelle.Compiler.Driver {
 
 					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(Minifier.Process(s)) : OutputFormatter.Format(s)));
 					try {
-						File.WriteAllText(outputScriptPath, script);
+						File.WriteAllText(outputScriptPath, script, settings.Encoding);
 					}
 					catch (IOException ex) {
 						er.Region = DomRegion.Empty;

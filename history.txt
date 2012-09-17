@@ -1,3 +1,16 @@
+1.3.0
+Support empty ScriptName for NamedValues enum.
+Added MinValue/MaxValue members to integer types.
+Added members necessary to compile iterator blocks returning IEnumerable.
+Fixed internal error when inheriting from generic type.
+Added conditions to project imports to work with NuGet package restore.
+Fixed problem invoking method on a class decorated with a [MixinAttribute].
+Fixed compilation of expression lambda containing a single property assignment.
+Fixed issue causing the property assignment to erroneously happen unconditionally in the statements "a && (P = b)" and "a || (P = b)".
+Conditional expressions now only declare the temporary variable once.
+Ensure that the RHS of a coalescing operator is not evaluated if the LHS is null
+Added support for [ExpandParams] and [BindThisToFirstParameter] attributes on delegates.
+
 1.2.5
 Refactored the handling of inline code. This means that unnecessary parentheses should no longer appear when using certain methods. It also means that the {,arg} modifier is removed ({*arg} now knows what to do), and inline code is verified to be syntactically valid.
 Re-added types Queue<T> and Stack<T> to the RTL
