@@ -82,7 +82,7 @@ namespace jQueryApi {
         /// <summary>
         /// Gets or sets the element that will be the context for the request.
         /// </summary>
-        public Element Context {
+        public object Context {
             get {
                 return null;
             }
@@ -167,7 +167,7 @@ namespace jQueryApi {
 
         /// <summary>
         /// Gets or sets whether the current environment should be treated as a local
-        /// environment (eg. when the page is loaded using file:///).
+        /// environment (eg. when the page is loaded using file://).
         /// </summary>
         public bool IsLocal {
             get {
