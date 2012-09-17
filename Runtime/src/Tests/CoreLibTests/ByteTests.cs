@@ -29,6 +29,12 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void ConstantsWork() {
+			Assert.AreEqual(byte.MinValue, 0);
+			Assert.AreEqual(byte.MaxValue, 255);
+		}
+
+		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((byte)0x12).Format("x"), "12");
 		}

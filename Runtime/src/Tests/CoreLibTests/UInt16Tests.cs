@@ -29,6 +29,12 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void ConstantsWork() {
+			Assert.AreEqual(ushort.MinValue, 0);
+			Assert.AreEqual(ushort.MaxValue, 65535);
+		}
+
+		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((ushort)0x123).Format("x"), "123");
 		}

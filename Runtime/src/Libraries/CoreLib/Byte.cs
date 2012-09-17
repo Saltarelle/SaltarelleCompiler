@@ -18,6 +18,12 @@ namespace System {
 		public Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		[CLSCompliant(false)]
+		public static byte MinValue { [InlineCode("0")] get { return 0; } }
+
+		[CLSCompliant(false)]
+		public static byte MaxValue { [InlineCode("255")] get { return 0; } }
+
         public string Format(string format) {
             return null;
         }
