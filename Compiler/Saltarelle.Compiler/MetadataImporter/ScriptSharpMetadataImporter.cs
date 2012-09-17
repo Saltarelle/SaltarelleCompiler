@@ -1020,7 +1020,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						Message(7133, method);
 					}
 
-					var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method)];
+					var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
 					if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
 						var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
 						if (errorMethod != null) {

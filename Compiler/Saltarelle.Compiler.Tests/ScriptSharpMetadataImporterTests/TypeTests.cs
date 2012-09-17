@@ -1221,5 +1221,111 @@ class C4 {}
 			Assert.That(Metadata.IsRealType(AllTypes["C3"]), Is.True);
 			Assert.That(Metadata.IsRealType(AllTypes["C4"]), Is.True);
 		}
+
+		[Test]
+		public void OverridingMembersFromGenericBaseTypeWorks() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+public class A<T> {
+	[ScriptName(""renamedCtor"")]
+	public A() {}
+
+	[ScriptName(""renamedMethod"")]
+	public virtual void M() {}
+
+	[ScriptName(""renamedEvent"")]
+	public virtual event Action E;
+
+	[ScriptName(""renamedProperty"")]
+	public virtual int P { get; set; }
+
+	[ScriptName(""renamedIndexer"")]
+	public virtual int this[int i] {
+		get { return 0; }
+		set {}
+	}
+}
+
+public class B : A<object> {
+	public override void M() {}
+	public override event Action E;
+	public override int P { get; set; }
+	public override int this[int i] {
+		get { return 0; }
+		set {}
+	}
+}
+");
+
+			var c = Metadata.GetConstructorSemantics(AllTypes["B"].DirectBaseTypes.Single().GetConstructors().Single());
+			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+			Assert.That(c.Name, Is.EqualTo("renamedCtor"));
+
+			var m = FindMethod("B.M", 0);
+			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m.Name, Is.EqualTo("renamedMethod"));
+
+			var e = FindEvent("B.E");
+			Assert.That(e.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e.AddMethod.Name, Is.EqualTo("add_renamedEvent"));
+			Assert.That(e.RemoveMethod.Name, Is.EqualTo("remove_renamedEvent"));
+
+			var p = FindProperty("B.P");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p.GetMethod.Name, Is.EqualTo("get_renamedProperty"));
+			Assert.That(p.SetMethod.Name, Is.EqualTo("set_renamedProperty"));
+
+			var i = FindIndexer("B", 1);
+			Assert.That(i.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(i.GetMethod.Name, Is.EqualTo("get_renamedIndexer"));
+			Assert.That(i.SetMethod.Name, Is.EqualTo("set_renamedIndexer"));
+		}
+
+		[Test]
+		public void ImplementingMembersFromGenericInterfaceWorks() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+public interface I<T> {
+	[ScriptName(""renamedMethod"")]
+    void M();
+
+	[ScriptName(""renamedEvent"")]
+    protected virtual event System.Action E;
+
+	[ScriptName(""renamedProperty"")]
+    protected virtual int P { get; set; }
+
+	[ScriptName(""renamedIndexer"")]
+    protected virtual int this[int i] { get; set; }
+}
+
+public class B : I<object> {
+    public void M() {}
+    public event System.Action E;
+    public int P { get; set; }
+    public int this[int i] { get { return 0; } set {} }
+}");
+
+			var m = FindMethod("B.M", 0);
+			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m.Name, Is.EqualTo("renamedMethod"));
+
+			var e = FindEvent("B.E");
+			Assert.That(e.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e.AddMethod.Name, Is.EqualTo("add_renamedEvent"));
+			Assert.That(e.RemoveMethod.Name, Is.EqualTo("remove_renamedEvent"));
+
+			var p = FindProperty("B.P");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p.GetMethod.Name, Is.EqualTo("get_renamedProperty"));
+			Assert.That(p.SetMethod.Name, Is.EqualTo("set_renamedProperty"));
+
+			var i = FindIndexer("B", 1);
+			Assert.That(i.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(i.GetMethod.Name, Is.EqualTo("get_renamedIndexer"));
+			Assert.That(i.SetMethod.Name, Is.EqualTo("set_renamedIndexer"));
+		}
 	}
 }
