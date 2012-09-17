@@ -256,6 +256,37 @@ enum MyEnum {
 		}
 
 		[Test]
+		public void EmptyNameInNamedValuesEnumFieldCausesTheFieldToBeUnchangedButAffectsTheValue() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[NamedValues]
+enum MyEnum {
+	[ScriptName("""")]
+	MyValue1,
+}", minimizeNames: false);
+
+			var f = FindField("MyEnum.MyValue1");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+			Assert.That(f.Value, Is.EqualTo(""));
+			Assert.That(f.Name, Is.EqualTo("$myValue1"));
+			Assert.That(f.GenerateCode, Is.True);
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[NamedValues]
+enum MyEnum {
+	[ScriptName("""")]
+	MyValue1,
+}", minimizeNames: true);
+
+			f = FindField("MyEnum.MyValue1");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+			Assert.That(f.Value, Is.EqualTo(""));
+			Assert.That(f.Name, Is.EqualTo("$0"));
+			Assert.That(f.GenerateCode, Is.True);
+		}
+
+		[Test]
 		public void StaticFieldCannotBeCalledName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

@@ -546,9 +546,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
 				string name = (string)sna[0] ?? "";
-				if (name != "" && !name.IsValidJavaScriptIdentifier()) {
-					if (typeSemantics.IsNamedValues)
-						return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an invalid value, which will only be used as the literal value for the field, not for the name.
+				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidNestedJavaScriptIdentifier())) {
+					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
+				}
+				else if (name != "" && !name.IsValidJavaScriptIdentifier()) {
 					Message(7101, member);
 				}
 				if (name == "" && isConstructor)
