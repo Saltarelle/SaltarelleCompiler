@@ -138,5 +138,28 @@ namespace System {
         public static Array ToArray(object o) {
             return null;
         }
+
+		public object GetValue(params int[] indices) {
+			return null;
+		}
+
+		public void SetValue(object value, params int[] indices) {
+		}
+
+		public int GetLength(int dimension) {
+			return 0;
+		}
+
+		public int Rank { get { return 0; } }
+
+		[InlineCode("0")]
+		public int GetLowerBound(int dimension) {
+			return 0;
+		}
+
+		[InlineCode("{this}.getLength({dimension}) - 1")]
+		public int GetUpperBound(int dimension) {
+			return 0;
+		}
     }
 }

@@ -71,6 +71,9 @@ namespace RuntimeLibrary.Tests.Core {
 	public class MathTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class MultidimArrayTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class NullableTests : CoreLibTestBase {}
 
 	[TestFixture]

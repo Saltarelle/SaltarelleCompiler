@@ -261,7 +261,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return JsExpression.New(_createTypeReferenceExpression(KnownTypeReference.Array), sizeList);
 			}
 			else {
-				throw new NotImplementedException();
+				return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Array), "multidim"), new[] { Default(elementType) }.Concat(sizeList));
 			}
 		}
 
@@ -302,11 +302,11 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(array, "get"), indices);
 		}
 
 		public JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(array, "set"), indices.Concat(new[] { value }));
 		}
 	}
 }
