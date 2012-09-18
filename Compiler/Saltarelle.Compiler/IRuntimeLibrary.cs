@@ -153,9 +153,9 @@ namespace Saltarelle.Compiler {
 		JsExpression Default(IType type);
 
 		/// <summary>
-		/// Generates an expression that creates an array of a specified size, with all elements uninitialized.
+		/// Generates an expression that creates an array of a specified size (one item for each rank), with all elements initialized to their default values.
 		/// </summary>
-		JsExpression CreateArray(JsExpression size);
+		JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> sizes);
 
 		/// <summary>
 		/// Generates an expression that copies an existing delegate to a new one.
@@ -195,5 +195,15 @@ namespace Saltarelle.Compiler {
 		/// <param name="yieldType">The yield type of the enumerable. <see cref="object"/> if the enumerable is non-generic.</param>
 		/// <param name="getEnumerator">Function to invoke when <see cref="IEnumerable.GetEnumerator"/> is invoked on the enumerator.</param>
 		JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator);
+
+		/// <summary>
+		/// Generates an expression that gets the value at a specific index of a multi-dimensional array.
+		/// </summary>
+		JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices);
+
+		/// <summary>
+		/// Generates an expression that sets the value at a specific index of a multi-dimensional array.
+		/// </summary>
+		JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value);
 	}
 }

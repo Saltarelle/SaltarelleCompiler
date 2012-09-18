@@ -492,11 +492,46 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (target is ArrayAccessResolveResult) {
 				var arr = (ArrayAccessResolveResult)target;
-				if (arr.Indexes.Count != 1) {
-					_errorReporter.Message(7510);
-					return JsExpression.Number(0);
+				if (arr.Indexes.Count == 1) {
+					return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 				}
-				return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				else {
+					var expressions = new List<JsExpression>();
+					expressions.Add(InnerCompile(arr.Array, oldValueIsImportant, expressions));
+					foreach (var i in arr.Indexes)
+						expressions.Add(InnerCompile(i, oldValueIsImportant, expressions));
+
+					JsExpression oldValue, jsOtherOperand;
+					if (oldValueIsImportant) {
+						expressions.Add(_runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1)));
+						jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
+						oldValue = expressions[expressions.Count - 1];
+						expressions.RemoveAt(expressions.Count - 1); // Remove the current value because it should not be an argument to the setter.
+					}
+					else {
+						jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
+						oldValue = null;
+					}
+
+					if (returnValueIsImportant) {
+						var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
+						if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(valueToReturn)) {
+							// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
+							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, valueToReturn);
+							var temp = _createTemporaryVariable(target.Type);
+							_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, valueToReturn));
+							valueToReturn = JsExpression.Identifier(_variables[temp].Name);
+						}
+
+						var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
+
+						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), newValue)));
+						return valueToReturn;
+					}
+					else {
+						return _runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), valueFactory(oldValue, jsOtherOperand));
+					}
+				}
 			}
 			else {
 				_errorReporter.InternalError("Unsupported target of assignment: " + target);
@@ -1366,34 +1401,65 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Indexes.Count != 1) {
-				_errorReporter.Message(7510);
-				return JsExpression.Number(0);
+			var expressions = new List<JsExpression>();
+			expressions.Add(InnerCompile(rr.Array, false, expressions));
+			foreach (var i in rr.Indexes)
+				expressions.Add(InnerCompile(i, false, expressions));
+
+			if (rr.Indexes.Count == 1) {
+				return JsExpression.Index(expressions[0], expressions[1]);
 			}
-			var array = InnerCompile(rr.Array, false);
-			var index = InnerCompile(rr.Indexes[0], false, ref array);
-			return JsExpression.Index(array, index);
+			else {
+				return _runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1));
+			}
 		}
 
 		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, bool returnValueIsImportant) {
-			if (((ArrayType)rr.Type).Dimensions != 1) {
-				_errorReporter.Message(7510);
-				return JsExpression.Number(0);
-			}
-			if (rr.SizeArguments != null) {
-				if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0)
-					return JsExpression.ArrayLiteral();
+			var at = (ArrayType)rr.Type;
 
-				return _runtimeLibrary.CreateArray(VisitResolveResult(rr.SizeArguments[0], true));
-			}
-			if (rr.InitializerElements != null) {
-				var expressions = new List<JsExpression>();
-				foreach (var init in rr.InitializerElements)
-					expressions.Add(InnerCompile(init, false, expressions));
-				return JsExpression.ArrayLiteral(expressions);
+			if (at.Dimensions == 1) {
+				if (rr.InitializerElements != null && rr.InitializerElements.Count > 0) {
+					var expressions = new List<JsExpression>();
+					foreach (var init in rr.InitializerElements)
+						expressions.Add(InnerCompile(init, false, expressions));
+					return JsExpression.ArrayLiteral(expressions);
+				}
+				else if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0) {
+					return JsExpression.ArrayLiteral();
+				}
+				else {
+					return _runtimeLibrary.CreateArray(at.ElementType, new[] { InnerCompile(rr.SizeArguments[0], false) });
+				}
 			}
 			else {
-				return JsExpression.ArrayLiteral();
+				var sizes = new List<JsExpression>();
+				foreach (var a in rr.SizeArguments)
+					sizes.Add(InnerCompile(a, false, sizes));
+				var result = _runtimeLibrary.CreateArray(at.ElementType, sizes);
+
+				if (rr.InitializerElements != null && rr.InitializerElements.Count > 0) {
+					var temp = _createTemporaryVariable(rr.Type);
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, result));
+					result = JsExpression.Identifier(_variables[temp].Name);
+
+					var expressions = new List<JsExpression>();
+					foreach (var ie in rr.InitializerElements)
+						expressions.Add(InnerCompile(ie, false, expressions));
+
+					var indices = new JsExpression[rr.SizeArguments.Count];
+					for (int i = 0; i < rr.InitializerElements.Count; i++) {
+						int remainder = i;
+						for (int j = indices.Length - 1; j >= 0; j--) {
+							int arg = Convert.ToInt32(rr.SizeArguments[j].ConstantValue);
+							indices[j] = JsExpression.Number(remainder % arg);
+							remainder /= arg;
+						}
+
+						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, expressions[i])));
+					}
+				}
+
+				return result;
 			}
 		}
 

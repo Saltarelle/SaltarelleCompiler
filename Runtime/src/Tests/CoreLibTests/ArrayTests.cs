@@ -34,9 +34,59 @@ namespace CoreLibTests {
 		}
 
 		[Test]
-		public void IndexingWorks() {
+		public void RankIsOne() {
+			Assert.AreEqual(new int[0].Rank, 1);
+		}
+
+		[Test]
+		public void GetLengthWorks() {
+			Assert.AreEqual(new int[0].GetLength(0), 0);
+			Assert.AreEqual(new[] { "x" }.GetLength(0), 1);
+			Assert.AreEqual(new[] { "x", "y" }.GetLength(0), 2);
+		}
+
+		[Test]
+		public void GetLowerBound() {
+			Assert.AreEqual(new int[0].GetLowerBound(0), 0);
+			Assert.AreEqual(new[] { "x" }.GetLowerBound(0), 0);
+			Assert.AreEqual(new[] { "x", "y" }.GetLowerBound(0), 0);
+		}
+
+		[Test]
+		public void GetUpperBoundWorks() {
+			Assert.AreEqual(new int[0].GetUpperBound(0), -1);
+			Assert.AreEqual(new[] { "x" }.GetUpperBound(0), 0);
+			Assert.AreEqual(new[] { "x", "y" }.GetUpperBound(0), 1);
+		}
+
+		[Test]
+		public void GettingValueByIndexWorks() {
 			Assert.AreEqual(new[] { "x", "y"}[0], "x");
 			Assert.AreEqual(new[] { "x", "y"}[1], "y");
+		}
+		
+		[Test]
+		public void GetValueWorks() {
+			Assert.AreEqual(new[] { "x", "y"}.GetValue(0), "x");
+			Assert.AreEqual(new[] { "x", "y"}.GetValue(1), "y");
+		}
+
+		[Test]
+		public void SettingValueByIndexWorks() {
+			var arr = new string[2];
+			arr[0] = "x";
+			arr[1] = "y";
+			Assert.AreEqual(arr[0], "x");
+			Assert.AreEqual(arr[1], "y");
+		}
+		
+		[Test]
+		public void SetValueWorks() {
+			var arr = new string[2];
+			arr.SetValue("x", 0);
+			arr.SetValue("y", 1);
+			Assert.AreEqual(arr[0], "x");
+			Assert.AreEqual(arr[1], "y");
 		}
 
 		[Test]
