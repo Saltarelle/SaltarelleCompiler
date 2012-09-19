@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.CSharp;
@@ -24,6 +25,43 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private const string FlagsAttribute = "FlagsAttribute";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
+		private static Tuple<string, string> Split(string name) {
+			int pos = name.LastIndexOf('.');
+			if (pos == -1)
+				return Tuple.Create("", name);
+			else
+				return Tuple.Create(name.Substring(0, pos), name.Substring(pos + 1));
+		}
+
+		internal static IEnumerable<T> OrderByNamespace<T>(IEnumerable<T> source, Func<T, string> nameSelector) {
+			return    from s in source
+			           let t = Split(nameSelector(s))
+			       orderby t.Item1, t.Item2
+			        select s;
+		}
+/*
+		internal class ByNamespaceComparer : IComparer<string> {
+
+			public int Compare(string x, string y) {
+				var tx = Split(x);
+				var ty = Split(y);
+				if (tx.Item1 == ty.Item1)	// Same namespace
+					return StringComparer.InvariantCulture.Compare(tx.Item2, ty.Item2);
+				else if (tx.Item1.StartsWith(ty.Item1 + ".", StringComparison.InvariantCulture))
+					return 1;	// x is in a sub-namespace of y
+				else if (ty.Item1.StartsWith(tx.Item1 + ".", StringComparison.InvariantCulture))
+					return -1;	// y is in a sub-namespace of x
+				else
+					return StringComparer.InvariantCulture.Compare(x, y);
+			}
+
+			private ByNamespaceComparer() {
+			}
+
+			private static ByNamespaceComparer _instance = new ByNamespaceComparer();
+			public static ByNamespaceComparer Instance { get { return _instance; } }
+		}
+*/
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
@@ -166,7 +204,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 			var result = new List<JsStatement>();
 
-			var orderedTypes = types.OrderBy(t => t.Name).ToList();
+			var orderedTypes = OrderByNamespace(types, t => t.Name).ToList();
 			string currentNs = "";
 			foreach (var t in orderedTypes) {
 				try {
