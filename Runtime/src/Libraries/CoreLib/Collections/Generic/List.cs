@@ -92,11 +92,11 @@ namespace System.Collections.Generic {
             return false;
         }
 
-        public bool Every(ListFilterCallback<T> filterCallback) {
+        public bool Every(Func<T, int, List<T>, bool> callback) {
             return false;
         }
 
-        public bool Every(ListItemFilterCallback<T> itemFilterCallback) {
+        public bool Every(Func<T, bool> callback) {
             return false;
         }
 
@@ -116,18 +116,18 @@ namespace System.Collections.Generic {
             return null;
         }
 
-        public List<T> Filter(ListFilterCallback<T> filterCallback) {
+        public List<T> Filter(Func<T, int, List<T>, bool> callback) {
             return null;
         }
 
-        public List<T> Filter(ListItemFilterCallback<T> itemFilterCallback) {
+        public List<T> Filter(Func<T, bool> callback) {
             return null;
         }
 
-        public void ForEach(ListCallback<T> callback) {
+        public void ForEach(Action<T, int, List<T>> callback) {
         }
 
-        public void ForEach(ListItemCallback<T> itemCallback) {
+        public void ForEach(Action<T> callback) {
         }
 
         public IEnumerator<T> GetEnumerator() {
@@ -161,12 +161,12 @@ namespace System.Collections.Generic {
         }
 
         [IgnoreGenericArguments]
-		public List<TTarget> Map<TTarget>(ListMapCallback<T, TTarget> mapCallback) {
+		public List<TTarget> Map<TTarget>(Func<T, int, List<T>, TTarget> callback) {
             return null;
         }
 
         [IgnoreGenericArguments]
-        public List<TTarget> Map<TTarget>(ListItemMapCallback<T, TTarget> mapItemCallback) {
+        public List<TTarget> Map<TTarget>(Func<T, TTarget> callback) {
             return null;
         }
 
@@ -187,18 +187,18 @@ namespace System.Collections.Generic {
         public void Reverse() {
         }
 
-        public bool Some(ListFilterCallback<T> filterCallback) {
+        public bool Some(Func<T, int, List<T>, bool> callback) {
             return false;
         }
 
-        public bool Some(ListItemFilterCallback<T> itemFilterCallback) {
+        public bool Some(Func<T, bool> callback) {
             return false;
         }
 
         public void Sort() {
         }
 
-        public void Sort(CompareCallback<T> compareCallback) {
+        public void Sort(Func<T, T, int> callback) {
         }
     }
 }

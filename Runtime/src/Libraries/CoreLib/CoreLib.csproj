@@ -44,18 +44,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Activator.cs" />
+    <Compile Include="ArrayExtensions.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
     <Compile Include="Collections\Generic\Dictionary.cs" />
     <Compile Include="Collections\Generic\IDictionary.cs" />
     <Compile Include="Collections\Generic\IEqualityComparer.cs" />
     <Compile Include="Collections\Generic\IList.cs" />
-    <Compile Include="Collections\Generic\ListMapCallback.cs" />
-    <Compile Include="Collections\Generic\ListItemMapCallback.cs" />
     <Compile Include="Collections\Generic\CompareCallback.cs" />
-    <Compile Include="Collections\Generic\ListItemCallback.cs" />
-    <Compile Include="Collections\Generic\ListCallback.cs" />
-    <Compile Include="Collections\Generic\ListItemFilterCallback.cs" />
-    <Compile Include="Collections\Generic\ListFilterCallback.cs" />
     <Compile Include="Collections\Generic\JsDictionary.cs" />
     <Compile Include="Collections\Generic\KeyValuePair.cs" />
     <Compile Include="Collections\Generic\List.cs" />
@@ -100,17 +95,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Array.cs" />
-    <Compile Include="Collections\ArrayCallback.cs" />
-    <Compile Include="Collections\ArrayFilterCallback.cs" />
-    <Compile Include="Collections\ArrayItemCallback.cs" />
-    <Compile Include="Collections\ArrayItemFilterCallback.cs" />
-    <Compile Include="Collections\ArrayItemMapCallback.cs" />
-    <Compile Include="Collections\ArrayMapCallback.cs" />
     <Compile Include="Boolean.cs" />
     <Compile Include="Byte.cs" />
     <Compile Include="CancelEventArgs.cs" />
     <Compile Include="Char.cs" />
-    <Compile Include="CompareCallback.cs" />
     <Compile Include="Arguments.cs" />
     <Compile Include="Action.cs" />
     <Compile Include="Testing\Assert.cs" />
