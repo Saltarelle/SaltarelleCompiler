@@ -8,6 +8,7 @@ using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Html;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace jQueryApi {
 
@@ -300,7 +301,7 @@ namespace jQueryApi {
         /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
         /// <param name="duration">The duration in milliseconds for the animation.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Animate(JsDictionary propertiesToAnimate, int duration) {
+        public jQueryObject Animate(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -311,40 +312,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the animation.</param>
         /// <param name="easing">The easing to apply to the animation.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Animate(JsDictionary propertiesToAnimate, int duration, EffectEasing easing) {
-            return null;
-        }
-
-        /// <summary>
-        /// Animates a set of CSS properties over the specified duration.
-        /// </summary>
-        /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
-        /// <param name="duration">The duration in milliseconds for the animation.</param>
-        /// <param name="easing">The easing to apply to the animation.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Animate(JsDictionary propertiesToAnimate, int duration, EffectEasing easing, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Animates a set of CSS properties over the specified duration.
-        /// </summary>
-        /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
-        /// <param name="duration">The duration in milliseconds for the animation.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Animate(JsDictionary propertiesToAnimate, EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Animates a set of CSS properties over the specified duration.
-        /// </summary>
-        /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
-        /// <param name="duration">The duration in milliseconds for the animation.</param>
-        /// <param name="easing">The easing to apply to the animation.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Animate(JsDictionary propertiesToAnimate, EffectDuration duration, EffectEasing easing) {
+        public jQueryObject Animate(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -356,7 +324,40 @@ namespace jQueryApi {
         /// <param name="easing">The easing to apply to the animation.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Animate(JsDictionary propertiesToAnimate, EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject Animate(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
+            return null;
+        }
+
+        /// <summary>
+        /// Animates a set of CSS properties using the default duration.
+        /// </summary>
+        /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', -1, {propertiesToAnimate})")]
+        public Task AnimateTask(JsDictionary propertiesToAnimate) {
+            return null;
+        }
+
+        /// <summary>
+        /// Animates a set of CSS properties over the specified duration.
+        /// </summary>
+        /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
+        /// <param name="duration">The duration in milliseconds for the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', -1, {propertiesToAnimate}, {duration})")]
+        public Task AnimateTask(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Animates a set of CSS properties over the specified duration.
+        /// </summary>
+        /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
+        /// <param name="duration">The duration in milliseconds for the animation.</param>
+        /// <param name="easing">The easing to apply to the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', -1, {propertiesToAnimate}, {duration}, {easing})")]
+        public Task AnimateTask(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -1212,7 +1213,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(int duration) {
+        public jQueryObject FadeIn(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -1222,7 +1223,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(int duration, Action callback) {
+        public jQueryObject FadeIn(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -1243,7 +1244,7 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject FadeIn(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
@@ -1254,58 +1255,37 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject FadeIn(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
         /// Fades in the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(EffectDuration duration) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', -1)")]
+        public Task FadeInTask() {
             return null;
         }
 
         /// <summary>
         /// Fades in the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(EffectDuration duration, Action callback) {
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', -1, {duration})")]
+        public Task FadeInTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
         /// <summary>
         /// Fades in the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades in the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(EffectDuration duration, EffectEasing easing, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades in the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeIn(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', -1, {duration}, {easing})")]
+        public Task FadeInTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -1322,7 +1302,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(int duration) {
+        public jQueryObject FadeOut(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -1332,7 +1312,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(int duration, Action callback) {
+        public jQueryObject FadeOut(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -1342,18 +1322,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades out the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds for the effect.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject FadeOut(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -1364,58 +1333,48 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject FadeOut(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
         /// <summary>
         /// Fades out the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades out the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(EffectDuration duration, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades out the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades out the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject FadeOut(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
-        /// Fades out the matching set of elements using a the specified duration.
+        /// Fades out the matching set of elements using the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', -1)")]
+        public Task FadeOutTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades out the matching set of elements using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', -1, {duration})")]
+        public Task FadeOutTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Fades out the matching set of elements using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeOut(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', -1, {duration}, {easing})")]
+        public Task FadeOutTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -1426,7 +1385,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(int duration, double opacity) {
+        public jQueryObject FadeTo(TypeOption<int, EffectDuration> duration, double opacity) {
             return null;
         }
 
@@ -1438,7 +1397,7 @@ namespace jQueryApi {
         /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(int duration, double opacity, Action callback) {
+        public jQueryObject FadeTo(TypeOption<int, EffectDuration> duration, double opacity, Action callback) {
             return null;
         }
 
@@ -1450,20 +1409,7 @@ namespace jQueryApi {
         /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(int duration, double opacity, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades the matching set of elements using a the specified duration to
-        /// the specified opacity.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds for the effect.</param>
-        /// <param name="opacity">The opacity level between 0 and 1.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(int duration, double opacity, EffectEasing easing, Action callback) {
+        public jQueryObject FadeTo(TypeOption<int, EffectDuration> duration, double opacity, ActionWithContext callback) {
             return null;
         }
 
@@ -1476,18 +1422,33 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(int duration, double opacity, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject FadeTo(TypeOption<int, EffectDuration> duration, double opacity, EffectEasing easing, Action callback) {
             return null;
         }
+
+        /// <summary>
+        /// Fades the matching set of elements using a the specified duration to
+        /// the specified opacity.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="opacity">The opacity level between 0 and 1.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <param name="callback">The callback to invoke upon completion.</param>
+        /// <returns>The current jQueryObject.</returns>
+        public jQueryObject FadeTo(TypeOption<int, EffectDuration> duration, double opacity, EffectEasing easing, ActionWithContext callback) {
+            return null;
+        }
+
 
         /// <summary>
         /// Fades the matching set of elements using a the specified duration to the
         /// specified opacity.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="opacity">The opacity level between 0 and 1.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(EffectDuration duration, double opacity) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeTo', -1, {duration}, {opacity})")]
+        public Task FadeToTask(TypeOption<int, EffectDuration> duration, double opacity) {
             return null;
         }
 
@@ -1495,49 +1456,12 @@ namespace jQueryApi {
         /// Fades the matching set of elements using a the specified duration to
         /// the specified opacity.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="opacity">The opacity level between 0 and 1.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(EffectDuration duration, double opacity, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades the matching set of elements using a the specified duration to
-        /// the specified opacity.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="opacity">The opacity level between 0 and 1.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(EffectDuration duration, double opacity, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades the matching set of elements using a the specified duration to
-        /// the specified opacity.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(EffectDuration duration, double opacity, EffectEasing easing, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Fades the matching set of elements using a the specified duration to
-        /// the specified opacity.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="opacity">The opacity level between 0 and 1.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeTo(EffectDuration duration, double opacity, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeTo', -1, {duration}, {opacity}, {easing})")]
+        public Task FadeToTask(TypeOption<int, EffectDuration> duration, double opacity, EffectEasing easing) {
             return null;
         }
 
@@ -1556,7 +1480,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(int duration) {
+        public jQueryObject FadeToggle(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -1567,7 +1491,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(int duration, Action callback) {
+        public jQueryObject FadeToggle(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -1578,19 +1502,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggles the visibility of the matching set of elements by fading them
-        /// using the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds for the effect.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject FadeToggle(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -1602,7 +1514,7 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject FadeToggle(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
@@ -1610,20 +1522,11 @@ namespace jQueryApi {
         /// Toggles the visibility of the matching set of elements by fading them
         /// using the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggles the visibility of the matching set of elements by fading them
-        /// using the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(EffectDuration duration, Action callback) {
+        public jQueryObject FadeToggle(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -1631,10 +1534,32 @@ namespace jQueryApi {
         /// Toggles the visibility of the matching set of elements by fading them
         /// using the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject FadeToggle(EffectDuration duration, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', -1)")]
+        public Task FadeToggleTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by fading them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', -1, {duration})")]
+        public Task FadeToggleTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by fading them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', -1, {duration}, {easing})")]
+        public Task FadeToggleTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -2143,7 +2068,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(int duration) {
+        public jQueryObject Hide(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -2153,7 +2078,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(int duration, Action callback) {
+        public jQueryObject Hide(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -2163,18 +2088,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Hide the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds of the animation.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject Hide(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -2185,58 +2099,48 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject Hide(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
         /// <summary>
         /// Hide the matched set of elements in an animated manner.
         /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Hide the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(EffectDuration duration, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Hide the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Hide the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject Hide(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
         /// Hide the matched set of elements in an animated manner.
         /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', -1)")]
+        public Task HideTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Hide the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', -1, {duration})")]
+        public Task HideTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Hide the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Hide(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', -1, {duration}, {easing})")]
+        public Task HideTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -4056,7 +3960,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(int duration) {
+        public jQueryObject Show(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -4066,7 +3970,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(int duration, Action callback) {
+        public jQueryObject Show(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -4076,18 +3980,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Show the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds of the animation.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject Show(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -4098,58 +3991,48 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject Show(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
         /// <summary>
         /// Show the matched set of elements in an animated manner.
         /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Show the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(EffectDuration duration, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Show the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Show the matched set of elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject Show(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
         /// Show the matched set of elements in an animated manner.
         /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', -1)")]
+        public Task ShowTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Show the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', -1, {duration})")]
+        public Task ShowTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Show the matched set of elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Show(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', -1, {duration}, {easing})")]
+        public Task ShowTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -4213,7 +4096,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(int duration) {
+        public jQueryObject SlideDown(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -4223,7 +4106,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(int duration, Action callback) {
+        public jQueryObject SlideDown(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -4233,18 +4116,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides down the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds for the effect.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject SlideDown(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -4255,58 +4127,48 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject SlideDown(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
         /// <summary>
         /// Slides down the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides down the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(EffectDuration duration, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides down the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides down the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject SlideDown(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
         /// Slides down the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', -1)")]
+        public Task SlideDownTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides down the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', -1, {duration})")]
+        public Task SlideDownTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides down the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideDown(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', -1, {duration}, {easing})")]
+        public Task SlideDownTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -4325,7 +4187,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(int duration) {
+        public jQueryObject SlideToggle(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -4336,7 +4198,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(int duration, Action callback) {
+        public jQueryObject SlideToggle(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -4347,19 +4209,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggles the visibility of the matching set of elements by sliding them
-        /// using the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds for the effect.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject SlideToggle(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -4371,7 +4221,7 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject SlideToggle(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
@@ -4379,20 +4229,11 @@ namespace jQueryApi {
         /// Toggles the visibility of the matching set of elements by sliding them
         /// using the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggles the visibility of the matching set of elements by sliding them
-        /// using the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(EffectDuration duration, Action callback) {
+        public jQueryObject SlideToggle(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
@@ -4400,10 +4241,32 @@ namespace jQueryApi {
         /// Toggles the visibility of the matching set of elements by sliding them
         /// using the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideToggle(EffectDuration duration, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', -1)")]
+        public Task SlideToggleTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by sliding them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', -1, {duration})")]
+        public Task SlideToggleTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggles the visibility of the matching set of elements by sliding them
+        /// using the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <param name="easing">The easing to use.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', -1, {duration}, {easing})")]
+        public Task SlideToggleTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -4420,7 +4283,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(int duration) {
+        public jQueryObject SlideUp(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -4430,7 +4293,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(int duration, Action callback) {
+        public jQueryObject SlideUp(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -4440,18 +4303,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides up the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds for the effect.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject SlideUp(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -4462,58 +4314,48 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject SlideUp(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
         /// <summary>
         /// Slides up the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides up the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(EffectDuration duration, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides up the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Slides up the matching set of elements using a the specified duration.
-        /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke upon completion.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject SlideUp(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
         /// Slides up the matching set of elements using a the specified duration.
         /// </summary>
-        /// <param name="duration">The duration for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', -1)")]
+        public Task SlideUpTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides up the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', -1, {duration})")]
+        public Task SlideUpTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Slides up the matching set of elements using a the specified duration.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke upon completion.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject SlideUp(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', -1, {duration}, {easing})")]
+        public Task SlideUpTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 
@@ -4719,7 +4561,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(int duration) {
+        public jQueryObject Toggle(TypeOption<int, EffectDuration> duration) {
             return null;
         }
 
@@ -4729,7 +4571,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(int duration, Action callback) {
+        public jQueryObject Toggle(TypeOption<int, EffectDuration> duration, Action callback) {
             return null;
         }
 
@@ -4739,18 +4581,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(int duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggle the visibility of the set of matched elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration in milliseconds of the animation.</param>
-        /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(int duration, EffectEasing easing, Action callback) {
+        public jQueryObject Toggle(TypeOption<int, EffectDuration> duration, ActionWithContext callback) {
             return null;
         }
 
@@ -4761,58 +4592,48 @@ namespace jQueryApi {
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(int duration, EffectEasing easing, ActionWithContext callback) {
+        public jQueryObject Toggle(TypeOption<int, EffectDuration> duration, EffectEasing easing, Action callback) {
             return null;
         }
 
         /// <summary>
         /// Toggle the visibility of the set of matched elements in an animated manner.
         /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(EffectDuration duration) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggle the visibility of the set of matched elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(EffectDuration duration, Action callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggle the visibility of the set of matched elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(EffectDuration duration, ActionWithContext callback) {
-            return null;
-        }
-
-        /// <summary>
-        /// Toggle the visibility of the set of matched elements in an animated manner.
-        /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <param name="callback">The callback to invoke once the animation is completed.</param>
         /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(EffectDuration duration, EffectEasing easing, Action callback) {
+        public jQueryObject Toggle(TypeOption<int, EffectDuration> duration, EffectEasing easing, ActionWithContext callback) {
             return null;
         }
 
         /// <summary>
         /// Toggle the visibility of the set of matched elements in an animated manner.
         /// </summary>
-        /// <param name="duration">The duration of the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', -1)")]
+        public Task ToggleTask() {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggle the visibility of the set of matched elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', -1, {duration})")]
+        public Task ToggleTask(TypeOption<int, EffectDuration> duration) {
+            return null;
+        }
+
+        /// <summary>
+        /// Toggle the visibility of the set of matched elements in an animated manner.
+        /// </summary>
+        /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
-        /// <param name="callback">The callback to invoke once the animation is completed.</param>
-        /// <returns>The current jQueryObject.</returns>
-        public jQueryObject Toggle(EffectDuration duration, EffectEasing easing, ActionWithContext callback) {
+        /// <returns>A task representing the operation.</returns>
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', -1, {duration}, {easing})")]
+        public Task ToggleTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
 

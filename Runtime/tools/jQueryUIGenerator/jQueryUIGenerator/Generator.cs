@@ -347,6 +347,7 @@ namespace {2} {{
         private void RenderEffectExtensionMethods(IEnumerable<Entry> effects) {
             string content =
 @"using System;
+using System.Threading.Tasks;
 using System.Html;
 using System.Runtime.CompilerServices;
 
@@ -368,6 +369,16 @@ namespace jQueryApi.UI.Effects {{
                     methods.AppendLine("        /// </summary>");
                     methods.AppendLine("        [InlineCode(\"{q}." + (facet == "" ? "effect" : facet) + "('" + effect.Name + "', {options}, {speed}, {callback})\")]");
                     methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, object speed = null, Action callback = null) {");
+                    methods.AppendLine("            return null;");
+                    methods.AppendLine("        }");
+
+                    methods.AppendLine();
+                    methods.AppendLine();
+                    methods.AppendLine("        /// <summary>");
+                    methods.AppendLine("        /// " + Utils.FormatXmlComment(effect.Description.Replace("<entryname />", effect.Name)));
+                    methods.AppendLine("        /// </summary>");
+                    methods.AppendLine("        [InlineCode(\"{$System.Threading.Tasks.Task}.fromDoneCallback({q}, '" + (facet == "" ? "effect" : facet) + "', -1, '" + effect.Name + "', {options}, {speed})\")]");
+                    methods.AppendLine("        public static Task " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "Task(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, object speed = null) {");
                     methods.AppendLine("            return null;");
                     methods.AppendLine("        }");
                 }
