@@ -39,29 +39,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			       orderby t.Item1, t.Item2
 			        select s;
 		}
-/*
-		internal class ByNamespaceComparer : IComparer<string> {
 
-			public int Compare(string x, string y) {
-				var tx = Split(x);
-				var ty = Split(y);
-				if (tx.Item1 == ty.Item1)	// Same namespace
-					return StringComparer.InvariantCulture.Compare(tx.Item2, ty.Item2);
-				else if (tx.Item1.StartsWith(ty.Item1 + ".", StringComparison.InvariantCulture))
-					return 1;	// x is in a sub-namespace of y
-				else if (ty.Item1.StartsWith(tx.Item1 + ".", StringComparison.InvariantCulture))
-					return -1;	// y is in a sub-namespace of x
-				else
-					return StringComparer.InvariantCulture.Compare(x, y);
-			}
-
-			private ByNamespaceComparer() {
-			}
-
-			private static ByNamespaceComparer _instance = new ByNamespaceComparer();
-			public static ByNamespaceComparer Instance { get { return _instance; } }
-		}
-*/
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
@@ -178,7 +156,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 				for (int i = 0; i < types.Count; i++) {
 					var type = types[i];
-					if (!type.CSharpTypeDefinition.DirectBaseTypes.Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
+					if (!type.CSharpTypeDefinition.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
 						result.Add(type);
 						types.RemoveAt(i);
 						i--;

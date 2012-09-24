@@ -168,6 +168,41 @@ class C1 : C2, I1 {}
 		}
 
 		[Test]
+		public void BaseTypesAreRegisteredBeforeDerivedTypesGeneric() {
+			var sourceFile = new MockSourceFile("file.cs", @"
+class B<T> {}
+interface I<T> {}
+class A : B<int>, I<int> {}
+");
+			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var n = new MockNamer();
+            var er = new MockErrorReporter(true);
+			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// A
+{A} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// B
+{B} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// I
+{I} = function() {
+};
+{B}.registerClass('B');
+{I}.registerClass('I');
+{A}.registerClass('A', {C}, {I});
+",			
+			
+				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), "A", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C"), new JsExpression[] { new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "I") }),
+				new JsClass(ReflectionHelper.ParseReflectionName("B`1").Resolve(compilation.Compilation).GetDefinition(), "B", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), "I", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]));
+		}
+
+		[Test]
 		public void ByNamespaceComparerOrdersTypesCorrectly() {
 			var orig = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
 			var rnd = new Random();

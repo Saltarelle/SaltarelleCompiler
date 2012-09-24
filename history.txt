@@ -1,3 +1,4 @@
+Fixed type ordering issue when inheriting from a type that uses [IgnoreGenericArguments].
 Support multidimensional arrays.
 Fixed ordering of type to prevent unnecessary (and sometimes problematic) Type.registerNamespace calls
 
