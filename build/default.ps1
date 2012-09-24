@@ -105,6 +105,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web</tags>
 		<dependencies>
 			<dependency id="Saltarelle.Compiler" version="$(Get-DependencyVersion $script:CompilerVersion)"/>
 		</dependencies>
@@ -133,6 +134,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>neue.cc, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web</tags>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 		</dependencies>
@@ -157,6 +159,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web</tags>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 		</dependencies>
@@ -181,6 +184,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Nikhil Kothari</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web</tags>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 		</dependencies>
@@ -201,8 +205,9 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<title>Metadata required to use jQuery with the Saltarelle C# to JavaScript compiler</title>
 		<description>This package contains the required metadata to use jQuery with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the jQuery import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Nikhil Kothari</authors>
+		<authors>Nikhil Kothari, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web jQuery</tags>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
@@ -227,6 +232,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
 		<authors>Ivaylo Gochkov, Erik Källén</authors>
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web jQuery jQueryUI</tags>
 		<dependencies>
 			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
 			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
@@ -242,6 +248,31 @@ Task Build-NuGetPackages -Depends Determine-Version {
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\jQuery.UI.nuspec"
 
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.Knockout</id>
+		<version>$script:KnockoutVersion</version>
+		<title>Metadata required to use Knockout with the Saltarelle C# to JavaScript compiler</title>
+		<description>This package contains the required metadata to use Knockout JS with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the knockout import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+		<authors>Nikhil Kothari, Matthew Leibowitz</authors>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web knockout</tags>
+		<dependencies>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
+			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="$baseDir\Runtime\License.txt" target=""/>
+		<file src="$baseDir\Runtime\bin\Script.Knockout.dll" target="lib"/>
+		<file src="$baseDir\Runtime\bin\Script.Knockout.xml" target="lib"/>
+		<file src="$baseDir\Runtime\src\Libraries\Knockout\knockout*.js" target=""/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$outDir\Knockout.nuspec"
+
 	"This file is safe to remove from the project, but NuGet requires the Saltarelle.Compiler package to install something." | Out-File -Encoding UTF8 "$outDir\dummy.txt"
 
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Compiler.nuspec" -OutputDirectory "$outDir" }
@@ -251,6 +282,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Web.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.UI.nuspec" -OutputDirectory "$outDir" }
+	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Knockout.nuspec" -OutputDirectory "$outDir" }
 }
 
 Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackages {
@@ -318,6 +350,7 @@ Task Determine-Version {
 	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Web"
 	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core"
 	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\tools\jQueryUIGenerator"
+	$script:KnockoutVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Knockout"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
@@ -326,6 +359,7 @@ Task Determine-Version {
 	"Web version: $script:WebVersion"
 	"jQuery version: $script:jQueryVersion"
 	"jQuery UI version: $script:jQueryUIVersion"
+	"Knockout version: $script:KnockoutVersion"
 }
 
 Function Generate-VersionFile($Path, $Version) {
@@ -343,4 +377,5 @@ Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\LinqJS\Properties\Version.cs" -Version $script:LinqVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Web\Properties\Version.cs" -Version $script:WebVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core\Properties\Version.cs" -Version $script:JQueryVersion
+	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Knockout\Properties\Version.cs" -Version $script:KnockoutVersion
 }
