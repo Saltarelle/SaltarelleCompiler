@@ -21,7 +21,7 @@ namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
                 list.Add(item);
         }
 
-        private static readonly Regex _jsIdentifierRegex = new Regex("^[_$a-z][_$a-z0-9]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex _jsIdentifierRegex = new Regex(@"^[_$\p{L}][_$\p{L}0-9]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         public static bool IsValidJavaScriptIdentifier(this string s) {
             return s != null && _jsIdentifierRegex.IsMatch(s);
