@@ -15,6 +15,7 @@
     <OutputPath>..\..\..\bin\Script\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BCL\NotSupportedException.js" />
     <Content Include="BCL\TaskCompletionSource.js" />
     <Content Include="BCL\Task.js" />
     <Content Include="BCL\JsDate.js" />
@@ -51,6 +52,9 @@
     <Content Include="BCL\IEnumerator.js" />
     <Content Include="BCL\StringBuilder.js" />
     <Content Include="TypeSystem\Type.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="BCL\AggregateException.js" />
   </ItemGroup>
   <Target Name="Build">
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.debug.js" />

@@ -45,6 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Activator.cs" />
+    <Compile Include="AggregateException.cs" />
     <Compile Include="ArrayExtensions.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
     <Compile Include="Collections\Generic\Dictionary.cs" />

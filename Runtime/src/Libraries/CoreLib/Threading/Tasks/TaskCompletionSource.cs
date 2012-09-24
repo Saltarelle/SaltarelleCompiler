@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -17,7 +18,6 @@ namespace System.Threading.Tasks {
 		public void SetCanceled() {
 		}
 
-		[NonScriptable]
 		public void SetException(IEnumerable<Exception> exceptions) {
 		}
 
@@ -31,7 +31,6 @@ namespace System.Threading.Tasks {
 			return false;
 		}
 
-		[NonScriptable]
 		public bool TrySetException(IEnumerable<Exception> exceptions) {
 			return false;
 		}

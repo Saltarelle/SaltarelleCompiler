@@ -1,7 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Task
 
-ss.Task = function#? DEBUG Task$##() {
+ss.Task = function#? DEBUG Task$##(action, state) {
+	this._action = action;
+	this._state = state;
 	this.exception = null;
 	this.status = 0;
 	this._thens = [];
@@ -12,10 +14,8 @@ ss.Task.prototype = {
 		var tcs = new ss.TaskCompletionSource();
 		var _this = this;
 		var fn = function() {
-			tcs.task.status = 3;
 			try {
-				var result = continuation(_this);
-				tcs.setResult(result);
+				tcs.setResult(continuation(_this));
 			}
 			catch (e) {
 				tcs.setException(ss.Exception.wrap(e));
@@ -28,6 +28,23 @@ ss.Task.prototype = {
 			this._thens.push(fn);
 		}
 		return tcs.task;
+	},
+	start: function#? DEBUG Task$start##() {
+		if (this.status !== 0)
+			throw 'Task was already started.';
+		var _this = this;
+		this.status = 3;
+		setTimeout(function() {
+			try {
+				var result = _this._action(_this._state);
+				delete _this._action;
+				delete _this._state;
+				_this._complete(result);
+			}
+			catch (e) {
+				_this._fail(new ss.AggregateException([ss.Exception.wrap(e)]));
+			}
+		}, 0);
 	},
 	_runCallbacks: function#? DEBUG Task$_runCallbacks##() {
 		for (var i = 0; i < this._thens.length; i++)
@@ -84,10 +101,92 @@ ss.Task.prototype = {
 
 ss.Task.delay = function#? DEBUG Task$delay##(delay) {
 	var tcs = new ss.TaskCompletionSource();
-	tcs.task.status = 3;
 	setTimeout(function() {
 		tcs.setResult(0);
 	}, delay);
+	return tcs.task;
+};
+
+ss.Task.fromResult = function#? DEBUG Task$fromResult##(result) {
+	var t = new ss.Task();
+	t.status = 5;
+	t._result = result;
+	return t;
+};
+
+ss.Task.run = function#? DEBUG Task$fromResult##(f) {
+	var tcs = new ss.TaskCompletionSource();
+	setTimeout(function() {
+		try {
+			tcs.setResult(f());
+		}
+		catch (e) {
+			tcs.setException(ss.Exception.wrap(e));
+		}
+	}, 0);
+	return tcs.task;
+};
+
+ss.Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
+	var tcs = new ss.TaskCompletionSource();
+	if (tasks.length === 0) {
+		tcs.setResult([]);
+	}
+	else {
+		var result = new Array(tasks.length), remaining = tasks.length, cancelled = false, exceptions = [];
+		for (var i = 0; i < tasks.length; i++) {
+			(function(i) {
+				tasks[i].continueWith(function(t) {
+					switch (t.status) {
+						case 5:
+							result[i] = t.getResult();
+							break;
+						case 6:
+							cancelled = true;
+							break;
+						case 7:
+							exceptions.addRange(t.exception.get_innerExceptions());
+							break;
+						default:
+							throw 'Invalid task status ' + t.status;
+					}
+					if (--remaining === 0) {
+						if (exceptions.length > 0)
+							tcs.setException(exceptions);
+						else if (cancelled)
+							tcs.setCanceled();
+						else
+							tcs.setResult(result);
+					}
+				});
+			})(i);
+		}
+	}
+	return tcs.task;
+};
+
+ss.Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
+	if (!tasks.length)
+		throw 'Must wait for at least one task';
+
+	var tcs = new ss.TaskCompletionSource();
+	for (var i = 0; i < tasks.length; i++) {
+		tasks[i].continueWith(function(t) {
+			switch (t.status) {
+				case 5:
+					tcs.trySetResult(t);
+					break;
+				case 6:
+					tcs.trySetCanceled();
+					break;
+				case 7:
+					tcs.trySetException(t.exception.get_innerExceptions());
+					break;
+				default:
+					throw 'Invalid task status ' + t.status;
+			}
+		});
+	}
 	return tcs.task;
 };
 

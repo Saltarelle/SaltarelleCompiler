@@ -110,6 +110,10 @@
 
 #include "BCL\Exception.js"
 
+#include "BCL\NotSupportedException.js"
+
+#include "BCL\AggregateException.js"
+
 #include "BCL\IteratorBlockEnumerable.js"
 
 #include "BCL\IteratorBlockEnumerator.js"

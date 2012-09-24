@@ -7,9 +7,12 @@ using System.Text;
 namespace System.Threading.Tasks {
 	public enum TaskStatus {
 		Created,
+		[NonScriptable, Obsolete("This enum member is not used in script", true), EditorBrowsable(EditorBrowsableState.Never)]
 		WaitingForActivation,
+		[NonScriptable, Obsolete("This enum member is not used in script", true), EditorBrowsable(EditorBrowsableState.Never)]
 		WaitingToRun,
 		Running,
+		[NonScriptable, Obsolete("This enum member is not used in script", true), EditorBrowsable(EditorBrowsableState.Never)]
 		WaitingForChildrenToComplete,
 		RanToCompletion,
 		Canceled,
@@ -19,14 +22,20 @@ namespace System.Threading.Tasks {
 	[Imported(IsRealType = true)]
 	[ScriptNamespace("ss")]
 	public class Task : IDisposable {
-		internal Task() {
+		[AlternateSignature]
+		public Task(Action action) {
+		}
+
+		public Task(Action<object> action, object state) {
 		}
 
 		[IntrinsicProperty]
-		public Exception Exception { get { return null; } }
+		public AggregateException Exception { get { return null; } }
+
 		public bool IsCanceled { [ScriptName("isCanceled")] get { return false; } }
 		public bool IsCompleted { [ScriptName("isCompleted")] get { return false; } }
 		public bool IsFaulted { [ScriptName("isFaulted")] get { return false; } }
+
 		[IntrinsicProperty]
 		public TaskStatus Status { get { return TaskStatus.Created; } }
 
@@ -39,9 +48,6 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[NonScriptable]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete("Tasks are always started.")]
 		public void Start() {
 		}
 
@@ -70,6 +76,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAll({$System.Array}.fromEnumerable({tasks}))")]
 		public static Task WhenAll(IEnumerable<Task> tasks) {
 			return null;
 		}
@@ -79,7 +86,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAll({$System.Array}.fromEnumerable({tasks}))")]
 		public static Task<TResult[]> WhenAll<TResult>(IEnumerable<Task<TResult>> tasks) {
 			return null;
 		}
@@ -88,6 +95,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Array}.fromEnumerable({tasks}))")]
 		public static Task<Task> WhenAny(IEnumerable<Task> tasks) {
 			return null;
 		}
@@ -98,6 +106,7 @@ namespace System.Threading.Tasks {
 		}
 
 		[IgnoreGenericArguments]
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Array}.fromEnumerable({tasks}))")]
 		public static Task<Task<TResult>> WhenAny<TResult>(IEnumerable<Task<TResult>> tasks) {
 			return null;
 		}
@@ -116,6 +125,13 @@ namespace System.Threading.Tasks {
 	[ScriptNamespace("ss")]
 	[IgnoreGenericArguments]
 	public class Task<TResult> : Task {
+		[AlternateSignature]
+		public Task(Func<TResult> function) : base(() => {}) {
+		}
+
+		public Task(Func<object, TResult> function, object state) : base(() => {}) {
+		}
+
 		public TResult Result { [ScriptName("getResult")] get { return default(TResult); } }
 
 		public Task ContinueWith(Action<Task<TResult>> continuationAction) {

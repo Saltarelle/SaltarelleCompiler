@@ -3,6 +3,7 @@
 
 ss.TaskCompletionSource = function#? DEBUG TaskCompletionSource$##() {
 	this.task = new ss.Task();
+	this.task.status = 3;
 };
 ss.TaskCompletionSource.prototype = {
 	setCanceled: function#? DEBUG TaskCompletionSource$setCanceled##() {
@@ -14,6 +15,9 @@ ss.TaskCompletionSource.prototype = {
 			throw 'Task was already completed.';
 	},
 	setException: function#? DEBUG TaskCompletionSource$setException##(exception) {
+		if (Type.canCast(exception, ss.Exception))
+			exception = [exception];
+		exception = new ss.AggregateException(exception);
 		if (!this.task._fail(exception))
 			throw 'Task was already completed.';
 	},
@@ -24,6 +28,9 @@ ss.TaskCompletionSource.prototype = {
 		return this.task._complete(result);
 	},
 	trySetException: function#? DEBUG TaskCompletionSource$setException##(exception) {
+		if (Type.canCast(exception, ss.Exception))
+			exception = [exception];
+		exception = new ss.AggregateException(exception);
 		return this.task._fail(exception);
 	}
 };
