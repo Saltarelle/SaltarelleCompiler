@@ -89,6 +89,9 @@ namespace RuntimeLibrary.Tests.Core {
 	public class StringTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class TaskTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class TupleTests : CoreLibTestBase {}
 
 	[TestFixture]

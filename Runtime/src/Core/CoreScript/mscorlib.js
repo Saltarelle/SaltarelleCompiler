@@ -114,6 +114,10 @@
 
 #include "BCL\IteratorBlockEnumerator.js"
 
+#include "BCL\Task.js"
+
+#include "BCL\TaskCompletionSource.js"
+
 ///////////////////////////////////////////////////////////////////////////////
 // XMLHttpRequest and XML parsing helpers
 
