@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Html;
+using System.Runtime.CompilerServices;
 using System.Testing;
 using System.Text;
 using System.Threading.Tasks;
@@ -1086,6 +1087,104 @@ namespace CoreLibTests {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
 				QUnit.Start();
 			}, 200);
+		}
+
+		public void MethodWithDoneCallback(string s, int i, int timeout, Action done) {
+			Assert.AreEqual(s, "expected string");
+			Assert.AreEqual(i, 42);
+			Window.SetTimeout(done, timeout);
+		}
+
+		public void MethodWithDoneFunction(string s, int i, int timeout, Action<int> done, int j) {
+			Assert.AreEqual(s, "expected string");
+			Assert.AreEqual(i, 42);
+			Window.SetTimeout(() => done(i + j), timeout);
+		}
+
+		[AsyncTest]
+		public void FromDoneCallbackWorks() {
+			bool continuationRun = false;
+			var task = Task.FromDoneCallback(this, "methodWithDoneCallback", 3, "expected string", 42, 200);
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
+
+		[AsyncTest]
+		public void FromDoneCallbackWorksWithNegativeIndexing() {
+			bool continuationRun = false;
+			var task = Task.FromDoneCallback(this, "methodWithDoneCallback", -1, "expected string", 42, 200);
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
+
+		[AsyncTest]
+		public void FromDoneCallbackWithReturnValueWorks() {
+			bool continuationRun = false;
+			var task = Task.FromDoneCallback<int>(this, "methodWithDoneFunction", 3, "expected string", 42, 200, 15);
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Result, 57);
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
+
+		[AsyncTest]
+		public void FromDoneCallbackWithReturnValueWorksWithNegativeIndexing() {
+			bool continuationRun = false;
+			var task = Task.FromDoneCallback<int>(this, "methodWithDoneFunction", -2, "expected string", 42, 200, 17);
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Result, 59);
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
 		}
 	}
 }

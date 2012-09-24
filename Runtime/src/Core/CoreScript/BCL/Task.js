@@ -190,4 +190,22 @@ ss.Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
 	return tcs.task;
 };
 
+ss.Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, m, idx) {
+	var tcs = new ss.TaskCompletionSource();
+	idx = idx >= 0 ? idx : (arguments.length + idx - 2);
+	var cb = function(v) {
+		tcs.setResult(v);
+	};
+	var args = Array.prototype.slice.call(arguments, 3, idx + 3).concat(cb, Array.prototype.slice.call(arguments, 3 + idx));
+	t[m].apply(t, args);
+	return tcs.task;
+};
+
 ss.Task.registerClass('ss.Task', null, ss.IDisposable);
+
+////////////////////////////////////////////////////////////////////////////////
+// TaskStatus
+ss.TaskStatus = function() {
+};
+ss.TaskStatus.prototype = { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 };
+ss.TaskStatus.registerEnum('ss.TaskStatus', false);

@@ -111,6 +111,18 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
+		[ExpandParams]
+		public static Task FromDoneCallback(object target, string method, int callbackIndex, params object[] otherArguments) {
+			return null;
+		}
+
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<T> FromDoneCallback<T>(object target, string method, int callbackIndex, params object[] otherArguments) {
+			return null;
+		}
+
+		// TODO
+
 		public static Task FromPromise(IPromise promise) {
 			return null;
 		}
