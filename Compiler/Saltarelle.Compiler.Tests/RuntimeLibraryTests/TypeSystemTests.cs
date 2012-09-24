@@ -1049,7 +1049,7 @@ public class C {
 }",
 @"		var v1 = o;
 		var v2 = o;
-		var v3 = true;
+		var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1074,7 +1074,32 @@ public class C {
 }",
 @"		var v1 = o;
 		var v2 = o;
-		var v3 = true;
+		var v3 = ss.isValue(o);
+");
+		}
+
+		[Test]
+		public void CastToImportedGenericClassIsANoOp() {
+			AssertSourceCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+[Imported]
+class C1<T> {}
+
+public class C {
+	private void M() {
+		object o = null;
+		// BEGIN
+		var v1 = (C1<int>)o;
+		var v2 = o as C1<int>;
+		var v3 = o is C1<int>;
+		// END
+	}
+}",
+@"		var v1 = o;
+		var v2 = o;
+		var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1101,7 +1126,7 @@ public class C {
 }",
 @"		var v1 = o;
 		var v2 = o;
-		var v3 = true;
+		var v3 = ss.isValue(o);
 ");
 		}
 

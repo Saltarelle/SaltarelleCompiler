@@ -48,7 +48,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
 					return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				else
-					return _createTypeReferenceExpression(def.ToTypeReference());
+					return GetScriptType(def, context);
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
@@ -76,29 +76,46 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			else if (type.Kind == TypeKind.Anonymous && context == TypeContext.GenericArgument) {
 				return _createTypeReferenceExpression(KnownTypeReference.Object);
 			}
+			else if (type.Kind == TypeKind.Null) {
+				return _createTypeReferenceExpression(KnownTypeReference.Object);
+			}
 			else {
 				throw new InvalidOperationException("Could not determine the script type for " + type.ToString() + ", context " + context);
 			}
 		}
 
+		private bool IsSystemObjectReference(JsExpression expr) {
+			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Assembly.AssemblyName == "mscorlib" && ((JsTypeReferenceExpression)expr).TypeName == "Object";
+		}
+
 		private JsExpression GetCastTarget(IType sourceType, IType targetType) {
-			if (sourceType is ITypeDefinition && targetType is ITypeDefinition) {
-				var st = _metadataImporter.GetTypeSemantics((ITypeDefinition)sourceType);
-				var tt = _metadataImporter.GetTypeSemantics((ITypeDefinition)targetType);
-				if (st.Type == TypeScriptSemantics.ImplType.NormalType && tt.Type == TypeScriptSemantics.ImplType.NormalType && st.Name == tt.Name)
+			var ss = GetScriptType(sourceType, TypeContext.CastTarget);
+			var st = GetScriptType(targetType, TypeContext.CastTarget);
+			if (ss == null || st == null) {
+				return null;	// Either the source or the target is not a real type.
+			}
+			else if (ss is JsTypeReferenceExpression && st is JsTypeReferenceExpression) {
+				var trs = (JsTypeReferenceExpression)ss;
+				var trt = (JsTypeReferenceExpression)st;
+				if (trs.TypeName == trt.TypeName && Equals(trs.Assembly, trt.Assembly))
 					return null;	// The types are the same in script, so no runtimeConversion is required.
 			}
-			return GetScriptType(targetType, TypeContext.CastTarget);
+
+			return st;
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType) {
 			var jsTarget = GetCastTarget(sourceType, targetType);
-			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "isInstanceOfType"), expression, jsTarget) : (JsExpression)JsExpression.True;
+			if (jsTarget == null || IsSystemObjectReference(jsTarget))
+				return ReferenceNotEquals(expression, JsExpression.Null);
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "isInstanceOfType"), expression, jsTarget);
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
 			var jsTarget = GetCastTarget(sourceType, targetType);
-			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, jsTarget) : expression;
+			if (jsTarget == null || IsSystemObjectReference(jsTarget))
+				return expression;
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, jsTarget);
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -108,7 +125,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
 			var jsTarget = GetCastTarget(sourceType, targetType);
-			return jsTarget != null ? JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, jsTarget) : expression;
+			if (jsTarget == null || IsSystemObjectReference(jsTarget))
+				return expression;
+			return JsExpression.Invocation(JsExpression.MemberAccess(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, jsTarget);
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
