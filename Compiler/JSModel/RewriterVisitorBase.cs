@@ -288,9 +288,8 @@ namespace Saltarelle.Compiler.JSModel
     	}
 
     	public virtual JsStatement VisitAwaitStatement(JsAwaitStatement statement, TData data) {
-			var assignmentTarget = (statement.AssignmentTarget != null ? VisitExpression(statement.AssignmentTarget, data) : null);
     		var awaiter = VisitExpression(statement.Awaiter, data);
-			return ReferenceEquals(assignmentTarget, statement.AssignmentTarget) && ReferenceEquals(awaiter, statement.Awaiter) ? statement : new JsAwaitStatement(assignmentTarget, awaiter, statement.GetResultMethodName, statement.OnCompletedMethodName);
+			return ReferenceEquals(awaiter, statement.Awaiter) ? statement : new JsAwaitStatement(awaiter, statement.OnCompletedMethodName);
     	}
     }
 }

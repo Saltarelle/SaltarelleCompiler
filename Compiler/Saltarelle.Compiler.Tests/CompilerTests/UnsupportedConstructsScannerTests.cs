@@ -12,21 +12,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		}
 
 		[Test]
-		public void AwaitIsReportedAsUnsupported() {
-			AssertCorrect(@"
-using System.Threading;
-class C {
-	public Task<int> F() { return null; }
-
-	public async Task<double> M() {
-		int i = await F();
-		return (double)i;
-	}
-}
-", "await");
-		}
-
-		[Test]
 		public void StructIsReportedAsUnsupported() {
 			AssertCorrect(@"
 struct S {

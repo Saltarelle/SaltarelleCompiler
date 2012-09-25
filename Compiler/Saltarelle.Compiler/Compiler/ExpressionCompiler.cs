@@ -1720,18 +1720,14 @@ namespace Saltarelle.Compiler.Compiler {
 			var operand = InnerCompile(rr.GetAwaiterInvocation, true);
 			var getResultMethodImpl   = _metadataImporter.GetMethodSemantics(rr.GetResultMethod);
 			var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(rr.OnCompletedMethod);
-			// TODO: Verify that all methods have normal implementation
 
-			if (returnValueIsImportant) {
-				var temp = _createTemporaryVariable(rr.Type);
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, null));
-				_additionalStatements.Add(new JsAwaitStatement(JsExpression.Identifier(_variables[temp].Name), operand, getResultMethodImpl.Name, onCompletedMethodImpl.Name));
-				return JsExpression.Identifier(_variables[temp].Name);
-			}
-			else {
-				_additionalStatements.Add(new JsAwaitStatement(null, operand, getResultMethodImpl.Name, onCompletedMethodImpl.Name));
+			if (onCompletedMethodImpl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
+				_errorReporter.Message(7535);
 				return JsExpression.Null;
 			}
+
+			_additionalStatements.Add(new JsAwaitStatement(operand, onCompletedMethodImpl.Name));
+			return CompileMethodInvocation(getResultMethodImpl, rr.GetResultMethod, new[] { operand }, new IType[0], false, false);
 		}
 
 		public override JsExpression VisitNamedArgumentResolveResult(NamedArgumentResolveResult rr, bool data) {

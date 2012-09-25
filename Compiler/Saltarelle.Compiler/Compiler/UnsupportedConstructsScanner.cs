@@ -17,17 +17,6 @@ namespace Saltarelle.Compiler.Compiler {
 			return _result;
 		}
 
-		public override void VisitUnaryOperatorExpression(UnaryOperatorExpression unaryOperatorExpression) {
-			if (unaryOperatorExpression.Operator == UnaryOperatorType.Await) {
-				_errorReporter.Region = unaryOperatorExpression.GetRegion();
-				_errorReporter.Message(7998, "await");
-				_result = false;
-			}
-			else {
-				base.VisitUnaryOperatorExpression(unaryOperatorExpression);
-			}
-		}
-
 		public override void VisitTypeDeclaration(TypeDeclaration typeDeclaration) {
 			if (typeDeclaration.ClassType == ClassType.Struct && !_isCorelibCompilation) {
 				_errorReporter.Region = typeDeclaration.GetRegion();

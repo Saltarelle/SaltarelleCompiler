@@ -117,6 +117,7 @@ namespace Saltarelle.Compiler {
 			{ 7532, Tuple.Create(MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.") },
 			{ 7533, Tuple.Create(MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.") },
 			{ 7534, Tuple.Create(MessageSeverity.Error, "Delegates of type {0} must be invoked in expanded form for its its param array.") },
+			{ 7535, Tuple.Create(MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.") },
 
 			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
 
