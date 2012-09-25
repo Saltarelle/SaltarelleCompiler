@@ -47,6 +47,10 @@ namespace Saltarelle.Compiler.Compiler {
 				return expression;	// Don't patch return values of nested functions.
 			}
 
+			public override JsStatement  VisitFunctionStatement(JsFunctionStatement statement, object data) {
+				return statement;	// Don't patch return values of nested functions.
+			}
+
 			public static IList<JsStatement> Process(IList<JsStatement> statements, string identifierToReturn) {
 				var obj = new StaticMethodConstructorReturnPatcher(identifierToReturn);
 				return obj.VisitStatements(statements, null);
