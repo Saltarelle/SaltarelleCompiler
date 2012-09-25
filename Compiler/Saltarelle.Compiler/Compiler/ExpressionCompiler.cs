@@ -1717,17 +1717,35 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitAwaitResolveResult(AwaitResolveResult rr, bool returnValueIsImportant) {
-			var operand = InnerCompile(rr.GetAwaiterInvocation, true);
-			var getResultMethodImpl   = _metadataImporter.GetMethodSemantics(rr.GetResultMethod);
-			var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(rr.OnCompletedMethod);
-
-			if (onCompletedMethodImpl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-				_errorReporter.Message(7535);
-				return JsExpression.Null;
+			JsExpression operand;
+			if (rr.GetAwaiterInvocation is DynamicInvocationResolveResult && ((DynamicInvocationResolveResult)rr.GetAwaiterInvocation).Target is DynamicMemberResolveResult) {
+				// If the GetAwaiter call is dynamic, we need to camel-case it.
+				operand = InnerCompile(((DynamicMemberResolveResult)((DynamicInvocationResolveResult)rr.GetAwaiterInvocation).Target).Target, false);
+				operand = JsExpression.Invocation(JsExpression.MemberAccess(operand, "getAwaiter"));
+				var temp = _createTemporaryVariable(SpecialType.Dynamic);
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, operand));
+				operand = JsExpression.Identifier(_variables[temp].Name);
+			}
+			else {
+				operand = InnerCompile(rr.GetAwaiterInvocation, true);
 			}
 
-			_additionalStatements.Add(new JsAwaitStatement(operand, onCompletedMethodImpl.Name));
-			return CompileMethodInvocation(getResultMethodImpl, rr.GetResultMethod, new[] { operand }, new IType[0], false, false);
+			if (rr.GetAwaiterInvocation.Type.Kind == TypeKind.Dynamic) {
+				_additionalStatements.Add(new JsAwaitStatement(operand, "onCompleted"));
+				return JsExpression.Invocation(JsExpression.MemberAccess(operand, "getResult"));
+			}
+			else {
+				var getResultMethodImpl   = _metadataImporter.GetMethodSemantics(rr.GetResultMethod);
+				var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(rr.OnCompletedMethod);
+	
+				if (onCompletedMethodImpl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
+					_errorReporter.Message(7535);
+					return JsExpression.Null;
+				}
+	
+				_additionalStatements.Add(new JsAwaitStatement(operand, onCompletedMethodImpl.Name));
+				return CompileMethodInvocation(getResultMethodImpl, rr.GetResultMethod, new[] { operand }, new IType[0], false, false);
+			}
 		}
 
 		public override JsExpression VisitNamedArgumentResolveResult(NamedArgumentResolveResult rr, bool data) {

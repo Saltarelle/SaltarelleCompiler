@@ -243,5 +243,31 @@ public class C {
 				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
+
+		[Test]
+		public void AwaitingDynamicWorksAndMethodsAreCamelCased() {
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+			AssertCorrect(@"
+using System;
+public class C {
+	public async void M() {
+		dynamic x = null;
+		// BEGIN
+		dynamic i = await x;
+		// END
+	}
+}
+",
+@"	var $tmp1 = $x.getAwaiter();
+	await $tmp1:onCompleted;
+	var $i = $tmp1.getResult();
+", addSkeleton: false);
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
+		}
 	}
 }
