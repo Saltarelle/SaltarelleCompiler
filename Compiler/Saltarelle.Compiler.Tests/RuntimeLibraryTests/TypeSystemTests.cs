@@ -1211,5 +1211,17 @@ public class C {
 @"		var b = !!d;
 ");
 		}
+
+		[Test]
+		public void FalseIsFunctionShouldReturnFalse() {
+			var result = ExecuteCSharp(
+@"using System;
+public class C {
+	public static bool M() {
+		return (object)false is Function;
+	}
+}", "C.M");
+			Assert.That(result, Is.False);
+		}
 	}
 }

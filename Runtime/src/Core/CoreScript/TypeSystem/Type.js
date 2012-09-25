@@ -224,7 +224,7 @@ Type.prototype.isInstanceOfType = function#? DEBUG Type$isInstanceOfType##(insta
 }
 
 Type.isInstanceOfType = function#? DEBUG Type$isInstanceOfTypeStatic##(instance, type) {
-    return instance instanceof type || (type.isInstanceOfType && type.isInstanceOfType(instance)) || false;
+    return instance instanceof type || (type !== Function && type.isInstanceOfType && type.isInstanceOfType(instance));
 }
 
 Type.prototype.isAssignableFrom = function#? DEBUG Type$isAssignableFrom##(type) {
