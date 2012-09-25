@@ -49,7 +49,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -88,7 +88,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -131,7 +131,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -211,7 +211,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -293,7 +293,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -366,7 +366,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -446,7 +446,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -539,7 +539,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -624,7 +624,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -824,7 +824,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1043,7 +1043,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1242,7 +1242,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1458,7 +1458,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1505,7 +1505,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1706,7 +1706,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1733,8 +1733,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
-
+", methodType: MethodType.Iterator);
 		}
 
 		[Test]
@@ -1765,8 +1764,7 @@ lbl1:
 		return false;
 	}
 }
-", isIteratorBlock: true);
-
+", methodType: MethodType.Iterator);
 		}
 	}
 }

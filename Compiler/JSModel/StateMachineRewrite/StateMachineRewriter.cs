@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		}
 
 		private JsBlockStatement DoRewrite(JsBlockStatement block) {
-			if (!FindInterestingConstructsVisitor.Analyze(block, InterestingConstruct.Label | InterestingConstruct.YieldReturn | InterestingConstruct.YieldBreak))
+			if (!FindInterestingConstructsVisitor.Analyze(block, InterestingConstruct.Label | InterestingConstruct.YieldReturn | InterestingConstruct.YieldBreak | InterestingConstruct.Await))
 				return block;
 			return new SingleStateMachineRewriter(_isExpressionComplexEnoughForATemporaryVariable, _allocateTempVariable, _allocateStateVariable, _allocateLoopLabel).Process(block);
 		}
@@ -37,6 +37,12 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		public static JsBlockStatement Rewrite(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
 			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel);
 			return obj.DoRewrite((JsBlockStatement)obj.VisitStatement(block, null));
+		}
+
+		public static JsBlockStatement RewriteAsyncMethod(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, string stateMachineVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask) {
+			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel);
+			var singleRewriter = new SingleStateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel);
+			return singleRewriter.ProcessAsyncMethod((JsBlockStatement)obj.VisitStatement(block, null), stateMachineVariableName, taskCompletionSource, makeSetResult, makeSetException, getTask);
 		}
 
 		public static JsBlockStatement RewriteIteratorBlock(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, Func<IteratorStateMachine, JsBlockStatement> makeIteratorBody) {

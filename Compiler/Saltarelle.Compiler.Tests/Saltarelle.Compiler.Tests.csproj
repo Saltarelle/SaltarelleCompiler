@@ -231,6 +231,7 @@
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\DelegateTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\ScriptSharpCompatibilityTests.cs" />
+    <Compile Include="StateMachineTests\AsyncTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\SwitchStatementTests.cs" />
