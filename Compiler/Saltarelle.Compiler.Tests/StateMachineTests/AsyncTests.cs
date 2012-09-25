@@ -265,5 +265,116 @@ lbl: z;
 }
 ", methodType: MethodType.AsyncTask);
 		}
+
+		[Test]
+		public void AsyncMethodWithTryFinally() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
+		try {
+			c;
+		}
+		finally {
+			d;
+		}
+	}
+	finally {
+		e;
+	}
+
+	await y:onCompleted2;
+
+	try {
+		f;
+	}
+	finally {
+		g;
+	}
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		var $doFinally = true;
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state1) {
+					case 0:
+					case 1:
+					case 2: {
+						$state1 = -1;
+						try {
+							$state1 = 1;
+							$loop2:
+							for (;;) {
+								switch ($state1) {
+									case 1: {
+										$state1 = -1;
+										a;
+										$state1 = 2;
+										x.onCompleted1($sm);
+										$doFinally = false;
+										return;
+									}
+									case 2: {
+										$state1 = -1;
+										b;
+										try {
+											c;
+										}
+										finally {
+											d;
+										}
+										$state1 = -1;
+										break $loop2;
+									}
+									default: {
+										break $loop2;
+									}
+								}
+							}
+						}
+						finally {
+							if ($doFinally) {
+								e;
+							}
+						}
+						$state1 = 3;
+						y.onCompleted2($sm);
+						$doFinally = false;
+						return;
+					}
+					case 3: {
+						$state1 = -1;
+						try {
+							f;
+						}
+						finally {
+							g;
+						}
+						$state1 = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AsyncMethodWithNestedTryBlocks() {
+			Assert.Fail("TODO. Test multiple nesting, and multiple inner blocks and nested statemachines in both try, catch and finally");
+		}
 	}
 }

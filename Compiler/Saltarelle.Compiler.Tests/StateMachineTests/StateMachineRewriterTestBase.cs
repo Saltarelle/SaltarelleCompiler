@@ -41,6 +41,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 				                                                 () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture),
 				                                                 () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)),
 				                                                 "$sm",
+				                                                 "$doFinally",
 				                                                 methodType == MethodType.AsyncTask ? new JsVariableDeclaration("$tcs", JsExpression.New(JsExpression.Identifier("TaskCompletionSource"))) : null,
 				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set result in async void method"); return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("$tcs"), "setResult"), expr ?? JsExpression.String("<<null>>")); },
 				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set exception in async void method"); return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("$tcs"), "setException"), expr); },
