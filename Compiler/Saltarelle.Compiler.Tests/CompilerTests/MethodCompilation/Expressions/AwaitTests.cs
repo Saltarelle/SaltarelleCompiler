@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
@@ -10,6 +11,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	public class AwaitTests : MethodCompilerTestBase {
 		[Test]
 		public void AwaitWithReturnValueWorks() {
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
 			AssertCorrect(@"
 using System;
 public class MyAwaiter {
@@ -30,14 +34,21 @@ public class C {
 }
 ",
 @"	var $tmp1 = $x.$GetAwaiter();
-	await $tmp1[$OnCompleted];
+	await $tmp1:$OnCompleted;
 	var $i = $tmp1.$GetResult();
 ", addSkeleton: false);
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void AwaitWithGetAwaiterExtensionMethodWorks() {
-			AssertCorrect(@"
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
 using System;
 namespace N {
 	public class MyAwaiter {
@@ -61,14 +72,21 @@ namespace N {
 }
 ",
 @"	var $tmp1 = {sm_AwaitableExtensions}.$GetAwaiter($x);
-	await $tmp1[$OnCompleted];
+	await $tmp1:$OnCompleted;
 	var $i = $tmp1.$GetResult();
 ", addSkeleton: false);
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void AwaitWithIgnoredReturnValueWorks() {
-			AssertCorrect(@"
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
 using System;
 public class MyAwaiter {
 	public bool IsCompleted { get { return false; } }
@@ -88,14 +106,21 @@ public class C {
 }
 ",
 @"	var $tmp1 = $x.$GetAwaiter();
-	await $tmp1[$OnCompleted];
+	await $tmp1:$OnCompleted;
 	$tmp1.$GetResult();
 ", addSkeleton: false);
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void InlineCodeImplementationOfGetAwaiterWorks() {
-			AssertCorrect(@"
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
 using System;
 public class MyAwaiter {
 	public bool IsCompleted { get { return false; } }
@@ -115,14 +140,21 @@ public class C {
 }
 ",
 @"	var $tmp1 = _GetAwaiter_($x)._;
-	await $tmp1[$OnCompleted];
+	await $tmp1:$OnCompleted;
 	$tmp1.$GetResult();
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetAwaiter" ? MethodScriptSemantics.InlineCode("_GetAwaiter_({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
 		public void InlineCodeImplementationOfGetResultWorks() {
-			AssertCorrect(@"
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
 using System;
 public class MyAwaiter {
 	public bool IsCompleted { get { return false; } }
@@ -142,9 +174,13 @@ public class C {
 }
 ",
 @"	var $tmp1 = $x.$GetAwaiter();
-	await $tmp1[$OnCompleted];
+	await $tmp1:$OnCompleted;
 	_GetResult($tmp1)._;
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetResult" ? MethodScriptSemantics.InlineCode("_GetResult({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 
 		[Test]
@@ -173,7 +209,10 @@ public class C {
 
 		[Test]
 		public void TwoAwaitsInAnExpression() {
-			AssertCorrect(@"
+			try {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
 using System;
 public class MyAwaiter {
 	public bool IsCompleted { get { return false; } }
@@ -193,12 +232,16 @@ public class C {
 }
 ",
 @"	var $tmp1 = $x.$GetAwaiter();
-	await $tmp1[$OnCompleted];
+	await $tmp1:$OnCompleted;
 	var $tmp3 = $tmp1.$GetResult();
 	var $tmp2 = $y.$GetAwaiter();
-	await $tmp2[$OnCompleted];
+	await $tmp2:$OnCompleted;
 	var $i = $tmp3 + $tmp2.$GetResult();
 ", addSkeleton: false);
+			}
+			finally {
+				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
 		}
 	}
 }
