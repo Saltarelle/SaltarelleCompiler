@@ -86,7 +86,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
             var er = new MockErrorReporter(!expectErrors);
 			PreparedCompilation compilation = null;
 			var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
-            var compiler = new Compiler.Compiler(md, n, rtl, er);
+            var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: false);
 
             var references = includeLinq ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
 			compilation = compiler.CreateCompilation(new[] { sourceFile }, references, null);

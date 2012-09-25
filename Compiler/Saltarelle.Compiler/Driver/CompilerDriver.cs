@@ -207,7 +207,7 @@ namespace Saltarelle.Compiler.Driver {
 					var n = new DefaultNamer();
 					PreparedCompilation compilation = null;
 					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
-					var compiler = new Compiler.Compiler(md, n, rtl, er);
+					var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: options.References.Count == 0 /* We allow user-defined structs in mscorlib only, which can be identified by the fact that it has no references*/);
 
 					var references = LoadReferences(settings.AssemblyReferences, er);
 					if (references == null)
