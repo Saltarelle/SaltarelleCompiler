@@ -153,6 +153,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="CompilerTests\CompilerTestBase.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Bugs.cs" />
+    <Compile Include="CompilerTests\MethodCompilation\Expressions\AwaitTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\LocalsTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\MethodCompilationTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\QueryExpressionTests.cs" />

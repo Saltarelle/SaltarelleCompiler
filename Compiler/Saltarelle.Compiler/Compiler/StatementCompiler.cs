@@ -346,7 +346,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var compiled = _expressionCompiler.Compile(resolveResult, false);
 			_result.AddRange(compiled.AdditionalStatements);
-			_result.Add(new JsExpressionStatement(compiled.Expression));
+			if (compiled.Expression.NodeType != ExpressionNodeType.Null)	// The statement "null;" is illegal in C#, so it must have appeared because there was no suitable expression to return.
+				_result.Add(new JsExpressionStatement(compiled.Expression));
 		}
 
 		public override void VisitForStatement(ForStatement forStatement) {

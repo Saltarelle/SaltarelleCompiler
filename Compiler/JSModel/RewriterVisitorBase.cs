@@ -286,5 +286,11 @@ namespace Saltarelle.Compiler.JSModel
     		var value = statement.Value != null ? VisitExpression(statement.Value, data) : null;
 			return ReferenceEquals(value, statement.Value) ? statement : new JsYieldStatement(value);
     	}
+
+    	public virtual JsStatement VisitAwaitStatement(JsAwaitStatement statement, TData data) {
+			var assignmentTarget = (statement.AssignmentTarget != null ? VisitExpression(statement.AssignmentTarget, data) : null);
+    		var awaiter = VisitExpression(statement.Awaiter, data);
+			return ReferenceEquals(assignmentTarget, statement.AssignmentTarget) && ReferenceEquals(awaiter, statement.Awaiter) ? statement : new JsAwaitStatement(assignmentTarget, awaiter, statement.GetResultMethodName, statement.OnCompletedMethodName);
+    	}
     }
 }

@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler.JSModel {
 		TReturn VisitLabelledStatement(JsLabelledStatement statement, TData data);
 		TReturn VisitGotoStatement(JsGotoStatement statement, TData data);
 		TReturn VisitYieldStatement(JsYieldStatement statement, TData data);
+		TReturn VisitAwaitStatement(JsAwaitStatement statement, TData data);
 		TReturn VisitFunctionStatement(JsFunctionStatement statement, TData data);
     }
 }
