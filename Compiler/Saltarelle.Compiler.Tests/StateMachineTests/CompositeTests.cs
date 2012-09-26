@@ -249,7 +249,7 @@ lbl2:
 		}
 
 		[Test]
-		public void NestedFunctionsAreRewrittenByThemselves() {
+		public void NestedFunctionsAreNotTouched() {
 			AssertCorrect(
 @"{
 	a;
@@ -269,66 +269,34 @@ lbl2:
 	j;
 }",
 @"{
-	var $state3 = 0, c;
-	$loop3:
+	var $state1 = 0, c;
+	$loop1:
 	for (;;) {
-		switch ($state3) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$state3 = 1;
-				continue $loop3;
+				$state1 = 1;
+				continue $loop1;
 			}
 			case 1: {
 				b;
 				c = function() {
-					var $state2 = 0, f;
-					$loop2:
-					for (;;) {
-						switch ($state2) {
-							case 0: {
-								d;
-								$state2 = 1;
-								continue $loop2;
-							}
-							case 1: {
-								e;
-								f = function() {
-									var $state1 = 0;
-									$loop1:
-									for (;;) {
-										switch ($state1) {
-											case 0: {
-												g;
-												$state1 = 1;
-												continue $loop1;
-											}
-											case 1: {
-												h;
-												$state1 = -1;
-												break $loop1;
-											}
-											default: {
-												break $loop1;
-											}
-										}
-									}
-								};
-								i;
-								$state2 = -1;
-								break $loop2;
-							}
-							default: {
-								break $loop2;
-							}
-						}
-					}
+					d;
+					lbl2:
+					e;
+					var f = function() {
+						g;
+						lbl3:
+						h;
+					};
+					i;
 				};
 				j;
-				$state3 = -1;
-				break $loop3;
+				$state1 = -1;
+				break $loop1;
 			}
 			default: {
-				break $loop3;
+				break $loop1;
 			}
 		}
 	}

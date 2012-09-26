@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		[Test]
 		public void AwaitWithReturnValueWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 			AssertCorrect(@"
 using System;
@@ -39,14 +39,14 @@ public class C {
 ", addSkeleton: false);
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void AwaitWithGetAwaiterExtensionMethodWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(@"
 using System;
@@ -77,14 +77,14 @@ namespace N {
 ", addSkeleton: false);
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void AwaitWithIgnoredReturnValueWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(@"
 using System;
@@ -111,14 +111,14 @@ public class C {
 ", addSkeleton: false);
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void InlineCodeImplementationOfGetAwaiterWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(@"
 using System;
@@ -145,14 +145,14 @@ public class C {
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetAwaiter" ? MethodScriptSemantics.InlineCode("_GetAwaiter_({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void InlineCodeImplementationOfGetResultWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(@"
 using System;
@@ -179,7 +179,7 @@ public class C {
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetResult" ? MethodScriptSemantics.InlineCode("_GetResult({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
@@ -210,7 +210,7 @@ public class C {
 		[Test]
 		public void TwoAwaitsInAnExpression() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(@"
 using System;
@@ -240,14 +240,14 @@ public class C {
 ", addSkeleton: false);
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void AwaitingDynamicWorksAndMethodsAreCamelCased() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 			AssertCorrect(@"
 using System;
@@ -266,7 +266,7 @@ public class C {
 ", addSkeleton: false);
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 	}

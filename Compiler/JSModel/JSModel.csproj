@@ -60,7 +60,6 @@
     <Compile Include="StateMachineRewrite\NestedJumpStatementRewriter.cs" />
     <Compile Include="StateMachineRewrite\RemainingBlock.cs" />
     <Compile Include="StateMachineRewrite\Section.cs" />
-    <Compile Include="StateMachineRewrite\SingleStateMachineRewriter.cs" />
     <Compile Include="StateMachineRewrite\StackEntry.cs" />
     <Compile Include="StateMachineRewrite\State.cs" />
     <Compile Include="StateMachineRewrite\IteratorStateMachine.cs" />

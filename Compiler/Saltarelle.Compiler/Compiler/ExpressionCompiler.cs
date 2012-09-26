@@ -1326,7 +1326,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			JsFunctionDefinitionExpression def;
 			if (f.BodyNode is Statement) {
-				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false);
+				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false, StateMachineType.NormalMethod);
 			}
 			else {
 				var body = CloneAndCompile(rr.Body, returnValue, nestedFunctionContext: newContext);

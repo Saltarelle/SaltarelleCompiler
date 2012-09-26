@@ -93,7 +93,7 @@ public void M() {
 		[Test]
 		public void GotoCaseAndGotoDefaultStatementsWork() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"public void M() {
@@ -160,14 +160,14 @@ public void M() {
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void GotoCaseAndGotoDefaultStatementsWorkWithNestedSwitches() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"public void M() {
@@ -228,14 +228,14 @@ public void M() {
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void NullCaseWorksWithGotoCase() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"public void M() {
@@ -272,7 +272,7 @@ public void M() {
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 

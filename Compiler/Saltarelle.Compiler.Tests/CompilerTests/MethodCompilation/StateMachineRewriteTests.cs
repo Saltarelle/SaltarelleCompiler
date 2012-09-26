@@ -360,5 +360,123 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 	});
 }");
 		}
+
+		[Test]
+		public void BlockLambdaCanUseGoto() {
+			AssertCorrect(@"
+public void M() {
+	Action x = () => {
+		int a = 0, b = 0, c = 0;
+		lbl1:
+		if (a == 1)
+			goto lbl2;
+		else
+			goto lbl3;
+		lbl2:
+		b = 0;
+		goto lbl3;
+		lbl3:
+		c = 0;
+		goto lbl1;
+	};
+}",
+@"function() {
+	var $x = function() {
+		var $state = 0, $a, $b, $c;
+		$loop1:
+		for (;;) {
+			switch ($state) {
+				case 0: {
+					$a = 0, $b = 0, $c = 0;
+					$state = 1;
+					continue $loop1;
+				}
+				case 1: {
+					if ($a === 1) {
+						$state = 2;
+						continue $loop1;
+					}
+					else {
+						$state = 3;
+						continue $loop1;
+					}
+				}
+				case 2: {
+					$b = 0;
+					$state = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$c = 0;
+					$state = 1;
+					continue $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+}");
+		}
+
+		[Test]
+		public void AnonymousDelegateCanUseGoto() {
+			AssertCorrect(@"
+public void M() {
+	Action<int> x = delegate(int a) {
+		int b = 0, c = 0;
+		lbl1:
+		if (a == 1)
+			goto lbl2;
+		else
+			goto lbl3;
+		lbl2:
+		b = 0;
+		goto lbl3;
+		lbl3:
+		c = 0;
+		goto lbl1;
+	};
+}",
+@"function() {
+	var $x = function($a) {
+		var $state = 0, $b, $c;
+		$loop1:
+		for (;;) {
+			switch ($state) {
+				case 0: {
+					$b = 0, $c = 0;
+					$state = 1;
+					continue $loop1;
+				}
+				case 1: {
+					if ($a === 1) {
+						$state = 2;
+						continue $loop1;
+					}
+					else {
+						$state = 3;
+						continue $loop1;
+					}
+				}
+				case 2: {
+					$b = 0;
+					$state = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$c = 0;
+					$state = 1;
+					continue $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+}");
+		}
 	}
 }

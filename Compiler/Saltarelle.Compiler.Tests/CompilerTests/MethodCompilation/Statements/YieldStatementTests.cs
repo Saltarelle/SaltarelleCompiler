@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		[Test]
 		public void YieldReturnWithoutAdditionalStatementsWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 				
 				AssertCorrect(
 @"public IEnumerable<int> M() {
@@ -20,14 +20,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void YieldReturnWithAdditionalStatementsWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"int MyProperty { get; set; }
@@ -42,14 +42,14 @@ public IEnumerable<int> M() {
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 
 		[Test]
 		public void YieldBreakWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"public IEnumerable<int> M() {
@@ -61,7 +61,7 @@ public IEnumerable<int> M() {
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 	}
