@@ -9,11 +9,11 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.JSModel
 {
     public abstract class RewriterVisitorBase<TData> : IExpressionVisitor<JsExpression, TData>, IStatementVisitor<JsStatement, TData> {
-        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, T> visitor) {
+		protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, int, T> visitor) {
             List<T> list = null;
             for (int i = 0; i < orig.Count; i++) {
                 var before = orig[i];
-                var after  = visitor(before);
+                var after  = visitor(before, i);
                 if (list != null) {
                     list.Add(after);
                 }
@@ -25,13 +25,17 @@ namespace Saltarelle.Compiler.JSModel
                 }
             }
             return list ?? orig;
+		}
+
+        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, T> visitor) {
+			return VisitCollection(orig, (x, _) => visitor(x));
         }
 
-        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, IList<T>> visitor) {
+        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, int, IList<T>> visitor) {
             List<T> list = null;
             for (int i = 0; i < orig.Count; i++) {
                 var before = orig[i];
-				IList<T> after = visitor(before);
+				IList<T> after = visitor(before, i);
 
                 if (list != null) {
                     list.AddRange(after);
@@ -43,7 +47,10 @@ namespace Saltarelle.Compiler.JSModel
                     list.AddRange(after);
                 }
             }
-            return list ?? orig;
+            return list ?? orig;		}
+
+        protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, IList<T>> visitor) {
+			return VisitCollection(orig, (x, _) => visitor(x));
         }
 
         public virtual IList<JsExpression> VisitExpressions(IList<JsExpression> expressions, TData data) {
