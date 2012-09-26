@@ -271,6 +271,58 @@ lbl: z;
 		}
 
 		[Test]
+		public void AsyncMethodReturningTaskEndingWithReturn() {
+			AssertCorrect(@"
+{
+	x;
+	await a:onCompleted1;
+	y;
+	await b:onCompleted2;
+	return z;
+}", 
+@"{
+	var $state1 = 0, $tcs = new TaskCompletionSource();
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state1) {
+					case 0: {
+						$state1 = -1;
+						x;
+						$state1 = 1;
+						a.onCompleted1($sm);
+						return;
+					}
+					case 1: {
+						$state1 = -1;
+						y;
+						$state1 = 2;
+						b.onCompleted2($sm);
+						return;
+					}
+					case 2: {
+						$state1 = -1;
+						$tcs.setResult(z);
+						return;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+			$tcs.setException($tmp1);
+		}
+	};
+	$sm();
+	return $tcs.getTask();
+}
+", methodType: MethodType.AsyncTask);
+		}
+
+		[Test]
 		public void AsyncMethodWithTryFinally() {
 			AssertCorrect(@"
 {

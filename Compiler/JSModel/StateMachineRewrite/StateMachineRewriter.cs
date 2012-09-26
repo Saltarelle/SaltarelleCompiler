@@ -143,7 +143,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 			string catchVariable = _allocateTempVariable();
 
-			JsBlockStatement tryBody = (taskCompletionSource != null ? new JsBlockStatement(hoistResult.Item1.Statements.Concat(new[] { new JsExpressionStatement(makeSetResult(null)) })) : hoistResult.Item1);
+			JsBlockStatement tryBody;
+			if (taskCompletionSource != null && (statement.Statements.Count == 0 || IsNextStatementReachable(statement.Statements[statement.Statements.Count - 1]))) {	// If we return the task, and if we risk falling out of the original method, we need to add a setResult call.
+				tryBody = new JsBlockStatement(hoistResult.Item1.Statements.Concat(new[] { new JsExpressionStatement(makeSetResult(null)) }));
+			}
+			else {
+				tryBody = hoistResult.Item1;
+			}
 
 			JsStatement body = new JsTryStatement(tryBody, new JsCatchClause(catchVariable,
 			                                                                 taskCompletionSource != null
