@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace System {
 
@@ -581,7 +582,6 @@ namespace System.Reflection {
 }
 
 namespace System.Runtime.CompilerServices {
-
     [EditorBrowsable(EditorBrowsableState.Never)]
     [NonScriptable]
     [Imported]
@@ -674,7 +674,7 @@ namespace System.Runtime.CompilerServices {
     [Imported]
     public sealed class CallSite<T> : CallSite where T : class {
         public T Update { get { return null; } }
-		public T Target;
+        public T Target;
 
         public static CallSite<T> Create(CallSiteBinder binder) {
             return null;
@@ -694,12 +694,114 @@ namespace System.Runtime.CompilerServices {
 
     [NonScriptable]
     [Imported]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Property)]
     public class IndexerNameAttribute : Attribute {
         public IndexerNameAttribute(string indexerName) {
             this.Value = indexerName;
         }
         public string Value { get; private set; }
+    }
+
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public struct AsyncVoidMethodBuilder {
+        public static AsyncVoidMethodBuilder Create(){
+            return default(AsyncVoidMethodBuilder);
+        }
+
+        public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void SetStateMachine(IAsyncStateMachine stateMachine) {
+        }
+
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine) where TAwaiter : INotifyCompletion where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine) where TAwaiter : ICriticalNotifyCompletion where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void SetResult() {
+        }
+
+        public void SetException(Exception exception) {
+        }
+    }
+
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public struct AsyncTaskMethodBuilder {
+        public Task Task { get { return null; } }
+
+        public static AsyncTaskMethodBuilder Create() {
+            return default(AsyncTaskMethodBuilder);
+        }
+
+        public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void SetStateMachine(IAsyncStateMachine stateMachine) {
+        }
+
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine) where TAwaiter : INotifyCompletion where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine) where TAwaiter : ICriticalNotifyCompletion where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void SetResult() {
+        }
+
+        public void SetException(Exception exception) {
+        }
+    }
+
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public struct AsyncTaskMethodBuilder<TResult> {
+        public Task<TResult> Task { get { return null; } }
+
+        public static AsyncTaskMethodBuilder<TResult> Create() {
+            return default(AsyncTaskMethodBuilder<TResult>);
+        }
+
+        public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void SetStateMachine(IAsyncStateMachine stateMachine) {
+        }
+
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine) where TAwaiter : INotifyCompletion where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine) where TAwaiter : ICriticalNotifyCompletion where TStateMachine : IAsyncStateMachine {
+        }
+
+        public void SetResult(TResult result) {
+        }
+
+        public void SetException(Exception exception) {
+        }
+    }
+  
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public interface IAsyncStateMachine {
+        void MoveNext();
+        void SetStateMachine(IAsyncStateMachine stateMachine);
+    }
+
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public interface INotifyCompletion {
+        void OnCompleted(Action continuation);
+    }
+
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public interface ICriticalNotifyCompletion : INotifyCompletion {
+        void UnsafeOnCompleted(Action continuation);
     }
 }
 

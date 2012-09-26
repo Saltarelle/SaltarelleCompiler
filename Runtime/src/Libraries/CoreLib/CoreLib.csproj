@@ -80,6 +80,7 @@
     <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
     <Compile Include="Properties\Version.cs" />
     <Compile Include="Text\RegexMatch.cs" />
+    <Compile Include="Threading\Tasks\TaskAwaiter.cs" />
     <Compile Include="Threading\Tasks\TaskCompletionSource.cs" />
     <Compile Include="Threading\Tasks\Promise.cs" />
     <Compile Include="Threading\Tasks\Task.cs" />

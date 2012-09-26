@@ -51,6 +51,11 @@ namespace System.Threading.Tasks {
 		public void Start() {
 		}
 
+		[ScriptSkip]
+		public TaskAwaiter GetAwaiter() {
+			return null;
+		}
+
 		public void Dispose() {
 		}
 
@@ -147,6 +152,11 @@ namespace System.Threading.Tasks {
 		public TResult Result { [ScriptName("getResult")] get { return default(TResult); } }
 
 		public Task ContinueWith(Action<Task<TResult>> continuationAction) {
+			return null;
+		}
+
+		[ScriptSkip]
+		public new TaskAwaiter<TResult> GetAwaiter() {
 			return null;
 		}
 

@@ -329,19 +329,19 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression CreateTaskCompletionSource(IType taskGenericArgument) {
-			throw new NotImplementedException();
+			return JsExpression.New(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Threading.Tasks.TaskCompletionSource`1")));
 		}
 
 		public JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(taskCompletionSource, "setResult"), value ?? JsExpression.Null);
 		}
 
 		public JsExpression SetAsyncException(JsExpression taskCompletionSource, JsExpression exception) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.MemberAccess(taskCompletionSource, "setException"), MakeException(exception));
 		}
 
 		public JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource) {
-			throw new NotImplementedException();
+			return JsExpression.MemberAccess(taskCompletionSource, "task");
 		}
 	}
 }
