@@ -15,10 +15,7 @@ ss.TaskCompletionSource.prototype = {
 			throw 'Task was already completed.';
 	},
 	setException: function#? DEBUG TaskCompletionSource$setException##(exception) {
-		if (Type.canCast(exception, ss.Exception))
-			exception = [exception];
-		exception = new ss.AggregateException(exception);
-		if (!this.task._fail(exception))
+		if (!this.trySetException(exception))
 			throw 'Task was already completed.';
 	},
 	trySetCanceled: function#? DEBUG TaskCompletionSource$trySetCanceled##() {
@@ -28,9 +25,11 @@ ss.TaskCompletionSource.prototype = {
 		return this.task._complete(result);
 	},
 	trySetException: function#? DEBUG TaskCompletionSource$setException##(exception) {
-		if (Type.canCast(exception, ss.Exception))
-			exception = [exception];
-		exception = new ss.AggregateException(exception);
+		if (!Type.canCast(exception, ss.AggregateException)) {
+			if (Type.canCast(exception, ss.Exception))
+				exception = [exception];
+			exception = new ss.AggregateException(exception);
+		}
 		return this.task._fail(exception);
 	}
 };

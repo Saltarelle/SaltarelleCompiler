@@ -1143,3 +1143,13 @@ namespace System.Collections.Generic {
 		int IEqualityComparer.GetHashCode(object obj) { return 0; }
 	}
 }
+
+namespace System.Diagnostics {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Constructor | AttributeTargets.Method, Inherited = false)]
+    [NonScriptable]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Serializable]
+    public sealed class DebuggerStepThroughAttribute : Attribute {
+        public DebuggerStepThroughAttribute() {}
+    }
+}

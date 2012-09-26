@@ -29,6 +29,9 @@ namespace RuntimeLibrary.Tests.Core {
 	public class ArrayTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class AsyncTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class BooleanTests : CoreLibTestBase {}
 
 	[TestFixture]
