@@ -818,7 +818,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else
 						Message(7109, property);
 				}
-				else if (property.IsOverride) {
+				else if (property.IsOverride && _propertySemantics[(IProperty)InheritanceHelper.GetBaseMember(property).MemberDefinition].Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 					if (property.IsIndexer)
 						Message(7110, property.Region);
 					else
@@ -830,7 +830,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else
 						Message(7113, property);
 				}
-				else if (property.ImplementedInterfaceMembers.Count > 0) {
+				else if (property.ImplementedInterfaceMembers.Any(m => _propertySemantics[(IProperty)m.MemberDefinition].Type != PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
 					if (property.IsIndexer)
 						Message(7114, property.Region);
 					else
@@ -923,7 +923,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
-				else if (method.IsOverride) {
+				else if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 					Message(7120, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
@@ -933,7 +933,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
-				else if (method.ImplementedInterfaceMembers.Count > 0) {
+				else if (method.ImplementedInterfaceMembers.Any(m => _methodSemantics[(IMethod)m.MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript)) {
 					Message(7122, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
@@ -973,7 +973,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
-				else if (method.IsOverride) {
+				else if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 					Message(7127, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
@@ -983,7 +983,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
 				}
-				else if (method.ImplementedInterfaceMembers.Count > 0) {
+				else if (method.ImplementedInterfaceMembers.Any(m => _methodSemantics[(IMethod)m.MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript)) {
 					Message(7129, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 					return;
@@ -1013,7 +1013,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 			else {
-				if (method.IsOverride) {
+				if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 					if (nameSpecified) {
 						Message(7132, method);
 					}
@@ -1032,7 +1032,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_methodSemantics[method] = semantics;
 					return;
 				}
-				else if (method.ImplementedInterfaceMembers.Count > 0) {
+				else if (method.ImplementedInterfaceMembers.Any(m => _methodSemantics[(IMethod)m.MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript)) {
 					if (nameSpecified) {
 						Message(7135, method);
 					}

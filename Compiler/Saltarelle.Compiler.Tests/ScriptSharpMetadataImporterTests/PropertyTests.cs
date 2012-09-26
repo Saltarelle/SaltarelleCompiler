@@ -471,6 +471,62 @@ class C1 {
 		}
 
 		[Test]
+		public void NonScriptableAttributeIsNotInheritedFromInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { [NonScriptable] int Prop { get; set; } }
+public class C1 : I {
+	public int Prop { get; set; }
+}");
+
+			var p = FindProperty("C1.Prop");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+		}
+
+		[Test]
+		public void CanSpecifyIntrinsicPropertyForPropertyImplementingUnusableInterfaceProperty() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { [NonScriptable] int Prop { get; set; } }
+public class C1 : I {
+	[IntrinsicProperty]
+	public int Prop { get; set; }
+}");
+
+			var p = FindProperty("C1.Prop");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop"));
+		}
+
+		[Test]
+		public void NonScriptableAttributeIsNotInheritedFromUnusableBaseMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class B { [NonScriptable] public virtual int Prop { get; set; } }
+public class C1 : B {
+	public sealed override int Prop { get; set; }
+}");
+
+			var p = FindProperty("C1.Prop");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+		}
+
+		[Test]
+		public void CanSpecifyIntrinsicPropertyForPropertyOverridingUnusableBaseMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class B { [NonScriptable] public virtual int Prop { get; set; } }
+public class C1 : B {
+	[IntrinsicProperty]
+	public sealed override int Prop { get; set; }
+}");
+
+			var p = FindProperty("C1.Prop");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop"));
+		}
+
+		[Test]
 		public void ScriptAliasAttributeCannotBeSpecifiedOnInstanceProperty() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
