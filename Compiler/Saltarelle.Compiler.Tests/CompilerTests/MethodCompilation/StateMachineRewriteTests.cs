@@ -478,5 +478,526 @@ public void M() {
 	};
 }");
 		}
+
+		[Test]
+		public void AsyncVoidMethodWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public async void M() {
+		var a = new MyAwaitable();
+		await a;
+		int i = 0;
+	}
+}",
+@"function() {
+	var $state = 0, $a, $tmp1, $i;
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$a = new {inst_MyAwaitable}();
+						$tmp1 = $a.$GetAwaiter();
+						$state = 1;
+						$tmp1.$OnCompleted($sm);
+						return;
+					}
+					case 1: {
+						$state = -1;
+						$tmp1.$GetResult();
+						$i = 0;
+						$state = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp2) {
+		}
+	};
+	$sm();
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncNonGenericTaskMethodWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public async Task M() {
+		var a = new MyAwaitable();
+		int i = await a + 1;
+	}
+}",
+@"function() {
+	var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $a, $tmp1, $i;
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$a = new {inst_MyAwaitable}();
+						$tmp1 = $a.$GetAwaiter();
+						$state = 1;
+						$tmp1.$OnCompleted($sm);
+						return;
+					}
+					case 1: {
+						$state = -1;
+						$i = $tmp1.$GetResult() + 1;
+						$state = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+			$SetAsyncResult($tcs, '<<null>>');
+		}
+		catch ($tmp2) {
+			$SetAsyncException($tcs, $tmp2);
+		}
+	};
+	$sm();
+	return $GetTask($tcs);
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncGenericTaskMethodWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public async Task<int> M() {
+		var a = new MyAwaitable();
+		return await a + 1;
+	}
+}",
+@"function() {
+	var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $a, $tmp1;
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$a = new {inst_MyAwaitable}();
+						$tmp1 = $a.$GetAwaiter();
+						$state = 1;
+						$tmp1.$OnCompleted($sm);
+						return;
+					}
+					case 1: {
+						$state = -1;
+						$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
+						return;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp2) {
+			$SetAsyncException($tcs, $tmp2);
+		}
+	};
+	$sm();
+	return $GetTask($tcs);
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncVoidLambdaWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Action x = async () => {
+			await a;
+		};
+	}
+}",
+@"function() {
+	var $a = new {inst_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$tmp1.$GetResult();
+							$state = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+			}
+			catch ($tmp2) {
+			}
+		};
+		$sm();
+	};
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncNonGenericTaskLambdaWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Func<Task> x = async() => {
+			await a;
+		};
+	}
+}",
+@"function() {
+	var $a = new {inst_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$tmp1.$GetResult();
+							$state = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+				$SetAsyncResult($tcs, '<<null>>');
+			}
+			catch ($tmp2) {
+				$SetAsyncException($tcs, $tmp2);
+			}
+		};
+		$sm();
+		return $GetTask($tcs);
+	};
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncGenericTaskLambdaWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Func<Task<int>> x = async() => {
+			return await a + 1;
+		};
+	}
+}",
+@"function() {
+	var $a = new {inst_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
+							return;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+			}
+			catch ($tmp2) {
+				$SetAsyncException($tcs, $tmp2);
+			}
+		};
+		$sm();
+		return $GetTask($tcs);
+	};
+}", addSkeleton: false);
+		}
+
+
+
+
+
+
+
+		[Test]
+		public void AsyncVoidAnonymousDelegateWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Action x = async delegate() {
+			await a;
+		};
+	}
+}",
+@"function() {
+	var $a = new {inst_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$tmp1.$GetResult();
+							$state = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+			}
+			catch ($tmp2) {
+			}
+		};
+		$sm();
+	};
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncNonGenericTaskAnonymousDelegateWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Func<Task> x = async delegate() {
+			await a;
+		};
+	}
+}",
+@"function() {
+	var $a = new {inst_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$tmp1.$GetResult();
+							$state = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+				$SetAsyncResult($tcs, '<<null>>');
+			}
+			catch ($tmp2) {
+				$SetAsyncException($tcs, $tmp2);
+			}
+		};
+		$sm();
+		return $GetTask($tcs);
+	};
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncGenericTaskAnonymousDelegateWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() {}
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Func<Task<int>> x = async delegate() {
+			return await a + 1;
+		};
+	}
+}",
+@"function() {
+	var $a = new {inst_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
+							return;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+			}
+			catch ($tmp2) {
+				$SetAsyncException($tcs, $tmp2);
+			}
+		};
+		$sm();
+		return $GetTask($tcs);
+	};
+}", addSkeleton: false);
+		}
 	}
 }

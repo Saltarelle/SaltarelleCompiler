@@ -120,14 +120,18 @@ namespace Saltarelle.Compiler.Compiler {
 			bool isIEnumerable = method.ReturnType.IsKnownType(KnownTypeCode.IEnumerable) || method.ReturnType.IsKnownType(KnownTypeCode.IEnumerableOfT);
 			bool isIEnumerator = method.ReturnType.IsKnownType(KnownTypeCode.IEnumerator) || method.ReturnType.IsKnownType(KnownTypeCode.IEnumeratorOfT);
 			StateMachineType smt = StateMachineType.NormalMethod;
-			IType yieldType = null;
+			IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null;
 			if ((isIEnumerable || isIEnumerator) && IsIteratorBlockVisitor.Analyze(body)) {
 				smt = isIEnumerable ? StateMachineType.IteratorBlockReturningIEnumerable : StateMachineType.IteratorBlockReturningIEnumerator;
-				yieldType = method.ReturnType is ParameterizedType ? ((ParameterizedType)method.ReturnType).TypeArguments[0] : _compilation.FindType(KnownTypeCode.Object);
+				iteratorBlockYieldTypeOrAsyncTaskGenericArgument = method.ReturnType is ParameterizedType ? ((ParameterizedType)method.ReturnType).TypeArguments[0] : _compilation.FindType(KnownTypeCode.Object);
+			}
+			else if (entity.HasModifier(Modifiers.Async)) {
+				smt = (method.ReturnType.IsKnownType(KnownTypeCode.Void) ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask);
+				iteratorBlockYieldTypeOrAsyncTaskGenericArgument = method.ReturnType is ParameterizedType ? ((ParameterizedType)method.ReturnType).TypeArguments[0] : null;
 			}
 
 			CreateCompilationContext(entity, method, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namer.ThisAlias : null));
-			return _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument, smt, yieldType);
+			return _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument, smt, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
 		}
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {

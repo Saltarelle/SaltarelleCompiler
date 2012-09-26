@@ -52,7 +52,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 					end--;
 				actual = actual.Substring(0, end + 1);
 			}
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
 
 		protected void DoForAllIntegerTypes(Action<string> a) {

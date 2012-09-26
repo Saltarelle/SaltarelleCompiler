@@ -1306,7 +1306,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return CompileThis();
 		}
 
-		private JsExpression CompileLambda(LambdaResolveResult rr, bool returnValue, DelegateScriptSemantics semantics) {
+		private JsExpression CompileLambda(LambdaResolveResult rr, IType returnType, DelegateScriptSemantics semantics) {
 			var f = _nestedFunctions[rr];
 
 			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedVariables.Where(v => _variables[v].UseByRefSemantics).ToList();
@@ -1326,11 +1326,18 @@ namespace Saltarelle.Compiler.Compiler {
 
 			JsFunctionDefinitionExpression def;
 			if (f.BodyNode is Statement) {
-				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false, StateMachineType.NormalMethod);
+				StateMachineType smt = StateMachineType.NormalMethod;
+				IType taskGenericArgument = null;
+				if (rr.IsAsync) {
+					smt = returnType.IsKnownType(KnownTypeCode.Void) ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
+					taskGenericArgument = returnType is ParameterizedType ? ((ParameterizedType)returnType).TypeArguments[0] : null;
+				}
+
+				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false, smt, taskGenericArgument);
 			}
 			else {
-				var body = CloneAndCompile(rr.Body, returnValue, nestedFunctionContext: newContext);
-				var lastStatement = (returnValue ? (JsStatement)new JsReturnStatement(body.Expression) : (JsStatement)new JsExpressionStatement(body.Expression));
+				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
+				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body.Expression) : (JsStatement)new JsReturnStatement(body.Expression);
 				var jsBody = new JsBlockStatement(MethodCompiler.FixByRefParameters(rr.Parameters, _variables).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
 			}
@@ -1486,7 +1493,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsAnonymousFunctionConversion) {
 				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
-				return CompileLambda((LambdaResolveResult)rr.Input, !retType.Equals(_compilation.FindType(KnownTypeCode.Void)), _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
+				return CompileLambda((LambdaResolveResult)rr.Input, retType, _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsTryCast) {
 				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, UnpackNullable(rr.Type));

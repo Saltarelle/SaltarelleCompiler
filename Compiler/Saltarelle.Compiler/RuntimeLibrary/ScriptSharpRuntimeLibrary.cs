@@ -327,5 +327,21 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		public JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value) {
 			return JsExpression.Invocation(JsExpression.MemberAccess(array, "set"), indices.Concat(new[] { value }));
 		}
+
+		public JsExpression CreateTaskCompletionSource(IType taskGenericArgument) {
+			throw new NotImplementedException();
+		}
+
+		public JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value) {
+			throw new NotImplementedException();
+		}
+
+		public JsExpression SetAsyncException(JsExpression taskCompletionSource, JsExpression exception) {
+			throw new NotImplementedException();
+		}
+
+		public JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource) {
+			throw new NotImplementedException();
+		}
 	}
 }
