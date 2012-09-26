@@ -1102,5 +1102,43 @@ class D : B {
 @"	$d['X'] >>= 123;
 ");
 		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicPropertyOfNonDynamicObject() {
+			AssertCorrectForBulkOperators(@"
+public class SomeClass {
+    public dynamic Value { get; set; }
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        c.Value += 1;
+		// END
+    }
+}",
+@"	$c.set_$Value($c.get_$Value() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicFieldOfNonDynamicObject() {
+			AssertCorrectForBulkOperators(@"
+public class SomeClass {
+    public dynamic Value;
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        $c.Value += 1;
+		// END
+    }
+}",
+@"	$c.$Value += 1;
+", addSkeleton: false);
+		}
 	}
 }

@@ -1,3 +1,4 @@
+Fixed bug when assigning to a property of type dynamic when the property owner is not dynamic.
 Fixed error when using 'x is Function'
 Array utility methods are now typed extension methods in the System namespace rather than untyped instance methods on Array.
 Fixed issue causing Type.cast calls to be generated for [Imported] generic types.

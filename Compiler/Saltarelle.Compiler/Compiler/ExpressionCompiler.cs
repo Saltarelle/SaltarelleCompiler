@@ -382,7 +382,7 @@ namespace Saltarelle.Compiler.Compiler {
 				valueFactory    = (a, b) => _runtimeLibrary.Lift(oldVF(a, b));
 			}
 
-			if (target is LocalResolveResult || target.Type.Kind == TypeKind.Dynamic) {
+			if (target is LocalResolveResult || target is DynamicMemberResolveResult || target is DynamicInvocationResolveResult /* Dynamic indexing is an invocation */) {
 				var jsTarget = InnerCompile(target, compoundFactory == null);
 				var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 				if (compoundFactory != null) {

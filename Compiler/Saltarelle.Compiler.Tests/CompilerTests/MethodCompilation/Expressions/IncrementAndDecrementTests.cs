@@ -4,9 +4,9 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class IncrementAndDecrementTests : MethodCompilerTestBase {
-		protected void AssertCorrectForBoth(string csharp, string expected, IMetadataImporter metadataImporter = null) {
-			AssertCorrect(csharp, expected, metadataImporter);
-			AssertCorrect(csharp.Replace("+", "-"), expected.Replace("+", "-"), metadataImporter);
+		protected void AssertCorrectForBoth(string csharp, string expected, IMetadataImporter metadataImporter = null, bool addSkeleton = true) {
+			AssertCorrect(csharp, expected, metadataImporter, addSkeleton: addSkeleton);
+			AssertCorrect(csharp.Replace("+", "-"), expected.Replace("+", "-"), metadataImporter, addSkeleton: addSkeleton);
 		}
 
 		[Test]
@@ -1341,6 +1341,82 @@ class D : B {
 @"	var $tmp1 = $CallBase({bind_B}, 'get_$P', [], [this]);
 	$CallBase({bind_B}, 'set_$P', [], [this, $tmp1 + 1]);
 	var $i = $tmp1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicPropertyOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value { get; set; }
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        ++c.Value;
+		// END
+    }
+}",
+@"	$c.set_$Value($c.get_$Value() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicPropertyOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value { get; set; }
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        c.Value++;
+		// END
+    }
+}",
+@"	$c.set_$Value($c.get_$Value() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicFieldOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value;
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        ++$c.Value;
+		// END
+    }
+}",
+@"	++$c.$Value;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicFieldOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value;
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        $c.Value++;
+		// END
+    }
+}",
+@"	$c.$Value++;
 ", addSkeleton: false);
 		}
 	}
