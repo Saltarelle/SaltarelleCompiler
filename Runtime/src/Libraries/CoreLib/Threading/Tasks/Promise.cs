@@ -1,24 +1,23 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Threading.Tasks {
+	/// <summary>
+	/// Represents a CommonJS Promise/A object. All the handlers can receive 0 or more arguments.
+	/// </summary>
 	[Imported]
 	public interface IPromise {
 		[PreserveName]
-		IPromise Then(Delegate doneHandler);
+		void Then(Delegate fulfilledHandler);
 		[PreserveName]
-		IPromise Then(Delegate doneHandler, Delegate failHandler);
+		void Then(Delegate fulfilledHandler, Delegate errorHandler);
 		[PreserveName]
-		IPromise Then(Delegate doneHandler, Delegate failHandler, Delegate progressHandler);
+		void Then(Delegate fulfilledHandler, Delegate errorHandler, Delegate progressHandler);
 	}
 
-	[Imported]
-	[IgnoreGenericArguments]
-	public interface IPromise<out TResult> {
-		[PreserveName]
-		void Then(Action<TResult> doneHandler);
-		[PreserveName]
-		void Then(Action<TResult> doneHandler, Delegate failHandler);
-		[PreserveName]
-		void Then(Action<TResult> doneHandler, Delegate failHandler, Delegate progressHandler);
+	public static class PromiseExtensions {
+		[InlineCode("{$System.Threading.Tasks.Task}.fromPromise({promise}))")]
+		public static TaskAwaiter GetAwaiter(this IPromise promise) {
+			return null;
+		}
 	}
 }

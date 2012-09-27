@@ -40,6 +40,7 @@
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
+    <Compile Include="PromiseTests.cs" />
     <Compile Include="TaskTests.cs" />
     <Compile Include="MultidimArrayTests.cs" />
     <Compile Include="IteratorBlockTests.cs" />

@@ -19,6 +19,9 @@ namespace System.Threading.Tasks {
 		Faulted,
 	}
 
+	[ExpandParams]
+	public delegate TResult PromiseResultFactory<out TResult>(params object[] callbackArgs);
+
 	[Imported(IsRealType = true)]
 	[ScriptNamespace("ss")]
 	public class Task : IDisposable {
@@ -126,14 +129,17 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		// TODO
-
 		public static Task FromPromise(IPromise promise) {
 			return null;
 		}
 
 		[IgnoreGenericArguments]
-		public static Task<TResult> FromPromise<TResult>(IPromise<TResult> promise) {
+		public static Task<TResult> FromPromise<TResult>(IPromise promise, int resultArgIndex) {
+			return null;
+		}
+
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<TResult>(IPromise promise, PromiseResultFactory<TResult> resultFactory) {
 			return null;
 		}
 	}

@@ -12,7 +12,7 @@ ss.AggregateException = function#? DEBUG AggregateException$##(message, innerExc
 	this._innerExceptions = innerExceptions;
 };
 ss.AggregateException.prototype = {
-	get_innerExceptions: function#? DEBUG Exception$get_innerExceptions##() {
+	get_innerExceptions: function#? DEBUG AggregateException$get_innerExceptions##() {
 		return this._innerExceptions;
 	}
 };

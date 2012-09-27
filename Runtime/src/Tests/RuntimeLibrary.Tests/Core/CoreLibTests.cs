@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 
 namespace RuntimeLibrary.Tests.Core {
@@ -78,6 +79,15 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class NullableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class PromiseTests : CoreLibTestBase {
+		protected override IEnumerable<string> ScriptSources {
+			get {
+				return base.ScriptSources.Concat(new[] { "SimplePromise.js" });
+			}
+		}
+	}
 
 	[TestFixture]
 	public class SByteTests : CoreLibTestBase {}
