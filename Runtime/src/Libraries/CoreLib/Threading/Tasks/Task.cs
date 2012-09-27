@@ -116,13 +116,51 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
 		[ExpandParams]
-		public static Task FromDoneCallback(object target, string method, int callbackIndex, params object[] otherArguments) {
+		public static Task FromDoneCallback(object target, string method, params object[] otherArguments) {
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done.
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="callbackIndex">Index of the callback parameter in the actual method invocation.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted at the position indicated by the <paramref name="callbackIndex"/> parameter).</param>
+		[ExpandParams]
+		public static Task FromDoneCallback(object target, int callbackIndex, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to have a single parameter, whose value will be used as the return value of the task.
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
 		[ExpandParams, IgnoreGenericArguments]
-		public static Task<T> FromDoneCallback<T>(object target, string method, int callbackIndex, params object[] otherArguments) {
+		public static Task<TResult> FromDoneCallback<TResult>(object target, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done.
+		/// The callback is expected to have a single parameter, whose value will be used as the return value of the task.
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="callbackIndex">Index of the callback parameter in the actual method invocation.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted at the position indicated by the <paramref name="callbackIndex"/> parameter).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromDoneCallback<TResult>(object target, int callbackIndex, string method, params object[] otherArguments) {
 			return null;
 		}
 

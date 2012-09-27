@@ -190,13 +190,25 @@ ss.Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
 	return tcs.task;
 };
 
-ss.Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, m, idx) {
-	var tcs = new ss.TaskCompletionSource();
-	idx = idx >= 0 ? idx : (arguments.length + idx - 2);
+ss.Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, i, m) {
+	var tcs = new ss.TaskCompletionSource(), args;
+    if (typeof(i) === 'number') {
+        args = Array.prototype.slice.call(arguments, 3);
+        if (i < 0)
+            i += args.length + 1;
+    }
+    else {
+        args = Array.prototype.slice.call(arguments, 2);
+        m = i;
+        i = args.length;
+    }
+
 	var cb = function(v) {
 		tcs.setResult(v);
 	};
-	var args = Array.prototype.slice.call(arguments, 3, idx + 3).concat(cb, Array.prototype.slice.call(arguments, 3 + idx));
+	
+    args = args.slice(0, i).concat(cb, args.slice(i));
+
 	t[m].apply(t, args);
 	return tcs.task;
 };

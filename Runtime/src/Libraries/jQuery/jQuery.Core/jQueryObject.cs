@@ -333,7 +333,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', -1, {propertiesToAnimate})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', {propertiesToAnimate})")]
         public Task AnimateTask(JsDictionary propertiesToAnimate) {
             return null;
         }
@@ -344,7 +344,7 @@ namespace jQueryApi {
         /// <param name="propertiesToAnimate">The properties to animate with their target values.</param>
         /// <param name="duration">The duration in milliseconds for the animation.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', -1, {propertiesToAnimate}, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', {propertiesToAnimate}, {duration})")]
         public Task AnimateTask(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -356,7 +356,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the animation.</param>
         /// <param name="easing">The easing to apply to the animation.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', -1, {propertiesToAnimate}, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'animate', {propertiesToAnimate}, {duration}, {easing})")]
         public Task AnimateTask(JsDictionary propertiesToAnimate, TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -1263,7 +1263,7 @@ namespace jQueryApi {
         /// Fades in the matching set of elements using a the specified duration.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn')")]
         public Task FadeInTask() {
             return null;
         }
@@ -1273,7 +1273,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', {duration})")]
         public Task FadeInTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -1284,7 +1284,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeIn', {duration}, {easing})")]
         public Task FadeInTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -1352,7 +1352,7 @@ namespace jQueryApi {
         /// Fades out the matching set of elements using the specified duration.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut')")]
         public Task FadeOutTask() {
             return null;
         }
@@ -1362,7 +1362,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', {duration})")]
         public Task FadeOutTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -1373,7 +1373,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeOut', {duration}, {easing})")]
         public Task FadeOutTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -1447,7 +1447,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeTo', -1, {duration}, {opacity})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeTo', {duration}, {opacity})")]
         public Task FadeToTask(TypeOption<int, EffectDuration> duration, double opacity) {
             return null;
         }
@@ -1460,7 +1460,7 @@ namespace jQueryApi {
         /// <param name="opacity">The opacity level between 0 and 1.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeTo', -1, {duration}, {opacity}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeTo', {duration}, {opacity}, {easing})")]
         public Task FadeToTask(TypeOption<int, EffectDuration> duration, double opacity, EffectEasing easing) {
             return null;
         }
@@ -1535,7 +1535,7 @@ namespace jQueryApi {
         /// using the specified duration.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle')")]
         public Task FadeToggleTask() {
             return null;
         }
@@ -1546,7 +1546,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', {duration})")]
         public Task FadeToggleTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -1558,7 +1558,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'fadeToggle', {duration}, {easing})")]
         public Task FadeToggleTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -2118,7 +2118,7 @@ namespace jQueryApi {
         /// Hide the matched set of elements in an animated manner.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide')")]
         public Task HideTask() {
             return null;
         }
@@ -2128,7 +2128,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', {duration})")]
         public Task HideTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -2139,7 +2139,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'hide', {duration}, {easing})")]
         public Task HideTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -4010,7 +4010,7 @@ namespace jQueryApi {
         /// Show the matched set of elements in an animated manner.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show')")]
         public Task ShowTask() {
             return null;
         }
@@ -4020,7 +4020,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', {duration})")]
         public Task ShowTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -4031,7 +4031,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'show', {duration}, {easing})")]
         public Task ShowTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -4146,7 +4146,7 @@ namespace jQueryApi {
         /// Slides down the matching set of elements using a the specified duration.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown')")]
         public Task SlideDownTask() {
             return null;
         }
@@ -4156,7 +4156,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', {duration})")]
         public Task SlideDownTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -4167,7 +4167,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideDown', {duration}, {easing})")]
         public Task SlideDownTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -4242,7 +4242,7 @@ namespace jQueryApi {
         /// using the specified duration.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle')")]
         public Task SlideToggleTask() {
             return null;
         }
@@ -4253,7 +4253,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', {duration})")]
         public Task SlideToggleTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -4265,7 +4265,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideToggle', {duration}, {easing})")]
         public Task SlideToggleTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -4333,7 +4333,7 @@ namespace jQueryApi {
         /// Slides up the matching set of elements using a the specified duration.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp')")]
         public Task SlideUpTask() {
             return null;
         }
@@ -4343,7 +4343,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', {duration})")]
         public Task SlideUpTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -4354,7 +4354,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds for the effect.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'slideUp', {duration}, {easing})")]
         public Task SlideUpTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
@@ -4611,7 +4611,7 @@ namespace jQueryApi {
         /// Toggle the visibility of the set of matched elements in an animated manner.
         /// </summary>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', -1)")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle')")]
         public Task ToggleTask() {
             return null;
         }
@@ -4621,7 +4621,7 @@ namespace jQueryApi {
         /// </summary>
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', -1, {duration})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', {duration})")]
         public Task ToggleTask(TypeOption<int, EffectDuration> duration) {
             return null;
         }
@@ -4632,7 +4632,7 @@ namespace jQueryApi {
         /// <param name="duration">The duration in milliseconds of the animation.</param>
         /// <param name="easing">The easing to use.</param>
         /// <returns>A task representing the operation.</returns>
-        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', -1, {duration}, {easing})")]
+        [InlineCode("{$System.Threading.Tasks.Task}.fromDoneCallback({this}, 'toggle', {duration}, {easing})")]
         public Task ToggleTask(TypeOption<int, EffectDuration> duration, EffectEasing easing) {
             return null;
         }
