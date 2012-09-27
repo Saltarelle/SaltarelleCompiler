@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace CoreLibTests {
 	[TestFixture]
 	public class AsyncTests {
+#if NET_4_5
 		[AsyncTest]
 		public void AsyncVoid() {
 			int state = 0;
@@ -171,5 +172,11 @@ namespace CoreLibTests {
 				QUnit.Start();
 			}, 300);
 		}
+#else
+		[Test]
+		public void AsyncTestsRequireNet45() {
+			Assert.IsTrue(true, "Running the async tests requires .net 4.5");
+		}
+#endif
 	}
 }

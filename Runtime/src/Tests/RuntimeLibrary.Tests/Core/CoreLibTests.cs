@@ -82,9 +82,12 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class PromiseTests : CoreLibTestBase {
+        private static readonly Lazy<string> _simplePromiseScript = new Lazy<string>(() => File.ReadAllText(@"SimplePromise.js"));
+		internal static string SimplePromiseScript { get { return _simplePromiseScript.Value; } }
+
 		protected override IEnumerable<string> ScriptSources {
 			get {
-				return base.ScriptSources.Concat(new[] { "SimplePromise.js" });
+				return base.ScriptSources.Concat(new[] { SimplePromiseScript });
 			}
 		}
 	}

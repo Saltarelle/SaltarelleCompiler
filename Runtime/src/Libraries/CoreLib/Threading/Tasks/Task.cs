@@ -19,9 +19,6 @@ namespace System.Threading.Tasks {
 		Faulted,
 	}
 
-	[ExpandParams]
-	public delegate TResult PromiseResultFactory<out TResult>(params object[] callbackArgs);
-
 	[Imported(IsRealType = true)]
 	[ScriptNamespace("ss")]
 	public class Task : IDisposable {
@@ -129,17 +126,110 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		public static Task FromPromise(IPromise promise) {
+		/// <summary>
+		/// Creates a task from a promise. The result of the promise is not accessible through the task. THe result of the task is the parameters passed to the onCompleted callback of the promise.
+		/// </summary>
+		public static Task<object[]> FromPromise(IPromise promise) {
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a task from a promise. The result of the task will be set to one of the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultArgIndex">Index of the argument in the onCompleted callback of the promise that will become the result of the task. negative values count from the back, positive values count from the front.</param>
 		[IgnoreGenericArguments]
 		public static Task<TResult> FromPromise<TResult>(IPromise promise, int resultArgIndex) {
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
 		[IgnoreGenericArguments]
-		public static Task<TResult> FromPromise<TResult>(IPromise promise, PromiseResultFactory<TResult> resultFactory) {
+		public static Task<TResult> FromPromise<TResult>(IPromise promise, Func<TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, TResult>(IPromise promise, Func<T1, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, TResult>(IPromise promise, Func<T1, T2, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, T3, TResult>(IPromise promise, Func<T1, T2, T3, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, T3, T4, TResult>(IPromise promise, Func<T1, T2, T3, T4, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, T6, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, T6, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, T6, T7, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultFactory) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from a promise. A factory method is used to create the result of the task based on the arguments to the onCompleted callback of the promise.
+		/// </summary>
+		/// <param name="promise">The promise to create a task from.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
+		[IgnoreGenericArguments]
+		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultFactory) {
 			return null;
 		}
 	}

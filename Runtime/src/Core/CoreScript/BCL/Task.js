@@ -204,7 +204,10 @@ ss.Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, m, idx) {
 ss.Task.fromPromise = function#? DEBUG Task$fromPromise##(p, f) {
 	var tcs = new ss.TaskCompletionSource();
 	if (typeof(f) === 'number')
-		f = function(i) { return arguments[i]; }
+		f = (function(i) { return function() { return arguments[i >= 0 ? i : (arguments.length + i)]; }; })(f);
+    else if (typeof(f) !== 'function')
+        f = function() { return Array.prototype.slice.call(arguments, 0); };
+
 	p.then(function() {
 		tcs.setResult(typeof(f) === 'function' ? f.apply(null, arguments) : null);
 	}, function() {
