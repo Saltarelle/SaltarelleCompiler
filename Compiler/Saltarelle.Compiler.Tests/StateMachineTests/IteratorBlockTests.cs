@@ -1766,5 +1766,158 @@ lbl1:
 }
 ", methodType: MethodType.Iterator);
 		}
+
+		[Test]
+		public void ForInIteratorBlock() {
+			AssertCorrect(
+@"{
+	a;
+	for (i = 0; i < b; i++)
+		yield return 1;
+	c;
+}",
+@"{
+	var $state1 = 0;
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					a;
+					i = 0;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					if (!(i < b)) {
+						$state1 = 3;
+						continue $loop1;
+					}
+					setCurrent(1);
+					$state1 = 2;
+					return true;
+				}
+				case 2: {
+					$state1 = -1;
+					i++;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 3: {
+					$state1 = -1;
+					c;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
+
+		[Test]
+		public void WhileInIteratorBlock() {
+			AssertCorrect(
+@"{
+	a;
+	while (b) {
+		yield return c;
+	}
+	d;
+}",
+@"{
+	var $state1 = 0;
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					a;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					if (!b) {
+						$state1 = 2;
+						continue $loop1;
+					}
+					setCurrent(c);
+					$state1 = 1;
+					return true;
+				}
+				case 2: {
+					$state1 = -1;
+					d;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
+
+		[Test]
+		public void DoWhileInIteratorBlock() {
+			AssertCorrect(
+@"{
+	a;
+	do {
+		yield return b;
+	} while (c);
+	d;
+}",
+@"{
+	var $state1 = 0;
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					a;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					setCurrent(b);
+					$state1 = 2;
+					return true;
+				}
+				case 2: {
+					$state1 = -1;
+					if (c) {
+						$state1 = 1;
+						continue $loop1;
+					}
+					d;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
 	}
 }

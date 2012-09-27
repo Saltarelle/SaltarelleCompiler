@@ -214,6 +214,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					_exitState = new State(_currentLoopLabel, -1, ImmutableStack<Tuple<int, string>>.Empty);
 	
 				var sections = new List<Section>();
+
+				int iterationCount = 0;
 	
 				while (_remainingBlocks.Count > 0) {
 					var current = _remainingBlocks.Dequeue();
@@ -221,6 +223,9 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					// Merge all top-level blocks that should be merged with their parents.
 					list = list.SelectMany(stmt => (stmt is JsBlockStatement && ((JsBlockStatement)stmt).MergeWithParent) ? ((JsBlockStatement)stmt).Statements : (IList<JsStatement>)new[] { stmt }).ToList();
 					sections.Add(new Section(current.StateValue, list));
+
+					if (iterationCount++ > 100000)
+						throw new Exception("Infinite loop when rewriting method to a state machine");
 				}
 
 				if (parentState != null && _isAsync) {
@@ -513,7 +518,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private bool HandleDoWhileStatement(JsDoWhileStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
-			if (currentBlock.Count > 0) {
+			if (NeedsBreakBeforeLoop(currentBlock)) {
 				// We have to create a new block for the statement.
 				var topOfLoopState = CreateNewStateValue(currentState.FinallyStack);
 				Enqueue(stack.Push(location), breakStack, continueStack, topOfLoopState, returnState);
@@ -547,7 +552,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private bool HandleWhileStatement(JsWhileStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
-			if (currentBlock.Count > 0) {
+			if (NeedsBreakBeforeLoop(currentBlock)) {
 				// We have to create a new block for the statement.
 				var topOfLoopState = CreateNewStateValue(currentState.FinallyStack);
 				Enqueue(stack.Push(location), breakStack, continueStack, topOfLoopState, returnState);
@@ -569,11 +574,17 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			}
 		}
 
-		private bool NeedsBreakBeforeForLoop(IList<JsStatement> currentBlock, JsForStatement stmt, StackEntry location) {
+		private bool NeedsBreakBeforeLoop(IList<JsStatement> currentBlock) {
 			if (currentBlock.Count > 1)
 				return true;	// We have a large current block
 			else if (currentBlock.Count == 1 && !(currentBlock[0] is JsSetNextStateStatement))
 				return true;	// If the current block is exactly one statement, it might be a SetNextState statement added automatically by Handle(). This statement can safely be ignored.
+			return false;
+		}
+
+		private bool NeedsBreakBeforeForLoop(IList<JsStatement> currentBlock, JsForStatement stmt, StackEntry location) {
+			if (NeedsBreakBeforeLoop(currentBlock))
+				return true;
 			else if (!(stmt.InitStatement is JsEmptyStatement) && !location.AfterForInitializer)
 				return true;	// If we have an initializer, the current location must state explicitly to have handled it.
 			else
