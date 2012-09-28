@@ -688,7 +688,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (ica != null) {
 				string code = (string)ica[0] ?? "";
 
-				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, code, t => t.Resolve(_compilation).Kind != TypeKind.Unknown);
+				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, code, t => t.Resolve(_compilation));
 				if (errors.Count > 0) {
 					Message(7103, source, string.Join(", ", errors));
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
@@ -1000,7 +1000,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else {
 						string code = (string) ica[0];
 
-						var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation).Kind != TypeKind.Unknown);
+						var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation));
 						if (errors.Count > 0) {
 							Message(7130, method, string.Join(", ", errors));
 							code = "X";

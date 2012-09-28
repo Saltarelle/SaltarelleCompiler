@@ -1068,7 +1068,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
 
 				case MethodScriptSemantics.ImplType.InlineCode:
-					return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), (t, c) => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), c), isExpandedForm, s => _errorReporter.Message(7525, s));
+					return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isExpandedForm, s => _errorReporter.Message(7525, s));
 
 				case MethodScriptSemantics.ImplType.NativeIndexer:
 					return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
@@ -1199,7 +1199,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						constructorCall = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), (t, c) => _runtimeLibrary.GetScriptType(t.Resolve(_compilation), c), isExpandedForm, s => _errorReporter.Message(7525, s));
+						constructorCall = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isExpandedForm, s => _errorReporter.Message(7525, s));
 						break;
 
 					default:
