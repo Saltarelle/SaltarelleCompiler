@@ -3,7 +3,7 @@
 
 Boolean.__typeName = 'Boolean';
 
-Boolean.getDefaultValue = function#? DEBUG Boolean$getDefaultValue##() {
+Boolean.getDefaultValue = Boolean.createInstance = function#? DEBUG Boolean$getDefaultValue##() {
 	return false;
 }
 

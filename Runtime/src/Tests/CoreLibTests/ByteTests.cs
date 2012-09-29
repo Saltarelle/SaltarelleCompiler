@@ -29,6 +29,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void CreatingInstanceReturnsZero() {
+			Assert.AreStrictEqual(Activator.CreateInstance<byte>(), 0);
+		}
+
+		[Test]
 		public void ConstantsWork() {
 			Assert.AreEqual(byte.MinValue, 0);
 			Assert.AreEqual(byte.MaxValue, 255);

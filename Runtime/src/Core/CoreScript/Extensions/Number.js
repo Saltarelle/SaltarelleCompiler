@@ -3,7 +3,7 @@
 
 Number.__typeName = 'Number';
 
-Number.getDefaultValue = function#? DEBUG Number$getDefaultValue##() {
+Number.getDefaultValue = Number.createInstance = function#? DEBUG Number$getDefaultValue##() {
 	return 0;
 }
 

@@ -227,6 +227,7 @@
     <Compile Include="MockNamer.cs" />
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
+    <Compile Include="RuntimeLibraryTests\ActivatorTests.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\DelegateTests.cs" />

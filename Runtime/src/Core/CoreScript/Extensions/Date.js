@@ -3,7 +3,7 @@
 
 Date.__typeName = 'Date';
 
-Date.getDefaultValue = function#? DEBUG Date$getDefaultValue##() {
+Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultValue##() {
 	return new Date(0);
 }
 

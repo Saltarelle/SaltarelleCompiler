@@ -23,6 +23,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void CreatingInstanceReturnsZero() {
+			Assert.AreStrictEqual(Activator.CreateInstance<float>(), 0);
+		}
+
+		[Test]
 		public void ConstantsWork() {
 			double zero = 0;
 			Assert.AreEqual(float.MinValue, 5e-324, "MinValue should be correct");

@@ -15,8 +15,18 @@ namespace System
         }
 
         [InlineCode("new {T}({*arguments})")]
-		public static T CreateInstance<T>(params object[] arguments) where T : class {
+		public static T CreateInstance<T>(params object[] arguments) {
+            return default(T);
+        }
+
+        [InlineCode("{type}.createInstance()")]
+		public static object CreateInstance(Type type) {
             return null;
+        }
+
+        [InlineCode("{T}.createInstance()")]
+		public static T CreateInstance<T>() {
+            return default(T);
         }
 	}
 }

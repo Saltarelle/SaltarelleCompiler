@@ -216,7 +216,7 @@ namespace Saltarelle.Compiler.Driver {
 					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
-					var js = new ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
+					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
 					js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
 
 					if (er.HasErrors)
