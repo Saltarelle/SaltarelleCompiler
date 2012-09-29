@@ -263,7 +263,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 
 					case InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier: {
-						if (method.Parameters[token.Index].Type.FullName != "System.String") {
+						if (!method.Parameters[token.Index].Type.IsKnownType(KnownTypeCode.String)) {
 							text.Append("X");	// Just something that should not cause an error.
 							hasErrors = true;
 							errorReporter("The type of the parameter " + method.Parameters[token.Index].Name + " must be string in order to use it with the '@' modifier.");
@@ -293,7 +293,7 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 						else if (!isParamArrayExpanded) {
 							hasErrors = true;
-							errorReporter("The method " + method.DeclaringType.FullName + "." + method.FullName + " can only be invoked with its params parameter expanded");
+							errorReporter("The method " + method.DeclaringType.FullName + "." + method.Name + " can only be invoked with its params parameter expanded");
 							substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
 						}
 						else {
