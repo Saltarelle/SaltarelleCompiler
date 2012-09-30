@@ -481,6 +481,23 @@ public class C1 : I {
 
 			var p = FindProperty("C1.Prop");
 			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p.GetMethod.Name, Is.EqualTo("get_prop"));
+			Assert.That(p.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p.SetMethod.Name, Is.EqualTo("set_prop"));
+		}
+
+		[Test]
+		public void NonScriptableAttributeIsInheritedForExplicitInterfaceImplementation() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { [NonScriptable] int Prop { get; set; } }
+public class C1 : I {
+	int I.Prop { get; set; }
+}");
+
+			var p = FindProperty("C1.Prop");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
 		}
 
 		[Test]

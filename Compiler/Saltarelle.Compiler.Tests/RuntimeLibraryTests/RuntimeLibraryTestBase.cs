@@ -99,7 +99,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-			var js = new OOPEmulator.ScriptSharpOOPEmulator(md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
+			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
 			js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));

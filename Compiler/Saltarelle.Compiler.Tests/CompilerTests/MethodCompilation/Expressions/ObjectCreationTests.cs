@@ -852,5 +852,23 @@ public class C {
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
 		}
+
+		[Test]
+		public void CreatingAnInstanceOfATypeParameterWithADefaultConstructorConstraintInvokesGenericActivatorCreateInstance() {
+			AssertCorrect(
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+	public int P { get; set; }
+}
+
+public void M<TMyType>() where TMyType : new() {
+	// BEGIN
+	var c = new TMyType();
+	// END
+}",
+@"	var $c = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, ga_$TMyType).call(null);
+");
+		}
 	}
 }

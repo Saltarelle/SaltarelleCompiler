@@ -48,12 +48,12 @@ namespace System {
         public static void AddHandler(object instance, string name, Delegate handler) {
         }
 
-        [InlineCode("new {type}({*arguments})")]
+        [Obsolete("Use Activator.CreateInstance() instead", true)]
         public static object CreateInstance(Type type, params object[] arguments) {
             return null;
         }
 
-        [InlineCode("new {T}({*arguments})")]
+        [Obsolete("Use Activator.CreateInstance<T>() instead", true)]
         public static T CreateInstance<T>(params object[] arguments) where T : class {
             return null;
         }

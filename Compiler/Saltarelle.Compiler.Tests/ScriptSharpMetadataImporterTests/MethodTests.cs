@@ -1071,6 +1071,20 @@ public class C1 : I {
 		}
 
 		[Test]
+		public void NonScriptableAttributeIsInheritedForExplicitInterfaceImplementation() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { [NonScriptable] void SomeMethod(); }
+public class C1 : I {
+	void I.SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
 		public void CanSpecifyNameForMethodImplementingUnusableInterfaceMethod() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

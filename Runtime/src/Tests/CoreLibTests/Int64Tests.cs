@@ -29,6 +29,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void CreatingInstanceReturnsZero() {
+			Assert.AreStrictEqual(Activator.CreateInstance<long>(), 0);
+		}
+
+		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((long)0x123).Format("x"), "123");
 		}

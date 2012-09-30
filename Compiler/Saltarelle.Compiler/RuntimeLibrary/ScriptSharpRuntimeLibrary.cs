@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			else if (type.Kind == TypeKind.Anonymous && context == TypeContext.GenericArgument) {
 				return _createTypeReferenceExpression(KnownTypeReference.Object);
 			}
-			else if (type.Kind == TypeKind.Null) {
+			else if (type.Kind == TypeKind.Null || type.Kind == TypeKind.Dynamic) {
 				return _createTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {

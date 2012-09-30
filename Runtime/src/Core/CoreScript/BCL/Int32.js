@@ -10,7 +10,7 @@ ss.Int32.isInstanceOfType = function#? DEBUG Int32$isInstanceOfType##(instance) 
 	return typeof(instance) === 'number' && isFinite(instance) && Math.round(instance, 0) == instance;
 }
 
-ss.Int32.getDefaultValue = function#? DEBUG Int32$getDefaultValue##() {
+ss.Int32.getDefaultValue = ss.Int32.createInstance = function#? DEBUG Int32$getDefaultValue##() {
 	return 0;
 }
 

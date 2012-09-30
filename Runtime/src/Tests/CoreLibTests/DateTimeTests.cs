@@ -24,6 +24,12 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void CreatingInstanceReturnsDateWithZeroValue() {
+			var dt = Activator.CreateInstance<DateTime>();
+			Assert.AreEqual(dt.GetUtcFullYear(), 1970);
+		}
+
+		[Test]
 		public void MillisecondSinceEpochConstructorWorks() {
 			var dt = new DateTime(1440L * 60 * 500 * 1000);
 			Assert.AreEqual(dt.GetFullYear(), 1971);
