@@ -8,8 +8,13 @@ The entire project is licensed under the [Apache License 2.0](http://www.apache.
 
 ## Building the Compiler ##
 
-To build the compiler and all libraries, open PowerShell, go to the build directory and type `.\psake.ps1`. This will generate all outputs in the bin\ directory, of which the .nupkg files are the real artifacts. After running the build script once, you can build both the compiler and the runtime library directly from Visual Studio, *but you can't build either from VS until you have run the build script once*. Invoking the default task will create auto-incrementing version numbers.
-By default it will require .net 4.5, but to build on 4.0 you can write `.\psake.ps1 -properties @{noAsync=$true}`, which will cause some tests that depend on async support not to be run. The production output is not affected, it is just that some tests will not be run. This corresponds to tne _NoAsync targets in the Runtime solution.
+To build the compiler and all libraries, open PowerShell, go to the build directory and type `.\psake.ps1`. This will generate all outputs in the bin\ directory, of which the .nupkg files are the real artifacts. After running the build script once, you can build both the compiler and the runtime library directly from Visual Studio, *but you can't build either from VS until you have run the build script once*.
+The following options exist (usage: `.\psake.ps1 -properties @{opt1=value1; opt2=value2 ...}`
+
+* configuration: Debug or Release.
+* skipTests: Do not run the tests. Useful to use when developing.
+* noAsync: Do not compile tests that depend on the platform compiler being able to use C#5 features. Use to build on .net 4.0
+* autoVersion: By default the build script will generate incrementing version numbers depending on tags and `git log`. By setting this to $false you can make it only use tags. This option is probably not that useful to you.
 
 ## Obtaining binaries ##
 

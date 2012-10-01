@@ -8,6 +8,7 @@ properties {
 	$releaseTagPattern = "release-(.*)"
 	$skipTests = $false
 	$noAsync = $false
+	$autoVersion = $true
 }
 
 Function Get-DotNetVersion($RawVersion) {
@@ -19,16 +20,18 @@ Function Get-DependencyVersion($RawVersion) {
 	Return New-Object System.Version($netVersion.Major, $netVersion.Minor)
 }
 
-Task default -Depends Build-AutoVersion
+Task default -Depends Build
 
-Task Build-AutoVersion {
-	$script:autoVersion = $true
-	Invoke-Task Build
+Task Build {
+	$script:autoVersion = $autoVersion
+	$script:noAsync = $noAsync
+	Invoke-Task Do-Build
 }
 
-Task Build-NoAutoVersion {
+Task Build-CIServer {
 	$script:autoVersion = $false
-	Invoke-Task Build
+	$script:noAsync = $true
+	Invoke-Task Do-Build
 }
 
 Task Clean {
@@ -63,7 +66,7 @@ Task Generate-jQueryUISource -Depends Determine-Version {
 
 Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generate-jQueryUISource {
 	$actualConfiguration = $configuration
-	if ($noAsync) {
+	if ($script:noAsync) {
 		$actualConfiguration += "_NoAsync"
 	}
 
@@ -291,7 +294,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Knockout.nuspec" -OutputDirectory "$outDir" }
 }
 
-Task Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackages {
+Task Do-Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackages {
 }
 
 Task Configure -Depends Generate-VersionInfo {
