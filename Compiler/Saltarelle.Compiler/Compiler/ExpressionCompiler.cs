@@ -383,8 +383,15 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			if (target is LocalResolveResult || target is DynamicMemberResolveResult || target is DynamicInvocationResolveResult /* Dynamic indexing is an invocation */) {
-				var jsTarget = InnerCompile(target, compoundFactory == null);
-				var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
+				JsExpression jsTarget, jsOtherOperand;
+				jsTarget = InnerCompile(target, compoundFactory == null);
+				if (target is LocalResolveResult) {
+					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
+				}
+				else {
+					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
+				}
+
 				if (compoundFactory != null) {
 					return compoundFactory(jsTarget, jsOtherOperand);
 				}
@@ -1256,13 +1263,6 @@ namespace Saltarelle.Compiler.Compiler {
 							var createInstance = activator.GetMethods(m => m.Name == "CreateInstance" && m.IsStatic && m.TypeParameters.Count == 1 && m.Parameters.Count == 0).Single();
 							var createInstanceSpec = new SpecializedMethod(createInstance, new TypeParameterSubstitution(EmptyList<IType>.Instance, new[] { method.DeclaringType }));
 							return CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new JsExpression[] { _runtimeLibrary.GetScriptType(activator, TypeContext.UseStaticMember) }, false, false);
-						}
-						else if (method.DeclaringType is ITypeParameter) {
-							var activator = ReflectionHelper.ParseReflectionName("System.Activator").Resolve(_compilation);
-							var createInstance = activator.GetMethods().Single(m => m.IsStatic && m.Name == "CreateInstance" && m.TypeParameters.Count == 1 && m.Parameters.Count == 0);
-							var createInstanceSpec = new SpecializedMethod(createInstance, new TypeParameterSubstitution(null, new[] { method.DeclaringType }));
-							var createInstanceImpl = _metadataImporter.GetMethodSemantics(createInstance);
-							return CompileMethodInvocation(createInstanceImpl, createInstanceSpec, new[] { _runtimeLibrary.GetScriptType(activator, TypeContext.UseStaticMember) }, false, false);
 						}
 						else {
 							return CompileConstructorInvocation(_metadataImporter.GetConstructorSemantics(method), method, argumentsForCall, argumentToParameterMap, initializerStatements, isExpandedForm);
