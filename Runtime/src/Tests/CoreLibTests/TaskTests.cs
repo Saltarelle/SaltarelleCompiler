@@ -72,7 +72,7 @@ namespace CoreLibTests {
 			task.ContinueWith(t => {
 				Assert.IsTrue(t == task, "Callback parameter should be correct");
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should be faulted in the callback");
-				Assert.IsTrue(task.Exception is AggregateException);
+				Assert.IsTrue((object)task.Exception is AggregateException);
 				Assert.IsTrue(task.Exception.InnerExceptions[0] == ex, "The exception should be correct");
 				Assert.Throws(() => { var x = task.Result; }, "Getting the result property in the callback should throw");
 				callbackRun = true;
@@ -82,7 +82,7 @@ namespace CoreLibTests {
 
 			tcs.SetException(ex);
 			Assert.AreEqual(task.Status, TaskStatus.Faulted, "The task should be faulted immediately after the SetException() call");
-			Assert.IsTrue(task.Exception is AggregateException);
+			Assert.IsTrue((object)task.Exception is AggregateException);
 			Assert.IsTrue(task.Exception.InnerExceptions[0] == ex, "The exception should be correct immediately after SetException()");
 			Assert.Throws(() => { var x = task.Result; }, "Getting the result property after SetException() should throw");
 
@@ -102,7 +102,7 @@ namespace CoreLibTests {
 			task.ContinueWith(t => {
 				Assert.IsTrue(t == task, "Callback parameter should be correct");
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should be faulted in the callback");
-				Assert.IsTrue(task.Exception is AggregateException);
+				Assert.IsTrue((object)task.Exception is AggregateException);
 				Assert.IsTrue(task.Exception.InnerExceptions[0] == ex1, "InnerExceptions[0] should be correct in callback");
 				Assert.IsTrue(task.Exception.InnerExceptions[1] == ex2, "InnerExceptions[1] should be correct in callback");
 				Assert.Throws(() => { var x = task.Result; }, "Getting the result property in the callback should throw");
@@ -113,7 +113,7 @@ namespace CoreLibTests {
 
 			tcs.SetException(MakeEnumerable(new[] { ex1, ex2 }));
 			Assert.AreEqual(task.Status, TaskStatus.Faulted, "The task should be faulted immediately after the SetException() call");
-			Assert.IsTrue(task.Exception is AggregateException);
+			Assert.IsTrue((object)task.Exception is AggregateException);
 			Assert.IsTrue(task.Exception.InnerExceptions[0] == ex1, "InnerExceptions[0] should be correct immediately after SetException");
 			Assert.IsTrue(task.Exception.InnerExceptions[1] == ex2, "InnerExceptions[1] should be correct immediately after SetException");
 			Assert.Throws(() => { var x = task.Result; }, "Getting the result property after SetException() should throw");
@@ -267,7 +267,7 @@ namespace CoreLibTests {
 				Assert.IsTrue(t == continuedTask, "argument to continuedTask.ContinueWith callback should be correct");
 				Assert.AreEqual(continuedTask.Status, TaskStatus.Faulted, "continuedTask should have run to completion at point 3");
 				Assert.AreNotEqual(continuedTask.Exception, null, "continuedTask should have an exception");
-				Assert.IsTrue(continuedTask.Exception is AggregateException);
+				Assert.IsTrue((object)continuedTask.Exception is AggregateException);
 				Assert.AreEqual(continuedTask.Exception.InnerExceptions[0].Message, "This is a test message");
 
 				done = true;
@@ -474,7 +474,7 @@ namespace CoreLibTests {
 				Assert.IsTrue(t == task, "argument to task.ContinueWith callback should be correct");
 				Assert.IsTrue(bodyRun, "Body should be run before continuation");
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "task should have faulted at point 2");
-				Assert.IsTrue(task.Exception is AggregateException);
+				Assert.IsTrue((object)task.Exception is AggregateException);
 				Assert.AreEqual(task.Exception.InnerExceptions[0].Message, "This is a test message");
 				continuationRun = true;
 			});
@@ -1010,7 +1010,7 @@ namespace CoreLibTests {
 			task.ContinueWith(t => {
 				Assert.IsTrue(taskRun, "Task should be run before continuation");
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should be faulted");
-				Assert.IsTrue(task.Exception is AggregateException, "Exception should be correct");
+				Assert.IsTrue((object)task.Exception is AggregateException, "Exception should be correct");
 				Assert.AreEqual(task.Exception.InnerExceptions.Length, 1, "There should be one inner exception");
 				Assert.IsTrue(task.Exception.InnerExceptions[0] == ex, "InnerException should be correct");
 				continuationRun = true;

@@ -16,7 +16,7 @@ namespace System.Threading.Tasks {
 
 	public static class PromiseExtensions {
 		[InlineCode("{$System.Threading.Tasks.Task}.fromPromise({promise}))")]
-		public static TaskAwaiter GetAwaiter(this IPromise promise) {
+		public static TaskAwaiter<object[]> GetAwaiter(this IPromise promise) {
 			return null;
 		}
 	}

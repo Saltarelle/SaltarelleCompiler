@@ -53,7 +53,7 @@ namespace CoreLibTests {
 			}, 200);
 		}
 
-		[Test]
+		[AsyncTest]
 		public void TaskFromPromiseWithResultIndexWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var tasks = new Task<int>[] {
@@ -78,19 +78,19 @@ namespace CoreLibTests {
 			}, 100);
 
 			Window.SetTimeout(() => {
-				Assert.IsTrue(tasks.Every(t => t.Status == TaskStatus.Running), "Task should be completed after promise");
-				Assert.IsFalse(continuationsRun.Some(x => x), "Continuations should have been run after promise was completed.");
+				Assert.IsTrue(tasks.Every(t => t.Status == TaskStatus.RanToCompletion), "Task should be completed after promise");
+				Assert.IsTrue(continuationsRun.Every(x => x), "Continuations should have been run after promise was completed.");
 				Assert.AreEqual(tasks[0].Result, 10, "Task 0 result should be correct");
 				Assert.AreEqual(tasks[1].Result, 42, "Task 1 result should be correct");
 				Assert.AreEqual(tasks[2].Result, 38, "Task 2 result should be correct");
-				Assert.AreEqual(tasks[0].Result, 10, "Task 3 result should be correct");
-				Assert.AreEqual(tasks[0].Result, 42, "Task 4 result should be correct");
-				Assert.AreEqual(tasks[0].Result, 38, "Task 5 result should be correct");
+				Assert.AreEqual(tasks[3].Result, 10, "Task 3 result should be correct");
+				Assert.AreEqual(tasks[4].Result, 42, "Task 4 result should be correct");
+				Assert.AreEqual(tasks[5].Result, 38, "Task 5 result should be correct");
 				QUnit.Start();
 			}, 200);
 		}
 
-		[Test]
+		[AsyncTest]
 		public void TaskFromPromiseWithResultFactoryWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise, (int i, string s, int j) => new { i, s, j });
@@ -115,7 +115,7 @@ namespace CoreLibTests {
 			}, 200);
 		}
 
-		[Test]
+		[AsyncTest]
 		public void TaskFromPromiseWorksWhenPromiseFails() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise);
@@ -135,7 +135,7 @@ namespace CoreLibTests {
 			Window.SetTimeout(() => {
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should have faulted after the promise was rejected.");
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was rejected.");
-				Assert.IsTrue(task.Exception is AggregateException, "Exception should be an AggregateException");
+				Assert.IsTrue((object)task.Exception is AggregateException, "Exception should be an AggregateException");
 				Assert.AreEqual(task.Exception.InnerExceptions.Length, 1, "Exception should have one inner exception");
 				Assert.IsTrue(task.Exception.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
 				Assert.AreEqual(((PromiseException)task.Exception.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
@@ -144,20 +144,53 @@ namespace CoreLibTests {
 			}, 200);
 		}
 
-#if NET_4_5
-		[Test]
-		public void CompletingPromiseCanBeAwaited() {
-			Assert.IsTrue(false, "TODO");
+#if !NO_ASYNC
+		[AsyncTest]
+		public async void CompletingPromiseCanBeAwaited() {
+			var promise = CreatePromise();
+			object[] result = null;
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(result == null, "Await should not finish too early.");
+				promise.Resolve(42, "result 123", 101);
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.AreEqual(result, new object[] { 42, "result 123", 101 }, "The result should be correct");
+				QUnit.Start();
+			}, 200);
+
+			result = await promise;
 		}
 
-		[Test]
-		public void FailingPromiseCanBeAwaited() {
-			Assert.IsTrue(false, "TODO");
-		}
-#else
-		[Test]
-		public void AwaitTestsRequireNet45() {
-			Assert.IsTrue(true, "Running the await tests requires .net 4.5");
+		[AsyncTest]
+		public async void FailingPromiseCanBeAwaited() {
+			var promise = CreatePromise();
+			bool continuationRun = false;
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(continuationRun, "Continuation should not be run too early.");
+				promise.Reject(42, "result 123", 101);
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was rejected.");
+				QUnit.Start();
+			}, 200);
+
+			try {
+				await promise;
+				Assert.IsTrue(false, "Await should throw");
+			}
+			catch (AggregateException ex) {
+				Assert.AreEqual(ex.InnerExceptions.Length, 1, "Exception should have one inner exception");
+				Assert.IsTrue(ex.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
+				Assert.AreEqual(((PromiseException)ex.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
+			}
+			catch (Exception ex) {
+				Assert.IsTrue(false, "Thrown exception should have been an AggregateException, was " + ex.GetType().FullName);
+			}
+			continuationRun = true;
 		}
 #endif
 	}
