@@ -7,6 +7,7 @@ properties {
 	$configuration = "Debug"
 	$releaseTagPattern = "release-(.*)"
 	$skipTests = $false
+	$noAsync = $false
 }
 
 Function Get-DotNetVersion($RawVersion) {
@@ -61,7 +62,12 @@ Task Generate-jQueryUISource -Depends Determine-Version {
 }
 
 Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generate-jQueryUISource {
-	Exec { msbuild "$baseDir\Runtime\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$configuration" }
+	$actualConfiguration = $configuration
+	if ($noAsync) {
+		$actualConfiguration += "_NoAsync"
+	}
+
+	Exec { msbuild "$baseDir\Runtime\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
 }
 
 Task Run-Tests -Depends Build-Compiler, Build-Runtime {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ICSharpCode.NRefactory;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -29,6 +30,29 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
 			return expression;
+		}
+
+		public override JsSwitchSection VisitSwitchSection(JsSwitchSection clause, object data) {
+			return base.VisitSwitchSection(clause, data);
+		}
+
+		public override IList<JsStatement> VisitStatements(IList<JsStatement> statements, object data) {
+            return VisitCollection(statements, (s, i) => {
+				if (s is JsSetNextStateStatement && i < statements.Count - 1) {
+					var next = statements[i + 1];
+					if (next is JsBlockStatement && ((JsBlockStatement)next).Statements.Count > 0)
+						next = ((JsBlockStatement)next).Statements[0];
+					if (next is JsSetNextStateStatement || next is JsGotoStateStatement)
+						return EmptyList<JsStatement>.Instance;	// The current statement is directly overridden by the next one - ignore it.
+				}
+
+				var after = VisitStatement(s, data);
+				var afterBlock = after as JsBlockStatement;
+				if (afterBlock != null && afterBlock.MergeWithParent)
+					return afterBlock.Statements;
+				else
+					return new[] { after };
+			});
 		}
 
 		public JsStatement VisitGotoStateStatement(JsGotoStateStatement statement, object data) {

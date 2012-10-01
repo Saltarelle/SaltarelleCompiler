@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
+    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
@@ -44,6 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Activator.cs" />
+    <Compile Include="AggregateException.cs" />
     <Compile Include="ArrayExtensions.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
     <Compile Include="Collections\Generic\Dictionary.cs" />
@@ -78,6 +80,11 @@
     <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
     <Compile Include="Properties\Version.cs" />
     <Compile Include="Text\RegexMatch.cs" />
+    <Compile Include="Threading\Tasks\PromiseException.cs" />
+    <Compile Include="Threading\Tasks\TaskAwaiter.cs" />
+    <Compile Include="Threading\Tasks\TaskCompletionSource.cs" />
+    <Compile Include="Threading\Tasks\Promise.cs" />
+    <Compile Include="Threading\Tasks\Task.cs" />
     <Compile Include="Tuple.cs" />
     <Compile Include="Nullable.cs" />
     <Compile Include="Diagnostics\ConditionalAttribute.cs" />

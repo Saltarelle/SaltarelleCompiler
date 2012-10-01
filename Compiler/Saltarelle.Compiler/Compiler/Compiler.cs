@@ -32,6 +32,7 @@ namespace Saltarelle.Compiler.Compiler {
         private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
         private readonly IErrorReporter _errorReporter;
+		private readonly bool _allowUserDefinedStructs;
         private ICompilation _compilation;
         private CSharpAstResolver _resolver;
         private Dictionary<ITypeDefinition, JsClass> _types;
@@ -47,14 +48,13 @@ namespace Saltarelle.Compiler.Compiler {
                 MethodCompiled(method, result, mc);
         }
 
-        public Compiler(IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
-            _metadataImporter = metadataImporter;
-			_namer            = namer;
-            _errorReporter    = errorReporter;
-        	_runtimeLibrary   = runtimeLibrary;
+        public Compiler(IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, bool allowUserDefinedStructs) {
+            _metadataImporter        = metadataImporter;
+			_namer                   = namer;
+            _errorReporter           = errorReporter;
+        	_runtimeLibrary          = runtimeLibrary;
+			_allowUserDefinedStructs = allowUserDefinedStructs;
         }
-
-		internal bool AllowUnsupportedConstructs { get; set; }
 
         private JsClass.ClassTypeEnum ConvertClassType(TypeKind typeKind) {
             switch (typeKind) {
@@ -68,6 +68,13 @@ namespace Saltarelle.Compiler.Compiler {
         private JsClass GetJsClass(ITypeDefinition typeDefinition) {
             JsClass result;
             if (!_types.TryGetValue(typeDefinition, out result)) {
+				if (typeDefinition.Kind == TypeKind.Struct && !_allowUserDefinedStructs) {
+					var oldRegion = _errorReporter.Region;
+					_errorReporter.Region = typeDefinition.Region;
+					_errorReporter.Message(7998, "user-defined value type (struct)");
+					_errorReporter.Region = oldRegion;
+				}
+
                 var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
                 if (semantics.GenerateCode) {
 					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _metadataImporter).ToList();
@@ -186,17 +193,8 @@ namespace Saltarelle.Compiler.Compiler {
             _constructorDeclarations = new HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>>();
             _instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
-			var unsupportedConstructsScanner = new UnsupportedConstructsScanner(_errorReporter, compilation.Compilation.ReferencedAssemblies.Count == 0);
-			bool hasUnsupported = false;
-
             foreach (var f in compilation.SourceFiles) {
 				try {
-					if (!AllowUnsupportedConstructs) {
-						if (!unsupportedConstructsScanner.ProcessAndReturnTrueIfEverythingIsSupported(f.SyntaxTree)) {
-							hasUnsupported = true;
-							continue;
-						}
-					}
 					_definedSymbols = f.DefinedSymbols;
 
 	                _resolver = new CSharpAstResolver(_compilation, f.SyntaxTree, f.ParsedFile);
@@ -208,9 +206,6 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError(ex);
 				}
             }
-
-			if (hasUnsupported)
-				return new JsType[0];	// Just to be safe
 
             // Handle constructors. We must do this after we have visited all the compilation units because field initializer (which change the InstanceInitStatements and StaticInitStatements) might appear anywhere.
             foreach (var n in _constructorDeclarations) {

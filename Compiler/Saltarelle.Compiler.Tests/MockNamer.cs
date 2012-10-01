@@ -37,10 +37,13 @@ namespace Saltarelle.Compiler.Tests
 			                               return result;
 			                           };
 			
-			ThisAlias                      = "$this";
-			FinallyHandlerDesiredName      = "$finally";
-			StateVariableDesiredName       = "$state";
-			YieldResultVariableDesiredName = "$result";
+			ThisAlias                                    = "$this";
+			FinallyHandlerDesiredName                    = "$finally";
+			StateVariableDesiredName                     = "$state";
+			YieldResultVariableDesiredName               = "$result";
+			AsyncStateMachineVariableDesiredName         = "$sm";
+			AsyncDoFinallyBlocksVariableDesiredName      = "$doFinally";
+			AsyncTaskCompletionSourceVariableDesiredName = "$tcs";
 		}
 
 		public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
@@ -51,6 +54,9 @@ namespace Saltarelle.Compiler.Tests
 		public string FinallyHandlerDesiredName { get; set; }
 		public string StateVariableDesiredName { get; set; }
 		public string YieldResultVariableDesiredName { get; set; }
+		public string AsyncStateMachineVariableDesiredName { get; set; }
+		public string AsyncDoFinallyBlocksVariableDesiredName { get; set; }
+		public string AsyncTaskCompletionSourceVariableDesiredName { get; set; }
 
 		string INamer.GetTypeParameterName(ITypeParameter typeParameter) {
 			return GetTypeParameterName(typeParameter);

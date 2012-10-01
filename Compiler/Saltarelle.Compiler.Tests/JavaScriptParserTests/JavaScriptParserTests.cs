@@ -493,5 +493,13 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			var stmt = ParseStatement<JsYieldStatement>("yield break;");
 			Assert.That(stmt.Value, Is.Null);
 		}
+
+		[Test]
+		public void AwaitWorks() {
+			var stmt = ParseStatement<JsAwaitStatement>("await a:b;");
+			Assert.That(stmt.Awaiter, Is.InstanceOf<JsIdentifierExpression>());
+			Assert.That(((JsIdentifierExpression)stmt.Awaiter).Name, Is.EqualTo("a"));
+			Assert.That(stmt.OnCompletedMethodName, Is.EqualTo("b"));
+		}
 	}
 }

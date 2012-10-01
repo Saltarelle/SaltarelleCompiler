@@ -1,3 +1,4 @@
+Implemented support for async/await.
 Fixed problem assigning an object creation with initializers to a by-reference variable.
 Fixed problems causing compilation error when using a default constructor constarint on a type parameter.
 Fixed invoking method implemented as inline code with type parameters as type arguments.

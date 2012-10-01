@@ -205,5 +205,31 @@ namespace Saltarelle.Compiler {
 		/// Generates an expression that sets the value at a specific index of a multi-dimensional array.
 		/// </summary>
 		JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value);
+
+		/// <summary>
+		/// Generates an expression that creates a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskGenericArgument">If the method being built returns a <c>Task&lt;T&gt;</c>, this parameter will contain <c>T</c>. If the method returns a non-generic task, this parameter will be null.</param>
+		JsExpression CreateTaskCompletionSource(IType taskGenericArgument);
+
+		/// <summary>
+		/// Generates an expression that applies the result of an async method to a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		/// <param name="value">Value to return. Will be null if the method does not return a value (in which case it must be a method returning a non-generic task).</param>
+		JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value);
+
+		/// <summary>
+		/// Generates an expression that applies an exception to a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		/// <param name="exception">The exception to return. Note that this may be any object (not necessarily an Exception instance).</param>
+		JsExpression SetAsyncException(JsExpression taskCompletionSource, JsExpression exception);
+
+		/// <summary>
+		/// Generates an expression that retrieves the Task instance from a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource);
 	}
 }

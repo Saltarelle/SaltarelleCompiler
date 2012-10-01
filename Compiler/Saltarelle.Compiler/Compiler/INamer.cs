@@ -14,5 +14,8 @@ namespace Saltarelle.Compiler.Compiler
 		string FinallyHandlerDesiredName { get; }
 		string StateVariableDesiredName { get; }
 		string YieldResultVariableDesiredName { get; }
+		string AsyncStateMachineVariableDesiredName { get; }
+		string AsyncDoFinallyBlocksVariableDesiredName { get; }
+		string AsyncTaskCompletionSourceVariableDesiredName { get; }
 	}
 }

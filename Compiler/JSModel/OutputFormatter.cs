@@ -738,5 +738,16 @@ redo:
 				_cb.AppendLine();
 			return null;
     	}
+
+		public object VisitAwaitStatement(JsAwaitStatement statement, bool addNewline) {
+			if (!_allowIntermediates)
+				throw new NotSupportedException("await should not occur in the output stage");
+			_cb.Append("await ");
+			VisitExpression(statement.Awaiter, false);
+			_cb.Append(":" + statement.OnCompletedMethodName + ";");
+			if (addNewline)
+				_cb.AppendLine();
+			return null;
+		}
     }
 }

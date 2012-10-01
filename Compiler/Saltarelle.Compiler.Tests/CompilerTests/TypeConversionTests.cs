@@ -105,7 +105,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 
         [Test]
         public void StructsShouldInheritValueType() {
-            Compile(@"struct Test {}");
+            Compile(new[] { @"struct Test {}" }, allowUserDefinedStructs: true);
             CompiledTypes.Should().HaveCount(1);
             Stringify(FindClass("Test").BaseClass).Should().Be("{inh_ValueType}");
         }
@@ -191,9 +191,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 
         [Test]
         public void StructsCanImplementInterfaces() {
-            Compile(@"interface ITest1 {}
-                      interface ITest2 {}
-                      struct Test : ITest1, ITest2 { }");
+            Compile(new[] { @"interface ITest1 {}
+                              interface ITest2 {}
+                              struct Test : ITest1, ITest2 { }" }, allowUserDefinedStructs: true);
             var cls = FindClass("Test");
             Stringify(cls.BaseClass).Should().Be("{inh_ValueType}");
             cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "{inh_ITest1}", "{inh_ITest2}" });
@@ -201,7 +201,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 
         [Test]
         public void ClassTypeIsSetCorrectly() {
-            Compile("class Test1{} struct Test2{} interface Test3{}");
+            Compile(new[] { "class Test1{} struct Test2{} interface Test3{}" }, allowUserDefinedStructs: true);
             CompiledTypes.Should().HaveCount(3);
             Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test1")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Class));
             Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test2")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Struct));

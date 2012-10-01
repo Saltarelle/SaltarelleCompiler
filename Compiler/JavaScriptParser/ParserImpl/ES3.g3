@@ -115,6 +115,7 @@ tokens
 
 // Made-up keywords
 	YIELD		= 'yield';
+	AWAIT       = 'await';
 
 // Punctuators
 	LBRACE		= '{' ;
@@ -990,6 +991,7 @@ statementTail
 	| tryStatement
 	| gotoStatement
 	| yieldStatement
+	| awaitStatement
 	;
 
 // $<Block (12.1)
@@ -1345,4 +1347,8 @@ gotoStatement
 
 yieldStatement
 	: YIELD^ ((RETURN! expression) | BREAK!) semic!
+	;
+
+awaitStatement
+	: AWAIT^ expression COLON! Identifier semic!
 	;

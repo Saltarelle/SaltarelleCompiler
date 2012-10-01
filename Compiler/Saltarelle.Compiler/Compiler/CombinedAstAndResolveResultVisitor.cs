@@ -272,5 +272,10 @@ namespace Saltarelle.Compiler.Compiler {
 			VisitChildResolveResults(rr, data);
 			return null;
 		}
+
+		public virtual object VisitAwaitResolveResult(AwaitResolveResult rr, object data) {
+			VisitChildResolveResults(rr, data);
+			return null;
+		}
     }
 }

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
@@ -33,11 +34,33 @@
     <WarningLevel>4</WarningLevel>
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_NoAsync|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;NO_ASYNC</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_NoAsync|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NO_ASYNC</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ActivatorTests.cs" />
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
+    <Compile Include="AsyncTests.cs" />
+    <Compile Include="PromiseTests.cs" />
+    <Compile Include="TaskTests.cs" />
     <Compile Include="MultidimArrayTests.cs" />
     <Compile Include="IteratorBlockTests.cs" />
     <Compile Include="QueueTests.cs" />
@@ -77,6 +100,10 @@
       <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
       <Name>CoreLib</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Web\Web.csproj">
+      <Project>{3681A9A8-FC40-4125-B842-7775713C8DCE}</Project>
+      <Name>Web</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />

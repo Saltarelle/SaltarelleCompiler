@@ -9,11 +9,20 @@ using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 using ExpressionType = System.Linq.Expressions.ExpressionType;
 
 namespace Saltarelle.Compiler.Compiler {
+	public enum StateMachineType {
+		NormalMethod,
+		IteratorBlockReturningIEnumerable,
+		IteratorBlockReturningIEnumerator,
+		AsyncVoid,
+		AsyncTask
+	}
+
 	public class StatementCompiler : DepthFirstAstVisitor {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
@@ -70,7 +79,104 @@ namespace Saltarelle.Compiler.Compiler {
 			_errorReporter.Region = region;
 		}
 
-		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument) {
+		internal static bool DisableStateMachineRewriteTestingUseOnly;
+
+		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, bool returnsIEnumerable, IType yieldType, string yieldResultVariable, IList<string> methodParameterNames) {
+			var body = new List<JsStatement>();
+			body.Add(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration(yieldResultVariable, null) }.Concat(sm.Variables)));
+			body.AddRange(sm.FinallyHandlers.Select(h => new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2))));
+			body.Add(new JsReturnStatement(_runtimeLibrary.MakeEnumerator(yieldType,
+			                                                              JsExpression.FunctionDefinition(new string[0], sm.MainBlock),
+			                                                              JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Identifier(yieldResultVariable))),
+			                                                              sm.Disposer != null ? JsExpression.FunctionDefinition(new string[0], sm.Disposer) : null)));
+			if (returnsIEnumerable) {
+				body = new List<JsStatement> {
+				    new JsReturnStatement(_runtimeLibrary.MakeEnumerable(
+				        yieldType,
+				        JsExpression.FunctionDefinition(new string[0],
+				            new JsReturnStatement(
+				                JsExpression.Invocation(
+				                    JsExpression.MemberAccess(
+				                        JsExpression.FunctionDefinition(methodParameterNames, new JsBlockStatement(body)),
+				                        "call"),
+				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(p => JsExpression.Identifier(p)))
+				                )
+				            )
+				        )
+				    ))
+				};
+			}
+
+			return new JsBlockStatement(body);
+		}
+
+		internal JsFunctionDefinitionExpression StateMachineRewriteNormalMethod(JsFunctionDefinitionExpression function) {
+			if (DisableStateMachineRewriteTestingUseOnly)
+				return function;
+
+			var usedLoopLabels = new HashSet<string>();
+			var body = StateMachineRewriter.RewriteNormalMethod(function.Body,
+			                                                    ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+			                                                    () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                    () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                    () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; });
+
+			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
+		}
+
+		private JsFunctionDefinitionExpression StateMachineRewriteIteratorBlock(JsFunctionDefinitionExpression function, bool returnsIEnumerable, IType yieldType) {
+			if (DisableStateMachineRewriteTestingUseOnly)
+				return function;
+
+			var usedLoopLabels = new HashSet<string>();
+			string yieldResultVariable = _namer.GetVariableName(_namer.YieldResultVariableDesiredName, _usedVariableNames);
+			_usedVariableNames.Add(yieldResultVariable);
+			var body = StateMachineRewriter.RewriteIteratorBlock(function.Body,
+			                                                     ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+			                                                     () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                     () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                     () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
+			                                                     () => { var result = _namer.GetVariableName(_namer.FinallyHandlerDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                     x => JsExpression.Assign(JsExpression.Identifier(yieldResultVariable), x),
+			                                                     sm => MakeIteratorBody(sm, returnsIEnumerable, yieldType, yieldResultVariable, function.ParameterNames));
+
+			return JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
+		}
+
+		private JsFunctionDefinitionExpression StateMachineRewriteAsyncMethod(JsFunctionDefinitionExpression function, bool returnsTask, IType taskGenericArgument) {
+			if (DisableStateMachineRewriteTestingUseOnly)
+				return function;
+
+			var usedLoopLabels = new HashSet<string>();
+			string stateMachineVariable = _namer.GetVariableName(_namer.AsyncStateMachineVariableDesiredName, _usedVariableNames);
+			_usedVariableNames.Add(stateMachineVariable);
+			string doFinallyBlocksVariable = _namer.GetVariableName(_namer.AsyncDoFinallyBlocksVariableDesiredName, _usedVariableNames);
+			_usedVariableNames.Add(doFinallyBlocksVariable);
+			string taskCompletionSourceVariable;
+			if (returnsTask) {
+				taskCompletionSourceVariable = _namer.GetVariableName(_namer.AsyncTaskCompletionSourceVariableDesiredName, _usedVariableNames);
+				_usedVariableNames.Add(taskCompletionSourceVariable);
+			}
+			else {
+				taskCompletionSourceVariable = null;
+			}
+
+			var body = StateMachineRewriter.RewriteAsyncMethod(function.Body,
+			                                                   ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+			                                                   () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                   () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
+			                                                   () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
+			                                                   stateMachineVariable,
+			                                                   doFinallyBlocksVariable,
+			                                                   taskCompletionSourceVariable != null ? new JsVariableDeclaration(taskCompletionSourceVariable, _runtimeLibrary.CreateTaskCompletionSource(taskGenericArgument)) : null,
+			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncResult(JsExpression.Identifier(taskCompletionSourceVariable), expr) : (Func<JsExpression, JsExpression>)null,
+			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncException(JsExpression.Identifier(taskCompletionSourceVariable), expr) : (Func<JsExpression, JsExpression>)null,
+			                                                   taskCompletionSourceVariable != null ? () => _runtimeLibrary.GetTaskFromTaskCompletionSource(JsExpression.Identifier(taskCompletionSourceVariable)) : (Func<JsExpression>)null);
+
+			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
+		}
+
+		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetRegion(body.GetRegion());
 			try {
 				_result = MethodCompiler.FixByRefParameters(parameters, variables);
@@ -80,7 +186,29 @@ namespace Saltarelle.Compiler.Compiler {
 					jsbody = (JsBlockStatement)_result[0];
 				else
 					jsbody = new JsBlockStatement(_result);
-	            return JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Select(p => variables[p].Name)), jsbody);
+
+				var result = JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Select(p => variables[p].Name)), jsbody);
+
+				switch (stateMachineType) {
+					case StateMachineType.NormalMethod:
+						result = StateMachineRewriteNormalMethod(result);
+						break;
+
+					case StateMachineType.IteratorBlockReturningIEnumerable:
+					case StateMachineType.IteratorBlockReturningIEnumerator:
+						result = StateMachineRewriteIteratorBlock(result, stateMachineType == StateMachineType.IteratorBlockReturningIEnumerable, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
+						break;
+
+					case StateMachineType.AsyncVoid:
+					case StateMachineType.AsyncTask:
+						result = StateMachineRewriteAsyncMethod(result, stateMachineType == StateMachineType.AsyncTask, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
+						break;
+
+					default:
+						throw new ArgumentException("stateMachineType");
+				}
+
+	            return result;
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
@@ -346,7 +474,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var compiled = _expressionCompiler.Compile(resolveResult, false);
 			_result.AddRange(compiled.AdditionalStatements);
-			_result.Add(new JsExpressionStatement(compiled.Expression));
+			if (compiled.Expression.NodeType != ExpressionNodeType.Null)	// The statement "null;" is illegal in C#, so it must have appeared because there was no suitable expression to return.
+				_result.Add(new JsExpressionStatement(compiled.Expression));
 		}
 
 		public override void VisitForStatement(ForStatement forStatement) {
