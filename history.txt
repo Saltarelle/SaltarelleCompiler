@@ -1,3 +1,4 @@
+Implemented support for async/await.
 Fixed problems causing compilation error when using a default constructor constarint on a type parameter.
 Fixed invoking method implemented as inline code with type parameters as type arguments.
 Can now specify custom implementations for methods/properties that override/implement [NonScriptable] base members.
