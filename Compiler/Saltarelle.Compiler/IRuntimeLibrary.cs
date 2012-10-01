@@ -153,9 +153,9 @@ namespace Saltarelle.Compiler {
 		JsExpression Default(IType type);
 
 		/// <summary>
-		/// Generates an expression that creates an array of a specified size, with all elements uninitialized.
+		/// Generates an expression that creates an array of a specified size (one item for each rank), with all elements initialized to their default values.
 		/// </summary>
-		JsExpression CreateArray(JsExpression size);
+		JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> sizes);
 
 		/// <summary>
 		/// Generates an expression that copies an existing delegate to a new one.
@@ -195,5 +195,41 @@ namespace Saltarelle.Compiler {
 		/// <param name="yieldType">The yield type of the enumerable. <see cref="object"/> if the enumerable is non-generic.</param>
 		/// <param name="getEnumerator">Function to invoke when <see cref="IEnumerable.GetEnumerator"/> is invoked on the enumerator.</param>
 		JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator);
+
+		/// <summary>
+		/// Generates an expression that gets the value at a specific index of a multi-dimensional array.
+		/// </summary>
+		JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices);
+
+		/// <summary>
+		/// Generates an expression that sets the value at a specific index of a multi-dimensional array.
+		/// </summary>
+		JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value);
+
+		/// <summary>
+		/// Generates an expression that creates a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskGenericArgument">If the method being built returns a <c>Task&lt;T&gt;</c>, this parameter will contain <c>T</c>. If the method returns a non-generic task, this parameter will be null.</param>
+		JsExpression CreateTaskCompletionSource(IType taskGenericArgument);
+
+		/// <summary>
+		/// Generates an expression that applies the result of an async method to a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		/// <param name="value">Value to return. Will be null if the method does not return a value (in which case it must be a method returning a non-generic task).</param>
+		JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value);
+
+		/// <summary>
+		/// Generates an expression that applies an exception to a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		/// <param name="exception">The exception to return. Note that this may be any object (not necessarily an Exception instance).</param>
+		JsExpression SetAsyncException(JsExpression taskCompletionSource, JsExpression exception);
+
+		/// <summary>
+		/// Generates an expression that retrieves the Task instance from a TaskCompletionSource.
+		/// </summary>
+		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource);
 	}
 }

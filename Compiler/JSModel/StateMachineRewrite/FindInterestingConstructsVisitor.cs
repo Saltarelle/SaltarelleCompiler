@@ -10,6 +10,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		YieldReturn = 2,
 		YieldBreak  = 4,
 		Goto        = 8,
+		Await       = 16,
 	}
 
 	internal class FindInterestingConstructsVisitor : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
@@ -41,6 +42,11 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 
 		public override JsStatement VisitGotoStatement(JsGotoStatement statement, object data) {
 			_result |= InterestingConstruct.Goto;
+			return statement;
+		}
+
+		public override JsStatement VisitAwaitStatement(JsAwaitStatement statement, object data) {
+			_result |= InterestingConstruct.Await;
 			return statement;
 		}
 

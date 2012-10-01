@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.OOPEmulator;
 using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
@@ -103,15 +104,15 @@ x = 1;
 		[Test]
 		public void TypesAppearInTheCorrectOrder() {
 			var names = new[] {
-				"SomeNamespace.InnerNamespace.OtherType1",
-				"SomeNamespace.InnerNamespace.OtherType2",
-				"SomeNamespace.SomeType",
-				"SomeNamespace.SomeType.StrangeType1",
-				"SomeNamespace.SomeType.StrangeType2",
 				"SomeType",
 				"SomeType2",
+				"SomeNamespace.SomeType",
+				"SomeNamespace.InnerNamespace.OtherType1",
+				"SomeNamespace.InnerNamespace.OtherType2",
+				"SomeNamespace.SomeType.StrangeType1",
+				"SomeNamespace.SomeType.StrangeType2",
 				"SomeType2.SomeType3",
-				"SomeTYpe2.SomeType3.SomeType4"
+				"SomeTYpe2.SomeType3.SomeType4",
 			};
 
 			var rnd = new Random(3);
@@ -135,7 +136,7 @@ class C1 : C2, I1 {}
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var n = new MockNamer();
             var er = new MockErrorReporter(true);
-			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
+			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er, allowUserDefinedStructs: false).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
 
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +165,50 @@ class C1 : C2, I1 {}
 				new JsClass(ReflectionHelper.ParseReflectionName("C2").Resolve(compilation.Compilation).GetDefinition(), "C2", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C3"), new JsExpression[0]),
 				new JsClass(ReflectionHelper.ParseReflectionName("C3").Resolve(compilation.Compilation).GetDefinition(), "C3", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
 				new JsClass(ReflectionHelper.ParseReflectionName("I1").Resolve(compilation.Compilation).GetDefinition(), "I1", JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
+		}
+
+		[Test]
+		public void BaseTypesAreRegisteredBeforeDerivedTypesGeneric() {
+			var sourceFile = new MockSourceFile("file.cs", @"
+class B<T> {}
+interface I<T> {}
+class A : B<int>, I<int> {}
+");
+			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
+			var n = new MockNamer();
+            var er = new MockErrorReporter(true);
+			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er, allowUserDefinedStructs: false).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// A
+{A} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// B
+{B} = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// I
+{I} = function() {
+};
+{B}.registerClass('B');
+{I}.registerClass('I');
+{A}.registerClass('A', {C}, {I});
+",			
+			
+				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), "A", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C"), new JsExpression[] { new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "I") }),
+				new JsClass(ReflectionHelper.ParseReflectionName("B`1").Resolve(compilation.Compilation).GetDefinition(), "B", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), "I", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]));
+		}
+
+		[Test]
+		public void ByNamespaceComparerOrdersTypesCorrectly() {
+			var orig = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
+			var rnd = new Random();
+			var shuffled = orig.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToList();
+			var actual = ScriptSharpOOPEmulator.OrderByNamespace(shuffled, s => s).ToList();
+			Assert.That(actual, Is.EqualTo(orig));
 		}
 	}
 }

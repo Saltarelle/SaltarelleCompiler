@@ -18,4 +18,18 @@ namespace System {
     	public void Reset() {}
     	public void Dispose() {}
     }
+
+    [ScriptNamespace("ss")]
+    [Imported(IsRealType = true)]
+	[IgnoreGenericArguments]
+    public sealed class ArrayEnumerator<T> : IEnumerator<T> {
+		object IEnumerator.Current { get { return default(T); } }
+
+    	public T Current { get { return default(T); } }
+
+    	public bool MoveNext() { return false; }
+
+    	public void Reset() {}
+    	public void Dispose() {}
+    }
 }

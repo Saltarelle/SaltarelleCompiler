@@ -23,6 +23,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void CreatingInstanceReturnsZero() {
+			Assert.AreStrictEqual(Activator.CreateInstance<decimal>(), 0);
+		}
+
+		[Test]
 		public void ConstantsWork() {
 			Assert.AreEqual(decimal.MinValue, 5e-324);
 			Assert.IsTrue(decimal.MaxValue > (decimal)(object)1.79e+308);

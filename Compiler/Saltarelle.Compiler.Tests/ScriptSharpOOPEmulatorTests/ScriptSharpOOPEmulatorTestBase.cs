@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -17,6 +18,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			typeDef.SetupGet(_ => _.FullName).Returns(name);
 			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
 			typeDef.SetupGet(_ => _.ParentAssembly).Returns(asm.Object);
+			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
 			return typeDef.Object;
 		}
 
@@ -33,7 +35,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			proj = proj.AddAssemblyReferences(new[] { Common.Mscorlib });
 			var comp = proj.CreateCompilation();
 			var er = new MockErrorReporter(true);
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator(metadataImporter, new MockRuntimeLibrary(), er);
+			var obj = new OOPEmulator.ScriptSharpOOPEmulator(comp, metadataImporter, new MockRuntimeLibrary(), er);
 			Assert.That(er.AllMessages, Is.Empty, "Should not have errors");
 			var rewritten = obj.Rewrite(types, comp);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));

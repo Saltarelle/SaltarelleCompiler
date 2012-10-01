@@ -72,23 +72,30 @@ lbl2:
 			g;
 			lbl2:
 			h;
+			try {
+				i;
+				lbl3:
+				j;
+			}
+			catch (k) {
+			}
 		}
-		catch (i) {
-			j;
+		catch (l) {
+			m;
 		}
-		k;
-		lbl3:
-		l;
-	}
-	catch (m) {
 		n;
-		lbl4:
+		lbl3:
 		o;
 	}
-	finally {
-		p;
-		lbl5:
+	catch (p) {
 		q;
+		lbl4:
+		r;
+	}
+	finally {
+		s;
+		lbl5:
+		t;
 	}
 }",
 @"{
@@ -97,22 +104,22 @@ lbl2:
 	for (;;) {
 		switch ($state1) {
 			case 0: {
+				$state1 = 1;
 				try {
-					$state1 = 1;
 					$loop2:
 					for (;;) {
 						switch ($state1) {
 							case 1: {
 								a;
+								$state1 = 2;
 								try {
-									$state1 = 2;
 									$loop3:
 									for (;;) {
 										switch ($state1) {
 											case 2: {
 												b;
+												$state1 = 3;
 												try {
-													$state1 = 3;
 													$loop4:
 													for (;;) {
 														switch ($state1) {
@@ -141,6 +148,29 @@ lbl2:
 											}
 											case 5: {
 												h;
+												$state1 = 6;
+												try {
+													$loop5:
+													for (;;) {
+														switch ($state1) {
+															case 6: {
+																i;
+																$state1 = 7;
+																continue $loop5;
+															}
+															case 7: {
+																j;
+																$state1 = -1;
+																break $loop5;
+															}
+															default: {
+																break $loop5;
+															}
+														}
+													}
+												}
+												catch (k) {
+												}
 												$state1 = -1;
 												break $loop3;
 											}
@@ -150,15 +180,11 @@ lbl2:
 										}
 									}
 								}
-								catch (i) {
-									j;
+								catch (l) {
+									m;
 								}
-								k;
-								$state1 = 6;
-								continue $loop2;
-							}
-							case 6: {
-								l;
+								n;
+								o;
 								$state1 = -1;
 								break $loop2;
 							}
@@ -168,44 +194,44 @@ lbl2:
 						}
 					}
 				}
-				catch (m) {
-					$state1 = 7;
-					$loop5:
+				catch (p) {
+					$state1 = 8;
+					$loop6:
 					for (;;) {
 						switch ($state1) {
-							case 7: {
-								n;
-								$state1 = 8;
-								continue $loop5;
-							}
 							case 8: {
-								o;
+								q;
+								$state1 = 9;
+								continue $loop6;
+							}
+							case 9: {
+								r;
 								$state1 = -1;
-								break $loop5;
+								break $loop6;
 							}
 							default: {
-								break $loop5;
+								break $loop6;
 							}
 						}
 					}
 				}
 				finally {
-					$state1 = 9;
-					$loop6:
+					$state1 = 10;
+					$loop7:
 					for (;;) {
 						switch ($state1) {
-							case 9: {
-								p;
-								$state1 = 10;
-								continue $loop6;
-							}
 							case 10: {
-								q;
+								s;
+								$state1 = 11;
+								continue $loop7;
+							}
+							case 11: {
+								t;
 								$state1 = -1;
-								break $loop6;
+								break $loop7;
 							}
 							default: {
-								break $loop6;
+								break $loop7;
 							}
 						}
 					}
@@ -223,7 +249,7 @@ lbl2:
 		}
 
 		[Test]
-		public void NestedFunctionsAreRewrittenByThemselves() {
+		public void NestedFunctionsAreNotTouched() {
 			AssertCorrect(
 @"{
 	a;
@@ -243,66 +269,34 @@ lbl2:
 	j;
 }",
 @"{
-	var $state3 = 0, c;
-	$loop3:
+	var $state1 = 0, c;
+	$loop1:
 	for (;;) {
-		switch ($state3) {
+		switch ($state1) {
 			case 0: {
 				a;
-				$state3 = 1;
-				continue $loop3;
+				$state1 = 1;
+				continue $loop1;
 			}
 			case 1: {
 				b;
 				c = function() {
-					var $state2 = 0, f;
-					$loop2:
-					for (;;) {
-						switch ($state2) {
-							case 0: {
-								d;
-								$state2 = 1;
-								continue $loop2;
-							}
-							case 1: {
-								e;
-								f = function() {
-									var $state1 = 0;
-									$loop1:
-									for (;;) {
-										switch ($state1) {
-											case 0: {
-												g;
-												$state1 = 1;
-												continue $loop1;
-											}
-											case 1: {
-												h;
-												$state1 = -1;
-												break $loop1;
-											}
-											default: {
-												break $loop1;
-											}
-										}
-									}
-								};
-								i;
-								$state2 = -1;
-								break $loop2;
-							}
-							default: {
-								break $loop2;
-							}
-						}
-					}
+					d;
+					lbl2:
+					e;
+					var f = function() {
+						g;
+						lbl3:
+						h;
+					};
+					i;
 				};
 				j;
-				$state3 = -1;
-				break $loop3;
+				$state1 = -1;
+				break $loop1;
 			}
 			default: {
-				break $loop3;
+				break $loop1;
 			}
 		}
 	}
@@ -338,15 +332,15 @@ lbl2:
 	for (;;) {
 		switch ($state1) {
 			case 0: {
+				$state1 = 1;
 				try {
-					$state1 = 1;
 					$loop2:
 					for (;;) {
 						switch ($state1) {
 							case 1: {
 								a;
+								$state1 = 2;
 								try {
-									$state1 = 2;
 									$loop3:
 									for (;;) {
 										switch ($state1) {

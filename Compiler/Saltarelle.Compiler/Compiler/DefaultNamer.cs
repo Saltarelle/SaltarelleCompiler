@@ -49,5 +49,17 @@ namespace Saltarelle.Compiler.Compiler
 		public string YieldResultVariableDesiredName {
 			get { return "$result"; }
 		}
+
+		public string AsyncStateMachineVariableDesiredName {
+			get { return "$sm"; }
+		}
+
+		public string AsyncDoFinallyBlocksVariableDesiredName {
+			get { return "$doFinally"; }
+		}
+
+		public string AsyncTaskCompletionSourceVariableDesiredName {
+			get { return "$tcs"; }
+		}
 	}
 }

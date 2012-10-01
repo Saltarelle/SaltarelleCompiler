@@ -7,7 +7,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		[Test]
 		public void GotoWorks() {
 			try {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
 @"Exception MyProperty { get; set; }
@@ -22,7 +22,7 @@ myLabel:
 ");
 			}
 			finally {
-				MethodCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
 			}
 		}
 	}

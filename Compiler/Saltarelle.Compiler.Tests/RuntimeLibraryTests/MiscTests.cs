@@ -64,5 +64,29 @@ public class C {
 @"		var b = Date.areNotEqual(this.$f(), null);
 ");
 		}
+
+		[Test]
+		public void CanCompileCodeWithNonAsciiCharacters() {
+			AssertSourceCorrect(
+@"namespace Ф {
+	class Класс {
+		void Я() {
+			string Щ = ""г"";
+		}
+	}
+}",
+@"Type.registerNamespace('Ф');
+////////////////////////////////////////////////////////////////////////////////
+// Ф.Класс
+Ф.$Класс = function() {
+};
+Ф.$Класс.prototype = {
+	$я: function() {
+		var Щ = 'г';
+	}
+};
+Ф.$Класс.registerClass('Ф.$Класс', Object);
+");
+		}
 	}
 }

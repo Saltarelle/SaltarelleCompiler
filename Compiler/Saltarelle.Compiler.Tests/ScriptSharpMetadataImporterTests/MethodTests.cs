@@ -1056,6 +1056,146 @@ class C1 {
 		}
 
 		[Test]
+		public void NonScriptableAttributeIsNotInheritedFromInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { [NonScriptable] void SomeMethod(); }
+public class C1 : I {
+	public void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("someMethod"));
+		}
+
+		[Test]
+		public void NonScriptableAttributeIsInheritedForExplicitInterfaceImplementation() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { [NonScriptable] void SomeMethod(); }
+public class C1 : I {
+	void I.SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
+		public void CanSpecifyNameForMethodImplementingUnusableInterfaceMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I { [NonScriptable] void SomeMethod(); }
+class C1 : I {
+	[ScriptName(""renamed"")]
+	public void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("renamed"));
+		}
+
+		[Test]
+		public void CanSpecifyInlineCodeForMethodImplementingUnusableInterfaceMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I { [NonScriptable] void SomeMethod(); }
+class C1 : I {
+	[InlineCode(""X"")]
+	public void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+		}
+
+		[Test]
+		public void CanSpecifyScriptSkipForMethodImplementingUnusableInterfaceMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I { [NonScriptable] void SomeMethod(); }
+class C1 : I {
+	[ScriptSkip]
+	public void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}"));
+		}
+
+		[Test]
+		public void NonScriptableAttributeIsNotInheritedFromBaseMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class B { [NonScriptable] public virtual void SomeMethod(); }
+public class C1 : B {
+	public override void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("someMethod"));
+		}
+
+		[Test]
+		public void CanSpecifyNameForMethodOverridingUnusableBaseMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class B { [NonScriptable] public virtual void SomeMethod(); }
+class C1 : B {
+	[ScriptName(""renamed"")]
+	public override void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("renamed"));
+		}
+
+		[Test]
+		public void CanSpecifyInlineCodeForMethodOverridingUnusableBaseMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class B { [NonScriptable] public virtual void SomeMethod(); }
+class C1 : B {
+	[InlineCode(""X"")]
+	public sealed override void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+		}
+
+		[Test]
+		public void CanSpecifyScriptSkipForMethodOverridingUnusableBaseMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class B { [NonScriptable] public virtual void SomeMethod(); }
+class C1 : B {
+	[ScriptSkip]
+	public sealed override void SomeMethod() {
+	}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}"));
+		}
+
+		[Test]
 		public void IgnoreGenericArgumentsAttributeWorks() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

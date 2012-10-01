@@ -17,6 +17,49 @@ Array.prototype.get_count = function#? DEBUG Array$get_count##() {
 	return this.length;
 }
 
+Array.prototype.getValue = function#? DEBUG Array$getValue##(indices) {
+	if (indices.length != (this._sizes ? this._sizes.length : 1))
+		throw 'Invalid number of indices';
+
+	var idx = indices[0];
+	if (this._sizes) {
+		for (var i = 1; i < this._sizes.length; i++)
+			idx = idx * this._sizes[i] + indices[i];
+	}
+	var r = this[idx];
+	return typeof r !== 'undefined' ? r : this._defvalue;
+}
+
+Array.prototype.get = function#? DEBUG Array$get##() {
+	return this.getValue(arguments);
+}
+
+Array.prototype.setValue = function#? DEBUG Array$setValue##(value, indices) {
+	if (indices.length != (this._sizes ? this._sizes.length : 1))
+		throw 'Invalid number of indices';
+
+	var idx = indices[0];
+	if (this._sizes) {
+		for (var i = 1; i < this._sizes.length; i++)
+			idx = idx * this._sizes[i] + indices[i];
+	}
+	this[idx] = value;
+}
+
+Array.prototype.set = function#? DEBUG Array$set##() {
+	return this.setValue(arguments[arguments.length - 1], Array.prototype.slice.call(arguments, 0, arguments.length - 1));
+}
+
+Array.prototype.get_rank = function#? DEBUG Array$get_rank##() {
+	return this._sizes ? this._sizes.length : 1;
+}
+
+Array.prototype.getLength = function#? DEBUG Array$getLength##(dimension) {
+	if (dimension >= (this._sizes ? this._sizes.length : 1))
+		throw 'Invalid dimension';
+	return this._sizes ? this._sizes[dimension] : this.length;
+}
+
 Array.prototype.extract = function#? DEBUG Array$extract##(start, count) {
    if (!ss.isValue(count)) {
        return this.slice(start);
@@ -226,4 +269,17 @@ Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {
 		e.dispose();
 	}
 	return r;
+}
+
+Array.multidim = function#? DEBUG Array$multidim##(defvalue, sizes) {
+	var arr = [];
+	arr._defvalue = defvalue;
+	arr._sizes = [arguments[1]];
+	var length = arguments[1];
+	for (var i = 2; i < arguments.length; i++) {
+		length *= arguments[i];
+		arr._sizes[i - 1] = arguments[i];
+	}
+	arr.length = length;
+	return arr;
 }

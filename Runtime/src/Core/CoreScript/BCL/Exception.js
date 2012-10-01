@@ -24,11 +24,3 @@ ss.Exception.wrap = function#? DEBUG Exception$get_message##(o) {
 		return new ss.Exception(o);
 	}
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// NotSupportedException
-
-ss.NotSupportedException = function#? DEBUG NotSupportedException$##(message, innerException) {
-	ss.Exception.call(this, message, innerException);
-};
-ss.NotSupportedException.registerClass('ss.NotSupportedException', ss.Exception);

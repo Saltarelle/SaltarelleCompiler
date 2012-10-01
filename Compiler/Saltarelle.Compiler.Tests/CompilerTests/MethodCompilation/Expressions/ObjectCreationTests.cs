@@ -852,5 +852,87 @@ public class C {
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
 		}
+
+		[Test]
+		public void CreatingAnInstanceOfATypeParameterWithADefaultConstructorConstraintInvokesGenericActivatorCreateInstance() {
+			AssertCorrect(
+@"public class C1 {
+	public C1(int x) {}
+	public C1(string x) {}
+	public int P { get; set; }
+}
+
+public void M<TMyType>() where TMyType : new() {
+	// BEGIN
+	var c = new TMyType();
+	// END
+}",
+@"	var $c = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, ga_$TMyType).call(null);
+");
+		}
+
+		[Test]
+		public void ObjectInitializerAssignedToByReferenceVariable() {
+			AssertCorrect(
+@"public int P1;
+public void M(out C c) {
+	// BEGIN
+	c = new C { P1 = 123 };
+	// END
+}
+",
+@"	var $tmp1 = new {inst_C}();
+	$tmp1.$P1 = 123;
+	$c.$ = $tmp1;
+");
+		}
+
+		[Test]
+		public void ObjectInitializerAssignedToField() {
+			AssertCorrect(
+@"public C F() { return null; }
+public C X;
+
+public int P1;
+public void M() {
+	// BEGIN
+	X = new C { P1 = 123 };
+	F().X = new C { P1 = 123 };
+	// END
+}
+",
+@"	var $tmp1 = new {inst_C}();
+	$tmp1.$P1 = 123;
+	this.$X = $tmp1;
+	var $tmp3 = this.$F();
+	var $tmp2 = new {inst_C}();
+	$tmp2.$P1 = 123;
+	$tmp3.$X = $tmp2;
+");
+		}
+
+		[Test]
+		public void ObjectInitializerAssignedToProperty() {
+			AssertCorrect(
+@"public C F() { return null; }
+public C X { get; set; }
+
+public int P1;
+public void M() {
+	// BEGIN
+	X = new C { P1 = 123 };
+	F().X = new C { P1 = 123 };
+	// END
+}
+",
+@"	var $tmp1 = new {inst_C}();
+	$tmp1.$P1 = 123;
+	this.set_$X($tmp1);
+	var $tmp3 = this.$F();
+	var $tmp2 = new {inst_C}();
+	$tmp2.$P1 = 123;
+	$tmp3.set_$X($tmp2);
+");
+		}
 	}
 }

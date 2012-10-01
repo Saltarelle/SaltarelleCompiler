@@ -153,6 +153,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="CompilerTests\CompilerTestBase.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Bugs.cs" />
+    <Compile Include="CompilerTests\MethodCompilation\Expressions\AwaitTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\LocalsTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\MethodCompilationTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\QueryExpressionTests.cs" />
@@ -218,7 +219,6 @@
     <Compile Include="CompilerTests\MethodCompilation\Statements\WhileStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\YieldStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\VariableGatheringTests.cs" />
-    <Compile Include="CompilerTests\UnsupportedConstructsScannerTests.cs" />
     <Compile Include="DefaultNamerTests\GetStateMachineLoopLabelTests.cs" />
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
@@ -227,10 +227,12 @@
     <Compile Include="MockNamer.cs" />
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
+    <Compile Include="RuntimeLibraryTests\ActivatorTests.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\DelegateTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\ScriptSharpCompatibilityTests.cs" />
+    <Compile Include="StateMachineTests\AsyncTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
     <Compile Include="StateMachineTests\SwitchStatementTests.cs" />

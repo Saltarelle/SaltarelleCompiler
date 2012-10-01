@@ -52,6 +52,7 @@
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="Minification\Minifier.cs" />
     <Compile Include="StateMachineRewrite\ContainsBreakVisitor.cs" />
+    <Compile Include="StateMachineRewrite\HasAwaitInsideTryWithFinallyVisitor.cs" />
     <Compile Include="StateMachineRewrite\DisposeGenerator.cs" />
     <Compile Include="StateMachineRewrite\FinalizerRewriter.cs" />
     <Compile Include="StateMachineRewrite\IntermediateStatements.cs" />
@@ -59,13 +60,13 @@
     <Compile Include="StateMachineRewrite\NestedJumpStatementRewriter.cs" />
     <Compile Include="StateMachineRewrite\RemainingBlock.cs" />
     <Compile Include="StateMachineRewrite\Section.cs" />
-    <Compile Include="StateMachineRewrite\SingleStateMachineRewriter.cs" />
     <Compile Include="StateMachineRewrite\StackEntry.cs" />
     <Compile Include="StateMachineRewrite\State.cs" />
     <Compile Include="StateMachineRewrite\IteratorStateMachine.cs" />
     <Compile Include="StateMachineRewrite\StateMachineRewriter.cs" />
     <Compile Include="OutputFormatter.cs" />
     <Compile Include="StateMachineRewrite\VariableHoistingVisitor.cs" />
+    <Compile Include="Statements\JsAwaitStatement.cs" />
     <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />

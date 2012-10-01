@@ -941,31 +941,6 @@ public class C {
 		}
 
 		[Test]
-		public void TypeCreateInstanceWorks() {
-			var result = ExecuteCSharp(@"
-using System;
-using System.Runtime.CompilerServices;
-
-public class C1 {}
-public class C2 { public int x; public C2(int x) { this.x = x; } }
-public class C3 { public int x, y; public C3(int x, int y) { this.x = x; this.y = y; } }
-
-public class C {
-	public static int[] M() {
-		var c1 = (C1)Type.CreateInstance(typeof(C1));
-		var c2 = (C2)Type.CreateInstance(typeof(C2), 3);
-		var c3 = (C3)Type.CreateInstance(typeof(C3), 7, 9);
-		var c4 = Type.CreateInstance<C1>();
-		var c5 = Type.CreateInstance<C2>(10);
-		var c6 = Type.CreateInstance<C3>(11, 12);
-
-		return new[] { c2.x, c3.x, c3.y, c5.x, c6.x, c6.y };
-	}
-}", "C.M");
-			Assert.That(result, Is.EqualTo(new[] { 3, 7, 9, 10, 11, 12 }));
-		}
-
-		[Test]
 		public void ImportedInterfaceAppearsAsObjectWhenUsedWithTypeOfAndAsGenericArgument() {
 			var result = ExecuteCSharp(@"
 using System;
@@ -1049,7 +1024,7 @@ public class C {
 }",
 @"		var v1 = o;
 		var v2 = o;
-		var v3 = true;
+		var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1074,7 +1049,32 @@ public class C {
 }",
 @"		var v1 = o;
 		var v2 = o;
-		var v3 = true;
+		var v3 = ss.isValue(o);
+");
+		}
+
+		[Test]
+		public void CastToImportedGenericClassIsANoOp() {
+			AssertSourceCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+[Imported]
+class C1<T> {}
+
+public class C {
+	private void M() {
+		object o = null;
+		// BEGIN
+		var v1 = (C1<int>)o;
+		var v2 = o as C1<int>;
+		var v3 = o is C1<int>;
+		// END
+	}
+}",
+@"		var v1 = o;
+		var v2 = o;
+		var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1101,7 +1101,7 @@ public class C {
 }",
 @"		var v1 = o;
 		var v2 = o;
-		var v3 = true;
+		var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1185,6 +1185,18 @@ public class C {
 }",
 @"		var b = !!d;
 ");
+		}
+
+		[Test]
+		public void FalseIsFunctionShouldReturnFalse() {
+			var result = ExecuteCSharp(
+@"using System;
+public class C {
+	public static bool M() {
+		return (object)false is Function;
+	}
+}", "C.M");
+			Assert.That(result, Is.False);
 		}
 	}
 }

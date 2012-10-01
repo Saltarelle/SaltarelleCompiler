@@ -34,9 +34,59 @@ namespace CoreLibTests {
 		}
 
 		[Test]
-		public void IndexingWorks() {
+		public void RankIsOne() {
+			Assert.AreEqual(new int[0].Rank, 1);
+		}
+
+		[Test]
+		public void GetLengthWorks() {
+			Assert.AreEqual(new int[0].GetLength(0), 0);
+			Assert.AreEqual(new[] { "x" }.GetLength(0), 1);
+			Assert.AreEqual(new[] { "x", "y" }.GetLength(0), 2);
+		}
+
+		[Test]
+		public void GetLowerBound() {
+			Assert.AreEqual(new int[0].GetLowerBound(0), 0);
+			Assert.AreEqual(new[] { "x" }.GetLowerBound(0), 0);
+			Assert.AreEqual(new[] { "x", "y" }.GetLowerBound(0), 0);
+		}
+
+		[Test]
+		public void GetUpperBoundWorks() {
+			Assert.AreEqual(new int[0].GetUpperBound(0), -1);
+			Assert.AreEqual(new[] { "x" }.GetUpperBound(0), 0);
+			Assert.AreEqual(new[] { "x", "y" }.GetUpperBound(0), 1);
+		}
+
+		[Test]
+		public void GettingValueByIndexWorks() {
 			Assert.AreEqual(new[] { "x", "y"}[0], "x");
 			Assert.AreEqual(new[] { "x", "y"}[1], "y");
+		}
+		
+		[Test]
+		public void GetValueWorks() {
+			Assert.AreEqual(new[] { "x", "y"}.GetValue(0), "x");
+			Assert.AreEqual(new[] { "x", "y"}.GetValue(1), "y");
+		}
+
+		[Test]
+		public void SettingValueByIndexWorks() {
+			var arr = new string[2];
+			arr[0] = "x";
+			arr[1] = "y";
+			Assert.AreEqual(arr[0], "x");
+			Assert.AreEqual(arr[1], "y");
+		}
+		
+		[Test]
+		public void SetValueWorks() {
+			var arr = new string[2];
+			arr.SetValue("x", 0);
+			arr.SetValue("y", 1);
+			Assert.AreEqual(arr[0], "x");
+			Assert.AreEqual(arr[1], "y");
 		}
 
 		[Test]
@@ -73,15 +123,15 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EveryWithArrayItemFilterCallbackWorks() {
-			Assert.IsTrue(new[] { 1, 2, 3 }.Every(x => (int)x > 0));
-			Assert.IsFalse(new[] { 1, 2, 3 }.Every(x => (int)x > 1));
+			Assert.IsTrue(new[] { 1, 2, 3 }.Every(x => x > 0));
+			Assert.IsFalse(new[] { 1, 2, 3 }.Every(x => x > 1));
 		}
 
 		[Test]
 		public void EveryWithArrayFilterCallbackWorks() {
 			var arr = new[] { 1, 2, 3 };
-			Assert.IsTrue(arr.Every((x, i, a) => a == arr && (int)x == i + 1));
-			Assert.IsFalse(arr.Every((x, i, a) => (int)x > 1));
+			Assert.IsTrue(arr.Every((x, i, a) => a == arr && x == i + 1));
+			Assert.IsFalse(arr.Every((x, i, a) => x > 1));
 		}
 
 		[Test]
@@ -106,13 +156,13 @@ namespace CoreLibTests {
 
 		[Test]
 		public void FilterWithArrayItemFilterCallbackWorks() {
-			Assert.AreEqual(new[] { 1, 2, 3, 4 }.Filter(x => (int)x > 1 && (int)x < 4), new[] { 2, 3 });
+			Assert.AreEqual(new[] { 1, 2, 3, 4 }.Filter(x => x > 1 && x < 4), new[] { 2, 3 });
 		}
 
 		[Test]
 		public void FilterWithArrayFilterCallbackWorks() {
 			var arr = new[] { -1, 1, 4, 3 };
-			Assert.AreEqual(arr.Filter((x, i, a) => a == arr && (int)x == i), new[] { 1, 3 });
+			Assert.AreEqual(arr.Filter((x, i, a) => a == arr && x == i), new[] { 1, 3 });
 		}
 
 		[Test]
@@ -125,7 +175,7 @@ namespace CoreLibTests {
 		[Test]
 		public void ForeachWithArrayCallbackWorks() {
 			string result = "";
-			new[] { "a", "b", "c" }.ForEach((s, i, a) => result += (string)s + i);
+			new[] { "a", "b", "c" }.ForEach((s, i, a) => result += s + i);
 			Assert.AreEqual(result, "a0b1c2");
 		}
 
@@ -156,7 +206,7 @@ namespace CoreLibTests {
 
 		[Test]
 		public void MapWithArrayMapCallbackWorks() {
-			Assert.AreEqual(new[] { "a", "b", "c", "b" }.Map((s, i, a) => (string)s + i), new[] { "a0", "b1", "c2", "b3" });
+			Assert.AreEqual(new[] { "a", "b", "c", "b" }.Map((s, i, a) => s + i), new[] { "a0", "b1", "c2", "b3" });
 		}
 
 		[Test]
@@ -173,14 +223,14 @@ namespace CoreLibTests {
 
 		[Test]
 		public void SomeWithArrayItemFilterCallbackWorks() {
-			Assert.IsTrue(new[] { 1, 2, 3, 4 }.Some(i => (int)i > 1));
-			Assert.IsFalse(new[] { 1, 2, 3, 4 }.Some(i => (int)i > 5));
+			Assert.IsTrue(new[] { 1, 2, 3, 4 }.Some(i => i > 1));
+			Assert.IsFalse(new[] { 1, 2, 3, 4 }.Some(i => i > 5));
 		}
 
 		[Test]
 		public void SomeWithArrayFilterCallbackWorks() {
-			Assert.IsTrue(new[] { 1, 1, 6, 2 }.Some((x, i, a) => (int)x == i + 1));
-			Assert.IsFalse(new[] { 2, 1, 6, 2 }.Some((x, i, a) => (int)x == i + 1));
+			Assert.IsTrue(new[] { 1, 1, 6, 2 }.Some((x, i, a) => x == i + 1));
+			Assert.IsFalse(new[] { 2, 1, 6, 2 }.Some((x, i, a) => x == i + 1));
 		}
 
 		[Test]
@@ -193,7 +243,7 @@ namespace CoreLibTests {
 		[Test]
 		public void SortWithCompareCallbackWorks() {
 			var arr = new[] { 1, 6, 6, 4, 2 };
-			arr.Sort((x, y) => (int)y - (int)x);
+			arr.Sort((x, y) => y - x);
 			Assert.AreEqual(arr, new[] { 6, 6, 4, 2, 1 });
 		}
 

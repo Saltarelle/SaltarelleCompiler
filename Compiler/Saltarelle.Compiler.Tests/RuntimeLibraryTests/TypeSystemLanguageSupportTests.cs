@@ -279,5 +279,31 @@ public class C {
 
 			Assert.That(result, Is.True);
 		}
+
+		[Test]
+		public void ConversionToAndFromDynamicWorks() {
+			AssertSourceCorrect(@"
+using System;
+using System.Runtime.CompilerServices;
+
+public class C {
+	private void M() {
+		int i = 0;
+		object o = null;
+		dynamic d = null;
+		// BEGIN
+		d = i;
+		i = d;
+		d = o;
+		o = d;
+		// END
+	}
+}",
+@"		d = i;
+		i = ss.Nullable.unbox(Type.cast(d, ss.Int32));
+		d = o;
+		o = d;
+");
+		}
 	}
 }

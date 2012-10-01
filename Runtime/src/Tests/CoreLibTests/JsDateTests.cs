@@ -14,9 +14,14 @@ namespace CoreLibTests {
 		}
 
 		[Test]
-		public void DefaultConstructorWorks() {
+		public void DefaultConstructorReturnsTodaysDate() {
 			var dt = new JsDate();
 			Assert.IsTrue(dt.GetFullYear() > 2011);
+		}
+
+		[Test]
+		public void CreatingInstanceReturnsTodaysDate() {
+			Assert.IsTrue(Activator.CreateInstance<JsDate>().GetFullYear() > 2011);
 		}
 
 		[Test]

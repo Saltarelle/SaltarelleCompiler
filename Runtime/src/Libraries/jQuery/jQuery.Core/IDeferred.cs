@@ -5,6 +5,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace jQueryApi {
 
@@ -13,7 +14,7 @@ namespace jQueryApi {
     /// </summary>
     [Imported]
     [IgnoreNamespace]
-    public interface IDeferred {
+    public interface IDeferred : IPromise {
 
         /// <summary>
         /// Add handlers to be called when the deferred object is resolved or
@@ -133,7 +134,7 @@ namespace jQueryApi {
     [Imported]
     [IgnoreNamespace]
 	[IgnoreGenericArguments]
-    public interface IDeferred<TData> {
+    public interface IDeferred<TData> : IPromise {
 
         /// <summary>
         /// Add handlers to be called when the deferred object is resolved or

@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.TypeSystem;
 using Mono.Collections.Generic;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.MetadataImporter;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.OOPEmulator {
 	public class ScriptSharpOOPEmulator : IOOPEmulator {
@@ -24,14 +28,31 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private const string FlagsAttribute = "FlagsAttribute";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
+		private static Tuple<string, string> Split(string name) {
+			int pos = name.LastIndexOf('.');
+			if (pos == -1)
+				return Tuple.Create("", name);
+			else
+				return Tuple.Create(name.Substring(0, pos), name.Substring(pos + 1));
+		}
+
+		internal static IEnumerable<T> OrderByNamespace<T>(IEnumerable<T> source, Func<T, string> nameSelector) {
+			return    from s in source
+			           let t = Split(nameSelector(s))
+			       orderby t.Item1, t.Item2
+			        select s;
+		}
+
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
+		private readonly ICompilation _compilation;
 
-		public ScriptSharpOOPEmulator(IScriptSharpMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
+		public ScriptSharpOOPEmulator(ICompilation compilation, IScriptSharpMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
 			_metadataImporter = metadataImporter;
 			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
+			_compilation = compilation;
 		}
 
 		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName, string nmspace = "System.Runtime.CompilerServices") {
@@ -58,6 +79,40 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			if (interfaces.Count > 0)
 				args.AddRange(interfaces);
 			return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterClass), args);
+		}
+
+		private JsExpression CreateDefaultConstructorInvocation(IMethod defaultConstructor, JsExpression typeRef) {
+			var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
+			switch (sem.Type) {
+				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:  // default behavior is good enough.
+				case ConstructorScriptSemantics.ImplType.NotUsableFromScript: // Can't be invoked so we don't need to create it.
+					return null;
+
+				case ConstructorScriptSemantics.ImplType.NamedConstructor:
+					return JsExpression.New(JsExpression.MemberAccess(typeRef, sem.Name));
+
+				case ConstructorScriptSemantics.ImplType.StaticMethod:
+					if (sem.IsGlobal)
+						return JsExpression.Invocation(JsExpression.Identifier(sem.Name));
+					else
+						return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, sem.Name));
+
+				case ConstructorScriptSemantics.ImplType.InlineCode:
+					var prevRegion = _errorReporter.Region;
+					try {
+						_errorReporter.Region = defaultConstructor.Region;
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor, sem.LiteralCode, null, EmptyList<JsExpression>.Instance, r => r.Resolve(_compilation), _runtimeLibrary.GetScriptType, false, s => _errorReporter.Message(7525, s));
+					}
+					finally {
+						_errorReporter.Region = prevRegion;
+					}
+
+				case ConstructorScriptSemantics.ImplType.Json:
+					return JsExpression.ObjectLiteral();
+
+				default:
+					throw new Exception("Invalid constructor implementation type: " + sem.Type);
+			}
 		}
 
 		private void AddClassMembers(JsClass c, JsExpression typeRef, ICompilation compilation, List<JsStatement> stmts) {
@@ -96,6 +151,18 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			if (c.NamedConstructors.Count > 0) {
 				stmts.AddRange(c.NamedConstructors.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, m.Name), m.Definition))));
 				stmts.Add(new JsExpressionStatement(c.NamedConstructors.Reverse().Aggregate((JsExpression)JsExpression.MemberAccess(typeRef, Prototype), (right, ctor) => JsExpression.Assign(JsExpression.MemberAccess(JsExpression.MemberAccess(typeRef, ctor.Name), Prototype), right))));	// This generates a statement like {C}.ctor1.prototype = {C}.ctor2.prototype = {C}.prototoype
+			}
+
+			var defaultConstructor = c.CSharpTypeDefinition.GetConstructors().SingleOrDefault(x => x.Parameters.Count == 0 && x.IsPublic);
+			if (defaultConstructor != null) {
+				JsExpression createInstance = CreateDefaultConstructorInvocation(defaultConstructor, typeRef);
+				if (createInstance != null) {
+					stmts.Add(new JsExpressionStatement(
+					              JsExpression.Assign(
+					                  JsExpression.MemberAccess(typeRef, "createInstance"),
+					                      JsExpression.FunctionDefinition(new string[0],
+					                          new JsReturnStatement(createInstance)))));
+				}
 			}
 
 			stmts.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, m.Name), RewriteMethod(m)))));
@@ -140,7 +207,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 				for (int i = 0; i < types.Count; i++) {
 					var type = types[i];
-					if (!type.CSharpTypeDefinition.DirectBaseTypes.Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
+					if (!type.CSharpTypeDefinition.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
 						result.Add(type);
 						types.RemoveAt(i);
 						i--;
@@ -166,7 +233,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 			var result = new List<JsStatement>();
 
-			var orderedTypes = types.OrderBy(t => t.Name).ToList();
+			var orderedTypes = OrderByNamespace(types, t => t.Name).ToList();
 			string currentNs = "";
 			foreach (var t in orderedTypes) {
 				try {

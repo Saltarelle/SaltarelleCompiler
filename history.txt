@@ -1,3 +1,17 @@
+1.4.0
+Implemented support for async/await.
+Fixed problem assigning an object creation with initializers to a by-reference variable.
+Fixed problems causing compilation error when using a default constructor constarint on a type parameter.
+Fixed invoking method implemented as inline code with type parameters as type arguments.
+Can now specify custom implementations for methods/properties that override/implement [NonScriptable] base members.
+Fixed bug when assigning to a property of type dynamic when the property owner is not dynamic.
+Fixed error when using 'x is Function'
+Array utility methods are now typed extension methods in the System namespace rather than untyped instance methods on Array.
+Fixed issue causing Type.cast calls to be generated for [Imported] generic types.
+Fixed type ordering issue when inheriting from a type that uses [IgnoreGenericArguments].
+Support multidimensional arrays.
+Fixed ordering of type to prevent unnecessary (and sometimes problematic) Type.registerNamespace calls
+
 1.3.0
 Support empty ScriptName for NamedValues enum.
 Added MinValue/MaxValue members to integer types.

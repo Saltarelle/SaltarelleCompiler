@@ -71,5 +71,16 @@ namespace CoreLibTests {
 			Assert.AreEqual(c.i, 7);
 			Assert.AreEqual(c.j, 8);
 		}
+
+		private T Instantiate<T>() where T : new() {
+			return new T();
+		}
+
+		[Test]
+		public void InstantiatingTypeParameterWithDefaultConstructorConstraintWorks() {
+			var c = Instantiate<C1>();
+			Assert.AreEqual(c.i, 1);
+			Assert.AreStrictEqual(Instantiate<int>(), 0);
+		}
 	}
 }

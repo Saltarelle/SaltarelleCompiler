@@ -177,18 +177,18 @@ namespace Saltarelle.Compiler.Compiler {
 			return "{" + index.ToString(CultureInfo.InvariantCulture) + "}";
 		}
 
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, TypeContext, JsExpression> getType, bool isParamArrayExpanded, Action<string> errorReporter) {
-			List<string>         typeParameterNames = new List<string>();
-			List<ITypeReference> typeArguments      = new List<ITypeReference>();
+		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, IType> resolveType, Func<IType, TypeContext, JsExpression> getJsType, bool isParamArrayExpanded, Action<string> errorReporter) {
+			List<string> typeParameterNames = new List<string>();
+			List<IType>  typeArguments      = new List<IType>();
 
 			if (method.DeclaringTypeDefinition.TypeParameterCount > 0) {
 				var parameterizedType = method.DeclaringType as ParameterizedType;
 				typeParameterNames.AddRange(method.DeclaringTypeDefinition.TypeParameters.Select(p => p.Name));
 				if (parameterizedType != null) {
-					typeArguments.AddRange(parameterizedType.TypeArguments.Select(a => a.ToTypeReference()));
+					typeArguments.AddRange(parameterizedType.TypeArguments);
 				}
 				else {
-					typeArguments.AddRange(Enumerable.Repeat(ReflectionHelper.ParseReflectionName("System.Object"), method.DeclaringType.TypeParameterCount));
+					typeArguments.AddRange(Enumerable.Repeat(resolveType(ReflectionHelper.ParseReflectionName("System.Object")), method.DeclaringType.TypeParameterCount));
 				}
 			}
 
@@ -196,10 +196,10 @@ namespace Saltarelle.Compiler.Compiler {
 				typeParameterNames.AddRange(method.TypeParameters.Select(p => p.Name).ToList());
 				var specializedMethod = method as SpecializedMethod;
 				if (specializedMethod != null) {
-					typeArguments.AddRange(specializedMethod.TypeArguments.Select(a => a.ToTypeReference()));
+					typeArguments.AddRange(specializedMethod.TypeArguments);
 				}
 				else {
-					typeArguments.AddRange(Enumerable.Repeat(ReflectionHelper.ParseReflectionName("System.Object"), method.TypeParameters.Count));
+					typeArguments.AddRange(Enumerable.Repeat(resolveType(ReflectionHelper.ParseReflectionName("System.Object")), method.TypeParameters.Count));
 				}
 			}
 
@@ -242,7 +242,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						substitutions[s] = Tuple.Create(getType(typeArguments[token.Index], TypeContext.GenericArgument), false);
+						substitutions[s] = Tuple.Create(getJsType(typeArguments[token.Index], TypeContext.GenericArgument), false);
 						break;
 					}
 
@@ -250,20 +250,20 @@ namespace Saltarelle.Compiler.Compiler {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
 
-						var typeRef = getType(ReflectionHelper.ParseReflectionName(token.Text), TypeContext.GenericArgument);
-						if (typeRef == null) {
+						var type = resolveType(ReflectionHelper.ParseReflectionName(token.Text));
+						if (type.Kind == TypeKind.Unknown) {
 							hasErrors = true;
 							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation");
 							substitutions[s] = Tuple.Create((JsExpression)JsExpression.Null, false);
 						}
 						else {
-							substitutions[s] = Tuple.Create(typeRef, false);
+							substitutions[s] = Tuple.Create(getJsType(type, TypeContext.GenericArgument), false);
 						}
 						break;
 					}
 
 					case InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier: {
-						if (method.Parameters[token.Index].Type.FullName != "System.String") {
+						if (!method.Parameters[token.Index].Type.IsKnownType(KnownTypeCode.String)) {
 							text.Append("X");	// Just something that should not cause an error.
 							hasErrors = true;
 							errorReporter("The type of the parameter " + method.Parameters[token.Index].Name + " must be string in order to use it with the '@' modifier.");
@@ -293,7 +293,7 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 						else if (!isParamArrayExpanded) {
 							hasErrors = true;
-							errorReporter("The method " + method.DeclaringType.FullName + "." + method.FullName + " can only be invoked with its params parameter expanded");
+							errorReporter("The method " + method.DeclaringType.FullName + "." + method.Name + " can only be invoked with its params parameter expanded");
 							substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
 						}
 						else {
@@ -378,57 +378,17 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, bool> doesTypeExist) {
+		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, IType> resolveType) {
 			var errors = new List<string>();
-			CompileInlineCodeMethodInvocation(method, literalCode, method.IsStatic ? null : JsExpression.Null, method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(), (t, c) => doesTypeExist(t) ? JsExpression.Null : null, true, errors.Add);
+			CompileInlineCodeMethodInvocation(method,
+			                                  literalCode,
+			                                  method.IsStatic ? null : JsExpression.Null,
+			                                  method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
+			                                  resolveType,
+			                                  (t, c) => JsExpression.Null,
+			                                  true,
+			                                  errors.Add);
 			return errors;
 		}
-/*
-		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, bool> doesTypeExist) {
-			List<string> typeParameterNames = new List<string>();
-			typeParameterNames.AddRange(method.DeclaringType.GetDefinition().TypeParameters.Select(p => p.Name));
-			typeParameterNames.AddRange(method.TypeParameters.Select(p => p.Name));
-
-			IList<string> parameterNames = method.Parameters.Count > 0 ? method.Parameters.Select(p => p.Name).ToList() : null;
-
-			var result = new List<string>();
-			var tokens = Tokenize(literalCode, parameterNames, typeParameterNames, s => result.Add(s));
-
-			foreach (var token in tokens) {
-				switch (token.Type) {
-					case InlineCodeToken.TokenType.Text:
-					case InlineCodeToken.TokenType.Parameter:
-					case InlineCodeToken.TokenType.TypeParameter:
-						// Can't be bad.
-						break;
-
-					case InlineCodeToken.TokenType.This:
-						if (method.IsStatic)
-							result.Add("Cannot use the placeholder {this} in inline code for a static method.");
-						break;
-
-					case InlineCodeToken.TokenType.TypeRef:
-						if (!doesTypeExist(ReflectionHelper.ParseReflectionName(token.Text)))
-							result.Add("Cannot find the type '" + token.Text + "'");
-						break;
-
-					case InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier: {
-						if (method.Parameters[token.Index].Type.FullName != "System.String")
-							result.Add("The type of the parameter " + method.Parameters[token.Index].Name + " must be string in order to use it with the '@' modifier.");
-						break;
-					}
-
-					case InlineCodeToken.TokenType.ExpandedParamArrayParameter:
-					case InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore: {
-						if (!method.Parameters[token.Index].IsParams)
-							result.Add("The parameter " + method.Parameters[token.Index].Name + " must be a param array in order to use it with the '" + (token.Type == InlineCodeToken.TokenType.ExpandedParamArrayParameterWithCommaBefore ? "," : "*") + "' modifier.");
-						break;
-					}
-					default:
-						throw new ArgumentException("Unknown token type " + token.Type);
-				}
-			}
-			return result;
-		}*/
 	}
 }

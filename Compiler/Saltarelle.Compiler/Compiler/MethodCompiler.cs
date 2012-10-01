@@ -47,26 +47,33 @@ namespace Saltarelle.Compiler.Compiler {
 				return expression;	// Don't patch return values of nested functions.
 			}
 
+			public override JsStatement  VisitFunctionStatement(JsFunctionStatement statement, object data) {
+				return statement;	// Don't patch return values of nested functions.
+			}
+
 			public static IList<JsStatement> Process(IList<JsStatement> statements, string identifierToReturn) {
 				var obj = new StaticMethodConstructorReturnPatcher(identifierToReturn);
 				return obj.VisitStatements(statements, null);
 			}
 		}
 
-		private class IsIteratorBlockVisitor : RewriterVisitorBase<object> {
+		private class IsIteratorBlockVisitor : DepthFirstAstVisitor {
 			private bool _result;
 
-			public override JsStatement VisitYieldStatement(JsYieldStatement statement, object data) {
+			public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
 				_result = true;
-				return statement;
+			}
+
+			public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
+				_result = true;
 			}
 
 			private IsIteratorBlockVisitor() {
 			}
 
-			public static bool Analyze(JsStatement statement) {
+			public static bool Analyze(AstNode node) {
 				var obj = new IsIteratorBlockVisitor();
-				obj.VisitStatement(statement, null);
+				node.AcceptVisitor(obj);
 				return obj._result;
 			}
 		}
@@ -87,7 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
 
         public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
             _metadataImporter = metadataImporter;
-			_namer    = namer;
+			_namer            = namer;
             _errorReporter    = errorReporter;
             _compilation      = compilation;
             _resolver         = resolver;
@@ -109,72 +116,23 @@ namespace Saltarelle.Compiler.Compiler {
 			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, _definedSymbols);
 		}
 
-		internal static bool DisableStateMachineRewriteTestingUseOnly;
-
-		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, IType methodReturnType, string yieldResultVariable, IList<string> methodParameterNames) {
-			IType yieldType     = methodReturnType is ParameterizedType ? ((ParameterizedType)methodReturnType).TypeArguments[0] : _compilation.FindType(KnownTypeCode.Object);
-			bool  isIEnumerable = methodReturnType.IsKnownType(KnownTypeCode.IEnumerable) || methodReturnType.IsKnownType(KnownTypeCode.IEnumerableOfT);
-
-			var body = new List<JsStatement>();
-			body.Add(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration(yieldResultVariable, null) }.Concat(sm.Variables)));
-			body.AddRange(sm.FinallyHandlers.Select(h => new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2))));
-			body.Add(new JsReturnStatement(_runtimeLibrary.MakeEnumerator(yieldType,
-			                                                              JsExpression.FunctionDefinition(new string[0], sm.MainBlock),
-			                                                              JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Identifier(yieldResultVariable))),
-			                                                              sm.Disposer != null ? JsExpression.FunctionDefinition(new string[0], sm.Disposer) : null)));
-			if (isIEnumerable) {
-				body = new List<JsStatement> {
-				    new JsReturnStatement(_runtimeLibrary.MakeEnumerable(
-				        yieldType,
-				        JsExpression.FunctionDefinition(new string[0],
-				            new JsReturnStatement(
-				                JsExpression.Invocation(
-				                    JsExpression.MemberAccess(
-				                        JsExpression.FunctionDefinition(methodParameterNames, new JsBlockStatement(body)),
-				                        "call"),
-				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(p => JsExpression.Identifier(p)))
-				                )
-				            )
-				        )
-				    ))
-				};
+		public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
+			bool isIEnumerable = method.ReturnType.IsKnownType(KnownTypeCode.IEnumerable) || method.ReturnType.IsKnownType(KnownTypeCode.IEnumerableOfT);
+			bool isIEnumerator = method.ReturnType.IsKnownType(KnownTypeCode.IEnumerator) || method.ReturnType.IsKnownType(KnownTypeCode.IEnumeratorOfT);
+			StateMachineType smt = StateMachineType.NormalMethod;
+			IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null;
+			if ((isIEnumerable || isIEnumerator) && IsIteratorBlockVisitor.Analyze(body)) {
+				smt = isIEnumerable ? StateMachineType.IteratorBlockReturningIEnumerable : StateMachineType.IteratorBlockReturningIEnumerator;
+				iteratorBlockYieldTypeOrAsyncTaskGenericArgument = method.ReturnType is ParameterizedType ? ((ParameterizedType)method.ReturnType).TypeArguments[0] : _compilation.FindType(KnownTypeCode.Object);
+			}
+			else if (entity.HasModifier(Modifiers.Async)) {
+				smt = (method.ReturnType.IsKnownType(KnownTypeCode.Void) ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask);
+				iteratorBlockYieldTypeOrAsyncTaskGenericArgument = method.ReturnType is ParameterizedType ? ((ParameterizedType)method.ReturnType).TypeArguments[0] : null;
 			}
 
-			return new JsBlockStatement(body);
-		}
-
-		private JsFunctionDefinitionExpression PerformStateMachineRewrite(IMethod method, JsFunctionDefinitionExpression function) {
-			if (DisableStateMachineRewriteTestingUseOnly)
-				return function;
-
-			JsBlockStatement body;
-			var usedLoopLabels = new HashSet<string>();
-			if (IsIteratorBlockVisitor.Analyze(function.Body)) {
-				string yieldResultVariable = _namer.GetVariableName(_namer.YieldResultVariableDesiredName, _usedNames);
-				_usedNames.Add(yieldResultVariable);
-				body = StateMachineRewriter.RewriteIteratorBlock(function.Body,
-				                                                 ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
-				                                                 () => { var result = _namer.GetVariableName(null, _usedNames); _usedNames.Add(result); return result; },
-				                                                 () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedNames); _usedNames.Add(result); return result; },
-				                                                 () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
-				                                                 () => { var result = _namer.GetVariableName(_namer.FinallyHandlerDesiredName, _usedNames); _usedNames.Add(result); return result; },
-				                                                 x => JsExpression.Assign(JsExpression.Identifier(yieldResultVariable), x),
-				                                                 sm => MakeIteratorBody(sm, method.ReturnType, yieldResultVariable, function.ParameterNames));
-			}
-			else {
-				body = StateMachineRewriter.Rewrite(function.Body,
-				                                    ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
-				                                    () => { var result = _namer.GetVariableName(null, _usedNames); _usedNames.Add(result); return result; },
-				                                    () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedNames); _usedNames.Add(result); return result; },
-				                                    () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; });
-			}
-			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
-		}
-
-        public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
 			CreateCompilationContext(entity, method, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namer.ThisAlias : null));
-            return PerformStateMachineRewrite(method, _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
-        }
+			return _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument, smt, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
+		}
 
         public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
 			var region = _errorReporter.Region = ctor != null ? ctor.GetRegion() : constructor.DeclaringTypeDefinition.Region;
@@ -224,7 +182,8 @@ namespace Saltarelle.Compiler.Compiler {
 					body = StaticMethodConstructorReturnPatcher.Process(body, _namer.ThisAlias).AsReadOnly();
 				}
 
-				return PerformStateMachineRewrite(constructor, JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body)));
+				var compiled = JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
+				return _statementCompiler.StateMachineRewriteNormalMethod(compiled);
 			}
 			catch (Exception ex) {
 				_errorReporter.Region = region;

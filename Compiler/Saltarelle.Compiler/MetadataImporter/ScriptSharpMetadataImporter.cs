@@ -688,7 +688,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (ica != null) {
 				string code = (string)ica[0] ?? "";
 
-				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, code, t => t.Resolve(_compilation).Kind != TypeKind.Unknown);
+				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, code, t => t.Resolve(_compilation));
 				if (errors.Count > 0) {
 					Message(7103, source, string.Join(", ", errors));
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
@@ -818,7 +818,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else
 						Message(7109, property);
 				}
-				else if (property.IsOverride) {
+				else if (property.IsOverride && _propertySemantics[(IProperty)InheritanceHelper.GetBaseMember(property).MemberDefinition].Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 					if (property.IsIndexer)
 						Message(7110, property.Region);
 					else
@@ -830,7 +830,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else
 						Message(7113, property);
 				}
-				else if (property.ImplementedInterfaceMembers.Count > 0) {
+				else if (property.IsExplicitInterfaceImplementation || property.ImplementedInterfaceMembers.Any(m => _propertySemantics[(IProperty)m.MemberDefinition].Type != PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
 					if (property.IsIndexer)
 						Message(7114, property.Region);
 					else
@@ -850,6 +850,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
 					return;
 				}
+			}
+
+			if (property.IsExplicitInterfaceImplementation && property.ImplementedInterfaceMembers.Any(m => _propertySemantics[(IProperty)m.MemberDefinition].Type == PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
+				// Inherit [NonScriptable] for explicit interface implementations.
+				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
+				return;
 			}
 
 			MethodScriptSemantics getter, setter;
@@ -916,202 +922,206 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				return;
 			}
-			else if (ssa != null) {
-				// [ScriptSkip] - Skip invocation of the method entirely.
-				if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-					Message(7119, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else if (method.IsOverride) {
-					Message(7120, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else if (method.IsOverridable) {
-					Message(7121, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else if (method.ImplementedInterfaceMembers.Count > 0) {
-					Message(7122, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else {
-					if (method.IsStatic) {
-						if (method.Parameters.Count != 1) {
-							Message(7123, method);
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-							return;
-						}
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}");
-						return;
-					}
-					else {
-						if (method.Parameters.Count != 0)
-							Message(7124, method);
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}");
-						return;
-					}
-				}
-			}
-			else if (saa != null) {
-				if (method.IsStatic) {
-					_methodSemantics[method] = MethodScriptSemantics.InlineCode((string) saa[0] + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
-					return;
-				}
-				else {
-					Message(7125, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-			}
-			else if (ica != null) {
-				if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-					Message(7126, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else if (method.IsOverride) {
-					Message(7127, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else if (method.IsOverridable) {
-					Message(7128, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else if (method.ImplementedInterfaceMembers.Count > 0) {
-					Message(7129, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-				else {
-					string code = (string) ica[0];
-
-					var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation).Kind != TypeKind.Unknown);
-					if (errors.Count > 0) {
-						Message(7130, method, string.Join(", ", errors));
-						code = "X";
-					}
-
-					_methodSemantics[method] = MethodScriptSemantics.InlineCode(code);
-					return;
-				}
-			}
-			else if (ifa != null) {
-				if (method.IsStatic) {
-					_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(preferredName, expandParams: epa != null);
-					return;
-				}
-				else {
-					Message(7131, method);
-					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-					return;
-				}
-			}
 			else {
-				if (method.IsOverride) {
-					if (nameSpecified) {
-						Message(7132, method);
-					}
-					if (iga != null) {
-						Message(7133, method);
-					}
+				bool implementsInterfaceMember = method.IsExplicitInterfaceImplementation || method.ImplementedInterfaceMembers.Any(m => _methodSemantics[(IMethod)m.MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript);
 
-					var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
-					if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
-						var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
-						if (errorMethod != null) {
-							Message(7134, method, GetQualifiedMemberName(errorMethod));
-						}
+				if (ssa != null) {
+					// [ScriptSkip] - Skip invocation of the method entirely.
+					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
+						Message(7119, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
 					}
-
-					_methodSemantics[method] = semantics;
-					return;
-				}
-				else if (method.ImplementedInterfaceMembers.Count > 0) {
-					if (nameSpecified) {
-						Message(7135, method);
+					else if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+						Message(7120, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
 					}
-
-					if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).Where(sem => sem.Type == MethodScriptSemantics.ImplType.NormalMethod).Select(sem => sem.Name).Distinct().Count() > 1) {
-						Message(7136, method);
+					else if (method.IsOverridable) {
+						Message(7121, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
 					}
-
-					// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
-					_methodSemantics[method] = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(sem => sem.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
-					return;
-				}
-				else {
-					if (epa != null) {
-						if (!method.Parameters.Any(p => p.IsParams)) {
-							Message(7137, method);
-						}
-					}
-
-					if (preferredName == "") {
-						// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
-						if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-							Message(7138, method);
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-							return;
-						}
-						else if (method.IsOverridable) {
-							Message(7139, method);
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-							return;
-						}
-						else if (method.IsStatic) {
-							Message(7140, method);
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-							return;
-						}
-						else {
-							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
-							return;
-						}
-					}
-					else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: _typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+					else if (implementsInterfaceMember) {
+						Message(7122, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else {
-						string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
-						if (asa == null)
-							usedNames[name] = true;
-						if (_typeSemantics[method.DeclaringTypeDefinition].IsSerializable && !method.IsStatic) {
-							_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+						if (method.IsStatic) {
+							if (method.Parameters.Count != 1) {
+								Message(7123, method);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+								return;
+							}
+							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}");
+							return;
 						}
 						else {
-							if (_typeSemantics[method.DeclaringTypeDefinition].IsTestFixture && name == "runTests") {
-								Message(7019, method);
-							}
-							var sta = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == TestAttribute);
-							var ata = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == AsyncTestAttribute);
-							if (sta != null && ata != null) {
-								Message(7021, method);
-							}
-							else if (sta != null || ata != null) {
-								if (!_typeSemantics[method.DeclaringTypeDefinition].IsTestFixture) {
-									Message(7022, method);
-								}
-								if (!method.ReturnType.Equals(_compilation.FindType(KnownTypeCode.Void)) || method.TypeParameters.Any() || method.Parameters.Any() || method.IsStatic || !method.IsPublic) {
-									Message(7020, method);
-								}
-								else {
-									var ta = sta ?? ata;
-									bool isAsync = ata != null;
-									string description = (ta.PositionalArguments.Count > 0 ? (string)ta.PositionalArguments[0].ConstantValue : null) ?? method.Name;
-									string category = GetNamedArgument<string>(ta, CategoryPropertyName);
-									int? expectedAssertionCount = GetNamedArgument<int?>(ta, ExpectedAssertionCountPropertyName) ?? -1;
-									_methodTestData[method] = new TestMethodData(description, category, isAsync, expectedAssertionCount >= 0 ? expectedAssertionCount : (int?)null);
-								}
-							}
+							if (method.Parameters.Count != 0)
+								Message(7124, method);
+							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}");
+							return;
+						}
+					}
+				}
+				else if (saa != null) {
+					if (method.IsStatic) {
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode((string) saa[0] + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
+						return;
+					}
+					else {
+						Message(7125, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
+					}
+				}
+				else if (ica != null) {
+					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
+						Message(7126, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
+					}
+					else if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+						Message(7127, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
+					}
+					else if (method.IsOverridable) {
+						Message(7128, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
+					}
+					else if (implementsInterfaceMember) {
+						Message(7129, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
+					}
+					else {
+						string code = (string) ica[0];
 
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+						var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation));
+						if (errors.Count > 0) {
+							Message(7130, method, string.Join(", ", errors));
+							code = "X";
+						}
+
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code);
+						return;
+					}
+				}
+				else if (ifa != null) {
+					if (method.IsStatic) {
+						_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(preferredName, expandParams: epa != null);
+						return;
+					}
+					else {
+						Message(7131, method);
+						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+						return;
+					}
+				}
+				else {
+					if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+						if (nameSpecified) {
+							Message(7132, method);
+						}
+						if (iga != null) {
+							Message(7133, method);
+						}
+
+						var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
+						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
+							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
+							if (errorMethod != null) {
+								Message(7134, method, GetQualifiedMemberName(errorMethod));
+							}
+						}
+
+						_methodSemantics[method] = semantics;
+						return;
+					}
+					else if (implementsInterfaceMember) {
+						if (nameSpecified) {
+							Message(7135, method);
+						}
+
+						if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).Where(sem => sem.Type == MethodScriptSemantics.ImplType.NormalMethod).Select(sem => sem.Name).Distinct().Count() > 1) {
+							Message(7136, method);
+						}
+
+						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
+						_methodSemantics[method] = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(sem => sem.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						return;
+					}
+					else {
+						if (epa != null) {
+							if (!method.Parameters.Any(p => p.IsParams)) {
+								Message(7137, method);
+							}
+						}
+
+						if (preferredName == "") {
+							// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
+							if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
+								Message(7138, method);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+								return;
+							}
+							else if (method.IsOverridable) {
+								Message(7139, method);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+								return;
+							}
+							else if (method.IsStatic) {
+								Message(7140, method);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+								return;
+							}
+							else {
+								_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
+								return;
+							}
+						}
+						else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: _typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+							return;
+						}
+						else {
+							string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
+							if (asa == null)
+								usedNames[name] = true;
+							if (_typeSemantics[method.DeclaringTypeDefinition].IsSerializable && !method.IsStatic) {
+								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+							}
+							else {
+								if (_typeSemantics[method.DeclaringTypeDefinition].IsTestFixture && name == "runTests") {
+									Message(7019, method);
+								}
+								var sta = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == TestAttribute);
+								var ata = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == AsyncTestAttribute);
+								if (sta != null && ata != null) {
+									Message(7021, method);
+								}
+								else if (sta != null || ata != null) {
+									if (!_typeSemantics[method.DeclaringTypeDefinition].IsTestFixture) {
+										Message(7022, method);
+									}
+									if (!method.ReturnType.Equals(_compilation.FindType(KnownTypeCode.Void)) || method.TypeParameters.Any() || method.Parameters.Any() || method.IsStatic || !method.IsPublic) {
+										Message(7020, method);
+									}
+									else {
+										var ta = sta ?? ata;
+										bool isAsync = ata != null;
+										string description = (ta.PositionalArguments.Count > 0 ? (string)ta.PositionalArguments[0].ConstantValue : null) ?? method.Name;
+										string category = GetNamedArgument<string>(ta, CategoryPropertyName);
+										int? expectedAssertionCount = GetNamedArgument<int?>(ta, ExpectedAssertionCountPropertyName) ?? -1;
+										_methodTestData[method] = new TestMethodData(description, category, isAsync, expectedAssertionCount >= 0 ? expectedAssertionCount : (int?)null);
+									}
+								}
+
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+							}
 						}
 					}
 				}

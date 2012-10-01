@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 
 namespace RuntimeLibrary.Tests.Core {
@@ -27,6 +28,9 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class ArrayTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class AsyncTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class BooleanTests : CoreLibTestBase {}
@@ -71,7 +75,22 @@ namespace RuntimeLibrary.Tests.Core {
 	public class MathTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class MultidimArrayTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class NullableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class PromiseTests : CoreLibTestBase {
+        private static readonly Lazy<string> _simplePromiseScript = new Lazy<string>(() => File.ReadAllText(@"SimplePromise.js"));
+		internal static string SimplePromiseScript { get { return _simplePromiseScript.Value; } }
+
+		protected override IEnumerable<string> ScriptSources {
+			get {
+				return base.ScriptSources.Concat(new[] { SimplePromiseScript });
+			}
+		}
+	}
 
 	[TestFixture]
 	public class SByteTests : CoreLibTestBase {}
@@ -84,6 +103,9 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class StringTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class TaskTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class TupleTests : CoreLibTestBase {}

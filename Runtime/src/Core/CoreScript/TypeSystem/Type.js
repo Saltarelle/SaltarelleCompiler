@@ -150,7 +150,7 @@ Type.prototype.registerEnum = function#? DEBUG Type$createEnum##(name, flags) {
     if (flags) {
         this.__flags = true;
     }
-    this.getDefaultValue = function() { return 0; };
+    this.getDefaultValue = this.createInstance = function() { return 0; };
     this.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
 }
 
@@ -224,7 +224,7 @@ Type.prototype.isInstanceOfType = function#? DEBUG Type$isInstanceOfType##(insta
 }
 
 Type.isInstanceOfType = function#? DEBUG Type$isInstanceOfTypeStatic##(instance, type) {
-    return instance instanceof type || (type.isInstanceOfType && type.isInstanceOfType(instance)) || false;
+    return instance instanceof type || (type !== Function && type.isInstanceOfType && type.isInstanceOfType(instance));
 }
 
 Type.prototype.isAssignableFrom = function#? DEBUG Type$isAssignableFrom##(type) {
@@ -340,6 +340,10 @@ Type.getType = function#? DEBUG Type$getType##(typeName) {
 
 Type.prototype.getDefaultValue = function#? DEBUG Type$getDefaultValue##() {
 	return null;
+}
+
+Type.prototype.createInstance = function#? DEBUG Type$createInstance##() {
+    return new this();
 }
 
 Type.parse = function#? DEBUG Type$parse##(typeName) {

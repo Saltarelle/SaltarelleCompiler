@@ -759,6 +759,56 @@ public void M() {
 		}
 
 		[Test]
+		public void CompoundAssigningToMultiDimensionalArrayWorks() {
+			AssertCorrectForBulkOperators(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	arr[i, j] += k;
+	// END
+}",
+@"	$MultidimArraySet($arr, $i, $j, $MultidimArrayGet($arr, $i, $j) + $k);
+");
+		}
+
+		[Test]
+		public void CompoundAssigningToMultiDimensionalArrayWorksWhenUsingTheReturnValue() {
+			AssertCorrectForBulkOperators(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1, k = 2, l;
+	// BEGIN
+	l = arr[i, j] += k;
+	// END
+}",
+@"	var $tmp1 = $MultidimArrayGet($arr, $i, $j) + $k;
+	$MultidimArraySet($arr, $i, $j, $tmp1);
+	$l = $tmp1;
+");
+		}
+
+		[Test]
+		public void CompoundAssigningToMultiDimensionalArrayOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
+			AssertCorrectForBulkOperators(
+@"public int[,] A() { return null; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public int F3() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	A()[F1(), F2()] += F3();
+	// END
+}",
+@"	var $tmp1 = this.$A();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	$MultidimArraySet($tmp1, $tmp2, $tmp3, $MultidimArrayGet($tmp1, $tmp2, $tmp3) + this.$F3());
+");
+		}
+
+		[Test]
 		public void CompoundAssigningToByRefLocalWorks() {
 			AssertCorrectForBulkOperators(
 @"int[] arr;
@@ -1051,6 +1101,44 @@ class D : B {
 }",
 @"	$d['X'] >>= 123;
 ");
+		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicPropertyOfNonDynamicObject() {
+			AssertCorrectForBulkOperators(@"
+public class SomeClass {
+    public dynamic Value { get; set; }
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        c.Value += 1;
+		// END
+    }
+}",
+@"	$c.set_$Value($c.get_$Value() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CompoundAssignmentToDynamicFieldOfNonDynamicObject() {
+			AssertCorrectForBulkOperators(@"
+public class SomeClass {
+    public dynamic Value;
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        $c.Value += 1;
+		// END
+    }
+}",
+@"	$c.$Value += 1;
+", addSkeleton: false);
 		}
 	}
 }

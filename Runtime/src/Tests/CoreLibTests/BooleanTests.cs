@@ -29,6 +29,11 @@ namespace CoreLibTests {
 		}
 
 		[Test]
+		public void CreatingInstanceReturnsFalse() {
+			Assert.AreStrictEqual(Activator.CreateInstance<bool>(), false);
+		}
+
+		[Test]
 		public void DefaultConstructorReturnsFalse() {
 		    Assert.AreStrictEqual(new bool(), false);
 		}

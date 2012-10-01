@@ -9,12 +9,19 @@ using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Tests.StateMachineTests {
+	public enum MethodType {
+		Normal,
+		Iterator,
+		AsyncVoid,
+		AsyncTask
+	}
+
 	public class StateMachineRewriterTestBase {
-		protected void AssertCorrect(string orig, string expected, bool isIteratorBlock = false) {
+		protected void AssertCorrect(string orig, string expected, MethodType methodType = MethodType.Normal) {
 			int tempIndex = 0, stateIndex = 0, loopLabelIndex = 0;
 			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
 			JsBlockStatement result;
-			if (isIteratorBlock) {
+			if (methodType == MethodType.Iterator) {
 				int finallyHandlerIndex = 0;
 				result = StateMachineRewriter.RewriteIteratorBlock(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), () => string.Format("$finally" + (++finallyHandlerIndex).ToString(CultureInfo.InvariantCulture)), v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v), sm => {
 					var body = new List<JsStatement>();
@@ -27,8 +34,22 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 					return new JsBlockStatement(body);
 				});
 			}
+			else if (methodType == MethodType.AsyncTask || methodType == MethodType.AsyncVoid) {
+				result = StateMachineRewriter.RewriteAsyncMethod(stmt,
+				                                                 e => e.NodeType != ExpressionNodeType.Identifier,
+				                                                 () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture),
+				                                                 () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture),
+				                                                 () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)),
+				                                                 "$sm",
+				                                                 "$doFinally",
+				                                                 methodType == MethodType.AsyncTask ? new JsVariableDeclaration("$tcs", JsExpression.New(JsExpression.Identifier("TaskCompletionSource"))) : null,
+				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set result in async void method"); return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("$tcs"), "setResult"), expr ?? JsExpression.String("<<null>>")); },
+				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set exception in async void method"); return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("$tcs"), "setException"), expr); },
+				                                                 ()   => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not get task async void method"); return JsExpression.Invocation(JsExpression.MemberAccess(JsExpression.Identifier("$tcs"), "getTask")); });
+
+			}
 			else {
-				result = StateMachineRewriter.Rewrite(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)));
+				result = StateMachineRewriter.RewriteNormalMethod(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)));
 			}
 			var actual = OutputFormatter.Format(result);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);

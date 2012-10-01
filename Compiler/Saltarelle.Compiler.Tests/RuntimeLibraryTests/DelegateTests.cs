@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	[TestFixture]
 	public class DelegateTests : RuntimeLibraryTestBase {
 		[Test]
-		public void CloningDelegateToADifferenTypeIsANoOp() {
+		public void CloningDelegateToADifferentTypeIsANoOp() {
 			var result = ExecuteCSharp(@"
 using System;
 public delegate void D1();

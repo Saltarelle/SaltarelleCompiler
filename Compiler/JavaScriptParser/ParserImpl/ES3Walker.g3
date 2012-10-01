@@ -134,6 +134,7 @@ public statement returns [JsStatement result]
 	| x=functionDeclaration
 	| x=gotoStatement
 	| x=yieldStatement
+	| x=awaitStatement
 	| SEMIC { x = new JsEmptyStatement(); } )
 	{ $result = x; }
 	;
@@ -239,6 +240,10 @@ gotoStatement returns [JsStatement result]
 
 yieldStatement returns [JsStatement result]
 	: ^( YIELD x=expression? ) { $result = new JsYieldStatement(x); }
+	;
+
+awaitStatement returns [JsStatement result]
+	: ^( AWAIT x=expression y=Identifier ) { $result = new JsAwaitStatement(x, y.Text); }
 	;
 
 public expression returns [JsExpression result]

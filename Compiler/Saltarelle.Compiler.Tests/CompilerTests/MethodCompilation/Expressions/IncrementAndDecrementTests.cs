@@ -4,9 +4,9 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class IncrementAndDecrementTests : MethodCompilerTestBase {
-		protected void AssertCorrectForBoth(string csharp, string expected, IMetadataImporter metadataImporter = null) {
-			AssertCorrect(csharp, expected, metadataImporter);
-			AssertCorrect(csharp.Replace("+", "-"), expected.Replace("+", "-"), metadataImporter);
+		protected void AssertCorrectForBoth(string csharp, string expected, IMetadataImporter metadataImporter = null, bool addSkeleton = true) {
+			AssertCorrect(csharp, expected, metadataImporter, addSkeleton: addSkeleton);
+			AssertCorrect(csharp.Replace("+", "-"), expected.Replace("+", "-"), metadataImporter, addSkeleton: addSkeleton);
 		}
 
 		[Test]
@@ -594,6 +594,104 @@ public void M() {
 }",
 @"	set_(this)._(get_(this) + 1);
 ", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})"), MethodScriptSemantics.InlineCode("set_({this})._({value})")) });
+		}
+
+		[Test]
+		public void PrefixForMultiDimensionalArrayWorks() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1;
+	// BEGIN
+	++arr[i, j];
+	// END
+}",
+@"	$MultidimArraySet($arr, $i, $j, $MultidimArrayGet($arr, $i, $j) + 1);
+");
+		}
+
+		[Test]
+		public void PostfixForMultiDimensionalArrayWorks() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1;
+	// BEGIN
+	arr[i, j]++;
+	// END
+}",
+@"	$MultidimArraySet($arr, $i, $j, $MultidimArrayGet($arr, $i, $j) + 1);
+");
+		}
+
+		[Test]
+		public void PrefixForMultiDimensionalArrayWorksWhenUsingTheReturnValue() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1, k;
+	// BEGIN
+	k = ++arr[i, j];
+	// END
+}",
+@"	var $tmp1 = $MultidimArrayGet($arr, $i, $j) + 1;
+	$MultidimArraySet($arr, $i, $j, $tmp1);
+	$k = $tmp1;
+");
+		}
+
+		[Test]
+		public void PostfixForMultiDimensionalArrayWorksWhenUsingTheReturnValue() {
+			AssertCorrectForBoth(
+@"public void M() {
+	int[,] arr;
+	int i = 0, j = 1, k;
+	// BEGIN
+	k = arr[i, j]++;
+	// END
+}",
+@"	var $tmp1 = $MultidimArrayGet($arr, $i, $j);
+	$MultidimArraySet($arr, $i, $j, $tmp1 + 1);
+	$k = $tmp1;
+");
+		}
+
+		[Test]
+		public void PrefixForMultiDimensionalArrayOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
+			AssertCorrectForBoth(
+@"public int[,] A() { return null; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	++A()[F1(), F2()];
+	// END
+}",
+@"	var $tmp1 = this.$A();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	$MultidimArraySet($tmp1, $tmp2, $tmp3, $MultidimArrayGet($tmp1, $tmp2, $tmp3) + 1);
+");
+		}
+
+		[Test]
+		public void PostfixForMultiDimensionalArrayOnlyInvokesIndexingArgumentsOnceAndInTheCorrectOrder() {
+			AssertCorrectForBoth(
+@"public int[,] A() { return null; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public void M() {
+	int i = 0;
+	// BEGIN
+	A()[F1(), F2()]++;
+	// END
+}",
+@"	var $tmp1 = this.$A();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	$MultidimArraySet($tmp1, $tmp2, $tmp3, $MultidimArrayGet($tmp1, $tmp2, $tmp3) + 1);
+");
 		}
 
 		[Test]
@@ -1243,6 +1341,82 @@ class D : B {
 @"	var $tmp1 = $CallBase({bind_B}, 'get_$P', [], [this]);
 	$CallBase({bind_B}, 'set_$P', [], [this, $tmp1 + 1]);
 	var $i = $tmp1;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicPropertyOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value { get; set; }
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        ++c.Value;
+		// END
+    }
+}",
+@"	$c.set_$Value($c.get_$Value() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicPropertyOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value { get; set; }
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        c.Value++;
+		// END
+    }
+}",
+@"	$c.set_$Value($c.get_$Value() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PrefixWorksForDynamicFieldOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value;
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        ++$c.Value;
+		// END
+    }
+}",
+@"	++$c.$Value;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void PostfixWorksForDynamicFieldOfNonDynamicObject() {
+			AssertCorrectForBoth(@"
+public class SomeClass {
+    public dynamic Value;
+}
+
+class C {
+    public void M() {
+        var c = new SomeClass();
+		// BEGIN
+        $c.Value++;
+		// END
+    }
+}",
+@"	$c.$Value++;
 ", addSkeleton: false);
 		}
 	}

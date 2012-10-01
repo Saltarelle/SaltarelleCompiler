@@ -6,6 +6,7 @@
 using System;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace jQueryApi {
@@ -274,6 +275,15 @@ namespace jQueryApi {
         }
 
         #region Implementation of IDeferred
+
+		void IPromise.Then(Delegate fulfilledHandler) {
+		}
+
+		void IPromise.Then(Delegate fulfilledHandler, Delegate errorHandler) {
+		}
+
+		void IPromise.Then(Delegate fulfilledHandler, Delegate errorHandler, Delegate progressHandler) {
+		}
 
         IDeferred IDeferred.Always(params Action[] callbacks) {
             return null;
