@@ -509,7 +509,22 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
 			member = UnwrapValueTypeConstructor(member);
 
-			bool preserveMemberCase = member.DeclaringTypeDefinition.Attributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) || member.ParentAssembly.AssemblyAttributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
+		    var typePreserveMemberCaseAttribute = member.DeclaringTypeDefinition.Attributes.FirstOrDefault( a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
+		    var assemblyPreserveMemberCaseAttribute = member.ParentAssembly.AssemblyAttributes.FirstOrDefault( a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
+		    bool preserveMemberCase = (typePreserveMemberCaseAttribute != null
+		                               && (typePreserveMemberCaseAttribute.PositionalArguments.Count == 0
+		                                   ||
+		                                   (typePreserveMemberCaseAttribute.PositionalArguments.Count > 0
+		                                    &&
+		                                    typePreserveMemberCaseAttribute.PositionalArguments[0].ConstantValue.ToString() ==
+		                                    true.ToString())))
+		                              ||
+		                              (assemblyPreserveMemberCaseAttribute != null
+		                               && (typePreserveMemberCaseAttribute == null
+		                                   || (typePreserveMemberCaseAttribute.PositionalArguments.Count > 0
+		                                       &&
+		                                       typePreserveMemberCaseAttribute.PositionalArguments[0].ConstantValue.ToString() ==
+		                                       true.ToString())));
 
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
 			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
