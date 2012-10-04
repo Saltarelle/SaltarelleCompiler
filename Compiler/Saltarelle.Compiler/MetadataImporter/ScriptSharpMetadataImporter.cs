@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -1020,8 +1021,32 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				else if (ifa != null) {
 					if (method.IsStatic) {
-						_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(preferredName, expandParams: epa != null);
-						return;
+						if (epa != null && !method.Parameters.Any(p => p.IsParams)) {
+							Message(7137, method);
+						}
+						if (method.Parameters.Count == 0) {
+							Message(7149, method);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+							return;
+						}
+						else if (method.Parameters[0].IsParams) {
+							Message(7150, method);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+							return;
+						}
+						else {
+							var sb = new StringBuilder();
+							sb.Append("{" + method.Parameters[0].Name + "}." + preferredName + "(");
+							for (int i = 1; i < method.Parameters.Count; i++) {
+								var p = method.Parameters[i];
+								if (i > 1)
+									sb.Append(", ");
+								sb.Append((epa != null && p.IsParams ? "{*" : "{") + p.Name + "}");
+							}
+							sb.Append(")");
+							_methodSemantics[method] = MethodScriptSemantics.InlineCode(sb.ToString());
+							return;
+						}
 					}
 					else {
 						Message(7131, method);

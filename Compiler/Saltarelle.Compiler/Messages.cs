@@ -82,6 +82,8 @@ namespace Saltarelle.Compiler {
 			{ 7146, Tuple.Create(MessageSeverity.Error, "The constructor cannot have an [ObjectLiteralAttribute] because the type {0} is not a serializable type.") },
 			{ 7147, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have a [BindThisToFirstParameterAttribute] because it does not have any parameters.") },
 			{ 7148, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
+			{ 7149, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it has no parameters.") },
+			{ 7150, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because its only parameter is a 'params' array.") },
 
 			{ 7500, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.") },
 			{ 7501, Tuple.Create(MessageSeverity.Error, "More than one unnamed constructor for the type {0}.") },
