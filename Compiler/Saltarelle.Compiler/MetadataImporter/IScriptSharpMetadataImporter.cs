@@ -31,6 +31,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		bool IsTestFixture(ITypeDefinition t);
 
 		/// <summary>
+		/// Returns the name of a module that has to be 'require'd for the type. Returns null if the type lives in the global namespace.
+		/// </summary>
+		string GetModuleName(ITypeDefinition t);
+
+		/// <summary>
 		/// Returns null for methods that are not test methods.
 		/// </summary>
 		TestMethodData GetTestData(IMethod m);

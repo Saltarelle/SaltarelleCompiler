@@ -418,4 +418,18 @@ namespace System.Runtime.CompilerServices {
 	public sealed class DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor {
 		private DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor() {}
 	}
+
+	/// <summary>
+	/// Defines that a type is defined in a module, which should be imported by a require() call.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Type)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ModuleNameAttribute : Attribute {	
+		public string ModuleName { get; private set; }
+
+		public ModuleNameAttribute(string moduleName) {
+			this.ModuleName = moduleName;
+		}
+	}
 }

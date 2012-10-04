@@ -34,6 +34,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
 		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
 		private const string BindThisToFirstParameterAttribute      = "System.Runtime.CompilerServices.BindThisToFirstParameterAttribute";
+		private const string ModuleNameAttribute                    = "System.Runtime.CompilerServices.ModuleNameAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
@@ -136,8 +137,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public bool IsResources { get; private set; }
 			public string MixinArg { get; private set; }
 			public bool IsTestFixture { get; private set; }
+			public string ModuleName { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isSerializable, bool isNamedValues, bool isImported, bool isRealType, bool isResources, string mixinArg, bool isTestFixture) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isSerializable, bool isNamedValues, bool isImported, bool isRealType, bool isResources, string mixinArg, bool isTestFixture, string moduleName) {
 				Semantics       = semantics;
 				IsGlobalMethods = isGlobalMethods;
 				IsSerializable  = isSerializable;
@@ -147,6 +149,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				IsResources     = isResources;
 				MixinArg        = mixinArg;
 				IsTestFixture   = isTestFixture;
+				ModuleName      = moduleName;
 			}
 		}
 
@@ -340,7 +343,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				ProcessType(b.GetDefinition());
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, true, false, null, false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, true, false, null, false, null);
 				return;
 			}
 
@@ -486,7 +489,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
 			var tfa = GetAttributePositionalArgs(typeDefinition, TestFixtureAttribute);
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, mixinArg: mixinArg, isTestFixture: tfa != null);
+			var mna = GetAttributePositionalArgs(typeDefinition, ModuleNameAttribute);
+			if (mna != null && mna[0] == null) {
+				mna[0] = "";
+			}
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, mixinArg: mixinArg, isTestFixture: tfa != null, moduleName: mna != null ? (string)mna[0] : null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -1383,6 +1390,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		public bool IsTestFixture(ITypeDefinition t) {
 			return _typeSemantics[t].IsTestFixture;
+		}
+
+		public string GetModuleName(ITypeDefinition t) {
+			for (; t != null; t = t.DeclaringTypeDefinition) {
+				var n = _typeSemantics[t].ModuleName;
+				if (n != null)
+					return n != "" ? n : null;
+			}
+			return null;
 		}
 
 		public TestMethodData GetTestData(IMethod m) {

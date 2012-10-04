@@ -1327,5 +1327,82 @@ public class B : I<object> {
 			Assert.That(i.GetMethod.Name, Is.EqualTo("get_renamedIndexer"));
 			Assert.That(i.SetMethod.Name, Is.EqualTo("set_renamedIndexer"));
 		}
+
+		[Test]
+		public void ModuleNameAttributeWorks() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+public class C1 {
+}
+
+[ModuleName(""my-module"")]
+public class C2 {
+}
+
+[ModuleName("""")]
+public class C3 {
+}
+
+[ModuleName(null)]
+public class C4 {
+}
+");
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1"]));
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C4"]));
+		}
+
+		[Test]
+		public void ModuleNameAttributeIsInheritedButCanBeOverridden() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+[ModuleName(""my-module"")]
+public class C1 {
+	public class D1 {
+	}
+
+	[ModuleName(""other-module"")]
+	public class D2 {
+	}
+
+	[ModuleName(null)]
+	public class D3 {
+	}
+
+	[ModuleName("""")]
+	public class D4 {
+	}
+}
+
+public class C2 {
+	public class D1 {
+	}
+
+	[ModuleName(""third-module"")]
+	public class D2 {
+	}
+
+	[ModuleName(null)]
+	public class D3 {
+	}
+
+	[ModuleName("""")]
+	public class D4 {
+	}
+}
+");
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C1+D1"]));
+			Assert.AreEqual("other-module", Metadata.GetModuleName(AllTypes["C1+D2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1+D3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1+D4"]));
+
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D1"]));
+			Assert.AreEqual("third-module", Metadata.GetModuleName(AllTypes["C2+D2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D4"]));
+		}
 	}
 }

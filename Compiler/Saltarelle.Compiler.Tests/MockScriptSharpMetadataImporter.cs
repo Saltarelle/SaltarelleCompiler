@@ -12,6 +12,7 @@ namespace Saltarelle.Compiler.Tests {
 			IsRealType             = t => true;
 			IsTestFixture          = t => false;
 			GetTestData            = m => null;
+			GetModuleName          = t => null;
 		}
 
 		public Func<ITypeDefinition, bool> IsNamedVaules { get; set; }
@@ -21,6 +22,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> IsRealType { get; set; }
 		public Func<ITypeDefinition, bool> IsTestFixture { get; set; }
 		public Func<IMethod, TestMethodData> GetTestData { get; set; }
+		public Func<ITypeDefinition, string> GetModuleName { get; set; }
 
 		bool IScriptSharpMetadataImporter.IsNamedValues(ITypeDefinition t) {
 			return IsNamedVaules(t);
@@ -48,6 +50,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		TestMethodData IScriptSharpMetadataImporter.GetTestData(IMethod m) {
 			return GetTestData(m);
+		}
+
+		string IScriptSharpMetadataImporter.GetModuleName(ITypeDefinition t) {
+			return GetModuleName(t);
 		}
 
 		public bool OmitDowncasts { get; set; }
