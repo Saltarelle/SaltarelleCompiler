@@ -266,6 +266,12 @@ namespace System.Runtime.CompilerServices {
     [Imported]
     public sealed class PreserveMemberCaseAttribute : Attribute
     {
+        public bool Preserve { get; set; }
+
+        public PreserveMemberCaseAttribute(bool preserve = true)
+        {
+            Preserve = preserve;
+        }
     }
 
     /// <summary>

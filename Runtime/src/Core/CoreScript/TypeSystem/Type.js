@@ -294,9 +294,11 @@ Type.safeCast = function#? DEBUG Type$safeCast##(instance, type) {
 }
 
 Type.cast = function#? DEBUG Type$cast##(instance, type) {
+	if (instance === undefined)
+		return undefined;
 	if (instance === null)
-		return null;
-    else if (Type.isInstanceOfType(instance, type)) {
+	    return null;
+	else if (Type.isInstanceOfType(instance, type)) {
         return instance;
     }
     throw 'Cannot cast object to type ' + type.__typeName;
@@ -305,6 +307,9 @@ Type.cast = function#? DEBUG Type$cast##(instance, type) {
 Type.getInstanceType = function#? DEBUG Type$getInstanceType##(instance) {
 	if (instance === null) {
 		throw 'Cannot get type of null'
+	}
+	if (instance === undefined) {
+		throw 'Cannot get type of undefined'
 	}
     var ctor = null;
 

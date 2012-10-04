@@ -749,6 +749,55 @@ public enum E1 {
 		}
 
 		[Test]
+		public void PerserveMemberCaseOnAssemblyCanBeOverriddenOnClass() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[assembly: PreserveMemberCase]
+[PreserveMemberCase(false)]
+public class C1 {
+	public void Method1() {
+	}
+}", minimizeNames: false);
+
+			var m1 = FindMethod("C1.Method1");
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("method1"));
+		}
+        
+        [Test]
+		public void PerserveMemberCaseOnAssemblyCanBePreservedOnClass() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[assembly: PreserveMemberCase]
+[PreserveMemberCase(true)]
+public class C1 {
+	public void Method1() {
+	}
+}", minimizeNames: false);
+
+			var m1 = FindMethod("C1.Method1");
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("Method1"));
+		}
+        
+        [Test]
+		public void PerserveMemberCaseOnAssemblyCanBeSetOnClassWithDefaultValue() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[assembly: PreserveMemberCase]
+[PreserveMemberCase]
+public class C1 {
+	public void Method1() {
+	}
+}", minimizeNames: false);
+
+			var m1 = FindMethod("C1.Method1");
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m1.Name, Is.EqualTo("Method1"));
+		}
+
+
+		[Test]
 		public void PreserveNameAttributePreventsMinimization() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
