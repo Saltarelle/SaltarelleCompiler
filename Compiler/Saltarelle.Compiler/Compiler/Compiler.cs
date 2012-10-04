@@ -86,7 +86,7 @@ namespace Saltarelle.Compiler.Compiler {
 							_errorReporter.Region = oldRegion;
 						}
 
-						result = new JsClass(typeDefinition, "X", ConvertClassType(typeDefinition.Kind), new string[0], null, null);
+						result = new JsClass(typeDefinition, ConvertClassType(typeDefinition.Kind), new string[0], null, null);
 					}
 					else {
 						var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _runtimeLibrary.GetScriptType(t, TypeContext.GenericArgument) != null).ToList();
@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? _runtimeLibrary.GetScriptType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class), TypeContext.Inheritance) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
 						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.Inheritance)).Where(t => t != null).ToList();
 						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namer.GetTypeParameterName(a)).ToList();
-						result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
+						result = new JsClass(typeDefinition, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
 					}
                 }
                 else {
@@ -142,7 +142,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
             }
 
-            return new JsEnum(type, semantics.Name, values);
+            return new JsEnum(type, values);
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {

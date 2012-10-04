@@ -318,35 +318,6 @@ class D : B {
 		}
 
 		[Test]
-		public void ChainingToGlobalStaticMethodConstructorFromAnotherStaticMethodConstructorWorks() {
-			AssertCorrect(
-@"class C {
-	static int F1() { return 0; }
-	static int F2() { return 0; }
-	static int F3() { return 0; }
-	static int F4() { return 0; }
-
-	public void M() {}
-
-	public C(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {
-	}
-
-	[System.Runtime.CompilerServices.CompilerGenerated]
-	public C() : this(d: F1(), g: F2(), f: F3(), b: F4()) {
-		M();
-	}
-}",
-@"function() {
-	var $tmp1 = {sm_C}.F1();
-	var $tmp2 = {sm_C}.F2();
-	var $tmp3 = {sm_C}.F3();
-	var $this = ctor$7(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
-	$this.M();
-	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), isGlobal: true) });
-		}
-
-		[Test]
 		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
 			var rpt = new MockErrorReporter(false);
 			Compile(new[] {

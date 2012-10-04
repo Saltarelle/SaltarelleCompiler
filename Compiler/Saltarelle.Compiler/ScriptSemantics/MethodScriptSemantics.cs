@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             /// <summary>
             /// The method is implemented as inline code, eg Debugger.Break() => debugger. Can use the parameters {this} (for instance methods), as well as all typenames and argument names in braces (eg. {arg0}, {TArg0}).
             /// If a parameter name is preceeded by an @ sign, {@arg0}, that argument must be a literal string during invocation, and the supplied string will be inserted as an identifier into the script (eg '{this}.set_{@arg0}({arg1})' can transform the call 'c.F("MyProp", v)' to 'c.set_MyProp(v)'.
-            /// If a parameter name is preceeded by an asterisk or a comma {*arg} or {,arg}, that parameter must be a param array, and all invocations of the method must use the expanded invocation form. The actual value supplied for the param array will be inserted into the call and if the identifier was {,arg}, a comma will be prepended if the param array is not empty.
+            /// If a parameter name is preceeded by an asterisk {*arg}, that parameter must be a param array, and all invocations of the method must use the expanded invocation form. The actual value supplied for the param array will be inserted into the call.
             /// The format string can also use identifiers starting with a dollar {$Namespace.Name} to construct type references. The name must be the fully qualified type name in this case.
             /// The method must use all of its arguments, or they risk not being evaluated.
             /// No code will be generated for the method.
@@ -87,22 +87,6 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         /// </summary>
         public bool GenerateCode { get; private set; }
 
-		private bool _isGlobal;
-		/// <summary>
-		/// Whether a static method is global (eg. transform <c>"Script.Alert()"</c> to just <c>"alert()"</c>).
-		/// Applies to methods of tyep <see cref="ImplType.StaticMethodWithThisAsFirstArgument"/>, and normal methods that are static.
-		/// </summary>
-		public bool IsGlobal {
-			get {
-				if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument)
-					throw new InvalidOperationException();
-				return _isGlobal;
-			}
-			private set {
-				_isGlobal = value;
-			}
-		}
-
 		/// <summary>
 		/// Whether the param array to this method is output to script in expanded form. Methods that use this option can only be invoked in expanded form.
 		/// </summary>
@@ -111,12 +95,12 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         private MethodScriptSemantics() {
         }
 
-        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false, bool expandParams = false) {
-            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal, ExpandParams = expandParams };
+        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false) {
+            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, ExpandParams = expandParams };
         }
 
-        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool isGlobal = false, bool expandParams = false) {
-            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, IsGlobal = isGlobal, ExpandParams = expandParams };
+        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false) {
+            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, ExpandParams = expandParams };
         }
 
         public static MethodScriptSemantics InstanceMethodOnFirstArgument(string name, bool expandParams = false) {

@@ -55,14 +55,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         }
 
         protected JsClass FindClass(string name) {
-            var result = CompiledTypes.SingleOrDefault(t => t.Name.ToString() == name);
+            var result = CompiledTypes.SingleOrDefault(t => t.CSharpTypeDefinition.Name == name);
             if (result == null) Assert.Fail("Could not find type " + name);
             if (!(result is JsClass)) Assert.Fail("Found type is not a JsClass, it is a " + result.GetType().Name);
             return (JsClass)result;
         }
 
         protected JsEnum FindEnum(string name) {
-            var result = CompiledTypes.SingleOrDefault(t => t.Name.ToString() == name);
+            var result = CompiledTypes.SingleOrDefault(t => t.CSharpTypeDefinition.Name == name);
             if (result == null) Assert.Fail("Could not find type " + name);
             if (!(result is JsEnum)) Assert.Fail("Found type is not a JsEnum, it is a " + result.GetType().Name);
             return (JsEnum)result;

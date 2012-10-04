@@ -775,7 +775,7 @@ public enum E1 {
 		}
 
 		[Test]
-		public void GlobalMethodsAttributeCausesAllMethodsToBeGlobalAndPreventsMinimization() {
+		public void GlobalMethodsAttributeCausesClassNameToBeEmptyAndPreventsMinimization() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
@@ -797,25 +797,24 @@ static class C1 {
 	}
 }");
 
+			var c1 = FindType("C1");
+			Assert.That(c1.Name, Is.EqualTo(""));
+
 			var m1 = FindMethod("C1.Method1");
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("method1"));
-			Assert.That(m1.IsGlobal, Is.True);
 
 			var m2 = FindMethod("C1.Method2");
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("Method2"));
-			Assert.That(m2.IsGlobal, Is.True);
 
 			var m3 = FindMethod("C1.Method3");
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("Renamed"));
-			Assert.That(m3.IsGlobal, Is.True);
 
 			var m4 = FindMethod("C1.Method4");
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("method4"));
-			Assert.That(m4.IsGlobal, Is.True);
 		}
 
 		[Test]
@@ -1036,7 +1035,7 @@ public static class C {
 		}
 
 		[Test]
-		public void MixinAttributeSetsTheNameForTheClassAndMethodsAreNonGlobal() {
+		public void MixinAttributeSetsTheNameForTheClass() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [Mixin(""$.fn"")]
@@ -1045,7 +1044,6 @@ public static class C {
 }");
 			Assert.That(FindType("C").Name, Is.EqualTo("$.fn"));
 			Assert.That(FindMethod("C.Method1").Name, Is.EqualTo("method1"));
-			Assert.That(FindMethod("C.Method1").IsGlobal, Is.False);
 		}
 
 		[Test]
@@ -1199,12 +1197,12 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void GetGlobalMethodsPrefixMethodWorks() {
+		public void IsMixinWorks() {
 			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [GlobalMethods] static class C2 {} [Mixin(""$.fn"")] static class C3 {}");
 
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C1"]), Is.Null);
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C2"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C3"]), Is.EqualTo("$.fn"));
+			Assert.That(Metadata.IsMixin(AllTypes["C1"]), Is.False);
+			Assert.That(Metadata.IsMixin(AllTypes["C2"]), Is.False);
+			Assert.That(Metadata.IsMixin(AllTypes["C3"]), Is.True);
 		}
 
 		[Test]

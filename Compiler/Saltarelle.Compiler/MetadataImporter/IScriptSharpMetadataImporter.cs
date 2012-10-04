@@ -21,12 +21,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		bool IsSerializable(ITypeDefinition t);
 		bool IsRealType(ITypeDefinition t);
 
-		/// <summary>
-		/// If the type has a [MixinAttribute], returns the argument to that attribute.
-		/// Otherwise, if the type has a [GlobalMethodsAttribute], returns an empty string.
-		/// Otherwise returns null.
-		/// </summary>
-		string GetGlobalMethodsPrefix(ITypeDefinition t);
+		bool IsMixin(ITypeDefinition t);
 
 		bool IsTestFixture(ITypeDefinition t);
 

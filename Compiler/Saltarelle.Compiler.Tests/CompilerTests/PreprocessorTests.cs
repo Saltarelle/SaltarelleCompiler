@@ -14,7 +14,7 @@ class A {}
 class B {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
         }
 
         [Test]
@@ -26,7 +26,7 @@ class A {}
 class B {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
         }
 
         [Test]
@@ -40,7 +40,7 @@ class B {}
 class C {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "C" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
         }
 
         [Test]
@@ -56,7 +56,7 @@ class C {}
 class D {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
         }
 
         [Test]
@@ -70,7 +70,7 @@ class B {}
 class C {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "C" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
         }
 
         [Test]
@@ -86,7 +86,7 @@ class C {}
 class D {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "D" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "D" });
         }
 
         [Test]
@@ -100,7 +100,7 @@ class B {}
 class C {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
         }
 
         [Test]
@@ -115,7 +115,7 @@ class B {}
 class B {}
 #endif
 " }, defineConstants: new[] { "MY_SYMBOL1" });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
         }
 
         [Test]
@@ -128,7 +128,7 @@ class A {}
 class B {}
 #endif
 " });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
         }
 
         [Test]
@@ -141,7 +141,7 @@ class A {}
 class B {}
 #endif
 " }, defineConstants: new[] { "MY_SYMBOL" });
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "A" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
         }
     }
 }

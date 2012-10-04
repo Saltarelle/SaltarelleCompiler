@@ -145,20 +145,6 @@ public class C {
 		}
 
 		[Test]
-		public void GlobalStaticMethodInvocationWithArgumentsWorks() {
-			AssertCorrect(
-@"static void F(int x, int y, int z) {}
-public void M() {
-	int a = 0, b = 0, c = 0;
-	// BEGIN
-	F(a, b, c);
-	// END
-}",
-@"	$F($a, $b, $c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, isGlobal: m.Name == "F") });
-		}
-
-		[Test]
 		public void GenericMethodInvocationWorks() {
 			AssertCorrect(
 @"void F<T1, T2>(T1 x, int y, T2 z) {}
@@ -420,21 +406,6 @@ public void M() {
 }",
 @"	{sm_C}.$F(this, $a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
-		}
-
-		[Test]
-		public void GlobalMethodWithThisAsFirstArgumentWorks() {
-			AssertCorrect(
-@"void F(int x, int y, string z) {}
-public void M() {
-	int a = 0, b = 0;
-	string c = null;
-	// BEGIN
-	F(a, b, c);
-	// END
-}",
-@"	$F(this, $a, $b, $c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, isGlobal: true) : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]

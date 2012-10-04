@@ -28,6 +28,16 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 				return result;
 			}
 
+			public override JsExpression VisitMemberAccessExpression(JsMemberAccessExpression expression, object data) {
+				if (expression.Target is JsTypeReferenceExpression) {
+					var type = ((JsTypeReferenceExpression)expression.Target).Type;
+					var sem = _metadataImporter.GetTypeSemantics(type);
+					if (string.IsNullOrEmpty(sem.Name))	// Handle types marked with [GlobalMethods]
+						return JsExpression.Identifier(expression.Member);
+				}
+				return base.VisitMemberAccessExpression(expression, data);
+			}
+
 			public JsStatement Process(JsStatement stmt) {
 				return VisitStatement(stmt, null);
 			}

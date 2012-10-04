@@ -38,7 +38,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             }
         }
 
-        public JsClass(ITypeDefinition csharpTypeDefinition, string name, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(csharpTypeDefinition, name) {
+        public JsClass(ITypeDefinition csharpTypeDefinition, ClassTypeEnum classType, IEnumerable<string> typeArgumentNames, JsExpression baseClass, IEnumerable<JsExpression> implementedInterfaces) : base(csharpTypeDefinition) {
             BaseClass             = baseClass;
             ClassType             = classType;
             TypeArgumentNames     = new List<string>(typeArgumentNames ?? new string[0]);
