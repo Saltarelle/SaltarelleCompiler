@@ -157,8 +157,5 @@
     <Content Include="qunit-1.9.0.css" />
     <Content Include="qunit-1.9.0.js" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-  </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>

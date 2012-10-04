@@ -6,6 +6,8 @@ namespace NodeJS.EventsModule {
 	[ModuleName("events")]
 	[IgnoreNamespace]
 	public class EventEmitter {
+		public EventEmitter() {}
+
 		public void AddListener(string @event, Delegate listener) {}
 
 		public void On(string @event, Delegate listener) {}
@@ -25,8 +27,8 @@ namespace NodeJS.EventsModule {
 
 
 		public event Action<string, Delegate> OnNewListener {
-			[InlineCode("{this}.addListener('newListener', {value}')")] add {}
-			[InlineCode("{this}.removeListener('newListener', {value}')")] remove {}
+			[InlineCode("{this}.addListener('newListener', {value})")] add {}
+			[InlineCode("{this}.removeListener('newListener', {value})")] remove {}
 		}
 
 		[InlineCode("{this}.once('newListener', {callback})")]

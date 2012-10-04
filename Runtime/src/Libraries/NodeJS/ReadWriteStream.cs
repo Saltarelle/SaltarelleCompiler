@@ -7,9 +7,24 @@ using NodeJS.EventsModule;
 
 namespace NodeJS {
 	[Imported]
-	public class ReadableStream : EventEmitter {
+	public class ReadWriteStream : EventEmitter {
 		[NonScriptable]
-		public ReadableStream() {}
+		public ReadWriteStream() {}
+
+		// Hacky stuff
+		[ScriptSkip]
+		public static implicit operator ReadableStream(ReadWriteStream s) { return null; }
+
+		[ScriptSkip]
+		public static implicit operator WritableStream(ReadWriteStream s) { return null; }
+
+		[ScriptSkip]
+		public static explicit operator ReadWriteStream(ReadableStream s) { return null; }
+
+		[ScriptSkip]
+		public static explicit operator ReadWriteStream(WritableStream s) { return null; }
+
+		// ReadableStream
 
 		[IntrinsicProperty]
 		public bool Readable { get; private set; }
@@ -70,5 +85,44 @@ namespace NodeJS {
 
 		[InlineCode("{this}.once('close', {callback})")]
 		public void OnceClose(Action callback) {}
+
+		// WritableStream
+
+		[IntrinsicProperty]
+		public bool Writable { get; private set; }
+
+		public bool Write(string data) { return false; }
+
+		public bool Write(string data, Encoding encoding) { return false; }
+
+		public bool Write(Buffer data) { return false; }
+
+		public void End() {}
+
+		public void End(string data) {}
+
+		public void End(string data, Encoding encoding) {}
+
+		public void End(Buffer data) {}
+
+		public void DestroySoon() {}
+
+
+		public event Action OnDrain {
+			[InlineCode("{this}.addListener('drain', {value})")] add {}
+			[InlineCode("{this}.removeListener('drain', {value})")] remove {}
+		}
+
+		[InlineCode("{this}.once('drain', {callback})")]
+		public void OnceDrain(Action callback) {}
+
+
+		public event Action OnPipe {
+			[InlineCode("{this}.addListener('pipe', {value})")] add {}
+			[InlineCode("{this}.removeListener('pipe', {value})")] remove {}
+		}
+
+		[InlineCode("{this}.once('pipe', {callback})")]
+		public void OncePipe(Action callback) {}
 	}
 }

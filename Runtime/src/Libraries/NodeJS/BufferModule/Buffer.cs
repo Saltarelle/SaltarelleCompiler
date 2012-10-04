@@ -99,47 +99,47 @@ namespace NodeJS.BufferModule {
 		public double ReadDoubleBE(int offset, bool noAssert) { return 0; }
 
 
-		public void WriteUInt8(byte value, int offset) { return 0; }
-		public void WriteUInt8(byte value, int offset, bool noAssert) { return 0; }
+		public void WriteUInt8(byte value, int offset) {}
+		public void WriteUInt8(byte value, int offset, bool noAssert) {}
 
-		public void WriteUInt16LE(ushort value, int offset) { return 0; }
-		public void WriteUInt16LE(ushort value, int offset, bool noAssert) { return 0; }
+		public void WriteUInt16LE(ushort value, int offset) {}
+		public void WriteUInt16LE(ushort value, int offset, bool noAssert) {}
 
-		public void WriteUInt16BE(ushort value, int offset) { return 0; }
-		public void WriteUInt16BE(ushort value, int offset, bool noAssert) { return 0; }
+		public void WriteUInt16BE(ushort value, int offset) {}
+		public void WriteUInt16BE(ushort value, int offset, bool noAssert) {}
 
-		public void WriteUInt32LE(uint value, int offset) { return 0; }
-		public void WriteUInt32LE(uint value, int offset, bool noAssert) { return 0; }
+		public void WriteUInt32LE(uint value, int offset) {}
+		public void WriteUInt32LE(uint value, int offset, bool noAssert) {}
 
-		public void WriteUInt32BE(uint value, int offset) { return 0; }
-		public void WriteUInt32BE(uint value, int offset, bool noAssert) { return 0; }
+		public void WriteUInt32BE(uint value, int offset) {}
+		public void WriteUInt32BE(uint value, int offset, bool noAssert) {}
 
-		public void WriteInt8(sbyte value, int offset) { return 0; }
-		public void WriteInt8(sbyte value, int offset, bool noAssert) { return 0; }
+		public void WriteInt8(sbyte value, int offset) {}
+		public void WriteInt8(sbyte value, int offset, bool noAssert) {}
 
-		public void WriteInt16LE(short value, int offset) { return 0; }
-		public void WriteInt16LE(short value, int offset, bool noAssert) { return 0; }
+		public void WriteInt16LE(short value, int offset) {}
+		public void WriteInt16LE(short value, int offset, bool noAssert) {}
 
-		public void WriteInt16BE(short value, int offset) { return 0; }
-		public void WriteInt16BE(short value, int offset, bool noAssert) { return 0; }
+		public void WriteInt16BE(short value, int offset) {}
+		public void WriteInt16BE(short value, int offset, bool noAssert) {}
 
-		public void WriteInt32LE(int value, int offset) { return 0; }
-		public void WriteInt32LE(int value, int offset, bool noAssert) { return 0; }
+		public void WriteInt32LE(int value, int offset) {}
+		public void WriteInt32LE(int value, int offset, bool noAssert) {}
 
-		public void WriteInt32BE(int value, int offset) { return 0; }
-		public void WriteInt32BE(int value, int offset, bool noAssert) { return 0; }
+		public void WriteInt32BE(int value, int offset) {}
+		public void WriteInt32BE(int value, int offset, bool noAssert) {}
 
-		public void WriteFloatLE(float value, int offset) { return 0; }
-		public void WriteFloatLE(float value, int offset, bool noAssert) { return 0; }
+		public void WriteFloatLE(float value, int offset) {}
+		public void WriteFloatLE(float value, int offset, bool noAssert) {}
 
-		public void WriteFloatBE(float value, int offset) { return 0; }
-		public void WriteFloatBE(float value, int offset, bool noAssert) { return 0; }
+		public void WriteFloatBE(float value, int offset) {}
+		public void WriteFloatBE(float value, int offset, bool noAssert) {}
 
-		public void WriteDoubleLE(double value, int offset) { return 0; }
-		public void WriteDoubleLE(double value, int offset, bool noAssert) { return 0; }
+		public void WriteDoubleLE(double value, int offset) {}
+		public void WriteDoubleLE(double value, int offset, bool noAssert) {}
 
-		public void WriteDoubleBE(double value, int offset) { return 0; }
-		public void WriteDoubleBE(double value, int offset, bool noAssert) { return 0; }
+		public void WriteDoubleBE(double value, int offset) {}
+		public void WriteDoubleBE(double value, int offset, bool noAssert) {}
 
 
 		public void Fill(byte value) {}

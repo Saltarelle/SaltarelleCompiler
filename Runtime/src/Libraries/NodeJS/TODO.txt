@@ -13,7 +13,7 @@ exports
 X Buffer
 
 querystring
-http
+X http (Except for 2 global properties)
 cluster
 zlib
 os
@@ -25,7 +25,7 @@ vm
 child_process
 url
 dns
-net
+X net
 dgram
 fs
 path

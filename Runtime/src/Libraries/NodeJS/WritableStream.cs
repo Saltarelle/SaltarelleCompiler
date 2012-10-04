@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using NodeJS.BufferModule;
 using NodeJS.EventsModule;
 
 namespace NodeJS {
 	[Imported]
 	public class WritableStream : EventEmitter {
+		[NonScriptable]
+		public WritableStream() {}
+
 		[IntrinsicProperty]
 		public bool Writable { get; private set; }
 
@@ -30,8 +34,8 @@ namespace NodeJS {
 
 
 		public event Action OnDrain {
-			[InlineCode("{this}.addListener('drain', {value}')")] add {}
-			[InlineCode("{this}.removeListener('drain', {value}')")] remove {}
+			[InlineCode("{this}.addListener('drain', {value})")] add {}
+			[InlineCode("{this}.removeListener('drain', {value})")] remove {}
 		}
 
 		[InlineCode("{this}.once('drain', {callback})")]
@@ -39,8 +43,8 @@ namespace NodeJS {
 
 
 		public event Action<Error> OnError {
-			[InlineCode("{this}.addListener('error', {value}')")] add {}
-			[InlineCode("{this}.removeListener('error', {value}')")] remove {}
+			[InlineCode("{this}.addListener('error', {value})")] add {}
+			[InlineCode("{this}.removeListener('error', {value})")] remove {}
 		}
 
 		[InlineCode("{this}.once('error', {callback})")]
@@ -48,8 +52,8 @@ namespace NodeJS {
 
 
 		public event Action OnClose {
-			[InlineCode("{this}.addListener('close', {value}')")] add {}
-			[InlineCode("{this}.removeListener('close', {value}')")] remove {}
+			[InlineCode("{this}.addListener('close', {value})")] add {}
+			[InlineCode("{this}.removeListener('close', {value})")] remove {}
 		}
 
 		[InlineCode("{this}.once('close', {callback})")]
@@ -57,8 +61,8 @@ namespace NodeJS {
 
 
 		public event Action OnPipe {
-			[InlineCode("{this}.addListener('pipe', {value}')")] add {}
-			[InlineCode("{this}.removeListener('pipe', {value}')")] remove {}
+			[InlineCode("{this}.addListener('pipe', {value})")] add {}
+			[InlineCode("{this}.removeListener('pipe', {value})")] remove {}
 		}
 
 		[InlineCode("{this}.once('pipe', {callback})")]

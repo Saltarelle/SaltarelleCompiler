@@ -43,6 +43,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BufferModule\Buffer.cs" />
+    <Compile Include="NetModule\SocketOptions.cs" />
+    <Compile Include="PipeOptions.cs" />
+    <Compile Include="ReadWriteStream.cs" />
+    <Compile Include="HttpModule\Agent.cs" />
+    <Compile Include="NetModule\ConnectOptions.cs" />
+    <Compile Include="NetModule\SocketAddress.cs" />
+    <Compile Include="NetModule\UnixConnectOptions.cs" />
+    <Compile Include="NetModule\TcpConnectOptions.cs" />
+    <Compile Include="NetModule\ServerOptions.cs" />
+    <Compile Include="NetModule\Socket.cs" />
+    <Compile Include="NetModule\Net.cs" />
+    <Compile Include="NetModule\Server.cs" />
     <Compile Include="WritableStream.cs" />
     <Compile Include="ReadableStream.cs" />
     <Compile Include="HttpModule\ClientRequest.cs" />
