@@ -11,13 +11,10 @@ using Saltarelle.Compiler.MetadataImporter;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 	public class ScriptSharpOOPEmulatorTestBase {
-		protected ITypeDefinition CreateMockType(string name) {
-			var typeDef = new Mock<ICSharpCode.NRefactory.TypeSystem.ITypeDefinition>(MockBehavior.Strict);
-			var asm = new Mock<IAssembly>();
+		protected ITypeDefinition CreateMockTypeDefinition(string name) {
+			var typeDef = Common.CreateTypeMock(name);
 			typeDef.SetupGet(_ => _.Attributes).Returns(new IAttribute[0]);
-			typeDef.SetupGet(_ => _.FullName).Returns(name);
 			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
-			typeDef.SetupGet(_ => _.ParentAssembly).Returns(asm.Object);
 			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
 			return typeDef.Object;
 		}

@@ -206,7 +206,7 @@ namespace Saltarelle.Compiler.Driver {
 					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 					var n = new DefaultNamer();
 					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
+					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => new JsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition()));
 					var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: options.References.Count == 0 /* We allow user-defined structs in mscorlib only, which can be identified by the fact that it has no references*/);
 
 					var references = LoadReferences(settings.AssemblyReferences, er);
@@ -217,7 +217,7 @@ namespace Saltarelle.Compiler.Driver {
 					var compiledTypes = compiler.Compile(compilation);
 
 					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
-					js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
+					js = new GlobalNamespaceReferenceImporter(md).ImportReferences(js);
 
 					if (er.HasErrors)
 						return false;

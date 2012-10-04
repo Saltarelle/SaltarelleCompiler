@@ -171,14 +171,14 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
 					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterGenericInterfaceInstance),
 					                                                            typeRef,
-					                                                            new JsTypeReferenceExpression(compilation.MainAssembly, c.Name),
+					                                                            new JsTypeReferenceExpression(c.CSharpTypeDefinition),
 					                                                            JsExpression.ArrayLiteral(c.TypeArgumentNames.Select(JsExpression.Identifier)),
 																				JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.ArrayLiteral(c.ImplementedInterfaces))))));
 				}
 				else {
 					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterGenericClassInstance),
 					                                                            typeRef,
-					                                                            new JsTypeReferenceExpression(compilation.MainAssembly, c.Name),
+					                                                            new JsTypeReferenceExpression(c.CSharpTypeDefinition),
 					                                                            JsExpression.ArrayLiteral(c.TypeArgumentNames.Select(JsExpression.Identifier)),
 					                                                            JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(c.BaseClass)),
 																				JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.ArrayLiteral(c.ImplementedInterfaces))))));
@@ -194,7 +194,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						  .Where(expr => expr.NodeType == ExpressionNodeType.Assign && expr.Left is JsMemberAccessExpression)
 						  .Select(expr => new { Name = ((JsMemberAccessExpression)expr.Left).Member, Value = expr.Right });
 
-			return new JsExpressionStatement(JsExpression.Assign(new JsTypeReferenceExpression(c.CSharpTypeDefinition.ParentAssembly, c.Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value)))));
+			return new JsExpressionStatement(JsExpression.Assign(new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value)))));
 		}
 
 		private IList<JsClass> TopologicalSortTypesByInheritance(IList<JsClass> types) {
@@ -229,7 +229,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
 			var netSystemType = compilation.FindType(KnownTypeCode.Type).GetDefinition();
-			var systemType = new JsTypeReferenceExpression(netSystemType.ParentAssembly, _metadataImporter.GetTypeSemantics(netSystemType).Name);
+			var systemType = new JsTypeReferenceExpression(netSystemType);
 
 			var result = new List<JsStatement>();
 
@@ -246,7 +246,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					}
 					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
 
-					var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, t.Name);
+					var typeRef = new JsTypeReferenceExpression(t.CSharpTypeDefinition);
 					if (t is JsClass) {
 						var c = (JsClass)t;
 						if (globalMethodsPrefix != null) {
@@ -300,7 +300,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			result.AddRange(TopologicalSortTypesByInheritance(typesToRegister)
 			                .Select(c => {
 			                                 try {
-			                                     var typeRef = new JsTypeReferenceExpression(compilation.MainAssembly, c.Name);
+			                                     var typeRef = new JsTypeReferenceExpression(c.CSharpTypeDefinition);
 			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
 			                                         return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterInterface), JsExpression.String(c.Name), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
 			                                     }

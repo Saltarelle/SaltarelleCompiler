@@ -471,14 +471,14 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
 		[Test]
 		public void InterfaceForWhichGetScriptTypeReturnsNullDoesNotAppearInTheInheritanceList() {
-			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition().ParentAssembly, t.FullName) };
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
             Compile(new[] { "interface I1 {} interface I2 {} interface I3<T> {} class C1 : I1, I2, I3<int> {}" }, runtimeLibrary: rtl);
             FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I2}" });
 		}
 
 		[Test]
 		public void BaseTypeForWhichGetScriptTypeReturnsNullIsNotConsideredInheritedFrom() {
-			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition().ParentAssembly, t.FullName) };
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
             Compile(new[] { "interface I1 {} class B {} class C1 : B, I1 {}" }, runtimeLibrary: rtl);
             FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I1}" });
 		}
