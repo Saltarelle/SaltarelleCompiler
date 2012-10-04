@@ -282,6 +282,29 @@ Task Build-NuGetPackages -Depends Determine-Version {
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\Knockout.nuspec"
 
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.NodeJS</id>
+		<version>$script:NodeJSVersion</version>
+		<title>Metadata required to use Node.js with the Saltarelle C# to JavaScript compiler</title>
+		<description>This package contains the required metadata to use Node.JS with the Saltarelle C# to JavaScript compiler.</description>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+		<authors>Erik Källén</authors>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web node.js</tags>
+		<dependencies>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="$baseDir\Runtime\License.txt" target=""/>
+		<file src="$baseDir\Runtime\bin\Script.NodeJS.dll" target="lib"/>
+		<file src="$baseDir\Runtime\bin\Script.NodeJS.xml" target="lib"/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$outDir\NodeJS.nuspec"
+
 	"This file is safe to remove from the project, but NuGet requires the Saltarelle.Compiler package to install something." | Out-File -Encoding UTF8 "$outDir\dummy.txt"
 
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Compiler.nuspec" -OutputDirectory "$outDir" }
@@ -292,6 +315,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.UI.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Knockout.nuspec" -OutputDirectory "$outDir" }
+	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\NodeJS.nuspec" -OutputDirectory "$outDir" }
 }
 
 Task Do-Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackages {
@@ -360,6 +384,7 @@ Task Determine-Version {
 	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core"
 	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\tools\jQueryUIGenerator"
 	$script:KnockoutVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Knockout"
+	$script:NodeJSVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\NodeJS"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
@@ -369,6 +394,7 @@ Task Determine-Version {
 	"jQuery version: $script:jQueryVersion"
 	"jQuery UI version: $script:jQueryUIVersion"
 	"Knockout version: $script:KnockoutVersion"
+	"NodeJS version: $script:NodeJSVersion"
 }
 
 Function Generate-VersionFile($Path, $Version) {
@@ -387,4 +413,5 @@ Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Web\Properties\Version.cs" -Version $script:WebVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core\Properties\Version.cs" -Version $script:JQueryVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Knockout\Properties\Version.cs" -Version $script:KnockoutVersion
+	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\NodeJS\Properties\Version.cs" -Version $script:KnockoutVersion
 }
