@@ -28,7 +28,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\bin\Script.NodeJS.xml</DocumentationFile>
     <NoWarn>1591, 0661, 0660, 1684</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -43,6 +43,24 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BufferModule\Buffer.cs" />
+    <Compile Include="ChildProcessModule\ChildProcess.cs" />
+    <Compile Include="ChildProcessModule\ChildProcessInstance.cs" />
+    <Compile Include="ChildProcessModule\ForkOptions.cs" />
+    <Compile Include="ChildProcessModule\ExecOptions.cs" />
+    <Compile Include="ChildProcessModule\SpawnOptions.cs" />
+    <Compile Include="UtilModule\Util.cs" />
+    <Compile Include="OSModule\NetworkInterfaceInfo.cs" />
+    <Compile Include="OSModule\OS.cs" />
+    <Compile Include="OSModule\CpuInfo.cs" />
+    <Compile Include="PathModule\Path.cs" />
+    <Compile Include="ReplModule\ReplServer.cs" />
+    <Compile Include="ReplModule\Repl.cs" />
+    <Compile Include="ReplModule\ReplOptions.cs" />
+    <Compile Include="StringDecoderModule\StringDecoder.cs" />
+    <Compile Include="ZLibModule\ZLib.cs" />
+    <Compile Include="ZLibModule\ZLibOptions.cs" />
+    <Compile Include="QueryStringModule\QueryString.cs" />
+    <Compile Include="QueryStringModule\ParseOptions.cs" />
     <Compile Include="NetModule\SocketOptions.cs" />
     <Compile Include="PipeOptions.cs" />
     <Compile Include="ReadWriteStream.cs" />
@@ -55,6 +73,8 @@
     <Compile Include="NetModule\Socket.cs" />
     <Compile Include="NetModule\Net.cs" />
     <Compile Include="NetModule\Server.cs" />
+    <Compile Include="UrlModule\UrlObject.cs" />
+    <Compile Include="UrlModule\Url.cs" />
     <Compile Include="WritableStream.cs" />
     <Compile Include="ReadableStream.cs" />
     <Compile Include="HttpModule\ClientRequest.cs" />
@@ -78,8 +98,6 @@
   <ItemGroup>
     <Content Include="TODO.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="StreamModule\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>

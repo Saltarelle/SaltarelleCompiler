@@ -12,28 +12,28 @@ module
 exports
 X Buffer
 
-querystring
-X http (Except for 2 global properties)
-cluster
-zlib
-os
+X querystring
+X http
+- cluster (experimental)
+X zlib
+X os
 https
 punycode
-repl
+X repl
 readline
 vm
-child_process
-url
+X child_process
+X url
 dns
 X net
 dgram
 fs
-path
-string_decoder
+X path
+X string_decoder
 tls
 crypto
-stream
-util
+X stream (but not imported, just modelled)
+X util
 assert
 tty
 domain

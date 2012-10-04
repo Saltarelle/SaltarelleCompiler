@@ -4,11 +4,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NodeJS.HttpModule {
-	[ModuleName("http")]
-	[GlobalMethods]
 	[Imported]
+	[GlobalMethods]
+	[ModuleName("http")]
 	public static class Http {
-		// TODO: [ScriptName("STATUS_CODES")] public static JsDictionary<int, string> StatusCodes;
+		#warning TODO: [ScriptName("STATUS_CODES")] public static JsDictionary<int, string> StatusCodes;
 
 		public static Server CreateServer(Action<ServerRequest, ServerResponse> requestListener) { return null; }
 
@@ -16,6 +16,6 @@ namespace NodeJS.HttpModule {
 
 		public static ClientRequest Get(RequestOptions options, Action<ClientResponse> callback) { return null; }
 
-		// TODO: public static Agent GlobalAgent
+		#warning TODO: public static Agent GlobalAgent
 	}
 }

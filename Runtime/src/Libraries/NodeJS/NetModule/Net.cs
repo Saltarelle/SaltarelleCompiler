@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NodeJS.NetModule {
+	[Imported]
 	[GlobalMethods]
 	[ModuleName("net")]
 	public static class Net {
