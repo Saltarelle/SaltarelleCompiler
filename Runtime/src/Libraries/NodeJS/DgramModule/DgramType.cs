@@ -1,12 +1,11 @@
 using System.Runtime.CompilerServices;
 
-namespace NodeJS.FSModule {
+namespace NodeJS.DgramModule {
 	[Imported]
 	[NamedValues]
 	[IgnoreNamespace]
-	public enum SymlinkType {
-		Dir,
-		File,
-		Junction,
+	public enum DgramType {
+		Udp4,
+		Udp6,
 	}
 }

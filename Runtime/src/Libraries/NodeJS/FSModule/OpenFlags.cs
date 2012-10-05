@@ -1,8 +1,9 @@
 using System.Runtime.CompilerServices;
 
 namespace NodeJS.FSModule {
-	[NamedValues]
 	[Imported]
+	[NamedValues]
+	[IgnoreNamespace]
 	public enum OpenFlags {
 		[ScriptName("r")]   Read,
 		[ScriptName("r+")]  ReadWriteRequireExists,

@@ -1,8 +1,9 @@
 using System.Runtime.CompilerServices;
 
 namespace NodeJS {
-	[NamedValues]
 	[Imported]
+	[NamedValues]
+	[IgnoreNamespace]
 	public enum Encoding {
 		Ascii,
 		Utf8,

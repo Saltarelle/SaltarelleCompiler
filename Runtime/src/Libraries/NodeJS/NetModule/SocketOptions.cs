@@ -4,8 +4,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NodeJS.NetModule {
-	[NamedValues]
 	[Imported]
+	[NamedValues]
+	[IgnoreNamespace]
 	public enum SocketType {
 		Tcp4,
 		Tcp6,

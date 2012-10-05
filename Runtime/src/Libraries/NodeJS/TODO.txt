@@ -12,30 +12,5 @@ module
 exports
 X Buffer
 
-X querystring
-X http
-- cluster (experimental)
-X zlib
-X os
-https
-punycode
-X repl
-readline
-vm
-X child_process
-X url
-dns
-X net
-dgram
-X fs
-X path
-X string_decoder
-X tls
-X crypto
-X stream (but not imported, just modelled)
-X util
-assert
-tty
-domain
-
 Task.FromNode!!!
+Make mscorlib work

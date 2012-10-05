@@ -42,6 +42,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssertModule\Assert.cs" />
     <Compile Include="BufferModule\Buffer.cs" />
     <Compile Include="ChildProcessModule\ChildProcess.cs" />
     <Compile Include="ChildProcessModule\ChildProcessInstance.cs" />
@@ -60,6 +61,12 @@
     <Compile Include="CryptoModule\SecureContext.cs" />
     <Compile Include="CryptoModule\Signer.cs" />
     <Compile Include="CryptoModule\Verifier.cs" />
+    <Compile Include="DgramModule\Dgram.cs" />
+    <Compile Include="DgramModule\DgramType.cs" />
+    <Compile Include="DgramModule\Socket.cs" />
+    <Compile Include="DnsModule\Dns.cs" />
+    <Compile Include="DnsModule\LookupResult.cs" />
+    <Compile Include="DnsModule\RecordType.cs" />
     <Compile Include="FSModule\WriteStream.cs" />
     <Compile Include="FSModule\CreateWriteStreamOptions.cs" />
     <Compile Include="FSModule\CreateReadStreamOptions.cs" />
@@ -73,6 +80,14 @@
     <Compile Include="FSModule\SymlinkType.cs" />
     <Compile Include="FSModule\Stats.cs" />
     <Compile Include="FSModule\FS.cs" />
+    <Compile Include="HttpsModule\Agent.cs" />
+    <Compile Include="HttpsModule\Https.cs" />
+    <Compile Include="HttpsModule\RequestOptions.cs" />
+    <Compile Include="HttpsModule\Server.cs" />
+    <Compile Include="PunycodeModule\Punycode.cs" />
+    <Compile Include="ReadLineModule\CreateInterfaceOptions.cs" />
+    <Compile Include="ReadLineModule\ReadLine.cs" />
+    <Compile Include="ReadLineModule\ReadLineInterface.cs" />
     <Compile Include="TlsModule\Certificate.cs" />
     <Compile Include="TlsModule\CipherNameAndVersion.cs" />
     <Compile Include="TlsModule\ConnectOptions.cs" />
@@ -91,6 +106,9 @@
     <Compile Include="ReplModule\Repl.cs" />
     <Compile Include="ReplModule\ReplOptions.cs" />
     <Compile Include="StringDecoderModule\StringDecoder.cs" />
+    <Compile Include="VMModule\Context.cs" />
+    <Compile Include="VMModule\Script.cs" />
+    <Compile Include="VMModule\VM.cs" />
     <Compile Include="ZLibModule\ZLib.cs" />
     <Compile Include="ZLibModule\ZLibOptions.cs" />
     <Compile Include="QueryStringModule\QueryString.cs" />
