@@ -20,9 +20,9 @@ namespace NodeJS.VMModule {
 		public static void RunInContext(string code, Context context) {}
 		public static void RunInContext(string code, Context context, string filename) {}
 
-		public static Context CreateContext(dynamic initContext) {}
+		public static Context CreateContext(dynamic initContext) { return null; }
 
-		public static Script CreateScript(string code) {}
-		public static Script CreateScript(string code, string filename) {}
+		public static Script CreateScript(string code) { return null; }
+		public static Script CreateScript(string code, string filename) { return null; }
 	}
 }

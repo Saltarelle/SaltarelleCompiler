@@ -50,6 +50,8 @@
     <Compile Include="ChildProcessModule\ForkOptions.cs" />
     <Compile Include="ChildProcessModule\ExecOptions.cs" />
     <Compile Include="ChildProcessModule\SpawnOptions.cs" />
+    <Compile Include="Console.cs" />
+    <Compile Include="Process.cs" />
     <Compile Include="CryptoModule\Cipher.cs" />
     <Compile Include="CryptoModule\Credentials.cs" />
     <Compile Include="CryptoModule\CredentialsDetails.cs" />
@@ -80,6 +82,7 @@
     <Compile Include="FSModule\SymlinkType.cs" />
     <Compile Include="FSModule\Stats.cs" />
     <Compile Include="FSModule\FS.cs" />
+    <Compile Include="Globals.cs" />
     <Compile Include="HttpsModule\Agent.cs" />
     <Compile Include="HttpsModule\Https.cs" />
     <Compile Include="HttpsModule\RequestOptions.cs" />
@@ -88,6 +91,7 @@
     <Compile Include="ReadLineModule\CreateInterfaceOptions.cs" />
     <Compile Include="ReadLineModule\ReadLine.cs" />
     <Compile Include="ReadLineModule\ReadLineInterface.cs" />
+    <Compile Include="Require.cs" />
     <Compile Include="TlsModule\Certificate.cs" />
     <Compile Include="TlsModule\CipherNameAndVersion.cs" />
     <Compile Include="TlsModule\ConnectOptions.cs" />
@@ -150,6 +154,5 @@
   <ItemGroup>
     <Content Include="TODO.txt" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>

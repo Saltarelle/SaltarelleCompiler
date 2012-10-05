@@ -1,16 +1,2 @@
-﻿process
-global
-console
-__filename
-__dirname
-setTimeout
-clearTimeout
-setInterval
-clearInterval
-require
-module
-exports
-X Buffer
-
-Task.FromNode!!!
+﻿Task.FromNode!!!
 Make mscorlib work
