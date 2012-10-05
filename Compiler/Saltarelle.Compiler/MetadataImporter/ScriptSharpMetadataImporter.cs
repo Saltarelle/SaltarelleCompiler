@@ -471,9 +471,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					if (!typeDefinition.IsStatic) {
 						Message(7015, typeDefinition);
 					}
-					else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
-						Message(7016, typeDefinition);
-					}
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7017, typeDefinition);
 					}

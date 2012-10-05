@@ -795,6 +795,12 @@ static class C1 {
 
 	static void Method4() {
 	}
+
+	static int I;
+
+	static event System.EventHandler E;
+
+	static int P { get; set; }
 }");
 
 			var c1 = FindType("C1");
@@ -815,21 +821,24 @@ static class C1 {
 			var m4 = FindMethod("C1.Method4");
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("method4"));
-		}
 
-		[Test]
-		public void FieldOrPropertyOrEventInGlobalMethodsClassGivesAnError() {
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int i; }", expectErrors: true);
-			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("fields"));
+			var f = FindField("C1.I");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f.Name, Is.EqualTo("i"));
 
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static event System.EventHandler e; }", expectErrors: true);
-			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("events"));
+			var e = FindEvent("C1.E");
+			Assert.That(e.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e.AddMethod.Name, Is.EqualTo("add_e"));
+			Assert.That(e.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e.RemoveMethod.Name, Is.EqualTo("remove_e"));
 
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int P { get; set; } }", expectErrors: true);
-			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("properties"));
+			var p = FindProperty("C1.P");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p.GetMethod.Name, Is.EqualTo("get_p"));
+			Assert.That(p.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p.SetMethod.Name, Is.EqualTo("set_p"));
 		}
 
 		[Test]

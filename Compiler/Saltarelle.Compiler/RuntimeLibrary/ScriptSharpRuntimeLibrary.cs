@@ -24,7 +24,10 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression GetScriptType(IType type, TypeContext context) {
-			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
+			if (type.Kind == TypeKind.Delegate) {
+				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
+			}
+			else if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
 			}
@@ -34,9 +37,6 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 			else if (type.Kind == TypeKind.Array) {
 				return _createTypeReferenceExpression(KnownTypeReference.Array);
-			}
-			else if (type.Kind == TypeKind.Delegate) {
-				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
 			else if (type is ITypeParameter) {
 				return JsExpression.Identifier(_getTypeParameterName((ITypeParameter)type));
