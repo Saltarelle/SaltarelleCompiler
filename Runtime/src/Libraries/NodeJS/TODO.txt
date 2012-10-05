@@ -30,8 +30,8 @@ dgram
 X fs
 X path
 X string_decoder
-tls
-crypto
+X tls
+X crypto
 X stream (but not imported, just modelled)
 X util
 assert
