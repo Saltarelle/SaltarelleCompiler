@@ -7,6 +7,6 @@ namespace NodeJS.NetModule {
 	[Imported]
 	[Serializable]
 	public class ServerOptions {
-		public bool AllowHalfOpen { get; set; }
+		public bool? AllowHalfOpen { get; set; }
 	}
 }

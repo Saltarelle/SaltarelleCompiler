@@ -11,7 +11,7 @@ namespace NodeJS.HttpModule {
 
 		public string Hostname { get; set; }
 
-		public int Port { get; set; }
+		public int? Port { get; set; }
 
 		public string LocalAddress { get; set; }
 

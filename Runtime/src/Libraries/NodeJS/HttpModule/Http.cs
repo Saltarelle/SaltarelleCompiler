@@ -8,7 +8,7 @@ namespace NodeJS.HttpModule {
 	[GlobalMethods]
 	[ModuleName("http")]
 	public static class Http {
-		#warning TODO: [ScriptName("STATUS_CODES")] public static JsDictionary<int, string> StatusCodes;
+		[IntrinsicProperty, ScriptName("STATUS_CODES")] public static JsDictionary<int, string> StatusCodes { get; private set; }
 
 		public static Server CreateServer(Action<ServerRequest, ServerResponse> requestListener) { return null; }
 
@@ -16,6 +16,6 @@ namespace NodeJS.HttpModule {
 
 		public static ClientRequest Get(RequestOptions options, Action<ClientResponse> callback) { return null; }
 
-		#warning TODO: public static Agent GlobalAgent
+		[IntrinsicProperty] public static Agent GlobalAgent { get; private set; }
 	}
 }

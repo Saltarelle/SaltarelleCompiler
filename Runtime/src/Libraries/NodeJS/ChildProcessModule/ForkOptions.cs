@@ -8,6 +8,6 @@ namespace NodeJS.ChildProcessModule {
 	public class ForkOptions {
 		public string Cwd { get; set; }
 		public JsDictionary<string, string> Env { get; set; }
-		public Encoding Encoding { get; set; }
+		public Encoding? Encoding { get; set; }
 	}
 }

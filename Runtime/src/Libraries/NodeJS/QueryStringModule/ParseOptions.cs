@@ -7,6 +7,6 @@ namespace NodeJS.QueryStringModule {
 	[Imported]
 	[Serializable]
 	public class ParseOptions {
-		public int MaxKeys { get; set; }
+		public int? MaxKeys { get; set; }
 	}
 }

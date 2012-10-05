@@ -23,11 +23,11 @@ namespace NodeJS.ChildProcessModule {
 
 		public static ChildProcessInstance Exec(string command, ExecOptions options, Action<Error, Buffer, Buffer> callback) { return null; }
 
-		#warning TODO: Fix, successful if first ars is null, return rest.
-		public static Task<Tuple<Buffer, Buffer>> ExecTask(string command) { return null; }
+		[InlineCode("{$System.Threading.Tasks.Task}.fromNode({$NodeJS.ChildProcessModule.ChildProcess}, function(a, b) {{ return {{ stdout: a, stderr: b}}; }}, 'exec', {command})")]
+		public static Task<ChildProcessHandles> ExecTask(string command) { return null; }
 
-		#warning TODO: Fix, successful if first ars is null, return rest.
-		public static Task<Tuple<Buffer, Buffer>> ExecTask(string command, ExecOptions options) {}
+		[InlineCode("{$System.Threading.Tasks.Task}.fromNode({$NodeJS.ChildProcessModule.ChildProcess}, function(a, b) {{ return {{ stdout: a, stderr: b}}; }}, 'exec', {command}, {options})")]
+		public static Task<ChildProcessHandles> ExecTask(string command, ExecOptions options) { return null; }
 
 
 		public static ChildProcessInstance ExecFile(string file, string[] args) { return null; }
@@ -42,13 +42,13 @@ namespace NodeJS.ChildProcessModule {
 
 		public static ChildProcessInstance ExecFile(string file, string[] args, ExecOptions options, Action<Error, Buffer, Buffer> callback) { return null; }
 
-		#warning TODO: Fix, successful if first ars is null, return rest.
+		[InlineCode("{$System.Threading.Tasks.Task}.fromNode({$NodeJS.ChildProcessModule.ChildProcess}, function(a, b) {{ return {{ stdout: a, stderr: b}}; }}, 'execFile', {file}, {args})")]
 		public static Task<Tuple<Buffer, Buffer>> ExecFileTask(string file, string[] args) { return null; }
 
-		#warning TODO: Fix, successful if first ars is null, return rest.
+		[InlineCode("{$System.Threading.Tasks.Task}.fromNode({$NodeJS.ChildProcessModule.ChildProcess}, function(a, b) {{ return {{ stdout: a, stderr: b}}; }}, 'execFile', {file}, {options})")]
 		public static Task<Tuple<Buffer, Buffer>> ExecFileTask(string file, ExecOptions options) { return null; }
 
-		#warning TODO: Fix, successful if first ars is null, return rest.
+		[InlineCode("{$System.Threading.Tasks.Task}.fromNode({$NodeJS.ChildProcessModule.ChildProcess}, function(a, b) {{ return {{ stdout: a, stderr: b}}; }}, 'execFile', {file}, {args}, {options})")]
 		public static Task<Tuple<Buffer, Buffer>> ExecFileTask(string file, string[] args, ExecOptions options) { return null; }
 
 

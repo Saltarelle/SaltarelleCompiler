@@ -15,8 +15,8 @@ namespace NodeJS.NetModule {
 	[Imported]
 	[Serializable]
 	public class SocketOptions {
-		public int Fd { get; set; }
-		public SocketType Type { get; set; }
-		public bool AllowHalfOpen { get; set; }
+		public int? Fd { get; set; }
+		public SocketType? Type { get; set; }
+		public bool? AllowHalfOpen { get; set; }
 	}
 }

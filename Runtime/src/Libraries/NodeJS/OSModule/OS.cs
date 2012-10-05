@@ -20,13 +20,13 @@ namespace NodeJS.OSModule {
 
 		public static string Release { [ScriptName("release")] get { return null; } }
 
-		public static double Uptime { [ScriptName("uptime")] get { return null; } }
+		public static double Uptime { [ScriptName("uptime")] get { return 0; } }
 
 		public static double[] LoadAvg { [ScriptName("loadavg")] get { return null; } }
 
-		public static long TotalMem { [ScriptName("totalmem")] get { return null; } }
+		public static long TotalMem { [ScriptName("totalmem")] get { return 0; } }
 
-		public static long FreeMem { [ScriptName("freemem")] get { return null; } }
+		public static long FreeMem { [ScriptName("freemem")] get { return 0; } }
 
 		public static CpuInfo[] Cpus { [ScriptName("cpus")] get { return null; } }
 

@@ -5,9 +5,12 @@ namespace NodeJS {
 	[Serializable]
 	[Imported]
 	public class PipeOptions {
-		public bool End { get; set; }
+		public bool? End { get; set; }
 
-		public PipeOptions(bool end) {
+		public PipeOptions() {
+		}
+
+		public PipeOptions(bool? end) {
 		}
 	}
 }
