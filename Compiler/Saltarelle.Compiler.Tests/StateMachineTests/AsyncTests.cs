@@ -653,7 +653,8 @@ lbl: z;
 					case 7:
 					case 8:
 					case 9:
-					case 10: {
+					case 10:
+					case 11: {
 						if ($state1 === 0) {
 							$state1 = 1;
 						}
@@ -674,7 +675,8 @@ lbl: z;
 									case 6:
 									case 7:
 									case 8:
-									case 9: {
+									case 9:
+									case 10: {
 										if ($state1 === 2) {
 											$state1 = 3;
 										}
@@ -724,27 +726,31 @@ lbl: z;
 														$doFinally = false;
 														return;
 													}
-													case 7:
+													case 7: {
+														$state1 = -1;
+														h;
+														$state1 = 8;
+														continue $loop3;
+													}
 													case 8:
-													case 9: {
-														if ($state1 === 7) {
-															$state1 = -1;
-															h;
-															$state1 = 8;
+													case 9:
+													case 10: {
+														if ($state1 === 8) {
+															$state1 = 9;
 														}
 														try {
 															$loop5:
 															for (;;) {
 																switch ($state1) {
-																	case 8: {
+																	case 9: {
 																		$state1 = -1;
 																		i;
-																		$state1 = 9;
+																		$state1 = 10;
 																		j.x($sm);
 																		$doFinally = false;
 																		return;
 																	}
-																	case 9: {
+																	case 10: {
 																		$state1 = -1;
 																		break $loop5;
 																	}
@@ -768,12 +774,12 @@ lbl: z;
 										catch (l) {
 											m;
 										}
-										$state1 = 10;
+										$state1 = 11;
 										n.x($sm);
 										$doFinally = false;
 										return;
 									}
-									case 10: {
+									case 11: {
 										$state1 = -1;
 										o;
 										$state1 = -1;
@@ -786,17 +792,17 @@ lbl: z;
 							}
 						}
 						catch (p) {
-							$state1 = 11;
+							$state1 = 12;
 							$loop6:
 							for (;;) {
 								switch ($state1) {
-									case 11: {
+									case 12: {
 										$state1 = -1;
 										q;
-										$state1 = 12;
+										$state1 = 13;
 										continue $loop6;
 									}
-									case 12: {
+									case 13: {
 										$state1 = -1;
 										r;
 										$state1 = -1;
@@ -810,17 +816,17 @@ lbl: z;
 						}
 						finally {
 							if ($doFinally) {
-								$state1 = 13;
+								$state1 = 14;
 								$loop7:
 								for (;;) {
 									switch ($state1) {
-										case 13: {
+										case 14: {
 											$state1 = -1;
 											s;
-											$state1 = 14;
+											$state1 = 15;
 											continue $loop7;
 										}
-										case 14: {
+										case 15: {
 											$state1 = -1;
 											t;
 											$state1 = -1;
@@ -832,6 +838,122 @@ lbl: z;
 									}
 								}
 							}
+						}
+						$state1 = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void TwoTryBlocksInARow() {
+			AssertCorrect(
+@"{
+	a;
+	try {
+		await b:x;
+		b.getResult();
+	}
+	catch (c) {
+		d;
+	}
+
+	e;
+	try {
+		await f:x;
+		g.getResult();
+	}
+	catch (h) {
+		i;
+	}
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state1) {
+					case 0: {
+						$state1 = -1;
+						a;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case 1:
+					case 2:
+					case 3: {
+						if ($state1 === 1) {
+							$state1 = 2;
+						}
+						try {
+							$loop2:
+							for (;;) {
+								switch ($state1) {
+									case 2: {
+										$state1 = 3;
+										b.x($sm);
+										return;
+									}
+									case 3: {
+										$state1 = -1;
+										b.getResult();
+										$state1 = -1;
+										break $loop2;
+									}
+									default: {
+										break $loop2;
+									}
+								}
+							}
+						}
+						catch (c) {
+							d;
+						}
+						e;
+						$state1 = 4;
+						continue $loop1;
+					}
+					case 4:
+					case 5:
+					case 6: {
+						if ($state1 === 4) {
+							$state1 = 5;
+						}
+						try {
+							$loop3:
+							for (;;) {
+								switch ($state1) {
+									case 5: {
+										$state1 = 6;
+										f.x($sm);
+										return;
+									}
+									case 6: {
+										$state1 = -1;
+										g.getResult();
+										$state1 = -1;
+										break $loop3;
+									}
+									default: {
+										break $loop3;
+									}
+								}
+							}
+						}
+						catch (h) {
+							i;
 						}
 						$state1 = -1;
 						break $loop1;
