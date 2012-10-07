@@ -1,31 +1,32 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Type System Implementation
 
-window.Type = Function;
+globals.Type = Function;
 
-window.__Namespace = function(name) {
+globals.__Namespace = function(name) {
     this.__typeName = name;
-}
+};
+
 __Namespace.prototype = {
     __namespace: true,
     getName: function() {
         return this.__typeName;
     }
-}
+};
 
 Type.registerNamespace = function#? DEBUG Type$registerNamespace##(name) {
-    if (!window.__namespaces) {
-        window.__namespaces = {};
+    if (!globals.__namespaces) {
+        globals.__namespaces = {};
     }
-    if (!window.__rootNamespaces) {
-        window.__rootNamespaces = [];
+    if (!globals.__rootNamespaces) {
+        globals.__rootNamespaces = [];
     }
 
-    if (window.__namespaces[name]) {
+    if (globals.__namespaces[name]) {
         return;
     }
 
-    var ns = window;
+    var ns = globals;
     var nameParts = name.split('.');
 
     for (var i = 0; i < nameParts.length; i++) {
@@ -34,27 +35,29 @@ Type.registerNamespace = function#? DEBUG Type$registerNamespace##(name) {
         if (!nso) {
             ns[part] = nso = new __Namespace(nameParts.slice(0, i + 1).join('.'));
             if (i == 0) {
-                window.__rootNamespaces.add(nso);
+                globals.__rootNamespaces.add(nso);
             }
         }
         ns = nso;
     }
 
-    window.__namespaces[name] = ns;
-}
+    globals.__namespaces[name] = ns;
+};
 
 Type.__genericCache = {};
+
 Type._makeGenericTypeName = function#? DEBUG Type$_makeGenericTypeName##(genericType, typeArguments) {
 	var result = genericType.__typeName;
 	for (var i = 0; i < typeArguments.length; i++)
 		result += (i === 0 ? '[' : ',') + typeArguments[i].__typeName;
 	result += ']';
 	return result;
-}
+};
+
 Type.makeGenericType = function#? DEBUG Type$makeGenericType##(genericType, typeArguments) {
 	var name = Type._makeGenericTypeName(genericType, typeArguments);
 	return Type.__genericCache[name] || genericType.apply(null, typeArguments);
-}
+};
 
 Type.prototype.registerGenericClassInstance = function#? DEBUG Type$registerGenericInstance##(instance, genericType, typeArguments, baseType, interfaceTypes) {
 	var name = Type._makeGenericTypeName(genericType, typeArguments);
@@ -62,7 +65,7 @@ Type.prototype.registerGenericClassInstance = function#? DEBUG Type$registerGene
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
 	instance.registerClass(name, baseType(), interfaceTypes());
-}
+};
 
 Type.prototype.registerGenericInterfaceInstance = function#? DEBUG Type$registerGenericInstance##(instance, genericType, typeArguments, baseInterfaces) {
 	var name = Type._makeGenericTypeName(genericType, typeArguments);
@@ -70,23 +73,23 @@ Type.prototype.registerGenericInterfaceInstance = function#? DEBUG Type$register
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
 	instance.registerInterface(name, baseInterfaces());
-}
+};
 
 Type.prototype.get_isGenericTypeDefinition = function#? DEBUG Type$get_isGenericTypeDefinition##() {
 	return this.__isGenericTypeDefinition || false;
-}
+};
 
 Type.prototype.getGenericTypeDefinition = function#? DEBUG Type$getGenericTypeDefinition##() {
 	return this.__genericTypeDefinition || null;
-}
+};
 
 Type.prototype.get_genericParameterCount = function#? DEBUG Type$get_genericParameterCount##() {
 	return this.__typeArgumentCount || 0;
-}
+};
 
 Type.prototype.getGenericArguments = function#? DEBUG Type$getGenericArguments##() {
     return this.__typeArguments || null;
-}
+};
 
 Type.prototype.registerClass = function#? DEBUG Type$registerClass##(name, baseType, interfaceType) {
     this.prototype.constructor = this;
@@ -107,7 +110,7 @@ Type.prototype.registerClass = function#? DEBUG Type$registerClass##(name, baseT
             this.__interfaces.add(interfaceType);
         }
     }
-}
+};
 
 Type.prototype.registerGenericClass = function#? DEBUG Type$registerGenericClass##(name, typeArgumentCount) {
     this.prototype.constructor = this;
@@ -116,7 +119,7 @@ Type.prototype.registerGenericClass = function#? DEBUG Type$registerGenericClass
 	this.__typeArgumentCount = typeArgumentCount;
 	this.__isGenericTypeDefinition = true;
     this.__baseType = Object;
-}
+};
 
 Type.prototype.registerInterface = function#? DEBUG Type$createInterface##(name, baseInterface) {
     this.__typeName = name;
@@ -130,7 +133,7 @@ Type.prototype.registerInterface = function#? DEBUG Type$createInterface##(name,
             this.__interfaces.add(arguments[i]);
         }
     }
-}
+};
 
 Type.prototype.registerGenericInterface = function#? DEBUG Type$registerGenericClass##(name, typeArgumentCount) {
     this.prototype.constructor = this;
@@ -138,7 +141,7 @@ Type.prototype.registerGenericInterface = function#? DEBUG Type$registerGenericC
     this.__interface = true;;
 	this.__typeArgumentCount = typeArgumentCount;
 	this.__isGenericTypeDefinition = true;
-}
+};
 
 Type.prototype.registerEnum = function#? DEBUG Type$createEnum##(name, flags) {
     for (var field in this.prototype) {
@@ -152,7 +155,7 @@ Type.prototype.registerEnum = function#? DEBUG Type$createEnum##(name, flags) {
     }
     this.getDefaultValue = this.createInstance = function() { return 0; };
     this.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
-}
+};
 
 Type.prototype.setupBase = function#? DEBUG Type$setupBase##() {
 	var baseType = this.__baseType;
@@ -163,13 +166,13 @@ Type.prototype.setupBase = function#? DEBUG Type$setupBase##() {
 			this.prototype[memberName] = memberValue;
 		}
 	}
-}
+};
 
 if (!Type.prototype.resolveInheritance) {
     // This function is not used by Script#; Visual Studio relies on it
     // for JavaScript IntelliSense support of derived types.
     Type.prototype.resolveInheritance = Type.prototype.setupBase;
-}
+};
 
 Type.prototype.initializeBase = function#? DEBUG Type$initializeBase##(instance, args) {
     if (!args) {
@@ -178,7 +181,7 @@ Type.prototype.initializeBase = function#? DEBUG Type$initializeBase##(instance,
     else {
         this.__baseType.apply(instance, args);
     }
-}
+};
 
 Type.prototype.callBaseMethod = function#? DEBUG Type$callBaseMethod##(instance, name, args) {
     var baseMethod = this.__baseType.prototype[name];
@@ -188,15 +191,15 @@ Type.prototype.callBaseMethod = function#? DEBUG Type$callBaseMethod##(instance,
     else {
         return baseMethod.apply(instance, args);
     }
-}
+};
 
 Type.prototype.get_baseType = function#? DEBUG Type$get_baseType##() {
     return this.__baseType || null;
-}
+};
 
 Type.prototype.get_fullName = function#? DEBUG Type$get_fullName##() {
     return this.__typeName;
-}
+};
 
 Type.prototype.get_name = function#? DEBUG Type$get_name##() {
     var fullName = this.__typeName;
@@ -205,11 +208,11 @@ Type.prototype.get_name = function#? DEBUG Type$get_name##() {
         return fullName.substr(nsIndex + 1);
     }
     return fullName;
-}
+};
 
 Type.prototype.getInterfaces = function#? DEBUG Type$getInterfaces##() {
     return this.__interfaces;
-}
+};
 
 Type.prototype.isInstanceOfType = function#? DEBUG Type$isInstanceOfType##(instance) {
     if (ss.isNullOrUndefined(instance)) {
@@ -221,11 +224,11 @@ Type.prototype.isInstanceOfType = function#? DEBUG Type$isInstanceOfType##(insta
 
     var type = Type.getInstanceType(instance);
     return this.isAssignableFrom(type);
-}
+};
 
 Type.isInstanceOfType = function#? DEBUG Type$isInstanceOfTypeStatic##(instance, type) {
     return instance instanceof type || (type !== Function && type.isInstanceOfType && type.isInstanceOfType(instance));
-}
+};
 
 Type.prototype.isAssignableFrom = function#? DEBUG Type$isAssignableFrom##(type) {
     if ((this == Object) || (this == type)) {
@@ -256,42 +259,42 @@ Type.prototype.isAssignableFrom = function#? DEBUG Type$isAssignableFrom##(type)
         }
     }
     return false;
-}
+};
 
 Type.hasProperty = function#? DEBUG Type$hasProperty##(instance, name) {
 	return typeof(instance['get_' + name]) === 'function' || typeof(instance['set_' + name]) === 'function';
-}
+};
 
 Type.prototype.get_isClass = function#? DEBUG Type$get_isClass##() {
     return (this.__class == true);
-}
+};
 
 Type.prototype.get_isEnum = function#? DEBUG Type$get_isEnum##() {
     return (this.__enum == true);
-}
+};
 
 Type.prototype.get_isFlags = function#? DEBUG Type$get_isFlags##() {
     return ((this.__enum == true) && (this.__flags == true));
-}
+};
 
 Type.prototype.get_isInterface = function#? DEBUG Type$get_isInterface##() {
     return (this.__interface == true);
-}
+};
 
 Type.isNamespace = function#? DEBUG Type$isNamespace##(object) {
     return (object.__namespace == true);
-}
+};
 
 Type.canCast = function#? DEBUG Type$canCast##(instance, type) {
     return Type.isInstanceOfType(instance, type);
-}
+};
 
 Type.safeCast = function#? DEBUG Type$safeCast##(instance, type) {
     if (Type.isInstanceOfType(instance, type)) {
         return instance;
     }
     return null;
-}
+};
 
 Type.cast = function#? DEBUG Type$cast##(instance, type) {
 	if (instance === null)
@@ -300,7 +303,7 @@ Type.cast = function#? DEBUG Type$cast##(instance, type) {
         return instance;
     }
     throw 'Cannot cast object to type ' + type.__typeName;
-}
+};
 
 Type.getInstanceType = function#? DEBUG Type$getInstanceType##(instance) {
 	if (instance === null) {
@@ -319,7 +322,7 @@ Type.getInstanceType = function#? DEBUG Type$getInstanceType##(instance) {
         ctor = Object;
     }
     return ctor;
-}
+};
 
 Type.getType = function#? DEBUG Type$getType##(typeName) {
     if (!typeName) {
@@ -336,16 +339,16 @@ Type.getType = function#? DEBUG Type$getType##(typeName) {
         Type.__typeCache[typeName] = type;
     }
     return type;
-}
+};
 
 Type.prototype.getDefaultValue = function#? DEBUG Type$getDefaultValue##() {
 	return null;
-}
+};
 
 Type.prototype.createInstance = function#? DEBUG Type$createInstance##() {
     return new this();
-}
+};
 
 Type.parse = function#? DEBUG Type$parse##(typeName) {
     return Type.getType(typeName);
-}
+};

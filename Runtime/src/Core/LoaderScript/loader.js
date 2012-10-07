@@ -474,7 +474,7 @@
   }
 
   if (!window.ss)
-	window.ss = {};
+    window.ss = {};
 
   window.ss.load = _startup;
   window.ss.loadScripts = loadScripts;

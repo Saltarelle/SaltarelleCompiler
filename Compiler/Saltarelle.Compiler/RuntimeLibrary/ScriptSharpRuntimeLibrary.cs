@@ -55,7 +55,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				if (_metadataImporter.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
-				else if (!_metadataImporter.IsRealType(td)) {
+				else if (context != TypeContext.UseStaticMember && !_metadataImporter.IsRealType(td)) {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else
