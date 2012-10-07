@@ -6,6 +6,7 @@ using System.Text;
 namespace NodeJS {
 	[Imported]
 	[ModuleName(null)]
+	[ScriptName("require")]
 	public static class Require {
 		/// <summary>
 		/// Equivalent to 'require(module)' in JS.

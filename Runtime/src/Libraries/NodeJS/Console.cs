@@ -6,6 +6,8 @@ using System.Text;
 namespace NodeJS {
 	[Imported]
 	[ModuleName(null)]
+	[IgnoreNamespace]
+	[ScriptName("console")]
 	public static class Console {
 		[ExpandParams] public static void Log(params object[] data) {}
 		[ExpandParams] public static void Log(string format, params object[] data) {}
