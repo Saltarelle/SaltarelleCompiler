@@ -28,6 +28,6 @@ namespace NodeJS.PathModule {
 		[ScriptName("extname")]
 		public static string ExtName(string path) { return null; }
 
-		public static string Sep { get { return null; } }
+		public static string Sep { [ScriptName("sep")] get { return null; } }
 	}
 }

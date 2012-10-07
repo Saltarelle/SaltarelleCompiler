@@ -5,8 +5,6 @@
 (function(globals) {
   var ss = {};
 
-  ss.version = '0.7.4.0';
-
   ss.isUndefined = function (o) {
     return (o === undefined);
   };
@@ -40,7 +38,7 @@
     return ss.isValue(a) ? a : b;
   };
 
-  if (window) {
+  if (typeof(window) == 'object') {
     // Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
     if (!window.Element) {
 	  // IE does not have an Element constructor. This implementation should make casting to elements work.
@@ -175,4 +173,4 @@
   else {
     globals.ss = ss;
   }
-})(this);
+})(typeof(window) === 'object' ? window : global);

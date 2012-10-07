@@ -14,6 +14,7 @@ namespace NodeJS {
 
 	[Imported]
 	[ModuleName(null)]
+	[IgnoreNamespace]
 	[ScriptName("process")]
 	public static class Process {
 		[IntrinsicProperty]
