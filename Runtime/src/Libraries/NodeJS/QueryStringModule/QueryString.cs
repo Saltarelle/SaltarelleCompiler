@@ -8,7 +8,7 @@ namespace NodeJS.QueryStringModule {
 	[Imported]
 	[GlobalMethods]
 	[ModuleName("querystring")]
-	public static class Url {
+	public static class QueryString {
 		public static string Stringify(JsDictionary obj) { return null; }
 
 		public static string Stringify(JsDictionary obj, string sep) { return null; }
