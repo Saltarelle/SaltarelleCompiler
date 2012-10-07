@@ -137,7 +137,7 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{ item1: {ga_Int32}, item2: {ga_String} };
+@"	{ item1: {sm_Int32}, item2: {sm_String} };
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -157,7 +157,7 @@ public void M() {
 	c.F();
 	// END
 }",
-@"	{ item1: {ga_Int32}, item2: {ga_String} };
+@"	{ item1: {sm_Int32}, item2: {sm_String} };
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -170,7 +170,7 @@ public void M() {
 	F();
 	// END
 }",
-@"	[{ga_String}, {ga_Int32}];
+@"	[{sm_String}, {sm_Int32}];
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ {$System.String}, {$System.Int32} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -444,7 +444,7 @@ public class C<T3> {
 		// END
 	}
 }",
-@"	ga_$T3._(ga_$T4);
+@"	sm_$T3._(sm_$T4);
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{T1}._({T2})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 	}

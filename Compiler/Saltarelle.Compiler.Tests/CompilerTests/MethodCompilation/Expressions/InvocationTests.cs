@@ -473,7 +473,7 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_({ga_Int32})._({ga_Byte})._({ga_String})._($o)._($a)._($b)._($c);
+@"	_({sm_Int32})._({sm_Byte})._({sm_String})._($o)._($a)._($b)._($c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
