@@ -54,7 +54,8 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 				foreach (var p in expression.ParameterNames)
 					_result.Add(p);
 				return base.VisitFunctionDefinitionExpression(expression, data);
-			}
+			}
+
 			public static HashSet<string> Analyze(IEnumerable<JsStatement> statements) {
 				var o = new UsedSymbolsGatherer();
 				foreach (var s in statements)
@@ -134,14 +135,16 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 				var importer = new ImportVisitor(metadataImporter, namer, UsedSymbolsGatherer.Analyze(statements));
 				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
 				if (importer._moduleAliases.Count > 0) {
-					body.InsertRange(0, importer._moduleAliases.OrderBy(x => x.Key)
-					                                           .Select(x => new JsVariableDeclarationStatement(
-					                                                                x.Value,
-					                                                                JsExpression.Invocation(
-					                                                                    JsExpression.Identifier("require"),
-					                                                                    JsExpression.String(x.Key))))
-					                                           .ToList());
-				}
+					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
+					body.InsertRange(0, new[] { (JsStatement)new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib"))) }
+					                    .Concat(importer._moduleAliases.OrderBy(x => x.Key)
+					                                                   .Select(x => new JsVariableDeclarationStatement(
+					                                                                        x.Value,
+					                                                                        JsExpression.Invocation(
+					                                                                            JsExpression.Identifier("require"),
+					                                                                            JsExpression.String(x.Key))))
+					                                                   .ToList()));
+				}						        
 				return body;
 			}
 		}

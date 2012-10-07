@@ -62,7 +62,8 @@ return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 			}, metadata: md);
 
 			AssertCorrect(actual,
-@"var $module1 = require('module1');
+@"require('mscorlib');
+var $module1 = require('module1');
 var $module2 = require('module2');
 var $module3 = require('module3');
 $module1.SomeNamespace.InnerNamespace.Type1.a + $module2.SomeNamespace.InnerNamespace.Type2.b;
@@ -81,7 +82,8 @@ $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
 			}, metadata: md);
 
 			AssertCorrect(actual,
-@"var $mymodule = require('mymodule');
+@"require('mscorlib');
+var $mymodule = require('mymodule');
 $mymodule.a;
 ");
 		}
@@ -113,7 +115,8 @@ $mymodule.a;
 			}, metadata: md, namer: new MockNamer(prefixWithDollar: false));
 
 			AssertCorrect(actual,
-@"var _2 = require('-');
+@"require('mscorlib');
+var _2 = require('-');
 var _ = require('+');
 var mymodule2 = require('mymodule');
 var mymodule4 = require('mymodule-');
