@@ -310,10 +310,10 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-window.s1 = function(s) {
+s1 = function(s) {
 	S;
 };
-window.s2 = function(t) {
+s2 = function(t) {
 	T;
 };
 Q;
@@ -341,9 +341,9 @@ R;
 				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
 				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
 				                },
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),
+				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),
 				                       }
 			});
 		}

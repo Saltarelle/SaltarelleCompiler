@@ -249,7 +249,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					if (t is JsClass) {
 						var c = (JsClass)t;
 						if (isGlobal) {
-							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.MemberAccess(JsExpression.Identifier("window"), m.Name), m.Definition))));
+							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Identifier(m.Name), m.Definition))));
 						}
 						else if (isMixin) {
 							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition))));
