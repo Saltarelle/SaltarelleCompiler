@@ -84,21 +84,26 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// <summary>
 		/// Whether the param array to this method is output to script in expanded form. Methods that use this option can only be invoked in expanded form.
 		/// </summary>
-		public bool ExpandParams { get; set; }
+		public bool ExpandParams { get; private set; }
+
+		/// <summary>
+		/// Whether this method, when used in a foreach, should be treated as being an array enumeration. Only applicable to GetEnumerator() methods.
+		/// </summary>
+		public bool EnumerateAsArray { get; private set; }
 
         private MethodScriptSemantics() {
         }
 
-        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false) {
-            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, ExpandParams = expandParams };
+        public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false, bool enumerateAsArray = false) {
+            return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray };
         }
 
-        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false) {
-            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, ExpandParams = expandParams };
+        public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false, bool enumerateAsArray = false) {
+            return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray };
         }
 
-        public static MethodScriptSemantics InlineCode(string literalCode) {
-            return new MethodScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = true, GenerateCode = false };
+        public static MethodScriptSemantics InlineCode(string literalCode, bool enumerateAsArray = false) {
+            return new MethodScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = true, GenerateCode = false, EnumerateAsArray = enumerateAsArray };
         }
 
         public static MethodScriptSemantics NativeIndexer() {
@@ -112,5 +117,9 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         public static MethodScriptSemantics NotUsableFromScript() {
             return new MethodScriptSemantics { Type = ImplType.NotUsableFromScript, GenerateCode = false };
         }
+
+		public MethodScriptSemantics WithEnumerateAsArray() {
+			return new MethodScriptSemantics { Type = this.Type, _text = this._text, IgnoreGenericArguments = this.IgnoreGenericArguments, GenerateCode = this.GenerateCode, ExpandParams = this.ExpandParams, EnumerateAsArray = true };
+		}
     }
 }

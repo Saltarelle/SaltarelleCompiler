@@ -637,9 +637,11 @@ namespace Saltarelle.Compiler.Compiler {
 			var ferr = (ForEachResolveResult)_resolver.Resolve(foreachStatement);
 			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
 
+			var getEnumeratorMethod = (ferr.GetEnumeratorCall is InvocationResolveResult ? ((InvocationResolveResult)ferr.GetEnumeratorCall).Member as IMethod : null);
+
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
 			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
-			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
+			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray) || (getEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(getEnumeratorMethod).EnumerateAsArray)) {
 				var arrayResult = CompileExpression(foreachStatement.InExpression, true);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;

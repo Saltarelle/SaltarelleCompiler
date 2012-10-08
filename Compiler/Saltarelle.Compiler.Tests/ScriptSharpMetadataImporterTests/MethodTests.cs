@@ -1406,5 +1406,98 @@ static class C {
 			Assert.That(FindMethod("C.M1").ExpandParams, Is.True);
 			Assert.That(FindMethod("C.M2").ExpandParams, Is.False);
 		}
+
+		[Test]
+		public void EnumerateAsArrayWorks() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+public class C1 {
+	[EnumerateAsArray]
+	public IEnumerator<int> GetEnumerator() { return null; }
+}
+[Serializable]
+public class C2 {
+	[EnumerateAsArray]
+	public IEnumerator<int> GetEnumerator() { return null; }
+}
+public class C3 {
+	[EnumerateAsArray]
+	[ScriptSkip]
+	public IEnumerator<int> GetEnumerator() { return null; }
+}
+public class C4 {
+	[EnumerateAsArray]
+	[InlineCode(""X"")]
+	public IEnumerator<int> GetEnumerator() { return null; }
+}
+public class C5 {
+	[EnumerateAsArray]
+	[ScriptName("""")]
+	public IEnumerator<int> GetEnumerator() { return null; }
+}
+public class C6 : IEnumerable<int> {
+	[EnumerateAsArray]
+	public IEnumerator<int> GetEnumerator() { return null; }
+}
+public class B {
+	public virtual IEnumerator<int> GetEnumerator() { return null; }
+}
+public class C7 : B {
+	[EnumerateAsArray]
+	public override IEnumerator<int> GetEnumerator() { return null; }
+}
+");
+			Assert.That(FindMethod("C1.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethod("C2.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethod("C3.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethod("C4.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethod("C5.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethod("C6.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethod("C7.GetEnumerator").EnumerateAsArray, Is.True);
+		}
+
+		[Test]
+		public void SpecifyingEnumerateAsArrayOnMethodThatIsNotAGetEnumeratorMethodIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+class C1 {
+	[EnumerateAsArray]
+	public IEnumerator<int> Something() { return null; }
+}", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("EnumerateAsArrayAttribute") && m.Contains("GetEnumerator")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+class C1 {
+	[EnumerateAsArray]
+	public static IEnumerator<int> GetEnumerator() { return null; }
+}", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("EnumerateAsArrayAttribute") && m.Contains("GetEnumerator")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+class C1 {
+	[EnumerateAsArray]
+	public IEnumerator<int> GetEnumerator<T>() { return null; }
+}", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("EnumerateAsArrayAttribute") && m.Contains("GetEnumerator")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+class C1 {
+	[EnumerateAsArray]
+	public IEnumerator<int> GetEnumerator(int i) { return null; }
+}", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("EnumerateAsArrayAttribute") && m.Contains("GetEnumerator")));
+		}
 	}
 }

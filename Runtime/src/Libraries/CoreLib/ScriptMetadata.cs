@@ -428,7 +428,7 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
-	/// Defines that a type is defined in a module, which should be imported by a require() call.
+	/// Specifies that a type is defined in a module, which should be imported by a require() call.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Type)]
 	[NonScriptable]
@@ -438,6 +438,17 @@ namespace System.Runtime.CompilerServices {
 
 		public ModuleNameAttribute(string moduleName) {
 			this.ModuleName = moduleName;
+		}
+	}
+	
+	/// <summary>
+	/// Can be applied to a GetEnumerator() method to indicate that that array-style enumeration should be used.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method)]
+	[NonScriptable]
+	[Imported]
+	public sealed class EnumerateAsArrayAttribute : Attribute {	
+		public EnumerateAsArrayAttribute() {
 		}
 	}
 }

@@ -130,6 +130,7 @@ namespace System.Collections.Generic {
         public void ForEach(Action<T> callback) {
         }
 
+        [EnumerateAsArray]
         public IEnumerator<T> GetEnumerator() {
             return null;
         }
