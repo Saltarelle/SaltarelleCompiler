@@ -24,7 +24,10 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression GetScriptType(IType type, TypeContext context) {
-			if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
+			if (type.Kind == TypeKind.Delegate) {
+				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
+			}
+			else if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
 			}
@@ -34,9 +37,6 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 			else if (type.Kind == TypeKind.Array) {
 				return _createTypeReferenceExpression(KnownTypeReference.Array);
-			}
-			else if (type.Kind == TypeKind.Delegate) {
-				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
 			else if (type is ITypeParameter) {
 				return JsExpression.Identifier(_getTypeParameterName((ITypeParameter)type));
@@ -55,7 +55,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				if (_metadataImporter.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
-				else if (!_metadataImporter.IsRealType(td)) {
+				else if (context != TypeContext.UseStaticMember && !_metadataImporter.IsRealType(td)) {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else
@@ -73,10 +73,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 					}
 				}
 			}
-			else if (type.Kind == TypeKind.Anonymous && context == TypeContext.GenericArgument) {
-				return _createTypeReferenceExpression(KnownTypeReference.Object);
-			}
-			else if (type.Kind == TypeKind.Null || type.Kind == TypeKind.Dynamic) {
+			else if (type.Kind == TypeKind.Anonymous || type.Kind == TypeKind.Null || type.Kind == TypeKind.Dynamic) {
 				return _createTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {
@@ -85,7 +82,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		private bool IsSystemObjectReference(JsExpression expr) {
-			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Assembly.AssemblyName == "mscorlib" && ((JsTypeReferenceExpression)expr).TypeName == "Object";
+			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Type.IsKnownType(KnownTypeCode.Object);
 		}
 
 		private JsExpression GetCastTarget(IType sourceType, IType targetType) {
@@ -95,9 +92,9 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return null;	// Either the source or the target is not a real type.
 			}
 			else if (ss is JsTypeReferenceExpression && st is JsTypeReferenceExpression) {
-				var trs = (JsTypeReferenceExpression)ss;
-				var trt = (JsTypeReferenceExpression)st;
-				if (trs.TypeName == trt.TypeName && Equals(trs.Assembly, trt.Assembly))
+				var ts = ((JsTypeReferenceExpression)ss).Type;
+				var tt = ((JsTypeReferenceExpression)st).Type;
+				if (_metadataImporter.GetTypeSemantics(ts).Name == _metadataImporter.GetTypeSemantics(tt).Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
 					return null;	// The types are the same in script, so no runtimeConversion is required.
 			}
 
@@ -180,14 +177,16 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 		public JsExpression Lift(JsExpression expression) {
 			if (expression is JsInvocationExpression) {
-				var int32 = (JsTypeReferenceExpression)_createTypeReferenceExpression(KnownTypeReference.Int32);
-
 				var ie = (JsInvocationExpression)expression;
 				if (ie.Method is JsMemberAccessExpression) {
 					var mae = (JsMemberAccessExpression)ie.Method;
-					if (mae.Target is JsTypeReferenceExpression && ((JsTypeReferenceExpression)mae.Target).Assembly == int32.Assembly && ((JsTypeReferenceExpression)mae.Target).TypeName == int32.TypeName) {
-						if (mae.Member == "div" || mae.Member == "trunc")
-							return expression;
+					if (mae.Target is JsTypeReferenceExpression) {
+						var t = ((JsTypeReferenceExpression)mae.Target).Type;
+						bool isIntegerType = t.IsKnownType(KnownTypeCode.Byte) || t.IsKnownType(KnownTypeCode.SByte) || t.IsKnownType(KnownTypeCode.Int16) || t.IsKnownType(KnownTypeCode.UInt16) || t.IsKnownType(KnownTypeCode.Char) || t.IsKnownType(KnownTypeCode.Int32) || t.IsKnownType(KnownTypeCode.UInt32) || t.IsKnownType(KnownTypeCode.Int64) || t.IsKnownType(KnownTypeCode.UInt64);
+						if (isIntegerType) {
+							if (mae.Member == "div" || mae.Member == "trunc")
+								return expression;
+						}
 					}
 				}
 			}

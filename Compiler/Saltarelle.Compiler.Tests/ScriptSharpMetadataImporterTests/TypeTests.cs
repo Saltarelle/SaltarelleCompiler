@@ -775,7 +775,7 @@ public enum E1 {
 		}
 
 		[Test]
-		public void GlobalMethodsAttributeCausesAllMethodsToBeGlobalAndPreventsMinimization() {
+		public void GlobalMethodsAttributeCausesClassNameToBeEmptyAndPreventsMinimization() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
@@ -795,42 +795,50 @@ static class C1 {
 
 	static void Method4() {
 	}
+
+	static int I;
+
+	static event System.EventHandler E;
+
+	static int P { get; set; }
 }");
+
+			var c1 = FindType("C1");
+			Assert.That(c1.Name, Is.EqualTo(""));
 
 			var m1 = FindMethod("C1.Method1");
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("method1"));
-			Assert.That(m1.IsGlobal, Is.True);
 
 			var m2 = FindMethod("C1.Method2");
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("Method2"));
-			Assert.That(m2.IsGlobal, Is.True);
 
 			var m3 = FindMethod("C1.Method3");
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("Renamed"));
-			Assert.That(m3.IsGlobal, Is.True);
 
 			var m4 = FindMethod("C1.Method4");
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("method4"));
-			Assert.That(m4.IsGlobal, Is.True);
-		}
 
-		[Test]
-		public void FieldOrPropertyOrEventInGlobalMethodsClassGivesAnError() {
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int i; }", expectErrors: true);
-			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("fields"));
+			var f = FindField("C1.I");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f.Name, Is.EqualTo("i"));
 
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static event System.EventHandler e; }", expectErrors: true);
-			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("events"));
+			var e = FindEvent("C1.E");
+			Assert.That(e.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e.AddMethod.Name, Is.EqualTo("add_e"));
+			Assert.That(e.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e.RemoveMethod.Name, Is.EqualTo("remove_e"));
 
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] static class C1 { static int P { get; set; } }", expectErrors: true);
-			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("properties"));
+			var p = FindProperty("C1.P");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p.GetMethod.Name, Is.EqualTo("get_p"));
+			Assert.That(p.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p.SetMethod.Name, Is.EqualTo("set_p"));
 		}
 
 		[Test]
@@ -1036,7 +1044,7 @@ public static class C {
 		}
 
 		[Test]
-		public void MixinAttributeSetsTheNameForTheClassAndMethodsAreNonGlobal() {
+		public void MixinAttributeSetsTheNameForTheClass() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [Mixin(""$.fn"")]
@@ -1045,7 +1053,6 @@ public static class C {
 }");
 			Assert.That(FindType("C").Name, Is.EqualTo("$.fn"));
 			Assert.That(FindMethod("C.Method1").Name, Is.EqualTo("method1"));
-			Assert.That(FindMethod("C.Method1").IsGlobal, Is.False);
 		}
 
 		[Test]
@@ -1199,12 +1206,12 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void GetGlobalMethodsPrefixMethodWorks() {
+		public void IsMixinWorks() {
 			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [GlobalMethods] static class C2 {} [Mixin(""$.fn"")] static class C3 {}");
 
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C1"]), Is.Null);
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C2"]), Is.EqualTo(""));
-			Assert.That(Metadata.GetGlobalMethodsPrefix(AllTypes["C3"]), Is.EqualTo("$.fn"));
+			Assert.That(Metadata.IsMixin(AllTypes["C1"]), Is.False);
+			Assert.That(Metadata.IsMixin(AllTypes["C2"]), Is.False);
+			Assert.That(Metadata.IsMixin(AllTypes["C3"]), Is.True);
 		}
 
 		[Test]
@@ -1326,6 +1333,83 @@ public class B : I<object> {
 			Assert.That(i.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(i.GetMethod.Name, Is.EqualTo("get_renamedIndexer"));
 			Assert.That(i.SetMethod.Name, Is.EqualTo("set_renamedIndexer"));
+		}
+
+		[Test]
+		public void ModuleNameAttributeWorks() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+public class C1 {
+}
+
+[ModuleName(""my-module"")]
+public class C2 {
+}
+
+[ModuleName("""")]
+public class C3 {
+}
+
+[ModuleName(null)]
+public class C4 {
+}
+");
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1"]));
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C4"]));
+		}
+
+		[Test]
+		public void ModuleNameAttributeIsInheritedButCanBeOverridden() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+[ModuleName(""my-module"")]
+public class C1 {
+	public class D1 {
+	}
+
+	[ModuleName(""other-module"")]
+	public class D2 {
+	}
+
+	[ModuleName(null)]
+	public class D3 {
+	}
+
+	[ModuleName("""")]
+	public class D4 {
+	}
+}
+
+public class C2 {
+	public class D1 {
+	}
+
+	[ModuleName(""third-module"")]
+	public class D2 {
+	}
+
+	[ModuleName(null)]
+	public class D3 {
+	}
+
+	[ModuleName("""")]
+	public class D4 {
+	}
+}
+");
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C1+D1"]));
+			Assert.AreEqual("other-module", Metadata.GetModuleName(AllTypes["C1+D2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1+D3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1+D4"]));
+
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D1"]));
+			Assert.AreEqual("third-module", Metadata.GetModuleName(AllTypes["C2+D2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D4"]));
 		}
 	}
 }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Moq;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -24,33 +26,32 @@ namespace Saltarelle.Compiler.Tests {
 		public MockRuntimeLibrary() {
 			GetScriptType = (t, c) => {
 			                    string context = GetTypeContextShortName(c);
-			                	if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && c == TypeContext.TypeOf) {
-			                		// This handles open generic types ( typeof(C<,>) )
-			                		var def = t.GetDefinition();
-			                		return new JsTypeReferenceExpression(def.ParentAssembly, context + "_" + def.Name);
-			                	}
-			                	else if (t is ArrayType) {
-			                		return JsExpression.Invocation(JsExpression.Identifier(context + "_$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument));
-			                	}
-			                	else if (t is ParameterizedType) {
-			                		var pt = (ParameterizedType)t;
-			                		var def = pt.GetDefinition();
-		                			return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(def.ParentAssembly, t.Name) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
-			                	}
-			                	else if (t is ITypeDefinition) {
-			                		var td = (ITypeDefinition)t;
-			                		if (td.TypeParameterCount > 0)
-			                			return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(td.ParentAssembly, t.Name) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
-			                		else {
-			                			return new JsTypeReferenceExpression(td.ParentAssembly, context + "_" + t.Name);
-			                		}
-			                	}
-			                	else if (t is ITypeParameter) {
-			                		return JsExpression.Identifier(context + "_$" + ((ITypeParameter)t).Name);
-			                	}
-			                	else {
-			                		throw new ArgumentException("Unsupported type + " + t.ToString());
-			                	}
+			                    if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && c == TypeContext.TypeOf) {
+			                        // This handles open generic types ( typeof(C<,>) )
+			                        var def = t.GetDefinition();
+			                        return new JsTypeReferenceExpression(Common.CreateMockType(context + "_" + def.Name));
+			                    }
+			                    else if (t is ArrayType) {
+			                        return JsExpression.Invocation(JsExpression.Identifier(context + "_$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument));
+			                    }
+			                    else if (t is ParameterizedType) {
+			                        var pt = (ParameterizedType)t;
+		                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockType(t.Name)) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+			                    }
+			                    else if (t is ITypeDefinition) {
+			                        var td = (ITypeDefinition)t;
+			                        if (td.TypeParameterCount > 0)
+			                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockType(t.Name)) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
+			                        else {
+			                            return new JsTypeReferenceExpression(Common.CreateMockType(context + "_" + t.Name));
+			                        }
+			                    }
+			                    else if (t is ITypeParameter) {
+			                        return JsExpression.Identifier(context + "_$" + ((ITypeParameter)t).Name);
+			                    }
+			                    else {
+			                        throw new ArgumentException("Unsupported type + " + t.ToString());
+			                    }
 			                };
 			TypeIs                          = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, TypeContext.CastTarget));
 			TryDowncast                     = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget));

@@ -449,6 +449,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				JsBlockStatement guarded;
 				var guardedConstructs = FindInterestingConstructsVisitor.Analyze(stmt.GuardedStatement);
 				if ((guardedConstructs & (InterestingConstruct.Label | InterestingConstruct.Await)) != InterestingConstruct.None) {
+					if (NeedsBreakBeforeLoop(currentBlock)) {
+						var sv = CreateNewStateValue(currentState.FinallyStack);
+						Enqueue(stack.Push(location), breakStack, continueStack, sv, returnState);
+						currentBlock.Add(new JsGotoStateStatement(sv, currentState));
+						return false;
+					}
+
 					var inner  = ProcessInner(stmt.GuardedStatement, breakStack, continueStack, currentState.FinallyStack, currentState.StateValue);
 					guarded    = new JsBlockStatement(inner.Item1);
 					currentBlock.Add(new JsSetNextStateStatement(inner.Item2));

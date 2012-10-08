@@ -145,20 +145,6 @@ public class C {
 		}
 
 		[Test]
-		public void GlobalStaticMethodInvocationWithArgumentsWorks() {
-			AssertCorrect(
-@"static void F(int x, int y, int z) {}
-public void M() {
-	int a = 0, b = 0, c = 0;
-	// BEGIN
-	F(a, b, c);
-	// END
-}",
-@"	$F($a, $b, $c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, isGlobal: m.Name == "F") });
-		}
-
-		[Test]
 		public void GenericMethodInvocationWorks() {
 			AssertCorrect(
 @"void F<T1, T2>(T1 x, int y, T2 z) {}
@@ -423,21 +409,6 @@ public void M() {
 		}
 
 		[Test]
-		public void GlobalMethodWithThisAsFirstArgumentWorks() {
-			AssertCorrect(
-@"void F(int x, int y, string z) {}
-public void M() {
-	int a = 0, b = 0;
-	string c = null;
-	// BEGIN
-	F(a, b, c);
-	// END
-}",
-@"	$F(this, $a, $b, $c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, isGlobal: true) : MethodScriptSemantics.NormalMethod(m.Name) });
-		}
-
-		[Test]
 		public void StaticMethodWithThisAsFirstArgumentDeclaredInGenericTypeWorks() {
 			AssertCorrect(
 @"class X<TX> { public void F(TX x, int y, string z) {} }
@@ -490,44 +461,6 @@ public void M() {
 		}
 
 		[Test]
-		public void InstanceMethodOnFirstArgumentWorks() {
-			AssertCorrect(
-@"class X { }
-public static void F(X x, int y, string z) {}
-public void M() {
-	X a = null;
-	int b = 0;
-	string c = null;
-	// BEGIN
-	F(a, b, c);
-	// END
-}",
-@"	$a.$F($b, $c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
-		}
-
-		[Test]
-		public void InstanceMethodOnFirstArgumentWorksWithReorderedAndDefaultArguments() {
-			AssertCorrect(
-@"static void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
-int F1() { return 0; }
-int F2() { return 0; }
-int F3() { return 0; }
-int F4() { return 0; }
-public void M() {
-	// BEGIN
-	F(d: F1(), g: F2(), f: F3(), a: F4());
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	var $tmp2 = this.$F2();
-	var $tmp3 = this.$F3();
-	this.$F4().$F(2, 3, $tmp1, 5, $tmp3, $tmp2);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InstanceMethodOnFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
-		}
-
-		[Test]
 		public void InvokingMethodImplementedAsInlineCodeWorks() {
 			AssertCorrect(
 @"class X<T1> { public class Y<T2> { public void F<T3>(T1 x, T2 y, T3 z) {} } }
@@ -540,7 +473,7 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_({ga_Int32})._({ga_Byte})._({ga_String})._($o)._($a)._($b)._($c);
+@"	_({sm_Int32})._({sm_Byte})._({sm_String})._($o)._($a)._($b)._($c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 

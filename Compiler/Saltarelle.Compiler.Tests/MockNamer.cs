@@ -9,13 +9,13 @@ using Saltarelle.Compiler.Compiler;
 namespace Saltarelle.Compiler.Tests
 {
 	public class MockNamer : INamer {
-		public MockNamer() {
+		public MockNamer(bool prefixWithDollar = true) {
 			GetTypeParameterName     = tp => "$" + tp.Name;
 			GetVariableName          = (desired, used) => {
 			                               string baseName;
 		                                   if (desired != null) {
 		                                       baseName = desired.Replace("<>", "$");
-		                                       if (!baseName.StartsWith("$"))
+		                                       if (prefixWithDollar && !baseName.StartsWith("$"))
 		                                           baseName = "$" + baseName;
 		                                   }
 		                                   else {

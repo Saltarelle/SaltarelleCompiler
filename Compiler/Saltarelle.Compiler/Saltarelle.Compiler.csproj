@@ -64,7 +64,7 @@
     <Compile Include="IReferenceImporter.cs" />
     <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
     <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
-    <Compile Include="ReferenceImporter\GlobalNamespaceReferenceImporter.cs" />
+    <Compile Include="ReferenceImporter\DefaultReferenceImporter.cs" />
     <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />

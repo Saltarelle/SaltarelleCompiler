@@ -2,57 +2,93 @@
 //! More information at http://projects.nikhilk.net/ScriptSharp
 //!
 
-(function () {
-  var globals = {
-    version: '0.7.4.0',
+(function(globals) {
+  var ss = {};
 
-    isUndefined: function (o) {
-      return (o === undefined);
-    },
-
-    isNull: function (o) {
-      return (o === null);
-    },
-
-    isNullOrUndefined: function (o) {
-      return (o === null) || (o === undefined);
-    },
-
-    isValue: function (o) {
-      return (o !== null) && (o !== undefined);
-    },
-
-    referenceEquals: function (a, b) {
-      return ss.isValue(a) ? a === b : !ss.isValue(b);
-    },
-
-    mkdict: function (a) {
-      a = (arguments.length != 1 ? arguments : arguments[0]);
-      var r = {};
-      for (var i = 0; i < a.length; i += 2) {
-        r[a[i]] = a[i + 1];
-      }
-      return r;
-    },
-
-    coalesce: function (a, b) {
-      return ss.isValue(a) ? a : b;
-    }
+  ss.isUndefined = function (o) {
+    return (o === undefined);
   };
 
-  var ss = window.ss;
-  if (!ss) {
-    window.ss = ss = {};
-  }
-  for (var n in globals) {
-    ss[n] = globals[n];
-  }
-  if (window && !window.Element) {
-    window.Element = function() {
+  ss.isNull = function (o) {
+    return (o === null);
+  };
+
+  ss.isNullOrUndefined = function (o) {
+    return (o === null) || (o === undefined);
+  };
+
+  ss.isValue = function (o) {
+    return (o !== null) && (o !== undefined);
+  };
+
+  ss.referenceEquals = function (a, b) {
+    return ss.isValue(a) ? a === b : !ss.isValue(b);
+  };
+
+  ss.mkdict = function (a) {
+    a = (arguments.length != 1 ? arguments : arguments[0]);
+    var r = {};
+    for (var i = 0; i < a.length; i += 2) {
+      r[a[i]] = a[i + 1];
+    }
+    return r;
+  };
+
+  ss.coalesce = function (a, b) {
+    return ss.isValue(a) ? a : b;
+  };
+
+  if (typeof(window) == 'object') {
+    // Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
+    if (!window.Element) {
+	  // IE does not have an Element constructor. This implementation should make casting to elements work.
+      window.Element = function() {
+      };
+      window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
+    }
+
+    if (!window.XMLHttpRequest) {
+      window.XMLHttpRequest = function() {
+        var progIDs = [ 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP' ];
+    
+        for (var i = 0; i < progIDs.length; i++) {
+          try {
+            var xmlHttp = new ActiveXObject(progIDs[i]);
+            return xmlHttp;
+          }
+          catch (ex) {
+          }
+        }
+    
+        return null;
+      };
+    }
+  
+    ss.parseXml = function(markup) {
+      try {
+        if (DOMParser) {
+          var domParser = new DOMParser();
+          return domParser.parseFromString(markup, 'text/xml');
+        }
+        else {
+          var progIDs = [ 'Msxml2.DOMDocument.3.0', 'Msxml2.DOMDocument' ];
+            
+          for (var i = 0; i < progIDs.length; i++) {
+            var xmlDOM = new ActiveXObject(progIDs[i]);
+            xmlDOM.async = false;
+            xmlDOM.loadXML(markup);
+            xmlDOM.setProperty('SelectionLanguage', 'XPath');
+                    
+            return xmlDOM;
+          }
+        }
+      }
+      catch (ex) {
+      }
+    
+      return null;
     };
-    window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
   }
-})();
 
 #include "TypeSystem\Type.js"
 
@@ -116,6 +152,8 @@
 
 #include "BCL\PromiseException.js"
 
+#include "BCL\JsErrorException.js"
+
 #include "BCL\IteratorBlockEnumerable.js"
 
 #include "BCL\IteratorBlockEnumerator.js"
@@ -124,51 +162,17 @@
 
 #include "BCL\TaskCompletionSource.js"
 
-///////////////////////////////////////////////////////////////////////////////
-// XMLHttpRequest and XML parsing helpers
-
-if (!window.XMLHttpRequest) {
-  window.XMLHttpRequest = function() {
-    var progIDs = [ 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP' ];
-
-    for (var i = 0; i < progIDs.length; i++) {
-      try {
-        var xmlHttp = new ActiveXObject(progIDs[i]);
-        return xmlHttp;
-      }
-      catch (ex) {
-      }
-    }
-
-    return null;
-  }
-}
-
-ss.parseXml = function(markup) {
-  try {
-    if (DOMParser) {
-      var domParser = new DOMParser();
-      return domParser.parseFromString(markup, 'text/xml');
-    }
-    else {
-      var progIDs = [ 'Msxml2.DOMDocument.3.0', 'Msxml2.DOMDocument' ];
-        
-      for (var i = 0; i < progIDs.length; i++) {
-        var xmlDOM = new ActiveXObject(progIDs[i]);
-        xmlDOM.async = false;
-        xmlDOM.loadXML(markup);
-        xmlDOM.setProperty('SelectionLanguage', 'XPath');
-                
-        return xmlDOM;
-      }
-    }
-  }
-  catch (ex) {
-  }
-
-  return null;
-}
-
 #include "BCL\CancelEventArgs.js"
 
 #include "BCL\App.js"
+
+  if (globals.ss) {
+    for (var n in ss) {
+      if (ss.hasOwnProperty(n))
+        globals.ss[n] = ss[n];
+    }
+  }
+  else {
+    globals.ss = ss;
+  }
+})(typeof(window) === 'object' ? window : global);

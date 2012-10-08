@@ -169,23 +169,6 @@ public void M() {
 		}
 
 		[Test]
-		public void CanCallGlobalStaticMethodConstructor() {
-			AssertCorrect(
-@"class X {
-	public X(int x, int y, int z) {}
-}
-public void M() {
-	int a = 0, b = 0, c = 0;
-	// BEGIN
-	var t = new X(a, b, c);
-	// END
-}",
-@"	var $t = create_X($a, $b, $c);
-", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("create_" + c.DeclaringType.Name, isGlobal: true) });
-		}
-
-
-		[Test]
 		public void InvokingConstructorImplementedAsInlineCodeWorks() {
 			AssertCorrect(
 @"class X {

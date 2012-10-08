@@ -8,7 +8,8 @@ ss.Task = function#? DEBUG Task$##(action, state) {
 	this.status = 0;
 	this._thens = [];
 	this._result = null;
-}
+};
+
 ss.Task.prototype = {
 	continueWith: function#? DEBUG Task$continueWith##(continuation) {
 		var tcs = new ss.TaskCompletionSource();
@@ -225,6 +226,30 @@ ss.Task.fromPromise = function#? DEBUG Task$fromPromise##(p, f) {
 	}, function() {
 		tcs.setException(new ss.PromiseException(Array.prototype.slice.call(arguments, 0)));
 	});
+	return tcs.task;
+};
+
+ss.Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
+	var tcs = new ss.TaskCompletionSource(), args;
+    if (typeof(f) === 'function') {
+        args = Array.prototype.slice.call(arguments, 3);
+    }
+    else {
+        args = Array.prototype.slice.call(arguments, 2);
+        m = f;
+		f = function() { return arguments[0]; };
+    }
+
+	var cb = function(e) {
+		if (e)
+			tcs.setException(ss.Exception.wrap(e));
+		else
+			tcs.setResult(f.apply(null, Array.prototype.slice.call(arguments, 1)));
+	};
+	
+	args.push(cb);
+
+	t[m].apply(t, args);
 	return tcs.task;
 };
 

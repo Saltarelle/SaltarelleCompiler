@@ -1046,7 +1046,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments);
 					}
 					else {
-						var jsMethod = method.IsStatic && impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
+						var jsMethod = (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name);
 
 						if (typeArguments.Count > 0) {
 							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
@@ -1061,7 +1061,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-					var jsMethod = impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), impl.Name);
+					var jsMethod = (JsExpression)JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), impl.Name);
 					if (typeArguments.Count > 0) {
 						var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
 						return JsExpression.Invocation(JsExpression.MemberAccess(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
@@ -1070,9 +1070,6 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Invocation(jsMethod, thisAndArguments);
 					}
 				}
-
-				case MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument:
-					return JsExpression.Invocation(JsExpression.MemberAccess(thisAndArguments[1], impl.Name), thisAndArguments.Skip(2));
 
 				case MethodScriptSemantics.ImplType.InlineCode:
 					return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isExpandedForm, s => _errorReporter.Message(7525, s));
@@ -1202,7 +1199,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						constructorCall = JsExpression.Invocation(impl.IsGlobal ? (JsExpression)JsExpression.Identifier(impl.Name) : (JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+						constructorCall = JsExpression.Invocation((JsExpression)JsExpression.MemberAccess(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:

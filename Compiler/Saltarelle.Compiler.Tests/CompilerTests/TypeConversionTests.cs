@@ -12,19 +12,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         public void EmptyGlobalClassIsCorrectlyReturned() {
             Compile(@"class TestClass { }");
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.Should().Be("TestClass");
             CompiledTypes[0].Should().BeAssignableTo<JsClass>();
         }
 
         [Test]
         public void NestedClassesWork() {
             Compile(@"class TestClass1 { class TestClass2 { class TestClass3 { } } class TestClass4 {} }");
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] {
-                                                                              "TestClass1",
-                                                                              "TestClass1$TestClass2",
-                                                                              "TestClass1$TestClass2$TestClass3",
-                                                                              "TestClass1$TestClass4",
-                                                                            });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.FullName).Should().BeEquivalentTo(new[] { "TestClass1",
+                                                                                                       "TestClass1.TestClass2",
+                                                                                                       "TestClass1.TestClass2.TestClass3",
+                                                                                                       "TestClass1.TestClass4",
+                                                                                                     });
             CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
         }
 
@@ -32,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         public void PartialClassesAreOnlyReturnedOnce() {
             Compile(@"partial class TestClass { }", @"partial class TestClass { }");
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.Should().Be("TestClass");
+            CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("TestClass");
             CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
         }
 
@@ -64,18 +62,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                       }
                       class Test10 {}
                     ");
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] {
-                                                                                "Test1",
-                                                                                "Nmspace1.Nmspace2.Nmspace3.Test2",
-                                                                                "Nmspace1.Nmspace2.Test3",
-                                                                                "Nmspace4.Test4",
-                                                                                "Nmspace4.Nmspace5.Test5",
-                                                                                "Nmspace4.Nmspace5.Test6",
-                                                                                "Nmspace4.Test7",
-                                                                                "Test8",
-                                                                                "Nmspace1.Nmspace2.Test9",
-                                                                                "Test10",
-                                                                            });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.FullName).Should().BeEquivalentTo(new[] { "Test1",
+                                                                                                       "Nmspace1.Nmspace2.Nmspace3.Test2",
+                                                                                                       "Nmspace1.Nmspace2.Test3",
+                                                                                                       "Nmspace4.Test4",
+                                                                                                       "Nmspace4.Nmspace5.Test5",
+                                                                                                       "Nmspace4.Nmspace5.Test6",
+                                                                                                       "Nmspace4.Test7",
+                                                                                                       "Test8",
+                                                                                                       "Nmspace1.Nmspace2.Test9",
+                                                                                                       "Test10",
+                                                                                                     });
             CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
         }
 
@@ -84,7 +81,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
             Compile(@"enum Test1 {}");
             CompiledTypes.Should().HaveCount(1);
             CompiledTypes[0].Should().BeAssignableTo<JsEnum>();
-            CompiledTypes[0].Name.Should().Be("Test1");
+            CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("Test1");
         }
 
         [Test]
@@ -203,9 +200,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         public void ClassTypeIsSetCorrectly() {
             Compile(new[] { "class Test1{} struct Test2{} interface Test3{}" }, allowUserDefinedStructs: true);
             CompiledTypes.Should().HaveCount(3);
-            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test1")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Class));
-            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test2")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Struct));
-            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.Name == "Test3")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Interface));
+            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.CSharpTypeDefinition.Name == "Test1")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Class));
+            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.CSharpTypeDefinition.Name == "Test2")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Struct));
+            Assert.That(((JsClass)CompiledTypes.Single(tp => tp.CSharpTypeDefinition.Name == "Test3")).ClassType, Is.EqualTo(JsClass.ClassTypeEnum.Interface));
         }
 
         [Test]
@@ -359,8 +356,8 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
         public void NestedTypesInheritTheGenericParametersOfTheirParents() {
             Compile("class Test1<T1> { class Test2<T2, T3> { class Test3<T4> {} } }");
             var test1 = FindClass("Test1");
-            var test2 = FindClass("Test1$Test2");
-            var test3 = FindClass("Test1$Test2$Test3");
+            var test2 = FindClass("Test2");
+            var test3 = FindClass("Test3");
             test1.TypeArgumentNames.Should().Equal(new[] { "$T1" });
             test2.TypeArgumentNames.Should().Equal(new[] { "$T1", "$T2", "$T3" });
             test3.TypeArgumentNames.Should().Equal(new[] { "$T1", "$T2", "$T3", "$T4" });
@@ -370,7 +367,7 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
         public void NonGenericTypeNestedInGenericTypeWorks() {
             Compile("class Test1<T1> { class Test2 {} }");
             var test1 = FindClass("Test1");
-            var test2 = FindClass("Test1$Test2");
+            var test2 = FindClass("Test2");
             test1.TypeArgumentNames.Should().Equal(new[] { "$T1" });
             test2.Should().NotBeNull();
         }
@@ -384,11 +381,11 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
         public void ClassesWithGenerateCodeSetToFalseAndTheirNestedClassesAreNotInTheOutput() {
             var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
             Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
 
             metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
-            CompiledTypes.Select(t => t.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
+            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
         }
 
         [Test]
@@ -396,12 +393,12 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
             var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
             Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.Should().Be("C1");
+            CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("C1");
 
             metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
             CompiledTypes.Should().HaveCount(1);
-            CompiledTypes[0].Name.Should().Be("C1");
+            CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("C1");
         }
 
         [Test]
@@ -471,14 +468,14 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
 		[Test]
 		public void InterfaceForWhichGetScriptTypeReturnsNullDoesNotAppearInTheInheritanceList() {
-			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition().ParentAssembly, t.FullName) };
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
             Compile(new[] { "interface I1 {} interface I2 {} interface I3<T> {} class C1 : I1, I2, I3<int> {}" }, runtimeLibrary: rtl);
             FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I2}" });
 		}
 
 		[Test]
 		public void BaseTypeForWhichGetScriptTypeReturnsNullIsNotConsideredInheritedFrom() {
-			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition().ParentAssembly, t.FullName) };
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
             Compile(new[] { "interface I1 {} class B {} class C1 : B, I1 {}" }, runtimeLibrary: rtl);
             FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I1}" });
 		}

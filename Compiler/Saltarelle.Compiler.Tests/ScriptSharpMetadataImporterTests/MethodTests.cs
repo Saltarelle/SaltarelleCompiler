@@ -998,40 +998,65 @@ class C1<T1> {
 class C1 {
 	[InstanceMethodOnFirstArgument]
 	[PreserveCase]
-	public static void SomeMethod() {
+	public static void SomeMethod(int a) {
 	}
 
 	[InstanceMethodOnFirstArgument]
 	[ScriptName(""RenamedMethod"")]
-	public static void SomeMethod2() {
+	public static void SomeMethod2(int a) {
 	}
 
 	[InstanceMethodOnFirstArgument]
-	public static void SomeMethod3() {
+	public static void SomeMethod3(int a, int x) {
 	}
 
 	[InstanceMethodOnFirstArgument]
 	[PreserveName]
-	public static void SomeMethod4() {
+	public static void SomeMethod4(int b, string s1, string s2) {
 	}
 }
 ");
 
 			var impl = FindMethod("C1.SomeMethod");
-			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
-			Assert.That(impl.Name, Is.EqualTo("SomeMethod"));
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{a}.SomeMethod()"));
 
 			impl = FindMethod("C1.SomeMethod2");
-			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
-			Assert.That(impl.Name, Is.EqualTo("RenamedMethod"));
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{a}.RenamedMethod()"));
 
 			impl = FindMethod("C1.SomeMethod3");
-			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
-			Assert.That(impl.Name, Is.EqualTo("someMethod3"));
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{a}.someMethod3({x})"));
 
 			impl = FindMethod("C1.SomeMethod4");
-			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InstanceMethodOnFirstArgument));
-			Assert.That(impl.Name, Is.EqualTo("someMethod4"));
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{b}.someMethod4({s1}, {s2})"));
+		}
+
+		[Test]
+		public void InstanceMethodOnFirstArgumentAttributeWorksWithExpandParams() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[InstanceMethodOnFirstArgument]
+	public static void SomeMethod1(int a, int b, params int[] c) {
+	}
+
+	[InstanceMethodOnFirstArgument]
+	[ExpandParams]
+	public static void SomeMethod2(int a, int b, params int[] c) {
+	}
+}
+");
+
+			var m1 = FindMethod("C1.SomeMethod1");
+			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(m1.LiteralCode, Is.EqualTo("{a}.someMethod1({b}, {c})"));
+
+			var m2 = FindMethod("C1.SomeMethod2");
+			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(m2.LiteralCode, Is.EqualTo("{a}.someMethod2({b}, {*c})"));
 		}
 
 		[Test]
@@ -1039,6 +1064,33 @@ class C1 {
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InstanceMethodOnFirstArgumentAttribute") && AllErrorTexts[0].Contains("static"));
+		}
+
+		[Test]
+		public void InstanceMethodOnFirstArgumentAttributeCannotBeSpecifiedOnMethodWithoutParameters() {
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public static void M() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InstanceMethodOnFirstArgumentAttribute") && AllErrorTexts[0].Contains("parameters"));
+		}
+
+		[Test]
+		public void InstanceMethodOnFirstArgumentAttributeCannotBeSpecifiedOnMethodWithASingleParamsParameter() {
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InstanceMethodOnFirstArgument] public static void M(params int[] args) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InstanceMethodOnFirstArgumentAttribute") && AllErrorTexts[0].Contains("params"));
+		}
+
+		[Test]
+		public void ExpandParamsAttributeCanOnlyBeAppliedToMethodWithParamArrayIfInstanceMethodOnFirstArgument() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[ExpandParams]
+	[InstanceMethodOnFirstArgument]
+	public static void M2(int a, int b, int[] c) {}
+}", expectErrors: true);
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1.M2") && m.Contains("params") && m.Contains("ExpandParamsAttribute")));
 		}
 
 		[Test]

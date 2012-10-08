@@ -35,13 +35,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
         }
 
         [Test]
-        public void MethodImplementedAsInstanceMethodOnFirstArgumentDoesNotAppearOnTheType() {
-            var metadataImporter = new MockMetadataImporter { GetMethodSemantics = method => MethodScriptSemantics.InstanceMethodOnFirstArgument("X") };
-            Compile(new[] { "class C { public static void M() {} }" }, metadataImporter: metadataImporter);
-            FindClass("C").InstanceMethods.Should().BeEmpty();
-        }
-
-        [Test]
         public void MethodImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
             var metadataImporter = new MockMetadataImporter { GetMethodSemantics = method => MethodScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C { public static void M() {} }" }, metadataImporter: metadataImporter);
