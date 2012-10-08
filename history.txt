@@ -1,3 +1,4 @@
+Can now specify PreseveMemberCase(false) on types to ignore the effect of a PreserveMemberCaseAttribute on the assembly.
 Node.js support: mscorlib works in Node, and there is a Node.js import library.
 Allow members other than methods in [GlobalMethods] classes. All members in such classes will be treated as gloabls (or module globals).
 Added support for CommonJS require (for now only for imports)

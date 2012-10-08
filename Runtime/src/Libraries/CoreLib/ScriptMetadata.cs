@@ -264,8 +264,16 @@ namespace System.Runtime.CompilerServices {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
     [NonScriptable]
     [Imported]
-    public sealed class PreserveMemberCaseAttribute : Attribute
-    {
+    public sealed class PreserveMemberCaseAttribute : Attribute {
+        public bool Preserve { get; private set; }
+
+        public PreserveMemberCaseAttribute() {
+            Preserve = true;
+        }
+
+        public PreserveMemberCaseAttribute(bool preserve) {
+            Preserve = preserve;
+        }
     }
 
     /// <summary>

@@ -258,9 +258,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName) {
-			var attr = entity.Attributes.FirstOrDefault(a => a.AttributeType.FullName == attributeName);
+		private IList<object> GetAttributePositionalArgs(IEnumerable<IAttribute> attributes, string attributeName) {
+			var attr = attributes.FirstOrDefault(a => a.AttributeType.FullName == attributeName);
 			return attr != null ? attr.PositionalArguments.Select(arg => arg.ConstantValue).ToList() : null;
+		}
+
+		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName) {
+			return GetAttributePositionalArgs(entity.Attributes, attributeName);
 		}
 
 		private static T GetNamedArgument<T>(IAttribute attr, string propertyName) {
@@ -486,7 +490,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, true) : tp.Name;
 			}
 
-			bool preserveMemberCases = typeDefinition.Attributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) || typeDefinition.ParentAssembly.AssemblyAttributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
+			var pmca = GetAttributePositionalArgs(typeDefinition, PreserveMemberCaseAttribute) ?? GetAttributePositionalArgs(typeDefinition.ParentAssembly.AssemblyAttributes, PreserveMemberCaseAttribute);
+
+			bool preserveMemberCases = pmca != null && (pmca.Count == 0 || (bool)pmca[0]);
 			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
 
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
