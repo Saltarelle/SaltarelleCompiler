@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 namespace NodeJS.DnsModule {
 	[Imported]
 	[NamedValues]
-	[IgnoreNamespace]
 	public enum RecordType {
 		[ScriptName("A")] IPv4,
 		[ScriptName("AAAA")] IPv6,

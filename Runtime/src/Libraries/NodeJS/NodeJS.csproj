@@ -151,8 +151,5 @@
       <Name>CoreLib</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="TODO.txt" />
-  </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>

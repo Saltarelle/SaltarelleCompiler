@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace NodeJS.CryptoModule {
 	[Imported]
-	[ModuleName("net")]
+	[ModuleName("crypto")]
 	[IgnoreNamespace]
 	public class SecureContext {
 		private SecureContext() {}

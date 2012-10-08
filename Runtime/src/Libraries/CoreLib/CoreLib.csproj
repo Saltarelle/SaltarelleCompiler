@@ -74,6 +74,7 @@
     <Compile Include="ComponentModel\IInitializable.cs" />
     <Compile Include="ComponentModel\IContainer.cs" />
     <Compile Include="ArrayEnumerator.cs" />
+    <Compile Include="JsErrorException.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="JsDate.cs" />
     <Compile Include="NotSupportedException.cs" />

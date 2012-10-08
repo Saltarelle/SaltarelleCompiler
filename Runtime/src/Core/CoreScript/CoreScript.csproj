@@ -15,6 +15,7 @@
     <OutputPath>..\..\..\bin\Script\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BCL\JsErrorException.js" />
     <Content Include="BCL\PromiseException.js" />
     <Content Include="BCL\NotSupportedException.js" />
     <Content Include="BCL\TaskCompletionSource.js" />

@@ -16,11 +16,14 @@ ss.Exception.prototype = {
 	}
 };
 
-ss.Exception.wrap = function#? DEBUG Exception$get_message##(o) {
+ss.Exception.wrap = function#? DEBUG Exception$wrap##(o) {
 	if (ss.Exception.isInstanceOfType(o)) {
 		return o;
 	}
+	else if (o instanceof Error) {
+		return new ss.JsErrorException(o);
+	}
 	else {
-		return new ss.Exception(o);
+		return new ss.Exception(o.toString());
 	}
 };

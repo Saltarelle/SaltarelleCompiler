@@ -279,6 +279,18 @@ namespace System.Threading.Tasks {
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
 		[ExpandParams, IgnoreGenericArguments]
+		public static Task FromNode(object target, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
 		public static Task<TResult> FromNode<TResult>(object target, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -306,6 +318,84 @@ namespace System.Threading.Tasks {
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
 		[ExpandParams, IgnoreGenericArguments]
 		public static Task<TResult> FromNode<T1, T2, TResult>(object target, Func<T1, T2, TResult> resultFactory, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromNode<T1, T2, T3, TResult>(object target, Func<T1, T2, T3, TResult> resultFactory, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromNode<T1, T2, T3, T4, TResult>(object target, Func<T1, T2, T3, T4, TResult> resultFactory, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, TResult>(object target, Func<T1, T2, T3, T4, T5, TResult> resultFactory, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, T6, TResult>(object target, Func<T1, T2, T3, T4, T5, T6, TResult> resultFactory, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, T6, T7, TResult>(object target, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultFactory, string method, params object[] otherArguments) {
+			return null;
+		}
+
+		/// <summary>
+		/// Creates a task from an invocation that will invoke a callback when it is done. The callback should be the last argument to the invoked method.
+		/// The callback is expected to be a node-style callback, where the first argument is an Error object, or null if successful
+		/// </summary>
+		/// <param name="target">Target to invoke the method on.</param>
+		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
+		/// <param name="method">Name of the method to invoke on the target.</param>
+		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
+		[ExpandParams, IgnoreGenericArguments]
+		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(object target, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
 	}

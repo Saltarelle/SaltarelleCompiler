@@ -152,6 +152,8 @@
 
 #include "BCL\PromiseException.js"
 
+#include "BCL\JsErrorException.js"
+
 #include "BCL\IteratorBlockEnumerable.js"
 
 #include "BCL\IteratorBlockEnumerator.js"

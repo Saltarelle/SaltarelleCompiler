@@ -32,6 +32,7 @@ namespace NodeJS.OSModule {
 
 		public static NetworkInterfaceInfo[] NetworkInterfaces { [ScriptName("networkInterfaces")] get { return null; } }
 
-		public static string Eol { [ScriptName("EOL")] get { return null; } }
+		[IntrinsicProperty]
+		public static string Eol { get { return null; } }
 	}
 }
