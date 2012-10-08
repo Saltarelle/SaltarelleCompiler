@@ -11,7 +11,6 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         public JsFunctionDefinitionExpression Definition { get; private set; }
 
         public JsNamedConstructor(string name, JsFunctionDefinitionExpression definition) {
-            Require.ValidJavaScriptIdentifier(name, "name");
             Name       = name;
             Definition = definition;
         }

@@ -225,13 +225,13 @@ namespace Saltarelle.Compiler.Compiler {
 				if (property.IsStatic) {
 					CreateCompilationContext(null, null, null);
 					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.UseStaticMember);
-					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.MemberAccess(jsType, backingFieldName)));
+					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, new JsReturnStatement(JsExpression.MemberAccess(JsExpression.Identifier(_namer.ThisAlias), backingFieldName)));
+					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, new JsReturnStatement(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName)));
 				}
 				else {
-					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.MemberAccess(JsExpression.This, backingFieldName)));
+					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(JsExpression.This, backingFieldName)));
 				}
 			}
 			catch (Exception ex) {
@@ -248,13 +248,13 @@ namespace Saltarelle.Compiler.Compiler {
 				if (property.IsStatic) {
 					CreateCompilationContext(null, null, null);
 					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.UseStaticMember);
-					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(jsType, backingFieldName), JsExpression.Identifier(valueName))));
+					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName))));
+					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else {
-					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName))));
+					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 			}
 			catch (Exception ex) {
@@ -284,7 +284,7 @@ namespace Saltarelle.Compiler.Compiler {
 					args = new[] { valueName };
 				}
 
-				var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
+				var bfAccessor = JsExpression.Member(target, backingFieldName);
 				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.AddAccessor.Region, bfAccessor, JsExpression.Identifier(valueName));
 				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 			}
@@ -317,7 +317,7 @@ namespace Saltarelle.Compiler.Compiler {
 					args = new[] { valueName };
 				}
 
-				var bfAccessor = JsExpression.MemberAccess(target, backingFieldName);
+				var bfAccessor = JsExpression.Member(target, backingFieldName);
 				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.RemoveAccessor.Region, bfAccessor, JsExpression.Identifier(valueName));
 				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
 			}

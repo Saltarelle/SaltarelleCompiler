@@ -1105,7 +1105,7 @@ public static class C {
 		}
 
 		[Test]
-		public void MixinAttributeArgumentMustBeAValidNestedJavascriptIdentifier() {
+		public void MixinAttributeArgumentCannotBeNullOrBlank() {
 			Prepare(@"using System.Runtime.CompilerServices; [Mixin(""$.fn"")] public static class C1 { static void Method1(int i) {} }");
 			// No error is good enough
 
@@ -1114,15 +1114,11 @@ public static class C {
 
 			Prepare(@"using System.Runtime.CompilerServices; [Mixin(null)] public static class C1 { static void Method1(int i) {} }", expectErrors: true);
 			Assert.AreEqual(1, AllErrorTexts.Count);
-			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("valid Javascript nested identifier")));
+			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("null or empty")));
 
 			Prepare(@"using System.Runtime.CompilerServices; [Mixin("""")] public static class C1 { static void Method1(int i) {} }", expectErrors: true);
 			Assert.AreEqual(1, AllErrorTexts.Count);
-			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("valid Javascript nested identifier")));
-
-			Prepare(@"using System.Runtime.CompilerServices; [Mixin(""§"")] public static class C1 { static void Method1(int i) {} }", expectErrors: true);
-			Assert.AreEqual(1, AllErrorTexts.Count);
-			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("valid Javascript nested identifier")));
+			Assert.IsTrue(AllErrorTexts.Any(e => e.Contains("C1") && e.Contains("null or empty")));
 		}
 
 		[Test]

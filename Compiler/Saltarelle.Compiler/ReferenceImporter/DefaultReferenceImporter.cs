@@ -103,14 +103,14 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 				if (moduleName != null) {
 					result = JsExpression.Identifier(GetModuleAlias(moduleName));
 					if (!string.IsNullOrEmpty(sem.Name))	// Test for [GlobalMethods] types.
-						result = JsExpression.MemberAccess(result, parts[0]);
+						result = JsExpression.Member(result, parts[0]);
 				}
 				else {
 					result = JsExpression.Identifier(parts[0]);
 				}
 
 				for (int i = 1; i < parts.Length; i++)
-					result = JsExpression.MemberAccess(result, parts[i]);
+					result = JsExpression.Member(result, parts[i]);
 				return result;
 			}
 
@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 					var type = ((JsTypeReferenceExpression)expression.Target).Type;
 					var sem = _metadataImporter.GetTypeSemantics(type);
 					if (string.IsNullOrEmpty(sem.Name) && _metadataImporter.GetModuleName(type) == null)	// Handle types marked with [GlobalMethods] that are not from modules.
-						return JsExpression.Identifier(expression.Member);
+						return JsExpression.Identifier(expression.MemberName);
 				}
 				return base.VisitMemberAccessExpression(expression, data);
 			}

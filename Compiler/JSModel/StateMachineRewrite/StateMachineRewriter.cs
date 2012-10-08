@@ -397,7 +397,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			}
 
 			currentBlock.Add(new JsSetNextStateStatement(stateAfter.StateValue));
-			currentBlock.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(stmt.Awaiter, stmt.OnCompletedMethodName), JsExpression.Identifier(_stateMachineMethodName))));
+			currentBlock.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(stmt.Awaiter, stmt.OnCompletedMethodName), JsExpression.Identifier(_stateMachineMethodName))));
 			if (_needDoFinallyBlocksVariable)
 				currentBlock.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_doFinallyBlocksVariableName), JsExpression.False)));
 			currentBlock.Add(new JsReturnStatement());

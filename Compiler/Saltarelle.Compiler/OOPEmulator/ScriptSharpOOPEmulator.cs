@@ -78,7 +78,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				args.Add(JsExpression.Null);
 			if (interfaces.Count > 0)
 				args.AddRange(interfaces);
-			return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterClass), args);
+			return JsExpression.Invocation(JsExpression.Member(typeRef, RegisterClass), args);
 		}
 
 		private JsExpression CreateDefaultConstructorInvocation(IMethod defaultConstructor, JsExpression typeRef) {
@@ -89,10 +89,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					return null;
 
 				case ConstructorScriptSemantics.ImplType.NamedConstructor:
-					return JsExpression.New(JsExpression.MemberAccess(typeRef, sem.Name));
+					return JsExpression.New(JsExpression.Member(typeRef, sem.Name));
 
 				case ConstructorScriptSemantics.ImplType.StaticMethod:
-					return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, sem.Name));
+					return JsExpression.Invocation(JsExpression.Member(typeRef, sem.Name));
 
 				case ConstructorScriptSemantics.ImplType.InlineCode:
 					var prevRegion = _errorReporter.Region;
@@ -142,12 +142,12 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			}
 
 			if (instanceMethods.Count > 0) {
-				stmts.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, Prototype), JsExpression.ObjectLiteral(instanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null))))));
+				stmts.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(instanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null))))));
 			}
 
 			if (c.NamedConstructors.Count > 0) {
-				stmts.AddRange(c.NamedConstructors.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, m.Name), m.Definition))));
-				stmts.Add(new JsExpressionStatement(c.NamedConstructors.Reverse().Aggregate((JsExpression)JsExpression.MemberAccess(typeRef, Prototype), (right, ctor) => JsExpression.Assign(JsExpression.MemberAccess(JsExpression.MemberAccess(typeRef, ctor.Name), Prototype), right))));	// This generates a statement like {C}.ctor1.prototype = {C}.ctor2.prototype = {C}.prototoype
+				stmts.AddRange(c.NamedConstructors.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, m.Name), m.Definition))));
+				stmts.Add(new JsExpressionStatement(c.NamedConstructors.Reverse().Aggregate((JsExpression)JsExpression.Member(typeRef, Prototype), (right, ctor) => JsExpression.Assign(JsExpression.Member(JsExpression.Member(typeRef, ctor.Name), Prototype), right))));	// This generates a statement like {C}.ctor1.prototype = {C}.ctor2.prototype = {C}.prototoype
 			}
 
 			var defaultConstructor = c.CSharpTypeDefinition.GetConstructors().SingleOrDefault(x => x.Parameters.Count == 0 && x.IsPublic);
@@ -156,24 +156,24 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				if (createInstance != null) {
 					stmts.Add(new JsExpressionStatement(
 					              JsExpression.Assign(
-					                  JsExpression.MemberAccess(typeRef, "createInstance"),
+					                  JsExpression.Member(typeRef, "createInstance"),
 					                      JsExpression.FunctionDefinition(new string[0],
 					                          new JsReturnStatement(createInstance)))));
 				}
 			}
 
-			stmts.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, m.Name), RewriteMethod(m)))));
+			stmts.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, m.Name), RewriteMethod(m)))));
 
 			if (c.TypeArgumentNames.Count > 0) {
 				if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterGenericInterfaceInstance),
+					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(typeRef, RegisterGenericInterfaceInstance),
 					                                                            typeRef,
 					                                                            new JsTypeReferenceExpression(c.CSharpTypeDefinition),
 					                                                            JsExpression.ArrayLiteral(c.TypeArgumentNames.Select(JsExpression.Identifier)),
 																				JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.ArrayLiteral(c.ImplementedInterfaces))))));
 				}
 				else {
-					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterGenericClassInstance),
+					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(typeRef, RegisterGenericClassInstance),
 					                                                            typeRef,
 					                                                            new JsTypeReferenceExpression(c.CSharpTypeDefinition),
 					                                                            JsExpression.ArrayLiteral(c.TypeArgumentNames.Select(JsExpression.Identifier)),
@@ -189,7 +189,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						  .Select(s => s.Expression)
 						  .OfType<JsBinaryExpression>()
 						  .Where(expr => expr.NodeType == ExpressionNodeType.Assign && expr.Left is JsMemberAccessExpression)
-						  .Select(expr => new { Name = ((JsMemberAccessExpression)expr.Left).Member, Value = expr.Right });
+						  .Select(expr => new { Name = ((JsMemberAccessExpression)expr.Left).MemberName, Value = expr.Right });
 
 			return new JsExpressionStatement(JsExpression.Assign(new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value)))));
 		}
@@ -219,7 +219,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			var parts = full.Split('.');
 			JsExpression result = JsExpression.Identifier(parts[0]);
 			for (int i = 1; i < parts.Length; i++) {
-				result = JsExpression.MemberAccess(result, parts[i]);
+				result = JsExpression.Member(result, parts[i]);
 			}
 			return result;
 		}
@@ -240,7 +240,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 					string ns = GetNamespace(name);
 					if (ns != currentNs && !isGlobal && !isMixin) {
-						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(systemType, RegisterNamespace), JsExpression.String(ns))));
+						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(systemType, RegisterNamespace), JsExpression.String(ns))));
 						currentNs = ns;
 					}
 					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
@@ -270,7 +270,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
 								result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts)))));
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), JsExpression.String(name), JsExpression.Number(c.TypeArgumentNames.Count))));
+								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(typeRef, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), JsExpression.String(name), JsExpression.Number(c.TypeArgumentNames.Count))));
 							}
 						}
 					}
@@ -278,8 +278,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						var e = (JsEnum)t;
 						bool flags = GetAttributePositionalArgs(t.CSharpTypeDefinition, FlagsAttribute, "System") != null;
 						result.Add(new JsExpressionStatement(JsExpression.Assign(typeRef, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement))));
-						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (_metadataImporter.IsNamedValues(t.CSharpTypeDefinition) ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
-						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterEnum), JsExpression.String(name), JsExpression.Boolean(flags))));
+						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (_metadataImporter.IsNamedValues(t.CSharpTypeDefinition) ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
+						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(typeRef, RegisterEnum), JsExpression.String(name), JsExpression.Boolean(flags))));
 					}
 				}
 				catch (Exception ex) {
@@ -300,7 +300,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
 			                                     var typeRef = new JsTypeReferenceExpression(c.CSharpTypeDefinition);
 			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-			                                         return JsExpression.Invocation(JsExpression.MemberAccess(typeRef, RegisterInterface), JsExpression.String(name), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
+			                                         return JsExpression.Invocation(JsExpression.Member(typeRef, RegisterInterface), JsExpression.String(name), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
 			                                     }
 			                                     else {
 			                                         return CreateRegisterClassCall(JsExpression.String(name), c.BaseClass, c.ImplementedInterfaces, typeRef);

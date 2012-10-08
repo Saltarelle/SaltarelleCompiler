@@ -96,7 +96,7 @@ namespace Saltarelle.Compiler.Compiler {
 				        JsExpression.FunctionDefinition(new string[0],
 				            new JsReturnStatement(
 				                JsExpression.Invocation(
-				                    JsExpression.MemberAccess(
+				                    JsExpression.Member(
 				                        JsExpression.FunctionDefinition(methodParameterNames, new JsBlockStatement(body)),
 				                        "call"),
 				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(p => JsExpression.Identifier(p)))
@@ -668,7 +668,7 @@ namespace Saltarelle.Compiler.Compiler {
 				          .Concat(CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement).Statements);
 
 				_result.Add(new JsForStatement(new JsVariableDeclarationStatement(_variables[index].Name, JsExpression.Number(0)),
-				                               JsExpression.Lesser(jsIndex, JsExpression.MemberAccess(array, lengthSem.FieldName)),
+				                               JsExpression.Lesser(jsIndex, JsExpression.Member(array, lengthSem.FieldName)),
 											   JsExpression.PostfixPlusPlus(jsIndex),
 											   new JsBlockStatement(body)));
 			}

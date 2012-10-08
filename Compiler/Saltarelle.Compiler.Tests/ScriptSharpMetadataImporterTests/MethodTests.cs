@@ -632,14 +632,10 @@ interface I {
 		}
 
 		[Test]
-		public void ScriptNameOnMethodMustBeValidIdentifierOrBeEmpty() {
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
-
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("must be a valid JavaScript identifier"));
+		public void ScriptNameOnMethodCanBeInvalidIdentifier() {
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName(""a b"")] public void M() {} }");
+			var m = FindMethod("C1.M");
+			Assert.That(m.Name, Is.EqualTo("a b"));
 		}
 
 		[Test]

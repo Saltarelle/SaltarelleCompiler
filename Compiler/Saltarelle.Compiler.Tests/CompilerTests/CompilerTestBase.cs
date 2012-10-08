@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                                               .Where(be =>    be.NodeType == ExpressionNodeType.Assign
                                                            && be.Left is JsMemberAccessExpression
                                                            && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
-                                                           && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                                           && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
                                               .Select(be => OutputFormatter.Format(be.Right, true))
                                               .SingleOrDefault();
         }
@@ -97,7 +97,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                                            .OfType<JsBinaryExpression>()
                                            .Where(be =>    be.NodeType == ExpressionNodeType.Assign
                                                         && be.Left is JsMemberAccessExpression
-                                                        && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                                        && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
                                            .Select(be => OutputFormatter.Format(be.Right, true))
                                            .SingleOrDefault();
         }

@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceImporterTests {
 		public void ImportingTypesFromGlobalNamespaceWorks() {
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsTypeReferenceExpression(Common.CreateMockType("GlobalType"))),
-			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("Global.NestedNamespace.InnerNamespace.Type")), "x"), JsExpression.Number(1)))
+			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockType("Global.NestedNamespace.InnerNamespace.Type")), "x"), JsExpression.Number(1)))
 			}, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -56,9 +56,9 @@ return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 			var md = new MockScriptSharpMetadataImporter { GetModuleName = t => t.Name == "Type1" || t.Name == "Type3" ? "module1" : (t.Name == "Type2" ? "module2" : "module3") };
 
 			var actual = Process(new JsStatement[] {
-				new JsExpressionStatement(JsExpression.Add(JsExpression.MemberAccess(new JsTypeReferenceExpression(t1), "a"), JsExpression.MemberAccess(new JsTypeReferenceExpression(t2), "b"))),
-				new JsExpressionStatement(JsExpression.Add(JsExpression.MemberAccess(new JsTypeReferenceExpression(t3), "c"), JsExpression.MemberAccess(new JsTypeReferenceExpression(t4), "d"))),
-				new JsExpressionStatement(JsExpression.Add(JsExpression.MemberAccess(new JsTypeReferenceExpression(t1), "e"), JsExpression.MemberAccess(new JsTypeReferenceExpression(t4), "f"))),
+				new JsExpressionStatement(JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "a"), JsExpression.Member(new JsTypeReferenceExpression(t2), "b"))),
+				new JsExpressionStatement(JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t3), "c"), JsExpression.Member(new JsTypeReferenceExpression(t4), "d"))),
+				new JsExpressionStatement(JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "e"), JsExpression.Member(new JsTypeReferenceExpression(t4), "f"))),
 			}, metadata: md);
 
 			AssertCorrect(actual,
@@ -78,7 +78,7 @@ $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
 			var md = new MockScriptSharpMetadataImporter { GetModuleName = t => "mymodule", GetTypeSemantics = t => TypeScriptSemantics.NormalType("") };
 
 			var actual = Process(new JsStatement[] {
-				new JsExpressionStatement(JsExpression.MemberAccess(new JsTypeReferenceExpression(t1), "a")),
+				new JsExpressionStatement(JsExpression.Member(new JsTypeReferenceExpression(t1), "a")),
 			}, metadata: md);
 
 			AssertCorrect(actual,
@@ -106,11 +106,11 @@ $mymodule.a;
 			                                             };
 
 			var actual = Process(new JsStatement[] {
-				new JsExpressionStatement(JsExpression.MemberAccess(new JsTypeReferenceExpression(t1), "a")),
-				new JsExpressionStatement(JsExpression.MemberAccess(new JsTypeReferenceExpression(t2), "b")),
-				new JsExpressionStatement(JsExpression.MemberAccess(new JsTypeReferenceExpression(t3), "c")),
-				new JsExpressionStatement(JsExpression.MemberAccess(new JsTypeReferenceExpression(t4), "d")),
-				new JsExpressionStatement(JsExpression.MemberAccess(new JsTypeReferenceExpression(t5), "e")),
+				new JsExpressionStatement(JsExpression.Member(new JsTypeReferenceExpression(t1), "a")),
+				new JsExpressionStatement(JsExpression.Member(new JsTypeReferenceExpression(t2), "b")),
+				new JsExpressionStatement(JsExpression.Member(new JsTypeReferenceExpression(t3), "c")),
+				new JsExpressionStatement(JsExpression.Member(new JsTypeReferenceExpression(t4), "d")),
+				new JsExpressionStatement(JsExpression.Member(new JsTypeReferenceExpression(t5), "e")),
 				new JsVariableDeclarationStatement("mymodule", null),
 			}, metadata: md, namer: new MockNamer(prefixWithDollar: false));
 

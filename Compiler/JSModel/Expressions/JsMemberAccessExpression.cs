@@ -10,14 +10,14 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         public const string Prototype = "prototype";
 
         public JsExpression Target { get; private set; }
-        public string Member { get; private set; }
+        public string MemberName { get; private set; }
 
-        internal JsMemberAccessExpression(JsExpression target, string member) : base(ExpressionNodeType.MemberAccess) {
+        internal JsMemberAccessExpression(JsExpression target, string memberName) : base(ExpressionNodeType.MemberAccess) {
             if (target == null) throw new ArgumentNullException("target");
-            if (member == null) throw new ArgumentNullException("member");
-            if (!member.IsValidJavaScriptIdentifier()) throw new ArgumentException("member");
+            if (memberName == null) throw new ArgumentNullException("memberName");
+            if (!memberName.IsValidJavaScriptIdentifier()) throw new ArgumentException("member");
 
-            Member = member;
+            MemberName = memberName;
             Target = target;
         }
 

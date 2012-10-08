@@ -1,3 +1,4 @@
+Allow invalid identifiers in [ScriptName] and similar attribute. This will generate indexing expressions rather than dot-notation for those members.
 foreach over ElementCollection and List<T> will now use a for loop. The [EnumerateAsArrayAttribute] controls this behaviour.
 Casting undefined to another type now returns undefined (instead of throwing an error).
 Can now specify PreseveMemberCase(false) on types to ignore the effect of a PreserveMemberCaseAttribute on the assembly.

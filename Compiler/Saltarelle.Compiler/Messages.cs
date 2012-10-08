@@ -30,10 +30,9 @@ namespace Saltarelle.Compiler {
 			{ 7022, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [AsyncTestAttribute] or a [TestAttribute] because its declaring class does not have a [TestFixtureAttribute].") },
 			{ 7023, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.") },
 			{ 7024, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot override the member {1}.") },
-			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must be a valid Javascript nested identifier.") },
+			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must not be null or empty.") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
-			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },
 			{ 7102, Tuple.Create(MessageSeverity.Error, "The constructor {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
 			{ 7103, Tuple.Create(MessageSeverity.Error, "The inline code for the constructor {0} contained errors: {1}.") },
 			{ 7104, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the indexer of type {0} cannot be empty.") },

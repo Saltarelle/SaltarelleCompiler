@@ -462,7 +462,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7014, typeDefinition);
 					}
-					else if (mixinAttr[0] == null || !((string)mixinAttr[0]).IsValidNestedJavaScriptIdentifier()) {
+					else if (string.IsNullOrEmpty((string)mixinAttr[0])) {
 						Message(7025, typeDefinition);
 					}
 					else {
@@ -560,11 +560,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
 				string name = (string)sna[0] ?? "";
-				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidNestedJavaScriptIdentifier())) {
+				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidJavaScriptIdentifier())) {
 					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
-				}
-				else if (name != "" && !name.IsValidJavaScriptIdentifier()) {
-					Message(7101, member);
 				}
 				if (name == "" && isConstructor)
 					name = "$ctor";
