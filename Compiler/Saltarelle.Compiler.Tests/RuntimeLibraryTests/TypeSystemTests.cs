@@ -1198,5 +1198,17 @@ public class C {
 }", "C.M");
 			Assert.That(result, Is.False);
 		}
+
+		[Test]
+		public void CastingUndefinedToOtherTypeShouldReturnUndefined() {
+			var result = ExecuteCSharp(
+@"using System;
+public class C {
+	public static string M() {
+		return Type.GetScriptType((C)Script.Undefined);
+	}
+}", "C.M");
+			Assert.That(result, Is.EqualTo("undefined"));
+		}
 	}
 }

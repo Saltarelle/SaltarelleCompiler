@@ -299,16 +299,18 @@ Type.safeCast = function#? DEBUG Type$safeCast##(instance, type) {
 Type.cast = function#? DEBUG Type$cast##(instance, type) {
 	if (instance === null)
 		return null;
-    else if (Type.isInstanceOfType(instance, type)) {
+    else if (typeof(instance) === "undefined" || Type.isInstanceOfType(instance, type)) {
         return instance;
     }
     throw 'Cannot cast object to type ' + type.__typeName;
 };
 
 Type.getInstanceType = function#? DEBUG Type$getInstanceType##(instance) {
-	if (instance === null) {
-		throw 'Cannot get type of null'
-	}
+	if (instance === null)
+		throw 'Cannot get type of null';
+	if (typeof(instance) === "undefined")
+		throw 'Cannot get type of undefined';
+
     var ctor = null;
 
     // NOTE: We have to catch exceptions because the constructor
