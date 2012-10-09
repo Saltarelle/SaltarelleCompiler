@@ -9,6 +9,7 @@ namespace Saltarelle.Compiler.Tests {
 			IsResources            = t => false;
 			IsSerializable         = t => false;
 			IsRealType             = t => true;
+			IsImported             = t => false;
 			IsMixin                = t => false;
 			IsTestFixture          = t => false;
 			GetTestData            = m => null;
@@ -19,6 +20,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> IsResources { get; set; }
 		public Func<ITypeDefinition, bool> IsSerializable { get; set; }
 		public Func<ITypeDefinition, bool> IsRealType { get; set; }
+		public Func<ITypeDefinition, bool> IsImported { get; set; }
 		public Func<ITypeDefinition, bool> IsMixin { get; set; }
 		public Func<ITypeDefinition, bool> IsTestFixture { get; set; }
 		public Func<IMethod, TestMethodData> GetTestData { get; set; }
@@ -38,6 +40,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		bool IScriptSharpMetadataImporter.IsRealType(ITypeDefinition t) {
 			return IsRealType(t);
+		}
+
+		bool IScriptSharpMetadataImporter.IsImported(ITypeDefinition t) {
+			return IsImported(t);
 		}
 
 		bool IScriptSharpMetadataImporter.IsMixin(ITypeDefinition t) {

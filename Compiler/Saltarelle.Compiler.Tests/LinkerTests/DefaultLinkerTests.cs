@@ -66,6 +66,17 @@ return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 		}
 
 		[Test]
+		public void ImportingImportedTypeFromOwnAssemblyWorks() {
+			var asm = CreateMockAssembly();
+			var type = CreateMockType("MyImportedType", asm);
+			var actual = Process(new JsStatement[] {
+			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(type), "x"), JsExpression.Number(1)))
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.FullName), IsImported = t => ReferenceEquals(t, type) });
+
+			AssertCorrect(actual, "return $MyImportedType.x + 1;\n");
+		}
+
+		[Test]
 		public void ImportingTypeFromOwnAssemblyButOtherModuleNameResultsInARequire() {
 			var asm = CreateMockAssembly();
 			var type = CreateMockType("GlobalType", asm);

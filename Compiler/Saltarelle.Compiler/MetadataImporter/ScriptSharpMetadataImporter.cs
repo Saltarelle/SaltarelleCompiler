@@ -1423,6 +1423,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsRealType;
 		}
 
+		public bool IsImported(ITypeDefinition t) {
+			return _typeSemantics[t].IsImported;
+		}
+
 		public bool IsTestFixture(ITypeDefinition t) {
 			return _typeSemantics[t].IsTestFixture;
 		}

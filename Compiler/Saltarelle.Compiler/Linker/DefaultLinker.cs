@@ -74,11 +74,13 @@ namespace Saltarelle.Compiler.Linker {
 			private readonly Dictionary<string, string> _moduleAliases;
 
 			private bool IsLocalReference(ITypeDefinition type) {
-				if (!type.ParentAssembly.Equals(_mainAssembly))
+				if (_metadataImporter.IsImported(type))	// Imported types must always be referenced the hard way...
+					return false;
+				if (!type.ParentAssembly.Equals(_mainAssembly))	// ...so must types from other assemblies...
 					return false;
 				var mainModule = _metadataImporter.MainModuleName;
 				var typeModule = _metadataImporter.GetModuleName(type);
-				return string.IsNullOrEmpty(mainModule) && string.IsNullOrEmpty(typeModule) || mainModule == typeModule;
+				return string.IsNullOrEmpty(mainModule) && string.IsNullOrEmpty(typeModule) || mainModule == typeModule;	// ...and types with a [ModuleName] that differs from that of the assembly.
 			}
 
 			private string GetModuleAlias(string moduleName) {
