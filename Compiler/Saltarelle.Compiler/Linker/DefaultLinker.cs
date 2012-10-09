@@ -73,6 +73,14 @@ namespace Saltarelle.Compiler.Linker {
 
 			private readonly Dictionary<string, string> _moduleAliases;
 
+			private bool IsLocalReference(ITypeDefinition type) {
+				if (!type.ParentAssembly.Equals(_mainAssembly))
+					return false;
+				var mainModule = _metadataImporter.MainModuleName;
+				var typeModule = _metadataImporter.GetModuleName(type);
+				return string.IsNullOrEmpty(mainModule) && string.IsNullOrEmpty(typeModule) || mainModule == typeModule;
+			}
+
 			private string GetModuleAlias(string moduleName) {
 				string result;
 				if (_moduleAliases.TryGetValue(moduleName, out result))
@@ -98,7 +106,7 @@ namespace Saltarelle.Compiler.Linker {
 				if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
 					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
 
-				if (expression.Type.ParentAssembly.Equals(_mainAssembly)) {
+				if (IsLocalReference(expression.Type)) {
 					if (string.IsNullOrEmpty(sem.Name))
 						return JsExpression.Identifier("exports");	// Referencing a [GlobalMethods] type. Since it was not handled in the member expression, we must be in a module, which means that the function should exist on the exports object.
 

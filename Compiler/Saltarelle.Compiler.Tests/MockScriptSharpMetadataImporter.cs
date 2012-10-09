@@ -58,5 +58,6 @@ namespace Saltarelle.Compiler.Tests {
 
 		public bool OmitDowncasts { get; set; }
 		public bool OmitNullableChecks { get; set; }
+		public string MainModuleName { get; set; }
 	}
 }

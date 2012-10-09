@@ -177,6 +177,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private ICompilation _compilation;
 		private bool _omitDowncasts;
 		private bool _omitNullableChecks;
+		private string _mainModuleName;
 
 		private readonly bool _minimizeNames;
 
@@ -1283,6 +1284,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (on != null)
 					_omitNullableChecks = (bool)on.ConstantValue;
 			}
+			else {
+				_omitDowncasts = _omitNullableChecks = false;
+			}
+
+			var mna = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, ModuleNameAttribute);
+			_mainModuleName = (mna != null && !string.IsNullOrEmpty((string)mna[0]) ? (string)mna[0] : null);
 
 			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
@@ -1440,11 +1447,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public bool OmitDowncasts {
-			get {  return _omitDowncasts; }
+			get { return _omitDowncasts; }
 		}
 
 		public bool OmitNullableChecks {
-			get {  return _omitNullableChecks; }
+			get { return _omitNullableChecks; }
+		}
+
+		public string MainModuleName {
+			get { return _mainModuleName; }
 		}
 	}
 }

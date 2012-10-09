@@ -37,5 +37,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		bool OmitNullableChecks { get; }
 		bool OmitDowncasts { get; }
+
+		/// <summary>
+		/// The value of any [assembly: ModuleName] attribute.
+		/// </summary>
+		string MainModuleName { get; }
 	}
 }

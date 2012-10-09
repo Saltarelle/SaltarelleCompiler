@@ -13,7 +13,7 @@ using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.Tests.LinkerTestsTests {
+namespace Saltarelle.Compiler.Tests.LinkerTests {
 	[TestFixture]
 	public class DefaultLinkerTests {
 		private ITypeDefinition CreateMockType(string fullName, IAssembly parentAssembly) {
@@ -66,13 +66,44 @@ return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 		}
 
 		[Test]
+		public void ImportingTypeFromOwnAssemblyButOtherModuleNameResultsInARequire() {
+			var asm = CreateMockAssembly();
+			var type = CreateMockType("GlobalType", asm);
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
+			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(CreateMockType("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1)))
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))), GetModuleName = t => "some-module", MainModuleName = "main-module" });
+
+			AssertCorrect(actual,
+@"require('mscorlib');
+var $somemodule = require('some-module');
+$somemodule.$GlobalType;
+return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
+");
+		}
+
+		[Test]
 		public void AccessingMemberOnTypeWithEmptyScriptNameInOwnAssemblyWithModuleNameUsesExports() {
 			var asm = CreateMockAssembly();
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", asm)), "x")),
-			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(""), GetModuleName = t => "my-module" });
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(""), GetModuleName = t => "my-module", MainModuleName = "my-module" });
 
 			AssertCorrect(actual, "exports.x;\n");
+		}
+
+		[Test]
+		public void AccessingMemberOnTypeWithEmptyScriptNameInOwnAssemblyButWithDifferentModuleNameResultsInARequire() {
+			var asm = CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", asm)), "x")),
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(""), GetModuleName = t => "my-module", MainModuleName = "main-module" });
+
+			AssertCorrect(actual,
+@"require('mscorlib');
+var $mymodule = require('my-module');
+$mymodule.x;
+");
 		}
 
 		[Test]
