@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.LinkerTestsTests {
 
 		private string Process(IList<JsStatement> stmts, IScriptSharpMetadataImporter metadata = null, INamer namer = null, IAssembly mainAssembly = null) {
 			var obj = new DefaultLinker(metadata ?? new MockScriptSharpMetadataImporter(), namer ?? new MockNamer());
-			var processed = obj.ImportReferences(stmts, mainAssembly ?? new Mock<IAssembly>().Object);
+			var processed = obj.Process(stmts, mainAssembly ?? new Mock<IAssembly>().Object);
 			return string.Join("", processed.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 		}
 

@@ -168,7 +168,7 @@ namespace Saltarelle.Compiler.Linker {
 			_namer            = namer;
 		}
 
-		public IList<JsStatement> ImportReferences(IList<JsStatement> statements, IAssembly mainAssembly) {
+		public IList<JsStatement> Process(IList<JsStatement> statements, IAssembly mainAssembly) {
 			return ImportVisitor.Process(_metadataImporter, _namer, mainAssembly, statements);
 		}
 	}

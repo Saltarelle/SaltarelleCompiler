@@ -36,7 +36,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			var er = new MockErrorReporter(true);
 			var obj = new OOPEmulator.ScriptSharpOOPEmulator(comp, metadataImporter, new MockRuntimeLibrary(), new MockNamer(), er);
 			Assert.That(er.AllMessages, Is.Empty, "Should not have errors");
-			var rewritten = obj.Rewrite(types, comp);
+			var rewritten = obj.Process(types, comp);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}
 

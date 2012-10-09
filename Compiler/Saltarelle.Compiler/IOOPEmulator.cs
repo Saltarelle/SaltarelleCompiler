@@ -18,6 +18,6 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="types">Types to rewrute.</param>
 		/// <param name="compilation">The current compilation.</param>
-		IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation);
+		IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation);
 	}
 }

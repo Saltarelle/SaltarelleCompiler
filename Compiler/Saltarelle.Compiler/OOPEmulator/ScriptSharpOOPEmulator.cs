@@ -230,7 +230,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				return JsExpression.Identifier(string.IsNullOrEmpty(_metadataImporter.GetModuleName(type)) ? "global" : "exports");
 		}
 
-		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
+		public IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation) {
 			var result = new List<JsStatement>();
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
