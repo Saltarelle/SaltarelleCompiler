@@ -430,7 +430,7 @@ namespace System.Runtime.CompilerServices {
 	/// <summary>
 	/// Specifies that a type is defined in a module, which should be imported by a require() call.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Type)]
+	[AttributeUsage(AttributeTargets.Type | AttributeTargets.Assembly)]
 	[NonScriptable]
 	[Imported]
 	public sealed class ModuleNameAttribute : Attribute {	

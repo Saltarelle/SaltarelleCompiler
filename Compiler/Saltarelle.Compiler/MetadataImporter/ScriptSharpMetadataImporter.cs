@@ -1421,11 +1421,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public string GetModuleName(ITypeDefinition t) {
-			for (; t != null; t = t.DeclaringTypeDefinition) {
-				var n = _typeSemantics[t].ModuleName;
+			for (var current = t; current != null; current = current.DeclaringTypeDefinition) {
+				var n = _typeSemantics[current].ModuleName;
 				if (n != null)
 					return n != "" ? n : null;
 			}
+			var asmModuleName = GetAttributePositionalArgs(t.ParentAssembly.AssemblyAttributes, ModuleNameAttribute);
+			if (asmModuleName != null && !string.IsNullOrEmpty((string)asmModuleName[0]))
+				return (string)asmModuleName[0];
+
 			return null;
 		}
 

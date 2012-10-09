@@ -1381,7 +1381,7 @@ public class B : I<object> {
 		}
 
 		[Test]
-		public void ModuleNameAttributeWorks() {
+		public void ModuleNameAttributeOnTypeWorks() {
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -1407,7 +1407,7 @@ public class C4 {
 		}
 
 		[Test]
-		public void ModuleNameAttributeIsInheritedButCanBeOverridden() {
+		public void ModuleNameAttributeIsInheritedToInnerTypesButCanBeOverridden() {
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -1455,6 +1455,47 @@ public class C2 {
 			Assert.AreEqual("third-module", Metadata.GetModuleName(AllTypes["C2+D2"]));
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D3"]));
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D4"]));
+		}
+
+		[Test]
+		public void ModuleNameOnAssemblyWorks() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+[assembly: ModuleName(""my-module"")]
+
+public class C1 {
+}
+
+public class C2 {
+}
+");
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C1"]));
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C2"]));
+		}
+
+		[Test]
+		public void ModuleNameOnAssemblyCanBeOverriddenOnTypeWorks() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+[assembly: ModuleName(""my-module"")]
+
+[ModuleName(""other-module"")]
+public class C1 {
+}
+
+[ModuleName("""")]
+public class C2 {
+}
+
+[ModuleName(null)]
+public class C3 {
+}
+");
+			Assert.AreEqual("other-module", Metadata.GetModuleName(AllTypes["C1"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));
 		}
 	}
 }
