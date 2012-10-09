@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 // CultureInfo
 
-ss.CultureInfo = function#? DEBUG CultureInfo$##(name, numberFormat, dateFormat) {
+var ss_CultureInfo = function#? DEBUG CultureInfo$##(name, numberFormat, dateFormat) {
     this.name = name;
     this.numberFormat = numberFormat;
     this.dateFormat = dateFormat;
-}
-ss.CultureInfo.registerClass('ss.CultureInfo');
+};
+Type.registerClass(global, 'ss.CultureInfo', ss_CultureInfo);
 
-ss.CultureInfo.InvariantCulture = new ss.CultureInfo('en-US',
+ss_CultureInfo.InvariantCulture = new ss_CultureInfo('en-US',
     {
         naNSymbol: 'NaN',
         negativeSign: '-',
@@ -63,4 +63,4 @@ ss.CultureInfo.InvariantCulture = new ss.CultureInfo('en-US',
         monthNames: ['January','February','March','April','May','June','July','August','September','October','November','December',''],
         shortMonthNames: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','']
     });
-ss.CultureInfo.CurrentCulture = ss.CultureInfo.InvariantCulture;
+ss_CultureInfo.CurrentCulture = ss_CultureInfo.InvariantCulture;

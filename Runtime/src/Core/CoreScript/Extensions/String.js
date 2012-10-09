@@ -1,7 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // String Extensions
 
-String.registerClass('String');
+String.__typeName = 'String';
+String.__baseType = 'Object';
+String.__class = true;
 
 String.empty = '';
 
@@ -24,15 +26,15 @@ String.compare = function#? DEBUG String$compare##(s1, s2, ignoreCase) {
         return -1;
     }
     return 1;
-}
+};
 
 String.prototype.compareTo = function#? DEBUG String$compareTo##(s, ignoreCase) {
     return String.compare(this, s, ignoreCase);
-}
+};
 
 String.concat = function#? DEBUG String$concat##() {
     return Array.prototype.join.call(arguments, '');
-}
+};
 
 String.prototype.endsWith = function#? DEBUG String$endsWith##(suffix) {
     if (!suffix.length) {
@@ -42,11 +44,11 @@ String.prototype.endsWith = function#? DEBUG String$endsWith##(suffix) {
         return false;
     }
     return (this.substr(this.length - suffix.length) == suffix);
-}
+};
 
 String.equals = function#? DEBUG String$equals1##(s1, s2, ignoreCase) {
     return String.compare(s1, s2, ignoreCase) == 0;
-}
+};
 
 String._format = function#? DEBUG String$_format##(format, values, useLocale) {
     if (!String._formatRE) {
@@ -72,11 +74,11 @@ String._format = function#? DEBUG String$_format##(format, values, useLocale) {
                                   return useLocale ? value.toLocaleString() : value.toString();
                               }
                           });
-}
+};
 
 String.format = function#? DEBUG String$format##(format) {
     return String._format(format, arguments, /* useLocale */ false);
-}
+};
 
 String.fromChar = function#? DEBUG String$fromChar##(ch, count) {
     var s = ch;
@@ -84,19 +86,19 @@ String.fromChar = function#? DEBUG String$fromChar##(ch, count) {
         s += ch;
     }
     return s;
-}
+};
 
 String.prototype.htmlDecode = function#? DEBUG String$htmlDecode##() {
     var div = document.createElement('div');
     div.innerHTML = this;
     return div.textContent || div.innerText;
-}
+};
 
 String.prototype.htmlEncode = function#? DEBUG String$htmlEncode##() {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(this));
     return div.innerHTML.replace(/\"/g, '&quot;');
-}
+};
 
 String.prototype.indexOfAny = function#? DEBUG String$indexOfAny##(chars, startIndex, count) {
     var length = this.length;
@@ -119,7 +121,7 @@ String.prototype.indexOfAny = function#? DEBUG String$indexOfAny##(chars, startI
         }
     }
     return -1;
-}
+};
 
 String.prototype.insert = function#? DEBUG String$insert##(index, value) {
     if (!value) {
@@ -131,11 +133,11 @@ String.prototype.insert = function#? DEBUG String$insert##(index, value) {
     var s1 = this.substr(0, index);
     var s2 = this.substr(index);
     return s1 + value + s2;
-}
+};
 
 String.isNullOrEmpty = function#? DEBUG String$isNullOrEmpty##(s) {
     return !s || !s.length;
-}
+};
 
 String.prototype.lastIndexOfAny = function#? DEBUG String$lastIndexOfAny##(chars, startIndex, count) {
     var length = this.length;
@@ -158,11 +160,11 @@ String.prototype.lastIndexOfAny = function#? DEBUG String$lastIndexOfAny##(chars
         }
     }
     return -1;
-}
+};
 
 String.localeFormat = function#? DEBUG String$localeFormat##(format) {
     return String._format(format, arguments, /* useLocale */ true);
-}
+};
 
 String.prototype.padLeft = function#? DEBUG String$padLeft##(totalWidth, ch) {
     if (this.length < totalWidth) {
@@ -170,7 +172,7 @@ String.prototype.padLeft = function#? DEBUG String$padLeft##(totalWidth, ch) {
         return String.fromChar(ch, totalWidth - this.length) + this;
     }
     return this.valueOf();
-}
+};
 
 String.prototype.padRight = function#? DEBUG String$padRight##(totalWidth, ch) {
     if (this.length < totalWidth) {
@@ -178,19 +180,19 @@ String.prototype.padRight = function#? DEBUG String$padRight##(totalWidth, ch) {
         return this + String.fromChar(ch, totalWidth - this.length);
     }
     return this.valueOf();
-}
+};
 
 String.prototype.remove = function#? DEBUG String$remove##(index, count) {
     if (!count || ((index + count) > this.length)) {
         return this.substr(0, index);
     }
     return this.substr(0, index) + this.substr(index + count);
-}
+};
 
 String.prototype.replaceAll = function#? DEBUG String$replaceAll##(oldValue, newValue) {
     newValue = newValue || '';
     return this.split(oldValue).join(newValue);
-}
+};
 
 String.prototype.startsWith = function#? DEBUG String$startsWith##(prefix) {
     if (!prefix.length) {
@@ -200,18 +202,18 @@ String.prototype.startsWith = function#? DEBUG String$startsWith##(prefix) {
         return false;
     }
     return (this.substr(0, prefix.length) == prefix);
-}
+};
 
 if (!String.prototype.trim) {
     String.prototype.trim = function#? DEBUG String$trim##() {
         return this.trimEnd().trimStart();
-    }
+    };
 }
 
 String.prototype.trimEnd = function#? DEBUG String$trimEnd##() {
     return this.replace(/\s*$/, '');
-}
+};
 
 String.prototype.trimStart = function#? DEBUG String$trimStart##() {
     return this.replace(/^\s*/, '');
-}
+};

@@ -2,4 +2,5 @@
 // RegExp Extensions
 
 RegExp.__typeName = 'RegExp';
+RegExp.__baseType = Object;
 RegExp.__class = true;

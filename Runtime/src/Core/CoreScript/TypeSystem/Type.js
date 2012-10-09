@@ -3,20 +3,18 @@
 
 global.Type = Function;
 
-Type.registerNamespace = function#? DEBUG Type$registerNamespace##(name) {
-    var root = (__isModule ? exports : global);
-    if (!root.__namespaces) {
-        root.__namespaces = {};
+Type.registerType = function#? DEBUG Type$registerType##(root, typeName, type) {
+    if (!root.__types) {
+        root.__types = {};
     }
-
-    if (root.__namespaces[name]) {
+    if (root.__types[typeName]) {
         return;
     }
 
     var ns = root;
-    var nameParts = name.split('.');
+    var nameParts = typeName.split('.');
 
-    for (var i = 0; i < nameParts.length; i++) {
+    for (var i = 0; i < nameParts.length - 1; i++) {
         var part = nameParts[i];
         var nso = ns[part];
         if (!nso) {
@@ -24,8 +22,9 @@ Type.registerNamespace = function#? DEBUG Type$registerNamespace##(name) {
         }
         ns = nso;
     }
+    ns[nameParts[nameParts.length - 1]] = type;
 
-    root.__namespaces[name] = ns;
+    root.__types[typeName] = type;
 };
 
 Type.__genericCache = {};
@@ -48,15 +47,15 @@ Type.prototype.registerGenericClassInstance = function#? DEBUG Type$registerGene
 	Type.__genericCache[name] = instance;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	instance.registerClass(name, baseType(), interfaceTypes());
+	Type.registerClass(null, name, instance, baseType(), interfaceTypes());
 };
 
-Type.prototype.registerGenericInterfaceInstance = function#? DEBUG Type$registerGenericInstance##(instance, genericType, typeArguments, baseInterfaces) {
+Type.registerGenericInterfaceInstance = function#? DEBUG Type$registerGenericInstance##(instance, genericType, typeArguments, baseInterfaces) {
 	var name = Type._makeGenericTypeName(genericType, typeArguments);
 	Type.__genericCache[name] = instance;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	instance.registerInterface(name, baseInterfaces());
+	Type.registerInterface(null, name, instance, baseInterfaces());
 };
 
 Type.prototype.get_isGenericTypeDefinition = function#? DEBUG Type$get_isGenericTypeDefinition##() {
@@ -75,70 +74,85 @@ Type.prototype.getGenericArguments = function#? DEBUG Type$getGenericArguments##
     return this.__typeArguments || null;
 };
 
-Type.prototype.registerClass = function#? DEBUG Type$registerClass##(name, baseType, interfaceType) {
-    this.prototype.constructor = this;
-    this.__typeName = name;
-    this.__class = true;
-    this.__baseType = baseType || Object;
+Type.registerClass = function#? DEBUG Type$registerClass##(root, name, ctor, baseType, interfaceType) {
+	if (root)
+		Type.registerType(root, name, ctor);
+
+    ctor.prototype.constructor = ctor;
+    ctor.__typeName = name;
+    ctor.__class = true;
+    ctor.__baseType = baseType || Object;
     if (baseType) {
-        this.setupBase(baseType);
+        ctor.setupBase(baseType);
     }
 
 	if (interfaceType instanceof Array) {
-		this.__interfaces = interfaceType;
+		ctor.__interfaces = interfaceType;
 	}
 	else if (interfaceType) {
-        this.__interfaces = [];
-        for (var i = 2; i < arguments.length; i++) {
+        ctor.__interfaces = [];
+        for (var i = 4; i < arguments.length; i++) {
             interfaceType = arguments[i];
-            this.__interfaces.add(interfaceType);
+            ctor.__interfaces.add(interfaceType);
         }
     }
 };
 
-Type.prototype.registerGenericClass = function#? DEBUG Type$registerGenericClass##(name, typeArgumentCount) {
-    this.prototype.constructor = this;
-    this.__typeName = name;
-    this.__class = true;
-	this.__typeArgumentCount = typeArgumentCount;
-	this.__isGenericTypeDefinition = true;
-    this.__baseType = Object;
+Type.registerGenericClass = function#? DEBUG Type$registerGenericClass##(root, name, ctor, typeArgumentCount) {
+	if (root)
+		Type.registerType(root, name, ctor);
+
+    ctor.prototype.constructor = ctor;
+    ctor.__typeName = name;
+    ctor.__class = true;
+	ctor.__typeArgumentCount = typeArgumentCount;
+	ctor.__isGenericTypeDefinition = true;
+    ctor.__baseType = Object;
 };
 
-Type.prototype.registerInterface = function#? DEBUG Type$createInterface##(name, baseInterface) {
-    this.__typeName = name;
-    this.__interface = true;
+Type.registerInterface = function#? DEBUG Type$createInterface##(root, name, ctor, baseInterface) {
+	if (root)
+		Type.registerType(root, name, ctor);
+
+    ctor.__typeName = name;
+    ctor.__interface = true;
 	if (baseInterface instanceof Array) {
-		this.__interfaces = baseInterface;
+		ctor.__interfaces = baseInterface;
 	}
 	else if (baseInterface) {
-        this.__interfaces = [];
-        for (var i = 1; i < arguments.length; i++) {
-            this.__interfaces.add(arguments[i]);
+        ctor.__interfaces = [];
+        for (var i = 3; i < arguments.length; i++) {
+            ctor.__interfaces.add(arguments[i]);
         }
     }
 };
 
-Type.prototype.registerGenericInterface = function#? DEBUG Type$registerGenericClass##(name, typeArgumentCount) {
-    this.prototype.constructor = this;
-    this.__typeName = name;
-    this.__interface = true;;
-	this.__typeArgumentCount = typeArgumentCount;
-	this.__isGenericTypeDefinition = true;
+Type.registerGenericInterface = function#? DEBUG Type$registerGenericClass##(root, name, ctor, typeArgumentCount) {
+	if (root)
+		Type.registerType(root, name, ctor);
+
+    ctor.prototype.constructor = ctor;
+    ctor.__typeName = name;
+    ctor.__interface = true;;
+	ctor.__typeArgumentCount = typeArgumentCount;
+	ctor.__isGenericTypeDefinition = true;
 };
 
-Type.prototype.registerEnum = function#? DEBUG Type$createEnum##(name, flags) {
-    for (var field in this.prototype) {
-         this[field] = this.prototype[field];
+Type.prototype.registerEnum = function#? DEBUG Type$createEnum##(root, name, ctor, flags) {
+	if (root)
+		Type.registerType(root, name, ctor);
+
+    for (var field in ctor.prototype) {
+        ctor[field] = ctor.prototype[field];
     }
 
-    this.__typeName = name;
-    this.__enum = true;
+    ctor.__typeName = name;
+    ctor.__enum = true;
     if (flags) {
-        this.__flags = true;
+        ctor.__flags = true;
     }
-    this.getDefaultValue = this.createInstance = function() { return 0; };
-    this.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
+    ctor.getDefaultValue = ctor.createInstance = function() { return 0; };
+    ctor.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
 };
 
 Type.prototype.setupBase = function#? DEBUG Type$setupBase##() {
@@ -156,25 +170,6 @@ if (!Type.prototype.resolveInheritance) {
     // This function is not used by Script#; Visual Studio relies on it
     // for JavaScript IntelliSense support of derived types.
     Type.prototype.resolveInheritance = Type.prototype.setupBase;
-};
-
-Type.prototype.initializeBase = function#? DEBUG Type$initializeBase##(instance, args) {
-    if (!args) {
-        this.__baseType.apply(instance);
-    }
-    else {
-        this.__baseType.apply(instance, args);
-    }
-};
-
-Type.prototype.callBaseMethod = function#? DEBUG Type$callBaseMethod##(instance, name, args) {
-    var baseMethod = this.__baseType.prototype[name];
-    if (!args) {
-        return baseMethod.apply(instance);
-    }
-    else {
-        return baseMethod.apply(instance, args);
-    }
 };
 
 Type.prototype.get_baseType = function#? DEBUG Type$get_baseType##() {

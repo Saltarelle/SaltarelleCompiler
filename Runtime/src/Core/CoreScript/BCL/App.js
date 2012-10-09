@@ -1,17 +1,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Interfaces
 
-ss.IApplication = function() { };
-ss.IApplication.registerInterface('ss.IApplication');
+var ss_IApplication = function() { };
+Type.registerInterface(global, 'ss.IApplication', ss_IApplication);
 
-ss.IContainer = function () { };
-ss.IContainer.registerInterface('ss.IContainer');
+var ss_IContainer = function () { };
+Type.registerInterface(global, 'ss.IContainer', ss_IContainer);
 
-ss.IObjectFactory = function () { };
-ss.IObjectFactory.registerInterface('ss.IObjectFactory');
+var ss_IObjectFactory = function () { };
+Type.registerInterface(global, 'ss.IObjectFactory', ss_IObjectFactory);
 
-ss.IEventManager = function () { };
-ss.IEventManager.registerInterface('ss.IEventManager');
+var ss_IEventManager = function () { };
+Type.registerInterface(global, 'ss.IEventManager', ss_IEventManager);
 
-ss.IInitializable = function () { };
-ss.IInitializable.registerInterface('ss.IInitializable');
+var ss_IInitializable = function () { };
+Type.registerInterface(global, 'ss.IInitializable', ss_IInitializable);

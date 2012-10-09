@@ -15,13 +15,12 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 		[Test]
 		public void NonGenericClassWithAllDataWorks() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = function(x) {
+var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	X;
 };
-{MyClass}.prototype = {
+$SomeNamespace_InnerNamespace_MyClass.prototype = {
 	m1: function(a) {
 		A;
 	},
@@ -29,20 +28,20 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 		B;
 	}
 };
-{MyClass}.ctor1 = function(y) {
+$SomeNamespace_InnerNamespace_MyClass.ctor1 = function(y) {
 	Y;
 };
-{MyClass}.ctor2 = function(z) {
+$SomeNamespace_InnerNamespace_MyClass.ctor2 = function(z) {
 	Z;
 };
-{MyClass}.ctor1.prototype = {MyClass}.ctor2.prototype = {MyClass}.prototype;
-{MyClass}.s1 = function(s) {
+$SomeNamespace_InnerNamespace_MyClass.ctor1.prototype = $SomeNamespace_InnerNamespace_MyClass.ctor2.prototype = $SomeNamespace_InnerNamespace_MyClass.prototype;
+$SomeNamespace_InnerNamespace_MyClass.s1 = function(s) {
 	S;
 };
-{MyClass}.s2 = function(t) {
+$SomeNamespace_InnerNamespace_MyClass.s2 = function(t) {
 	T;
 };
-{MyClass}.registerClass('SomeNamespace.InnerNamespace.MyClass', TheBaseClass, Interface1, Interface2, Interface3);
+{Type}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, TheBaseClass, Interface1, Interface2, Interface3);
 Q;
 R;
 ",			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
@@ -65,26 +64,25 @@ R;
 		[Test]
 		public void ClassWithoutInstanceMethodsOmitsAssignmentOfPrototype() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = function(x) {
+var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	X;
 };
-{MyClass}.ctor1 = function(y) {
+$SomeNamespace_InnerNamespace_MyClass.ctor1 = function(y) {
 	Y;
 };
-{MyClass}.ctor2 = function(z) {
+$SomeNamespace_InnerNamespace_MyClass.ctor2 = function(z) {
 	Z;
 };
-{MyClass}.ctor1.prototype = {MyClass}.ctor2.prototype = {MyClass}.prototype;
-{MyClass}.s1 = function(s) {
+$SomeNamespace_InnerNamespace_MyClass.ctor1.prototype = $SomeNamespace_InnerNamespace_MyClass.ctor2.prototype = $SomeNamespace_InnerNamespace_MyClass.prototype;
+$SomeNamespace_InnerNamespace_MyClass.s1 = function(s) {
 	S;
 };
-{MyClass}.s2 = function(t) {
+$SomeNamespace_InnerNamespace_MyClass.s2 = function(t) {
 	T;
 };
-{MyClass}.registerClass('SomeNamespace.InnerNamespace.MyClass', TheBaseClass, Interface1, Interface2, Interface3);
+{Type}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, TheBaseClass, Interface1, Interface2, Interface3);
 Q;
 R;
 ",			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
@@ -106,10 +104,10 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
-{MyClass} = function(x) {
+var $MyClass = function(x) {
 	X;
 };
-{MyClass}.registerClass('MyClass', TheBaseClass, Interface1, Interface2, Interface3);
+{Type}.registerClass(global, 'MyClass', $MyClass, TheBaseClass, Interface1, Interface2, Interface3);
 ",			new JsClass(CreateMockTypeDefinition("MyClass"), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
 				UnnamedConstructor = CreateFunction("x"),
 			});
@@ -118,13 +116,12 @@ R;
 		[Test]
 		public void ClassWithoutBaseClassButWithInterfacesPassesNullForTheBaseTypeInRegisterClass() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = function(x) {
+var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	X;
 };
-{MyClass}.registerClass('SomeNamespace.InnerNamespace.MyClass', null, Interface1, Interface2, Interface3);
+{Type}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, null, Interface1, Interface2, Interface3);
 ",			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
 				UnnamedConstructor = CreateFunction("x"),
 			});
@@ -133,13 +130,12 @@ R;
 		[Test]
 		public void ClassWithoutInterfacesWorks() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = function(x) {
+var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	X;
 };
-{MyClass}.registerClass('SomeNamespace.InnerNamespace.MyClass', TheBaseClass);
+{Type}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, TheBaseClass);
 ",			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new JsExpression[0]) {
 				UnnamedConstructor = CreateFunction("x"),
 			});
@@ -148,13 +144,12 @@ R;
 		[Test]
 		public void ClassWithoutBothBaseClassAndInterfacesOnlyPassTheNameToRegisterClass() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = function(x) {
+var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	X;
 };
-{MyClass}.registerClass('SomeNamespace.InnerNamespace.MyClass');
+{Type}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass);
 ",			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				UnnamedConstructor = CreateFunction("x"),
 			});
@@ -165,10 +160,10 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
-{IMyInterface} = function() {
+var $IMyInterface = function() {
 };
-{IMyInterface}.prototype = { m1: null, m2: null };
-{IMyInterface}.registerInterface('IMyInterface', [Interface1, Interface2, Interface3]);
+$IMyInterface.prototype = { m1: null, m2: null };
+{Type}.registerInterface(global, 'IMyInterface', $IMyInterface, [Interface1, Interface2, Interface3]);
 ",			new JsClass(CreateMockTypeDefinition("IMyInterface"), JsClass.ClassTypeEnum.Interface, null, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
 				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, null),
 				                    new JsMethod(CreateMockMethod("M2"), "m2", null, null),
@@ -181,19 +176,18 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
-{MyClass} = function() {
+var $MyClass = function() {
 };
-{MyClass}.registerClass('MyClass');
+{Type}.registerClass(global, 'MyClass', $MyClass);
 ",			new JsClass(CreateMockTypeDefinition("MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]));
 		}
 
 		[Test]
 		public void GenericClassWorks() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = function(T1, T2) {
+var $SomeNamespace_InnerNamespace_MyClass = function(T1, T2) {
 	var $type = function(x) {
 		X;
 	};
@@ -218,7 +212,7 @@ R;
 	$type.s2 = function(t) {
 		T;
 	};
-	$type.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
+	{Type}.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
 		return $InstantiateGenericType(TheBaseClass, T1);
 	}, function() {
 		return [Interface1, $InstantiateGenericType(Interface2, T2, Int32), Interface3];
@@ -227,7 +221,7 @@ R;
 	R;
 	return $type;
 };
-{MyClass}.registerGenericClass('SomeNamespace.InnerNamespace.MyClass', 2);
+{Type}.registerGenericClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, 2);
 ",			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, new[] { "T1", "T2" }, JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), JsExpression.Identifier("TheBaseClass"), JsExpression.Identifier("T1")), new JsExpression[] { JsExpression.Identifier("Interface1"), JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("T2"), JsExpression.Identifier("Int32")), JsExpression.Identifier("Interface3") }) {
 				UnnamedConstructor = CreateFunction("x"),
 				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
@@ -250,16 +244,16 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
-{IMyInterface} = function(T1, T2) {
+var $IMyInterface = function(T1, T2) {
 	var $type = function() {
 	};
 	$type.prototype = { m1: null, m2: null };
-	$type.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2], function() {
+	{Type}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2], function() {
 		return [Interface1, Interface2, Interface3];
 	});
 	return $type;
 };
-{IMyInterface}.registerGenericInterface('IMyInterface', 2);
+{Type}.registerGenericInterface(global, 'IMyInterface', $IMyInterface, 2);
 ",			new JsClass(CreateMockTypeDefinition("IMyInterface"), JsClass.ClassTypeEnum.Interface, new[] { "T1", "T2" }, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
 				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, null),
 				                    new JsMethod(CreateMockMethod("M2"), "m2", null, null),
@@ -272,16 +266,16 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
-{MyClass} = function() {
+var $MyClass = function() {
 };
-{MyClass}.prototype = {
+$MyClass.prototype = {
 	m1: function(T1, T2) {
 		return function(x) {
 			X;
 		};
 	}
 };
-{MyClass}.registerClass('MyClass');
+{Type}.registerClass(global, 'MyClass', $MyClass);
 ",			new JsClass(CreateMockTypeDefinition("MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", new[] { "T1", "T2" }, CreateFunction("x")) }
 			});
@@ -292,14 +286,14 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
-{MyClass} = function() {
+var $MyClass = function() {
 };
-{MyClass}.m1 = function(T1, T2) {
+$MyClass.m1 = function(T1, T2) {
 	return function(x) {
 		X;
 	};
 };
-{MyClass}.registerClass('MyClass');
+{Type}.registerClass(global, 'MyClass', $MyClass);
 ",			new JsClass(CreateMockTypeDefinition("MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				StaticMethods = { new JsMethod(CreateMockMethod("M1"), "m1", new[] { "T1", "T2" }, CreateFunction("x")) }
 			});
@@ -310,10 +304,10 @@ R;
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-s1 = function(s) {
+global.s1 = function(s) {
 	S;
 };
-s2 = function(t) {
+global.s2 = function(t) {
 	T;
 };
 Q;
@@ -332,10 +326,10 @@ R;
 		[Test]
 		public void ResourcesAttributeCausesAResourcesClassToBeGenerated() {
 			AssertCorrect(
-@"{Type}.registerNamespace('SomeNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
-{MyClass} = { Field1: 'the value', Field2: 123, Field3: null };
+var $SomeNamespace_InnerNamespace_MyClass = { Field1: 'the value', Field2: 123, Field3: null };
+{Type}.registerType(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass);
 ",          new MockScriptSharpMetadataImporter { IsResources = t => t.FullName == "SomeNamespace.InnerNamespace.MyClass" },
 			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
@@ -371,9 +365,9 @@ $.fn.method2 = function(y) {
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
-{MyClass} = function() {
+var $MyClass = function() {
 };
-{MyClass}.prototype = {
+$MyClass.prototype = {
 	normalMethod: function(y) {
 		Y;
 	},
@@ -392,7 +386,7 @@ $.fn.method2 = function(y) {
 		}, this));
 	}
 };
-{MyClass}.registerClass('MyClass');
+{Type}.registerClass(global, 'MyClass', $MyClass);
 ",          new MockScriptSharpMetadataImporter { IsTestFixture = t => t.FullName == "MyClass", GetTestData = m => m.Name.Contains("TestMethod") ? new TestMethodData(m.Name + " description", null, m.Name.Contains("Async"), m.Name.Contains("AssertionCount") ? 3 : (int?)null) : null },
 			new JsClass(CreateMockTypeDefinition("MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				InstanceMethods = { new JsMethod(CreateMockMethod("TestMethod"), "testMethod", null, CreateFunction("x1")),
@@ -409,9 +403,9 @@ $.fn.method2 = function(y) {
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
-{MyClass} = function() {
+var $MyClass = function() {
 };
-{MyClass}.prototype = {
+$MyClass.prototype = {
 	runTests: function() {
 		test('Test1 description', $Bind(function(x1) {
 			X1;
@@ -435,7 +429,7 @@ $.fn.method2 = function(y) {
 		}, this));
 	}
 };
-{MyClass}.registerClass('MyClass');
+{Type}.registerClass(global, 'MyClass', $MyClass);
 ",          new MockScriptSharpMetadataImporter { IsTestFixture = t => t.FullName == "MyClass", GetTestData = m => { int idx = m.Name.IndexOf("X"); return new TestMethodData(m.Name.Substring(idx + 1) + " description", idx >= 0 ? m.Name.Substring(0, idx) : null, false, null); } },
 			new JsClass(CreateMockTypeDefinition("MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				InstanceMethods = { new JsMethod(CreateMockMethod("Test1"), "test1", null, CreateFunction("x1")),

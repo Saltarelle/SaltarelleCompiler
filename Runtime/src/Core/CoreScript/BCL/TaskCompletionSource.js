@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // TaskCompletionSource
 
-ss.TaskCompletionSource = function#? DEBUG TaskCompletionSource$##() {
-	this.task = new ss.Task();
+var ss_TaskCompletionSource = function#? DEBUG TaskCompletionSource$##() {
+	this.task = new ss_Task();
 	this.task.status = 3;
 };
-ss.TaskCompletionSource.prototype = {
+ss_TaskCompletionSource.prototype = {
 	setCanceled: function#? DEBUG TaskCompletionSource$setCanceled##() {
 		if (!this.task._cancel())
 			throw 'Task was already completed.';
@@ -25,13 +25,13 @@ ss.TaskCompletionSource.prototype = {
 		return this.task._complete(result);
 	},
 	trySetException: function#? DEBUG TaskCompletionSource$setException##(exception) {
-		if (!Type.canCast(exception, ss.AggregateException)) {
-			if (Type.canCast(exception, ss.Exception))
+		if (!Type.canCast(exception, ss_AggregateException)) {
+			if (Type.canCast(exception, ss_Exception))
 				exception = [exception];
-			exception = new ss.AggregateException(exception);
+			exception = new ss_AggregateException(exception);
 		}
 		return this.task._fail(exception);
 	}
 };
 
-ss.TaskCompletionSource.registerClass('ss.TaskCompletionSource');
+Type.registerClass(global, 'ss.TaskCompletionSource', ss_TaskCompletionSource);

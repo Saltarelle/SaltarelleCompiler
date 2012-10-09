@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ArrayEnumerator
 
-ss.ArrayEnumerator = function#? DEBUG ArrayEnumerator$##(array) {
+var ss_ArrayEnumerator = function#? DEBUG ArrayEnumerator$##(array) {
     this._array = array;
     this._index = -1;
-}
-ss.ArrayEnumerator.prototype = {
+};
+ss_ArrayEnumerator.prototype = {
     moveNext: function#? DEBUG ArrayEnumerator$moveNext##() {
         this._index++;
         return (this._index < this._array.length);
@@ -20,6 +20,6 @@ ss.ArrayEnumerator.prototype = {
 	},
     dispose: function#? DEBUG ArrayEnumerator$dispose##() {
     }
-}
+};
 
-ss.ArrayEnumerator.registerClass('ss.ArrayEnumerator', null, [ss.IEnumerator, ss.IDisposable]);
+Type.registerClass(global, 'ss.ArrayEnumerator', ss_ArrayEnumerator, null, [ss_IEnumerator, ss_IDisposable]);

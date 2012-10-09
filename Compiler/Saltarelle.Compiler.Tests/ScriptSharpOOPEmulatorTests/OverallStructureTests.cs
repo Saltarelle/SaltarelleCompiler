@@ -14,19 +14,18 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 		[Test]
 		public void TheOverallStructureIsCorrect() {
 			AssertCorrect(
-@"{Type}.registerNamespace('OuterNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeEnum
-{SomeEnum} = function() {
+var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
-{SomeEnum}.prototype = { Value1: 1, Value2: 2, Value3: 3 };
-{SomeEnum}.registerEnum('OuterNamespace.InnerNamespace.SomeEnum', false);
+$OuterNamespace_InnerNamespace_SomeEnum.prototype = { Value1: 1, Value2: 2, Value3: 3 };
+{Type}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum, false);
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
-{SomeType} = function() {
+var $OuterNamespace_InnerNamespace_SomeType = function() {
 	this.a = 0;
 };
-{SomeType}.prototype = {
+$OuterNamespace_InnerNamespace_SomeType.prototype = {
 	method1: function(x) {
 		return x;
 	},
@@ -34,39 +33,38 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 		return x + y;
 	}
 };
-{SomeType}.staticMethod = function() {
+$OuterNamespace_InnerNamespace_SomeType.staticMethod = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType2
-{SomeType2} = function() {
+var $OuterNamespace_InnerNamespace_SomeType2 = function() {
 	this.b = 0;
 };
-{SomeType2}.prototype = {
+$OuterNamespace_InnerNamespace_SomeType2.prototype = {
 	method1: function(x) {
 		return x;
 	}
 };
-{SomeType2}.otherStaticMethod = function() {
+$OuterNamespace_InnerNamespace_SomeType2.otherStaticMethod = function() {
 };
-{Type}.registerNamespace('OuterNamespace.InnerNamespace2');
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherInterface
-{OtherInterface} = function() {
+var $OuterNamespace_InnerNamespace2_OtherInterface = function() {
 };
-{OtherInterface}.prototype = { interfaceMethod: null };
+$OuterNamespace_InnerNamespace2_OtherInterface.prototype = { interfaceMethod: null };
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherType
-{OtherType} = function() {
+var $OuterNamespace_InnerNamespace2_OtherType = function() {
 };
-{OtherType}.prototype = {
+$OuterNamespace_InnerNamespace2_OtherType.prototype = {
 	method1: function(x) {
 		return x;
 	}
 };
-{SomeType}.registerClass('OuterNamespace.InnerNamespace.SomeType');
-{SomeType2}.registerClass('OuterNamespace.InnerNamespace.SomeType2');
-{OtherInterface}.registerInterface('OuterNamespace.InnerNamespace2.OtherInterface', []);
-{OtherType}.registerClass('OuterNamespace.InnerNamespace2.OtherType', {SomeType2});
+{Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType', $OuterNamespace_InnerNamespace_SomeType);
+{Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
+{Type}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface, []);
+{Type}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
 y = 1;
 x = 1;
 ",
@@ -141,24 +139,24 @@ class C1 : C2, I1 {}
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // C1
-{C1} = function() {
+var $C1 = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // C2
-{C2} = function() {
+var $C2 = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // C3
-{C3} = function() {
+var $C3 = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // I1
-{I1} = function() {
+var $I1 = function() {
 };
-{C3}.registerClass('C3');
-{I1}.registerInterface('I1', []);
-{C2}.registerClass('C2', {C3});
-{C1}.registerClass('C1', {C2}, {I1});
+{Type}.registerClass(global, 'C3', $C3);
+{Type}.registerInterface(global, 'I1', $I1, []);
+{Type}.registerClass(global, 'C2', $C2, {C3});
+{Type}.registerClass(global, 'C1', $C1, {C2}, {I1});
 ",			
 			
 				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C2")), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockType("I1")) }),
@@ -182,24 +180,24 @@ class A : B<int>, I<int> {}
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // A
-{A} = function() {
+var $A = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // B
-{B} = function() {
+var $B = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // I
-{I} = function() {
+var $I = function() {
 };
-{B}.registerClass('B');
-{I}.registerClass('I');
-{A}.registerClass('A', {C}, {I});
+{Type}.registerClass(global, 'B', $B);
+{Type}.registerInterface(global, 'I', $I, []);
+{Type}.registerClass(global, 'A', $A, {C}, {I});
 ",			
 			
 				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C")), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockType("I")) }),
 				new JsClass(ReflectionHelper.ParseReflectionName("B`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
-				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]));
+				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
 		}
 
 		[Test]

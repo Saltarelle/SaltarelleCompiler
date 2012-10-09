@@ -15,6 +15,7 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulator;
 using Saltarelle.Compiler.ReferenceImporter;
 using Saltarelle.Compiler.RuntimeLibrary;
@@ -246,7 +247,11 @@ namespace Saltarelle.Compiler.Driver {
 						}
 					}
 
-					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(Minifier.Process(s)) : OutputFormatter.Format(s)));
+					if (options.MinimizeScript) {
+						js = ((JsBlockStatement)Minifier.Process(new JsBlockStatement(js))).Statements;
+					}
+
+					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
 					try {
 						File.WriteAllText(outputScriptPath, script, settings.Encoding);
 					}

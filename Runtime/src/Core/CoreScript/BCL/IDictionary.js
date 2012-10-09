@@ -1,9 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IDictionary
 
-ss.IDictionary = function#? DEBUG IDictionary$##() { };
-#if DEBUG
-ss.IDictionary.prototype = {
+var ss_IDictionary = function#? DEBUG IDictionary$##() { };
+ss_IDictionary.prototype = {
 	get_item: null,
 	set_item: null,
 	get_keys: null,
@@ -12,7 +11,6 @@ ss.IDictionary.prototype = {
 	add: null,
 	remove: null,
 	tryGetValue: null
-}
-#endif // DEBUG
+};
 
-ss.IDictionary.registerInterface('ss.IDictionary', [ss.IEnumerable]);
+Type.registerInterface(global, 'ss.IDictionary', ss_IDictionary, [ss_IEnumerable]);

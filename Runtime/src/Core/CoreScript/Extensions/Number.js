@@ -5,7 +5,7 @@ Number.__typeName = 'Number';
 
 Number.getDefaultValue = Number.createInstance = function#? DEBUG Number$getDefaultValue##() {
 	return 0;
-}
+};
 
 Number.parse = function#? DEBUG Number$parse##(s) {
     if (!s || !s.length) {
@@ -16,21 +16,21 @@ Number.parse = function#? DEBUG Number$parse##(s) {
         return parseFloat(s);
     }
     return parseInt(s, 10);
-}
+};
 
 Number.prototype.format = function#? DEBUG Number$format##(format) {
     if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
         return this.toString();
     }
     return this._netFormat(format, false);
-}
+};
 
 Number.prototype.localeFormat = function#? DEBUG Number$format##(format) {
     if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
         return this.toLocaleString();
     }
     return this._netFormat(format, true);
-}
+};
 
 Number._commaFormat = function#? DEBUG Number$_commaFormat##(number, groups, decimal, comma) {
     var decimalPart = null;
@@ -86,10 +86,10 @@ Number._commaFormat = function#? DEBUG Number$_commaFormat##(number, groups, dec
         s = '-' + s;
     }    
     return decimalPart ? s + decimalPart : s;
-}
+};
 
 Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLocale) {
-    var nf = useLocale ? ss.CultureInfo.CurrentCulture.numberFormat : ss.CultureInfo.InvariantCulture.numberFormat;
+    var nf = useLocale ? ss_CultureInfo.CurrentCulture.numberFormat : ss_CultureInfo.InvariantCulture.numberFormat;
 
     var s = '';    
     var precision = -1;
@@ -180,4 +180,4 @@ Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLo
     }
 
     return s;
-}
+};
