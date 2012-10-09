@@ -251,7 +251,7 @@
     <Compile Include="OutputFormatterTests\ParenthesationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CompilerTests\TypeConversionTests.cs" />
-    <Compile Include="ReferenceImporterTests\DefaultReferenceImporterTests.cs" />
+    <Compile Include="LinkerTests\DefaultLinkerTests.cs" />
     <Compile Include="RuntimeLibraryTests\ExceptionTests.cs" />
     <Compile Include="RuntimeLibraryTests\NumberTests.cs" />
     <Compile Include="RuntimeLibraryTests\MiscTests.cs" />

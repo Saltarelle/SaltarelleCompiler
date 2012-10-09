@@ -10,12 +10,12 @@ using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.MetadataImporter;
-using Saltarelle.Compiler.ReferenceImporter;
+using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.Tests.ReferenceImporterTests {
+namespace Saltarelle.Compiler.Tests.LinkerTestsTests {
 	[TestFixture]
-	public class DefaultReferenceImporterTests {
+	public class DefaultLinkerTests {
 		private ITypeDefinition CreateMockType(string fullName, IAssembly parentAssembly) {
 			var mock = Common.CreateTypeMock(fullName);
 			mock.SetupGet(_ => _.ParentAssembly).Returns(parentAssembly);
@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceImporterTests {
 		}
 
 		private string Process(IList<JsStatement> stmts, IScriptSharpMetadataImporter metadata = null, INamer namer = null, IAssembly mainAssembly = null) {
-			var obj = new DefaultReferenceImporter(metadata ?? new MockScriptSharpMetadataImporter(), namer ?? new MockNamer());
+			var obj = new DefaultLinker(metadata ?? new MockScriptSharpMetadataImporter(), namer ?? new MockNamer());
 			var processed = obj.ImportReferences(stmts, mainAssembly ?? new Mock<IAssembly>().Object);
 			return string.Join("", processed.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 		}
@@ -193,7 +193,7 @@ for (w = 0, x; w < 1; w++) {
 for (var y = 0, z; w < 1; w++) {
 }
 ");
-			var actual = DefaultReferenceImporter.UsedSymbolsGatherer.Analyze(program);
+			var actual = DefaultLinker.UsedSymbolsGatherer.Analyze(program);
 			Assert.That(actual, Is.EquivalentTo(new[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" }));
 		}
 	}

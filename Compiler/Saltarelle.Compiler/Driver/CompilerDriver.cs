@@ -17,7 +17,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulator;
-using Saltarelle.Compiler.ReferenceImporter;
+using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.RuntimeLibrary;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
@@ -218,7 +218,7 @@ namespace Saltarelle.Compiler.Driver {
 					var compiledTypes = compiler.Compile(compilation);
 
 					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Rewrite(compiledTypes, compilation.Compilation);
-					js = new DefaultReferenceImporter(md, n).ImportReferences(js, compilation.Compilation.MainAssembly);
+					js = new DefaultLinker(md, n).ImportReferences(js, compilation.Compilation.MainAssembly);
 
 					if (er.HasErrors)
 						return false;

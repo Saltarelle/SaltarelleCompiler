@@ -223,7 +223,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return result;
 		}
 
-		private JsExpression GetRoot(ITypeDefinition type, bool exportNonPublic) {
+		private JsExpression GetRoot(ITypeDefinition type, bool exportNonPublic = false) {
 			if (!exportNonPublic && !Utils.IsPublic(type))
 				return JsExpression.Null;
 			else
