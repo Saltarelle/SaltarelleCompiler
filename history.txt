@@ -1,10 +1,11 @@
+Added support for generating executables, which will invoke the static Main entry point (command line -t:exe, task property TargetType).
 Allow invalid identifiers in [ScriptName] and similar attribute. This will generate indexing expressions rather than dot-notation for those members.
 foreach over ElementCollection and List<T> will now use a for loop. The [EnumerateAsArrayAttribute] controls this behaviour.
 Casting undefined to another type now returns undefined (instead of throwing an error).
 Can now specify PreseveMemberCase(false) on types to ignore the effect of a PreserveMemberCaseAttribute on the assembly.
 Node.js support: mscorlib works in Node, and there is a Node.js import library.
 Allow members other than methods in [GlobalMethods] classes. All members in such classes will be treated as gloabls (or module globals).
-Added support for CommonJS require (for now only for imports)
+Added support for CommonJS require
 
 1.4.0
 Implemented support for async/await.
