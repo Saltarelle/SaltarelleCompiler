@@ -10,7 +10,7 @@ using com.gargoylesoftware.htmlunit.html;
 namespace RuntimeLibrary.Tests
 {
 	public abstract class TestBase {
-        private static readonly Lazy<string> _mscorlibScriptLazy = new Lazy<string>(() => File.ReadAllText(@"..\..\..\..\bin\Script\mscorlib.debug.js"));
+        private static readonly Lazy<string> _mscorlibScriptLazy = new Lazy<string>(() => File.ReadAllText(@"..\..\..\..\bin\Script\mscorlib.js"));
 		internal static string MscorlibScript { get { return _mscorlibScriptLazy.Value; } }
 
         private static readonly Lazy<string> _qunitCss = new Lazy<string>(() => File.ReadAllText(@"..\..\..\Libraries\CoreLib\qunit-1.9.0.css"));

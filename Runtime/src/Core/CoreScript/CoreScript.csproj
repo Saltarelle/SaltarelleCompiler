@@ -59,9 +59,9 @@
     <Content Include="BCL\AggregateException.js" />
   </ItemGroup>
   <Target Name="Build">
-    <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.debug.js" />
+    <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.js" />
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /stripCommentsOnly /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.rel.js" />
-    <Exec Command="$(ToolsPath)\ajaxmin.exe -clobber:true $(OutputPath)\mscorlib.rel.js -out $(OutputPath)\mscorlib.js" />
+    <Exec Command="$(ToolsPath)\ajaxmin.exe -clobber:true $(OutputPath)\mscorlib.rel.js -out $(OutputPath)\mscorlib.min.js" />
   </Target>
   <Target Name="Clean">
   </Target>

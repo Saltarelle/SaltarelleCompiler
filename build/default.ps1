@@ -124,7 +124,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\bin\mscorlib.dll" target="tools\Assemblies"/>
 		<file src="$baseDir\Runtime\bin\mscorlib.xml" target="tools\Assemblies"/>
 		<file src="$baseDir\Runtime\bin\Script\mscorlib.js" target=""/>
-		<file src="$baseDir\Runtime\bin\Script\mscorlib.debug.js" target=""/>
+		<file src="$baseDir\Runtime\bin\Script\mscorlib.min.js" target=""/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.js" target=""/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.css" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
@@ -178,7 +178,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\bin\SSLoader.dll" target="lib"/>
 		<file src="$baseDir\Runtime\bin\SSLoader.xml" target="lib"/>
 		<file src="$baseDir\Runtime\bin\Script\ssloader.js" target=""/>
-		<file src="$baseDir\Runtime\bin\Script\ssloader.debug.js" target=""/>
+		<file src="$baseDir\Runtime\bin\Script\ssloader.min.js" target=""/>
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\Loader.nuspec"
