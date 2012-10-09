@@ -36,6 +36,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
 		private const string BindThisToFirstParameterAttribute      = "System.Runtime.CompilerServices.BindThisToFirstParameterAttribute";
 		private const string ModuleNameAttribute                    = "System.Runtime.CompilerServices.ModuleNameAttribute";
+		private const string AsyncModuleAttribute                   = "System.Runtime.CompilerServices.AsyncModuleAttribute";
 		private const string EnumerateAsArrayAttribute              = "System.Runtime.CompilerServices.EnumerateAsArrayAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
@@ -178,6 +179,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private bool _omitDowncasts;
 		private bool _omitNullableChecks;
 		private string _mainModuleName;
+		private bool _isAsyncModule;
 
 		private readonly bool _minimizeNames;
 
@@ -1291,6 +1293,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var mna = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, ModuleNameAttribute);
 			_mainModuleName = (mna != null && !string.IsNullOrEmpty((string)mna[0]) ? (string)mna[0] : null);
 
+			_isAsyncModule = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, AsyncModuleAttribute) != null;
+
 			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
 					ProcessType(t);
@@ -1460,6 +1464,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		public string MainModuleName {
 			get { return _mainModuleName; }
+		}
+
+		public bool IsAsyncModule {
+			get { return _isAsyncModule; }
 		}
 	}
 }

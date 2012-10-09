@@ -43,5 +43,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		/// The value of any [assembly: ModuleName] attribute.
 		/// </summary>
 		string MainModuleName { get; }
+
+		/// <summary>
+		/// Whether the module being compiled is an AMD module.
+		/// </summary>
+		bool IsAsyncModule { get; }
 	}
 }

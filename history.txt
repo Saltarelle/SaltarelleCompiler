@@ -1,3 +1,4 @@
+Added Support for AMD (AsyncModuleAttribute)
 Added support for generating executables, which will invoke the static Main entry point (command line -t:exe, task property TargetType).
 Allow invalid identifiers in [ScriptName] and similar attribute. This will generate indexing expressions rather than dot-notation for those members.
 foreach over ElementCollection and List<T> will now use a for loop. The [EnumerateAsArrayAttribute] controls this behaviour.

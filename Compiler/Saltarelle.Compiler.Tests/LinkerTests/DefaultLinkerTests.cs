@@ -169,6 +169,51 @@ $mymodule.a;
 		}
 
 		[Test]
+		public void AsyncModuleWithoutReferencesWorks() {
+			var asm = CreateMockAssembly();
+			var type = CreateMockType("GlobalType", asm);
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
+			    new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(CreateMockType("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))), 
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))), IsAsyncModule = true });
+
+			AssertCorrect(actual,
+@"define(['mscorlib'], function($_) {
+	var exports = {};
+	$$GlobalType;
+	$$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
+	return exports;
+});
+");
+		}
+
+		[Test]
+		public void AsyncModuleWithReferencesWorks() {
+			var asm = CreateMockAssembly();
+			var t1 = CreateMockType("SomeNamespace.InnerNamespace.Type1", asm);
+			var t2 = CreateMockType("SomeNamespace.InnerNamespace.Type2", asm);
+			var t3 = CreateMockType("SomeNamespace.Type3", asm);
+			var t4 = CreateMockType("Type4", asm);
+			var md = new MockScriptSharpMetadataImporter { GetModuleName = t => t.Name == "Type1" || t.Name == "Type3" ? "module1" : (t.Name == "Type2" ? "module2" : "module3"), IsAsyncModule = true };
+
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "a"), JsExpression.Member(new JsTypeReferenceExpression(t2), "b"))),
+				new JsExpressionStatement(JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t3), "c"), JsExpression.Member(new JsTypeReferenceExpression(t4), "d"))),
+				new JsExpressionStatement(JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "e"), JsExpression.Member(new JsTypeReferenceExpression(t4), "f"))),
+			}, metadata: md);
+
+			AssertCorrect(actual,
+@"define(['mscorlib', 'module1', 'module2', 'module3'], function($_, $module1, $module2, $module3) {
+	var exports = {};
+	$module1.SomeNamespace.InnerNamespace.Type1.a + $module2.SomeNamespace.InnerNamespace.Type2.b;
+	$module1.SomeNamespace.Type3.c + $module3.Type4.d;
+	$module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
+	return exports;
+});
+");
+		}
+
+		[Test]
 		public void GeneratedModuleAliasesAreValidAndDoNotClashWithEachOtherOrUsedSymbols() {
 			var asm = CreateMockAssembly();
 			var t1 = CreateMockType("Type1", asm);

@@ -442,6 +442,17 @@ namespace System.Runtime.CompilerServices {
 	}
 	
 	/// <summary>
+	/// When specified on an assembly, Javascript that adheres to the AMD pattern (require/define) will be generated.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[NonScriptable]
+	[Imported]
+	public sealed class AsyncModuleAttribute : Attribute {	
+		public AsyncModuleAttribute() {
+		}
+	}
+
+	/// <summary>
 	/// Can be applied to a GetEnumerator() method to indicate that that array-style enumeration should be used.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]

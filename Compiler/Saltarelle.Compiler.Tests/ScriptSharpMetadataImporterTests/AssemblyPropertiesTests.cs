@@ -42,5 +42,13 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			Prepare("using System.Runtime.CompilerServices; [assembly: ModuleName(\"\")] class C {}");
 			Assert.That(Metadata.MainModuleName, Is.Null);
 		}
+
+		[Test]
+		public void AsyncModuleWorks() {
+			Prepare("using System.Runtime.CompilerServices; class C {}");
+			Assert.That(Metadata.IsAsyncModule, Is.False);
+			Prepare("using System.Runtime.CompilerServices; [assembly: AsyncModule] class C {}");
+			Assert.That(Metadata.IsAsyncModule, Is.True);
+		}
 	}
 }

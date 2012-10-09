@@ -153,9 +153,29 @@ namespace Saltarelle.Compiler.Linker {
 			}
 
 			public static IList<JsStatement> Process(IScriptSharpMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, IList<JsStatement> statements) {
-				var importer = new ImportVisitor(metadataImporter, namer, mainAssembly, UsedSymbolsGatherer.Analyze(statements));
+				var usedSymbols = UsedSymbolsGatherer.Analyze(statements);
+				var importer = new ImportVisitor(metadataImporter, namer, mainAssembly, usedSymbols);
 				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
-				if (importer._moduleAliases.Count > 0) {
+				if (metadataImporter.IsAsyncModule) {
+					body.Insert(0, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()));
+					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
+
+					var pairs = new[] { new KeyValuePair<string, string>("mscorlib", namer.GetVariableName("_", usedSymbols)) }.Concat(importer._moduleAliases.OrderBy(x => x.Key)).ToList();
+
+					body = new List<JsStatement> {
+						new JsExpressionStatement(
+							JsExpression.Invocation(
+								JsExpression.Identifier("define"),
+								JsExpression.ArrayLiteral(pairs.Select(p => JsExpression.String(p.Key))),
+								JsExpression.FunctionDefinition(
+									pairs.Select(p => p.Value),
+									new JsBlockStatement(body)
+								)
+							)
+						)
+					};
+				}
+				else if (importer._moduleAliases.Count > 0) {
 					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
 					body.InsertRange(0, new[] { (JsStatement)new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib"))) }
 					                    .Concat(importer._moduleAliases.OrderBy(x => x.Key)
