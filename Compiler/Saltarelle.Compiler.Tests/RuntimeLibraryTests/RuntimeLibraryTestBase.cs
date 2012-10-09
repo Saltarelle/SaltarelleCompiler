@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
 		private enum OutputType { None, GeneratedScript, Html };
 
-		private OutputType Output = OutputType.GeneratedScript;
+		private OutputType Output = OutputType.None;
 
 		protected void AssertStringsEqual(string expected, string actual) {
 			Assert.That(expected.Replace("\r\n", "\n"), Is.EqualTo(actual.Replace("\r\n", "\n")));
