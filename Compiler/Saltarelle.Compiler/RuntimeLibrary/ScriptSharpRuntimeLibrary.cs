@@ -15,17 +15,33 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		private readonly IErrorReporter _errorReporter;
 		private readonly Func<ITypeParameter, string> _getTypeParameterName;
 		private readonly Func<ITypeReference, JsExpression> _createTypeReferenceExpression;
+		private readonly JsExpression _systemScript;
+		private readonly JsExpression _systemDelegate;
+		private readonly JsExpression _systemType;
+		private readonly JsExpression _systemArray;
+		private readonly JsExpression _systemObject;
+		private readonly JsExpression _systemException;
+		private readonly JsExpression _systemInt32;
+		private readonly JsExpression _systemNullableOfT;
 
 		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, IErrorReporter errorReporter, Func<ITypeParameter, string> getTypeParameterName, Func<ITypeReference, JsExpression> createTypeReferenceExpression) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 			_getTypeParameterName = getTypeParameterName;
 			_createTypeReferenceExpression = createTypeReferenceExpression;
+			_systemScript      = _createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script"));
+			_systemDelegate    = _createTypeReferenceExpression(KnownTypeReference.Delegate);
+			_systemType        = _createTypeReferenceExpression(KnownTypeReference.Type);
+			_systemArray       = _createTypeReferenceExpression(KnownTypeReference.Array);
+			_systemObject      = _createTypeReferenceExpression(KnownTypeReference.Object);
+			_systemException   = _createTypeReferenceExpression(KnownTypeReference.Exception);
+			_systemInt32       = _createTypeReferenceExpression(KnownTypeReference.Int32);
+			_systemNullableOfT = _createTypeReferenceExpression(KnownTypeReference.NullableOfT);
 		}
 
 		public JsExpression GetScriptType(IType type, TypeContext context) {
 			if (type.Kind == TypeKind.Delegate) {
-				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
+				return _systemDelegate;
 			}
 			else if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
 				// This handles open generic types ( typeof(C<,>) )
@@ -36,7 +52,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				return _createTypeReferenceExpression(def.EnumUnderlyingType.ToTypeReference());
 			}
 			else if (type.Kind == TypeKind.Array) {
-				return _createTypeReferenceExpression(KnownTypeReference.Array);
+				return _systemArray;
 			}
 			else if (type is ITypeParameter) {
 				return JsExpression.Identifier(_getTypeParameterName((ITypeParameter)type));
@@ -46,7 +62,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				var def = pt.GetDefinition();
 				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+					return JsExpression.Invocation(JsExpression.Member(_systemType, "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				else
 					return GetScriptType(def, context);
 			}
@@ -59,14 +75,14 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else
-						return _createTypeReferenceExpression(KnownTypeReference.Object);
+						return _systemObject;
 				}
 				else {
 					var sem = _metadataImporter.GetTypeSemantics(td);
 					var jsref = _createTypeReferenceExpression(td.ToTypeReference());
 					if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
 						// This handles the case of resolving the current type, eg. to access a static member.
-						return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+						return JsExpression.Invocation(JsExpression.Member(_systemType, "makeGenericType"), _createTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 					}
 					else {
 						return jsref;
@@ -74,7 +90,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				}
 			}
 			else if (type.Kind == TypeKind.Anonymous || type.Kind == TypeKind.Null || type.Kind == TypeKind.Dynamic) {
-				return _createTypeReferenceExpression(KnownTypeReference.Object);
+				return _systemObject;
 			}
 			else {
 				throw new InvalidOperationException("Could not determine the script type for " + type.ToString() + ", context " + context);
@@ -105,14 +121,14 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null);
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Type), "isInstanceOfType"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(_systemType, "isInstanceOfType"), expression, jsTarget);
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(_systemType, "safeCast"), expression, jsTarget);
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -124,7 +140,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(_systemType, "cast"), expression, jsTarget);
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -135,24 +151,24 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 		public JsExpression ReferenceEquals(JsExpression a, JsExpression b) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isNullOrUndefined"), b);
+				return JsExpression.Invocation(JsExpression.Member(_systemScript, "isNullOrUndefined"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isNullOrUndefined"), a);
+				return JsExpression.Invocation(JsExpression.Member(_systemScript, "isNullOrUndefined"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.Same(a, b);
 			else
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "referenceEquals"), a, b);
+				return JsExpression.Invocation(JsExpression.Member(_systemScript, "referenceEquals"), a, b);
 		}
 
 		public JsExpression ReferenceNotEquals(JsExpression a, JsExpression b) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isValue"), b);
+				return JsExpression.Invocation(JsExpression.Member(_systemScript, "isValue"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isValue"), a);
+				return JsExpression.Invocation(JsExpression.Member(_systemScript, "isValue"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.NotSame(a, b);
 			else
-				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "referenceEquals"), a, b));
+				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(_systemScript, "referenceEquals"), a, b));
 		}
 
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
@@ -160,19 +176,19 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression MakeException(JsExpression operand) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Exception), "wrap"), operand);
+			return JsExpression.Invocation(JsExpression.Member(_systemException, "wrap"), operand);
 		}
 
 		public JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Int32), "div"), numerator, denominator);
+			return JsExpression.Invocation(JsExpression.Member(_systemInt32, "div"), numerator, denominator);
 		}
 
 		public JsExpression FloatToInt(JsExpression operand) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Int32), "trunc"), operand);
+			return JsExpression.Invocation(JsExpression.Member(_systemInt32, "trunc"), operand);
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b) {
-			return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "coalesce"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, "coalesce"), a, b);
 		}
 
 		public JsExpression Lift(JsExpression expression) {
@@ -200,7 +216,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 					default:
 						if (methodName != null)
-							return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsUnaryExpression)expression).Operand);
+							return JsExpression.Invocation(JsExpression.Member(_systemNullableOfT, methodName), ((JsUnaryExpression)expression).Operand);
 						break;
 				}
 			}
@@ -235,7 +251,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 					default:
 						if (methodName != null)
-							return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
+							return JsExpression.Invocation(JsExpression.Member(_systemNullableOfT, methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
 						break;
 				}
 			}
@@ -250,23 +266,23 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			if (expression.NodeType == ExpressionNodeType.LogicalNot)
 				return expression;	// This is a little hacky. The problem we want to solve is that 'bool b = myDynamic' should compile to !!myDynamic, but the actual call is unbox(convert(myDynamic, bool)), where convert() will return the !!. Anyway, in JS, the !expression will never be null anyway.
 
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), "unbox"), expression);
+			return JsExpression.Invocation(JsExpression.Member(_systemNullableOfT, "unbox"), expression);
 		}
 
 		public JsExpression LiftedBooleanAnd(JsExpression a, JsExpression b) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), "and"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(_systemNullableOfT, "and"), a, b);
 		}
 
 		public JsExpression LiftedBooleanOr(JsExpression a, JsExpression b) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.NullableOfT), "or"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(_systemNullableOfT, "or"), a, b);
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), target, function);
+			return JsExpression.Invocation(JsExpression.Member(_systemDelegate, "mkdel"), target, function);
 		}
 
 		public JsExpression BindFirstParameterToThis(JsExpression function) {
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Delegate), "thisFix"), function);
+			return JsExpression.Invocation(JsExpression.Member(_systemDelegate, "thisFix"), function);
 		}
 
 		public JsExpression Default(IType type) {
@@ -276,17 +292,17 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size) {
 			var sizeList = (size is IList<JsExpression>) ? (IList<JsExpression>)size : size.ToList();
 			if (sizeList.Count == 1) {
-				return JsExpression.New(_createTypeReferenceExpression(KnownTypeReference.Array), sizeList);
+				return JsExpression.New(_systemArray, sizeList);
 			}
 			else {
-				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Array), "multidim"), new[] { Default(elementType) }.Concat(sizeList));
+				return JsExpression.Invocation(JsExpression.Member(_systemArray, "multidim"), new[] { Default(elementType) }.Concat(sizeList));
 			}
 		}
 
 		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
 			if (Equals(sourceType, targetType)) {
 				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
-				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Delegate), "clone"), source);
+				return JsExpression.Invocation(JsExpression.Member(_systemDelegate, "clone"), source);
 			}
 			else {
 				return source;	// The clone is just to convert the delegate to a different type. The risk of anyone comparing the references is small, so just return the original as delegates are immutable anyway.
@@ -308,7 +324,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);
 
-			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), @this, method);
+			return JsExpression.Invocation(JsExpression.Member(_systemDelegate, "mkdel"), @this, method);
 		}
 
 		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
