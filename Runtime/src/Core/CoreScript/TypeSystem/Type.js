@@ -1,47 +1,31 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Type System Implementation
 
-globals.Type = Function;
-
-globals.__Namespace = function(name) {
-    this.__typeName = name;
-};
-
-__Namespace.prototype = {
-    __namespace: true,
-    getName: function() {
-        return this.__typeName;
-    }
-};
+global.Type = Function;
 
 Type.registerNamespace = function#? DEBUG Type$registerNamespace##(name) {
-    if (!globals.__namespaces) {
-        globals.__namespaces = {};
-    }
-    if (!globals.__rootNamespaces) {
-        globals.__rootNamespaces = [];
+    var root = (__isModule ? exports : global);
+    if (!root.__namespaces) {
+        root.__namespaces = {};
     }
 
-    if (globals.__namespaces[name]) {
+    if (root.__namespaces[name]) {
         return;
     }
 
-    var ns = globals;
+    var ns = root;
     var nameParts = name.split('.');
 
     for (var i = 0; i < nameParts.length; i++) {
         var part = nameParts[i];
         var nso = ns[part];
         if (!nso) {
-            ns[part] = nso = new __Namespace(nameParts.slice(0, i + 1).join('.'));
-            if (i == 0) {
-                globals.__rootNamespaces.add(nso);
-            }
+            ns[part] = nso = {};
         }
         ns = nso;
     }
 
-    globals.__namespaces[name] = ns;
+    root.__namespaces[name] = ns;
 };
 
 Type.__genericCache = {};
@@ -279,10 +263,6 @@ Type.prototype.get_isFlags = function#? DEBUG Type$get_isFlags##() {
 
 Type.prototype.get_isInterface = function#? DEBUG Type$get_isInterface##() {
     return (this.__interface == true);
-};
-
-Type.isNamespace = function#? DEBUG Type$isNamespace##(object) {
-    return (object.__namespace == true);
 };
 
 Type.canCast = function#? DEBUG Type$canCast##(instance, type) {

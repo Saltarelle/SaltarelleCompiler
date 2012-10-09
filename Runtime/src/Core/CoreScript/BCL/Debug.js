@@ -1,24 +1,24 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Debug Extensions
 
-ss.Debug = globals.Debug || function() {};
+ss.Debug = global.Debug || function() {};
 ss.Debug.__typeName = 'Debug';
 
 if (!ss.Debug.writeln) {
     ss.Debug.writeln = function#? DEBUG Debug$writeln##(text) {
-        if (globals.console) {
-            if (globals.console.debug) {
-                globals.console.debug(text);
+        if (global.console) {
+            if (global.console.debug) {
+                global.console.debug(text);
                 return;
             }
-            else if (globals.console.log) {
-                globals.console.log(text);
+            else if (global.console.log) {
+                global.console.log(text);
                 return;
             }
         }
-        else if (globals.opera &&
-            globals.opera.postError) {
-            globals.opera.postError(text);
+        else if (global.opera &&
+            global.opera.postError) {
+            global.opera.postError(text);
             return;
         }
     }
