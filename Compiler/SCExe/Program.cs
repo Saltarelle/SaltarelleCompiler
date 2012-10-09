@@ -14,20 +14,23 @@ namespace Saltarelle.Compiler {
 
 		internal const string OptionsText =
 @"    -debug              Preserve names in the generated script.
-    -define:S1[;S2]     Defines one or more conditional symbols.
+    -define:S1[;S2]     Defines one or more conditional symbols (short: -d).
     -doc:FILE           Specifies output file for XML doc comments.
-	-keycontainer:NAME  The key pair container used to sign the output assembly.
-	-keyfile:FILE       The key file used to strongname the ouput assembly.
+    -keycontainer:NAME  The key pair container used to sign the output assembly.
+    -keyfile:FILE       The key file used to strongname the ouput assembly.
     -lib:PATH1[,PATHn]  Specifies locations to search for referenced assemblies.
+    -main:CLASS         Specifies the class with the Main method (short: -m)
     -nowarn:W1[,Wn]     Suppress one or more compiler warnings.
     -outasm:FILE        Specifies the output assembly file (default: base name of first file).
     -outscript:FILE     Specifies the output script file (default: base name of first file).
-    -reference:A1[,An]  Imports metadata from the specified assemblies.
-    -reference:ALIAS=A  Imports metadata using specified extern alias.
-    -warn:0-4           Sets warning level, the default is 4.
+    -reference:A1[,An]  Imports metadata from the specified assemblies (short: -r).
+    -reference:ALIAS=A  Imports metadata using specified extern alias (short: -r).
+    -target:KIND        Specifies the format of the output assembly (short: -t)
+                        KIND can be exe or library.
+    -warn:0-4           Sets warning level, the default is 4 (short: -w).
     -warnaserror[+|-]:  Treats all warnings as errors.
     -warnaserror[+|-]:W1[,Wn]  Treats one or more compiler warnings as errors.
-	-?  --help          Show this message";
+    -help               Show this message (short: -?)";
 
 
 		private static void HandleReferences(CompilerOptions options, string value) {
@@ -69,6 +72,19 @@ namespace Saltarelle.Compiler {
 			}
 			else {
 				options.TreatWarningsAsErrors = true;
+			}
+		}
+
+		private static bool ParseTargetForHasEntryPoint(string target) {
+			switch (target.ToLowerInvariant()) {
+				case "exe":
+				case "winexe":
+					return true;
+				case "library":
+				case "module":
+					return false;
+				default:
+					throw new OptionException(string.Format("Target kind {0} is invalid (should be either exe or library).", target), "target");
 			}
 		}
 
@@ -114,16 +130,18 @@ namespace Saltarelle.Compiler {
 					{ "outasm=",       v => result.OutputAssemblyPath = v },
 					{ "outscript=",    v => result.OutputScriptPath = v },
 					{ "doc=",          v => result.DocumentationFile = v },
-					{ "define=",       v => result.DefineConstants.AddRange(v.Split(new[] { ';' }).Select(s => s.Trim()).Where(s => s != "" && !result.DefineConstants.Contains(s))) },
+					{ "d|define=",     v => result.DefineConstants.AddRange(v.Split(new[] { ';' }).Select(s => s.Trim()).Where(s => s != "" && !result.DefineConstants.Contains(s))) },
 					{ "lib=",          v => result.AdditionalLibPaths.AddRange(v.Split(new[] { ',' }).Select(s => s.Trim()).Where(s => s != "" && !result.AdditionalLibPaths.Contains(s))) },
-					{ "reference=",    v => HandleReferences(result, v) },
+					{ "m|main=",       v => result.EntryPointClass = v },
+					{ "r|reference=",  v => HandleReferences(result, v) },
 					{ "debug",         f => result.MinimizeScript = f == null || f.EndsWith("-") },
-					{ "warn=",         (int v) => { if (v < 0 || v > 4) throw new OptionException("Warning level must be between 0 and 4", "/warn"); result.WarningLevel = v; } },
+					{ "w|warn=",       (int v) => { if (v < 0 || v > 4) throw new OptionException("Warning level must be between 0 and 4", "/warn"); result.WarningLevel = v; } },
 					{ "nowarn=",       v => DisableWarnings(result, v) },
 					{ "warnaserror:",  v => HandleWarningsAsErrors(result, v) },
 					{ "warnaserror-:", v => HandleWarningsNotAsErrors(result, v) },
 					{ "keyfile=",      v => result.KeyFile = v },
 					{ "keycontainer=", v => result.KeyContainer = v },
+					{ "t|target=",     v => result.HasEntryPoint = ParseTargetForHasEntryPoint(v) },
 					{ "?|help",        v => showHelp = true },
 				};
 

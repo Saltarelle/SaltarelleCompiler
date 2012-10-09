@@ -40,9 +40,11 @@
 		        WarningLevel="$(WarningLevel)"
 		        WarningsAsErrors="$(WarningsAsErrors)"
 		        WarningsNotAsErrors="$(WarningsNotAsErrors)"
+		        MainEntryPoint="$(StartupObject)"
+		        TargetType="$(OutputType)"
 		        AlreadyCompiled="true"
 		        />
-  </Target>
+	</Target>
 
 	<Target Name="CopyFilesToOutputDirectory"
 	        DependsOnTargets="

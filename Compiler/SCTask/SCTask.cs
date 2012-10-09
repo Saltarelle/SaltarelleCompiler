@@ -36,6 +36,26 @@ namespace Saltarelle.Compiler.SCTask {
 			result.WarningLevel          =  this.WarningLevel;
 			result.AlreadyCompiled       =  this.AlreadyCompiled;
 
+			result.EntryPointClass = this.MainEntryPoint;
+			if (!string.IsNullOrEmpty(this.TargetType)) {
+				switch (this.TargetType.ToLowerInvariant()) {
+					case "exe":
+					case "winexe":
+						result.HasEntryPoint = true;
+						break;
+					case "library":
+					case "module":
+						result.HasEntryPoint = false;
+						break;
+					default:
+						Log.LogError("Invalid target type (must be exe, winexe, library or module).");
+						return null;
+				}
+			}
+			else {
+				result.HasEntryPoint = false;
+			}
+
 			if (this.WarningLevel < 0 || this.WarningLevel > 4) {
 				Log.LogError("Warning level must be between 0 and 4.");
 				return null;
@@ -113,6 +133,10 @@ namespace Saltarelle.Compiler.SCTask {
 		public string WarningsAsErrors { get; set; }
 
 		public string WarningsNotAsErrors { get; set; }
+
+		public string TargetType { get; set; }
+
+		public string MainEntryPoint { get; set; }
 
 		public bool AlreadyCompiled { get; set; }
 	}

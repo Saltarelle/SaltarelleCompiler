@@ -27,21 +27,24 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			return mock.Object;
 		}
 
-		protected string Process(IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null) {
+		protected string Process(IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null, IErrorReporter errorReporter = null, IMethod entryPoint = null) {
 			metadataImporter = metadataImporter ?? new MockScriptSharpMetadataImporter();
 
 			IProjectContent proj = new CSharpProjectContent();
 			proj = proj.AddAssemblyReferences(new[] { Common.Mscorlib });
 			var comp = proj.CreateCompilation();
-			var er = new MockErrorReporter(true);
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator(comp, metadataImporter, new MockRuntimeLibrary(), new MockNamer(), er);
-			Assert.That(er.AllMessages, Is.Empty, "Should not have errors");
-			var rewritten = obj.Process(types, comp);
+			bool verifyNoErrors = errorReporter == null;
+			errorReporter = errorReporter ?? new MockErrorReporter();
+			var obj = new OOPEmulator.ScriptSharpOOPEmulator(comp, metadataImporter, new MockRuntimeLibrary(), new MockNamer(), errorReporter);
+			if (verifyNoErrors)
+				Assert.That(((MockErrorReporter)errorReporter).AllMessages, Is.Empty, "Should not have errors");
+
+			var rewritten = obj.Process(types, comp, entryPoint);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}
 
-		protected void AssertCorrect(string expected, IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null) {
-			var actual = Process(types, metadataImporter);
+		protected void AssertCorrect(string expected, IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null, IMethod entryPoint = null) {
+			var actual = Process(types, metadataImporter: metadataImporter, entryPoint: entryPoint);
 
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
@@ -52,6 +55,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 
 		protected void AssertCorrect(string expected, IScriptSharpMetadataImporter metadataImporter, params JsType[] types) {
 			AssertCorrect(expected, (IEnumerable<JsType>)types, metadataImporter);
+		}
+
+		protected void AssertCorrect(string expected, IScriptSharpMetadataImporter metadataImporter, IMethod entryPoint, params JsType[] types) {
+			AssertCorrect(expected, (IEnumerable<JsType>)types, metadataImporter, entryPoint);
 		}
 	}
 }

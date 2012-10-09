@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Linq;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
+using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.OOPEmulator;
+using Saltarelle.Compiler.ScriptSemantics;
 using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
@@ -207,6 +211,85 @@ var $I = function() {
 			var shuffled = orig.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToList();
 			var actual = ScriptSharpOOPEmulator.OrderByNamespace(shuffled, s => s).ToList();
 			Assert.That(actual, Is.EqualTo(orig));
+		}
+
+		[Test]
+		public void ProgramWithEntryPointWorks() {
+			var type = CreateMockTypeDefinition("MyClass");
+			var main = new Mock<IMethod>(MockBehavior.Strict);
+			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
+			main.SetupGet(_ => _.Name).Returns("Main");
+			main.SetupGet(_ => _.Parameters).Returns(EmptyList<IParameter>.Instance);
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+};
+$MyClass.$main = function() {
+	X;
+};
+{Type}.registerClass(global, 'MyClass', $MyClass);
+{MyClass}.$Main();
+",			new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
+			main.Object,
+			new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
+				StaticMethods = { new JsMethod(main.Object, "$main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
+			});
+		}
+
+		[Test]
+		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
+			var type = CreateMockTypeDefinition("MyClass");
+			var main = new Mock<IMethod>(MockBehavior.Strict);
+			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
+			main.SetupGet(_ => _.Name).Returns("Main");
+			main.SetupGet(_ => _.FullName).Returns("MyClass.Main");
+			main.SetupGet(_ => _.Parameters).Returns(new[] { new Mock<IParameter>().Object });
+			main.SetupGet(_ => _.Region).Returns(DomRegion.Empty);
+
+			var er = new MockErrorReporter();
+
+			Process(
+				new[] {
+					new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
+						StaticMethods = { new JsMethod(main.Object, "$Main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
+					}
+				},
+				new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
+				er,
+				main.Object
+			);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7800 && (string)m.Args[0] == "MyClass.Main"));
+		}
+
+		[Test]
+		public void AnErrorIsIssuedIfTheMainMethodIsNotImplementedAsANormalMethod() {
+			var type = CreateMockTypeDefinition("MyClass");
+			var main = new Mock<IMethod>(MockBehavior.Strict);
+			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
+			main.SetupGet(_ => _.Name).Returns("Main");
+			main.SetupGet(_ => _.FullName).Returns("MyClass.Main");
+			main.SetupGet(_ => _.Parameters).Returns(EmptyList<IParameter>.Instance);
+			main.SetupGet(_ => _.Region).Returns(DomRegion.Empty);
+
+			var er = new MockErrorReporter();
+
+			Process(
+				new[] {
+					new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
+						StaticMethods = { new JsMethod(main.Object, "$Main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
+					}
+				},
+				new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => ReferenceEquals(m, main.Object) ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod("$" + m.Name) },
+				er,
+				main.Object
+			);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7801 && (string)m.Args[0] == "MyClass.Main"));
 		}
 	}
 }

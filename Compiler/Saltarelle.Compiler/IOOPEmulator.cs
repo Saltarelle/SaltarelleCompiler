@@ -18,6 +18,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="types">Types to rewrute.</param>
 		/// <param name="compilation">The current compilation.</param>
-		IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation);
+		/// <param name="entryPoint">Program entry point, or null if no entry point.</param>
+		IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation, IMethod entryPoint);
 	}
 }

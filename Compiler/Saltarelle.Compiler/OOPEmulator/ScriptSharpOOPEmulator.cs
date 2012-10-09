@@ -230,7 +230,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				return JsExpression.Identifier(string.IsNullOrEmpty(_metadataImporter.GetModuleName(type)) ? "global" : "exports");
 		}
 
-		public IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation) {
+		public IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation, IMethod entryPoint) {
 			var result = new List<JsStatement>();
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
@@ -314,6 +314,23 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                             })
 			                .Select(expr => new JsExpressionStatement(expr)));
 			result.AddRange(orderedTypes.OfType<JsClass>().Where(c => c.TypeArgumentNames.Count == 0 && !_metadataImporter.IsResources(c.CSharpTypeDefinition)).SelectMany(t => t.StaticInitStatements));
+
+			if (entryPoint != null) {
+				if (entryPoint.Parameters.Count > 0) {
+					_errorReporter.Region = entryPoint.Region;
+					_errorReporter.Message(7800, entryPoint.FullName);
+				}
+				else {
+					var sem = _metadataImporter.GetMethodSemantics(entryPoint);
+					if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
+						_errorReporter.Region = entryPoint.Region;
+						_errorReporter.Message(7801, entryPoint.FullName);
+					}
+					else {
+						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.DeclaringTypeDefinition), sem.Name))));
+					}
+				}
+			}
 
 			return result;
 		}

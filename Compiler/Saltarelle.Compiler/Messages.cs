@@ -122,6 +122,9 @@ namespace Saltarelle.Compiler {
 
 			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
 
+			{ 7800, Tuple.Create(MessageSeverity.Error, "The program entry point {0} may not have any parameters.") },
+			{ 7801, Tuple.Create(MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.") },
+
 			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },
 			{ 7952, Tuple.Create(MessageSeverity.Error, "Error writing documentation file: {0}.") },

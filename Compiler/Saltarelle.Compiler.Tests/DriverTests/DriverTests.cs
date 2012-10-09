@@ -834,6 +834,55 @@ public class C1 {
 		}
 
 		[Test]
+		public void EntryPointCanBeAutomaticallyDetermined() {
+			UsingFiles(() => {
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"public class Class1 { public static void Main() {} } public class Class2 { public static object Main() { return null; } public static void Main(int x) {} public static void Main(string[] a, int b) {} }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					HasEntryPoint      = true,
+					DisabledWarnings   = { 28 },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				bool result = driver.Compile(options, false);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+
+				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(content.Replace("\r\n", "\n").EndsWith("$Class1.main();\n"), Is.True);
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void EntryPointCanBeSpecified() {
+			UsingFiles(() => {
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"namespace MyNamespace { public class SomeClass { public static void Main() {} } } public class OtherClass { public static void Main() {} }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					HasEntryPoint      = true,
+					EntryPointClass    = "MyNamespace.SomeClass",
+					DisabledWarnings   = { 28 },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				bool result = driver.Compile(options, false);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+
+				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(content.Replace("\r\n", "\n").EndsWith("$MyNamespace_SomeClass.main();\n"), Is.True);
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void SigningWorks() {
 			string key = "0702000000240000525341320004000001000100BF8CF25A8FAE18A956C58C7F0484E846B1DAF18C64DDC3C04B668894E90AFB7C796F86B2926EB59548DDF82097805AE0A981C553A639A0669B39BECD22C1026A3F8E0F90E01BF6993EA18F8E2EA60F4F1B1563FDBB9F8D501A0E0736C3ACCD6BA86B6B2002D20AE83A5E62218BC2ADA819FF0B1521E56801684FA07726EB6DAAC9DF138633A3495C1687045E1B98ECAC630F4BB278AEFF7D6276A88DFFFF02D556562579E144591166595656519A0620F272E8FE1F29DC6EAB1D14319A77EDEB479C09294F0970F1293273AA6E5A8DB32DB6C156E070672F7EEA2C1111E040FB8B992329CD8572D48D9BB256A5EE0329B69ABAFB227BBEEEF402F7383DE4EDB83947AF3B87F9ED7B2A3F3F4572F871020606778C0CEF86C77ECF6F9E8A5112A5B06FA33255A1D8AF6F2401DFA6AC3220181B1BB99D79C931B416E06926DA0E21B79DA68D3ED95CBBFE513990B3BFB4419A390206B48AC93BC397183CD608E0ECA794B66AEC94521E655559B7A098711D2FFD531BED25FF797B8320E415E99F70995777243C3940AF6672976EF37D851D93F765EC0F35FE641279F14400E227A1627CDDCCE09F6B3543681544A169DC78B6AF734AFDAF2C50015E6B932E6BD913619BA04FB5BE03428EAB072C64F7743E1E9DDDADE9DCA6A1E47C648BE01D9133F7D227FAE72337E662459B6A0CA11410FA0179F22312A534B5CABE611742A11A890B1893CD0402CE01778EDC921F0D27CBC96AEE75ECB4D4E083301A843E9716BBB0AD689FDEE275321EA915FD44F696883DAF4E3CAB3D0229283ED43FB12747";
 			byte[] keyBytes = Enumerable.Range(0, key.Length / 2).Select(i => Convert.ToByte(key.Substring(i * 2, 2), 16)).ToArray();
