@@ -1,13 +1,13 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // JsErrorException
 
-ss.JsErrorException = function#? DEBUG JsErrorException$##(error) {
-	ss.Exception.call(this, error.message);
+var ss_JsErrorException = function#? DEBUG JsErrorException$##(error) {
+	ss_Exception.call(this, error.message);
 	this._error = error;
 };
-ss.JsErrorException.prototype = {
+ss_JsErrorException.prototype = {
 	get_error: function#? DEBUG JsErrorException$get_error##() {
 		return this._error;
 	}
 };
-ss.JsErrorException.registerClass('ss.JsErrorException', ss.Exception);
+Type.registerClass(global, 'ss.JsErrorException', ss_JsErrorException, ss_Exception);

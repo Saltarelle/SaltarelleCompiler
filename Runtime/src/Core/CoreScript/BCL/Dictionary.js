@@ -1,10 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Dictionary
-ss.Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
+var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 	var $type = function(o) {
 		this._o = {};
-		if (ss.IDictionary.isInstanceOfType(o)) {
-			var e = Type.cast(o, ss.IDictionary).getEnumerator();
+		if (ss_IDictionary.isInstanceOfType(o)) {
+			var e = Type.cast(o, ss_IDictionary).getEnumerator();
 			try {
 				while (e.moveNext()) {
 					var c = e.get_current();
@@ -12,8 +12,8 @@ ss.Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 				}
 			}
 			finally {
-				if (ss.IDisposable.isInstanceOfType(e)) {
-					Type.cast(e, ss.IDisposable).dispose();
+				if (ss_IDisposable.isInstanceOfType(e)) {
+					Type.cast(e, ss_IDisposable).dispose();
 				}
 			}
 		}
@@ -52,7 +52,7 @@ ss.Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			this._o[key] = value;
 		},
 		getEnumerator: function#? DEBUG Dictionary$2$getEnumerator##() {
-			return new ss.ObjectEnumerator(this._o);
+			return new ss_ObjectEnumerator(this._o);
 		},
 		remove: function#? DEBUG Dictionary$2$remove##(key, value) {
 			var result = Object.keyExists(this._o, key);
@@ -76,7 +76,7 @@ ss.Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			Object.clearKeys(this._o);
 		}
 	};
-	$type.registerGenericClassInstance($type, ss.Dictionary$2, [TKey, TValue], function() { return null }, function() { return [ ss.IDictionary, ss.IEnumerable ] });
+	$type.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], function() { return null }, function() { return [ ss_IDictionary, ss_IEnumerable ] });
 	return $type;
 };
-ss.Dictionary$2.registerGenericClass('ss.Dictionary$2', 2);
+Type.registerGenericClass(global, 'ss.Dictionary$2', ss_Dictionary$2, 2);

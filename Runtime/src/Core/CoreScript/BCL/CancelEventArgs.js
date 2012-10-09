@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // CancelEventArgs
 
-ss.CancelEventArgs = function#? DEBUG CancelEventArgs$##() {
-    ss.CancelEventArgs.initializeBase(this);
+var ss_CancelEventArgs = function#? DEBUG CancelEventArgs$##() {
+    ss_CancelEventArgs.call(this);
     this.cancel = false;
 }
-ss.CancelEventArgs.registerClass('ss.CancelEventArgs', ss.EventArgs);
+Type.registerClass(global, 'ss.CancelEventArgs', ss_CancelEventArgs, ss_EventArgs);

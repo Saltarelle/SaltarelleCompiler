@@ -1,10 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IDisposable
 
-ss.IDisposable = function#? DEBUG IDisposable$##() { };
-#if DEBUG
-ss.IDisposable.prototype = {
+var ss_IDisposable = function#? DEBUG IDisposable$##() { };
+ss_IDisposable.prototype = {
     dispose: null
-}
-#endif // DEBUG
-ss.IDisposable.registerInterface('ss.IDisposable');
+};
+Type.registerInterface(global, 'ss.IDisposable', ss_IDisposable);

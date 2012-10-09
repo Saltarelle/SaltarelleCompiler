@@ -1,19 +1,19 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // AggregateException
 
-ss.AggregateException = function#? DEBUG AggregateException$##(message, innerExceptions) {
+var ss_AggregateException = function#? DEBUG AggregateException$##(message, innerExceptions) {
 	if (typeof(message) !== 'string') {
 		innerExceptions = message;
 		message = 'One or more errors occurred.';
 	}
 	innerExceptions = ss.isValue(innerExceptions) ? Array.fromEnumerable(innerExceptions) : null;
 
-	ss.Exception.call(this, message, innerExceptions && innerExceptions.length ? innerExceptions[0] : null);
+	ss_Exception.call(this, message, innerExceptions && innerExceptions.length ? innerExceptions[0] : null);
 	this._innerExceptions = innerExceptions;
 };
-ss.AggregateException.prototype = {
+ss_AggregateException.prototype = {
 	get_innerExceptions: function#? DEBUG AggregateException$get_innerExceptions##() {
 		return this._innerExceptions;
 	}
 };
-ss.AggregateException.registerClass('ss.AggregateException', ss.Exception);
+Type.registerClass(global, 'ss.AggregateException', ss_AggregateException, ss_Exception);

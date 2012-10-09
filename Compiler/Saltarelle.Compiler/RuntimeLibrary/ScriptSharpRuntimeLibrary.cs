@@ -135,24 +135,24 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 
 		public JsExpression ReferenceEquals(JsExpression a, JsExpression b) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isNullOrUndefined"), b);
+				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isNullOrUndefined"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isNullOrUndefined"), a);
+				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isNullOrUndefined"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.Same(a, b);
 			else
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "referenceEquals"), a, b);
+				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "referenceEquals"), a, b);
 		}
 
 		public JsExpression ReferenceNotEquals(JsExpression a, JsExpression b) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isValue"), b);
+				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isValue"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "isValue"), a);
+				return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isValue"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.NotSame(a, b);
 			else
-				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "referenceEquals"), a, b));
+				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "referenceEquals"), a, b));
 		}
 
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
@@ -172,7 +172,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b) {
-			return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("ss"), "coalesce"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(_createTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "coalesce"), a, b);
 		}
 
 		public JsExpression Lift(JsExpression expression) {

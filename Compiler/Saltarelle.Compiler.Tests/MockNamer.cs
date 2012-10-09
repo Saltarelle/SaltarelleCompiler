@@ -36,6 +36,7 @@ namespace Saltarelle.Compiler.Tests
 			                               } while (used.Contains(result));
 			                               return result;
 			                           };
+			GetTypeVariableName      = n => "$" + n.Replace(".", "_");
 			
 			ThisAlias                                    = "$this";
 			FinallyHandlerDesiredName                    = "$finally";
@@ -49,6 +50,7 @@ namespace Saltarelle.Compiler.Tests
 		public Func<ITypeParameter, string> GetTypeParameterName { get; set; }
 		public Func<string, ISet<string>, string> GetVariableName { get; set; }
 		public Func<ISet<string>, string> GetStateMachineLoopLabel { get; set; }
+		public Func<string, string> GetTypeVariableName { get; set; }
 
 		public string ThisAlias { get; set; }
 		public string FinallyHandlerDesiredName { get; set; }
@@ -70,5 +72,8 @@ namespace Saltarelle.Compiler.Tests
 			return GetStateMachineLoopLabel(usedNames);
 		}
 
+		string INamer.GetTypeVariableName(string scriptTypeName) {
+			return GetTypeVariableName(scriptTypeName);
+		}
 	}
 }

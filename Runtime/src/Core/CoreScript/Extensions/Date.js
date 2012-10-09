@@ -2,19 +2,20 @@
 // Date Extensions
 
 Date.__typeName = 'Date';
+Date.__baseType = 'Object';
 
 Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultValue##() {
 	return new Date(0);
-}
+};
 
 Date.get_now = function#? DEBUG Date$get_now##() {
     return new Date();
-}
+};
 
 Date.get_today = function#? DEBUG Date$get_today##() {
     var d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
+};
 
 Date.areEqual = function#? DEBUG Date$areEqual##(a, b) {
     if (!ss.isValue(a))
@@ -23,11 +24,11 @@ Date.areEqual = function#? DEBUG Date$areEqual##(a, b) {
         return false;
     else
         return a.valueOf() === b.valueOf();
-}
+};
 
 Date.areNotEqual = function#? DEBUG Date$areNotEqual##(a, b) {
     return !Date.areEqual(a, b);
-}
+};
 
 Date.prototype.format = function#? DEBUG Date$format##(format) {
     if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
@@ -41,7 +42,7 @@ Date.prototype.format = function#? DEBUG Date$format##(format) {
     }
 
     return this._netFormat(format, false);
-}
+};
 
 Date.prototype.localeFormat = function#? DEBUG Date$localeFormat##(format) {
     if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
@@ -55,11 +56,11 @@ Date.prototype.localeFormat = function#? DEBUG Date$localeFormat##(format) {
     }
 
     return this._netFormat(format, true);
-}
+};
 
 Date.prototype._netFormat = function#? DEBUG Date$_netFormat##(format, useLocale) {
     var dt = this;
-    var dtf = useLocale ? ss.CultureInfo.CurrentCulture.dateFormat : ss.CultureInfo.InvariantCulture.dateFormat;
+    var dtf = useLocale ? ss_CultureInfo.CurrentCulture.dateFormat : ss_CultureInfo.InvariantCulture.dateFormat;
 
     if (format.length == 1) {
         switch (format) {
@@ -76,7 +77,7 @@ Date.prototype._netFormat = function#? DEBUG Date$_netFormat##(format, useLocale
             case 'G': format = dtf.shortDatePattern + ' ' + dtf.longTimePattern; break;
 
             case 'R': case 'r':
-                dtf = ss.CultureInfo.InvariantCulture.dateFormat;
+                dtf = ss_CultureInfo.InvariantCulture.dateFormat;
                 format = dtf.gmtDateTimePattern;
                 break;
             case 'u': format = dtf.universalDateTimePattern; break;
@@ -99,7 +100,7 @@ Date.prototype._netFormat = function#? DEBUG Date$_netFormat##(format, useLocale
     }
 
     var re = Date._formatRE;
-    var sb = new ss.StringBuilder();
+    var sb = new ss_StringBuilder();
 
     re.lastIndex = 0;
     while (true) {
@@ -210,16 +211,16 @@ Date.prototype._netFormat = function#? DEBUG Date$_netFormat##(format, useLocale
     }
 
     return sb.toString();
-}
+};
 
 Date.parseDate = function#? DEBUG Date$parse##(s) {
     // Date.parse returns the number of milliseconds
     // so we use that to create an actual Date instance
     return new Date(Date.parse(s));
-}
+};
 
 Date._parseExact = function#? DEBUG Date$_parseExact##(val, format, culture, utc) {
-    culture = culture || ss.CultureInfo.CurrentCulture;
+    culture = culture || ss_CultureInfo.CurrentCulture;
 	var AM = culture.amDesignator, PM = culture.pmDesignator;
 
 	var _isInteger = function(val) {
@@ -379,8 +380,8 @@ Date._parseExact = function#? DEBUG Date$_parseExact##(val, format, culture, utc
 
 Date.parseExact = function#? DEBUG Date$parseExact##(val, format, culture) {
     return Date._parseExact(val, format, culture, false);
-}
+};
 
 Date.parseExactUTC = function#? DEBUG Date$parseExactUTC##(val, format, culture) {
     return Date._parseExact(val, format, culture, true);
-}
+};

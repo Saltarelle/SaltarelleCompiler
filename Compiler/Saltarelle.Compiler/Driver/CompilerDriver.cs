@@ -15,8 +15,9 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulator;
-using Saltarelle.Compiler.ReferenceImporter;
+using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.RuntimeLibrary;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
@@ -216,8 +217,8 @@ namespace Saltarelle.Compiler.Driver {
 					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
-					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
-					js = new DefaultReferenceImporter(md, n).ImportReferences(js);
+					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Rewrite(compiledTypes, compilation.Compilation);
+					js = new DefaultLinker(md, n).ImportReferences(js, compilation.Compilation.MainAssembly);
 
 					if (er.HasErrors)
 						return false;
@@ -246,7 +247,11 @@ namespace Saltarelle.Compiler.Driver {
 						}
 					}
 
-					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(Minifier.Process(s)) : OutputFormatter.Format(s)));
+					if (options.MinimizeScript) {
+						js = ((JsBlockStatement)Minifier.Process(new JsBlockStatement(js))).Statements;
+					}
+
+					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
 					try {
 						File.WriteAllText(outputScriptPath, script, settings.Encoding);
 					}

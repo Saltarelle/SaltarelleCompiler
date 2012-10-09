@@ -1,14 +1,14 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
 // MutableDateTime
 
-ss.JsDate = function#? DEBUG JsDate$##() { };
+var ss_JsDate = function#? DEBUG JsDate$##() { };
 
-ss.JsDate.registerClass('ss.JsDate');
+Type.registerClass(global, 'ss.JsDate', ss_JsDate);
 
-ss.JsDate.createInstance = function#? DEBUG JsDate$createInstance##() {
+ss_JsDate.createInstance = function#? DEBUG JsDate$createInstance##() {
 	return new Date();
-}
+};
 
-ss.JsDate.isInstanceOfType = function#? DEBUG JsDate$isInstanceOfType##(instance) {
+ss_JsDate.isInstanceOfType = function#? DEBUG JsDate$isInstanceOfType##(instance) {
 	return instance instanceof Date;
-}
+};

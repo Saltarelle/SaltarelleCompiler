@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.ReferenceImporter;
+using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.RuntimeLibrary;
 using com.gargoylesoftware.htmlunit;
 using com.gargoylesoftware.htmlunit.html;
@@ -99,8 +99,8 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
-			js = new DefaultReferenceImporter(md, n).ImportReferences(js);
+			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Rewrite(compiledTypes, compilation.Compilation);
+			js = new DefaultLinker(md, n).ImportReferences(js, compilation.Compilation.MainAssembly);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 

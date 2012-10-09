@@ -61,10 +61,10 @@
     <Compile Include="Driver\CompilerOptions.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
-    <Compile Include="IReferenceImporter.cs" />
+    <Compile Include="ILinker.cs" />
     <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
     <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
-    <Compile Include="ReferenceImporter\DefaultReferenceImporter.cs" />
+    <Compile Include="Linker\DefaultLinker.cs" />
     <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />

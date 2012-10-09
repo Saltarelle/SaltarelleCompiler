@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // EventArgs
 
-ss.EventArgs = function#? DEBUG EventArgs$##() {
+var ss_EventArgs = function#? DEBUG EventArgs$##() {
 }
-ss.EventArgs.registerClass('ss.EventArgs');
+Type.registerClass(global, 'ss.EventArgs', ss_EventArgs);
 
-ss.EventArgs.Empty = new ss.EventArgs();
+ss_EventArgs.Empty = new ss_EventArgs();

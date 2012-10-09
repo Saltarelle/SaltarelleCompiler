@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ObjectEnumerator
 
-ss.ObjectEnumerator = function#? DEBUG ObjectEnumerator$##(o) {
+var ss_ObjectEnumerator = function#? DEBUG ObjectEnumerator$##(o) {
     this._keys = Object.keys(o);
     this._index = -1;
 	this._object = o;
 };
-ss.ObjectEnumerator.prototype = {
+ss_ObjectEnumerator.prototype = {
     moveNext: function#? DEBUG ObjectEnumerator$moveNext##() {
         this._index++;
         return (this._index < this._keys.length);
@@ -24,4 +24,4 @@ ss.ObjectEnumerator.prototype = {
     }
 };
 
-ss.ObjectEnumerator.registerClass('ss.ObjectEnumerator', null, [ss.IEnumerator, ss.IDisposable]);
+Type.registerClass(global, 'ss.ObjectEnumerator', ss_ObjectEnumerator, null, [ss_IEnumerator, ss_IDisposable]);

@@ -13,6 +13,7 @@ namespace System {
     /// </summary>
     [IgnoreNamespace]
     [Imported(IsRealType = true)]
+	[ScriptName("ss")]
     public static class Script {
         /// <summary>
         /// Converts an object into a boolean.
@@ -41,7 +42,6 @@ namespace System {
         /// </summary>
         /// <param name="o">The object to test against null.</param>
         /// <returns>true if the object is null; false otherwise.</returns>
-        [ScriptAlias("ss.isNull")]
         public static bool IsNull(object o) {
             return false;
         }
@@ -53,7 +53,6 @@ namespace System {
         /// </summary>
         /// <param name="o">The object to test against null or undefined.</param>
         /// <returns>true if the object is null or undefined; false otherwise.</returns>
-        [ScriptAlias("ss.isNullOrUndefined")]
         public static bool IsNullOrUndefined(object o) {
             return false;
         }
@@ -65,7 +64,6 @@ namespace System {
         /// </summary>
         /// <param name="o">The object to test against undefined.</param>
         /// <returns>true if the object is undefined; false otherwise.</returns>
-        [ScriptAlias("ss.isUndefined")]
         public static bool IsUndefined(object o) {
             return false;
         }
@@ -76,7 +74,6 @@ namespace System {
         /// </summary>
         /// <param name="o">The object to test.</param>
         /// <returns>true if the object represents a value; false otherwise.</returns>
-        [ScriptAlias("ss.isValue")]
         public static bool IsValue(object o) {
             return false;
         }
@@ -84,6 +81,14 @@ namespace System {
         [Obsolete("The Script.Literal method is not supported. As a workaround, you can define another method and decorate it with an [InlineCodeAttribute]", true)]
         public static object Literal(string script, params object[] args) {
             return null;
+        }
+
+        /// <summary>
+        /// Returns the first argument if it is not null or undefined, otherwise the second.
+        /// </summary>
+        [IgnoreGenericArguments]
+        public static T Coalesce<T>(T a, T b) {
+            return default(T);
         }
 
 		/// <summary>

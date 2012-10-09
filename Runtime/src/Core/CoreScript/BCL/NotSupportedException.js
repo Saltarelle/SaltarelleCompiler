@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // NotSupportedException
 
-ss.NotSupportedException = function#? DEBUG NotSupportedException$##(message, innerException) {
-	ss.Exception.call(this, message, innerException);
+var ss_NotSupportedException = function#? DEBUG NotSupportedException$##(message, innerException) {
+	ss_Exception.call(this, message, innerException);
 };
-ss.NotSupportedException.registerClass('ss.NotSupportedException', ss.Exception);
+Type.registerClass(global, 'ss.NotSupportedException', ss_NotSupportedException, ss_Exception);

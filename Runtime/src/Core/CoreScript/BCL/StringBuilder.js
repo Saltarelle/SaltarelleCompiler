@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // StringBuilder
 
-ss.StringBuilder = function#? DEBUG StringBuilder$##(s) {
+var ss_StringBuilder = function#? DEBUG StringBuilder$##(s) {
     this._parts = ss.isNullOrUndefined(s) || s === '' ? [] : [s];
     this.isEmpty = this._parts.length == 0;
 }
-ss.StringBuilder.prototype = {
+ss_StringBuilder.prototype = {
     append: function#? DEBUG StringBuilder$append##(s) {
         if (!ss.isNullOrUndefined(s) && s !== '') {
             this._parts.add(s);
@@ -39,4 +39,4 @@ ss.StringBuilder.prototype = {
     }
 };
 
-ss.StringBuilder.registerClass('ss.StringBuilder');
+Type.registerClass(global, 'ss.StringBuilder', ss_StringBuilder);

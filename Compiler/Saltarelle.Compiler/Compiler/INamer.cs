@@ -17,5 +17,11 @@ namespace Saltarelle.Compiler.Compiler
 		string AsyncStateMachineVariableDesiredName { get; }
 		string AsyncDoFinallyBlocksVariableDesiredName { get; }
 		string AsyncTaskCompletionSourceVariableDesiredName { get; }
+
+		/// <summary>
+		/// Returns the name for a variable that is used to represent a type in the pattern "var $TYPE = function() {} ... Type.registerClass(global, 'The.Name', $TYPE)"
+		/// </summary>
+		/// <param name="scriptTypeName">The (fully qualified) name by which the type is known in script (as returned by IMetadataImporter.GetTypeSemantics()).</param>
+		string GetTypeVariableName(string scriptTypeName);
 	}
 }
