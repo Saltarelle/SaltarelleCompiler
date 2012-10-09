@@ -223,13 +223,14 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return result;
 		}
 
-		private JsExpression ExportIfPublic(ITypeDefinition type, JsExpression exportTo) {
-			return Utils.IsPublic(type) ? exportTo : JsExpression.Null;
+		private JsExpression GetRoot(ITypeDefinition type, bool exportNonPublic) {
+			if (!exportNonPublic && !Utils.IsPublic(type))
+				return JsExpression.Null;
+			else
+				return JsExpression.Identifier(string.IsNullOrEmpty(_metadataImporter.GetModuleName(type)) ? "global" : "exports");
 		}
 
 		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
-			var root = JsExpression.Identifier("global");
-
 			var result = new List<JsStatement>();
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
@@ -245,7 +246,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					if (t is JsClass) {
 						var c = (JsClass)t;
 						if (isGlobal) {
-							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(root, m.Name), m.Definition))));
+							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(GetRoot(t.CSharpTypeDefinition, exportNonPublic: true), m.Name), m.Definition))));
 						}
 						else if (isMixin) {
 							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition))));
@@ -266,7 +267,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts))));
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), ExportIfPublic(t.CSharpTypeDefinition, root), JsExpression.String(name), typeRef, JsExpression.Number(c.TypeArgumentNames.Count))));
+								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.TypeArgumentNames.Count))));
 							}
 						}
 					}
@@ -275,7 +276,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						bool flags = GetAttributePositionalArgs(t.CSharpTypeDefinition, FlagsAttribute, "System") != null;
 						result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)));
 						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (_metadataImporter.IsNamedValues(t.CSharpTypeDefinition) ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
-						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterEnum), ExportIfPublic(t.CSharpTypeDefinition, root), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
+						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterEnum), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
 					}
 				}
 				catch (Exception ex) {
@@ -296,13 +297,13 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
 			                                     if (_metadataImporter.IsResources(c.CSharpTypeDefinition)) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterType), ExportIfPublic(c.CSharpTypeDefinition, root), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
+			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterType), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
 			                                     }
 			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterInterface), ExportIfPublic(c.CSharpTypeDefinition, root), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
+			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterInterface), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
 			                                     }
 			                                     else {
-			                                         return CreateRegisterClassCall(ExportIfPublic(c.CSharpTypeDefinition, root), name, JsExpression.Identifier(_namer.GetTypeVariableName(name)), c.BaseClass, c.ImplementedInterfaces);
+			                                         return CreateRegisterClassCall(GetRoot(c.CSharpTypeDefinition), name, JsExpression.Identifier(_namer.GetTypeVariableName(name)), c.BaseClass, c.ImplementedInterfaces);
 			                                     }
 			                                 }
 			                                 catch (Exception ex) {

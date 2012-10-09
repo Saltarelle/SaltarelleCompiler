@@ -325,6 +325,30 @@ R;
 		}
 
 		[Test]
+		public void GlobalMethodsAttributeWithModuleNameCausesModuleGlobalMethodsToBeGenerated() {
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// SomeNamespace.InnerNamespace.MyClass
+exports.s1 = function(s) {
+	S;
+};
+exports.s2 = function(t) {
+	T;
+};
+Q;
+R;
+", new MockScriptSharpMetadataImporter() { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name == "MyClass" ? "" : t.FullName), GetModuleName = t => "my-module" },
+			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
+				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
+				                },
+				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
+				                         new JsExpressionStatement(JsExpression.Identifier("R")),
+				                       }
+			});
+		}
+
+		[Test]
 		public void ResourcesAttributeCausesAResourcesClassToBeGenerated() {
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
@@ -495,6 +519,60 @@ var $ResourceClass = { Field1: 'the value', Field2: 123, Field3: null };
 			new JsClass(CreateMockTypeDefinition("Interface", Accessibility.Internal), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]),
 			new JsClass(CreateMockTypeDefinition("GenericInterface", Accessibility.Internal), JsClass.ClassTypeEnum.Interface, new[] { "T1" }, null, new JsExpression[0]),
 			new JsClass(CreateMockTypeDefinition("ResourceClass", Accessibility.Internal), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),
+				                       }
+			});
+		}
+
+		[Test]
+		public void ClassesWithModuleNamesGetExportedToTheExportsObject() {
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// GenericClass
+var $GenericClass = function(T1) {
+	var $type = function() {
+	};
+	{Type}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
+		return;
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+{Type}.registerGenericClass(exports, 'GenericClass', $GenericClass, 1);
+////////////////////////////////////////////////////////////////////////////////
+// GenericInterface
+var $GenericInterface = function(T1) {
+	var $type = function() {
+	};
+	{Type}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], function() {
+		return [];
+	});
+	return $type;
+};
+{Type}.registerGenericInterface(exports, 'GenericInterface', $GenericInterface, 1);
+////////////////////////////////////////////////////////////////////////////////
+// Interface
+var $Interface = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// NormalClass
+var $NormalClass = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// ResourceClass
+var $ResourceClass = { Field1: 'the value', Field2: 123, Field3: null };
+{Type}.registerInterface(exports, 'Interface', $Interface, []);
+{Type}.registerClass(exports, 'NormalClass', $NormalClass);
+{Type}.registerType(exports, 'ResourceClass', $ResourceClass);
+",          new MockScriptSharpMetadataImporter { IsResources = t => t.FullName == "ResourceClass", GetModuleName = t => "my-module" },
+			new JsClass(CreateMockTypeDefinition("NormalClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("GenericClass"), JsClass.ClassTypeEnum.Class, new[] { "T1" }, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("Interface"), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("GenericInterface"), JsClass.ClassTypeEnum.Interface, new[] { "T1" }, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("ResourceClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
 				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
 				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),

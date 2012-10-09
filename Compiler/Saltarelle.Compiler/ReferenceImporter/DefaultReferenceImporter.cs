@@ -99,6 +99,9 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
 
 				if (expression.Type.ParentAssembly.Equals(_mainAssembly)) {
+					if (string.IsNullOrEmpty(sem.Name))
+						return JsExpression.Identifier("exports");	// Referencing a [GlobalMethods] type. Since it was not handled in the member expression, we must be in a module, which means that the function should exist on the exports object.
+
 					// For types in our own assembly, we can use the $TYPE variable in the pattern "var $TYPE = function() {} ... Type.registerClass(global, 'The.Name', $TYPE)"
 					return JsExpression.Identifier(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(expression.Type).Name));
 				}

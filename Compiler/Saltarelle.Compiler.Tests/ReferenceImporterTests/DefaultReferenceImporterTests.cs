@@ -66,6 +66,16 @@ return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 		}
 
 		[Test]
+		public void AccessingMemberOnTypeWithEmptyScriptNameInOwnAssemblyWithModuleNameUsesExports() {
+			var asm = CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", asm)), "x")),
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(""), GetModuleName = t => "my-module" });
+
+			AssertCorrect(actual, "exports.x;\n");
+		}
+
+		[Test]
 		public void AccessingMemberOnTypeWithEmptyScriptNameResultsInGlobalAccess() {
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", CreateMockAssembly())), "x")),
