@@ -4,13 +4,6 @@
 global.Type = Function;
 
 Type.registerType = function#? DEBUG Type$registerType##(root, typeName, type) {
-    if (!root.__types) {
-        root.__types = {};
-    }
-    if (root.__types[typeName]) {
-        return;
-    }
-
     var ns = root;
     var nameParts = typeName.split('.');
 
@@ -23,8 +16,6 @@ Type.registerType = function#? DEBUG Type$registerType##(root, typeName, type) {
         ns = nso;
     }
     ns[nameParts[nameParts.length - 1]] = type;
-
-    root.__types[typeName] = type;
 };
 
 Type.__genericCache = {};
@@ -312,8 +303,17 @@ Type.getType = function#? DEBUG Type$getType##(typeName) {
 
     var type = Type.__typeCache[typeName];
     if (!type) {
-        type = eval(typeName);
-        Type.__typeCache[typeName] = type;
+		var arr = typeName.split(',');
+		var type = (arr.length > 1 ? require(arr[1].trim) : global);
+
+		var parts = arr[0].trim().split('.');
+		for (var i = 0; i < parts.length; i++) {
+			type = type[parts[i]];
+			if (!type)
+				break;
+		}
+
+        Type.__typeCache[typeName] = type || null;
     }
     return type;
 };
