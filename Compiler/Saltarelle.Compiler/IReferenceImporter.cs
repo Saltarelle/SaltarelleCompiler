@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -15,6 +16,6 @@ namespace Saltarelle.Compiler {
 		/// Import all references in the given statements, thereby ensuring that no <see cref="JsTypeReferenceExpression"/>s are left.
 		/// </summary>
 		/// <param name="statements">Statements to process.</param>
-		IList<JsStatement> ImportReferences(IList<JsStatement> statements);
+		IList<JsStatement> ImportReferences(IList<JsStatement> statements, IAssembly mainAssembly);
 	}
 }

@@ -69,7 +69,7 @@ public class C {
 		public void CanCompileCodeWithNonAsciiCharacters() {
 			AssertSourceCorrect(
 @"namespace Ф {
-	class Класс {
+	public class Класс {
 		void Я() {
 			string Щ = ""г"";
 		}
@@ -77,14 +77,14 @@ public class C {
 }",
 @"////////////////////////////////////////////////////////////////////////////////
 // Ф.Класс
-var $Ф_$Класс = function() {
+var $Ф_Класс = function() {
 };
-$Ф_$Класс.prototype = {
+$Ф_Класс.prototype = {
 	$я: function() {
 		var Щ = 'г';
 	}
 };
-Type.registerClass(global, 'Ф.$Класс', $Ф_$Класс, Object);
+Type.registerClass(global, 'Ф.Класс', $Ф_Класс, Object);
 ");
 		}
 	}

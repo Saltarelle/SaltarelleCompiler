@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 	public class RuntimeLibraryTestBase {
 		private enum OutputType { None, GeneratedScript, Html };
 
-		private OutputType Output = OutputType.None;
+		private OutputType Output = OutputType.GeneratedScript;
 
 		protected void AssertStringsEqual(string expected, string actual) {
 			Assert.That(expected.Replace("\r\n", "\n"), Is.EqualTo(actual.Replace("\r\n", "\n")));
@@ -99,8 +99,8 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
-			js = new DefaultReferenceImporter(md, n).ImportReferences(js);
+			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Rewrite(compiledTypes, compilation.Compilation);
+			js = new DefaultReferenceImporter(md, n).ImportReferences(js, compilation.Compilation.MainAssembly);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 

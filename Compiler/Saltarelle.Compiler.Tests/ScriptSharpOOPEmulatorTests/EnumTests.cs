@@ -34,6 +34,7 @@ $MyEnum.prototype = { value1: 1, value2: 2, value3: 3 };
 		[Test]
 		public void FlagsAttributeWorks() {
 			var typeDef = Common.CreateTypeMock("SomeNamespace.InnerNamespace.MyEnum");
+			typeDef.SetupGet(_ => _.Accessibility).Returns(Accessibility.Public);
 			var attr = new Mock<IAttribute>(MockBehavior.Strict);
 			var attrType = new Mock<ITypeDefinition>();
 			typeDef.SetupGet(_ => _.Attributes).Returns(new[] { attr.Object });
@@ -62,6 +63,18 @@ $SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 'value1', value2: 'va
 {Type}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum, false);
 ",          new MockScriptSharpMetadataImporter { IsNamedVaules = t => t.FullName == "SomeNamespace.InnerNamespace.MyEnum" },
 			new JsEnum(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyEnum"), new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
+		}
+
+		[Test]
+		public void InternalEnumIsNotExported() {
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// MyEnum
+var $MyEnum = function() {
+};
+$MyEnum.prototype = { value1: 1, value2: 2, value3: 3 };
+{Type}.registerEnum(null, 'MyEnum', $MyEnum, false);
+",			new JsEnum(CreateMockTypeDefinition("MyEnum", Accessibility.Internal), new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
 		}
 	}
 }

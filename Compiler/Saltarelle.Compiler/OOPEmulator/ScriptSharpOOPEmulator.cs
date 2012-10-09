@@ -45,13 +45,15 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
+		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
 		private readonly ICompilation _compilation;
 		private readonly JsTypeReferenceExpression _systemType;
 
-		public ScriptSharpOOPEmulator(ICompilation compilation, IScriptSharpMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
+		public ScriptSharpOOPEmulator(ICompilation compilation, IScriptSharpMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
 			_metadataImporter = metadataImporter;
 			_runtimeLibrary = runtimeLibrary;
+			_namer = namer;
 			_errorReporter = errorReporter;
 			_compilation = compilation;
 			_systemType = new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Type).GetDefinition());
@@ -188,7 +190,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						  .Where(expr => expr.NodeType == ExpressionNodeType.Assign && expr.Left is JsMemberAccessExpression)
 						  .Select(expr => new { Name = ((JsMemberAccessExpression)expr.Left).MemberName, Value = expr.Right });
 
-			return new JsVariableDeclarationStatement(MakeClassVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
+			return new JsVariableDeclarationStatement(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
 		}
 
 		private IList<JsClass> TopologicalSortTypesByInheritance(IList<JsClass> types) {
@@ -221,8 +223,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return result;
 		}
 
-		private string MakeClassVariableName(string typeName) {	
-			return "$" + typeName.Replace(".", "_");
+		private JsExpression ExportIfPublic(ITypeDefinition type, JsExpression exportTo) {
+			return Utils.IsPublic(type) ? exportTo : JsExpression.Null;
 		}
 
 		public IList<JsStatement> Rewrite(IEnumerable<JsType> types, ICompilation compilation) {
@@ -239,7 +241,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
 
-					var typeRef = JsExpression.Identifier(MakeClassVariableName(name));
+					var typeRef = JsExpression.Identifier(_namer.GetTypeVariableName(name));
 					if (t is JsClass) {
 						var c = (JsClass)t;
 						if (isGlobal) {
@@ -264,7 +266,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts))));
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), root, JsExpression.String(name), typeRef, JsExpression.Number(c.TypeArgumentNames.Count))));
+								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), ExportIfPublic(t.CSharpTypeDefinition, root), JsExpression.String(name), typeRef, JsExpression.Number(c.TypeArgumentNames.Count))));
 							}
 						}
 					}
@@ -273,7 +275,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						bool flags = GetAttributePositionalArgs(t.CSharpTypeDefinition, FlagsAttribute, "System") != null;
 						result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)));
 						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, (_metadataImporter.IsNamedValues(t.CSharpTypeDefinition) ? JsExpression.String(v.Name) : JsExpression.Number(v.Value))))))));
-						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterEnum), root, JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
+						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterEnum), ExportIfPublic(t.CSharpTypeDefinition, root), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
 					}
 				}
 				catch (Exception ex) {
@@ -285,6 +287,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			var typesToRegister = orderedTypes.OfType<JsClass>()
 			                            .Where(c =>    c.TypeArgumentNames.Count == 0
 			                                        && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
+			                                        && (!_metadataImporter.IsResources(c.CSharpTypeDefinition) || Utils.IsPublic(c.CSharpTypeDefinition))	// Resources classes are only exported if they are public.
 			                                        && !_metadataImporter.IsMixin(c.CSharpTypeDefinition))
 			                            .ToList();
 
@@ -293,13 +296,13 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
 			                                     if (_metadataImporter.IsResources(c.CSharpTypeDefinition)) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterType), root, JsExpression.String(name), JsExpression.Identifier(MakeClassVariableName(name)));
+			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterType), ExportIfPublic(c.CSharpTypeDefinition, root), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
 			                                     }
 			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterInterface), root, JsExpression.String(name), JsExpression.Identifier(MakeClassVariableName(name)), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
+			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterInterface), ExportIfPublic(c.CSharpTypeDefinition, root), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
 			                                     }
 			                                     else {
-			                                         return CreateRegisterClassCall(root, name, JsExpression.Identifier(MakeClassVariableName(name)), c.BaseClass, c.ImplementedInterfaces);
+			                                         return CreateRegisterClassCall(ExportIfPublic(c.CSharpTypeDefinition, root), name, JsExpression.Identifier(_namer.GetTypeVariableName(name)), c.BaseClass, c.ImplementedInterfaces);
 			                                     }
 			                                 }
 			                                 catch (Exception ex) {

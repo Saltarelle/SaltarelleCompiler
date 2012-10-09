@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -67,6 +68,7 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 		private class ImportVisitor : RewriterVisitorBase<object> {
 			private readonly IScriptSharpMetadataImporter _metadataImporter;
 			private readonly INamer _namer;
+			private readonly IAssembly _mainAssembly;
 			private readonly HashSet<string> _usedSymbols;
 
 			private readonly Dictionary<string, string> _moduleAliases;
@@ -96,6 +98,11 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 				if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
 					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
 
+				if (expression.Type.ParentAssembly.Equals(_mainAssembly)) {
+					// For types in our own assembly, we can use the $TYPE variable in the pattern "var $TYPE = function() {} ... Type.registerClass(global, 'The.Name', $TYPE)"
+					return JsExpression.Identifier(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(expression.Type).Name));
+				}
+
 				string moduleName = _metadataImporter.GetModuleName(expression.Type);
 
 				var parts = sem.Name.Split('.');
@@ -124,15 +131,16 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			private ImportVisitor(IScriptSharpMetadataImporter metadataImporter, INamer namer, HashSet<string> usedSymbols) {
+			private ImportVisitor(IScriptSharpMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols) {
 				_metadataImporter = metadataImporter;
 				_namer            = namer;
+				_mainAssembly     = mainAssembly;
 				_usedSymbols      = usedSymbols;
 				_moduleAliases    = new Dictionary<string, string>();
 			}
 
-			public static IList<JsStatement> Process(IScriptSharpMetadataImporter metadataImporter, INamer namer, IList<JsStatement> statements) {
-				var importer = new ImportVisitor(metadataImporter, namer, UsedSymbolsGatherer.Analyze(statements));
+			public static IList<JsStatement> Process(IScriptSharpMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, IList<JsStatement> statements) {
+				var importer = new ImportVisitor(metadataImporter, namer, mainAssembly, UsedSymbolsGatherer.Analyze(statements));
 				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
 				if (importer._moduleAliases.Count > 0) {
 					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
@@ -157,8 +165,8 @@ namespace Saltarelle.Compiler.ReferenceImporter {
 			_namer            = namer;
 		}
 
-		public IList<JsStatement> ImportReferences(IList<JsStatement> statements) {
-			return ImportVisitor.Process(_metadataImporter, _namer, statements);
+		public IList<JsStatement> ImportReferences(IList<JsStatement> statements, IAssembly mainAssembly) {
+			return ImportVisitor.Process(_metadataImporter, _namer, mainAssembly, statements);
 		}
 	}
 }

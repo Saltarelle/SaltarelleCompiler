@@ -11,10 +11,12 @@ using Saltarelle.Compiler.MetadataImporter;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 	public class ScriptSharpOOPEmulatorTestBase {
-		protected ITypeDefinition CreateMockTypeDefinition(string name) {
+		protected ITypeDefinition CreateMockTypeDefinition(string name, Accessibility accessibility = Accessibility.Public, ITypeDefinition declaringType = null) {
 			var typeDef = Common.CreateTypeMock(name);
 			typeDef.SetupGet(_ => _.Attributes).Returns(new IAttribute[0]);
 			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
+			typeDef.SetupGet(_ => _.Accessibility).Returns(accessibility);
+			typeDef.SetupGet(_ => _.DeclaringTypeDefinition).Returns(declaringType);
 			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
 			return typeDef.Object;
 		}
@@ -32,7 +34,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			proj = proj.AddAssemblyReferences(new[] { Common.Mscorlib });
 			var comp = proj.CreateCompilation();
 			var er = new MockErrorReporter(true);
-			var obj = new OOPEmulator.ScriptSharpOOPEmulator(comp, metadataImporter, new MockRuntimeLibrary(), er);
+			var obj = new OOPEmulator.ScriptSharpOOPEmulator(comp, metadataImporter, new MockRuntimeLibrary(), new MockNamer(), er);
 			Assert.That(er.AllMessages, Is.Empty, "Should not have errors");
 			var rewritten = obj.Rewrite(types, comp);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));

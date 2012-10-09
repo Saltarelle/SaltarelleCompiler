@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -15,9 +16,19 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.ReferenceImporterTests {
 	[TestFixture]
 	public class DefaultReferenceImporterTests {
-		private string Process(IList<JsStatement> stmts, IScriptSharpMetadataImporter metadata = null, INamer namer = null) {
+		private ITypeDefinition CreateMockType(string fullName, IAssembly parentAssembly) {
+			var mock = Common.CreateTypeMock(fullName);
+			mock.SetupGet(_ => _.ParentAssembly).Returns(parentAssembly);
+			return mock.Object;
+		}
+
+		private IAssembly CreateMockAssembly() {
+			return new Mock<IAssembly>().Object;
+		}
+
+		private string Process(IList<JsStatement> stmts, IScriptSharpMetadataImporter metadata = null, INamer namer = null, IAssembly mainAssembly = null) {
 			var obj = new DefaultReferenceImporter(metadata ?? new MockScriptSharpMetadataImporter(), namer ?? new MockNamer());
-			var processed = obj.ImportReferences(stmts);
+			var processed = obj.ImportReferences(stmts, mainAssembly ?? new Mock<IAssembly>().Object);
 			return string.Join("", processed.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
 		}
 
@@ -27,9 +38,10 @@ namespace Saltarelle.Compiler.Tests.ReferenceImporterTests {
 
 		[Test]
 		public void ImportingTypesFromGlobalNamespaceWorks() {
+			var otherAsm = CreateMockAssembly();
 			var actual = Process(new JsStatement[] {
-				new JsExpressionStatement(new JsTypeReferenceExpression(Common.CreateMockType("GlobalType"))),
-			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockType("Global.NestedNamespace.InnerNamespace.Type")), "x"), JsExpression.Number(1)))
+				new JsExpressionStatement(new JsTypeReferenceExpression(CreateMockType("GlobalType", otherAsm))),
+			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(CreateMockType("Global.NestedNamespace.InnerNamespace.Type", otherAsm)), "x"), JsExpression.Number(1)))
 			}, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -39,9 +51,24 @@ return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 		}
 
 		[Test]
+		public void ImportingTypeFromOwnAssemblyUsesTheTypeVariable() {
+			var asm = CreateMockAssembly();
+			var type = CreateMockType("GlobalType", asm);
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
+			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(CreateMockType("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1)))
+			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+
+			AssertCorrect(actual,
+@"$$GlobalType;
+return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
+");
+		}
+
+		[Test]
 		public void AccessingMemberOnTypeWithEmptyScriptNameResultsInGlobalAccess() {
 			var actual = Process(new JsStatement[] {
-				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(Common.CreateMockType("GlobalType")), "x")),
+				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", CreateMockAssembly())), "x")),
 			}, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual, "x;\n");
@@ -49,10 +76,11 @@ return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 
 		[Test]
 		public void ImportingTypesFromModulesWorks() {
-			var t1 = Common.CreateMockType("SomeNamespace.InnerNamespace.Type1");
-			var t2 = Common.CreateMockType("SomeNamespace.InnerNamespace.Type2");
-			var t3 = Common.CreateMockType("SomeNamespace.Type3");
-			var t4 = Common.CreateMockType("Type4");
+			var asm = CreateMockAssembly();
+			var t1 = CreateMockType("SomeNamespace.InnerNamespace.Type1", asm);
+			var t2 = CreateMockType("SomeNamespace.InnerNamespace.Type2", asm);
+			var t3 = CreateMockType("SomeNamespace.Type3", asm);
+			var t4 = CreateMockType("Type4", asm);
 			var md = new MockScriptSharpMetadataImporter { GetModuleName = t => t.Name == "Type1" || t.Name == "Type3" ? "module1" : (t.Name == "Type2" ? "module2" : "module3") };
 
 			var actual = Process(new JsStatement[] {
@@ -74,7 +102,7 @@ $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
 
 		[Test]
 		public void ImportingGlobalMethodsFromModulesWorks() {
-			var t1 = Common.CreateMockType("Type1");
+			var t1 = CreateMockType("Type1", CreateMockAssembly());
 			var md = new MockScriptSharpMetadataImporter { GetModuleName = t => "mymodule", GetTypeSemantics = t => TypeScriptSemantics.NormalType("") };
 
 			var actual = Process(new JsStatement[] {
@@ -90,11 +118,12 @@ $mymodule.a;
 
 		[Test]
 		public void GeneratedModuleAliasesAreValidAndDoNotClashWithEachOtherOrUsedSymbols() {
-			var t1 = Common.CreateMockType("Type1");
-			var t2 = Common.CreateMockType("Type2");
-			var t3 = Common.CreateMockType("Type3");
-			var t4 = Common.CreateMockType("Type4");
-			var t5 = Common.CreateMockType("Type5");
+			var asm = CreateMockAssembly();
+			var t1 = CreateMockType("Type1", asm);
+			var t2 = CreateMockType("Type2", asm);
+			var t3 = CreateMockType("Type3", asm);
+			var t4 = CreateMockType("Type4", asm);
+			var t5 = CreateMockType("Type5", asm);
 			var md = new MockScriptSharpMetadataImporter { GetModuleName = t => { switch (t.Name) {
 			                                                                          case "Type1": return "mymodule";
 			                                                                          case "Type2": return "mymodule+";

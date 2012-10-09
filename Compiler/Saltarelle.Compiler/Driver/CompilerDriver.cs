@@ -217,8 +217,8 @@ namespace Saltarelle.Compiler.Driver {
 					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
-					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
-					js = new DefaultReferenceImporter(md, n).ImportReferences(js);
+					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Rewrite(compiledTypes, compilation.Compilation);
+					js = new DefaultReferenceImporter(md, n).ImportReferences(js, compilation.Compilation.MainAssembly);
 
 					if (er.HasErrors)
 						return false;

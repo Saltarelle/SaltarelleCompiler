@@ -126,10 +126,10 @@ x = 1;
 		[Test]
 		public void BaseTypesAreRegisteredBeforeDerivedTypes() {
 			var sourceFile = new MockSourceFile("file.cs", @"
-class C3 {}
-interface I1 {}
-class C2 : C3 {}
-class C1 : C2, I1 {}
+public class C3 {}
+public interface I1 {}
+public class C2 : C3 {}
+public class C1 : C2, I1 {}
 ");
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var n = new MockNamer();
@@ -168,9 +168,9 @@ var $I1 = function() {
 		[Test]
 		public void BaseTypesAreRegisteredBeforeDerivedTypesGeneric() {
 			var sourceFile = new MockSourceFile("file.cs", @"
-class B<T> {}
-interface I<T> {}
-class A : B<int>, I<int> {}
+public class B<T> {}
+public interface I<T> {}
+public class A : B<int>, I<int> {}
 ");
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var n = new MockNamer();

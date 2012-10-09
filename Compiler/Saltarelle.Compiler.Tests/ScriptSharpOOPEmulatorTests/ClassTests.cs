@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using ICSharpCode.NRefactory.TypeSystem;
+using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
@@ -332,9 +333,6 @@ var $SomeNamespace_InnerNamespace_MyClass = { Field1: 'the value', Field2: 123, 
 {Type}.registerType(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass);
 ",          new MockScriptSharpMetadataImporter { IsResources = t => t.FullName == "SomeNamespace.InnerNamespace.MyClass" },
 			new JsClass(CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
-				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
-				                },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
 				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
 				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),
@@ -439,6 +437,68 @@ $MyClass.prototype = {
 				                    new JsMethod(CreateMockMethod("Category1XTest5"), "category1XTest5", null, CreateFunction("x5")),
 				                    new JsMethod(CreateMockMethod("Category2XTest6"), "category2XTest6", null, CreateFunction("x6")),
 				                  }
+			});
+		}
+
+		[Test]
+		public void InternalTypesAreNotExported() {
+			var outerType = CreateMockTypeDefinition("Outer", Accessibility.Internal);
+			var innerType = CreateMockTypeDefinition("Inner", Accessibility.Public, outerType);
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// GenericClass
+var $GenericClass = function(T1) {
+	var $type = function() {
+	};
+	{Type}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
+		return;
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+{Type}.registerGenericClass(null, 'GenericClass', $GenericClass, 1);
+////////////////////////////////////////////////////////////////////////////////
+// GenericInterface
+var $GenericInterface = function(T1) {
+	var $type = function() {
+	};
+	{Type}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], function() {
+		return [];
+	});
+	return $type;
+};
+{Type}.registerGenericInterface(null, 'GenericInterface', $GenericInterface, 1);
+////////////////////////////////////////////////////////////////////////////////
+// Interface
+var $Interface = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// Outer
+var $Outer = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// Inner
+var $Outer$Inner = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// ResourceClass
+var $ResourceClass = { Field1: 'the value', Field2: 123, Field3: null };
+{Type}.registerInterface(null, 'Interface', $Interface, []);
+{Type}.registerClass(null, 'Outer', $Outer);
+{Type}.registerClass(null, 'Outer$Inner', $Outer$Inner);
+",          new MockScriptSharpMetadataImporter { IsResources = t => t.FullName == "ResourceClass" },
+			new JsClass(outerType, JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+			new JsClass(innerType, JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("GenericClass", Accessibility.Internal), JsClass.ClassTypeEnum.Class, new[] { "T1" }, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("Interface", Accessibility.Internal), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("GenericInterface", Accessibility.Internal), JsClass.ClassTypeEnum.Interface, new[] { "T1" }, null, new JsExpression[0]),
+			new JsClass(CreateMockTypeDefinition("ResourceClass", Accessibility.Internal), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
+				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),
+				                       }
 			});
 		}
 	}
