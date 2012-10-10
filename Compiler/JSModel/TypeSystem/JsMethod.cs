@@ -15,7 +15,6 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         public JsFunctionDefinitionExpression Definition { get; private set; }
 
         public JsMethod(IMember csharpMember, string name, IEnumerable<string> typeParameterNames, JsFunctionDefinitionExpression definition) {
-            Require.ValidJavaScriptIdentifier(name, "name");
 			CSharpMember       = csharpMember;
             Name               = name;
             TypeParameterNames = typeParameterNames.AsReadOnly();

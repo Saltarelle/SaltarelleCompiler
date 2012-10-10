@@ -36,6 +36,8 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		[Test]
 		public void SimplestCommandLineReturnsTheExpectedOptions() {
 			ExpectSuccess(new [] { "File1.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.False);
+				Assert.That(options.EntryPointClass, Is.Null);
 				Assert.That(options.AdditionalLibPaths, Is.Empty);
 				Assert.That(options.MinimizeScript, Is.True);
 				Assert.That(options.DefineConstants, Is.Empty);
@@ -68,6 +70,10 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 				Assert.That(options.DefineConstants, Is.EquivalentTo(new[] { "MY_SYMBOL1", "MY_SYMBOL2", "MY_SYMBOL3", "MY_SYMBOL4" }));
 				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
+			ExpectSuccess(new[] { "/d:MY_SYMBOL1;MY_SYMBOL2", "/d:MY_SYMBOL3;MY_SYMBOL2", "/d:MY_SYMBOL4", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.DefineConstants, Is.EquivalentTo(new[] { "MY_SYMBOL1", "MY_SYMBOL2", "MY_SYMBOL3", "MY_SYMBOL4" }));
+				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+			});
 		}
 
 		[Test]
@@ -87,6 +93,11 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 
 			ExpectSuccess(new[] { @"/reference:SomeReference1,Some\Relative\Path\SomeOtherReference,somealias=AliasedReference", @"/reference:OtherReference", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.References.Select(r => new { r.Alias, r.Filename }).ToList(), Is.EquivalentTo(new[] { new { Alias = (string)null, Filename = "SomeReference1" }, new { Alias = (string)null, Filename = @"Some\Relative\Path\SomeOtherReference" }, new { Alias = "somealias", Filename = "AliasedReference" }, new { Alias = (string)null, Filename = "OtherReference" } }));
+				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+			});
+
+			ExpectSuccess(new[] { @"/r:SomeReference1", @"/r:Some\Relative\Path\SomeOtherReference", @"/r:somealias=AliasedReference", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.References.Select(r => new { r.Alias, r.Filename }).ToList(), Is.EquivalentTo(new[] { new { Alias = (string)null, Filename = "SomeReference1" }, new { Alias = (string)null, Filename = @"Some\Relative\Path\SomeOtherReference" }, new { Alias = "somealias", Filename = "AliasedReference" } }));
 				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 		}
@@ -110,6 +121,12 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		public void WarningLevelsWork() {
 			for (int i = 0; i <= 4; i++) {
 				ExpectSuccess(new[] { string.Format(CultureInfo.InvariantCulture, "/warn:{0}", i), "MyFile1.cs", "MyFile2.cs" }, options => {
+					Assert.That(options.WarningLevel, Is.EqualTo(i));
+				});
+			}
+
+			for (int i = 0; i <= 4; i++) {
+				ExpectSuccess(new[] { string.Format(CultureInfo.InvariantCulture, "/w:{0}", i), "MyFile1.cs", "MyFile2.cs" }, options => {
 					Assert.That(options.WarningLevel, Is.EqualTo(i));
 				});
 			}
@@ -186,6 +203,48 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 
 			ExpectSuccess(new[] { "/keycontainer:MyKeyContainer", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.KeyContainer, Is.EqualTo("MyKeyContainer"));
+			});
+		}
+
+		[Test]
+		public void TargetWorks() {
+			ExpectSuccess(new[] { "/t:exe", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.True);
+			});
+			ExpectSuccess(new[] { "/target:EXE", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.True);
+			});
+			ExpectSuccess(new[] { "/t:winexe", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.True);
+			});
+			ExpectSuccess(new[] { "/target:WINEXE", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.True);
+			});
+			ExpectSuccess(new[] { "/t:library", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.False);
+			});
+			ExpectSuccess(new[] { "/target:LIBRARY", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.False);
+			});
+			ExpectSuccess(new[] { "/t:module", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.False);
+			});
+			ExpectSuccess(new[] { "/target:MODULE", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.HasEntryPoint, Is.False);
+			});
+
+			ExpectError(new[] { "/t:invalid_target1" }, error => {
+				Assert.That(error.Contains("invalid_target1"), Is.True);
+			});
+		}
+
+		[Test]
+		public void MainWorks() {
+			ExpectSuccess(new[] { "/m:SomeNamespace.SomeClass", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.EntryPointClass, Is.EqualTo("SomeNamespace.SomeClass"));
+			});
+			ExpectSuccess(new[] { "/main:SomeClass", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.EntryPointClass, Is.EqualTo("SomeClass"));
 			});
 		}
 

@@ -236,9 +236,9 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
         [Test]
         public void NestedMemberExpressionsAreNotParenthesized() {
-            AssertCorrect(JsExpression.MemberAccess(
-                              JsExpression.MemberAccess(
-                                  JsExpression.MemberAccess(
+            AssertCorrect(JsExpression.Member(
+                              JsExpression.Member(
+                                  JsExpression.Member(
                                       JsExpression.Identifier("x"),
                                       "Member1"
                                   ),
@@ -251,7 +251,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
         [Test]
         public void InvocationIsNotParenthesizedWhenUsedAsMemberAccessTarget() {
-            AssertCorrect(JsExpression.MemberAccess(
+            AssertCorrect(JsExpression.Member(
                               JsExpression.Invocation(
                                   JsExpression.Number(1),
                                   new[] { JsExpression.Number(2) }
@@ -276,7 +276,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
         [Test]
         public void NewExpressionIsParenthesizedWhenItIsTheTargetOfAMemberAccess() {
-            AssertCorrect(JsExpression.MemberAccess(
+            AssertCorrect(JsExpression.Member(
                               JsExpression.New(
                                   JsExpression.Number(1),
                                   new[] { JsExpression.Number(2) }
@@ -337,7 +337,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
         [Test]
         public void MemberAccessIsNotParenthesizedWhenUsedAsInvocationTarget() {
             AssertCorrect(JsExpression.Invocation(
-                              JsExpression.MemberAccess(
+                              JsExpression.Member(
                                   JsExpression.Identifier("x"),
                                   "Member"
                               ),
@@ -361,11 +361,11 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
         [Test]
         public void ChainedFunctionCallsAndMemberAccessesAreNotParenthtesized() {
             AssertCorrect(JsExpression.Invocation(
-                              JsExpression.MemberAccess(
+                              JsExpression.Member(
                                   JsExpression.Invocation(
-                                      JsExpression.MemberAccess(
+                                      JsExpression.Member(
                                           JsExpression.Invocation(
-                                              JsExpression.MemberAccess(JsExpression.This, "x"),
+                                              JsExpression.Member(JsExpression.This, "x"),
                                               new[] { JsExpression.Number(1) }
                                           ), "y"),
                                       new[] { JsExpression.Number(2) }
@@ -400,7 +400,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			              "new (X())(1)");
 
 			AssertCorrect(JsExpression.New(
-			                  JsExpression.MemberAccess(
+			                  JsExpression.Member(
 			                      JsExpression.Invocation(
 			                          JsExpression.Identifier("X"),
 			                          new JsExpression[0]
@@ -412,9 +412,9 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			              "new (X().a)(1)");
 
 			AssertCorrect(JsExpression.New(
-			                  JsExpression.MemberAccess(
+			                  JsExpression.Member(
 			                      JsExpression.Invocation(
-			                          JsExpression.MemberAccess(
+			                          JsExpression.Member(
 			                              JsExpression.Identifier("a"),
 			                              "X"
 			                          ),
@@ -431,8 +431,8 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
         public void CreatingObjectOfNestedTypeDoesNotCauseUnnecessaryParentheses() {
             // Just to get rid of ambiguities
             AssertCorrect(JsExpression.New(
-                              JsExpression.MemberAccess(
-                                  JsExpression.MemberAccess(
+                              JsExpression.Member(
+                                  JsExpression.Member(
                                       JsExpression.Identifier("X"),
                                       "Y"
                                   ),
@@ -486,14 +486,14 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void NumberIsParenthesizedWhenUsedAsMemberAccessTarget() {
-			AssertCorrect(JsExpression.MemberAccess(JsExpression.Number(1), "X"), "(1).X");
+			AssertCorrect(JsExpression.Member(JsExpression.Number(1), "X"), "(1).X");
 		}
 
 		[Test]
 		public void IndexingDoesNotCauseUnnecessaryParentheses() {
-			AssertCorrect(JsExpression.MemberAccess(
+			AssertCorrect(JsExpression.Member(
 			                  JsExpression.Index(
-			                      JsExpression.MemberAccess(
+			                      JsExpression.Member(
 			                          JsExpression.Index(
 			                          JsExpression.Identifier("a"),
 			                          JsExpression.Identifier("b")

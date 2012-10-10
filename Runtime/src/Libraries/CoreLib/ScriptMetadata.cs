@@ -264,8 +264,16 @@ namespace System.Runtime.CompilerServices {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
     [NonScriptable]
     [Imported]
-    public sealed class PreserveMemberCaseAttribute : Attribute
-    {
+    public sealed class PreserveMemberCaseAttribute : Attribute {
+        public bool Preserve { get; private set; }
+
+        public PreserveMemberCaseAttribute() {
+            Preserve = true;
+        }
+
+        public PreserveMemberCaseAttribute(bool preserve) {
+            Preserve = preserve;
+        }
     }
 
     /// <summary>
@@ -417,5 +425,41 @@ namespace System.Runtime.CompilerServices {
 	[Imported]
 	public sealed class DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor {
 		private DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor() {}
+	}
+
+	/// <summary>
+	/// Specifies that a type is defined in a module, which should be imported by a require() call.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Type | AttributeTargets.Assembly)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ModuleNameAttribute : Attribute {	
+		public string ModuleName { get; private set; }
+
+		public ModuleNameAttribute(string moduleName) {
+			this.ModuleName = moduleName;
+		}
+	}
+	
+	/// <summary>
+	/// When specified on an assembly, Javascript that adheres to the AMD pattern (require/define) will be generated.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[NonScriptable]
+	[Imported]
+	public sealed class AsyncModuleAttribute : Attribute {	
+		public AsyncModuleAttribute() {
+		}
+	}
+
+	/// <summary>
+	/// Can be applied to a GetEnumerator() method to indicate that that array-style enumeration should be used.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method)]
+	[NonScriptable]
+	[Imported]
+	public sealed class EnumerateAsArrayAttribute : Attribute {	
+		public EnumerateAsArrayAttribute() {
+		}
 	}
 }

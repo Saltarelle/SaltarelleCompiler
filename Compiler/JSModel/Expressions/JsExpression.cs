@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
     public enum ExpressionNodeType {
@@ -313,7 +314,14 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
             return new JsMemberAccessExpression(target, member);
         }
 
-        public static JsNewExpression New(JsExpression constructor, IEnumerable<JsExpression> arguments) {
+		/// <summary>
+		/// Creates an expression to access a member. If the member is a valid JS identifier, will return target.member, otherwise returns traget["member"].
+		/// </summary>
+		public static JsExpression Member(JsExpression target, string member) {
+			return member.IsValidJavaScriptIdentifier() ? (JsExpression)MemberAccess(target, member) : Index(target, JsExpression.String(member));
+		}
+
+	    public static JsNewExpression New(JsExpression constructor, IEnumerable<JsExpression> arguments) {
             return new JsNewExpression(constructor, arguments);
         }
 

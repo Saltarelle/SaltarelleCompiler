@@ -231,7 +231,7 @@
     <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
     <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\DelegateTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\ScriptSharpCompatibilityTests.cs" />
+    <Compile Include="ScriptSharpMetadataImporterTests\AssemblyPropertiesTests.cs" />
     <Compile Include="StateMachineTests\AsyncTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />
@@ -251,7 +251,7 @@
     <Compile Include="OutputFormatterTests\ParenthesationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CompilerTests\TypeConversionTests.cs" />
-    <Compile Include="ReferenceImporterTests\GlobalNamespaceReferenceImporterTests.cs" />
+    <Compile Include="LinkerTests\DefaultLinkerTests.cs" />
     <Compile Include="RuntimeLibraryTests\ExceptionTests.cs" />
     <Compile Include="RuntimeLibraryTests\NumberTests.cs" />
     <Compile Include="RuntimeLibraryTests\MiscTests.cs" />

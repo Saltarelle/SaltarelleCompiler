@@ -86,7 +86,7 @@ namespace Saltarelle.Compiler.Compiler {
 							_errorReporter.Region = oldRegion;
 						}
 
-						result = new JsClass(typeDefinition, "X", ConvertClassType(typeDefinition.Kind), new string[0], null, null);
+						result = new JsClass(typeDefinition, ConvertClassType(typeDefinition.Kind), new string[0], null, null);
 					}
 					else {
 						var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _runtimeLibrary.GetScriptType(t, TypeContext.GenericArgument) != null).ToList();
@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? _runtimeLibrary.GetScriptType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class), TypeContext.Inheritance) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
 						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.Inheritance)).Where(t => t != null).ToList();
 						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namer.GetTypeParameterName(a)).ToList();
-						result = new JsClass(typeDefinition, semantics.Name, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
+						result = new JsClass(typeDefinition, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
 					}
                 }
                 else {
@@ -142,7 +142,7 @@ namespace Saltarelle.Compiler.Compiler {
                 }
             }
 
-            return new JsEnum(type, semantics.Name, values);
+            return new JsEnum(type, values);
         }
 
         private IEnumerable<IType> SelfAndNested(IType type) {
@@ -345,19 +345,19 @@ namespace Saltarelle.Compiler.Compiler {
 
         private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), fieldType));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), fieldType));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.MemberAccess(JsExpression.This, fieldName), fieldType));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(JsExpression.This, fieldName), fieldType));
             }
         }
 
         private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
             if (isStatic) {
-                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), initializer));
+                jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember), fieldName), initializer));
             }
             else {
-                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.MemberAccess(JsExpression.This, fieldName), initializer));
+                AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(JsExpression.This, fieldName), initializer));
             }
         }
 

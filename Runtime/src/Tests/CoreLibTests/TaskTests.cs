@@ -1234,5 +1234,101 @@ namespace CoreLibTests {
 				QUnit.Start();
 			}, 300);
 		}
+
+		[PreserveName]
+		private void NodeAsyncHelper(int timeout, object[] callbackArgs, Delegate action) {
+			Window.SetTimeout(() => ((Function)action).Apply(this, callbackArgs), timeout);
+		}
+
+		[AsyncTest]
+		public void FromNodeWithoutResultWorks() {
+			bool continuationRun = false;
+			var task = Task.FromNode(this, "nodeAsyncHelper", 200, new object[] { null });
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
+
+		[AsyncTest]
+		public void FromNodeWithoutResultFactoryWorks() {
+			bool continuationRun = false;
+			var task = Task.FromNode<int>(this, "nodeAsyncHelper", 200, new object[] { null, 42 });
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				Assert.AreEqual(task.Result, 42);
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
+
+		[AsyncTest]
+		public void FromNodeWithResultFactoryWorks() {
+			bool continuationRun = false;
+			var task = Task.FromNode(this, (int i, string s) => new { i, s }, "nodeAsyncHelper", 200, new object[] { null, 42, "Test 123" });
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed");
+				Assert.AreEqual(task.Result.i, 42);
+				Assert.AreEqual(task.Result.s, "Test 123");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
+
+		[AsyncTest]
+		public void FromNodeWorksWhenTheCallbackIsInvokedWithAnError() {
+			bool continuationRun = false;
+			var err = new Error();
+			var task = Task.FromNode(this, "nodeAsyncHelper", 200, new object[] { err });
+			Assert.AreEqual(task.Status, TaskStatus.Running);
+			task.ContinueWith(t => {
+				Assert.IsTrue(t == task, "Callback parameter should be correct");
+				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should be faulted");
+				Assert.IsTrue(task.Exception is AggregateException, "The exception should be an AggregateException");
+				Assert.IsTrue(task.Exception.InnerExceptions[0] is JsErrorException, "The inner exception should be a JsErrorException");
+				Assert.AreEqual(((JsErrorException)task.Exception.InnerExceptions[0]).Error, err, "The error in the JsErrorException should be correct");
+				continuationRun = true;
+			});
+
+			Window.SetTimeout(() => {
+				Assert.IsFalse(task.IsCompleted, "Task should not be completed too early");
+			}, 100);
+
+			Window.SetTimeout(() => {
+				Assert.IsTrue(continuationRun, "The continuation should be run");
+				QUnit.Start();
+			}, 300);
+		}
 	}
 }

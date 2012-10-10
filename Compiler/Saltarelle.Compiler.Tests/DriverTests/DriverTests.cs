@@ -287,9 +287,10 @@ public class C1 {
 				var result = driver.Compile(options, false);
 
 				Assert.That(result, Is.True);
-				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("Class1"), Is.False);
-				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("someVariable"), Is.False);
-				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains(" "), Is.False);
+				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(content.Contains("Class1"), Is.False);
+				Assert.That(content.Contains("someVariable"), Is.False);
+				Assert.That(new System.Text.RegularExpressions.Regex("(?<!var) ").IsMatch(content), Is.False);
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
@@ -830,6 +831,55 @@ public class C1 {
 				Assert.That(File.Exists(Path.GetFullPath("Out.dll")), Is.True);
 
 			}, "MyAdditionalReferencePath", "Out.cs", "Out.dll", "Out.js");
+		}
+
+		[Test]
+		public void EntryPointCanBeAutomaticallyDetermined() {
+			UsingFiles(() => {
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"public class Class1 { public static void Main() {} } public class Class2 { public static object Main() { return null; } public static void Main(int x) {} public static void Main(string[] a, int b) {} }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					HasEntryPoint      = true,
+					DisabledWarnings   = { 28 },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				bool result = driver.Compile(options, false);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+
+				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(content.Replace("\r\n", "\n").EndsWith("$Class1.main();\n"), Is.True);
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void EntryPointCanBeSpecified() {
+			UsingFiles(() => {
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"namespace MyNamespace { public class SomeClass { public static void Main() {} } } public class OtherClass { public static void Main() {} }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					HasEntryPoint      = true,
+					EntryPointClass    = "MyNamespace.SomeClass",
+					DisabledWarnings   = { 28 },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				bool result = driver.Compile(options, false);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+
+				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(content.Replace("\r\n", "\n").EndsWith("$MyNamespace_SomeClass.main();\n"), Is.True);
+			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
 		[Test]

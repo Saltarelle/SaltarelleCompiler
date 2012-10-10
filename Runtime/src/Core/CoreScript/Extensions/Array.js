@@ -2,20 +2,21 @@
 // Array Extensions
 
 Array.__typeName = 'Array';
-Array.__interfaces = [ ss.IEnumerable, ss.ICollection, ss.IList ];
+Array.__baseType = Object;
+Array.__interfaces = [ ss_IEnumerable, ss_ICollection, ss_IList ];
 Array.__class = true;
 
 Array.prototype.get_item = function#? DEBUG Array$get_item##(index) {
 	return this[index];
-}
+};
 
 Array.prototype.set_item = function#? DEBUG Array$set_item##(index, value) {
 	this[index] = value;
-}
+};
 
 Array.prototype.get_count = function#? DEBUG Array$get_count##() {
 	return this.length;
-}
+};
 
 Array.prototype.getValue = function#? DEBUG Array$getValue##(indices) {
 	if (indices.length != (this._sizes ? this._sizes.length : 1))
@@ -28,11 +29,11 @@ Array.prototype.getValue = function#? DEBUG Array$getValue##(indices) {
 	}
 	var r = this[idx];
 	return typeof r !== 'undefined' ? r : this._defvalue;
-}
+};
 
 Array.prototype.get = function#? DEBUG Array$get##() {
 	return this.getValue(arguments);
-}
+};
 
 Array.prototype.setValue = function#? DEBUG Array$setValue##(value, indices) {
 	if (indices.length != (this._sizes ? this._sizes.length : 1))
@@ -44,32 +45,32 @@ Array.prototype.setValue = function#? DEBUG Array$setValue##(value, indices) {
 			idx = idx * this._sizes[i] + indices[i];
 	}
 	this[idx] = value;
-}
+};
 
 Array.prototype.set = function#? DEBUG Array$set##() {
 	return this.setValue(arguments[arguments.length - 1], Array.prototype.slice.call(arguments, 0, arguments.length - 1));
-}
+};
 
 Array.prototype.get_rank = function#? DEBUG Array$get_rank##() {
 	return this._sizes ? this._sizes.length : 1;
-}
+};
 
 Array.prototype.getLength = function#? DEBUG Array$getLength##(dimension) {
 	if (dimension >= (this._sizes ? this._sizes.length : 1))
 		throw 'Invalid dimension';
 	return this._sizes ? this._sizes[dimension] : this.length;
-}
+};
 
 Array.prototype.extract = function#? DEBUG Array$extract##(start, count) {
    if (!ss.isValue(count)) {
        return this.slice(start);
    }
    return this.slice(start, start + count);
-}
+};
 
 Array.prototype.add = function#? DEBUG Array$add##(item) {
     this[this.length] = item;
-}
+};
 
 Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
 	if (items instanceof Array) {
@@ -83,16 +84,16 @@ Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
 			}
 		}
 		finally {
-			if (ss.IDisposable.isInstanceOfType(e)) {
-				Type.cast(e, ss.IDisposable).dispose();
+			if (ss_IDisposable.isInstanceOfType(e)) {
+				Type.cast(e, ss_IDisposable).dispose();
 			}
 		}
 	}
-}
+};
 
 Array.prototype.clear = function#? DEBUG Array$clear##() {
     this.length = 0;
-}
+};
 
 Array.prototype.clone = function#? DEBUG Array$clone##() {
     if (this.length === 1) {
@@ -101,24 +102,24 @@ Array.prototype.clone = function#? DEBUG Array$clone##() {
     else {
         return Array.apply(null, this);
     }
-}
+};
 
 Array.prototype.contains = function#? DEBUG Array$contains##(item) {
     var index = this.indexOf(item);
     return (index >= 0);
-}
+};
 
 Array.prototype.peekFront = function#? DEBUG Array$peekFront##(item) {
 	if (this.length)
 		return this[0];
 	throw 'Array is empty';
-}
+};
 
 Array.prototype.peekBack = function#? DEBUG Array$peekBack##(item) {
 	if (this.length)
 		return this[this.length - 1];
 	throw 'Array is empty';
-}
+};
 
 if (!Array.prototype.every) {
     Array.prototype.every = function#? DEBUG Array$every##(callback, instance) {
@@ -129,7 +130,7 @@ if (!Array.prototype.every) {
             }
         }
         return true;
-    }
+    };
 }
 
 if (!Array.prototype.filter) {
@@ -145,7 +146,7 @@ if (!Array.prototype.filter) {
             }
         }
         return filtered;
-    }
+    };
 }
 
 if (!Array.prototype.forEach) {
@@ -156,12 +157,12 @@ if (!Array.prototype.forEach) {
                 callback.call(instance, this[i], i, this);
             }
         }
-    }
+    };
 }
 
 Array.prototype.getEnumerator = function#? DEBUG Array$getEnumerator##() {
-    return new ss.ArrayEnumerator(this);
-}
+    return new ss_ArrayEnumerator(this);
+};
 
 if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = function#? DEBUG Array$indexOf##(item, startIndex) {
@@ -175,12 +176,12 @@ if (!Array.prototype.indexOf) {
             }
         }
         return -1;
-    }
+    };
 }
 
 Array.prototype.insert = function#? DEBUG Array$insert##(index, item) {
     this.splice(index, 0, item);
-}
+};
 
 Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items) {
 	if (items instanceof Array) {
@@ -202,12 +203,12 @@ Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items)
 			}
 		}
 		finally {
-			if (ss.IDisposable.isInstanceOfType(e)) {
-				Type.cast(e, ss.IDisposable).dispose();
+			if (ss_IDisposable.isInstanceOfType(e)) {
+				Type.cast(e, ss_IDisposable).dispose();
 			}
 		}
 	}
-}
+};
 
 if (!Array.prototype.map) {
     Array.prototype.map = function#? DEBUG Array$map##(callback, instance) {
@@ -219,12 +220,12 @@ if (!Array.prototype.map) {
             }
         }
         return mapped;
-    }
+    };
 }
 
 Array.parse = function#? DEBUG Array$parse##(s) {
     return eval('(' + s + ')');
-}
+};
 
 Array.prototype.remove = function#? DEBUG Array$remove##(item) {
     var index = this.indexOf(item);
@@ -233,15 +234,15 @@ Array.prototype.remove = function#? DEBUG Array$remove##(item) {
         return true;
     }
     return false;
-}
+};
 
 Array.prototype.removeAt = function#? DEBUG Array$removeAt##(index) {
     this.splice(index, 1);
-}
+};
 
 Array.prototype.removeRange = function#? DEBUG Array$removeRange##(index, count) {
     this.splice(index, count);
-}
+};
 
 if (!Array.prototype.some) {
     Array.prototype.some = function#? DEBUG Array$some##(callback, instance) {
@@ -252,12 +253,12 @@ if (!Array.prototype.some) {
             }
         }
         return false;
-    }
+    };
 }
 
 Array.toArray = function#? DEBUG Array$toArray##(obj) {
     return Array.prototype.slice.call(obj);
-}
+};
 
 Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {
 	var e = enm.getEnumerator(), r = [];
@@ -269,7 +270,7 @@ Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {
 		e.dispose();
 	}
 	return r;
-}
+};
 
 Array.multidim = function#? DEBUG Array$multidim##(defvalue, sizes) {
 	var arr = [];
@@ -282,4 +283,4 @@ Array.multidim = function#? DEBUG Array$multidim##(defvalue, sizes) {
 	}
 	arr.length = length;
 	return arr;
-}
+};

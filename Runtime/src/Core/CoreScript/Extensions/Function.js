@@ -2,6 +2,7 @@
 // Function Extensions
 
 Function.__typeName = 'Function';
+Function.__baseType = Object;
 Function.__class = true;
 
 Function.empty = function () { };
@@ -13,7 +14,7 @@ Function._contains = function#? DEBUG Function$_contains##(targets, object, meth
         }
     }
     return false;
-}
+};
 
 Function._mkdel = function#? DEBUG Function$_mkdel##(targets) {
     var delegate = function() {
@@ -33,14 +34,14 @@ Function._mkdel = function#? DEBUG Function$_mkdel##(targets) {
     delegate._targets = targets;
 
     return delegate;
-}
+};
 
 Function.mkdel = function#? DEBUG Function$mkdel##(object, method) {
     if (!object) {
         return method;
     }
     return Function._mkdel([object, method]);
-}
+};
 
 Function.combine = function#? DEBUG Function$combine##(delegate1, delegate2) {
     if (!delegate1) {
@@ -60,7 +61,7 @@ Function.combine = function#? DEBUG Function$combine##(delegate1, delegate2) {
     var targets2 = delegate2._targets ? delegate2._targets : [null, delegate2];
 
     return Function._mkdel(targets1.concat(targets2));
-}
+};
 
 Function.remove = function#? DEBUG Function$remove##(delegate1, delegate2) {
     if (!delegate1 || (delegate1 === delegate2)) {
@@ -92,11 +93,11 @@ Function.remove = function#? DEBUG Function$remove##(delegate1, delegate2) {
     }
 
     return delegate1;
-}
+};
 
 Function.clone = function#? DEBUG Function$clone##(source) {
 	return source._targets ? Function._mkdel(source._targets) : function() { return source.apply(this, arguments); };
-}
+};
 
 Function.thisFix = function#? DEBUG Function$thisFix##(source) {
     return function() {
@@ -105,4 +106,4 @@ Function.thisFix = function#? DEBUG Function$thisFix##(source) {
             x.push(arguments[i]);
         return source.apply(source, x);
     };
-}
+};

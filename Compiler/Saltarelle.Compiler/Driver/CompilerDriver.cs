@@ -15,8 +15,9 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulator;
-using Saltarelle.Compiler.ReferenceImporter;
+using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.RuntimeLibrary;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
@@ -61,29 +62,31 @@ namespace Saltarelle.Compiler.Driver {
 		private static CompilerSettings MapSettings(CompilerOptions options, string outputAssemblyPath, string outputDocFilePath, IErrorReporter er) {
 			var allPaths = options.AdditionalLibPaths.Concat(new[] { Environment.CurrentDirectory }).ToList();
 
-			var result = new CompilerSettings();
-			result.Target                    = Target.Library;
-			result.Platform                  = Platform.AnyCPU;
-			result.TargetExt                 = ".dll";
-			result.VerifyClsCompliance       = false;
-			result.Optimize                  = false;
-			result.Version                   = LanguageVersion.V_5;
-			result.EnhancedWarnings          = false;
-			result.LoadDefaultReferences     = false;
-			result.TabSize                   = 1;
-			result.WarningsAreErrors         = options.TreatWarningsAsErrors;
-			result.FatalCounter              = 100;
-			result.WarningLevel              = options.WarningLevel;
-			result.AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList();
-			result.AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => Tuple.Create(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList();
-			result.Encoding                  = Encoding.UTF8;
-			result.DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null;
-			result.OutputFile                = outputAssemblyPath;
-			result.AssemblyName              = GetAssemblyName(options);
-			result.StdLib                    = false;
-			result.StdLibRuntimeVersion      = RuntimeVersion.v4;
-			result.StrongNameKeyContainer    = options.KeyContainer;
-			result.StrongNameKeyFile         = options.KeyFile;
+			var result = new CompilerSettings {
+				Target                    = (options.HasEntryPoint ? Target.Exe : Target.Library),
+				Platform                  = Platform.AnyCPU,
+				TargetExt                 = (options.HasEntryPoint ? ".exe" : ".dll"),
+				MainClass                 = options.EntryPointClass,
+				VerifyClsCompliance       = false,
+				Optimize                  = false,
+				Version                   = LanguageVersion.V_5,
+				EnhancedWarnings          = false,
+				LoadDefaultReferences     = false,
+				TabSize                   = 1,
+				WarningsAreErrors         = options.TreatWarningsAsErrors,
+				FatalCounter              = 100,
+				WarningLevel              = options.WarningLevel,
+				AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList(),
+				AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => Tuple.Create(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList(),
+				Encoding                  = Encoding.UTF8,
+				DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null,
+				OutputFile                = outputAssemblyPath,
+				AssemblyName              = GetAssemblyName(options),
+				StdLib                    = false,
+				StdLibRuntimeVersion      = RuntimeVersion.v4,
+				StrongNameKeyContainer    = options.KeyContainer,
+				StrongNameKeyFile         = options.KeyFile,
+			};
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(f, f, i + 1)));
 			foreach (var c in options.DefineConstants)
 				result.AddConditionalSymbol(c);
@@ -185,6 +188,22 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private class Executor : MarshalByRefObject {
+			private bool IsEntryPointCandidate(IMethod m) {
+				if (m.Name != "Main" || !m.IsStatic || m.DeclaringTypeDefinition.TypeParameterCount > 0 || m.TypeParameters.Count > 0)	// Must be a static, non-generic Main
+					return false;
+				if (!m.ReturnType.IsKnownType(KnownTypeCode.Void) && !m.ReturnType.IsKnownType(KnownTypeCode.Int32))	// Must return void or int.
+					return false;
+				if (m.Parameters.Count == 0)	// Can have 0 parameters.
+					return true;
+				if (m.Parameters.Count > 1)	// May not have more than 1 parameter.
+					return false;
+				if (m.Parameters[0].IsRef || m.Parameters[0].IsOut)	// The single parameter must not be ref or out.
+					return false;
+
+				var at = m.Parameters[0].Type as ArrayType;
+				return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
+			}
+
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
 				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
 				try {
@@ -206,7 +225,7 @@ namespace Saltarelle.Compiler.Driver {
 					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
 					var n = new DefaultNamer();
 					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => { var t = tr.Resolve(compilation.Compilation).GetDefinition(); return new JsTypeReferenceExpression(t.ParentAssembly, md.GetTypeSemantics(t).Name); });
+					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => new JsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition()));
 					var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: options.References.Count == 0 /* We allow user-defined structs in mscorlib only, which can be identified by the fact that it has no references*/);
 
 					var references = LoadReferences(settings.AssemblyReferences, er);
@@ -216,8 +235,31 @@ namespace Saltarelle.Compiler.Driver {
 					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
 					var compiledTypes = compiler.Compile(compilation);
 
-					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, er).Rewrite(compiledTypes, compilation.Compilation);
-					js = new GlobalNamespaceReferenceImporter().ImportReferences(js);
+					IMethod entryPoint = null;
+					if (options.HasEntryPoint) {
+						List<IMethod> candidates;
+						if (!string.IsNullOrEmpty(options.EntryPointClass)) {
+							var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
+							if (t == null) {
+								er.Region = DomRegion.Empty;
+								er.Message(7950, "Could not find the entry point class " + options.EntryPointClass + ".");
+								return false;
+							}
+							candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
+						}
+						else {
+							candidates = compilation.Compilation.MainAssembly.GetAllTypeDefinitions().SelectMany(t => t.Methods).Where(IsEntryPointCandidate).ToList();
+						}
+						if (candidates.Count != 1) {
+							er.Region = DomRegion.Empty;
+							er.Message(7950, "Could not find a unique entry point.");
+							return false;
+						}
+						entryPoint = candidates[0];
+					}
+
+					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Process(compiledTypes, compilation.Compilation, entryPoint);
+					js = new DefaultLinker(md, n).Process(js, compilation.Compilation.MainAssembly);
 
 					if (er.HasErrors)
 						return false;
@@ -246,7 +288,11 @@ namespace Saltarelle.Compiler.Driver {
 						}
 					}
 
-					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(Minifier.Process(s)) : OutputFormatter.Format(s)));
+					if (options.MinimizeScript) {
+						js = ((JsBlockStatement)Minifier.Process(new JsBlockStatement(js))).Statements;
+					}
+
+					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
 					try {
 						File.WriteAllText(outputScriptPath, script, settings.Encoding);
 					}

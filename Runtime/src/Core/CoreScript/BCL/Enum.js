@@ -1,11 +1,11 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
 // Enum
 
-ss.Enum = function#? DEBUG Enum$##() {
+var ss_Enum = function#? DEBUG Enum$##() {
 };
-ss.Enum.registerClass('ss.Enum');
+Type.registerClass(global, 'ss.Enum', ss_Enum);
 
-ss.Enum.parse = function #? DEBUG Enum$parse##(enumType, s) {
+ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 	var values = enumType.prototype;
 	if (!enumType.__flags) {
 		for (var f in values) {
@@ -43,7 +43,7 @@ ss.Enum.parse = function #? DEBUG Enum$parse##(enumType, s) {
 	throw 'Invalid Enumeration Value';
 };
 
-ss.Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
+ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 	var values = enumType.prototype;
 	if (!enumType.__flags || (value === 0)) {
 		for (var i in values) {

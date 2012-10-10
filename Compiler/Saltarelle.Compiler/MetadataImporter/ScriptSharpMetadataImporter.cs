@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -34,6 +35,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
 		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
 		private const string BindThisToFirstParameterAttribute      = "System.Runtime.CompilerServices.BindThisToFirstParameterAttribute";
+		private const string ModuleNameAttribute                    = "System.Runtime.CompilerServices.ModuleNameAttribute";
+		private const string AsyncModuleAttribute                   = "System.Runtime.CompilerServices.AsyncModuleAttribute";
+		private const string EnumerateAsArrayAttribute              = "System.Runtime.CompilerServices.EnumerateAsArrayAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
@@ -128,25 +132,29 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		private class TypeSemantics {
 			public TypeScriptSemantics Semantics { get; private set; }
-			public bool IsGlobalMethods { get; private set; }
+			public bool PreserveMemberNames { get; private set; }
+			public bool PreserveMemberCases { get; private set; }
 			public bool IsSerializable { get; private set; }
 			public bool IsNamedValues { get; private set; }
 			public bool IsImported { get; private set; }
 			public bool IsRealType { get; private set; }
 			public bool IsResources { get; private set; }
-			public string MixinArg { get; private set; }
+			public bool IsMixin { get; private set; }
 			public bool IsTestFixture { get; private set; }
+			public string ModuleName { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool isGlobalMethods, bool isSerializable, bool isNamedValues, bool isImported, bool isRealType, bool isResources, string mixinArg, bool isTestFixture) {
-				Semantics       = semantics;
-				IsGlobalMethods = isGlobalMethods;
-				IsSerializable  = isSerializable;
-				IsNamedValues   = isNamedValues;
-				IsImported      = isImported;
-				IsRealType      = isRealType;
-				IsResources     = isResources;
-				MixinArg        = mixinArg;
-				IsTestFixture   = isTestFixture;
+			public TypeSemantics(TypeScriptSemantics semantics, bool preserveMemberNames, bool preserveMemberCases, bool isSerializable, bool isNamedValues, bool isImported, bool isRealType, bool isResources, bool isMixin, bool isTestFixture, string moduleName) {
+				Semantics           = semantics;
+				PreserveMemberNames = preserveMemberNames;
+				PreserveMemberCases = preserveMemberCases;
+				IsSerializable      = isSerializable;
+				IsNamedValues       = isNamedValues;
+				IsImported          = isImported;
+				IsRealType          = isRealType;
+				IsResources         = isResources;
+				IsMixin             = isMixin;
+				IsTestFixture       = isTestFixture;
+				ModuleName          = moduleName;
 			}
 		}
 
@@ -170,6 +178,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private ICompilation _compilation;
 		private bool _omitDowncasts;
 		private bool _omitNullableChecks;
+		private string _mainModuleName;
+		private bool _isAsyncModule;
 
 		private readonly bool _minimizeNames;
 
@@ -252,9 +262,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName) {
-			var attr = entity.Attributes.FirstOrDefault(a => a.AttributeType.FullName == attributeName);
+		private IList<object> GetAttributePositionalArgs(IEnumerable<IAttribute> attributes, string attributeName) {
+			var attr = attributes.FirstOrDefault(a => a.AttributeType.FullName == attributeName);
 			return attr != null ? attr.PositionalArguments.Select(arg => arg.ConstantValue).ToList() : null;
+		}
+
+		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName) {
+			return GetAttributePositionalArgs(entity.Attributes, attributeName);
 		}
 
 		private static T GetNamedArgument<T>(IAttribute attr, string propertyName) {
@@ -340,7 +354,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				ProcessType(b.GetDefinition());
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, true, false, null, false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, true, false, false, false, null);
 				return;
 			}
 
@@ -408,8 +422,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool hasSerializableAttr = GetAttributePositionalArgs(typeDefinition, SerializableAttribute) != null;
 			bool inheritsRecord = typeDefinition.GetAllBaseTypeDefinitions().Any(td => td.Equals(_systemRecord)) && !typeDefinition.Equals(_systemRecord);
 			
-			bool globalMethods = false, isSerializable = hasSerializableAttr || inheritsRecord;
-			string mixinArg = null;
+			bool isMixin = false, isSerializable = hasSerializableAttr || inheritsRecord;
 
 			if (isSerializable) {
 				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
@@ -452,29 +465,26 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7014, typeDefinition);
 					}
-					else if (mixinAttr[0] == null || !((string)mixinAttr[0]).IsValidNestedJavaScriptIdentifier()) {
+					else if (string.IsNullOrEmpty((string)mixinAttr[0])) {
 						Message(7025, typeDefinition);
 					}
 					else {
 						var split = SplitNamespacedName((string)mixinAttr[0]);
 						nmspace   = split.Item1;
 						typeName  = split.Item2;
-						mixinArg  = (string)mixinAttr[0];
+						isMixin   = true;
 					}
 				}
 				else if (globalMethodsAttr != null) {
 					if (!typeDefinition.IsStatic) {
 						Message(7015, typeDefinition);
 					}
-					else if (typeDefinition.Fields.Any() || typeDefinition.Events.Any() || typeDefinition.Properties.Any()) {
-						Message(7016, typeDefinition);
-					}
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7017, typeDefinition);
 					}
 					else {
-						nmspace = "";
-						globalMethods = true;
+						nmspace  = "";
+						typeName = "";
 					}
 				}
 			}
@@ -484,9 +494,18 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, true) : tp.Name;
 			}
 
+			var pmca = GetAttributePositionalArgs(typeDefinition, PreserveMemberCaseAttribute) ?? GetAttributePositionalArgs(typeDefinition.ParentAssembly.AssemblyAttributes, PreserveMemberCaseAttribute);
+
+			bool preserveMemberCases = pmca != null && (pmca.Count == 0 || (bool)pmca[0]);
+			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
+
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
 			var tfa = GetAttributePositionalArgs(typeDefinition, TestFixtureAttribute);
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), isGlobalMethods: globalMethods, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, mixinArg: mixinArg, isTestFixture: tfa != null);
+			var mna = GetAttributePositionalArgs(typeDefinition, ModuleNameAttribute);
+			if (mna != null && mna[0] == null) {
+				mna[0] = "";
+			}
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, isMixin: isMixin, isTestFixture: tfa != null, moduleName: mna != null ? (string)mna[0] : null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -509,8 +528,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
 			member = UnwrapValueTypeConstructor(member);
 
-			bool preserveMemberCase = member.DeclaringTypeDefinition.Attributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute) || member.ParentAssembly.AssemblyAttributes.Any(a => a.AttributeType.FullName == PreserveMemberCaseAttribute);
-
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
 			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
 
@@ -519,13 +536,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				defaultName = "$ctor";
 			}
 			else if (Utils.IsPublic(member)) {
-				defaultName = preserveMemberCase ? member.Name : MakeCamelCase(member.Name);
+				defaultName = _typeSemantics[member.DeclaringTypeDefinition].PreserveMemberCases ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {
 				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
 					defaultName = null;
 				else
-					defaultName = "$" + (preserveMemberCase ? member.Name : MakeCamelCase(member.Name));
+					defaultName = "$" + (_typeSemantics[member.DeclaringTypeDefinition].PreserveMemberCases ? member.Name : MakeCamelCase(member.Name));
 			}
 
 
@@ -546,11 +563,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
 				string name = (string)sna[0] ?? "";
-				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidNestedJavaScriptIdentifier())) {
+				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidJavaScriptIdentifier())) {
 					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
-				}
-				else if (name != "" && !name.IsValidJavaScriptIdentifier()) {
-					Message(7101, member);
 				}
 				if (name == "" && isConstructor)
 					name = "$ctor";
@@ -563,13 +577,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
 			                                                       || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
 			                                                       || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
-			                                                       || typeSemantics.IsGlobalMethods
-			                                                       || (!typeSemantics.Semantics.GenerateCode && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
+			                                                       || typeSemantics.PreserveMemberNames && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
 			                                                       || (typeSemantics.IsSerializable && !member.IsStatic && (member is IProperty || member is IField)))
-			                                                       || (typeSemantics.IsNamedValues && member is IField));
+			                                                       || (typeSemantics.IsNamedValues && member is IField);
 
 			if (preserveName)
-				return Tuple.Create(preserveMemberCase ? member.Name : MakeCamelCase(member.Name), true);
+				return Tuple.Create(typeSemantics.PreserveMemberCases ? member.Name : MakeCamelCase(member.Name), true);
 
 			return Tuple.Create(defaultName, false);
 		}
@@ -892,6 +905,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, true) : tp.Name;
 			}
 
+			var eaa = GetAttributePositionalArgs(method, EnumerateAsArrayAttribute);
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
 			var saa = GetAttributePositionalArgs(method, ScriptAliasAttribute);
 			var ica = GetAttributePositionalArgs(method, InlineCodeAttribute);
@@ -903,6 +917,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var asa = GetAttributePositionalArgs(method, AlternateSignatureAttribute);
 
 			bool isImported = _typeSemantics[method.DeclaringTypeDefinition].IsImported;
+
+			if (eaa != null && (method.Name != "GetEnumerator" || method.IsStatic || method.TypeParameters.Count > 0 || method.Parameters.Count > 0)) {
+				Message(7151, method);
+				eaa = null;
+			}
 
 			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
@@ -954,13 +973,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 								return;
 							}
-							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}");
+							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}", enumerateAsArray: eaa != null);
 							return;
 						}
 						else {
 							if (method.Parameters.Count != 0)
 								Message(7124, method);
-							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}");
+							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}", enumerateAsArray: eaa != null);
 							return;
 						}
 					}
@@ -1006,14 +1025,38 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							code = "X";
 						}
 
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code);
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null);
 						return;
 					}
 				}
 				else if (ifa != null) {
 					if (method.IsStatic) {
-						_methodSemantics[method] = MethodScriptSemantics.InstanceMethodOnFirstArgument(preferredName, expandParams: epa != null);
-						return;
+						if (epa != null && !method.Parameters.Any(p => p.IsParams)) {
+							Message(7137, method);
+						}
+						if (method.Parameters.Count == 0) {
+							Message(7149, method);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+							return;
+						}
+						else if (method.Parameters[0].IsParams) {
+							Message(7150, method);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
+							return;
+						}
+						else {
+							var sb = new StringBuilder();
+							sb.Append("{" + method.Parameters[0].Name + "}." + preferredName + "(");
+							for (int i = 1; i < method.Parameters.Count; i++) {
+								var p = method.Parameters[i];
+								if (i > 1)
+									sb.Append(", ");
+								sb.Append((epa != null && p.IsParams ? "{*" : "{") + p.Name + "}");
+							}
+							sb.Append(")");
+							_methodSemantics[method] = MethodScriptSemantics.InlineCode(sb.ToString());
+							return;
+						}
 					}
 					else {
 						Message(7131, method);
@@ -1031,6 +1074,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 
 						var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
+						if (eaa != null)
+							semantics = semantics.WithEnumerateAsArray();
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
 							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
 							if (errorMethod != null) {
@@ -1046,12 +1091,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							Message(7135, method);
 						}
 
-						if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).Where(sem => sem.Type == MethodScriptSemantics.ImplType.NormalMethod).Select(sem => sem.Name).Distinct().Count() > 1) {
+						if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).Where(x => x.Type == MethodScriptSemantics.ImplType.NormalMethod).Select(x => x.Name).Distinct().Count() > 1) {
 							Message(7136, method);
 						}
 
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
-						_methodSemantics[method] = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(sem => sem.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						var sem = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						if (eaa != null)
+							sem = sem.WithEnumerateAsArray();
+						_methodSemantics[method] = sem;
 						return;
 					}
 					else {
@@ -1079,20 +1127,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 								return;
 							}
 							else {
-								_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
+								_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")", enumerateAsArray: eaa != null);
 								return;
 							}
-						}
-						else if (_typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods) {
-							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(preferredName, isGlobal: _typeSemantics[method.DeclaringTypeDefinition].IsGlobalMethods, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
-							return;
 						}
 						else {
 							string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 							if (asa == null)
 								usedNames[name] = true;
 							if (_typeSemantics[method.DeclaringTypeDefinition].IsSerializable && !method.IsStatic) {
-								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 							else {
 								if (_typeSemantics[method.DeclaringTypeDefinition].IsTestFixture && name == "runTests") {
@@ -1120,7 +1164,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 									}
 								}
 
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 						}
 					}
@@ -1242,6 +1286,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (on != null)
 					_omitNullableChecks = (bool)on.ConstantValue;
 			}
+			else {
+				_omitDowncasts = _omitNullableChecks = false;
+			}
+
+			var mna = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, ModuleNameAttribute);
+			_mainModuleName = (mna != null && !string.IsNullOrEmpty((string)mna[0]) ? (string)mna[0] : null);
+
+			_isAsyncModule = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, AsyncModuleAttribute) != null;
 
 			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
@@ -1363,14 +1415,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsResources;
 		}
 
-		public string GetGlobalMethodsPrefix(ITypeDefinition t) {
-			var s = _typeSemantics[t];
-			if (s.MixinArg != null)
-				return s.MixinArg;
-			else if (s.IsGlobalMethods)
-				return "";
-			else
-				return null;
+		public bool IsMixin(ITypeDefinition t) {
+			return _typeSemantics[t].IsMixin;
 		}
 
 		public bool IsSerializable(ITypeDefinition t) {
@@ -1381,8 +1427,25 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsRealType;
 		}
 
+		public bool IsImported(ITypeDefinition t) {
+			return _typeSemantics[t].IsImported;
+		}
+
 		public bool IsTestFixture(ITypeDefinition t) {
 			return _typeSemantics[t].IsTestFixture;
+		}
+
+		public string GetModuleName(ITypeDefinition t) {
+			for (var current = t; current != null; current = current.DeclaringTypeDefinition) {
+				var n = _typeSemantics[current].ModuleName;
+				if (n != null)
+					return n != "" ? n : null;
+			}
+			var asmModuleName = GetAttributePositionalArgs(t.ParentAssembly.AssemblyAttributes, ModuleNameAttribute);
+			if (asmModuleName != null && !string.IsNullOrEmpty((string)asmModuleName[0]))
+				return (string)asmModuleName[0];
+
+			return null;
 		}
 
 		public TestMethodData GetTestData(IMethod m) {
@@ -1392,11 +1455,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public bool OmitDowncasts {
-			get {  return _omitDowncasts; }
+			get { return _omitDowncasts; }
 		}
 
 		public bool OmitNullableChecks {
-			get {  return _omitNullableChecks; }
+			get { return _omitNullableChecks; }
+		}
+
+		public string MainModuleName {
+			get { return _mainModuleName; }
+		}
+
+		public bool IsAsyncModule {
+			get { return _isAsyncModule; }
 		}
 	}
 }

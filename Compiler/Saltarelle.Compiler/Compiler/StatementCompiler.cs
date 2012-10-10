@@ -96,7 +96,7 @@ namespace Saltarelle.Compiler.Compiler {
 				        JsExpression.FunctionDefinition(new string[0],
 				            new JsReturnStatement(
 				                JsExpression.Invocation(
-				                    JsExpression.MemberAccess(
+				                    JsExpression.Member(
 				                        JsExpression.FunctionDefinition(methodParameterNames, new JsBlockStatement(body)),
 				                        "call"),
 				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(p => JsExpression.Identifier(p)))
@@ -637,9 +637,11 @@ namespace Saltarelle.Compiler.Compiler {
 			var ferr = (ForEachResolveResult)_resolver.Resolve(foreachStatement);
 			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
 
+			var getEnumeratorMethod = (ferr.GetEnumeratorCall is InvocationResolveResult ? ((InvocationResolveResult)ferr.GetEnumeratorCall).Member as IMethod : null);
+
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
 			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
-			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray)) {
+			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray) || (getEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(getEnumeratorMethod).EnumerateAsArray)) {
 				var arrayResult = CompileExpression(foreachStatement.InExpression, true);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;
@@ -666,7 +668,7 @@ namespace Saltarelle.Compiler.Compiler {
 				          .Concat(CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement).Statements);
 
 				_result.Add(new JsForStatement(new JsVariableDeclarationStatement(_variables[index].Name, JsExpression.Number(0)),
-				                               JsExpression.Lesser(jsIndex, JsExpression.MemberAccess(array, lengthSem.FieldName)),
+				                               JsExpression.Lesser(jsIndex, JsExpression.Member(array, lengthSem.FieldName)),
 											   JsExpression.PostfixPlusPlus(jsIndex),
 											   new JsBlockStatement(body)));
 			}

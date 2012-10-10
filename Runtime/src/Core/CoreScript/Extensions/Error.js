@@ -2,6 +2,7 @@
 // Error Extensions
 
 Error.__typeName = 'Error';
+Error.__baseType = Object;
 
 Error.prototype.popStackFrame = function Error$popStackFrame() {
     if (ss.isNullOrUndefined(this.stack) ||
@@ -33,7 +34,7 @@ Error.prototype.popStackFrame = function Error$popStackFrame() {
     this.stack = stackFrames.join("\n");
     this.fileName = nextFrameParts[1];
     this.lineNumber = parseInt(nextFrameParts[2]);
-}
+};
 
 Error.createError = function#? DEBUG Error$createError##(message, errorInfo, innerException) {
     var e = new Error(message);
@@ -48,4 +49,4 @@ Error.createError = function#? DEBUG Error$createError##(message, errorInfo, inn
 
     e.popStackFrame();
     return e;
-}
+};

@@ -18,7 +18,7 @@ namespace System {
         }
 
         public bool HasValue {
-			[InlineCode("ss.isValue({this})")]
+			[InlineCode("{$System.Script}.isValue({this})")]
             get {
                 return false;
             }
@@ -36,7 +36,7 @@ namespace System {
 			return default(T);
 		}
 
-		[InlineCode("ss.coalesce({this}, {defaultValue})")]
+		[InlineCode("{$System.Script}.coalesce({this}, {defaultValue})")]
 		public T GetValueOrDefault(T defaultValue) {
 			return default(T);
 		}

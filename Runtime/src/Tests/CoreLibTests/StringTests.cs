@@ -498,5 +498,14 @@ namespace CoreLibTests {
 			Assert.IsTrue(s1 != s2);
 			Assert.IsFalse(s2 != s3);
 		}
+
+		[Test]
+		public void StringIndexingWorks() {
+			var s = "abcd";
+			Assert.AreEqual((int)s[0], (int)'a');
+			Assert.AreEqual((int)s[1], (int)'b');
+			Assert.AreEqual((int)s[2], (int)'c');
+			Assert.AreEqual((int)s[3], (int)'d');
+		}
 	}
 }

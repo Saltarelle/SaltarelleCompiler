@@ -1,12 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IEnumerator
 
-ss.IEqualityComparer = function#? DEBUG IEqualityComparer$##() { };
-#if DEBUG
-ss.IEqualityComparer.prototype = {
+var ss_IEqualityComparer = function#? DEBUG IEqualityComparer$##() { };
+ss_IEqualityComparer.prototype = {
     equals: null,
     getHashCode: null
-}
-#endif // DEBUG
+};
 
-ss.IEqualityComparer.registerInterface('ss.IEqualityComparer');
+Type.registerInterface(global, 'ss.IEqualityComparer', ss_IEqualityComparer);

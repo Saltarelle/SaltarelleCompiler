@@ -18,9 +18,9 @@
     <Content Include="loader.js" />
   </ItemGroup>
   <Target Name="Build">
-    <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)loader.js /output:$(OutputPath)\ssloader.debug.js" />
+    <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)loader.js /output:$(OutputPath)\ssloader.js" />
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /stripCommentsOnly /crlf /input:$(ProjectDir)loader.js /output:$(OutputPath)\ssloader.rel.js" />
-    <Exec Command="$(ToolsPath)\ajaxmin.exe -clobber:true $(OutputPath)\ssloader.rel.js -out $(OutputPath)\ssloader.js" />
+    <Exec Command="$(ToolsPath)\ajaxmin.exe -clobber:true $(OutputPath)\ssloader.rel.js -out $(OutputPath)\ssloader.min.js" />
   </Target>
   <Target Name="Clean">
   </Target>

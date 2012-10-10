@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
         private IList<JsEnumValue> _values;
         public IList<JsEnumValue> Values { get { return _values; } }
 
-        public JsEnum(ITypeDefinition csharpTypeDefinition, string name, IEnumerable<JsEnumValue> values) : base(csharpTypeDefinition, name) {
+        public JsEnum(ITypeDefinition csharpTypeDefinition, IEnumerable<JsEnumValue> values) : base(csharpTypeDefinition) {
             _values = values.AsReadOnly();
         }
 

@@ -1,13 +1,13 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
 // Exception
 
-ss.Exception = function#? DEBUG Exception$##(message, innerException) {
+var ss_Exception = function#? DEBUG Exception$##(message, innerException) {
 	this._message = message || null;
 	this._innerException = innerException || null;
 }
-ss.Exception.registerClass('ss.Exception');
+Type.registerClass(global, 'ss.Exception', ss_Exception);
 
-ss.Exception.prototype = {
+ss_Exception.prototype = {
 	get_message: function#? DEBUG Exception$get_message##() {
 		return this._message;
 	},
@@ -16,11 +16,14 @@ ss.Exception.prototype = {
 	}
 };
 
-ss.Exception.wrap = function#? DEBUG Exception$get_message##(o) {
-	if (ss.Exception.isInstanceOfType(o)) {
+ss_Exception.wrap = function#? DEBUG Exception$wrap##(o) {
+	if (ss_Exception.isInstanceOfType(o)) {
 		return o;
 	}
+	else if (o instanceof Error) {
+		return new ss_JsErrorException(o);
+	}
 	else {
-		return new ss.Exception(o);
+		return new ss_Exception(o.toString());
 	}
 };

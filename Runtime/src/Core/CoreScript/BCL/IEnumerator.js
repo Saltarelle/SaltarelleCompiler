@@ -1,13 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IEnumerator
 
-ss.IEnumerator = function#? DEBUG IEnumerator$##() { };
-#if DEBUG
-ss.IEnumerator.prototype = {
+var ss_IEnumerator = function#? DEBUG IEnumerator$##() { };
+ss_IEnumerator.prototype = {
     get_current: null,
     moveNext: null,
     reset: null
-}
-#endif // DEBUG
+};
 
-ss.IEnumerator.registerInterface('ss.IEnumerator', ss.IDisposable);
+Type.registerInterface(global, 'ss.IEnumerator', ss_IEnumerator, ss_IDisposable);

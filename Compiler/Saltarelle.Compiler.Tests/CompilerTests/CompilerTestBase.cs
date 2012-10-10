@@ -55,14 +55,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         }
 
         protected JsClass FindClass(string name) {
-            var result = CompiledTypes.SingleOrDefault(t => t.Name.ToString() == name);
+            var result = CompiledTypes.SingleOrDefault(t => t.CSharpTypeDefinition.Name == name);
             if (result == null) Assert.Fail("Could not find type " + name);
             if (!(result is JsClass)) Assert.Fail("Found type is not a JsClass, it is a " + result.GetType().Name);
             return (JsClass)result;
         }
 
         protected JsEnum FindEnum(string name) {
-            var result = CompiledTypes.SingleOrDefault(t => t.Name.ToString() == name);
+            var result = CompiledTypes.SingleOrDefault(t => t.CSharpTypeDefinition.Name == name);
             if (result == null) Assert.Fail("Could not find type " + name);
             if (!(result is JsEnum)) Assert.Fail("Found type is not a JsEnum, it is a " + result.GetType().Name);
             return (JsEnum)result;
@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                                               .Where(be =>    be.NodeType == ExpressionNodeType.Assign
                                                            && be.Left is JsMemberAccessExpression
                                                            && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
-                                                           && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                                           && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
                                               .Select(be => OutputFormatter.Format(be.Right, true))
                                               .SingleOrDefault();
         }
@@ -97,7 +97,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                                            .OfType<JsBinaryExpression>()
                                            .Where(be =>    be.NodeType == ExpressionNodeType.Assign
                                                         && be.Left is JsMemberAccessExpression
-                                                        && ((JsMemberAccessExpression)be.Left).Member == name.Substring(lastDot + 1))
+                                                        && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
                                            .Select(be => OutputFormatter.Format(be.Right, true))
                                            .SingleOrDefault();
         }

@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	[TestFixture]
@@ -227,6 +228,84 @@ public void M() {
 		}
 	}
 ");
+		}
+
+		[Test]
+		public void GetEnumeratorWithEnumerateAsArray() {
+			AssertCorrect(
+@"public class X {
+class MyEnumerable {
+	public MyEnumerator GetEnumerator() { return null; }
+}
+sealed class MyEnumerator {
+	public int Current { get { return 0; } }
+	public bool MoveNext() {}
+}
+public void M() {
+	var enm = new MyEnumerable();
+	// BEGIN
+	foreach (var item in enm) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for (var $tmp1 = 0; $tmp1 < $enm.$Length; $tmp1++) {
+		var $item = $enm[$tmp1];
+		var $x = 0;
+	}
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, enumerateAsArray: m.Name == "GetEnumerator") });
+		}
+
+		[Test]
+		public void GetEnumeratorAsStaticMethodWithThisAsFirstArgumentWithEnumerateAsArray() {
+			AssertCorrect(
+@"public class X {
+class MyEnumerable {
+	public MyEnumerator GetEnumerator() { return null; }
+}
+sealed class MyEnumerator {
+	public int Current { get { return 0; } }
+	public bool MoveNext() {}
+}
+public void M() {
+	var enm = new MyEnumerable();
+	// BEGIN
+	foreach (var item in enm) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for (var $tmp1 = 0; $tmp1 < $enm.$Length; $tmp1++) {
+		var $item = $enm[$tmp1];
+		var $x = 0;
+	}
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetEnumerator" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, enumerateAsArray: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void GetEnumeratorAsInlineCodeWithEnumerateAsArray() {
+			AssertCorrect(
+@"public class X {
+class MyEnumerable {
+	public MyEnumerator GetEnumerator() { return null; }
+}
+sealed class MyEnumerator {
+	public int Current { get { return 0; } }
+	public bool MoveNext() {}
+}
+public void M() {
+	var enm = new MyEnumerable();
+	// BEGIN
+	foreach (var item in enm) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for (var $tmp1 = 0; $tmp1 < $enm.$Length; $tmp1++) {
+		var $item = $enm[$tmp1];
+		var $x = 0;
+	}
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetEnumerator" ? MethodScriptSemantics.InlineCode("X", enumerateAsArray: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 	}
 }

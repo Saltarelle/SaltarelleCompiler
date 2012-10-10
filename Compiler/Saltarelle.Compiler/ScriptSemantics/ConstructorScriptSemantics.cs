@@ -79,19 +79,6 @@ namespace Saltarelle.Compiler.ScriptSemantics {
         /// </summary>
         public bool GenerateCode { get; private set; }
 
-		private bool _isGlobal;
-		/// <summary>
-		/// Whether the static method constructing the type is global (not type-qualified).
-		/// </summary>
-		public bool IsGlobal {
-			get {
-				if (Type != ImplType.StaticMethod)
-					throw new InvalidOperationException();
-				return _isGlobal;
-			}
-			set { _isGlobal = value; }
-		}
-
 		/// <summary>
 		/// Whether the param array to this method is output to script in expanded form. Methods that use this option can only be invoked in expanded form.
 		/// </summary>
@@ -117,8 +104,8 @@ namespace Saltarelle.Compiler.ScriptSemantics {
             return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode, ExpandParams = expandParams };
         }
 
-        public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool isGlobal = false, bool expandParams = false) {
-            return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, IsGlobal = isGlobal, ExpandParams = expandParams };
+        public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool expandParams = false) {
+            return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, ExpandParams = expandParams };
         }
 
         public static ConstructorScriptSemantics InlineCode(string literalCode) {

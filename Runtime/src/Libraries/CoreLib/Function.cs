@@ -47,7 +47,7 @@ namespace System {
         /// <param name="instance">The object used as the value of 'this' within the function.</param>
         /// <param name="arguments">The set of arguments to pass in into the function.</param>
         /// <returns>Any return value returned from the function.</returns>
-        public object Apply(object instance, object[] arguments) {
+        public object Apply(object instance, params object[] arguments) {
             return null;
         }
 

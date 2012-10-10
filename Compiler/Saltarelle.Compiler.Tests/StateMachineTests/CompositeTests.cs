@@ -112,23 +112,31 @@ lbl2:
 							case 1: {
 								a;
 								$state1 = 2;
+								continue $loop2;
+							}
+							case 2: {
+								$state1 = 3;
 								try {
 									$loop3:
 									for (;;) {
 										switch ($state1) {
-											case 2: {
+											case 3: {
 												b;
-												$state1 = 3;
+												$state1 = 4;
+												continue $loop3;
+											}
+											case 4: {
+												$state1 = 5;
 												try {
 													$loop4:
 													for (;;) {
 														switch ($state1) {
-															case 3: {
+															case 5: {
 																c;
-																$state1 = 4;
+																$state1 = 6;
 																continue $loop4;
 															}
-															case 4: {
+															case 6: {
 																d;
 																$state1 = -1;
 																break $loop4;
@@ -143,22 +151,26 @@ lbl2:
 													f;
 												}
 												g;
-												$state1 = 5;
+												$state1 = 7;
 												continue $loop3;
 											}
-											case 5: {
+											case 7: {
 												h;
-												$state1 = 6;
+												$state1 = 8;
+												continue $loop3;
+											}
+											case 8: {
+												$state1 = 9;
 												try {
 													$loop5:
 													for (;;) {
 														switch ($state1) {
-															case 6: {
+															case 9: {
 																i;
-																$state1 = 7;
+																$state1 = 10;
 																continue $loop5;
 															}
-															case 7: {
+															case 10: {
 																j;
 																$state1 = -1;
 																break $loop5;
@@ -195,16 +207,16 @@ lbl2:
 					}
 				}
 				catch (p) {
-					$state1 = 8;
+					$state1 = 11;
 					$loop6:
 					for (;;) {
 						switch ($state1) {
-							case 8: {
+							case 11: {
 								q;
-								$state1 = 9;
+								$state1 = 12;
 								continue $loop6;
 							}
-							case 9: {
+							case 12: {
 								r;
 								$state1 = -1;
 								break $loop6;
@@ -216,16 +228,16 @@ lbl2:
 					}
 				}
 				finally {
-					$state1 = 10;
+					$state1 = 13;
 					$loop7:
 					for (;;) {
 						switch ($state1) {
-							case 10: {
+							case 13: {
 								s;
-								$state1 = 11;
+								$state1 = 14;
 								continue $loop7;
 							}
-							case 11: {
+							case 14: {
 								t;
 								$state1 = -1;
 								break $loop7;
@@ -340,17 +352,21 @@ lbl2:
 							case 1: {
 								a;
 								$state1 = 2;
+								continue $loop2;
+							}
+							case 2: {
+								$state1 = 3;
 								try {
 									$loop3:
 									for (;;) {
 										switch ($state1) {
-											case 2: {
+											case 3: {
 												b;
-												$state1 = 3;
+												$state1 = 4;
 												continue $loop3;
 											}
-											case 3: {
-												$state1 = 4;
+											case 4: {
+												$state1 = 5;
 												continue $loop2;
 											}
 											default: {
@@ -361,14 +377,14 @@ lbl2:
 								}
 								catch (c) {
 									d;
-									$state1 = 4;
+									$state1 = 5;
 									continue $loop2;
 								}
 								e;
-								$state1 = 4;
+								$state1 = 5;
 								continue $loop2;
 							}
-							case 4: {
+							case 5: {
 								f;
 								$state1 = -1;
 								break $loop2;

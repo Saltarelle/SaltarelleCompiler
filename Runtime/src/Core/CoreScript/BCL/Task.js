@@ -1,24 +1,25 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Task
 
-ss.Task = function#? DEBUG Task$##(action, state) {
+var ss_Task = function#? DEBUG Task$##(action, state) {
 	this._action = action;
 	this._state = state;
 	this.exception = null;
 	this.status = 0;
 	this._thens = [];
 	this._result = null;
-}
-ss.Task.prototype = {
+};
+
+ss_Task.prototype = {
 	continueWith: function#? DEBUG Task$continueWith##(continuation) {
-		var tcs = new ss.TaskCompletionSource();
+		var tcs = new ss_TaskCompletionSource();
 		var _this = this;
 		var fn = function() {
 			try {
 				tcs.setResult(continuation(_this));
 			}
 			catch (e) {
-				tcs.setException(ss.Exception.wrap(e));
+				tcs.setException(ss_Exception.wrap(e));
 			}
 		};
 		if (this.isCompleted()) {
@@ -42,7 +43,7 @@ ss.Task.prototype = {
 				_this._complete(result);
 			}
 			catch (e) {
-				_this._fail(new ss.AggregateException([ss.Exception.wrap(e)]));
+				_this._fail(new ss_AggregateException([ss_Exception.wrap(e)]));
 			}
 		}, 0);
 	},
@@ -99,36 +100,36 @@ ss.Task.prototype = {
 	}
 };
 
-ss.Task.delay = function#? DEBUG Task$delay##(delay) {
-	var tcs = new ss.TaskCompletionSource();
+ss_Task.delay = function#? DEBUG Task$delay##(delay) {
+	var tcs = new ss_TaskCompletionSource();
 	setTimeout(function() {
 		tcs.setResult(0);
 	}, delay);
 	return tcs.task;
 };
 
-ss.Task.fromResult = function#? DEBUG Task$fromResult##(result) {
-	var t = new ss.Task();
+ss_Task.fromResult = function#? DEBUG Task$fromResult##(result) {
+	var t = new ss_Task();
 	t.status = 5;
 	t._result = result;
 	return t;
 };
 
-ss.Task.run = function#? DEBUG Task$fromResult##(f) {
-	var tcs = new ss.TaskCompletionSource();
+ss_Task.run = function#? DEBUG Task$fromResult##(f) {
+	var tcs = new ss_TaskCompletionSource();
 	setTimeout(function() {
 		try {
 			tcs.setResult(f());
 		}
 		catch (e) {
-			tcs.setException(ss.Exception.wrap(e));
+			tcs.setException(ss_Exception.wrap(e));
 		}
 	}, 0);
 	return tcs.task;
 };
 
-ss.Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
-	var tcs = new ss.TaskCompletionSource();
+ss_Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
+	var tcs = new ss_TaskCompletionSource();
 	if (tasks.length === 0) {
 		tcs.setResult([]);
 	}
@@ -165,11 +166,11 @@ ss.Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
 	return tcs.task;
 };
 
-ss.Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
+ss_Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
 	if (!tasks.length)
 		throw 'Must wait for at least one task';
 
-	var tcs = new ss.TaskCompletionSource();
+	var tcs = new ss_TaskCompletionSource();
 	for (var i = 0; i < tasks.length; i++) {
 		tasks[i].continueWith(function(t) {
 			switch (t.status) {
@@ -190,8 +191,8 @@ ss.Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
 	return tcs.task;
 };
 
-ss.Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, i, m) {
-	var tcs = new ss.TaskCompletionSource(), args;
+ss_Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, i, m) {
+	var tcs = new ss_TaskCompletionSource(), args;
     if (typeof(i) === 'number') {
         args = Array.prototype.slice.call(arguments, 3);
         if (i < 0)
@@ -213,8 +214,8 @@ ss.Task.fromDoneCallback = function#? DEBUG Task$fromDoneCallback##(t, i, m) {
 	return tcs.task;
 };
 
-ss.Task.fromPromise = function#? DEBUG Task$fromPromise##(p, f) {
-	var tcs = new ss.TaskCompletionSource();
+ss_Task.fromPromise = function#? DEBUG Task$fromPromise##(p, f) {
+	var tcs = new ss_TaskCompletionSource();
 	if (typeof(f) === 'number')
 		f = (function(i) { return function() { return arguments[i >= 0 ? i : (arguments.length + i)]; }; })(f);
     else if (typeof(f) !== 'function')
@@ -223,16 +224,40 @@ ss.Task.fromPromise = function#? DEBUG Task$fromPromise##(p, f) {
 	p.then(function() {
 		tcs.setResult(typeof(f) === 'function' ? f.apply(null, arguments) : null);
 	}, function() {
-		tcs.setException(new ss.PromiseException(Array.prototype.slice.call(arguments, 0)));
+		tcs.setException(new ss_PromiseException(Array.prototype.slice.call(arguments, 0)));
 	});
 	return tcs.task;
 };
 
-ss.Task.registerClass('ss.Task', null, ss.IDisposable);
+ss_Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
+	var tcs = new ss_TaskCompletionSource(), args;
+    if (typeof(f) === 'function') {
+        args = Array.prototype.slice.call(arguments, 3);
+    }
+    else {
+        args = Array.prototype.slice.call(arguments, 2);
+        m = f;
+		f = function() { return arguments[0]; };
+    }
+
+	var cb = function(e) {
+		if (e)
+			tcs.setException(ss_Exception.wrap(e));
+		else
+			tcs.setResult(f.apply(null, Array.prototype.slice.call(arguments, 1)));
+	};
+	
+	args.push(cb);
+
+	t[m].apply(t, args);
+	return tcs.task;
+};
+
+Type.registerClass(global, 'ss.Task', ss_Task, null, ss_IDisposable);
 
 ////////////////////////////////////////////////////////////////////////////////
 // TaskStatus
-ss.TaskStatus = function() {
+var ss_TaskStatus = function() {
 };
-ss.TaskStatus.prototype = { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 };
-ss.TaskStatus.registerEnum('ss.TaskStatus', false);
+ss_TaskStatus.prototype = { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 };
+Type.registerEnum(global, 'ss.TaskStatus', ss_TaskStatus, false);

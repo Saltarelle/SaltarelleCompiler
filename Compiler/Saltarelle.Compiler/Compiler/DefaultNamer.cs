@@ -61,5 +61,9 @@ namespace Saltarelle.Compiler.Compiler
 		public string AsyncTaskCompletionSourceVariableDesiredName {
 			get { return "$tcs"; }
 		}
+
+		public string GetTypeVariableName(string scriptTypeName) {
+			return "$" + scriptTypeName.Replace(".", "_");
+		}
 	}
 }

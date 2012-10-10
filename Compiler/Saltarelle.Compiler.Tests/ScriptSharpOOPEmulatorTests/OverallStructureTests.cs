@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Linq;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
+using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.OOPEmulator;
+using Saltarelle.Compiler.ScriptSemantics;
 using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
@@ -14,19 +18,18 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 		[Test]
 		public void TheOverallStructureIsCorrect() {
 			AssertCorrect(
-@"{Type}.registerNamespace('OuterNamespace.InnerNamespace');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeEnum
-{SomeEnum} = function() {
+var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
-{SomeEnum}.prototype = { Value1: 1, Value2: 2, Value3: 3 };
-{SomeEnum}.registerEnum('OuterNamespace.InnerNamespace.SomeEnum', false);
+$OuterNamespace_InnerNamespace_SomeEnum.prototype = { Value1: 1, Value2: 2, Value3: 3 };
+{Type}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum, false);
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
-{SomeType} = function() {
+var $OuterNamespace_InnerNamespace_SomeType = function() {
 	this.a = 0;
 };
-{SomeType}.prototype = {
+$OuterNamespace_InnerNamespace_SomeType.prototype = {
 	method1: function(x) {
 		return x;
 	},
@@ -34,67 +37,66 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 		return x + y;
 	}
 };
-{SomeType}.staticMethod = function() {
+$OuterNamespace_InnerNamespace_SomeType.staticMethod = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType2
-{SomeType2} = function() {
+var $OuterNamespace_InnerNamespace_SomeType2 = function() {
 	this.b = 0;
 };
-{SomeType2}.prototype = {
+$OuterNamespace_InnerNamespace_SomeType2.prototype = {
 	method1: function(x) {
 		return x;
 	}
 };
-{SomeType2}.otherStaticMethod = function() {
+$OuterNamespace_InnerNamespace_SomeType2.otherStaticMethod = function() {
 };
-{Type}.registerNamespace('OuterNamespace.InnerNamespace2');
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherInterface
-{OtherInterface} = function() {
+var $OuterNamespace_InnerNamespace2_OtherInterface = function() {
 };
-{OtherInterface}.prototype = { interfaceMethod: null };
+$OuterNamespace_InnerNamespace2_OtherInterface.prototype = { interfaceMethod: null };
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherType
-{OtherType} = function() {
+var $OuterNamespace_InnerNamespace2_OtherType = function() {
 };
-{OtherType}.prototype = {
+$OuterNamespace_InnerNamespace2_OtherType.prototype = {
 	method1: function(x) {
 		return x;
 	}
 };
-{SomeType}.registerClass('OuterNamespace.InnerNamespace.SomeType');
-{SomeType2}.registerClass('OuterNamespace.InnerNamespace.SomeType2');
-{OtherInterface}.registerInterface('OuterNamespace.InnerNamespace2.OtherInterface', []);
-{OtherType}.registerClass('OuterNamespace.InnerNamespace2.OtherType', {SomeType2});
+{Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType', $OuterNamespace_InnerNamespace_SomeType);
+{Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
+{Type}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface, []);
+{Type}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
 y = 1;
 x = 1;
 ",
 
-			new JsClass(CreateMockType("OuterNamespace.InnerNamespace.SomeType"), "OuterNamespace.InnerNamespace.SomeType", JsClass.ClassTypeEnum.Class, null, null, null) {
-				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, "a"), JsExpression.Number(0)))),
+			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType"), JsClass.ClassTypeEnum.Class, null, null, null) {
+				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.This, "a"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))),
 				                    new JsMethod(CreateMockMethod("Method2"), "method2", null, JsExpression.FunctionDefinition(new[] { "x", "y" }, new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))))
 				                  },
 				StaticMethods = { new JsMethod(CreateMockMethod("StaticMethod"), "staticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 			},
-			new JsClass(CreateMockType("OuterNamespace.InnerNamespace.SomeType2"), "OuterNamespace.InnerNamespace.SomeType2", JsClass.ClassTypeEnum.Class, null, null, null) {
-				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(JsExpression.This, "b"), JsExpression.Number(0)))),
+			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType2"), JsClass.ClassTypeEnum.Class, null, null, null) {
+				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.This, "b"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))) },
 				StaticMethods = { new JsMethod(CreateMockMethod("OtherStaticMethod"), "otherStaticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("y"), JsExpression.Number(1))) }
 			},
-			new JsEnum(CreateMockType("OuterNamespace.InnerNamespace.SomeEnum"), "OuterNamespace.InnerNamespace.SomeEnum", new[] {
+			new JsEnum(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeEnum"), new[] {
 				new JsEnumValue("Value1", 1),
 				new JsEnumValue("Value2", 2),
 				new JsEnumValue("Value3", 3),
 			}),
-			new JsClass(CreateMockType("OuterNamespace.InnerNamespace2.OtherType"), "OuterNamespace.InnerNamespace2.OtherType", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(null, "OuterNamespace.InnerNamespace.SomeType2"), null) {
+			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace2.OtherType"), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("OuterNamespace.InnerNamespace.SomeType2")), null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))), },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("x"), JsExpression.Number(1))) }
 			},
-			new JsClass(CreateMockType("OuterNamespace.InnerNamespace2.OtherInterface"), "OuterNamespace.InnerNamespace2.OtherInterface", JsClass.ClassTypeEnum.Interface, null, null, null) {
+			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace2.OtherInterface"), JsClass.ClassTypeEnum.Interface, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod(CreateMockMethod("InterfaceMethod"), "interfaceMethod", null, null) },
 				StaticInitStatements = {}
@@ -118,7 +120,7 @@ x = 1;
 			var rnd = new Random(3);
 			var unorderedNames = names.Select(n => new { n = n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
 			
-			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockType(n), n, JsClass.ClassTypeEnum.Class, null, null, null)));
+			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockTypeDefinition(n), JsClass.ClassTypeEnum.Class, null, null, null)));
 
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("// ")).Select(l => l.Substring(3)).ToList();
 
@@ -128,10 +130,10 @@ x = 1;
 		[Test]
 		public void BaseTypesAreRegisteredBeforeDerivedTypes() {
 			var sourceFile = new MockSourceFile("file.cs", @"
-class C3 {}
-interface I1 {}
-class C2 : C3 {}
-class C1 : C2, I1 {}
+public class C3 {}
+public interface I1 {}
+public class C2 : C3 {}
+public class C1 : C2, I1 {}
 ");
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var n = new MockNamer();
@@ -141,38 +143,38 @@ class C1 : C2, I1 {}
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // C1
-{C1} = function() {
+var $C1 = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // C2
-{C2} = function() {
+var $C2 = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // C3
-{C3} = function() {
+var $C3 = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // I1
-{I1} = function() {
+var $I1 = function() {
 };
-{C3}.registerClass('C3');
-{I1}.registerInterface('I1', []);
-{C2}.registerClass('C2', {C3});
-{C1}.registerClass('C1', {C2}, {I1});
+{Type}.registerClass(global, 'C3', $C3);
+{Type}.registerInterface(global, 'I1', $I1, []);
+{Type}.registerClass(global, 'C2', $C2, {C3});
+{Type}.registerClass(global, 'C1', $C1, {C2}, {I1});
 ",			
 			
-				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), "C1", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C2"), new JsExpression[] { new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "I1") }),
-				new JsClass(ReflectionHelper.ParseReflectionName("C2").Resolve(compilation.Compilation).GetDefinition(), "C2", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C3"), new JsExpression[0]),
-				new JsClass(ReflectionHelper.ParseReflectionName("C3").Resolve(compilation.Compilation).GetDefinition(), "C3", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
-				new JsClass(ReflectionHelper.ParseReflectionName("I1").Resolve(compilation.Compilation).GetDefinition(), "I1", JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
+				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C2")), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockType("I1")) }),
+				new JsClass(ReflectionHelper.ParseReflectionName("C2").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C3")), new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("C3").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("I1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
 		}
 
 		[Test]
 		public void BaseTypesAreRegisteredBeforeDerivedTypesGeneric() {
 			var sourceFile = new MockSourceFile("file.cs", @"
-class B<T> {}
-interface I<T> {}
-class A : B<int>, I<int> {}
+public class B<T> {}
+public interface I<T> {}
+public class A : B<int>, I<int> {}
 ");
 			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var n = new MockNamer();
@@ -182,24 +184,24 @@ class A : B<int>, I<int> {}
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // A
-{A} = function() {
+var $A = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // B
-{B} = function() {
+var $B = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // I
-{I} = function() {
+var $I = function() {
 };
-{B}.registerClass('B');
-{I}.registerClass('I');
-{A}.registerClass('A', {C}, {I});
+{Type}.registerClass(global, 'B', $B);
+{Type}.registerInterface(global, 'I', $I, []);
+{Type}.registerClass(global, 'A', $A, {C}, {I});
 ",			
 			
-				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), "A", JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "C"), new JsExpression[] { new JsTypeReferenceExpression(compilation.Compilation.MainAssembly, "I") }),
-				new JsClass(ReflectionHelper.ParseReflectionName("B`1").Resolve(compilation.Compilation).GetDefinition(), "B", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
-				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), "I", JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]));
+				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C")), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockType("I")) }),
+				new JsClass(ReflectionHelper.ParseReflectionName("B`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
 		}
 
 		[Test]
@@ -209,6 +211,85 @@ class A : B<int>, I<int> {}
 			var shuffled = orig.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToList();
 			var actual = ScriptSharpOOPEmulator.OrderByNamespace(shuffled, s => s).ToList();
 			Assert.That(actual, Is.EqualTo(orig));
+		}
+
+		[Test]
+		public void ProgramWithEntryPointWorks() {
+			var type = CreateMockTypeDefinition("MyClass");
+			var main = new Mock<IMethod>(MockBehavior.Strict);
+			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
+			main.SetupGet(_ => _.Name).Returns("Main");
+			main.SetupGet(_ => _.Parameters).Returns(EmptyList<IParameter>.Instance);
+
+			AssertCorrect(
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+};
+$MyClass.$main = function() {
+	X;
+};
+{Type}.registerClass(global, 'MyClass', $MyClass);
+{MyClass}.$Main();
+",			new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
+			main.Object,
+			new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
+				StaticMethods = { new JsMethod(main.Object, "$main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
+			});
+		}
+
+		[Test]
+		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
+			var type = CreateMockTypeDefinition("MyClass");
+			var main = new Mock<IMethod>(MockBehavior.Strict);
+			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
+			main.SetupGet(_ => _.Name).Returns("Main");
+			main.SetupGet(_ => _.FullName).Returns("MyClass.Main");
+			main.SetupGet(_ => _.Parameters).Returns(new[] { new Mock<IParameter>().Object });
+			main.SetupGet(_ => _.Region).Returns(DomRegion.Empty);
+
+			var er = new MockErrorReporter();
+
+			Process(
+				new[] {
+					new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
+						StaticMethods = { new JsMethod(main.Object, "$Main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
+					}
+				},
+				new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
+				er,
+				main.Object
+			);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7800 && (string)m.Args[0] == "MyClass.Main"));
+		}
+
+		[Test]
+		public void AnErrorIsIssuedIfTheMainMethodIsNotImplementedAsANormalMethod() {
+			var type = CreateMockTypeDefinition("MyClass");
+			var main = new Mock<IMethod>(MockBehavior.Strict);
+			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
+			main.SetupGet(_ => _.Name).Returns("Main");
+			main.SetupGet(_ => _.FullName).Returns("MyClass.Main");
+			main.SetupGet(_ => _.Parameters).Returns(EmptyList<IParameter>.Instance);
+			main.SetupGet(_ => _.Region).Returns(DomRegion.Empty);
+
+			var er = new MockErrorReporter();
+
+			Process(
+				new[] {
+					new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
+						StaticMethods = { new JsMethod(main.Object, "$Main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
+					}
+				},
+				new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => ReferenceEquals(m, main.Object) ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod("$" + m.Name) },
+				er,
+				main.Object
+			);
+
+			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7801 && (string)m.Args[0] == "MyClass.Main"));
 		}
 	}
 }

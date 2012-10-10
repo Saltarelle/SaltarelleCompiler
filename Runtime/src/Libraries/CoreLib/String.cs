@@ -3,6 +3,7 @@
 // This source code is subject to terms and conditions of the Apache License, Version 2.0.
 //
 
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -23,6 +24,12 @@ namespace System {
 
 		[InlineCode("{$System.String}.fromChar({$System.String}.fromCharCode({ch}), {count})")]
 		public String(char ch, int count) {}
+
+		[IndexerName("Chars")]
+		public char this[int index] { [InlineCode("{this}.charCodeAt({index})")] get { return '\0'; } }
+
+		[NonScriptable]
+		public IEnumerator<char> GetEnumerator() { return null; }
 
         /// <summary>
         /// An empty zero-length string.

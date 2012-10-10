@@ -1,4 +1,7 @@
-﻿    Enumerable.from = (function(old) {
+﻿    if (typeof(global) === "undefined")
+      global = window;
+
+    Enumerable.from = (function(old) {
         return function(obj) {
             var ienum = Type.safeCast(obj, ss.IEnumerable);
             if (ienum) {
@@ -62,17 +65,17 @@
         };
     })(ArrayEnumerable.prototype.getEnumerator);
 
-    Enumerable.registerClass('Enumerable', null, ss.IEnumerable);
+    Type.registerClass(global, 'Enumerable', Enumerable, null, ss.IEnumerable);
 
     Grouping.prototype.get_current = function () { return this.current(); };
-    Grouping.registerClass('$Grouping', null, ss.IEnumerable);
+    Type.registerClass(null, '$Grouping', Grouping, null, ss.IEnumerable);
 
     IEnumerator.prototype.get_current = function () { return this.current(); };
     IEnumerator.prototype.reset = function () { throw new Error('Reset is not supported'); };
-    IEnumerator.registerClass('$IEnumerator', null, ss.IDisposable);
+    Type.registerClass(null, '$IEnumerator', IEnumerator, null, ss.IDisposable);
 
     Lookup.prototype.getEnumerator = function () { return this.toEnumerable().getEnumerator(); };
-    Lookup.registerClass('$Lookup', null, ss.IEnumerable);
+    Type.registerClass(null, '$Lookup', Lookup, null, ss.IEnumerable);
 
     Dictionary.prototype.get_item = function (key) { if (!this.contains(key)) throw new Error('Key ' + key + ' does not exist.'); return this.get(key); };
     Dictionary.prototype.set_item = (function (add) { return function (key, value) { add.call(this, key, value); }; })(Dictionary.prototype.add);
@@ -84,4 +87,4 @@
     Dictionary.prototype.get_values = function () { return this.toEnumerable().select(function (x) { return x.value; }); };
     Dictionary.prototype.getEnumerator = function () { return this.toEnumerable().getEnumerator(); };
     Dictionary.prototype.tryGetValue = function (key, value) { if (this.containsKey(key)) { value.$ = this.get(key); return true; } else { value.$ = this.defaultValue; return false; } };
-    Dictionary.registerClass('$LinqJSDictionary', null, ss.IEnumerable);
+    Type.registerClass(null, '$LinqJSDictionary', Dictionary, null, ss.IEnumerable);

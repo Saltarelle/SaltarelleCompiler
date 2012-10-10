@@ -119,7 +119,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsExpression VisitMemberAccessExpression(JsMemberAccessExpression expression, TData data) {
             var target = VisitExpression(expression.Target, data);
-            return ReferenceEquals(target, expression.Target) ? expression : JsExpression.MemberAccess(target, expression.Member);
+            return ReferenceEquals(target, expression.Target) ? expression : JsExpression.Member(target, expression.MemberName);
         }
 
         public virtual JsExpression VisitNewExpression(JsNewExpression expression, TData data) {

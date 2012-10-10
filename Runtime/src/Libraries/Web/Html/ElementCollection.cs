@@ -29,9 +29,10 @@ namespace System.Html {
             }
         }
 
-		[InlineCode("new {$System.ArrayEnumerator}({this})")]
-		public ArrayEnumerator<Element> GetEnumerator() {
-			return null;
-		}
+        [EnumerateAsArray]
+        [InlineCode("new {$System.ArrayEnumerator}({this})")]
+        public ArrayEnumerator<Element> GetEnumerator() {
+            return null;
+        }
     }
 }

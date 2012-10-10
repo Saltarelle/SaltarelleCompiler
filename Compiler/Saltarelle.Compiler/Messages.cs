@@ -22,7 +22,6 @@ namespace Saltarelle.Compiler {
 			{ 7013, Tuple.Create(MessageSeverity.Error, "The type {0} can contain only methods order to be decorated with a [MixinAttribute]") },
 			{ 7014, Tuple.Create(MessageSeverity.Error, "[MixinAttribute] cannot be applied to the generic type {0}.") },
 			{ 7015, Tuple.Create(MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [GlobalMethodsAttribute]") },
-			{ 7016, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have any fields, events or properties in order to be decorated with a [GlobalMethodsAttribute]") },
 			{ 7017, Tuple.Create(MessageSeverity.Error, "[GlobalMethodsAttribute] cannot be applied to the generic type {0}.") },
 			{ 7018, Tuple.Create(MessageSeverity.Error, "The type {0} cannot inherit from both {1} and {2} because both those types have a member with the script name {3}. You have to rename the member on one of the base types, or refactor your code.") },
 			{ 7019, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have the script name 'runTests' because its defining type has a TestFixtureAttribute.") },
@@ -31,10 +30,9 @@ namespace Saltarelle.Compiler {
 			{ 7022, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [AsyncTestAttribute] or a [TestAttribute] because its declaring class does not have a [TestFixtureAttribute].") },
 			{ 7023, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.") },
 			{ 7024, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot override the member {1}.") },
-			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must be a valid Javascript nested identifier.") },
+			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must not be null or empty.") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
-			{ 7101, Tuple.Create(MessageSeverity.Error, "The name specified in the [ScriptName] attribute for member {0} must be a valid JavaScript identifier, or be blank.") },
 			{ 7102, Tuple.Create(MessageSeverity.Error, "The constructor {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
 			{ 7103, Tuple.Create(MessageSeverity.Error, "The inline code for the constructor {0} contained errors: {1}.") },
 			{ 7104, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the indexer of type {0} cannot be empty.") },
@@ -82,6 +80,9 @@ namespace Saltarelle.Compiler {
 			{ 7146, Tuple.Create(MessageSeverity.Error, "The constructor cannot have an [ObjectLiteralAttribute] because the type {0} is not a serializable type.") },
 			{ 7147, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have a [BindThisToFirstParameterAttribute] because it does not have any parameters.") },
 			{ 7148, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
+			{ 7149, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it has no parameters.") },
+			{ 7150, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because its only parameter is a 'params' array.") },
+			{ 7151, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [EnumerateAsArrayAttribute] because it is not a GetEnumerator() method for the iterator pattern.") },
 
 			{ 7500, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.") },
 			{ 7501, Tuple.Create(MessageSeverity.Error, "More than one unnamed constructor for the type {0}.") },
@@ -120,6 +121,9 @@ namespace Saltarelle.Compiler {
 			{ 7535, Tuple.Create(MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.") },
 
 			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
+
+			{ 7800, Tuple.Create(MessageSeverity.Error, "The program entry point {0} may not have any parameters.") },
+			{ 7801, Tuple.Create(MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.") },
 
 			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
 			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },

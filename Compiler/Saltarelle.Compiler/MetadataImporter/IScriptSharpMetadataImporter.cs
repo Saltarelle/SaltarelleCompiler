@@ -20,15 +20,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		bool IsResources(ITypeDefinition t);
 		bool IsSerializable(ITypeDefinition t);
 		bool IsRealType(ITypeDefinition t);
+		bool IsImported(ITypeDefinition t);
 
-		/// <summary>
-		/// If the type has a [MixinAttribute], returns the argument to that attribute.
-		/// Otherwise, if the type has a [GlobalMethodsAttribute], returns an empty string.
-		/// Otherwise returns null.
-		/// </summary>
-		string GetGlobalMethodsPrefix(ITypeDefinition t);
+		bool IsMixin(ITypeDefinition t);
 
 		bool IsTestFixture(ITypeDefinition t);
+
+		/// <summary>
+		/// Returns the name of a module that has to be 'require'd for the type. Returns null if the type lives in the global namespace.
+		/// </summary>
+		string GetModuleName(ITypeDefinition t);
 
 		/// <summary>
 		/// Returns null for methods that are not test methods.
@@ -37,5 +38,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		bool OmitNullableChecks { get; }
 		bool OmitDowncasts { get; }
+
+		/// <summary>
+		/// The value of any [assembly: ModuleName] attribute.
+		/// </summary>
+		string MainModuleName { get; }
+
+		/// <summary>
+		/// Whether the module being compiled is an AMD module.
+		/// </summary>
+		bool IsAsyncModule { get; }
 	}
 }
