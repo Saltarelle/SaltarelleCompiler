@@ -505,20 +505,32 @@ public void M() {
 				public void M() {
 					int x;
 					foreach (int y in new[] { 1, 2, 3 }) {
-						int z = y;
-						Func<int, int> f = t => x + y + z;
+						int z = 0;
+						Func<int, int> f = t => x + z;
 					}
 					int a = 0;
 					Func<int> f2 = () => x + a;
 				}
 			");
 			AssertNotUsedByReference("$x");
-			AssertNotUsedByReference("$y");
 			AssertNotUsedByReference("$t");
 			AssertUsedByReference("$z");
 			AssertNotUsedByReference("$a");
 			AssertNotUsedByReference("$f");
 			AssertNotUsedByReference("$f2");
+		}
+
+		[Test]
+		public void CapturedForeachIterationVariableIsConsideredUsedByReference() {
+			CompileMethod(@"
+				public void M() {
+					int x;
+					foreach (int y in new[] { 1, 2, 3 }) {
+						Func<int, int> f = t => y;
+					}
+				}
+			");
+			AssertUsedByReference("$y");
 		}
 
 		[Test]
