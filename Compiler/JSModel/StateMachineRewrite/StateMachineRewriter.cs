@@ -42,9 +42,9 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			}
 		}
 
-		public static JsBlockStatement RewriteAsyncMethod(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, string stateMachineVariableName, string doFinallyBlocksVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask) {
+		public static JsBlockStatement RewriteAsyncMethod(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, string stateMachineVariableName, string doFinallyBlocksVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask, Func<JsExpression, JsExpression, JsExpression> bindToContext) {
 			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel);
-			return obj.ProcessAsyncMethod(block, stateMachineVariableName, doFinallyBlocksVariableName, taskCompletionSource, makeSetResult, makeSetException, getTask);
+			return obj.ProcessAsyncMethod(block, stateMachineVariableName, doFinallyBlocksVariableName, taskCompletionSource, makeSetResult, makeSetException, getTask, bindToContext);
 		}
 
 		public static JsBlockStatement RewriteIteratorBlock(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, Func<IteratorStateMachine, JsBlockStatement> makeIteratorBody) {
@@ -132,7 +132,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		}
 
-		private JsBlockStatement ProcessAsyncMethod(JsBlockStatement statement, string stateMachineMethodName, string doFinallyBlocksVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask) {
+		private JsBlockStatement ProcessAsyncMethod(JsBlockStatement statement, string stateMachineMethodName, string doFinallyBlocksVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask, Func<JsExpression, JsExpression, JsExpression> bindToContext) {
 			_stateMachineMethodName = stateMachineMethodName;
 			_doFinallyBlocksVariableName = doFinallyBlocksVariableName;
 			_makeSetResult = taskCompletionSource != null ? makeSetResult : null;
@@ -164,8 +164,11 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			if (_needDoFinallyBlocksVariable)
 				body = new JsBlockStatement(new JsVariableDeclarationStatement(_doFinallyBlocksVariableName, JsExpression.True), body);
 
+			var stateMachine = JsExpression.FunctionDefinition(new string[0], body);
+			var boundStateMachine = UsesThisVisitor.Analyze(stateMachine.Body) ? bindToContext(stateMachine, JsExpression.This) : stateMachine;
+			
 			IEnumerable<JsStatement> stmts = new JsStatement[] { new JsVariableDeclarationStatement(declarations),
-			                                                     new JsVariableDeclarationStatement(stateMachineMethodName, JsExpression.FunctionDefinition(new string[0], body)),
+			                                                     new JsVariableDeclarationStatement(stateMachineMethodName, boundStateMachine),
 			                                                     new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier(stateMachineMethodName)))
 			                                                   };
 			if (taskCompletionSource != null)

@@ -45,7 +45,8 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 				                                                 methodType == MethodType.AsyncTask ? new JsVariableDeclaration("$tcs", JsExpression.New(JsExpression.Identifier("TaskCompletionSource"))) : null,
 				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set result in async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "setResult"), expr ?? JsExpression.String("<<null>>")); },
 				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set exception in async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "setException"), expr); },
-				                                                 ()   => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not get task async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "getTask")); });
+				                                                 ()   => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not get task async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "getTask")); },
+																 (sm, ctx) => JsExpression.Invocation(JsExpression.Identifier("$Bind"), sm, ctx));
 
 			}
 			else {

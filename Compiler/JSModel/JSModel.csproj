@@ -52,6 +52,7 @@
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="Minification\Minifier.cs" />
     <Compile Include="StateMachineRewrite\ContainsBreakVisitor.cs" />
+    <Compile Include="StateMachineRewrite\UsesThisVisitor.cs" />
     <Compile Include="StateMachineRewrite\HasAwaitInsideTryWithFinallyVisitor.cs" />
     <Compile Include="StateMachineRewrite\DisposeGenerator.cs" />
     <Compile Include="StateMachineRewrite\FinalizerRewriter.cs" />

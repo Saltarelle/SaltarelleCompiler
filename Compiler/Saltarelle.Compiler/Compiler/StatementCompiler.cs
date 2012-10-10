@@ -171,7 +171,8 @@ namespace Saltarelle.Compiler.Compiler {
 			                                                   taskCompletionSourceVariable != null ? new JsVariableDeclaration(taskCompletionSourceVariable, _runtimeLibrary.CreateTaskCompletionSource(taskGenericArgument)) : null,
 			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncResult(JsExpression.Identifier(taskCompletionSourceVariable), expr) : (Func<JsExpression, JsExpression>)null,
 			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncException(JsExpression.Identifier(taskCompletionSourceVariable), expr) : (Func<JsExpression, JsExpression>)null,
-			                                                   taskCompletionSourceVariable != null ? () => _runtimeLibrary.GetTaskFromTaskCompletionSource(JsExpression.Identifier(taskCompletionSourceVariable)) : (Func<JsExpression>)null);
+			                                                   taskCompletionSourceVariable != null ? () => _runtimeLibrary.GetTaskFromTaskCompletionSource(JsExpression.Identifier(taskCompletionSourceVariable)) : (Func<JsExpression>)null,
+			                                                   _runtimeLibrary.Bind);
 
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
