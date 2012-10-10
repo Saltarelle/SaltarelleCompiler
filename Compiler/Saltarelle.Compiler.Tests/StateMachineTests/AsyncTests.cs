@@ -971,5 +971,56 @@ lbl: z;
 }
 ", MethodType.AsyncVoid);
 		}
+
+		[Test]
+		public void AsyncMethodThatUsesThis() {
+			AssertCorrect(@"
+{
+	x;
+	await a:onCompleted1;
+	this.y;
+	await b:onCompleted2;
+	z;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = $Bind(function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state1) {
+					case 0: {
+						$state1 = -1;
+						x;
+						$state1 = 1;
+						a.onCompleted1($sm);
+						return;
+					}
+					case 1: {
+						$state1 = -1;
+						this.y;
+						$state1 = 2;
+						b.onCompleted2($sm);
+						return;
+					}
+					case 2: {
+						$state1 = -1;
+						z;
+						$state1 = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+		}
+	}, this);
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
 	}
 }
