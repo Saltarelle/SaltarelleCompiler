@@ -1,3 +1,6 @@
+The variable declared in a foreach statement is now considered declared inside the loop (only matters when capturing it, breaking change in C#5.0)
+Fixed issue causing the "N" format specifier to forget the minus sign for small negative numbers.
+
 1.5.1
 Fixed issue using "this" in async methods.
 
