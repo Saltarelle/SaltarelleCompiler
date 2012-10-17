@@ -1,4 +1,4 @@
-﻿Framework "4.0x86"
+Framework "4.0x86"
 
 properties {
 	$baseDir = Resolve-Path ".."
@@ -28,8 +28,14 @@ Task Build {
 	Invoke-Task Do-Build
 }
 
-Task Build-CIServer {
+Task Build-CIServerMaster {
 	$script:autoVersion = $false
+	$script:noAsync = $true
+	Invoke-Task Do-Build
+}
+
+Task Build-CIServerDevelop {
+	$script:autoVersion = $true
 	$script:noAsync = $true
 	Invoke-Task Do-Build
 }
