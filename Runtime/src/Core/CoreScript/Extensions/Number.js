@@ -48,7 +48,7 @@ Number._commaFormat = function#? DEBUG Number$_commaFormat##(number, groups, dec
     var groupIndex = 0;
     var groupSize = groups[groupIndex];
     if (number.length < groupSize) {
-        return decimalPart ? number + decimalPart : number;
+        return (negative ? '-' : '') + (decimalPart ? number + decimalPart : number);
     }
 
     var index = number.length;

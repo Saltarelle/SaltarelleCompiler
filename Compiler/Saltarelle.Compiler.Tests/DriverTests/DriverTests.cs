@@ -522,6 +522,45 @@ public class C1 {
 		}
 
 		[Test]
+		public void CanUseAsyncMethodAsArgumentToAnotherMethod() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"
+using System;
+using System.Threading.Tasks;
+
+class Program {
+	public class C {
+		public void M() {}
+	}
+
+	public static void F(Action<C> a) {
+	}
+
+	public static void Main() {
+		F(async (c) => {
+			await Task.Run(() => {});
+			c.M();
+		});
+	}
+}
+");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath), new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.NodeJS.dll")) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options, false);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void TheAssemblyNameIsCorrect() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");

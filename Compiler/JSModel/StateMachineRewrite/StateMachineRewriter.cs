@@ -143,18 +143,16 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 			string catchVariable = _allocateTempVariable();
 
-			JsBlockStatement tryBody;
+			JsStatement body;
 			if (taskCompletionSource != null && (statement.Statements.Count == 0 || IsNextStatementReachable(statement.Statements[statement.Statements.Count - 1]))) {	// If we return the task, and if we risk falling out of the original method, we need to add a setResult call.
-				tryBody = new JsBlockStatement(hoistResult.Item1.Statements.Concat(new[] { new JsExpressionStatement(makeSetResult(null)) }));
+				body = new JsBlockStatement(hoistResult.Item1.Statements.Concat(new[] { new JsExpressionStatement(makeSetResult(null)) }));
 			}
 			else {
-				tryBody = hoistResult.Item1;
+				body = hoistResult.Item1;
 			}
 
-			JsStatement body = new JsTryStatement(tryBody, new JsCatchClause(catchVariable,
-			                                                                 taskCompletionSource != null
-			                                                                     ? new JsBlockStatement(new JsExpressionStatement(makeSetException(JsExpression.Identifier(catchVariable))))
-			                                                                     : JsBlockStatement.EmptyStatement), null);
+			if (taskCompletionSource != null)
+				body = new JsTryStatement(body, new JsCatchClause(catchVariable, new JsBlockStatement(new JsExpressionStatement(makeSetException(JsExpression.Identifier(catchVariable))))), null);
 
 			IEnumerable<JsVariableDeclaration> declarations = new[] { new JsVariableDeclaration(_stateVariableName, JsExpression.Number(0)) };
 			if (taskCompletionSource != null)
@@ -162,7 +160,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			declarations = declarations.Concat(hoistResult.Item2.Select(v => new JsVariableDeclaration(v, null)));
 
 			if (_needDoFinallyBlocksVariable)
-				body = new JsBlockStatement(new JsVariableDeclarationStatement(_doFinallyBlocksVariableName, JsExpression.True), body);
+				body = new JsBlockStatement(new[] { new JsVariableDeclarationStatement(_doFinallyBlocksVariableName, JsExpression.True) }.Concat(body is JsBlockStatement ? ((JsBlockStatement)body).Statements : (IEnumerable<JsStatement>)new[] { body }));
 
 			var stateMachine = JsExpression.FunctionDefinition(new string[0], body);
 			var boundStateMachine = UsesThisVisitor.Analyze(stateMachine.Body) ? bindToContext(stateMachine, JsExpression.This) : stateMachine;

@@ -492,8 +492,13 @@ namespace Saltarelle.Compiler.Compiler {
 							return JsExpression.Null;
 					}
 				}
+				else if (mrr.Member is IEvent) {
+					var evt = (IEvent)mrr.Member;
+					var evtField = _metadataImporter.GetAutoEventBackingFieldName(evt);
+					return CompileCompoundFieldAssignment(mrr, otherOperand, evtField, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				}
 				else {
-					_errorReporter.InternalError("Target " + mrr.Member.DeclaringType.FullName + "." + mrr.Member.Name + " of compound assignment is neither a property nor a field.");
+					_errorReporter.InternalError("Target " + mrr.Member.DeclaringType.FullName + "." + mrr.Member.Name + " of compound assignment is neither a property nor a field nor an event.");
 					return JsExpression.Null;
 				}
 			}

@@ -30,6 +30,11 @@ namespace Saltarelle.Compiler.Compiler {
 				// Inside a function, "this" is in another context and should thus not be replaced.
 				return expression;
 			}
+
+			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
+				// Inside a function, "this" is in another context and should thus not be replaced.
+				return statement;
+			}
 		}
 
 		private class StaticMethodConstructorReturnPatcher : RewriterVisitorBase<object> {

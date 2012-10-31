@@ -502,32 +502,28 @@ public class C {
 @"function() {
 	var $state = 0, $a, $tmp1, $i;
 	var $sm = function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state) {
-					case 0: {
-						$state = -1;
-						$a = new {inst_MyAwaitable}();
-						$tmp1 = $a.$GetAwaiter();
-						$state = 1;
-						$tmp1.$OnCompleted($sm);
-						return;
-					}
-					case 1: {
-						$state = -1;
-						$tmp1.$GetResult();
-						$i = 0;
-						$state = -1;
-						break $loop1;
-					}
-					default: {
-						break $loop1;
-					}
+		$loop1:
+		for (;;) {
+			switch ($state) {
+				case 0: {
+					$state = -1;
+					$a = new {inst_MyAwaitable}();
+					$tmp1 = $a.$GetAwaiter();
+					$state = 1;
+					$tmp1.$OnCompleted($sm);
+					return;
+				}
+				case 1: {
+					$state = -1;
+					$tmp1.$GetResult();
+					$i = 0;
+					$state = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp2) {
 		}
 	};
 	$sm();
@@ -670,30 +666,26 @@ public class C {
 	var $x = function() {
 		var $state = 0, $tmp1;
 		var $sm = function() {
-			try {
-				$loop1:
-				for (;;) {
-					switch ($state) {
-						case 0: {
-							$state = -1;
-							$tmp1 = $a.$GetAwaiter();
-							$state = 1;
-							$tmp1.$OnCompleted($sm);
-							return;
-						}
-						case 1: {
-							$state = -1;
-							$tmp1.$GetResult();
-							$state = -1;
-							break $loop1;
-						}
-						default: {
-							break $loop1;
-						}
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$tmp1 = $a.$GetAwaiter();
+						$state = 1;
+						$tmp1.$OnCompleted($sm);
+						return;
+					}
+					case 1: {
+						$state = -1;
+						$tmp1.$GetResult();
+						$state = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
 					}
 				}
-			}
-			catch ($tmp2) {
 			}
 		};
 		$sm();
@@ -851,30 +843,26 @@ public class C {
 	var $x = function() {
 		var $state = 0, $tmp1;
 		var $sm = function() {
-			try {
-				$loop1:
-				for (;;) {
-					switch ($state) {
-						case 0: {
-							$state = -1;
-							$tmp1 = $a.$GetAwaiter();
-							$state = 1;
-							$tmp1.$OnCompleted($sm);
-							return;
-						}
-						case 1: {
-							$state = -1;
-							$tmp1.$GetResult();
-							$state = -1;
-							break $loop1;
-						}
-						default: {
-							break $loop1;
-						}
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$tmp1 = $a.$GetAwaiter();
+						$state = 1;
+						$tmp1.$OnCompleted($sm);
+						return;
+					}
+					case 1: {
+						$state = -1;
+						$tmp1.$GetResult();
+						$state = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
 					}
 				}
-			}
-			catch ($tmp2) {
 			}
 		};
 		$sm();

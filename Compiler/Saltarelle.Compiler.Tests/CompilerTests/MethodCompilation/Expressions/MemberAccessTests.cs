@@ -222,6 +222,19 @@ public void M() {
 		}
 
 		[Test]
+		public void SettingEventBackingFieldWorks() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	// BEGIN
+	MyEvent = null;
+	// END
+}",
+@"	this.$MyEvent = null;
+");
+		}
+
+		[Test]
 		public void NonVirtualCallToEventAccessorsWork() {
 			AssertCorrect(
 @"class B {

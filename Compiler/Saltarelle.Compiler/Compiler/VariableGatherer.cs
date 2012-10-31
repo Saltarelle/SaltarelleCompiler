@@ -65,11 +65,10 @@ namespace Saltarelle.Compiler.Compiler {
         }
 
 		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
-			AddVariable(foreachStatement.VariableNameToken, foreachStatement.VariableName);
-
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
+				AddVariable(foreachStatement.VariableNameToken, foreachStatement.VariableName);
 				base.VisitForeachStatement(foreachStatement);
 			}
 			finally {
