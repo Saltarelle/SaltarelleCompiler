@@ -20,37 +20,33 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 @"{
 	var $state1 = 0;
 	var $sm = function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0: {
-						$state1 = -1;
-						x;
-						$state1 = 1;
-						a.onCompleted1($sm);
-						return;
-					}
-					case 1: {
-						$state1 = -1;
-						y;
-						$state1 = 2;
-						b.onCompleted2($sm);
-						return;
-					}
-					case 2: {
-						$state1 = -1;
-						z;
-						$state1 = -1;
-						break $loop1;
-					}
-					default: {
-						break $loop1;
-					}
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					x;
+					$state1 = 1;
+					a.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					y;
+					$state1 = 2;
+					b.onCompleted2($sm);
+					return;
+				}
+				case 2: {
+					$state1 = -1;
+					z;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -70,35 +66,31 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 @"{
 	var $state1 = 0;
 	var $sm = function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0: {
-						$state1 = -1;
-						x;
-						$state1 = 1;
-						a.onCompleted1($sm);
-						return;
-					}
-					case 1: {
-						$state1 = -1;
-						y;
-						$state1 = 2;
-						b.onCompleted2($sm);
-						return;
-					}
-					case 2: {
-						$state1 = -1;
-						break $loop1;
-					}
-					default: {
-						break $loop1;
-					}
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					x;
+					$state1 = 1;
+					a.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					y;
+					$state1 = 2;
+					b.onCompleted2($sm);
+					return;
+				}
+				case 2: {
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -119,37 +111,33 @@ lbl: z;
 @"{
 	var $state1 = 0;
 	var $sm = function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0: {
-						$state1 = -1;
-						x;
-						$state1 = 1;
-						a.onCompleted1($sm);
-						return;
-					}
-					case 1: {
-						$state1 = -1;
-						y;
-						$state1 = 2;
-						b.onCompleted2($sm);
-						return;
-					}
-					case 2: {
-						$state1 = -1;
-						z;
-						$state1 = -1;
-						break $loop1;
-					}
-					default: {
-						break $loop1;
-					}
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					x;
+					$state1 = 1;
+					a.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					y;
+					$state1 = 2;
+					b.onCompleted2($sm);
+					return;
+				}
+				case 2: {
+					$state1 = -1;
+					z;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -354,74 +342,70 @@ lbl: z;
 	var $state1 = 0;
 	var $sm = function() {
 		var $doFinally = true;
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0:
-					case 1:
-					case 2: {
-						if ($state1 === 0) {
-							$state1 = 1;
-						}
-						try {
-							$loop2:
-							for (;;) {
-								switch ($state1) {
-									case 1: {
-										$state1 = -1;
-										a;
-										$state1 = 2;
-										x.onCompleted1($sm);
-										$doFinally = false;
-										return;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 1:
+				case 2: {
+					if ($state1 === 0) {
+						$state1 = 1;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 1: {
+									$state1 = -1;
+									a;
+									$state1 = 2;
+									x.onCompleted1($sm);
+									$doFinally = false;
+									return;
+								}
+								case 2: {
+									$state1 = -1;
+									b;
+									try {
+										c;
 									}
-									case 2: {
-										$state1 = -1;
-										b;
-										try {
-											c;
-										}
-										finally {
-											d;
-										}
-										$state1 = -1;
-										break $loop2;
+									finally {
+										d;
 									}
-									default: {
-										break $loop2;
-									}
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
 								}
 							}
 						}
-						finally {
-							if ($doFinally) {
-								e;
-							}
-						}
-						$state1 = 3;
-						y.onCompleted2($sm);
-						$doFinally = false;
-						return;
 					}
-					case 3: {
-						$state1 = -1;
-						try {
-							f;
+					finally {
+						if ($doFinally) {
+							e;
 						}
-						finally {
-							g;
-						}
-						$state1 = -1;
-						break $loop1;
 					}
-					default: {
-						break $loop1;
+					$state1 = 3;
+					y.onCompleted2($sm);
+					$doFinally = false;
+					return;
+				}
+				case 3: {
+					$state1 = -1;
+					try {
+						f;
 					}
+					finally {
+						g;
+					}
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -446,57 +430,53 @@ lbl: z;
 @"{
 	var $state1 = 0;
 	var $sm = function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0:
-					case 1:
-					case 2: {
-						if ($state1 === 0) {
-							$state1 = 1;
-						}
-						try {
-							$loop2:
-							for (;;) {
-								switch ($state1) {
-									case 1: {
-										$state1 = -1;
-										a;
-										$state1 = 2;
-										b.x($sm);
-										return;
-									}
-									case 2: {
-										$state1 = -1;
-										break $loop2;
-									}
-									default: {
-										break $loop2;
-									}
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 1:
+				case 2: {
+					if ($state1 === 0) {
+						$state1 = 1;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 1: {
+									$state1 = -1;
+									a;
+									$state1 = 2;
+									b.x($sm);
+									return;
+								}
+								case 2: {
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
 								}
 							}
 						}
-						catch (c) {
-							d;
-						}
-						$state1 = 3;
-						e.x($sm);
-						return;
 					}
-					case 3: {
-						$state1 = -1;
-						f;
-						$state1 = -1;
-						break $loop1;
+					catch (c) {
+						d;
 					}
-					default: {
-						break $loop1;
-					}
+					$state1 = 3;
+					e.x($sm);
+					return;
+				}
+				case 3: {
+					$state1 = -1;
+					f;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -521,71 +501,67 @@ lbl: z;
 	var $state1 = 0;
 	var $sm = function() {
 		var $doFinally = true;
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0:
-					case 1:
-					case 2: {
-						if ($state1 === 0) {
-							$state1 = 1;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 1:
+				case 2: {
+					if ($state1 === 0) {
+						$state1 = 1;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 1: {
+									$state1 = 2;
+									a.x($sm);
+									$doFinally = false;
+									return;
+								}
+								case 2: {
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
 						}
-						try {
-							$loop2:
+					}
+					finally {
+						if ($doFinally) {
+							$state1 = 3;
+							$loop3:
 							for (;;) {
 								switch ($state1) {
-									case 1: {
-										$state1 = 2;
-										a.x($sm);
-										$doFinally = false;
-										return;
-									}
-									case 2: {
+									case 3: {
 										$state1 = -1;
-										break $loop2;
+										b;
+										$state1 = 4;
+										continue $loop3;
+									}
+									case 4: {
+										$state1 = -1;
+										c;
+										$state1 = -1;
+										break $loop3;
 									}
 									default: {
-										break $loop2;
+										break $loop3;
 									}
 								}
 							}
 						}
-						finally {
-							if ($doFinally) {
-								$state1 = 3;
-								$loop3:
-								for (;;) {
-									switch ($state1) {
-										case 3: {
-											$state1 = -1;
-											b;
-											$state1 = 4;
-											continue $loop3;
-										}
-										case 4: {
-											$state1 = -1;
-											c;
-											$state1 = -1;
-											break $loop3;
-										}
-										default: {
-											break $loop3;
-										}
-									}
-								}
-							}
-						}
-						$state1 = -1;
-						break $loop1;
 					}
-					default: {
-						break $loop1;
-					}
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -639,216 +615,212 @@ lbl: z;
 	var $state1 = 0;
 	var $sm = function() {
 		var $doFinally = true;
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0:
-					case 1:
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
-					case 8:
-					case 9:
-					case 10:
-					case 11: {
-						if ($state1 === 0) {
-							$state1 = 1;
-						}
-						try {
-							$loop2:
-							for (;;) {
-								switch ($state1) {
-									case 1: {
-										$state1 = 2;
-										a.x($sm);
-										$doFinally = false;
-										return;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11: {
+					if ($state1 === 0) {
+						$state1 = 1;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 1: {
+									$state1 = 2;
+									a.x($sm);
+									$doFinally = false;
+									return;
+								}
+								case 2:
+								case 3:
+								case 4:
+								case 5:
+								case 6:
+								case 7:
+								case 8:
+								case 9:
+								case 10: {
+									if ($state1 === 2) {
+										$state1 = 3;
 									}
-									case 2:
-									case 3:
-									case 4:
-									case 5:
-									case 6:
-									case 7:
-									case 8:
-									case 9:
-									case 10: {
-										if ($state1 === 2) {
-											$state1 = 3;
-										}
-										try {
-											$loop3:
-											for (;;) {
-												switch ($state1) {
-													case 3: {
-														$state1 = 4;
-														b.x($sm);
-														$doFinally = false;
-														return;
+									try {
+										$loop3:
+										for (;;) {
+											switch ($state1) {
+												case 3: {
+													$state1 = 4;
+													b.x($sm);
+													$doFinally = false;
+													return;
+												}
+												case 4:
+												case 5:
+												case 6: {
+													if ($state1 === 4) {
+														$state1 = 5;
 													}
-													case 4:
-													case 5:
-													case 6: {
-														if ($state1 === 4) {
-															$state1 = 5;
-														}
-														try {
-															$loop4:
-															for (;;) {
-																switch ($state1) {
-																	case 5: {
-																		$state1 = 6;
-																		c.x($sm);
-																		$doFinally = false;
-																		return;
-																	}
-																	case 6: {
-																		$state1 = -1;
-																		d;
-																		$state1 = -1;
-																		break $loop4;
-																	}
-																	default: {
-																		break $loop4;
-																	}
+													try {
+														$loop4:
+														for (;;) {
+															switch ($state1) {
+																case 5: {
+																	$state1 = 6;
+																	c.x($sm);
+																	$doFinally = false;
+																	return;
+																}
+																case 6: {
+																	$state1 = -1;
+																	d;
+																	$state1 = -1;
+																	break $loop4;
+																}
+																default: {
+																	break $loop4;
 																}
 															}
 														}
-														catch (e) {
-															f;
-														}
-														$state1 = 7;
-														g.x($sm);
-														$doFinally = false;
-														return;
 													}
-													case 7: {
-														$state1 = -1;
-														h;
-														$state1 = 8;
-														continue $loop3;
+													catch (e) {
+														f;
 													}
-													case 8:
-													case 9:
-													case 10: {
-														if ($state1 === 8) {
-															$state1 = 9;
-														}
-														try {
-															$loop5:
-															for (;;) {
-																switch ($state1) {
-																	case 9: {
-																		$state1 = -1;
-																		i;
-																		$state1 = 10;
-																		j.x($sm);
-																		$doFinally = false;
-																		return;
-																	}
-																	case 10: {
-																		$state1 = -1;
-																		break $loop5;
-																	}
-																	default: {
-																		break $loop5;
-																	}
+													$state1 = 7;
+													g.x($sm);
+													$doFinally = false;
+													return;
+												}
+												case 7: {
+													$state1 = -1;
+													h;
+													$state1 = 8;
+													continue $loop3;
+												}
+												case 8:
+												case 9:
+												case 10: {
+													if ($state1 === 8) {
+														$state1 = 9;
+													}
+													try {
+														$loop5:
+														for (;;) {
+															switch ($state1) {
+																case 9: {
+																	$state1 = -1;
+																	i;
+																	$state1 = 10;
+																	j.x($sm);
+																	$doFinally = false;
+																	return;
+																}
+																case 10: {
+																	$state1 = -1;
+																	break $loop5;
+																}
+																default: {
+																	break $loop5;
 																}
 															}
 														}
-														catch (k) {
-														}
-														$state1 = -1;
-														break $loop3;
 													}
-													default: {
-														break $loop3;
+													catch (k) {
 													}
+													$state1 = -1;
+													break $loop3;
+												}
+												default: {
+													break $loop3;
 												}
 											}
 										}
-										catch (l) {
-											m;
-										}
-										$state1 = 11;
-										n.x($sm);
-										$doFinally = false;
-										return;
 									}
-									case 11: {
-										$state1 = -1;
-										o;
-										$state1 = -1;
-										break $loop2;
+									catch (l) {
+										m;
 									}
-									default: {
-										break $loop2;
-									}
+									$state1 = 11;
+									n.x($sm);
+									$doFinally = false;
+									return;
+								}
+								case 11: {
+									$state1 = -1;
+									o;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
 								}
 							}
 						}
-						catch (p) {
-							$state1 = 12;
-							$loop6:
+					}
+					catch (p) {
+						$state1 = 12;
+						$loop6:
+						for (;;) {
+							switch ($state1) {
+								case 12: {
+									$state1 = -1;
+									q;
+									$state1 = 13;
+									continue $loop6;
+								}
+								case 13: {
+									$state1 = -1;
+									r;
+									$state1 = -1;
+									break $loop6;
+								}
+								default: {
+									break $loop6;
+								}
+							}
+						}
+					}
+					finally {
+						if ($doFinally) {
+							$state1 = 14;
+							$loop7:
 							for (;;) {
 								switch ($state1) {
-									case 12: {
+									case 14: {
 										$state1 = -1;
-										q;
-										$state1 = 13;
-										continue $loop6;
+										s;
+										$state1 = 15;
+										continue $loop7;
 									}
-									case 13: {
+									case 15: {
 										$state1 = -1;
-										r;
+										t;
 										$state1 = -1;
-										break $loop6;
+										break $loop7;
 									}
 									default: {
-										break $loop6;
+										break $loop7;
 									}
 								}
 							}
 						}
-						finally {
-							if ($doFinally) {
-								$state1 = 14;
-								$loop7:
-								for (;;) {
-									switch ($state1) {
-										case 14: {
-											$state1 = -1;
-											s;
-											$state1 = 15;
-											continue $loop7;
-										}
-										case 15: {
-											$state1 = -1;
-											t;
-											$state1 = -1;
-											break $loop7;
-										}
-										default: {
-											break $loop7;
-										}
-									}
-								}
-							}
-						}
-						$state1 = -1;
-						break $loop1;
 					}
-					default: {
-						break $loop1;
-					}
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -881,90 +853,86 @@ lbl: z;
 @"{
 	var $state1 = 0;
 	var $sm = function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0: {
-						$state1 = -1;
-						a;
-						$state1 = 1;
-						continue $loop1;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					a;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1:
+				case 2:
+				case 3: {
+					if ($state1 === 1) {
+						$state1 = 2;
 					}
-					case 1:
-					case 2:
-					case 3: {
-						if ($state1 === 1) {
-							$state1 = 2;
-						}
-						try {
-							$loop2:
-							for (;;) {
-								switch ($state1) {
-									case 2: {
-										$state1 = 3;
-										b.x($sm);
-										return;
-									}
-									case 3: {
-										$state1 = -1;
-										b.getResult();
-										$state1 = -1;
-										break $loop2;
-									}
-									default: {
-										break $loop2;
-									}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = 3;
+									b.x($sm);
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b.getResult();
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
 								}
 							}
 						}
-						catch (c) {
-							d;
-						}
-						e;
-						$state1 = 4;
-						continue $loop1;
 					}
-					case 4:
-					case 5:
-					case 6: {
-						if ($state1 === 4) {
-							$state1 = 5;
-						}
-						try {
-							$loop3:
-							for (;;) {
-								switch ($state1) {
-									case 5: {
-										$state1 = 6;
-										f.x($sm);
-										return;
-									}
-									case 6: {
-										$state1 = -1;
-										g.getResult();
-										$state1 = -1;
-										break $loop3;
-									}
-									default: {
-										break $loop3;
-									}
+					catch (c) {
+						d;
+					}
+					e;
+					$state1 = 4;
+					continue $loop1;
+				}
+				case 4:
+				case 5:
+				case 6: {
+					if ($state1 === 4) {
+						$state1 = 5;
+					}
+					try {
+						$loop3:
+						for (;;) {
+							switch ($state1) {
+								case 5: {
+									$state1 = 6;
+									f.x($sm);
+									return;
+								}
+								case 6: {
+									$state1 = -1;
+									g.getResult();
+									$state1 = -1;
+									break $loop3;
+								}
+								default: {
+									break $loop3;
 								}
 							}
 						}
-						catch (h) {
-							i;
-						}
-						$state1 = -1;
-						break $loop1;
 					}
-					default: {
-						break $loop1;
+					catch (h) {
+						i;
 					}
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	};
 	$sm();
@@ -985,37 +953,33 @@ lbl: z;
 @"{
 	var $state1 = 0;
 	var $sm = $Bind(function() {
-		try {
-			$loop1:
-			for (;;) {
-				switch ($state1) {
-					case 0: {
-						$state1 = -1;
-						x;
-						$state1 = 1;
-						a.onCompleted1($sm);
-						return;
-					}
-					case 1: {
-						$state1 = -1;
-						this.y;
-						$state1 = 2;
-						b.onCompleted2($sm);
-						return;
-					}
-					case 2: {
-						$state1 = -1;
-						z;
-						$state1 = -1;
-						break $loop1;
-					}
-					default: {
-						break $loop1;
-					}
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					x;
+					$state1 = 1;
+					a.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					this.y;
+					$state1 = 2;
+					b.onCompleted2($sm);
+					return;
+				}
+				case 2: {
+					$state1 = -1;
+					z;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
 				}
 			}
-		}
-		catch ($tmp1) {
 		}
 	}, this);
 	$sm();

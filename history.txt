@@ -1,3 +1,4 @@
+Don't swallow exceptions in async void methods.
 Fixed assigning to the backing field of an event.
 Fixed issue using async methods in certain cases when not using the VS .targets file.
 The variable declared in a foreach statement is now considered declared inside the loop (only matters when capturing it, breaking change in C#5.0)
