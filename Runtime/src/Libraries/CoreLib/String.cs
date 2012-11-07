@@ -448,5 +448,10 @@ namespace System {
         public static bool operator !=(string s1, string s2) {
             return false;
         }
+
+        [InlineCode("{$System.String}.fromCharCode({ch})")]
+        public static explicit operator String(char ch) {
+            return null;
+        }
     }
 }

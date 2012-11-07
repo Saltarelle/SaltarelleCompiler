@@ -76,6 +76,6 @@ namespace KnockoutApi {
         }
 
         [ScriptAlias("")]
-        public static extern implicit operator BindingHandler(InlineBindingHandler<T> handler);
+        public static implicit operator BindingHandler(InlineBindingHandler<T> handler) { return null; }
     }
 }

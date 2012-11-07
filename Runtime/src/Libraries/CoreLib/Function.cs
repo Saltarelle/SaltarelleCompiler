@@ -70,5 +70,10 @@ namespace System {
         public object Call(object instance, params object[] arguments) {
             return null;
         }
+
+		[ScriptSkip]
+		public static explicit operator Function(Delegate d) {
+			return null;
+		}
     }
 }

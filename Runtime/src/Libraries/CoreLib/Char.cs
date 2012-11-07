@@ -54,10 +54,5 @@ namespace System {
         public new string ToLocaleString() {
             return null;
         }
-
-        [InlineCode("{$System.String}.fromCharCode({ch})")]
-        public static explicit operator String(char ch) {
-            return null;
-        }
     }
 }
