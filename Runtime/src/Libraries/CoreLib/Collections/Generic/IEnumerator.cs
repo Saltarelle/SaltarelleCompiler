@@ -9,7 +9,7 @@ namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
     [ScriptNamespace("ss")]
     [ScriptName("IEnumerator")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IEnumerator<out T> : IDisposable, IEnumerator {
         new T Current { get; }
         new bool MoveNext();

@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace System {
     [ScriptNamespace("ss")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public sealed class ArrayEnumerator : IEnumerator<object> {
     	public object Current { get { return null; } }
 
@@ -20,7 +20,7 @@ namespace System {
     }
 
     [ScriptNamespace("ss")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
 	[IgnoreGenericArguments]
     public sealed class ArrayEnumerator<T> : IEnumerator<T> {
 		object IEnumerator.Current { get { return default(T); } }

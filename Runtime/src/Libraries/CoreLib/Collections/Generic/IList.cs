@@ -6,7 +6,7 @@ namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
     [ScriptNamespace("ss")]
 	[ScriptName("IList")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	public interface IList<T> : ICollection<T> {
 		T this[int index] { get; set; }
 

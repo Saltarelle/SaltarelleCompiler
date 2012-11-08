@@ -9,7 +9,7 @@ namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
     [ScriptNamespace("ss")]
 	[ScriptName("ICollection")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface ICollection<T> : IEnumerable<T> {
         int Count { get; }
 

@@ -7,7 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace System.Serialization {
-    [Imported(IsRealType = true)]
+    [Imported]
     [IgnoreNamespace]
     [ScriptName("JSON")]
     public static class Json {

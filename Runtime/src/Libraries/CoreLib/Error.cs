@@ -7,7 +7,7 @@ namespace System {
 	/// <summary>
 	/// Represents a JavaScript Error. Useful primarily for interop, within C# code it will always be wrapped to an Exception when caught.
 	/// </summary>
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[IgnoreNamespace]
 	[ScriptName("Error")]
 	public class Error {

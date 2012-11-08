@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string AsyncTestAttribute                     = "System.Testing.AsyncTestAttribute";
 		private const string CategoryPropertyName               = "Category";
 		private const string ExpectedAssertionCountPropertyName = "ExpectedAssertionCount";
-		private const string IsRealTypePropertyName             = "IsRealType";
+		private const string ObeysTypeSystemPropertyName        = "ObeysTypeSystem";
 		private const string OmitDowncastsPropertyName          = "OmitDowncasts";
 		private const string OmitNullableChecksPropertyName     = "OmitNullableChecks";
 		private const string Function = "Function";
@@ -137,20 +137,20 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public bool IsSerializable { get; private set; }
 			public bool IsNamedValues { get; private set; }
 			public bool IsImported { get; private set; }
-			public bool IsRealType { get; private set; }
+			public bool ObeysTypeSystem { get; private set; }
 			public bool IsResources { get; private set; }
 			public bool IsMixin { get; private set; }
 			public bool IsTestFixture { get; private set; }
 			public string ModuleName { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool preserveMemberNames, bool preserveMemberCases, bool isSerializable, bool isNamedValues, bool isImported, bool isRealType, bool isResources, bool isMixin, bool isTestFixture, string moduleName) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool preserveMemberNames, bool preserveMemberCases, bool isSerializable, bool isNamedValues, bool isImported, bool obeysTypeSystem, bool isResources, bool isMixin, bool isTestFixture, string moduleName) {
 				Semantics           = semantics;
 				PreserveMemberNames = preserveMemberNames;
 				PreserveMemberCases = preserveMemberCases;
 				IsSerializable      = isSerializable;
 				IsNamedValues       = isNamedValues;
 				IsImported          = isImported;
-				IsRealType          = isRealType;
+				ObeysTypeSystem     = obeysTypeSystem;
 				IsResources         = isResources;
 				IsMixin             = isMixin;
 				IsTestFixture       = isTestFixture;
@@ -361,7 +361,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
 			var importedAttr = typeDefinition.Attributes.FirstOrDefault(a => a.AttributeType.FullName == ImportedAttribute);
 			bool isImported = importedAttr != null;
-			bool isRealType = importedAttr == null || GetNamedArgument<bool>(importedAttr, IsRealTypePropertyName);
+			bool obeysTypeSystem = importedAttr == null || GetNamedArgument<bool>(importedAttr, ObeysTypeSystemPropertyName);
 			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
 
 			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null || isImported;
@@ -505,7 +505,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (mna != null && mna[0] == null) {
 				mna[0] = "";
 			}
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, isRealType: isRealType, isResources: isResources, isMixin: isMixin, isTestFixture: tfa != null, moduleName: mna != null ? (string)mna[0] : null);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, obeysTypeSystem: obeysTypeSystem, isResources: isResources, isMixin: isMixin, isTestFixture: tfa != null, moduleName: mna != null ? (string)mna[0] : null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -1423,8 +1423,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return _typeSemantics[t].IsSerializable;
 		}
 
-		public bool IsRealType(ITypeDefinition t) {
-			return _typeSemantics[t].IsRealType;
+		public bool DoesTypeObeyTypeSystem(ITypeDefinition t) {
+			return _typeSemantics[t].ObeysTypeSystem;
 		}
 
 		public bool IsImported(ITypeDefinition t) {

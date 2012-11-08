@@ -11,7 +11,7 @@ namespace System {
 	[IgnoreGenericArguments]
     [ScriptNamespace("ss")]
 	[ScriptName("Nullable")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public struct Nullable<T> where T : struct {
 		[InlineCode("{value}")]
         public Nullable(T value) {

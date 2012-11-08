@@ -10,7 +10,7 @@ namespace System.Text.RegularExpressions {
     /// Equivalent to the RegExp type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     [ScriptName("RegExp")]
     public sealed class Regex {
 		[ScriptName("")]

@@ -13,7 +13,7 @@ namespace System {
     /// Equivalent to the Array type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public sealed class Array : IEnumerable {
 
         [IntrinsicProperty]

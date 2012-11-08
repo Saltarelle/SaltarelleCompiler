@@ -12,7 +12,7 @@ namespace System {
     /// Equivalent to the Date type in Javascript, but emulates value-type semantics by removing all mutators.
     /// </summary>
     [IgnoreNamespace]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Date")]
     public struct DateTime {
         /// <summary>

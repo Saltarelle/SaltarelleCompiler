@@ -12,7 +12,7 @@ namespace System.ComponentModel {
     /// Defines contextual information about the current application.
     /// </summary>
     [ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IApplication {
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace System.Collections.Generic {
     /// The Stack data type which is mapped to the Array type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     [ScriptName("Array")]
 	[IgnoreGenericArguments]
     public sealed class Stack<T> {

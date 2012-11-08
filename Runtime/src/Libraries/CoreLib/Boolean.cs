@@ -11,7 +11,7 @@ namespace System {
     /// Equivalent to the Boolean type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public struct Boolean {
 		[InlineCode("false")]
 		public Boolean(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {

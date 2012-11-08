@@ -10,7 +10,7 @@ namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
     [ScriptNamespace("ss")]
     [ScriptName("IEqualityComparer")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IEqualityComparer<in T> : IEqualityComparer {
         bool Equals(T x, T y);
 		int GetHashCode(T obj);

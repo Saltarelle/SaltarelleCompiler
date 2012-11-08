@@ -5,7 +5,7 @@ using System.Text;
 
 namespace System.Collections.Generic
 {
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[IgnoreGenericArguments]
 	[ScriptNamespace("ss")]
 	internal class IteratorBlockEnumerator<T> : IEnumerator<T> {

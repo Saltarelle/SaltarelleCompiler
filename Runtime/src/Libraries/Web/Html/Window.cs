@@ -14,7 +14,7 @@ namespace System.Html {
     /// scripting object.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported]
     [ScriptName("window")]
     public static class Window {
         [IntrinsicProperty]

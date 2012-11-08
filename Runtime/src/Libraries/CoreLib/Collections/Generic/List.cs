@@ -12,7 +12,7 @@ namespace System.Collections.Generic {
     /// </summary>
 	[IgnoreGenericArguments]
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     [ScriptName("Array")]
     public sealed class List<T> : IList<T> {
 

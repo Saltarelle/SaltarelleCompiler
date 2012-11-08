@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[IgnoreNamespace]
     [ScriptName("Function")]
     public abstract class Delegate {

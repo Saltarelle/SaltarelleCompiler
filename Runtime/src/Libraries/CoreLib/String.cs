@@ -14,7 +14,7 @@ namespace System {
     /// Equivalent to the String type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public sealed class String {
 		[ScriptName("")]
 		public String() {}

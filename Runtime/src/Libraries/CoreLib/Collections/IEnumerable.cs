@@ -13,7 +13,7 @@ namespace System.Collections {
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
     [ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IEnumerable {
 		/// <summary>
 		/// Don't call this method, use the generic version instead.

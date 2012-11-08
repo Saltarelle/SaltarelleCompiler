@@ -17,7 +17,7 @@ namespace System {
     /// Equivalent to the Date type in Javascript.
     /// </summary>
     [ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public sealed class JsDate {
         /// <summary>
         /// Creates a new instance of Date initialized from the current time.

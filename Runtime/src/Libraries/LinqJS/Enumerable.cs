@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System.Linq {
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[IgnoreNamespace]
 	public static class Enumerable {
 		#region Generators

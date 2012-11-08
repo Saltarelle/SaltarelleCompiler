@@ -9,7 +9,7 @@ namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
     [ScriptNamespace("ss")]
     [ScriptName("IEnumerable")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IEnumerable<out T> : IEnumerable {
         new IEnumerator<T> GetEnumerator();
     }

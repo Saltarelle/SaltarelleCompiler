@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace System {
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public class AggregateException : Exception {
 		public AggregateException() {
