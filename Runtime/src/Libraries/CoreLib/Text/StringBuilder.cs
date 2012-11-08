@@ -10,7 +10,7 @@ namespace System.Text {
     /// <summary>
     /// Provides an optimized mechanism to concatenate strings.
     /// </summary>
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     [ScriptNamespace("ss")]
     public sealed class StringBuilder {
 

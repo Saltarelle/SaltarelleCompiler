@@ -11,7 +11,7 @@ namespace System {
     /// Used by event sources to pass event argument information.
     /// </summary>
     [ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public class EventArgs {
 
         /// <summary>

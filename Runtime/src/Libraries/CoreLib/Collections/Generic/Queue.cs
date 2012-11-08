@@ -10,7 +10,7 @@ namespace System.Collections.Generic {
     /// The Queue data type which is mapped to the Array type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     [ScriptName("Array")]
 	[IgnoreGenericArguments]
     public sealed class Queue<T> {

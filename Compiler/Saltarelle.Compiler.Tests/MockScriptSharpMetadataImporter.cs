@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests {
 			IsNamedVaules          = t => false;
 			IsResources            = t => false;
 			IsSerializable         = t => false;
-			IsRealType             = t => true;
+			DoesTypeObeyTypeSystem = t => true;
 			IsImported             = t => false;
 			IsMixin                = t => false;
 			IsTestFixture          = t => false;
@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> IsNamedVaules { get; set; }
 		public Func<ITypeDefinition, bool> IsResources { get; set; }
 		public Func<ITypeDefinition, bool> IsSerializable { get; set; }
-		public Func<ITypeDefinition, bool> IsRealType { get; set; }
+		public Func<ITypeDefinition, bool> DoesTypeObeyTypeSystem { get; set; }
 		public Func<ITypeDefinition, bool> IsImported { get; set; }
 		public Func<ITypeDefinition, bool> IsMixin { get; set; }
 		public Func<ITypeDefinition, bool> IsTestFixture { get; set; }
@@ -38,8 +38,8 @@ namespace Saltarelle.Compiler.Tests {
 			return IsSerializable(t);
 		}
 
-		bool IScriptSharpMetadataImporter.IsRealType(ITypeDefinition t) {
-			return IsRealType(t);
+		bool IScriptSharpMetadataImporter.DoesTypeObeyTypeSystem(ITypeDefinition t) {
+			return DoesTypeObeyTypeSystem(t);
 		}
 
 		bool IScriptSharpMetadataImporter.IsImported(ITypeDefinition t) {

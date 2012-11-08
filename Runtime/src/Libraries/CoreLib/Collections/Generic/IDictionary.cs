@@ -3,7 +3,7 @@
 namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
 	[ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	public interface IDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {
 		TValue this[TKey key] { get; set; }
 

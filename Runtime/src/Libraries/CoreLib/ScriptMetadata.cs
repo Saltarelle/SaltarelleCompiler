@@ -42,11 +42,10 @@ namespace System.Runtime.CompilerServices {
     [Imported]
     public sealed class ImportedAttribute : Attribute {
 		/// <summary>
-		/// If true, the type is a real type, meaning that it can be inherited from, cast to, and used as a generic argument.
-		/// If false (the default), the type is ignored in inheritance lists, casts to it is a no-op, and Object will be used if the type is used as a generic argument.
-		/// The default is false.
+		/// Indicates that the type obeys the Saltarelle type system. If false (the default), the type is ignored in inheritance lists, casts to it is a no-op, and Object will be used if the type is used as a generic argument.
+		/// The default is false. Requiring this to be set should be very uncommon.
 		/// </summary>
-		public bool IsRealType { get; set; }
+		public bool ObeysTypeSystem { get; set; }
 
 		/// <summary>
 		/// This flag, set by default, applies an [IgnoreGenericArgument] attribute to the type and all its methods.

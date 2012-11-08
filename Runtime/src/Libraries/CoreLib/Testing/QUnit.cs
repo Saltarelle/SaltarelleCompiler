@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Testing {
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported]
     public static class QUnit {
         [ScriptName("start")]
         public static void Start() {

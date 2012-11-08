@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace System.Html {
     [IgnoreNamespace]
 	[ScriptName("Element")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public sealed class IFrameElement : Element {
 
         private IFrameElement() {

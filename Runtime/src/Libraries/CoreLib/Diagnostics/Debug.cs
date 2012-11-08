@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace System.Diagnostics {
 
     [ScriptNamespace("ss")]
-    [Imported(IsRealType = true)]
+    [Imported]
     public static class Debug {
 
         [Conditional("DEBUG")]

@@ -11,7 +11,7 @@ namespace System {
     /// Equivalent to the Math object in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported]
     public static class Math {
         [PreserveCase]
         public static readonly double E;

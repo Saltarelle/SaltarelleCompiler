@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     [ScriptNamespace("ss")]
     public abstract class Enum : ValueType {
 		public static Enum Parse(Type enumType, string value) {

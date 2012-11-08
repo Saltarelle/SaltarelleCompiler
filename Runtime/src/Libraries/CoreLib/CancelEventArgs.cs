@@ -12,7 +12,7 @@ namespace System {
     /// The event argument associated with cancelable events.
     /// </summary>
     [ScriptNamespace("ss")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public class CancelEventArgs : EventArgs {
 
         /// <summary>

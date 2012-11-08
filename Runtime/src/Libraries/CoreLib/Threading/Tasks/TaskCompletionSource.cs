@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace System.Threading.Tasks {
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[IgnoreGenericArguments]
 	[ScriptNamespace("ss")]
 	public class TaskCompletionSource<TResult> {

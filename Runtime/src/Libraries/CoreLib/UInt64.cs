@@ -12,7 +12,7 @@ namespace System {
     /// </summary>
     [ScriptNamespace("ss")]
 	[ScriptName("Int32")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public struct UInt64 {
 		[InlineCode("0")]
 		public UInt64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {

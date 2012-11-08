@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
 namespace System {
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public class JsErrorException : Exception {
 		public JsErrorException(Error error) {

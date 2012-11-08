@@ -14,7 +14,7 @@ namespace System.ComponentModel {
     /// initialization. 
     /// </summary>
     [ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IInitializable {
 
         /// <summary>

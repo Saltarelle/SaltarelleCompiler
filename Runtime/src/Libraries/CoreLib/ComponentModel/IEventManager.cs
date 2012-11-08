@@ -13,7 +13,7 @@ namespace System.ComponentModel {
     /// listen to messages or events without being coupled to each other.
     /// </summary>
     [ScriptNamespace("ss")]
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
     public interface IEventManager {
 
         /// <summary>

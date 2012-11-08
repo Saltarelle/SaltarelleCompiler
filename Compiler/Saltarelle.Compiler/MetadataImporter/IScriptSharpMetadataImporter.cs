@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		bool IsNamedValues(ITypeDefinition t);
 		bool IsResources(ITypeDefinition t);
 		bool IsSerializable(ITypeDefinition t);
-		bool IsRealType(ITypeDefinition t);
+		bool DoesTypeObeyTypeSystem(ITypeDefinition t);
 		bool IsImported(ITypeDefinition t);
 
 		bool IsMixin(ITypeDefinition t);

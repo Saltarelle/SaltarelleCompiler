@@ -12,7 +12,7 @@ namespace System {
     /// Equivalent to the Object type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public class Object {
 
         /// <summary>

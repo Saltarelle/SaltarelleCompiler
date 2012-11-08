@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 namespace System {
     [ScriptNamespace("ss")]
 	[IgnoreGenericArguments]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public sealed class ObjectEnumerator<TKey, TValue> : IEnumerator<KeyValuePair<TKey, TValue>> {
     	public KeyValuePair<TKey, TValue> Current { get { return null; } }
     	object IEnumerator.Current { get { return null; } }

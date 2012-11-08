@@ -1260,18 +1260,18 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void IsRealTypeMethodWorks() {
+		public void DoesTypeObeyTypeSystemMethodWorks() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [Imported] class C1 {}
-[Imported(IsRealType = false)] class C2 {}
-[Imported(IsRealType = true)] class C3 {}
+[Imported(ObeysTypeSystem = false)] class C2 {}
+[Imported(ObeysTypeSystem = true)] class C3 {}
 class C4 {}
 ");
-			Assert.That(Metadata.IsRealType(AllTypes["C1"]), Is.False);
-			Assert.That(Metadata.IsRealType(AllTypes["C2"]), Is.False);
-			Assert.That(Metadata.IsRealType(AllTypes["C3"]), Is.True);
-			Assert.That(Metadata.IsRealType(AllTypes["C4"]), Is.True);
+			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C1"]), Is.False);
+			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C2"]), Is.False);
+			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C3"]), Is.True);
+			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C4"]), Is.True);
 		}
 
 		[Test]

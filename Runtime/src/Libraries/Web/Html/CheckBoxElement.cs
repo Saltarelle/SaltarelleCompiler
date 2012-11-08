@@ -10,7 +10,7 @@ namespace System.Html {
 
     [IgnoreNamespace]
 	[ScriptName("Element")]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public class CheckBoxElement : InputElement {
 
         internal CheckBoxElement() {

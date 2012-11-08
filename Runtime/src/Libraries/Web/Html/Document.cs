@@ -10,7 +10,7 @@ using System.Html.Editing;
 namespace System.Html {
 
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported]
     [ScriptName("document")]
     public static class Document {
 		[IntrinsicProperty]

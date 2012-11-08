@@ -11,7 +11,7 @@ namespace System {
     /// Equivalent to the Function type in Javascript.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported(ObeysTypeSystem = true)]
     public sealed class Function {
         /// <summary>
         /// Creates a new function with the specified implementation, and the

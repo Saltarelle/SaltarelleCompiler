@@ -19,7 +19,7 @@ namespace System.Threading.Tasks {
 		Faulted,
 	}
 
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public class Task : IDisposable {
 		[AlternateSignature]
@@ -400,7 +400,7 @@ namespace System.Threading.Tasks {
 		}
 	}
 
-	[Imported(IsRealType = true)]
+	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	[IgnoreGenericArguments]
 	public class Task<TResult> : Task {

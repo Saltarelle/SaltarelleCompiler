@@ -18,7 +18,7 @@ namespace jQueryApi {
     /// The global jQuery object.
     /// </summary>
     [IgnoreNamespace]
-    [Imported(IsRealType = true)]
+    [Imported]
     [ScriptName("$")]
     public static class jQuery {
 
