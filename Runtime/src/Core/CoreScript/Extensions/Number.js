@@ -2,6 +2,7 @@
 // Number Extensions
 
 Number.__typeName = 'Number';
+Number.__baseType = Object;
 
 Number.getDefaultValue = Number.createInstance = function#? DEBUG Number$getDefaultValue##() {
 	return 0;

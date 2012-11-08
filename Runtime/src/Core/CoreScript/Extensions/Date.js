@@ -2,7 +2,7 @@
 // Date Extensions
 
 Date.__typeName = 'Date';
-Date.__baseType = 'Object';
+Date.__baseType = Object;
 
 Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultValue##() {
 	return new Date(0);

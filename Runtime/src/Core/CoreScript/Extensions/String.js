@@ -2,7 +2,7 @@
 // String Extensions
 
 String.__typeName = 'String';
-String.__baseType = 'Object';
+String.__baseType = Object;
 String.__class = true;
 
 String.empty = '';

@@ -2,6 +2,7 @@
 // Boolean Extensions
 
 Boolean.__typeName = 'Boolean';
+Boolean.__baseType = Object;
 
 Boolean.getDefaultValue = Boolean.createInstance = function#? DEBUG Boolean$getDefaultValue##() {
 	return false;
