@@ -1,3 +1,6 @@
+Added interfaces IEquatable<T> and IHashable<T>
+Created a "real" dictionary class that actually uses GetHashCode and Equals().
+
 1.5.2
 Don't swallow exceptions in async void methods.
 Fixed assigning to the backing field of an event.
