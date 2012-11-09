@@ -7,6 +7,17 @@ String.__class = true;
 
 String.empty = '';
 
+String.prototype.getHashCode = function#? DEBUG String$getHashCode##() {
+	var res = 0;
+	for (var i = 0; i < this.length; i++)
+		res = (res * 31 + this.charCodeAt(i)) & 0xffffffff;
+	return res;
+};
+
+String.prototype.equals = function#? DEBUG String$equals##(s) {
+	return this == s;	// Note: Loose equality because "this" will be boxed
+};
+
 String.compare = function#? DEBUG String$compare##(s1, s2, ignoreCase) {
     if (ignoreCase) {
         if (s1) {

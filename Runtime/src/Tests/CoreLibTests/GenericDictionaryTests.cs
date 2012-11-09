@@ -57,18 +57,42 @@ namespace CoreLibTests {
 		public void KeysWorks() {
 			var d = new Dictionary<string, string> { { "1", "a" }, { "2", "b" } };
 			var keys = d.Keys;
+			Assert.IsTrue((object)keys is IEnumerable<string>);
+			Assert.IsTrue((object)keys is ICollection<string>);
 			Assert.AreEqual(keys.Count, 2);
 			Assert.IsTrue(keys.Contains("1"));
 			Assert.IsTrue(keys.Contains("2"));
+			Assert.IsFalse(keys.Contains("a"));
+
+			int count = 0;
+			foreach (var key in d.Keys) {
+				if (key != "1" && key != "2") {
+					Assert.IsTrue(false, "Unexpected key " + key);
+				}
+				count++;
+			}
+			Assert.AreEqual(count, 2);
 		}
 
 		[Test]
 		public void ValuesWorks() {
 			var d = new Dictionary<int, string> { { 1, "a" }, { 2, "b" } };
 			var values = d.Values;
+			Assert.IsTrue((object)values is IEnumerable<string>);
+			Assert.IsTrue((object)values is ICollection<string>);
 			Assert.AreEqual(values.Count, 2);
 			Assert.IsTrue(values.Contains("a"));
 			Assert.IsTrue(values.Contains("b"));
+			Assert.IsFalse(values.Contains("1"));
+
+			int count = 0;
+			foreach (var value in d.Values) {
+				if (value != "a" && value != "b") {
+					Assert.IsTrue(false, "Unexpected key " + value);
+				}
+				count++;
+			}
+			Assert.AreEqual(count, 2);
 		}
 
 		[Test]
