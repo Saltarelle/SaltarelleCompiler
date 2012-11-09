@@ -37,5 +37,20 @@ namespace CoreLibTests {
 		public void DefaultConstructorReturnsFalse() {
 		    Assert.AreStrictEqual(new bool(), false);
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual(true.GetHashCode(), true.GetHashCode());
+			Assert.AreEqual(false.GetHashCode(), false.GetHashCode());
+			Assert.AreNotEqual(false.GetHashCode(), true.GetHashCode());
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue(true.Equals(true));
+			Assert.IsFalse(true.Equals(false));
+			Assert.IsFalse(false.Equals(true));
+			Assert.IsTrue(false.Equals(false));
+		}
 	}
 }

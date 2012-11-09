@@ -486,5 +486,21 @@ namespace CoreLibTests {
 			Assert.AreEqual(mdt.GetMonth(), 7);
 			Assert.AreEqual(mdt.GetDate(), 12);
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   (new DateTime(0).GetHashCode(), new DateTime(0).GetHashCode());
+			Assert.AreEqual   (new DateTime(1).GetHashCode(), new DateTime(1).GetHashCode());
+			Assert.AreNotEqual(new DateTime(0).GetHashCode(), new DateTime(1).GetHashCode());
+			Assert.IsTrue((long)new DateTime(3000, 1, 1).GetHashCode() < 0xffffffffL);
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue( new DateTime(0).Equals(new DateTime(0)));
+			Assert.IsFalse(new DateTime(1).Equals(new DateTime(0)));
+			Assert.IsFalse(new DateTime(0).Equals(new DateTime(1)));
+			Assert.IsTrue( new DateTime(1).Equals(new DateTime(1)));
+		}
 	}
 }

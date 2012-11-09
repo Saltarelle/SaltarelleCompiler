@@ -11,7 +11,7 @@ Number.getDefaultValue = Number.createInstance = function#? DEBUG Number$getDefa
 Number.prototype.getHashCode = function#? DEBUG Number$getHashCode##() {
 	var s = this.toExponential();
 	s = s.substr(0, s.indexOf('e'));
-	return parseInt(s.replace('.', ''), 10);
+	return parseInt(s.replace('.', ''), 10) & 0xffffffff;
 };
 
 Number.prototype.equals = function#? DEBUG Number$equals##(n) {

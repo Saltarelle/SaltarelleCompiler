@@ -72,5 +72,20 @@ namespace CoreLibTests {
 		public void CastCharToStringWorks() {
 			Assert.AreEqual((string)'c', "c");
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   ('0'.GetHashCode(), '0'.GetHashCode());
+			Assert.AreEqual   ('1'.GetHashCode(), '1'.GetHashCode());
+			Assert.AreNotEqual('0'.GetHashCode(), '1'.GetHashCode());
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue ('0'.Equals('0'));
+			Assert.IsFalse('1'.Equals('0'));
+			Assert.IsFalse('0'.Equals('1'));
+			Assert.IsTrue ('1'.Equals('1'));
+		}
 	}
 }

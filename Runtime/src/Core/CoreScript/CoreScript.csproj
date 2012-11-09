@@ -22,6 +22,8 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BCL\IHashable.js" />
+    <Content Include="BCL\IEquatable.js" />
     <Content Include="BCL\JsErrorException.js" />
     <Content Include="BCL\PromiseException.js" />
     <Content Include="BCL\NotSupportedException.js" />
