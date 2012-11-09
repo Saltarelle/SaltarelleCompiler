@@ -123,6 +123,10 @@ if (typeof(window) == 'object') {
 
 #include "BCL\IEnumerable.js"
 
+#include "BCL\IEquatable.js"
+
+#include "BCL\IHashable.js"
+
 #include "BCL\ICollection.js"
 
 #include "BCL\Nullable.js"

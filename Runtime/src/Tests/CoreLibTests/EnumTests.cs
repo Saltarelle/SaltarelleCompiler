@@ -69,5 +69,17 @@ namespace CoreLibTests {
 			Assert.AreEqual(Enum.ToString(typeof(TestEnum), TestEnum.FirstValue), "FirstValue");
 			Assert.AreEqual(Enum.ToString(typeof(FlagsEnum), FlagsEnum.FirstValue | FlagsEnum.ThirdValue), "FirstValue | ThirdValue");
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual(TestEnum.FirstValue.GetHashCode(), TestEnum.FirstValue.GetHashCode());
+			Assert.AreNotEqual(TestEnum.FirstValue.GetHashCode(), TestEnum.SecondValue.GetHashCode());
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue(TestEnum.FirstValue.Equals(TestEnum.FirstValue));
+			Assert.IsFalse(TestEnum.FirstValue.Equals(TestEnum.SecondValue));
+		}
 	}
 }

@@ -529,5 +529,21 @@ namespace CoreLibTests {
 			dt.SetUtcMilliseconds(435);
 			Assert.AreEqual(dt.GetUtcMilliseconds(), 435);
         }
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   (new JsDate(0).GetHashCode(), new JsDate(0).GetHashCode());
+			Assert.AreEqual   (new JsDate(1).GetHashCode(), new JsDate(1).GetHashCode());
+			Assert.AreNotEqual(new JsDate(0).GetHashCode(), new JsDate(1).GetHashCode());
+			Assert.IsTrue((long)new JsDate(3000, 1, 1).GetHashCode() < 0xffffffffL);
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue( new JsDate(0).Equals(new JsDate(0)));
+			Assert.IsFalse(new JsDate(1).Equals(new JsDate(0)));
+			Assert.IsFalse(new JsDate(0).Equals(new JsDate(1)));
+			Assert.IsTrue( new JsDate(1).Equals(new JsDate(1)));
+		}
 	}
 }

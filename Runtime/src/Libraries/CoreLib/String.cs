@@ -15,7 +15,7 @@ namespace System {
     /// </summary>
     [IgnoreNamespace]
     [Imported(IsRealType = true)]
-    public sealed class String {
+    public sealed class String : IHashable<String> {
 		[ScriptName("")]
 		public String() {}
 
@@ -453,5 +453,13 @@ namespace System {
         public static explicit operator String(char ch) {
             return null;
         }
+
+	    public bool Equals(string other) {
+		    return false;
+	    }
+
+		public new int GetHashCode() {
+			return 0;
+		}
     }
 }

@@ -8,6 +8,16 @@ Number.getDefaultValue = Number.createInstance = function#? DEBUG Number$getDefa
 	return 0;
 };
 
+Number.prototype.getHashCode = function#? DEBUG Number$getHashCode##() {
+	var s = this.toExponential();
+	s = s.substr(0, s.indexOf('e'));
+	return parseInt(s.replace('.', ''), 10) & 0xffffffff;
+};
+
+Number.prototype.equals = function#? DEBUG Number$equals##(n) {
+	return this == n;	// Note: Loose equality because "this" will be boxed
+};
+
 Number.parse = function#? DEBUG Number$parse##(s) {
     if (!s || !s.length) {
         return 0;

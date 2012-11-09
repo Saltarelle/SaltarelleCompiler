@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(IsRealType = true)]
-    public struct SByte {
+    public struct SByte : IHashable<SByte> {
 		[InlineCode("0")]
 		public SByte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -51,5 +51,14 @@ namespace System {
         public string ToString(int radix) {
             return null;
         }
+
+	    [CLSCompliant(false)]
+	    public bool Equals(sbyte other) {
+		    return false;
+	    }
+
+		public new int GetHashCode() {
+			return 0;
+		}
     }
 }
