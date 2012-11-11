@@ -1,3 +1,5 @@
+Fixed issue with Dispose() method for iterator blocks.
+
 1.6.1
 Fixed an issue causing the state machine rewriter to generate incorrect code
 Added interfaces IEquatable<T> and IHashable<T>
