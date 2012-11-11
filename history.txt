@@ -1,3 +1,4 @@
+Throw an exception if any index in a multidimensional array access is out of range (#79)
 Fixed issue with Dispose() method for iterator blocks.
 
 1.6.1
