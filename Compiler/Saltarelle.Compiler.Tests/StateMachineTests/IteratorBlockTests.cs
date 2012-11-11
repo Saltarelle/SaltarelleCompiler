@@ -1919,5 +1919,163 @@ lbl1:
 }
 ", methodType: MethodType.Iterator);
 		}
+
+		[Test]
+		public void ReturnToFirstStatementInsideTryAfterYieldReturn() {
+			AssertCorrect(@"
+{
+	try {
+		while (a) {
+			yield return 1;
+		}
+	}
+	finally {
+		b;
+	}
+}",
+@"{
+	var $state1 = 0;
+	$finally1 = function() {
+		b;
+	};
+	dispose = function() {
+		try {
+			switch ($state1) {
+				case 1:
+				case 2: {
+					try {
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$state1 = -1;
+		}
+	};
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = 1;
+					if (!a) {
+						$state1 = 2;
+						continue $loop1;
+					}
+					setCurrent(1);
+					$state1 = 0;
+					return true;
+				}
+				case 2: {
+					$state1 = -1;
+					$finally1.call(this);
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
+
+		[Test]
+		public void ReturnToFirstStatementInsideTryAfterYieldReturnNested() {
+			AssertCorrect(@"
+{
+	try {
+		try {
+			while (a) {
+				yield return 1;
+			}
+		}
+		finally {
+			b;
+		}
+	}
+	finally {
+		c;
+	}
+}",
+@"{
+	var $state1 = 0;
+	$finally1 = function() {
+		c;
+	};
+	$finally2 = function() {
+		b;
+	};
+	dispose = function() {
+		try {
+			switch ($state1) {
+				case 1:
+				case 2:
+				case 3:
+				case 4: {
+					try {
+						switch ($state1) {
+							case 3:
+							case 4: {
+								try {
+								}
+								finally {
+									$finally2.call(this);
+								}
+							}
+						}
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$state1 = -1;
+		}
+	};
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = 3;
+					if (!a) {
+						$state1 = 4;
+						continue $loop1;
+					}
+					setCurrent(1);
+					$state1 = 0;
+					return true;
+				}
+				case 4: {
+					$state1 = 1;
+					$finally2.call(this);
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					$finally1.call(this);
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
 	}
 }

@@ -1,5 +1,6 @@
+Fixed an issue causing the state machine rewriter to generate incorrect code
 Added interfaces IEquatable<T> and IHashable<T>
-Created a "real" dictionary class that actually uses GetHashCode and Equals().
+Created a "real" dictionary class that actually uses GetHashCode() and Equals().
 
 1.5.2
 Don't swallow exceptions in async void methods.
