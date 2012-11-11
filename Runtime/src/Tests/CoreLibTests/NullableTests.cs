@@ -10,8 +10,8 @@ namespace CoreLibTests {
 		public void TypePropertiesAreCorrect() {
 			int? a = 3, b = null;
 			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable");
-			Assert.IsTrue(a is int?);
-			Assert.IsFalse(b is int?);
+			Assert.IsTrue((object)a is int?);
+			Assert.IsFalse((object)b is int?);
 		}
 
 		[Test]
@@ -42,7 +42,10 @@ namespace CoreLibTests {
 			int? a = 3, b = null;
 			Assert.AreEqual((int)a, 3);
 			try {
+#pragma warning disable 219
 				int x = (int)b;
+#pragma warning restore 219
+				Assert.IsTrue(false, "Unboxing null should have thrown an exception");
 			}
 			catch (Exception) {
 			}
@@ -53,7 +56,10 @@ namespace CoreLibTests {
 			int? a = 3, b = null;
 			Assert.AreEqual(a.Value, 3);
 			try {
+#pragma warning disable 219
 				int x = b.Value;
+#pragma warning restore 219
+				Assert.IsTrue(false, "null.Value should have thrown an exception");
 			}
 			catch (Exception) {
 			}

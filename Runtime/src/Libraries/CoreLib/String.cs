@@ -15,7 +15,7 @@ namespace System {
     /// </summary>
     [IgnoreNamespace]
     [Imported(IsRealType = true)]
-    public sealed class String {
+    public sealed class String : IHashable<String> {
 		[ScriptName("")]
 		public String() {}
 
@@ -448,5 +448,18 @@ namespace System {
         public static bool operator !=(string s1, string s2) {
             return false;
         }
+
+        [InlineCode("{$System.String}.fromCharCode({ch})")]
+        public static explicit operator String(char ch) {
+            return null;
+        }
+
+	    public bool Equals(string other) {
+		    return false;
+	    }
+
+		public new int GetHashCode() {
+			return 0;
+		}
     }
 }

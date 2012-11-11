@@ -2,10 +2,18 @@
 // Date Extensions
 
 Date.__typeName = 'Date';
-Date.__baseType = 'Object';
+Date.__baseType = Object;
 
 Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultValue##() {
 	return new Date(0);
+};
+
+Date.prototype.getHashCode = function#? DEBUG Date$getHashCode##() {
+	return this.valueOf() & 0xffffffff;
+};
+
+Date.prototype.equals = function#? DEBUG Date$equals##(d) {
+	return this.valueOf() === d.valueOf();
 };
 
 Date.get_now = function#? DEBUG Date$get_now##() {

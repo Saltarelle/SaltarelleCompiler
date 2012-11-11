@@ -206,5 +206,21 @@ namespace CoreLibTests {
 		public void SubtractWorks() {
 			Assert.AreEqual(decimal.Subtract(7m, 3m), 4);
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   (((decimal)0).GetHashCode(), ((decimal)0).GetHashCode());
+			Assert.AreEqual   (((decimal)1).GetHashCode(), ((decimal)1).GetHashCode());
+			Assert.AreNotEqual(((decimal)0).GetHashCode(), ((decimal)1).GetHashCode());
+			Assert.AreNotEqual(((decimal)0).GetHashCode(), ((decimal)0.5).GetHashCode());
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue (((decimal)0).Equals((decimal)0));
+			Assert.IsFalse(((decimal)1).Equals((decimal)0));
+			Assert.IsFalse(((decimal)0).Equals((decimal)0.5));
+			Assert.IsTrue (((decimal)1).Equals((decimal)1));
+		}
 	}
 }

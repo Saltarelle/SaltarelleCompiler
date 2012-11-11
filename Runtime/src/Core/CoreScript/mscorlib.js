@@ -42,11 +42,13 @@ ss.coalesce = function (a, b) {
 if (typeof(window) == 'object') {
   // Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
   if (!window.Element) {
-  // IE does not have an Element constructor. This implementation should make casting to elements work.
+    // IE does not have an Element constructor. This implementation should make casting to elements work.
     window.Element = function() {
     };
     window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
   }
+  window.Element.__typeName = 'Element';
+  window.Element.__baseType = Object;
 
   if (!window.XMLHttpRequest) {
     window.XMLHttpRequest = function() {
@@ -120,6 +122,10 @@ if (typeof(window) == 'object') {
 #include "BCL\IEnumerator.js"
 
 #include "BCL\IEnumerable.js"
+
+#include "BCL\IEquatable.js"
+
+#include "BCL\IHashable.js"
 
 #include "BCL\ICollection.js"
 

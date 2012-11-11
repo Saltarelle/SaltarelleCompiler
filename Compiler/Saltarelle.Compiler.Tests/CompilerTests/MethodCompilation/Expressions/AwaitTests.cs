@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 
 			AssertCorrect(@"
 using System;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -51,7 +51,7 @@ public class C {
 				AssertCorrect(@"
 using System;
 namespace N {
-	public class MyAwaiter {
+	public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 		public bool IsCompleted { get { return false; } }
 		public void OnCompleted(Action continuation) {}
 		public int GetResult() {}
@@ -88,7 +88,7 @@ namespace N {
 
 				AssertCorrect(@"
 using System;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -122,7 +122,7 @@ public class C {
 
 				AssertCorrect(@"
 using System;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -156,7 +156,7 @@ public class C {
 
 				AssertCorrect(@"
 using System;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -188,7 +188,7 @@ public class C {
 			var er = new MockErrorReporter();
 			Compile(new[] { @"
 using System;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -214,7 +214,7 @@ public class C {
 
 				AssertCorrect(@"
 using System;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}

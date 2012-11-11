@@ -138,7 +138,7 @@ namespace CoreLibTests {
 		}
 
 		[Test]
-		public void EqualsWorks() {
+		public void StaticEqualsWorks() {
 			Assert.IsTrue(string.Equals("abcd", "abcd", false));
 			Assert.IsFalse(string.Equals("abcd", "abce", false));
 			Assert.IsFalse(string.Equals("abcd", "ABCD", false));
@@ -506,6 +506,25 @@ namespace CoreLibTests {
 			Assert.AreEqual((int)s[1], (int)'b');
 			Assert.AreEqual((int)s[2], (int)'c');
 			Assert.AreEqual((int)s[3], (int)'d');
+		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   ("a".GetHashCode(), "a".GetHashCode());
+			Assert.AreEqual   ("b".GetHashCode(), "b".GetHashCode());
+			Assert.AreNotEqual("a".GetHashCode(), "b".GetHashCode());
+			Assert.AreNotEqual("a".GetHashCode(), "ab".GetHashCode());
+			Assert.IsTrue((long)"abcdefghijklmnopq".GetHashCode() < 0xffffffffL);
+		}
+
+		[Test]
+		public void InstanceEqualsWorks() {
+			Assert.IsTrue( "a".Equals("a"));
+			Assert.IsFalse("b".Equals("a"));
+			Assert.IsFalse("a".Equals("b"));
+			Assert.IsTrue( "b".Equals("b"));
+			Assert.IsFalse("a".Equals("A"));
+			Assert.IsFalse("a".Equals("ab"));
 		}
 	}
 }

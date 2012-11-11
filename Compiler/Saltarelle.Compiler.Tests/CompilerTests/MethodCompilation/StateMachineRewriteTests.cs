@@ -484,7 +484,7 @@ public void M() {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -535,7 +535,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -591,7 +591,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -645,7 +645,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -698,7 +698,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -758,7 +758,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -822,7 +822,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -875,7 +875,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}
@@ -935,7 +935,7 @@ public class C {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
-public class MyAwaiter {
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
 	public int GetResult() {}

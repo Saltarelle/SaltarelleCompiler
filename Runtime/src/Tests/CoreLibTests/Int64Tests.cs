@@ -63,5 +63,21 @@ namespace CoreLibTests {
 			Assert.AreEqual(((long)123).ToString(10), "123");
 			Assert.AreEqual(((long)0x123).ToString(16), "123");
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   (((long)0).GetHashCode(), ((long)0).GetHashCode());
+			Assert.AreEqual   (((long)1).GetHashCode(), ((long)1).GetHashCode());
+			Assert.AreNotEqual(((long)0).GetHashCode(), ((long)1).GetHashCode());
+			Assert.IsTrue((long)0x100000000L.GetHashCode() <= 0xffffffffL);
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue (((long)0).Equals((long)0));
+			Assert.IsFalse(((long)1).Equals((long)0));
+			Assert.IsFalse(((long)0).Equals((long)1));
+			Assert.IsTrue (((long)1).Equals((long)1));
+		}
 	}
 }

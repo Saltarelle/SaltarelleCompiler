@@ -433,7 +433,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				var innerState = CreateNewStateValue(currentState.FinallyStack, handlerName);
 				var stateBeforeFinally = CreateNewStateValue(innerState.FinallyStack);
 				currentBlock.Add(new JsSetNextStateStatement(innerState.StateValue));
-				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.GuardedStatement, 0)), breakStack, continueStack, innerState, stateBeforeFinally));
+				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.GuardedStatement, 0)), breakStack, continueStack, new State(currentState.LoopLabelName, currentState.StateValue, innerState.FinallyStack), stateBeforeFinally));
 
 				Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(new JsBlockStatement(new JsBlockStatement(new JsStatement[0], true)), 0)), breakStack, continueStack, stateBeforeFinally, stateAfter.Item1);
 				if (!stack.IsEmpty || location.Index < location.Block.Statements.Count - 1) {

@@ -274,16 +274,21 @@ namespace jQueryApi {
             return null;
         }
 
+        [InlineCode("{$System.Threading.Tasks.Task}.fromPromise({this}, 0))")]
+        public TaskAwaiter<object> GetAwaiter() {
+            return null;
+        }
+
         #region Implementation of IDeferred
 
-		void IPromise.Then(Delegate fulfilledHandler) {
-		}
+        void IPromise.Then(Delegate fulfilledHandler) {
+        }
 
-		void IPromise.Then(Delegate fulfilledHandler, Delegate errorHandler) {
-		}
+        void IPromise.Then(Delegate fulfilledHandler, Delegate errorHandler) {
+        }
 
-		void IPromise.Then(Delegate fulfilledHandler, Delegate errorHandler, Delegate progressHandler) {
-		}
+        void IPromise.Then(Delegate fulfilledHandler, Delegate errorHandler, Delegate progressHandler) {
+        }
 
         IDeferred IDeferred.Always(params Action[] callbacks) {
             return null;

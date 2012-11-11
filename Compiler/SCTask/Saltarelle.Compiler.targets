@@ -24,6 +24,9 @@
 		<PropertyGroup Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'">
 			<EmitDebugScript>true</EmitDebugScript>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(AlreadyCompiled)'==''">
+			<AlreadyCompiled>true</AlreadyCompiled>
+		</PropertyGroup>
 
 		<SCTask AdditionalLibPaths="$(AdditionalLibPaths)"
 		        DefineConstants="$(DefineConstants)"
@@ -42,7 +45,7 @@
 		        WarningsNotAsErrors="$(WarningsNotAsErrors)"
 		        MainEntryPoint="$(StartupObject)"
 		        TargetType="$(OutputType)"
-		        AlreadyCompiled="true"
+		        AlreadyCompiled="$(AlreadyCompiled)"
 		        />
 	</Target>
 

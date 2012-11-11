@@ -74,7 +74,27 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			}
 		}
 
-		[Test, Ignore("Debugging purposes")]
+		[Test]
+		public void CanCompileCoreLibTests() {
+			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
+			opts.References.Clear();
+			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Web.dll")));
+			opts.References.Add(new Reference(Common.MscorlibPath));
+
+			try {
+				var er = new MockErrorReporter();
+				var d = new CompilerDriver(er);
+				bool result = d.Compile(opts, false);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+			}
+			finally {
+				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
+				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
+			}
+		}
+
+		//[Test, Ignore("Debugging purposes")]
 		public void CanCompileProject() {
 			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
 			opts.References.Clear();
