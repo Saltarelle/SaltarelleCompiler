@@ -22,10 +22,16 @@ Array.prototype.getValue = function#? DEBUG Array$getValue##(indices) {
 	if (indices.length != (this._sizes ? this._sizes.length : 1))
 		throw 'Invalid number of indices';
 
+	if (indices[0] < 0 || indices[0] >= (this._sizes ? this._sizes[0] : this.length))
+		throw 'Index 0 out of range';
+
 	var idx = indices[0];
 	if (this._sizes) {
-		for (var i = 1; i < this._sizes.length; i++)
+		for (var i = 1; i < this._sizes.length; i++) {
+			if (indices[i] < 0 || indices[i] >= this._sizes[i])
+				throw 'Index ' + i + ' out of range';
 			idx = idx * this._sizes[i] + indices[i];
+		}
 	}
 	var r = this[idx];
 	return typeof r !== 'undefined' ? r : this._defvalue;
@@ -39,10 +45,16 @@ Array.prototype.setValue = function#? DEBUG Array$setValue##(value, indices) {
 	if (indices.length != (this._sizes ? this._sizes.length : 1))
 		throw 'Invalid number of indices';
 
+	if (indices[0] < 0 || indices[0] >= (this._sizes ? this._sizes[0] : this.length))
+		throw 'Index 0 out of range';
+
 	var idx = indices[0];
 	if (this._sizes) {
-		for (var i = 1; i < this._sizes.length; i++)
+		for (var i = 1; i < this._sizes.length; i++) {
+			if (indices[i] < 0 || indices[i] >= this._sizes[i])
+				throw 'Index ' + i + ' out of range';
 			idx = idx * this._sizes[i] + indices[i];
+		}
 	}
 	this[idx] = value;
 };

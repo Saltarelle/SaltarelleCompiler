@@ -1,3 +1,7 @@
+1.6.2
+Throw an exception if any index in a multidimensional array access is out of range (#79)
+Fixed issue with Dispose() method for iterator blocks.
+
 1.6.1
 Fixed an issue causing the state machine rewriter to generate incorrect code
 Added interfaces IEquatable<T> and IHashable<T>

@@ -159,6 +159,7 @@ public System.Collections.IEnumerator M() {
 				case 1:
 				case 2: {
 					try {
+						break;
 					}
 					finally {
 						$finally.call(this);
@@ -219,6 +220,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 				case 1:
 				case 2: {
 					try {
+						break;
 					}
 					finally {
 						$finally.call(this);
@@ -281,6 +283,7 @@ public System.Collections.IEnumerable M() {
 						case 1:
 						case 2: {
 							try {
+								break;
 							}
 							finally {
 								$finally.call(this);
@@ -345,6 +348,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 						case 1:
 						case 2: {
 							try {
+								break;
 							}
 							finally {
 								$finally.call(this);
