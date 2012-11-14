@@ -1,0 +1,178 @@
+grammar TypeScript;
+
+options
+{
+	output = AST;
+	language = CSharp3;
+	backtrack = true;
+}
+
+tokens {
+	DECLARE   = 'declare';
+	VAR       = 'var';
+	FUNCTION  = 'function';
+
+	COLON     = ':';
+	COMMA     = ',';
+	SEMIC     = ';';
+	LBRACE    = '{';
+	RBRACE    = '}';
+	LBRACK    = '[';
+	RBRACK    = ']';
+	LPAREN    = '(';
+	RPAREN    = ')';
+	ELLIPSIS  = '...';
+	DOT       = '.';
+	ARROW     = '=>';
+	ASSIGN    = '=';
+	NEW       = 'new';
+	QUESTION  = '?';
+	INTERFACE = 'interface';
+	EXTENDS   = 'extends';
+	MODULE    = 'module';
+	EXPORT    = 'export';
+	IMPORT    = 'import';
+
+	ARRAY_TYPE;
+	FUNCTION_TYPE;
+	PARAM;
+	PARAM_ARRAY;
+	PARAM_OPT;
+	PARAMS;
+	VAR_OPT;
+	CONSTRUCTOR;
+	INDEX;
+	COMPOSITE_TYPE;
+}
+
+@lexer::namespace { TypeScriptParser.TypeScriptParserImpl }
+
+@lexer::header { #pragma warning disable 219, 162, 3021 }
+
+@parser::namespace { TypeScriptParser.TypeScriptParserImpl }
+
+@parser::header { #pragma warning disable 219, 162, 3021 }
+
+/*
+@lexer::members {
+	public override void ReportError(RecognitionException e) { throw e; }
+}
+
+@parser::members {
+	public override void ReportError(RecognitionException e) { throw e; }
+}
+*/
+
+Identifier
+	: ('a'..'z' | 'A'..'Z' | '$' | '_') ('a'..'z' | 'A'..'Z' | '$' | '_' | '0'..'9')*
+	;
+
+QuotedIdentifier
+	: '"' ~('"')* '"' { $type = Identifier; $text = $text.Substring(1, $text.Length - 2); }
+	;
+
+Whitespace:
+	(' ' | '\t' | '\r' | '\n') { $channel = Hidden; }
+	;
+
+MultiLineComment
+	: '/*' ( options { greedy = false; } : . )* '*/' { $channel = Hidden; }
+	;
+
+SingleLineComment
+	: '//' ( ~( '\r' | '\n' ) )* { $channel = Hidden; }
+	;
+
+ident
+	: ( x=Identifier
+	  | x=INTERFACE
+	  | x=EXTENDS
+	  | x=MODULE
+	  | x=EXPORT
+	  | x=IMPORT
+	  ) { $x.Type = Identifier; }
+	;
+
+nestedIdentifier
+	@init { string result = ""; }
+	: x=ident { result = $x.text; } ( DOT { result += '.'; } y=ident { result += $y.text; } )* -> Identifier[null, result]
+	;
+
+public program
+	: globalDeclaration* EOF!
+	;
+
+globalDeclaration
+	: declaration
+	| moduleDeclaration
+	;
+
+declaration
+	: variableDeclaration
+	| functionDeclaration
+	| interfaceDeclaration
+	| importDeclaration
+	;
+
+variableDeclaration
+	@init { bool export = false; }
+	: (DECLARE | EXPORT { export = true; } )? VAR ident (COLON type)? SEMIC? -> { export }? ^(EXPORT ident type?)
+	                                                                         ->             ^(DECLARE[null, "DECLARE"] ident type?)
+	;
+
+functionDeclaration
+	@init { bool export = false; }
+	: (DECLARE | EXPORT { export = true; })? FUNCTION ident parameterList (COLON type)? SEMIC? -> { export }? ^(EXPORT ident parameterList type?)
+	                                                                                           ->             ^(DECLARE[null, "DECLARE"] ident parameterList type?)
+	;
+
+interfaceDeclaration
+	@init { bool export = false; }
+	: (EXPORT { export = true; })? INTERFACE ident extendsDeclaration? compositeType -> { export }? ^(EXPORT ^(INTERFACE ident extendsDeclaration? compositeType))
+	                                                                                 ->             ^(DECLARE ^(INTERFACE ident extendsDeclaration? compositeType))
+	;
+
+extendsDeclaration
+	: EXTENDS^ nestedIdentifier (COMMA! nestedIdentifier)*
+	;
+
+moduleDeclaration
+	: DECLARE! MODULE^ Identifier LBRACE! declaration* RBRACE!
+	;
+
+importDeclaration
+	: IMPORT^ Identifier ASSIGN! MODULE! LPAREN! Identifier RPAREN! SEMIC!?
+	;
+
+parameterList
+	: LPAREN (parameterDeclaration (COMMA parameterDeclaration)*)* RPAREN -> ^(PARAMS parameterDeclaration*)
+	;
+
+parameterDeclaration
+	: ident (COLON type)? -> ^(PARAM ident type?)
+	| ident QUESTION (COLON type)? -> ^(PARAM_OPT ident type?)
+	| ELLIPSIS ident (COLON type)? -> ^(PARAM_ARRAY ident type?)
+	;
+
+type
+	: ( nestedIdentifier
+	  | compositeType
+	  | functionType
+	  ) (x=LBRACK^ { $x.Type = ARRAY_TYPE; } RBRACK!)*
+	;
+
+compositeType
+	: LBRACE member* RBRACE -> ^(COMPOSITE_TYPE member*)
+	;
+
+member
+	: ident (COLON type)? SEMIC? -> ^(VAR ident type?)
+	| ident QUESTION (COLON type)? SEMIC? -> ^(VAR_OPT ident type?)
+	| ident? parameterList (COLON type)? SEMIC? -> ^(FUNCTION ident? parameterList type?)
+	| NEW parameterList (COLON type?) SEMIC? -> ^(CONSTRUCTOR parameterList type?)
+	| LBRACK parameterDeclaration RBRACK (COLON type)? SEMIC? -> ^(INDEX parameterDeclaration type?)
+	;
+
+functionType
+	: parameterList ARROW type -> ^(FUNCTION_TYPE parameterList type?)
+	;

@@ -1,0 +1,93 @@
+tree grammar TypeScriptWalker;
+
+options
+{
+	ASTLabelType = CommonTree;
+	tokenVocab = TypeScript;
+}
+
+@namespace { TypeScriptParser.TypeScriptParserImpl }
+
+@header {
+using System;
+using TypeScriptModel;
+#pragma warning disable 219, 162, 3021
+}
+
+@members {
+	public override void ReportError(RecognitionException e) { throw e; }
+}
+
+public program returns [Globals result]
+	@init { var members = new List<Member>(); var modules = new List<Module>(); }
+	: ( m=moduleMember { members.Add(m); }
+	  | d=moduleDeclaration { modules.Add(d); }
+	  )*
+	  EOF
+	{ $result = new Globals(members, modules); }
+	;
+
+moduleMember returns [Member result]
+	: ( ^((DECLARE | EXPORT) x=Identifier y=type? { $result = new Variable(x.Text, y, false, false); })
+	  | ^((DECLARE | EXPORT) i=interfaceDeclaration { $result = i; })
+	  | ^((DECLARE | EXPORT) x=Identifier l=parameterList t=type? { $result = new Function(x.Text, t, l); })
+	  )
+	;
+
+interfaceDeclaration returns [Interface result]
+	: ^(INTERFACE i=Identifier e=extendsDeclaration? t=compositeType) { $result = new Interface(i.Text, e, t); }
+	;
+
+extendsDeclaration returns [List<TSType> result]
+	@init { $result = new List<TSType>(); }
+	: ^(EXTENDS (t=type { $result.Add(t); })+)
+	;
+
+moduleDeclaration returns [Module result]
+	@init { var members = new List<Member>(); var imports = new List<ModuleImport>(); }
+	: ^(MODULE i=Identifier (m=moduleMember { members.Add(m); } | p=importDeclaration { imports.Add(p); })*)
+	{ $result = new Module(i.Text, imports, members); }
+	;
+
+importDeclaration returns [ModuleImport result]
+	: ^(IMPORT a=Identifier m=Identifier) { $result = new ModuleImport(m.Text, a.Text); }
+	;
+
+type returns [TSType result]
+	: Identifier { $result = new TypeReference($Identifier.Text); }
+	| ct=compositeType { $result = ct; }
+	| at=arrayType { $result = at; }
+	| ft=functionType { $result = ft; }
+	;
+
+compositeType returns [CompositeType result]
+	@init { var members = new List<Member>(); }
+	: ^(COMPOSITE_TYPE (m=member { members.Add(m); })*)
+	{ $result = new CompositeType(members); }
+	;
+
+arrayType returns [ArrayType result]
+	: ^(ARRAY_TYPE t=type) { $result = new ArrayType(t); }
+	;
+
+functionType returns [FunctionType result]
+	: ^(FUNCTION_TYPE l=parameterList t=type?) { $result = new FunctionType(l, t); }
+	;
+
+member returns [Member result]
+	: ^(VAR Identifier t=type?) { $result = new Variable($Identifier.Text, t, false, false); }
+	| ^(VAR_OPT Identifier t=type?) { $result = new Variable($Identifier.Text, t, true, false); }
+	| ^(FUNCTION i=Identifier? l=parameterList t=type?) { $result = new Function(i != null ? i.Text : null, t, l); }
+	| ^(CONSTRUCTOR l=parameterList t=type?) { $result = new Constructor(t, l); }
+	| ^(INDEX p=parameter t=type?) { $result = new Indexer(t, p); }
+	;
+
+parameterList returns [List<Variable> result]
+	@init { $result = new List<Variable>(); }
+	: ^(PARAMS (p=parameter { $result.Add(p); })* )
+	;
+
+parameter returns [Variable result]
+	@init { bool optional = false, paramArray = false; }
+	: ^((PARAM | PARAM_OPT { optional = true; } | PARAM_ARRAY { paramArray = true; }) i=Identifier t=type? { $result = new Variable(i.Text, t, optional, paramArray); })
+	;
