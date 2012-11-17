@@ -73,8 +73,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="knockout-2.1.0.js" />
-    <Content Include="knockout-2.1.0.min.js" />
+    <Content Include="knockout-2.2.0.js" />
+    <Content Include="knockout-2.2.0.min.js" />
   </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>
