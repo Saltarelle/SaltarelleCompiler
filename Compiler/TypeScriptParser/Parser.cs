@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Antlr.Runtime;
 using Antlr.Runtime.Tree;
 using TypeScriptModel;
+using TypeScriptModel.Model;
 
 namespace TypeScriptParser {
 	public static class Parser {

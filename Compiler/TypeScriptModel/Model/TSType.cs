@@ -1,4 +1,4 @@
-namespace TypeScriptModel {
+namespace TypeScriptModel.Model {
 	public abstract class TSType {
 	}
 }

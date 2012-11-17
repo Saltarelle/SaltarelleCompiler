@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TypeScriptModel {
+namespace TypeScriptModel.Model {
 	public class CompositeType : TSType {
 		public IReadOnlyCollection<Member> Members { get; private set; }
 

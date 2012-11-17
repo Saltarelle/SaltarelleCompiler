@@ -10,7 +10,7 @@ options
 
 @header {
 using System;
-using TypeScriptModel;
+using TypeScriptModel.Model;
 #pragma warning disable 219, 162, 3021
 }
 
@@ -19,23 +19,23 @@ using TypeScriptModel;
 }
 
 public program returns [Globals result]
-	@init { var members = new List<Member>(); var modules = new List<Module>(); }
+	@init { var members = new List<Member>(); var modules = new List<Module>(); var interfaces = new List<Interface>(); }
 	: ( m=moduleMember { members.Add(m); }
 	  | d=moduleDeclaration { modules.Add(d); }
+	  | ^((DECLARE | EXPORT) i=interfaceDeclaration { interfaces.Add(i); })
 	  )*
 	  EOF
-	{ $result = new Globals(members, modules); }
+	{ $result = new Globals(members, modules, interfaces); }
 	;
 
 moduleMember returns [Member result]
 	: ( ^((DECLARE | EXPORT) x=Identifier y=type? { $result = new Variable(x.Text, y, false, false); })
-	  | ^((DECLARE | EXPORT) i=interfaceDeclaration { $result = i; })
 	  | ^((DECLARE | EXPORT) x=Identifier l=parameterList t=type? { $result = new Function(x.Text, t, l); })
 	  )
 	;
 
 interfaceDeclaration returns [Interface result]
-	: ^(INTERFACE i=Identifier e=extendsDeclaration? t=compositeType) { $result = new Interface(i.Text, e, t); }
+	: ^(INTERFACE i=Identifier e=extendsDeclaration? t=compositeType) { $result = new Interface(i.Text, e ?? new List<TSType>(), t.Members); }
 	;
 
 extendsDeclaration returns [List<TSType> result]
@@ -44,9 +44,9 @@ extendsDeclaration returns [List<TSType> result]
 	;
 
 moduleDeclaration returns [Module result]
-	@init { var members = new List<Member>(); var imports = new List<ModuleImport>(); }
-	: ^(MODULE i=Identifier (m=moduleMember { members.Add(m); } | p=importDeclaration { imports.Add(p); })*)
-	{ $result = new Module(i.Text, imports, members); }
+	@init { var members = new List<Member>(); var imports = new List<ModuleImport>(); var interfaces = new List<Interface>(); }
+	: ^(MODULE n=Identifier (m=moduleMember { members.Add(m); } | p=importDeclaration { imports.Add(p); } | ^((DECLARE | EXPORT) i=interfaceDeclaration { interfaces.Add(i); }))*)
+	{ $result = new Module(n.Text, imports, members, interfaces); }
 	;
 
 importDeclaration returns [ModuleImport result]

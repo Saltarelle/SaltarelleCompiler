@@ -1,4 +1,4 @@
-namespace TypeScriptModel {
+namespace TypeScriptModel.Model {
 	public class ModuleImport {
 		public string Module { get; private set; }
 		public string Alias { get; private set; }

@@ -1,4 +1,4 @@
-namespace TypeScriptModel {
+namespace TypeScriptModel.Model {
 	public class ArrayType : TSType {
 		public TSType ElementType { get; private set; }
 

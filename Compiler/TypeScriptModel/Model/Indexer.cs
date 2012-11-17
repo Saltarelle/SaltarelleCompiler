@@ -1,4 +1,4 @@
-namespace TypeScriptModel {
+namespace TypeScriptModel.Model {
 	public class Indexer : Member {
 		public TSType ReturnType { get; private set; }
 		public Variable Parameter { get; private set; }

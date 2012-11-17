@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TypeScriptModel {
+namespace TypeScriptModel.Model {
 	public class FunctionType : TSType {
 		public IReadOnlyCollection<Variable> Parameters { get; private set; }
 		public TSType ReturnType { get; private set; }
