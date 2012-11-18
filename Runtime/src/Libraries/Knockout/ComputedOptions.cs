@@ -1,4 +1,4 @@
-// DependentObservableOptions.cs
+// ComputedOptions.cs
 // Script#/Libraries/Knockout
 // This source code is subject to terms and conditions of the Apache License, Version 2.0.
 //
@@ -9,14 +9,13 @@ using System.Runtime.CompilerServices;
 namespace KnockoutApi {
 
     /// <summary>
-    /// Provides advanced options for defining a dependent observable.
+    /// Provides advanced options for defining a computed observable.
     /// </summary>
     /// <typeparam name="T">The type of the observable value.</typeparam>
     [Imported]
     [IgnoreNamespace]
     [ScriptName("Object")]
-    [Obsolete("Use ComputedOptions<T> instead.")]
-    public sealed class DependentObservableOptions<T> {
+    public sealed class ComputedOptions<T> {
 
         /// <summary>
         /// Gets or sets whether the evaluation should be deferred, i.e. not
