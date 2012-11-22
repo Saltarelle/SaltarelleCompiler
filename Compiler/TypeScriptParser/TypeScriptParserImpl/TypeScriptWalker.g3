@@ -4,6 +4,7 @@ options
 {
 	ASTLabelType = CommonTree;
 	tokenVocab = TypeScript;
+	k = 4;
 }
 
 @namespace { TypeScriptParser.TypeScriptParserImpl }
@@ -15,38 +16,43 @@ using TypeScriptModel.Model;
 }
 
 @members {
-	public override void ReportError(RecognitionException e) { throw e; }
+	public override void ReportError(RecognitionException e) { ErrorReporter.ReportError(e.Line, e.CharPositionInLine, "Internal error: " + GetErrorMessage(e, TokenNames)); }
+	public IErrorReporter ErrorReporter { get; set; }
 }
 
 public program returns [Globals result]
 	@init { var members = new List<Member>(); var modules = new List<Module>(); var interfaces = new List<Interface>(); }
-	: ( m=moduleMember { members.Add(m); }
+	: ( ^(DECLARE v=variableDeclaration { members.Add(v); })
+	  | ^(DECLARE i=interfaceDeclaration { interfaces.Add(i); })
 	  | d=moduleDeclaration { modules.Add(d); }
-	  | ^((DECLARE | EXPORT) i=interfaceDeclaration { interfaces.Add(i); })
 	  )*
 	  EOF
-	{ $result = new Globals(members, modules, interfaces); }
+	{ $result = new Globals(modules, interfaces, members); }
 	;
 
-moduleMember returns [Member result]
-	: ( ^((DECLARE | EXPORT) x=Identifier y=type? { $result = new Variable(x.Text, y, false, false); })
-	  | ^((DECLARE | EXPORT) x=Identifier l=parameterList t=type? { $result = new Function(x.Text, t, l); })
-	  )
+variableDeclaration returns [Member result]
+	: (x=Identifier t=type? { $result = new Variable(x.Text, t, false); })
+	| (x=Identifier l=parameterList t=type? { $result = new Function(x.Text, t, l); })
 	;
 
 interfaceDeclaration returns [Interface result]
-	: ^(INTERFACE i=Identifier e=extendsDeclaration? t=compositeType) { $result = new Interface(i.Text, e ?? new List<TSType>(), t.Members); }
+	: ^(INTERFACE i=Identifier e=extendsDeclaration? t=compositeType) { $result = new Interface(i.Text, e ?? new List<TypeReference>(), t.Members); }
 	;
 
-extendsDeclaration returns [List<TSType> result]
-	@init { $result = new List<TSType>(); }
-	: ^(EXTENDS (t=type { $result.Add(t); })+)
+extendsDeclaration returns [List<TypeReference> result]
+	@init { $result = new List<TypeReference>(); }
+	: ^(EXTENDS (t=typeReference { $result.Add(t); })+)
 	;
 
 moduleDeclaration returns [Module result]
-	@init { var members = new List<Member>(); var imports = new List<ModuleImport>(); var interfaces = new List<Interface>(); }
-	: ^(MODULE n=Identifier (m=moduleMember { members.Add(m); } | p=importDeclaration { imports.Add(p); } | ^((DECLARE | EXPORT) i=interfaceDeclaration { interfaces.Add(i); }))*)
-	{ $result = new Module(n.Text, imports, members, interfaces); }
+	@init { var imports = new List<ModuleImport>(); var exportedMembers = new List<Member>(); var members = new List<Member>(); var exportedInterfaces = new List<Interface>(); var interfaces = new List<Interface>(); bool export = false; }
+	: ^(MODULE n=Identifier (  p=importDeclaration { imports.Add(p); }
+	                         | ^((DECLARE { export = false; } | EXPORT { export = true; }) (  (i=interfaceDeclaration { (export ? exportedInterfaces : interfaces).Add(i); })
+	                                                                                        | (v=variableDeclaration { (export ? exportedMembers : members).Add(v); })
+	                                                                                       ))
+	                        )*
+	  )
+	{ $result = new Module(n.Text, imports, exportedMembers, members, exportedInterfaces, interfaces); }
 	;
 
 importDeclaration returns [ModuleImport result]
@@ -54,10 +60,14 @@ importDeclaration returns [ModuleImport result]
 	;
 
 type returns [TSType result]
-	: Identifier { $result = new TypeReference($Identifier.Text); }
+	: tr=typeReference { $result = tr; }
 	| ct=compositeType { $result = ct; }
 	| at=arrayType { $result = at; }
 	| ft=functionType { $result = ft; }
+	;
+
+typeReference returns [TypeReference result]
+	: Identifier { $result = new TypeReference($Identifier.Text); }
 	;
 
 compositeType returns [CompositeType result]
@@ -75,19 +85,19 @@ functionType returns [FunctionType result]
 	;
 
 member returns [Member result]
-	: ^(VAR Identifier t=type?) { $result = new Variable($Identifier.Text, t, false, false); }
-	| ^(VAR_OPT Identifier t=type?) { $result = new Variable($Identifier.Text, t, true, false); }
+	: ^(VAR Identifier t=type?) { $result = new Variable($Identifier.Text, t, false); }
+	| ^(VAR_OPT Identifier t=type?) { $result = new Variable($Identifier.Text, t, true); }
 	| ^(FUNCTION i=Identifier? l=parameterList t=type?) { $result = new Function(i != null ? i.Text : null, t, l); }
 	| ^(CONSTRUCTOR l=parameterList t=type?) { $result = new Constructor(t, l); }
-	| ^(INDEX p=parameter t=type?) { $result = new Indexer(t, p); }
+	| ^(INDEX p=parameter t=type?) { $result = new Indexer(t, p.Name, p.Type); }
 	;
 
-parameterList returns [List<Variable> result]
-	@init { $result = new List<Variable>(); }
+parameterList returns [List<Parameter> result]
+	@init { $result = new List<Parameter>(); }
 	: ^(PARAMS (p=parameter { $result.Add(p); })* )
 	;
 
-parameter returns [Variable result]
+parameter returns [Parameter result]
 	@init { bool optional = false, paramArray = false; }
-	: ^((PARAM | PARAM_OPT { optional = true; } | PARAM_ARRAY { paramArray = true; }) i=Identifier t=type? { $result = new Variable(i.Text, t, optional, paramArray); })
+	: ^((PARAM | PARAM_OPT { optional = true; } | PARAM_ARRAY { paramArray = true; }) i=Identifier t=type? { $result = new Parameter(i.Text, t, optional, paramArray); })
 	;

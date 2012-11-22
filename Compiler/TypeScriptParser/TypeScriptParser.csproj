@@ -52,6 +52,7 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="IErrorReporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -52,6 +52,7 @@
     <Compile Include="Model\ArrayType.cs" />
     <Compile Include="Model\CompositeType.cs" />
     <Compile Include="Model\Constructor.cs" />
+    <Compile Include="Model\Parameter.cs" />
     <Compile Include="Model\Function.cs" />
     <Compile Include="Model\FunctionType.cs" />
     <Compile Include="Model\Globals.cs" />
@@ -65,6 +66,12 @@
     <Compile Include="Model\TSType.cs" />
     <Compile Include="Model\Variable.cs" />
     <Compile Include="Model\TypeReference.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JSModel\JSModel.csproj">
+      <Project>{c84df308-9ebf-4521-9ca2-5c531f4b245a}</Project>
+      <Name>JSModel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

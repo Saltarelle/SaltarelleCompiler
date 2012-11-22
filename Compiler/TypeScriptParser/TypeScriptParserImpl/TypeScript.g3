@@ -4,7 +4,7 @@ options
 {
 	output = AST;
 	language = CSharp3;
-	backtrack = true;
+	k = 2;
 }
 
 tokens {
@@ -53,15 +53,15 @@ tokens {
 
 @parser::header { #pragma warning disable 219, 162, 3021 }
 
-/*
 @lexer::members {
-	public override void ReportError(RecognitionException e) { throw e; }
+	public override void ReportError(RecognitionException e) { ErrorReporter.ReportError(e.Line, e.CharPositionInLine, GetErrorMessage(e, TokenNames)); }
+	public IErrorReporter ErrorReporter { get; set; }
 }
 
 @parser::members {
-	public override void ReportError(RecognitionException e) { throw e; }
+	public override void ReportError(RecognitionException e) { ErrorReporter.ReportError(e.Line, e.CharPositionInLine, GetErrorMessage(e, TokenNames)); }
+	public IErrorReporter ErrorReporter { get; set; }
 }
-*/
 
 Identifier
 	: ('a'..'z' | 'A'..'Z' | '$' | '_') ('a'..'z' | 'A'..'Z' | '$' | '_' | '0'..'9')*
@@ -128,8 +128,8 @@ functionDeclaration
 
 interfaceDeclaration
 	@init { bool export = false; }
-	: (EXPORT { export = true; })? INTERFACE ident extendsDeclaration? compositeType -> { export }? ^(EXPORT ^(INTERFACE ident extendsDeclaration? compositeType))
-	                                                                                 ->             ^(DECLARE ^(INTERFACE ident extendsDeclaration? compositeType))
+	: (EXPORT { export = true; })? INTERFACE ident extendsDeclaration? compositeType SEMIC? -> { export }? ^(EXPORT ^(INTERFACE ident extendsDeclaration? compositeType))
+	                                                                                        ->             ^(DECLARE ^(INTERFACE ident extendsDeclaration? compositeType))
 	;
 
 extendsDeclaration
@@ -137,7 +137,7 @@ extendsDeclaration
 	;
 
 moduleDeclaration
-	: DECLARE! MODULE^ Identifier LBRACE! declaration* RBRACE!
+	: DECLARE! MODULE^ Identifier LBRACE! declaration* RBRACE! SEMIC!?
 	;
 
 importDeclaration
@@ -166,11 +166,11 @@ compositeType
 	;
 
 member
-	: ident (COLON type)? SEMIC? -> ^(VAR ident type?)
-	| ident QUESTION (COLON type)? SEMIC? -> ^(VAR_OPT ident type?)
-	| ident? parameterList (COLON type)? SEMIC? -> ^(FUNCTION ident? parameterList type?)
-	| NEW parameterList (COLON type?) SEMIC? -> ^(CONSTRUCTOR parameterList type?)
+	: NEW parameterList (COLON type)? SEMIC? -> ^(CONSTRUCTOR parameterList type?)
 	| LBRACK parameterDeclaration RBRACK (COLON type)? SEMIC? -> ^(INDEX parameterDeclaration type?)
+	| ((ident l=parameterList) | ident | l=parameterList) (COLON type)? SEMIC? -> { l != null }? ^(FUNCTION ident? $l type?)
+	                                                                           ->                ^(VAR ident type?)
+	| ident QUESTION (COLON type)? SEMIC? -> ^(VAR_OPT ident type?)
 	;
 
 functionType
