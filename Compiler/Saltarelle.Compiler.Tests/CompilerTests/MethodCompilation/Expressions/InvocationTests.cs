@@ -940,6 +940,27 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingStaticMethodWithDynamicArgumentWorks() {
+			AssertCorrect(
+@"class Other {
+	public static void S(int i) {}
+	public static void S(string s) {}
+}
+public static void S(int i) {}
+public static void S(string s) {}
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	S(d);
+	Other.S(d);
+	// END
+}",
+@"	{sm_C}.$S($d);
+	{sm_Other}.$S($d);
+");
+		}
+
+		[Test]
 		public void InvokingIndexerWithDynamicArgumentWorksWhenOnlyOneMemberIsApplicable() {
 			AssertCorrect(
 @"class X {

@@ -1710,7 +1710,8 @@ namespace Saltarelle.Compiler.Compiler {
 						_errorReporter.Message(7529);
 						return JsExpression.Null;
 					}
-					expressions.Add(JsExpression.Member(InnerCompile(mgrr.TargetResult, false), impl[0].Name));
+					var target = mgrr.TargetResult is TypeResolveResult ? _runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember) : InnerCompile(mgrr.TargetResult, false);
+					expressions.Add(JsExpression.Member(target, impl[0].Name));
 				}
 				else {
 					expressions.Add(InnerCompile(rr.Target, false));
