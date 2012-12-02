@@ -119,7 +119,7 @@ namespace KnockoutApi {
         /// <param name="function">A function to compute the value.</param>
         /// <returns>A new dependent observable instance.</returns>
         [Obsolete("Use Computed instead.")]
-        public static DependentObservable<T> DependentObservable<T>(Func<T> function) {
+        public static ComputedObservable<T> DependentObservable<T>(Func<T> function) {
             return null;
         }
 
@@ -129,7 +129,7 @@ namespace KnockoutApi {
         /// <typeparam name="T">The type of the observable value.</typeparam>
         /// <param name="options">Options for the dependent observable.</param>
         [Obsolete("Use Computed instead.")]
-        public static DependentObservable<T> DependentObservable<T>(DependentObservableOptions<T> options) {
+        public static ComputedObservable<T> DependentObservable<T>(ComputedOptions<T> options) {
             return null;
         }
                 
@@ -146,7 +146,7 @@ namespace KnockoutApi {
         /// <typeparam name="T">The type of the observable value.</typeparam>
         /// <param name="function">A function to compute the value.</param>
         /// <returns>A new dependent observable instance.</returns>
-        public static DependentObservable<T> Computed<T>(Func<T> function) {
+        public static ComputedObservable<T> Computed<T>(Func<T> function) {
             return null;
         }
 
@@ -155,7 +155,7 @@ namespace KnockoutApi {
         /// </summary>
         /// <typeparam name="T">The type of the observable value.</typeparam>
         /// <param name="options">Options for the dependent observable.</param>
-        public static DependentObservable<T> Computed<T>(DependentObservableOptions<T> options) {
+        public static ComputedObservable<T> Computed<T>(ComputedOptions<T> options) {
             return null;
         }
 
