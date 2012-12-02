@@ -1,3 +1,4 @@
+Fixed issues with user-defined conversion operators (#97)
 Knockout API updates
 Fixed issue invoking static method with dynamic argument (#95)
 

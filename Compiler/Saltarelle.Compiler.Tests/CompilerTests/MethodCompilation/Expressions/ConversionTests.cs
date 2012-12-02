@@ -1574,5 +1574,35 @@ public void M() {
 	var $e12 = $FromNullable($ix);
 ");
 		}
+
+		[Test]
+		public void StandardConversionBeforeUserDefinedConversion() {
+			AssertCorrect(@"
+class MyConvertible {
+	public static explicit operator MyConvertible(int i) { return null; }
+}
+void M() {
+	// BEGIN
+	var c = (MyConvertible)3.14;
+	// END
+}",
+@"	var $c = {sm_MyConvertible}.$op_Explicit($Truncate(3.14));
+");
+		}
+
+		[Test]
+		public void StandardConversionAfterUserDefinedConversion() {
+			AssertCorrect(@"
+class MyConvertible {
+	public static explicit operator double(MyConvertible c) { return 0; }
+}
+void M() {
+	// BEGIN
+	var c = (int)new MyConvertible();
+	// END
+}",
+@"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {inst_MyConvertible}()));
+");
+		}
 	}
 }
