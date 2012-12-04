@@ -7,11 +7,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
     [TestFixture]
     public class VariableGatheringTests : MethodCompilerTestBase {
 		private void AssertUsedByReference(string scriptVariableName) {
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.True);
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.True, scriptVariableName + " should be used by reference");
 		}
 
 		private void AssertNotUsedByReference(string scriptVariableName) {
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.False);
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.False, scriptVariableName + " should not be used by reference");
 		}
 
         [Test]
@@ -462,6 +462,32 @@ public void M() {
 			");
 			AssertNotUsedByReference("$x");
 			AssertUsedByReference("$y");
+		}
+
+		[Test]
+		public void ByRefAndOutParametersToAnonymousDelegatesAreConsideredUsedByReference() {
+			CompileMethod(@"
+				delegate void D(int a, ref int b, out int c);
+				public void M() {
+					D d = delegate(int x, ref int y, out int z) { z = 0; };
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
+			AssertUsedByReference("$z");
+		}
+
+		[Test]
+		public void ByRefAndOutParametersToLambdasAreConsideredUsedByReference() {
+			CompileMethod(@"
+				delegate void D(int a, ref int b, out int c);
+				public void M() {
+					D d = (int x, ref int y, out int z) => { z = 0; };
+				}
+			");
+			AssertNotUsedByReference("$x");
+			AssertUsedByReference("$y");
+			AssertUsedByReference("$z");
 		}
 
 		[Test]

@@ -1,3 +1,5 @@
+Fixed issue causing ref and out parameters to anonymous methods and lambdas not to work (#98).
+
 1.6.3
 Fixed issues with user-defined conversion operators (#97)
 Knockout API updates
