@@ -12,7 +12,7 @@ namespace System {
     /// </summary>
     [IgnoreNamespace]
     [Imported(ObeysTypeSystem = true)]
-    public struct Boolean {
+    public struct Boolean : IHashable<Boolean> {
 		[InlineCode("false")]
 		public Boolean(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -25,5 +25,13 @@ namespace System {
         public static bool Parse(string s) {
             return false;
         }
+
+	    public bool Equals(bool other) {
+		    return false;
+	    }
+
+		public new int GetHashCode() {
+			return 0;
+		}
     }
 }

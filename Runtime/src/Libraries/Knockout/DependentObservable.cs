@@ -15,6 +15,7 @@ namespace KnockoutApi {
     /// <typeparam name="T">The type of the contained value.</typeparam>
     [Imported]
     [IgnoreNamespace]
+    [Obsolete("Use ComputedObservable<T> instead.")]
     public sealed class DependentObservable<T> {
 
         private DependentObservable() {

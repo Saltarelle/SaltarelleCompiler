@@ -161,6 +161,7 @@ lbl1:
 				case 3:
 				case 4: {
 					try {
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -243,6 +244,7 @@ lbl1:
 				case 3:
 				case 4: {
 					try {
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -322,6 +324,7 @@ lbl1:
 				case 2:
 				case 3: {
 					try {
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -396,6 +399,7 @@ lbl1:
 				case 3:
 				case 4: {
 					try {
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -496,6 +500,7 @@ lbl1:
 				case 4:
 				case 5: {
 					try {
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -570,6 +575,7 @@ lbl1:
 				case 3:
 				case 4: {
 					try {
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -704,6 +710,7 @@ lbl1:
 										case 10:
 										case 11: {
 											try {
+												break;
 											}
 											finally {
 												$finally3.call(this);
@@ -909,6 +916,7 @@ lbl1:
 										case 10:
 										case 11: {
 											try {
+												break;
 											}
 											finally {
 												$finally3.call(this);
@@ -1124,6 +1132,7 @@ lbl1:
 										case 10:
 										case 11: {
 											try {
+												break;
 											}
 											finally {
 												$finally3.call(this);
@@ -1328,6 +1337,7 @@ lbl1:
 										case 10:
 										case 11: {
 											try {
+												break;
 											}
 											finally {
 												$finally3.call(this);
@@ -1588,6 +1598,7 @@ lbl1:
 										case 11:
 										case 12: {
 											try {
+												break;
 											}
 											finally {
 												$finally3.call(this);
@@ -1906,6 +1917,304 @@ lbl1:
 						continue $loop1;
 					}
 					d;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
+
+		[Test]
+		public void ReturnToFirstStatementInsideTryAfterYieldReturn() {
+			AssertCorrect(@"
+{
+	try {
+		while (a) {
+			yield return 1;
+		}
+	}
+	finally {
+		b;
+	}
+}",
+@"{
+	var $state1 = 0;
+	$finally1 = function() {
+		b;
+	};
+	dispose = function() {
+		try {
+			switch ($state1) {
+				case 1:
+				case 2: {
+					try {
+						break;
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$state1 = -1;
+		}
+	};
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = 1;
+					if (!a) {
+						$state1 = 2;
+						continue $loop1;
+					}
+					setCurrent(1);
+					$state1 = 0;
+					return true;
+				}
+				case 2: {
+					$state1 = -1;
+					$finally1.call(this);
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", methodType: MethodType.Iterator);
+		}
+
+		[Test]
+		public void TwoTryBlocksAfterEachother() {
+			AssertCorrect(@"
+{
+	try {
+		try {
+			yield return 1;
+			a;
+		}
+		finally {
+			b;
+		}
+		try {
+			yield return 2;
+			c;
+		}
+		finally {
+			d;
+		}
+	}
+	finally {
+		e;
+	}
+}",
+@"{
+	var $state1 = 0;
+	$finally1 = function() {
+		e;
+	};
+	$finally2 = function() {
+		b;
+	};
+	$finally3 = function() {
+		d;
+	};
+	dispose = function() {
+		try {
+			switch ($state1) {
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9: {
+					try {
+						switch ($state1) {
+							case 4:
+							case 5:
+							case 6: {
+								try {
+									break;
+								}
+								finally {
+									$finally2.call(this);
+								}
+							}
+							case 7:
+							case 8:
+							case 9: {
+								try {
+									break;
+								}
+								finally {
+									$finally3.call(this);
+								}
+							}
+						}
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$state1 = -1;
+		}
+	};
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = 4;
+					setCurrent(1);
+					$state1 = 6;
+					return true;
+				}
+				case 6: {
+					$state1 = 4;
+					a;
+					$state1 = 5;
+					continue $loop1;
+				}
+				case 5: {
+					$state1 = 1;
+					$finally2.call(this);
+					$state1 = 3;
+					continue $loop1;
+				}
+				case 3: {
+					$state1 = 7;
+					setCurrent(2);
+					$state1 = 9;
+					return true;
+				}
+				case 2: {
+					$state1 = -1;
+					$finally1.call(this);
+					$state1 = -1;
+					break $loop1;
+				}
+				case 9: {
+					$state1 = 7;
+					c;
+					$state1 = 8;
+					continue $loop1;
+				}
+				case 8: {
+					$state1 = 1;
+					$finally3.call(this);
+					$state1 = 2;
+					continue $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", MethodType.Iterator);
+		}
+
+		[Test]
+		public void ReturnToFirstStatementInsideTryAfterYieldReturnNested() {
+			AssertCorrect(@"
+{
+	try {
+		try {
+			while (a) {
+				yield return 1;
+			}
+		}
+		finally {
+			b;
+		}
+	}
+	finally {
+		c;
+	}
+}",
+@"{
+	var $state1 = 0;
+	$finally1 = function() {
+		c;
+	};
+	$finally2 = function() {
+		b;
+	};
+	dispose = function() {
+		try {
+			switch ($state1) {
+				case 1:
+				case 2:
+				case 3:
+				case 4: {
+					try {
+						switch ($state1) {
+							case 3:
+							case 4: {
+								try {
+									break;
+								}
+								finally {
+									$finally2.call(this);
+								}
+							}
+						}
+					}
+					finally {
+						$finally1.call(this);
+					}
+				}
+			}
+		}
+		finally {
+			$state1 = -1;
+		}
+	};
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = 3;
+					if (!a) {
+						$state1 = 4;
+						continue $loop1;
+					}
+					setCurrent(1);
+					$state1 = 0;
+					return true;
+				}
+				case 4: {
+					$state1 = 1;
+					$finally2.call(this);
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					$finally1.call(this);
 					$state1 = -1;
 					break $loop1;
 				}

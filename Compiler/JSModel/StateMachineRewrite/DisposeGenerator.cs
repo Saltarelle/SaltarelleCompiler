@@ -40,7 +40,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		private static JsStatement GenerateBody(string stateVariableName, List<Node> nodes) {
 			if (nodes.Count == 0)
-				return JsBlockStatement.EmptyStatement;
+				return new JsBreakStatement();
 
 			return new JsSwitchStatement(JsExpression.Identifier(stateVariableName),
 			                             nodes.Select(n => new JsSwitchSection(n.StateValues.Select(v => JsExpression.Number(v)),

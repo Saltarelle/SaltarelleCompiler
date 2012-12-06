@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
     [ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-    public struct Byte {
+    public struct Byte : IHashable<Byte> {
 		[InlineCode("0")]
 		public Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -50,5 +50,13 @@ namespace System {
         public string ToString(int radix) {
             return null;
         }
+
+	    public bool Equals(byte other) {
+		    return false;
+	    }
+
+		public new int GetHashCode() {
+			return 0;
+		}
     }
 }

@@ -129,5 +129,33 @@ namespace CoreLibTests {
 			Assert.AreEqual(new int[0,0].Rank, 2);
 			Assert.AreEqual(new int[0,0,0].Rank, 3);
 		}
+
+		[Test]
+		public void GetValueWithIndexOutOfRangeThrowsAnException() {
+#pragma warning disable 219, 251
+			var arr = new int[2, 3, 4];
+			int i = arr[1, 2, 3];
+			Assert.Throws(() => i = arr[2, 2, 1]);
+			Assert.Throws(() => i = arr[1, 3, 1]);
+			Assert.Throws(() => i = arr[1, 2, 4]);
+			Assert.Throws(() => i = arr[-1, 0, 0]);
+			Assert.Throws(() => i = arr[0, -1, 0]);
+			Assert.Throws(() => i = arr[0, 0, -1]);
+#pragma warning restore 219, 251
+		}
+
+		[Test]
+		public void SetValueWithIndexOutOfRangeThrowsAnException() {
+#pragma warning disable 251
+			var arr = new int[2, 3, 4];
+			arr[1, 2, 3] = 0;
+			Assert.Throws(() => arr[2, 2, 1] = 0);
+			Assert.Throws(() => arr[1, 3, 1] = 0);
+			Assert.Throws(() => arr[1, 2, 4] = 0);
+			Assert.Throws(() => arr[-1, 0, 0] = 0);
+			Assert.Throws(() => arr[0, -1, 0] = 0);
+			Assert.Throws(() => arr[0, 0, -1] = 0);
+#pragma warning restore 251
+		}
 	}
 }

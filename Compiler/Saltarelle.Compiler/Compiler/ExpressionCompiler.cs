@@ -1502,65 +1502,105 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.Null;
 		}
 
-		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
-			if (rr.Conversion.IsIdentityConversion) {
-				return VisitResolveResult(rr.Input, true);
+		private JsExpression PerformConversion(JsExpression input, Conversion c, IType fromType, IType toType) {
+			if (c.IsIdentityConversion) {
+				return input;
 			}
-			else if (rr.Conversion.IsAnonymousFunctionConversion) {
-				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
-				return CompileLambda((LambdaResolveResult)rr.Input, retType, _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
+			else if (c.IsTryCast) {
+				return _runtimeLibrary.TryDowncast(input, fromType, UnpackNullable(toType));
 			}
-			else if (rr.Conversion.IsTryCast) {
-				return _runtimeLibrary.TryDowncast(VisitResolveResult(rr.Input, true), rr.Input.Type, UnpackNullable(rr.Type));
-			}
-			else if (rr.Conversion.IsReferenceConversion) {
-				var input = VisitResolveResult(rr.Input, true);
-
-				if (rr.Type is ArrayType && rr.Input.Type is ArrayType)	// Array covariance / contravariance.
+			else if (c.IsReferenceConversion) {
+				if (toType is ArrayType && fromType is ArrayType)	// Array covariance / contravariance.
 					return input;
-				else if (rr.Type.Kind == TypeKind.Dynamic)
+				else if (toType.Kind == TypeKind.Dynamic)
 					return input;
-				else if (rr.Type.Kind == TypeKind.Delegate && rr.Input.Type.Kind == TypeKind.Delegate && !rr.Type.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)) && !rr.Input.Type.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)))
+				else if (toType.Kind == TypeKind.Delegate && fromType.Kind == TypeKind.Delegate && !toType.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)) && !fromType.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)))
 					return input;	// Conversion between compatible delegate types.
-				else if (rr.Conversion.IsImplicit)
-					return _runtimeLibrary.Upcast(input, rr.Input.Type, rr.Type);
+				else if (c.IsImplicit)
+					return _runtimeLibrary.Upcast(input, fromType, toType);
 				else
-					return _runtimeLibrary.Downcast(input, rr.Input.Type, rr.Type);
+					return _runtimeLibrary.Downcast(input, fromType, toType);
 			}
-			else if (rr.Conversion.IsNumericConversion) {
-				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Input.Type.IsKnownType(KnownTypeCode.NullableOfT) && !rr.Type.IsKnownType(KnownTypeCode.NullableOfT))
+			else if (c.IsNumericConversion) {
+				var result = input;
+				if (fromType.IsKnownType(KnownTypeCode.NullableOfT) && !toType.IsKnownType(KnownTypeCode.NullableOfT))
 					result = _runtimeLibrary.FromNullable(result);
 
-				if (!IsIntegerType(rr.Input.Type) && IsIntegerType(rr.Type)) {
+				if (!IsIntegerType(fromType) && IsIntegerType(toType)) {
 					result = _runtimeLibrary.FloatToInt(result);
 
-					if (rr.Input.Type.IsKnownType(KnownTypeCode.NullableOfT) && rr.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
+					if (fromType.IsKnownType(KnownTypeCode.NullableOfT) && toType.IsKnownType(KnownTypeCode.NullableOfT)) {
 						result = _runtimeLibrary.Lift(result);
 					}
 				}
 				return result;
 			}
-			else if (rr.Conversion.IsDynamicConversion) {
-				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
+			else if (c.IsDynamicConversion) {
+				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(result, rr.Input.Type, UnpackNullable(rr.Type));
+					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType));
 				}
-				else if (rr.Type.Kind == TypeKind.Struct) {
+				else if (toType.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type));
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType));
 				}
 				else {
 					// Converting to a boring reference type.
-					return _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
+					return _runtimeLibrary.Downcast(input, fromType, toType);
 				}
 			}
-			else if (rr.Conversion.IsNullableConversion || rr.Conversion.IsEnumerationConversion) {
-				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Input.Type.IsKnownType(KnownTypeCode.NullableOfT) && !rr.Type.IsKnownType(KnownTypeCode.NullableOfT))
-					result = _runtimeLibrary.FromNullable(result);
+			else if (c.IsNullableConversion || c.IsEnumerationConversion) {
+				if (fromType.IsKnownType(KnownTypeCode.NullableOfT) && !toType.IsKnownType(KnownTypeCode.NullableOfT))
+					return _runtimeLibrary.FromNullable(input);
+				return input;
+			}
+			else if (c.IsBoxingConversion) {
+				if (toType.Kind != TypeKind.Dynamic) {
+					if (fromType.GetAllBaseTypes().Contains(toType))	// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
+						return _runtimeLibrary.Upcast(input, fromType, toType);
+					else
+						return _runtimeLibrary.Downcast(input, fromType, toType);
+						
+				}
+				return input;
+			}
+			else if (c.IsUnboxingConversion) {
+				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
+					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType));
+				}
+				else {
+					var result = _runtimeLibrary.Downcast(input, fromType, toType);
+					if (toType.Kind == TypeKind.Struct)
+						result = _runtimeLibrary.FromNullable(result);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
+					return result;
+				}
+			}
+			else if (c.IsUserDefined) {
+				var conversions = new CSharpConversions(_compilation);
+				var preConv = conversions.ExplicitConversion(fromType, c.Method.Parameters[0].Type);
+				if (!preConv.IsIdentityConversion)
+					input = PerformConversion(input, preConv, fromType, c.Method.Parameters[0].Type);
+
+				var impl = _metadataImporter.GetMethodSemantics(c.Method);
+				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.GetScriptType(c.Method.DeclaringType, TypeContext.UseStaticMember), input }, false, false);
+
+				var postConv = conversions.ExplicitConversion(c.Method.ReturnType, toType);
+				if (!postConv.IsIdentityConversion)
+					result = PerformConversion(result, postConv, c.Method.ReturnType, toType);
 				return result;
+			}
+			else if (c.IsNullLiteralConversion || c.IsConstantExpressionConversion) {
+				return input;
+			}
+
+			_errorReporter.InternalError("Conversion " + c + " is not implemented");
+			return JsExpression.Null;
+		}
+
+		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
+			if (rr.Conversion.IsAnonymousFunctionConversion) {
+				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
+				return CompileLambda((LambdaResolveResult)rr.Input, retType, _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
 			}
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
@@ -1621,39 +1661,9 @@ namespace Saltarelle.Compiler.Compiler {
 
 				return result;
 			}
-			else if (rr.Conversion.IsBoxingConversion) {
-				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Type.Kind != TypeKind.Dynamic) {
-					if (rr.Input.Type.GetAllBaseTypes().Contains(rr.Type))	// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-						result = _runtimeLibrary.Upcast(result, rr.Input.Type, rr.Type);
-					else
-						result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
-						
-				}
-				return result;
+			else {
+				return PerformConversion(VisitResolveResult(rr.Input, true), rr.Conversion, rr.Input.Type, rr.Type);
 			}
-			else if (rr.Conversion.IsUnboxingConversion) {
-				var result = VisitResolveResult(rr.Input, true);
-				if (rr.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
-					return _runtimeLibrary.Downcast(result, rr.Input.Type, UnpackNullable(rr.Type));
-				}
-				else {
-					result = _runtimeLibrary.Downcast(result, rr.Input.Type, rr.Type);
-					if (rr.Type.Kind == TypeKind.Struct)
-						result = _runtimeLibrary.FromNullable(result);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
-					return result;
-				}
-			}
-			else if (rr.Conversion.IsUserDefined) {
-				var impl = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);
-				return CompileMethodInvocation(impl, rr.Conversion.Method, new TypeResolveResult(rr.Conversion.Method.DeclaringType), new[] { rr.Input }, null, false, false);
-			}
-			else if (rr.Conversion.IsNullLiteralConversion || rr.Conversion.IsConstantExpressionConversion) {
-				return VisitResolveResult(rr.Input, true);
-			}
-
-			_errorReporter.InternalError("Conversion " + rr.Conversion + " is not implemented");
-			return JsExpression.Null;
 		}
 
 		public override JsExpression VisitDynamicMemberResolveResult(DynamicMemberResolveResult rr, bool data) {
@@ -1710,7 +1720,8 @@ namespace Saltarelle.Compiler.Compiler {
 						_errorReporter.Message(7529);
 						return JsExpression.Null;
 					}
-					expressions.Add(JsExpression.Member(InnerCompile(mgrr.TargetResult, false), impl[0].Name));
+					var target = mgrr.TargetResult is TypeResolveResult ? _runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember) : InnerCompile(mgrr.TargetResult, false);
+					expressions.Add(JsExpression.Member(target, impl[0].Name));
 				}
 				else {
 					expressions.Add(InnerCompile(rr.Target, false));

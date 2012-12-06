@@ -102,5 +102,21 @@ namespace CoreLibTests {
 			Assert.IsFalse(double.IsNaN(one / zero));
 			Assert.IsTrue(double.IsNaN(zero / zero));
 		}
+
+		[Test]
+		public void GetHashCodeWorks() {
+			Assert.AreEqual   (((double)0).GetHashCode(), ((double)0).GetHashCode());
+			Assert.AreEqual   (((double)1).GetHashCode(), ((double)1).GetHashCode());
+			Assert.AreNotEqual(((double)0).GetHashCode(), ((double)1).GetHashCode());
+			Assert.AreNotEqual(((double)0).GetHashCode(), ((double)0.5).GetHashCode());
+		}
+
+		[Test]
+		public void EqualsWorks() {
+			Assert.IsTrue (((double)0).Equals((double)0));
+			Assert.IsFalse(((double)1).Equals((double)0));
+			Assert.IsFalse(((double)0).Equals((double)0.5));
+			Assert.IsTrue (((double)1).Equals((double)1));
+		}
 	}
 }

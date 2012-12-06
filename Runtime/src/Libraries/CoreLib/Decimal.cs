@@ -15,7 +15,7 @@ namespace System {
     [IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
     [ScriptName("Number")]
-    public struct Decimal {
+    public struct Decimal : IHashable<Decimal> {
         [ScriptName("MAX_VALUE")]
         public const decimal MaxValue = 0;
 
@@ -404,6 +404,14 @@ namespace System {
 
 		[InlineCode("{d1} - {d2}")]
 		public static decimal Subtract(decimal d1, decimal d2) {
+			return 0;
+		}
+
+	    public bool Equals(decimal other) {
+		    return false;
+	    }
+
+		public new int GetHashCode() {
 			return 0;
 		}
     }

@@ -54,6 +54,8 @@
     <Compile Include="Knockout.cs" />
     <Compile Include="Observable.cs" />
     <Compile Include="Subscribable.cs" />
+    <Compile Include="ComputedObservable.cs" />
+    <Compile Include="ComputedOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -73,8 +75,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="knockout-2.1.0.js" />
-    <Content Include="knockout-2.1.0.min.js" />
+    <Content Include="knockout-2.2.0.js" />
+    <Content Include="knockout-2.2.0.min.js" />
   </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>
