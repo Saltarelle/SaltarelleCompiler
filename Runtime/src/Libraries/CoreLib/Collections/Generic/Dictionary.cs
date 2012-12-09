@@ -4,12 +4,11 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
 	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue> {
-		/// <summary>
-		/// This constructor cannot be used, but is required to avoid problems in mcs and csc when switching on strings.
-		/// </summary>
-		[NonScriptable]
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[InlineCode("new ({$System.Type}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))()")]
 		public Dictionary(int capacity) {}
+
+		[InlineCode("new ({$System.Type}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))({{}}, {comparer})")]
+		public Dictionary(int capacity, IEqualityComparer<TKey> comparer) {}
 
 		[AlternateSignature]
 		public Dictionary() {}
@@ -17,7 +16,19 @@ namespace System.Collections.Generic {
 		[AlternateSignature]
 		public Dictionary(JsDictionary<TKey, TValue> dictionary) {}
 
+		[AlternateSignature]
+		public Dictionary(JsDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) {}
+
+		[AlternateSignature]
 		public Dictionary(IDictionary<TKey, TValue> dictionary) {}
+
+		[InlineCode("new ({$System.Type}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))({{}}, {comparer})")]
+		public Dictionary(IEqualityComparer<TKey> comparer) {}
+
+		public Dictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) {}
+
+		[IntrinsicProperty]
+		public IEqualityComparer<TKey> Comparer { get { return null; } }
 
 		public int Count { get { return 0; } }
 

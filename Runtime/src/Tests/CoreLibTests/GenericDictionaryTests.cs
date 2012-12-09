@@ -6,6 +6,16 @@ using System.Text;
 namespace CoreLibTests {
 	[TestFixture]
 	public class GenericDictionaryTests {
+		class TestEqualityComparer : EqualityComparer<string> {
+			public override bool Equals(string x, string y) {
+				return x[0] == y[0];
+			}
+
+			public override int GetHashCode(string obj) {
+				return obj[0];
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(Dictionary<int, string>).FullName, "ss.Dictionary$2[ss.Int32,String]", "FullName should be correct");
@@ -20,16 +30,45 @@ namespace CoreLibTests {
 		public void DefaultConstructorWorks() {
 			var d = new Dictionary<int, string>();
 			Assert.AreEqual(d.Count, 0);
+			Assert.AreStrictEqual(d.Comparer, EqualityComparer<int>.Default);
+		}
+
+		[Test]
+		public void CapacityConstructorWorks() {
+			var d = new Dictionary<int, string>(10);
+			Assert.AreEqual(d.Count, 0);
+			Assert.AreStrictEqual(d.Comparer, EqualityComparer<int>.Default);
+		}
+
+		[Test]
+		public void CapacityAndEqualityComparerWorks() {
+			var c = new TestEqualityComparer();
+			var d = new Dictionary<string, string>(10, c);
+			Assert.AreEqual(d.Count, 0);
+			Assert.AreStrictEqual(d.Comparer, c);
 		}
 
 		[Test]
 		public void JsDictionaryConstructorWorks() {
-			var orig = JsDictionary<string,int>.GetDictionary(new { a = 1, b = 2 });
+			var orig = JsDictionary<string, int>.GetDictionary(new { a = 1, b = 2 });
 			var d = new Dictionary<string, int>(orig);
 			Assert.IsFalse((object)d == (object)orig);
 			Assert.AreEqual(d.Count, 2);
 			Assert.AreEqual(d["a"], 1);
 			Assert.AreEqual(d["b"], 2);
+			Assert.AreStrictEqual(d.Comparer, EqualityComparer<string>.Default);
+		}
+
+		[Test]
+		public void JsDictionaryAndEqualityComparerConstructorWorks() {
+			var c = new TestEqualityComparer();
+			var orig = JsDictionary<string, int>.GetDictionary(new { a = 1, b = 2 });
+			var d = new Dictionary<string, int>(orig, c);
+			Assert.IsFalse((object)d == (object)orig);
+			Assert.AreEqual(d.Count, 2);
+			Assert.AreEqual(d["a"], 1);
+			Assert.AreEqual(d["b"], 2);
+			Assert.AreStrictEqual(d.Comparer, c);
 		}
 
 		[Test]
@@ -41,6 +80,28 @@ namespace CoreLibTests {
 			Assert.AreEqual(d2.Count, 2);
 			Assert.AreEqual(d2["a"], 1);
 			Assert.AreEqual(d2["b"], 2);
+			Assert.AreStrictEqual(d2.Comparer, EqualityComparer<string>.Default);
+		}
+
+		[Test]
+		public void EqualityComparerOnlyConstructorWorks() {
+			var c = new TestEqualityComparer();
+			var d = new Dictionary<string, int>(c);
+			Assert.AreEqual(d.Count, 0);
+			Assert.AreStrictEqual(d.Comparer, c);
+		}
+
+		[Test]
+		public void ConstructorWithBothDictionaryAndEqualityComparerWorks() {
+			var c = new TestEqualityComparer();
+			var orig = JsDictionary<string,int>.GetDictionary(new { a = 1, b = 2 });
+			var d = new Dictionary<string, int>(orig);
+			var d2 = new Dictionary<string, int>(d, c);
+			Assert.IsFalse((object)d == (object)d2);
+			Assert.AreEqual(d2.Count, 2);
+			Assert.AreEqual(d2["a"], 1);
+			Assert.AreEqual(d2["b"], 2);
+			Assert.AreStrictEqual(d2.Comparer, c);
 		}
 
 		[Test]
@@ -194,6 +255,14 @@ namespace CoreLibTests {
 			Assert.AreEqual(i, 1);
 			Assert.IsFalse(d.TryGetValue("c", out i));
 			Assert.AreEqual(i, 0);
+		}
+
+		[Test]
+		public void CanUseCustomComparer() {
+			var d = new Dictionary<string, int>(new TestEqualityComparer()) { { "a", 1 }, { "b", 2 } };
+			d["a2"] = 100;
+			Assert.AreEqual(d["a3"], 100);
+			Assert.AreEqual(d.Count, 2);
 		}
 	}
 }
