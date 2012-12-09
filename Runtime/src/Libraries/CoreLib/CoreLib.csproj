@@ -75,6 +75,7 @@
     <Compile Include="ComponentModel\IInitializable.cs" />
     <Compile Include="ComponentModel\IContainer.cs" />
     <Compile Include="ArrayEnumerator.cs" />
+    <Compile Include="Converter.cs" />
     <Compile Include="Lazy.cs" />
     <Compile Include="IComparable.cs" />
     <Compile Include="IEquatable.cs" />
