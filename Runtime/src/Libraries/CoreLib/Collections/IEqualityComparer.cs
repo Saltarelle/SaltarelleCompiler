@@ -11,6 +11,7 @@ namespace System.Collections {
 	/// <summary>
 	/// Don't use. Use <see cref="IEqualityComparer{T}"/> instead.
 	/// </summary>
+	[ScriptNamespace("ss")]
     public interface IEqualityComparer {
 		/// <summary>
 		/// Don't use. Use <see cref="IEqualityComparer{T}"/> instead. When implementing <see cref="IEqualityComparer{T}"/>, just provide a dummy implementation for this method.
