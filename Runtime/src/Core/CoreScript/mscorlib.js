@@ -39,6 +39,52 @@ ss.coalesce = function (a, b) {
   return ss.isValue(a) ? a : b;
 };
 
+ss.getHashCode = function(obj) {
+	if (!ss.isValue(obj))
+		throw 'Cannot get hash code of null';
+	else if (typeof(obj.getHashCode) === 'function')
+		return obj.getHashCode();
+	else if (typeof(obj) === 'boolean') {
+		return obj ? 1 : 0;
+	}
+	else if (typeof(obj) === 'number') {
+		var s = obj.toExponential();
+		s = s.substr(0, s.indexOf('e'));
+		return parseInt(s.replace('.', ''), 10) & 0xffffffff;
+	}
+	else if (typeof(obj) === 'string') {
+		var res = 0;
+		for (var i = 0; i < obj.length; i++)
+			res = (res * 31 + obj.charCodeAt(i)) & 0xffffffff;
+		return res;
+	}
+	else if (Object.prototype.toString.call(obj) === '[object Date]') {
+		return obj.valueOf() & 0xffffffff;
+	}
+	else {
+		return 0;
+	}
+};
+
+ss.equals = function(a, b) {
+	if (!ss.isValue(a))
+		throw 'Object is null';
+	else if (typeof(a.equals) === 'function')
+		return a.equals(b);
+	var ta = Object.prototype.toString.call(a), tb = Object.prototype.toString.call(a);
+	if (ta === '[object Date]' && tb === '[object Date]')
+		return a.valueOf() === b.valueOf();
+	else
+		return a === b;
+};
+
+ss.staticEquals = function(a, b) {
+	if (!ss.isValue(a))
+		return !ss.isValue(b);
+	else
+		return ss.isValue(b) ? ss.equals(a, b) : false;
+};
+
 if (typeof(window) == 'object') {
   // Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
   if (!window.Element) {
@@ -125,9 +171,9 @@ if (typeof(window) == 'object') {
 
 #include "BCL\IEquatable.js"
 
-#include "BCL\IHashable.js"
-
 #include "BCL\ICollection.js"
+
+#include "BCL\IEqualityComparer.js"
 
 #include "BCL\Nullable.js"
 
@@ -142,6 +188,8 @@ if (typeof(window) == 'object') {
 #include "BCL\ArrayEnumerator.js"
 
 #include "BCL\ObjectEnumerator.js"
+
+#include "BCL\EqualityComparer.js"
 
 #include "BCL\Dictionary.js"
 

@@ -47,6 +47,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ObeysTypeSystemPropertyName        = "ObeysTypeSystem";
 		private const string OmitDowncastsPropertyName          = "OmitDowncasts";
 		private const string OmitNullableChecksPropertyName     = "OmitNullableChecks";
+		private const string GeneratedMethodNamePropertyName    = "GeneratedMethodName";
+		private const string NonVirtualCodePropertyName         = "NonVirtualCode";
 		private const string Function = "Function";
 		private const string Array    = "Array";
 
@@ -570,6 +572,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					name = "$ctor";
 				return Tuple.Create(name, true);
 			}
+
+			var ica = member.Attributes.FirstOrDefault(a => a.AttributeType.FullName == InlineCodeAttribute);
+			if (ica != null) {
+				string name = GetNamedArgument<string>(ica, GeneratedMethodNamePropertyName);
+				if (name != null)
+					return Tuple.Create(name, true);
+			}
+
+
 			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
 			if (pca != null)
 				return Tuple.Create(member.Name, true);
@@ -908,7 +919,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var eaa = GetAttributePositionalArgs(method, EnumerateAsArrayAttribute);
 			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
 			var saa = GetAttributePositionalArgs(method, ScriptAliasAttribute);
-			var ica = GetAttributePositionalArgs(method, InlineCodeAttribute);
+			var ica = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == InlineCodeAttribute);
 			var ifa = GetAttributePositionalArgs(method, InstanceMethodOnFirstArgumentAttribute);
 			var nsa = GetAttributePositionalArgs(method, NonScriptableAttribute);
 			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
@@ -996,6 +1007,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 				}
 				else if (ica != null) {
+					string code = ica.PositionalArguments[0].ConstantValue as string ?? "";
+
+					string generatedMethodName = GetNamedArgument<string>(ica, GeneratedMethodNamePropertyName);
+					string nonVirtualCode = GetNamedArgument<string>(ica, NonVirtualCodePropertyName);
+
 					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
 						Message(7126, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
@@ -1006,7 +1022,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (method.IsOverridable) {
+					else if (method.IsOverridable && generatedMethodName == null) {
 						Message(7128, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -1017,15 +1033,17 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						return;
 					}
 					else {
-						string code = (string) ica[0];
-
 						var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation));
+						if (nonVirtualCode != null)
+							errors.AddRange(InlineCodeMethodCompiler.ValidateLiteralCode(method, nonVirtualCode, t => t.Resolve(_compilation)));
 						if (errors.Count > 0) {
 							Message(7130, method, string.Join(", ", errors));
-							code = "X";
+							code = nonVirtualCode = "X";
 						}
 
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null);
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: generatedMethodName, nonVirtualInvocationLiteralCode: nonVirtualCode);
+						if (generatedMethodName != null)
+							usedNames[generatedMethodName] = true;
 						return;
 					}
 				}
@@ -1074,6 +1092,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 
 						var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
+						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
+							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							semantics = semantics.WithEnumerateAsArray();
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {

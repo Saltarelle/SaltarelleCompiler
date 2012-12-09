@@ -3,8 +3,8 @@
 
 var ss_IEqualityComparer = function#? DEBUG IEqualityComparer$##() { };
 ss_IEqualityComparer.prototype = {
-    equals: null,
-    getHashCode: null
+    areEqual: null,
+    getObjectHashCode: null
 };
 
 Type.registerInterface(global, 'ss.IEqualityComparer', ss_IEqualityComparer);

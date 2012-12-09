@@ -18,7 +18,7 @@ namespace System {
     /// </summary>
     [ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-    public sealed class JsDate : IHashable<JsDate> {
+    public sealed class JsDate {
         /// <summary>
         /// Creates a new instance of Date initialized from the current time.
         /// </summary>
@@ -409,13 +409,5 @@ namespace System {
         public static bool operator >=(JsDate a, JsDate b) {
             return false;
         }
-
-	    public bool Equals(JsDate other) {
-		    return false;
-	    }
-
-		public new int GetHashCode() {
-			return 0;
-		}
     }
 }

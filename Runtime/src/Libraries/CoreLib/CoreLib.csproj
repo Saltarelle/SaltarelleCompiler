@@ -47,6 +47,7 @@
     <Compile Include="Activator.cs" />
     <Compile Include="AggregateException.cs" />
     <Compile Include="ArrayExtensions.cs" />
+    <Compile Include="Collections\Generic\EqualityComparer.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
     <Compile Include="Collections\Generic\Dictionary.cs" />
     <Compile Include="Collections\Generic\IDictionary.cs" />
@@ -75,7 +76,6 @@
     <Compile Include="ComponentModel\IContainer.cs" />
     <Compile Include="ArrayEnumerator.cs" />
     <Compile Include="IEquatable.cs" />
-    <Compile Include="IHashable.cs" />
     <Compile Include="JsErrorException.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="JsDate.cs" />

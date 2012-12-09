@@ -338,6 +338,16 @@ namespace System.Runtime.CompilerServices {
 		public string Code {
 			get { return _code; }
 		}
+
+		/// <summary>
+		/// If set, a method with this name will be generated from the method source.
+		/// </summary>
+		public string GeneratedMethodName { get; set; }
+		
+		/// <summary>
+		/// This code is used when the method is invoked non-virtually (eg. in a base.Method() call).
+		/// </summary>
+		public string NonVirtualCode { get; set; }
 	}
 
 	/// <summary>

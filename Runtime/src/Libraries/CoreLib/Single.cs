@@ -15,7 +15,7 @@ namespace System {
     [IgnoreNamespace]
     [Imported(ObeysTypeSystem = true)]
     [ScriptName("Number")]
-    public struct Single : IHashable<Single> {
+    public struct Single {
 		[InlineCode("0")]
 		public Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -105,13 +105,5 @@ namespace System {
         public static bool IsNaN(float f) {
             return false;
         }
-
-	    public bool Equals(float other) {
-		    return false;
-	    }
-
-		public new int GetHashCode() {
-			return 0;
-		}
     }
 }

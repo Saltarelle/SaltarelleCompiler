@@ -1127,23 +1127,6 @@ namespace System.Linq.Expressions
     }
 }
 
-namespace System.Collections.Generic {
-	/// <summary>
-	/// Not usable, but required by the compiler
-	/// </summary>
-	[NonScriptable]
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	public abstract class EqualityComparer<T> : IEqualityComparer<T> {
-		public static EqualityComparer<T> Default { get { return null; } }
-
-		public abstract bool Equals(T x, T y);
-		public abstract int GetHashCode(T obj);
-
-		bool IEqualityComparer.Equals(object x, object y) { return false; }
-		int IEqualityComparer.GetHashCode(object obj) { return 0; }
-	}
-}
-
 namespace System.Diagnostics {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Constructor | AttributeTargets.Method, Inherited = false)]
     [NonScriptable]

@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
     [ScriptName("Int32")]
     [Imported(ObeysTypeSystem = true)]
-    public struct UInt16 : IHashable<UInt16> {
+    public struct UInt16 {
 		[InlineCode("0")]
 		public UInt16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -52,14 +52,5 @@ namespace System {
         public string ToString(int radix) {
             return null;
         }
-
-	    [CLSCompliant(false)]
-	    public bool Equals(ushort other) {
-		    return false;
-	    }
-
-		public new int GetHashCode() {
-			return 0;
-		}
     }
 }

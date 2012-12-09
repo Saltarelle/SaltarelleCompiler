@@ -35,6 +35,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
         }
 
         [Test]
+        public void MethodImplementedAsInlineCodeWithGeneratedMethodNameDoesAppearOnTheType() {
+            var metadataImporter = new MockMetadataImporter { GetMethodSemantics = method => MethodScriptSemantics.InlineCode("X", generatedMethodName: "someMethod") };
+            Compile(new[] { "class C { public static void M() {} }" }, metadataImporter: metadataImporter);
+            var m = FindInstanceMethod("C.someMethod");
+            m.Definition.Should().NotBeNull();
+        }
+
+        [Test]
         public void MethodImplementedAsNotUsableFromScriptDoesNotAppearOnTheType() {
             var metadataImporter = new MockMetadataImporter { GetMethodSemantics = method => MethodScriptSemantics.NotUsableFromScript() };
             Compile(new[] { "class C { public static void M() {} }" }, metadataImporter: metadataImporter);

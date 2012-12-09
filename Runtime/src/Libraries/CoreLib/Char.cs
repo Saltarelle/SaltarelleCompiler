@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
     [ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-    public struct Char : IHashable<Char> {
+    public struct Char {
 		[InlineCode("0")]
 		public Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -54,13 +54,5 @@ namespace System {
         public new string ToLocaleString() {
             return null;
         }
-
-	    public bool Equals(char other) {
-		    return false;
-	    }
-
-		public new int GetHashCode() {
-			return 0;
-		}
     }
 }

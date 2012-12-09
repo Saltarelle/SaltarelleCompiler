@@ -17,7 +17,7 @@ ss_$DictionaryCollection.prototype = {
 				if (this._dict.buckets.hasOwnProperty(e)) {
 					var bucket = this._dict.buckets[e];
 					for (var i = 0; i < bucket.length; i++) {
-						if (bucket[i].value.equals(v))
+						if (ss.equals(bucket[i].value, v))
 							return true;
 					}
 				}
@@ -68,12 +68,12 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 
 	$type.prototype = {
 		_setOrAdd: function(key, value, add) {
-			var hash = key.getHashCode();
+			var hash = ss.getHashCode(key);
 			var entry = { key: key, value: value };
 			if (this.buckets.hasOwnProperty(hash)) {
 				var array = this.buckets[hash];
 				for (var i = 0; i < array.length; i++) {
-					if (array[i].key.equals(key)) {
+					if (ss.equals(array[i].key, key)) {
 						if (add)
 							throw 'Key ' + key + ' already exists.';
 						array[i] = entry;
@@ -96,12 +96,12 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		},
 
 		_get: function(key) {
-			var hash = key.getHashCode();
+			var hash = ss.getHashCode(key);
 			if (this.buckets.hasOwnProperty(hash)) {
 				var array = this.buckets[hash];
 				for (var i = 0; i < array.length; i++) {
 					var entry = array[i];
-					if (entry.key.equals(key))
+					if (ss.equals(entry.key, key))
 						return entry.value !== undefined ? entry.value : null;
 				}
 			}
@@ -128,13 +128,13 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		},
 
 		containsKey: function(key) {
-			var hash = key.getHashCode();
+			var hash = ss.getHashCode(key);
 			if (!this.buckets.hasOwnProperty(hash))
 				return false;
 
 			var array = this.buckets[hash];
 			for (var i = 0; i < array.length; i++) {
-				if (array[i].key.equals(key))
+				if (ss.equals(array[i].key, key))
 					return true;
 			}
 			return false;
@@ -146,13 +146,13 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		},
 
 		remove: function(key) {
-			var hash = key.getHashCode();
+			var hash = ss.getHashCode(key);
 			if (!this.buckets.hasOwnProperty(hash))
 				return false;
 
 			var array = this.buckets[hash];
 			for (var i = 0; i < array.length; i++) {
-				if (array[i].key.equals(key)) {
+				if (ss.equals(array[i].key, key)) {
 					array.splice(i, 1);
 					if (array.length == 0) delete this.buckets[hash];
 					this.countField--;

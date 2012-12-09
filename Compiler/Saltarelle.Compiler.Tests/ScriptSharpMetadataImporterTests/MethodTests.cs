@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
-			Assert.That(impl.GenerateCode, Is.True);
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 		}
 
 		[Test]
@@ -40,25 +40,25 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
 			Assert.That(m1.IgnoreGenericArguments, Is.False);
-			Assert.That(m1.GenerateCode, Is.True);
+			Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
 			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("someMethod$1"));
 			Assert.That(m2.IgnoreGenericArguments, Is.False);
-			Assert.That(m2.GenerateCode, Is.True);
+			Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
 			var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("someMethod$2"));
 			Assert.That(m3.IgnoreGenericArguments, Is.False);
-			Assert.That(m3.GenerateCode, Is.True);
+			Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
 			var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("someMethod$3"));
 			Assert.That(m4.IgnoreGenericArguments, Is.False);
-			Assert.That(m4.GenerateCode, Is.True);
+			Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
 		}
 
 		[Test]
@@ -84,22 +84,22 @@ class C {
 			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
-			Assert.That(m1.GenerateCode, Is.True);
+			Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
 			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("someMethod"));
-			Assert.That(m2.GenerateCode, Is.True);
+			Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
 			var m3 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("SomeMethod"));
-			Assert.That(m3.GenerateCode, Is.True);
+			Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
 			var m4 = methods.Single(x => x.Item1.Parameters.Count == 3).Item2;
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("Renamed"));
-			Assert.That(m4.GenerateCode, Is.True);
+			Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
 		}
 
 		[Test]
@@ -123,19 +123,19 @@ public class C : B {
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
-			Assert.That(impl.GenerateCode, Is.True);
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 
 			impl = FindMethod("B.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod$1"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
-			Assert.That(impl.GenerateCode, Is.True);
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 
 			impl = FindMethod("C.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod$2"));
 			Assert.That(impl.IgnoreGenericArguments, Is.False);
-			Assert.That(impl.GenerateCode, Is.True);
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 		}
 
 		[Test]
@@ -812,11 +812,11 @@ public class C1 {
 
 			var methods = FindMethods("C1.SomeMethod");
 			Assert.That(methods.All(m => m.Item2.Name == "someMethod"));
-			Assert.That(methods.All(m => m.Item2.GenerateCode == (m.Item1.Parameters.Count == 2)));
+			Assert.That(methods.All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Count == 2 ? m.Item2.Name : null)));
 		}
 
 		[Test]
-		public void AlternateSignatureAttributeWorksWhenTheMinMethodIsRenamed() {
+		public void AlternateSignatureAttributeWorksWhenTheMainMethodIsRenamed() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
@@ -835,7 +835,7 @@ class C1 {
 
 			var methods = FindMethods("C1.SomeMethod");
 			Assert.That(methods.All(m => m.Item2.Name == "RenamedMethod"));
-			Assert.That(methods.All(m => m.Item2.GenerateCode == (m.Item1.Parameters.Count == 2)));
+			Assert.That(methods.All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Count == 2 ? m.Item2.Name : null)));
 		}
 
 		[Test]
@@ -935,6 +935,75 @@ class C1<T1> {
 			var impl = FindMethod("C1`1+C2`1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
+			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
+			Assert.That(impl.GeneratedMethodName, Is.Null);
+		}
+
+		[Test]
+		public void InlineCodeWithGeneratedMethodNameWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[InlineCode(""X"", GeneratedMethodName = ""GeneratedName"")]
+	public void SomeMethod(int x, string y) {}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo("GeneratedName"));
+		}
+
+		[Test]
+		public void InlineCodeWithNonVirtualCodeWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[InlineCode(""X"", NonVirtualCode = ""X({x}, {y})"")]
+	public void SomeMethod(int x, string y) {}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("X({x}, {y})"));
+			Assert.That(impl.GeneratedMethodName, Is.Null);
+		}
+
+		[Test]
+		public void MethodDerivedFromInlineCodeWithGeneratedMethodIsNormalMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class B {
+	[InlineCode(""X"", GeneratedMethodName = ""GeneratedName"")]
+	public virtual void SomeMethod(int x, string y) {}
+}
+class D : B {
+	public override void SomeMethod(int x, string y) {}
+}");
+
+			var impl = FindMethod("D.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("GeneratedName"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+		}
+
+		[Test]
+		public void InlineCodeWithGeneratedMethodNameAvoidsNameClashes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	[InlineCode(""X"", GeneratedMethodName = ""someMethod"")]
+	public void SomeMethod(int x, string y) {}
+
+	public void SomeMethod() {}
+}");
+
+			var impl = FindMethod("C.SomeMethod", 0);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("someMethod$1"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 		}
 
 		[Test]
@@ -944,6 +1013,10 @@ class C1<T1> {
 			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
 
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonVirtualCode = ""{x}"")] public void SomeMethod() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 		}

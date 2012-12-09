@@ -57,6 +57,9 @@ namespace RuntimeLibrary.Tests.Core {
 	public class EnumTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class EqualityComparerTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class Int16Tests : CoreLibTestBase {}
 
 	[TestFixture]
@@ -79,6 +82,9 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class NullableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ObjectTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class PromiseTests : CoreLibTestBase {

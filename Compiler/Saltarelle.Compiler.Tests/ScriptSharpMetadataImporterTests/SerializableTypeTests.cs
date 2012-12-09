@@ -135,25 +135,25 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 				Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m1.Name, Is.EqualTo("someMethod"));
 				Assert.That(m1.IgnoreGenericArguments, Is.False);
-				Assert.That(m1.GenerateCode, Is.True);
+				Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
 				var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
 				Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 				Assert.That(m2.Name, Is.EqualTo("someMethod$1"));
 				Assert.That(m2.IgnoreGenericArguments, Is.False);
-				Assert.That(m2.GenerateCode, Is.True);
+				Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
 				var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
 				Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m3.Name, Is.EqualTo("someMethod$2"));
 				Assert.That(m3.IgnoreGenericArguments, Is.False);
-				Assert.That(m3.GenerateCode, Is.True);
+				Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
 				var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
 				Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m4.Name, Is.EqualTo("someMethod$3"));
 				Assert.That(m4.IgnoreGenericArguments, Is.False);
-				Assert.That(m4.GenerateCode, Is.True);
+				Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
 			});
 		}
 

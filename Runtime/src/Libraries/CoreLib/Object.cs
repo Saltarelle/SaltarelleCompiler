@@ -40,22 +40,19 @@ namespace System {
             return null;
         }
 
-		/// <summary>
-		/// Unusable, required for the compiler to work.
-		/// </summary>
-		[NonScriptable]
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[InlineCode("{$System.Script}.equals({this}, {o})", GeneratedMethodName = "equals", NonVirtualCode = "{this} === {o}")]
 		public virtual bool Equals(object o) {
 			return false;
 		}
 
-		/// <summary>
-		/// Unusable, required for the compiler to work.
-		/// </summary>
-		[NonScriptable]
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[InlineCode("{$System.Script}.getHashCode({this})", GeneratedMethodName = "getHashCode", NonVirtualCode = "0")]
 		public virtual int GetHashCode() {
 			return 0;
+		}
+
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
+		public static bool Equals(object a, object b) {
+			return false;
 		}
     }
 }

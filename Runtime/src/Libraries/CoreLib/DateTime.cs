@@ -14,7 +14,7 @@ namespace System {
     [IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Date")]
-    public struct DateTime : IHashable<DateTime> {
+    public struct DateTime {
         /// <summary>
         /// Creates a new instance of Date initialized from the specified number of milliseconds.
         /// </summary>
@@ -400,14 +400,6 @@ namespace System {
 		[InlineCode("new Date({dt}.valueOf())")]
 		public static explicit operator JsDate(DateTime dt) {
 			return null;
-		}
-
-	    public bool Equals(DateTime other) {
-		    return false;
-	    }
-
-		public new int GetHashCode() {
-			return 0;
 		}
     }
 }

@@ -13,7 +13,7 @@ namespace System {
     [IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
     [ScriptName("Number")]
-    public struct Double : IHashable<Double> {
+    public struct Double {
 		[InlineCode("0")]
 		public Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -108,13 +108,5 @@ namespace System {
         public static bool IsNaN(double d) {
             return false;
         }
-
-	    public bool Equals(double other) {
-		    return false;
-	    }
-
-		public new int GetHashCode() {
-			return 0;
-		}
     }
 }

@@ -478,6 +478,23 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingMethodImplementedAsInlineCodeWithCustomNonVirtualCodeWorks() {
+			AssertCorrect(
+@"class B<T1> {
+	public virtual void F<T2>(T1 x, T2 y) {}
+}
+class D : B<int> {
+	public override void M() {
+		// BEGIN
+		base.F(1, ""X"");
+		// END
+	}
+}",
+@"	_({sm_Int32})._({sm_String})._(this)._(1)._('X');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("X", nonVirtualInvocationLiteralCode: "_({T1})._({T2})._({this})._({x})._({y})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSkeleton: false);
+		}
+
+		[Test]
 		public void InvokingMethodImplementedAsInlineCodeWorksWithReorderedAndDefaultArguments() {
 			AssertCorrect(
 @"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}

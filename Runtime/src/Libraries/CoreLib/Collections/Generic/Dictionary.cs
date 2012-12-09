@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
-	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : IHashable<TKey> {
+	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue> {
 		/// <summary>
 		/// This constructor cannot be used, but is required to avoid problems in mcs and csc when switching on strings.
 		/// </summary>

@@ -82,10 +82,10 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
-			Assert.IsTrue ('0'.Equals('0'));
-			Assert.IsFalse('1'.Equals('0'));
-			Assert.IsFalse('0'.Equals('1'));
-			Assert.IsTrue ('1'.Equals('1'));
+			Assert.IsTrue ('0'.Equals((int)'0'));
+			Assert.IsFalse('1'.Equals((int)'0'));
+			Assert.IsFalse('0'.Equals((int)'1'));
+			Assert.IsTrue ('1'.Equals((int)'1'));
 		}
 	}
 }

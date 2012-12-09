@@ -7,6 +7,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[IgnoreGenericArguments]
 	public interface IEquatable<in T> {
+		[ScriptName("equalsT")]
 		bool Equals(T other);
 	}
 }
