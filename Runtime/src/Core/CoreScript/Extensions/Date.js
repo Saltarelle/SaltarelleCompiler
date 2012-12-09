@@ -3,6 +3,7 @@
 
 Date.__typeName = 'Date';
 Date.__baseType = Object;
+Date.__interfaces = [ ss_IEquatable, ss_IComparable ];
 
 Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultValue##() {
 	return new Date(0);

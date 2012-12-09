@@ -9,8 +9,12 @@ namespace CoreLibTests {
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(JsDate).FullName, "ss.JsDate");
 			Assert.IsTrue(typeof(JsDate).IsClass);
+			Assert.IsTrue(typeof(IComparable<JsDate>).IsAssignableFrom(typeof(JsDate)));
+			Assert.IsTrue(typeof(IEquatable<JsDate>).IsAssignableFrom(typeof(JsDate)));
 			object o = new JsDate();
 			Assert.IsTrue(o is JsDate);
+			Assert.IsTrue(o is IComparable<JsDate>);
+			Assert.IsTrue(o is IEquatable<JsDate>);
 		}
 
 		[Test]
@@ -540,10 +544,37 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue( new JsDate(0).Equals((object)new JsDate(0)));
+			Assert.IsFalse(new JsDate(1).Equals((object)new JsDate(0)));
+			Assert.IsFalse(new JsDate(0).Equals((object)new JsDate(1)));
+			Assert.IsTrue( new JsDate(1).Equals((object)new JsDate(1)));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue( new JsDate(0).Equals(new JsDate(0)));
 			Assert.IsFalse(new JsDate(1).Equals(new JsDate(0)));
 			Assert.IsFalse(new JsDate(0).Equals(new JsDate(1)));
 			Assert.IsTrue( new JsDate(1).Equals(new JsDate(1)));
+
+			Assert.IsTrue( ((IEquatable<JsDate>)new JsDate(0)).Equals(new JsDate(0)));
+			Assert.IsFalse(((IEquatable<JsDate>)new JsDate(1)).Equals(new JsDate(0)));
+			Assert.IsFalse(((IEquatable<JsDate>)new JsDate(0)).Equals(new JsDate(1)));
+			Assert.IsTrue( ((IEquatable<JsDate>)new JsDate(1)).Equals(new JsDate(1)));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(new JsDate(0).CompareTo(new JsDate(0)) == 0);
+			Assert.IsTrue(new JsDate(1).CompareTo(new JsDate(0)) > 0);
+			Assert.IsTrue(new JsDate(0).CompareTo(new JsDate(1)) < 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<JsDate>)new JsDate(0)).CompareTo(new JsDate(0)) == 0);
+			Assert.IsTrue(((IComparable<JsDate>)new JsDate(1)).CompareTo(new JsDate(0)) > 0);
+			Assert.IsTrue(((IComparable<JsDate>)new JsDate(0)).CompareTo(new JsDate(1)) < 0);
 		}
 	}
 }

@@ -12,6 +12,12 @@ namespace CoreLibTests {
 			Assert.IsFalse((object)0.5 is byte);
 			Assert.AreEqual(typeof(byte).FullName, "ss.Int32");
 			Assert.IsFalse(typeof(byte).IsClass);
+			Assert.IsTrue(typeof(IComparable<byte>).IsAssignableFrom(typeof(byte)));
+			Assert.IsTrue(typeof(IEquatable<byte>).IsAssignableFrom(typeof(byte)));
+			object b = (byte)0;
+			Assert.IsTrue(b is byte);
+			Assert.IsTrue(b is IComparable<byte>);
+			Assert.IsTrue(b is IEquatable<byte>);
 		}
 
 		private T GetDefaultValue<T>() {
@@ -79,10 +85,37 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue (((byte)0).Equals((object)(byte)0));
+			Assert.IsFalse(((byte)1).Equals((object)(byte)0));
+			Assert.IsFalse(((byte)0).Equals((object)(byte)1));
+			Assert.IsTrue (((byte)1).Equals((object)(byte)1));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue (((byte)0).Equals((byte)0));
 			Assert.IsFalse(((byte)1).Equals((byte)0));
 			Assert.IsFalse(((byte)0).Equals((byte)1));
 			Assert.IsTrue (((byte)1).Equals((byte)1));
+
+			Assert.IsTrue (((IEquatable<byte>)((byte)0)).Equals((byte)0));
+			Assert.IsFalse(((IEquatable<byte>)((byte)1)).Equals((byte)0));
+			Assert.IsFalse(((IEquatable<byte>)((byte)0)).Equals((byte)1));
+			Assert.IsTrue (((IEquatable<byte>)((byte)1)).Equals((byte)1));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(((byte)0).CompareTo((byte)0) == 0);
+			Assert.IsTrue(((byte)1).CompareTo((byte)0) > 0);
+			Assert.IsTrue(((byte)0).CompareTo((byte)1) < 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<byte>)((byte)0)).CompareTo((byte)0) == 0);
+			Assert.IsTrue(((IComparable<byte>)((byte)1)).CompareTo((byte)0) > 0);
+			Assert.IsTrue(((IComparable<byte>)((byte)0)).CompareTo((byte)1) < 0);
 		}
 	}
 }

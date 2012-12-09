@@ -15,7 +15,7 @@ namespace System {
     [IgnoreNamespace]
     [Imported(ObeysTypeSystem = true)]
     [ScriptName("Number")]
-    public struct Single {
+    public struct Single : IComparable<Single>, IEquatable<Single> {
 		[InlineCode("0")]
 		public Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -105,5 +105,16 @@ namespace System {
         public static bool IsNaN(float f) {
             return false;
         }
+
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(float other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(float other) {
+		    return false;
+	    }
     }
 }

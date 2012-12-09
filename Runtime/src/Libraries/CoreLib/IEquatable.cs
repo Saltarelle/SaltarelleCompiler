@@ -7,7 +7,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[IgnoreGenericArguments]
 	public interface IEquatable<in T> {
-		[ScriptName("equalsT")]
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})", GeneratedMethodName = "equalsT")]
 		bool Equals(T other);
 	}
 }

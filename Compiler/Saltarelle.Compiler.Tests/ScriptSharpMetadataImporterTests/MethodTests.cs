@@ -1040,6 +1040,63 @@ public class C {
 		}
 
 		[Test]
+		public void MethodImplementingInlineCodeWithGeneratedMethodIsNormalMethod() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I {
+	[InlineCode(""X"", GeneratedMethodName = ""generatedName"")]
+	public virtual void SomeMethod(int x, string y) {}
+}
+class C : I {
+	public void SomeMethod(int x, string y) {}
+}");
+
+			var impl = FindMethod("C.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("generatedName"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+		}
+
+		[Test]
+		public void MethodImplementingAnInterfaceMemberCanSpecifyInlineCode() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I {
+	[InlineCode(""X"", GeneratedMethodName = ""generatedName"")]
+	public virtual void SomeMethod(int x, string y) {}
+}
+class C1 : I {
+	[InlineCode(""Y"", GeneratedMethodName = ""generatedName"")]
+	public void SomeMethod(int x, string y) {}
+}");
+
+			var impl = FindMethod("C1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("Y"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo("generatedName"));
+		}
+
+		[Test]
+		public void MethodImplementingInlineCodeWithGeneratedMethodNameAvoidsNameClashes() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I {
+	[InlineCode(""X"", GeneratedMethodName = ""generatedName"")]
+	public virtual void SomeMethod(int x, string y) {}
+}
+public class C : I {
+	public void SomeMethod(int x, string y) {}
+
+	public void GeneratedName(int x, string y) {}
+}");
+
+			var impl = FindMethod("C.GeneratedName");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("generatedName$1"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+		}
+
+		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
@@ -1077,13 +1134,6 @@ public class C {
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public abstract void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
-		}
-
-		[Test]
-		public void InlineCodeAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
-			Prepare(@"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [InlineCode(""X"")] public void M() {} }", expectErrors: true);
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("implements"));
 		}
 
 		[Test]

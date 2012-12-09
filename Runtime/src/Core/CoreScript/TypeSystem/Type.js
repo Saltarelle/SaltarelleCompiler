@@ -129,7 +129,7 @@ Type.registerGenericInterface = function#? DEBUG Type$registerGenericClass##(roo
 	ctor.__isGenericTypeDefinition = true;
 };
 
-Type.prototype.registerEnum = function#? DEBUG Type$createEnum##(root, name, ctor, flags) {
+Type.registerEnum = function#? DEBUG Type$createEnum##(root, name, ctor, flags) {
 	if (root)
 		Type.registerType(root, name, ctor);
 

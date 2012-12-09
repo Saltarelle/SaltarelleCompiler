@@ -15,7 +15,7 @@ namespace System {
     /// </summary>
     [IgnoreNamespace]
     [Imported(ObeysTypeSystem = true)]
-    public sealed class String {
+    public sealed class String : IComparable<String>, IEquatable<String> {
 		[ScriptName("")]
 		public String() {}
 
@@ -69,10 +69,6 @@ namespace System {
         }
 
         public static int Compare(string s1, string s2, bool ignoreCase) {
-            return 0;
-        }
-
-        public int CompareTo(string s) {
             return 0;
         }
 
@@ -453,5 +449,15 @@ namespace System {
         public static explicit operator String(char ch) {
             return null;
         }
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(string other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(string other) {
+		    return false;
+	    }
     }
 }

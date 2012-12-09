@@ -10,6 +10,12 @@ namespace CoreLibTests {
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(string).FullName, "String");
 			Assert.IsTrue(typeof(string).IsClass);
+			Assert.IsTrue(typeof(IComparable<string>).IsAssignableFrom(typeof(string)));
+			Assert.IsTrue(typeof(IEquatable<string>).IsAssignableFrom(typeof(string)));
+			object s = "X";
+			Assert.IsTrue(s is string);
+			Assert.IsTrue(s is IComparable<string>);
+			Assert.IsTrue(s is IEquatable<string>);
 		}
 
 		[Test]
@@ -45,13 +51,6 @@ namespace CoreLibTests {
 		[Test]
 		public void CharCodeAtWorks() {
 			Assert.AreEqual((int)"abcd".CharCodeAt(2), (int)'c');
-		}
-
-		[Test]
-		public void CompareToWorks() {
-			Assert.IsTrue("abcd".CompareTo("abcd") == 0);
-			Assert.IsTrue("abcd".CompareTo("abcb") > 0);
-			Assert.IsTrue("abcd".CompareTo("abce") < 0);
 		}
 
 		[Test]
@@ -519,12 +518,45 @@ namespace CoreLibTests {
 
 		[Test]
 		public void InstanceEqualsWorks() {
+			Assert.IsTrue( "a".Equals((object)"a"));
+			Assert.IsFalse("b".Equals((object)"a"));
+			Assert.IsFalse("a".Equals((object)"b"));
+			Assert.IsTrue( "b".Equals((object)"b"));
+			Assert.IsFalse("a".Equals((object)"A"));
+			Assert.IsFalse("a".Equals((object)"ab"));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue( "a".Equals("a"));
 			Assert.IsFalse("b".Equals("a"));
 			Assert.IsFalse("a".Equals("b"));
 			Assert.IsTrue( "b".Equals("b"));
 			Assert.IsFalse("a".Equals("A"));
 			Assert.IsFalse("a".Equals("ab"));
+
+			Assert.IsTrue( ((IEquatable<string>)"a").Equals("a"));
+			Assert.IsFalse(((IEquatable<string>)"b").Equals("a"));
+			Assert.IsFalse(((IEquatable<string>)"a").Equals("b"));
+			Assert.IsTrue( ((IEquatable<string>)"b").Equals("b"));
+			Assert.IsFalse(((IEquatable<string>)"a").Equals("A"));
+			Assert.IsFalse(((IEquatable<string>)"a").Equals("ab"));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue("abcd".CompareTo("abcd") == 0);
+			Assert.IsTrue("abcd".CompareTo("abcD") != 0);
+			Assert.IsTrue("abcd".CompareTo("abcb") > 0);
+			Assert.IsTrue("abcd".CompareTo("abce") < 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcd") == 0);
+			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcD") != 0);
+			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcb") > 0);
+			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abce") < 0);
 		}
 	}
 }

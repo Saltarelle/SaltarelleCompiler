@@ -39,6 +39,10 @@ ss.coalesce = function (a, b) {
   return ss.isValue(a) ? a : b;
 };
 
+ss.isDate = function(obj) {
+	return Object.prototype.toString.call(obj) === '[object Date]';
+};
+
 ss.getHashCode = function(obj) {
 	if (!ss.isValue(obj))
 		throw 'Cannot get hash code of null';
@@ -58,7 +62,7 @@ ss.getHashCode = function(obj) {
 			res = (res * 31 + obj.charCodeAt(i)) & 0xffffffff;
 		return res;
 	}
-	else if (Object.prototype.toString.call(obj) === '[object Date]') {
+	else if (ss.isDate(obj)) {
 		return obj.valueOf() & 0xffffffff;
 	}
 	else {
@@ -71,11 +75,32 @@ ss.equals = function(a, b) {
 		throw 'Object is null';
 	else if (typeof(a.equals) === 'function')
 		return a.equals(b);
-	var ta = Object.prototype.toString.call(a), tb = Object.prototype.toString.call(a);
-	if (ta === '[object Date]' && tb === '[object Date]')
+	if (ss.isDate(a) && ss.isDate(b))
 		return a.valueOf() === b.valueOf();
 	else
 		return a === b;
+};
+
+ss.compare = function(a, b) {
+	if (!ss.isValue(a))
+		throw 'Object is null';
+	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
+		return a < b ? -1 : (a > b ? 1 : 0);
+	else if (ss.isDate(a))
+		return ss.compare(a.valueOf(), b.valueOf());
+	else
+		return a.compareTo(b);
+};
+
+ss.equalsT = function(a, b) {
+	if (!ss.isValue(a))
+		throw 'Object is null';
+	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
+		return a === b;
+	else if (ss.isDate(a))
+		return a.valueOf() === b.valueOf();
+	else
+		return a.equalsT(b);
 };
 
 ss.staticEquals = function(a, b) {
@@ -141,6 +166,10 @@ if (typeof(window) == 'object') {
 
 #include "TypeSystem\Type.js"
 
+#include "BCL\IComparable.js"
+
+#include "BCL\IEquatable.js"
+
 #include "Extensions\Object.js"
 
 #include "Extensions\Boolean.js"
@@ -168,8 +197,6 @@ if (typeof(window) == 'object') {
 #include "BCL\IEnumerator.js"
 
 #include "BCL\IEnumerable.js"
-
-#include "BCL\IEquatable.js"
 
 #include "BCL\ICollection.js"
 

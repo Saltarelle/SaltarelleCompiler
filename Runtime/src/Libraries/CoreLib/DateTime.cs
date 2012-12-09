@@ -14,7 +14,7 @@ namespace System {
     [IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Date")]
-    public struct DateTime {
+    public struct DateTime : IComparable<DateTime>, IEquatable<DateTime> {
         /// <summary>
         /// Creates a new instance of Date initialized from the specified number of milliseconds.
         /// </summary>
@@ -401,5 +401,16 @@ namespace System {
 		public static explicit operator JsDate(DateTime dt) {
 			return null;
 		}
+
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(DateTime other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(DateTime other) {
+		    return false;
+	    }
     }
 }

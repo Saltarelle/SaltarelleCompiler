@@ -11,6 +11,11 @@ namespace CoreLibTests {
 			Assert.IsTrue((object)true is bool);
 			Assert.AreEqual(typeof(bool).FullName, "Boolean");
 			Assert.IsFalse(typeof(bool).IsClass);
+			Assert.IsTrue(typeof(IComparable<bool>).IsAssignableFrom(typeof(bool)));
+			Assert.IsTrue(typeof(IEquatable<bool>).IsAssignableFrom(typeof(bool)));
+			object b = false;
+			Assert.IsTrue(b is IComparable<bool>);
+			Assert.IsTrue(b is IEquatable<bool>);
 		}
 
 		[Test]
@@ -46,11 +51,40 @@ namespace CoreLibTests {
 		}
 
 		[Test]
-		public void EqualsWorks() {
+		public void ObjectEqualsWorks() {
+			Assert.IsTrue(true.Equals((object)true));
+			Assert.IsFalse(true.Equals((object)false));
+			Assert.IsFalse(false.Equals((object)true));
+			Assert.IsTrue(false.Equals((object)false));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue(true.Equals(true));
 			Assert.IsFalse(true.Equals(false));
 			Assert.IsFalse(false.Equals(true));
 			Assert.IsTrue(false.Equals(false));
+
+			Assert.IsTrue(((IEquatable<bool>)true).Equals(true));
+			Assert.IsFalse(((IEquatable<bool>)true).Equals(false));
+			Assert.IsFalse(((IEquatable<bool>)false).Equals(true));
+			Assert.IsTrue(((IEquatable<bool>)false).Equals(false));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(true.CompareTo(true) == 0);
+			Assert.IsTrue(true.CompareTo(false) > 0);
+			Assert.IsTrue(false.CompareTo(true) < 0);
+			Assert.IsTrue(false.CompareTo(false) == 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<bool>)true).CompareTo(true) == 0);
+			Assert.IsTrue(((IComparable<bool>)true).CompareTo(false) > 0);
+			Assert.IsTrue(((IComparable<bool>)false).CompareTo(true) < 0);
+			Assert.IsTrue(((IComparable<bool>)false).CompareTo(false) == 0);
 		}
 	}
 }

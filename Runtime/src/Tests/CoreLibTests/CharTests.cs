@@ -10,6 +10,8 @@ namespace CoreLibTests {
 		public void TypePropertiesAreInt32() {
 			Assert.AreEqual(typeof(char).FullName, "ss.Int32");
 			Assert.IsFalse(typeof(char).IsClass);
+			Assert.IsTrue(typeof(IComparable<char>).IsAssignableFrom(typeof(char)));
+			Assert.IsTrue(typeof(IEquatable<char>).IsAssignableFrom(typeof(char)));
 		}
 
 		private T GetDefaultValue<T>() {
@@ -86,6 +88,22 @@ namespace CoreLibTests {
 			Assert.IsFalse('1'.Equals((int)'0'));
 			Assert.IsFalse('0'.Equals((int)'1'));
 			Assert.IsTrue ('1'.Equals((int)'1'));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
+			Assert.IsTrue ('0'.Equals('0'));
+			Assert.IsFalse('1'.Equals('0'));
+			Assert.IsFalse('0'.Equals('1'));
+			Assert.IsTrue ('1'.Equals('1'));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue('1'.CompareTo('0') > 0);
+			Assert.IsTrue('0'.CompareTo('1') < 0);
+			Assert.IsTrue('0'.CompareTo('0') == 0);
+			Assert.IsTrue('1'.CompareTo('1') == 0);
 		}
 	}
 }

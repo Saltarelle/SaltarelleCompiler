@@ -9,6 +9,12 @@ namespace CoreLibTests {
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(DateTime).FullName, "Date");
 			Assert.IsFalse(typeof(DateTime).IsClass);
+			Assert.IsTrue(typeof(IComparable<DateTime>).IsAssignableFrom(typeof(DateTime)));
+			Assert.IsTrue(typeof(IEquatable<DateTime>).IsAssignableFrom(typeof(DateTime)));
+			object d = new DateTime();
+			Assert.IsTrue(d is DateTime);
+			Assert.IsTrue(d is IComparable<DateTime>);
+			Assert.IsTrue(d is IEquatable<DateTime>);
 		}
 
 		[Test]
@@ -497,10 +503,37 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue( new DateTime(0).Equals((object)new DateTime(0)));
+			Assert.IsFalse(new DateTime(1).Equals((object)new DateTime(0)));
+			Assert.IsFalse(new DateTime(0).Equals((object)new DateTime(1)));
+			Assert.IsTrue( new DateTime(1).Equals((object)new DateTime(1)));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue( new DateTime(0).Equals(new DateTime(0)));
 			Assert.IsFalse(new DateTime(1).Equals(new DateTime(0)));
 			Assert.IsFalse(new DateTime(0).Equals(new DateTime(1)));
 			Assert.IsTrue( new DateTime(1).Equals(new DateTime(1)));
+
+			Assert.IsTrue( ((IEquatable<DateTime>)new DateTime(0)).Equals(new DateTime(0)));
+			Assert.IsFalse(((IEquatable<DateTime>)new DateTime(1)).Equals(new DateTime(0)));
+			Assert.IsFalse(((IEquatable<DateTime>)new DateTime(0)).Equals(new DateTime(1)));
+			Assert.IsTrue( ((IEquatable<DateTime>)new DateTime(1)).Equals(new DateTime(1)));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(new DateTime(0).CompareTo(new DateTime(0)) == 0);
+			Assert.IsTrue(new DateTime(1).CompareTo(new DateTime(0)) > 0);
+			Assert.IsTrue(new DateTime(0).CompareTo(new DateTime(1)) < 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<DateTime>)new DateTime(0)).CompareTo(new DateTime(0)) == 0);
+			Assert.IsTrue(((IComparable<DateTime>)new DateTime(1)).CompareTo(new DateTime(0)) > 0);
+			Assert.IsTrue(((IComparable<DateTime>)new DateTime(0)).CompareTo(new DateTime(1)) < 0);
 		}
 	}
 }

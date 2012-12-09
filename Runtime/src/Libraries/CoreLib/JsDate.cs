@@ -18,7 +18,7 @@ namespace System {
     /// </summary>
     [ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-    public sealed class JsDate {
+    public sealed class JsDate : IComparable<JsDate>, IEquatable<JsDate> {
         /// <summary>
         /// Creates a new instance of Date initialized from the current time.
         /// </summary>
@@ -409,5 +409,16 @@ namespace System {
         public static bool operator >=(JsDate a, JsDate b) {
             return false;
         }
+
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(JsDate other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(JsDate other) {
+		    return false;
+	    }
     }
 }

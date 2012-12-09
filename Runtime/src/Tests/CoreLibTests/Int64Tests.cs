@@ -12,6 +12,12 @@ namespace CoreLibTests {
 			Assert.IsFalse((object)0.5 is long);
 			Assert.AreEqual(typeof(long).FullName, "ss.Int32");
 			Assert.IsFalse(typeof(long).IsClass);
+			Assert.IsTrue(typeof(IComparable<long>).IsAssignableFrom(typeof(long)));
+			Assert.IsTrue(typeof(IEquatable<long>).IsAssignableFrom(typeof(long)));
+			object l = (long)0;
+			Assert.IsTrue(l is long);
+			Assert.IsTrue(l is IComparable<long>);
+			Assert.IsTrue(l is IEquatable<long>);
 		}
 
 		private T GetDefaultValue<T>() {
@@ -74,10 +80,37 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue (((long)0).Equals((object)(long)0));
+			Assert.IsFalse(((long)1).Equals((object)(long)0));
+			Assert.IsFalse(((long)0).Equals((object)(long)1));
+			Assert.IsTrue (((long)1).Equals((object)(long)1));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue (((long)0).Equals((long)0));
 			Assert.IsFalse(((long)1).Equals((long)0));
 			Assert.IsFalse(((long)0).Equals((long)1));
 			Assert.IsTrue (((long)1).Equals((long)1));
+
+			Assert.IsTrue (((IEquatable<long>)((long)0)).Equals((long)0));
+			Assert.IsFalse(((IEquatable<long>)((long)1)).Equals((long)0));
+			Assert.IsFalse(((IEquatable<long>)((long)0)).Equals((long)1));
+			Assert.IsTrue (((IEquatable<long>)((long)1)).Equals((long)1));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(((long)0).CompareTo((long)0) == 0);
+			Assert.IsTrue(((long)1).CompareTo((long)0) > 0);
+			Assert.IsTrue(((long)0).CompareTo((long)1) < 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<long>)((long)0)).CompareTo((long)0) == 0);
+			Assert.IsTrue(((IComparable<long>)((long)1)).CompareTo((long)0) > 0);
+			Assert.IsTrue(((IComparable<long>)((long)0)).CompareTo((long)1) < 0);
 		}
 	}
 }

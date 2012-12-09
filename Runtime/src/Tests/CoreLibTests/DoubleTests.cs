@@ -11,6 +11,12 @@ namespace CoreLibTests {
 			Assert.IsTrue((object)(double)0.5 is double);
 			Assert.AreEqual(typeof(double).FullName, "Number");
 			Assert.IsFalse(typeof(double).IsClass);
+			Assert.IsTrue(typeof(IComparable<double>).IsAssignableFrom(typeof(double)));
+			Assert.IsTrue(typeof(IEquatable<double>).IsAssignableFrom(typeof(double)));
+			object d = (double)0;
+			Assert.IsTrue(d is double);
+			Assert.IsTrue(d is IComparable<double>);
+			Assert.IsTrue(d is IEquatable<double>);
 		}
 
 		private T GetDefaultValue<T>() {
@@ -113,10 +119,39 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue (((double)0).Equals((object)(double)0));
+			Assert.IsFalse(((double)1).Equals((object)(double)0));
+			Assert.IsFalse(((double)0).Equals((object)(double)0.5));
+			Assert.IsTrue (((double)1).Equals((object)(double)1));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue (((double)0).Equals((double)0));
 			Assert.IsFalse(((double)1).Equals((double)0));
 			Assert.IsFalse(((double)0).Equals((double)0.5));
 			Assert.IsTrue (((double)1).Equals((double)1));
+
+			Assert.IsTrue (((IEquatable<double>)((double)0)).Equals((double)0));
+			Assert.IsFalse(((IEquatable<double>)((double)1)).Equals((double)0));
+			Assert.IsFalse(((IEquatable<double>)((double)0)).Equals((double)0.5));
+			Assert.IsTrue (((IEquatable<double>)((double)1)).Equals((double)1));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(((double)0).CompareTo((double)0) == 0);
+			Assert.IsTrue(((double)1).CompareTo((double)0) > 0);
+			Assert.IsTrue(((double)0).CompareTo((double)0.5) < 0);
+			Assert.IsTrue(((double)1).CompareTo((double)1) == 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<double>)((double)0)).CompareTo((double)0) == 0);
+			Assert.IsTrue(((IComparable<double>)((double)1)).CompareTo((double)0) > 0);
+			Assert.IsTrue(((IComparable<double>)((double)0)).CompareTo((double)0.5) < 0);
+			Assert.IsTrue(((IComparable<double>)((double)1)).CompareTo((double)1) == 0);
 		}
 	}
 }

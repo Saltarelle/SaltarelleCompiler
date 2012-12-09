@@ -15,7 +15,7 @@ namespace System {
     [IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
     [ScriptName("Number")]
-    public struct Decimal {
+    public struct Decimal : IComparable<Decimal>, IEquatable<Decimal> {
         [ScriptName("MAX_VALUE")]
         public const decimal MaxValue = 0;
 
@@ -406,5 +406,16 @@ namespace System {
 		public static decimal Subtract(decimal d1, decimal d2) {
 			return 0;
 		}
+
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(decimal other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(decimal other) {
+		    return false;
+	    }
     }
 }

@@ -13,7 +13,7 @@ namespace System {
     [IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
     [ScriptName("Number")]
-    public struct Double {
+    public struct Double : IComparable<Double>, IEquatable<Double> {
 		[InlineCode("0")]
 		public Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -108,5 +108,15 @@ namespace System {
         public static bool IsNaN(double d) {
             return false;
         }
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(double other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(double other) {
+		    return false;
+	    }
     }
 }

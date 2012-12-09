@@ -60,7 +60,9 @@
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
+    <Compile Include="IEquatableTests.cs" />
     <Compile Include="EqualityComparerTests.cs" />
+    <Compile Include="IComparableTests.cs" />
     <Compile Include="ObjectTests.cs" />
     <Compile Include="PromiseTests.cs" />
     <Compile Include="TaskTests.cs" />

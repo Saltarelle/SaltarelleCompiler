@@ -150,23 +150,6 @@ class C1 {
 		}
 
 		[Test]
-		public void CannotSpecifyInlineCodeOnIndexerAccessorsImplementingInterfaceMembers() {
-			Prepare(
-@"using System.Runtime.CompilerServices;
-interface I {
-	int this[int x] { get; set; }
-}
-
-class C : I {
-	public int this[int x] { [InlineCode(""|some code|"")] get { return 0; } [InlineCode(""|setter|{value}"")] set {} }
-}", expectErrors: true);
-
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C.get_Item") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C.set_Item") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-		}
-
-		[Test]
 		public void CannotSpecifyInlineCodeOnIndexerAccessorsThatOverrideBaseMembers() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

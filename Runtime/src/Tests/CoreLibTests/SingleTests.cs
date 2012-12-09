@@ -11,6 +11,12 @@ namespace CoreLibTests {
 			Assert.IsTrue((object)(float)0.5 is float);
 			Assert.AreEqual(typeof(float).FullName, "Number");
 			Assert.IsFalse(typeof(float).IsClass);
+			Assert.IsTrue(typeof(IComparable<float>).IsAssignableFrom(typeof(float)));
+			Assert.IsTrue(typeof(IEquatable<float>).IsAssignableFrom(typeof(float)));
+			object f = (float)0;
+			Assert.IsTrue(f is float);
+			Assert.IsTrue(f is IComparable<float>);
+			Assert.IsTrue(f is IEquatable<float>);
 		}
 
 		private T GetDefaultValue<T>() {
@@ -113,10 +119,39 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue (((float)0).Equals((object)(float)0));
+			Assert.IsFalse(((float)1).Equals((object)(float)0));
+			Assert.IsFalse(((float)0).Equals((object)(float)0.5));
+			Assert.IsTrue (((float)1).Equals((object)(float)1));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue (((float)0).Equals((float)0));
 			Assert.IsFalse(((float)1).Equals((float)0));
 			Assert.IsFalse(((float)0).Equals((float)0.5));
 			Assert.IsTrue (((float)1).Equals((float)1));
+
+			Assert.IsTrue (((IEquatable<float>)((float)0)).Equals((float)0));
+			Assert.IsFalse(((IEquatable<float>)((float)1)).Equals((float)0));
+			Assert.IsFalse(((IEquatable<float>)((float)0)).Equals((float)0.5));
+			Assert.IsTrue (((IEquatable<float>)((float)1)).Equals((float)1));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(((float)0).CompareTo((float)0) == 0);
+			Assert.IsTrue(((float)1).CompareTo((float)0) > 0);
+			Assert.IsTrue(((float)0).CompareTo((float)0.5) < 0);
+			Assert.IsTrue(((float)1).CompareTo((float)1) == 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<float>)((float)0)).CompareTo((float)0) == 0);
+			Assert.IsTrue(((IComparable<float>)((float)1)).CompareTo((float)0) > 0);
+			Assert.IsTrue(((IComparable<float>)((float)0)).CompareTo((float)0.5) < 0);
+			Assert.IsTrue(((IComparable<float>)((float)1)).CompareTo((float)1) == 0);
 		}
 	}
 }

@@ -953,7 +953,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else {
-				bool implementsInterfaceMember = method.IsExplicitInterfaceImplementation || method.ImplementedInterfaceMembers.Any(m => _methodSemantics[(IMethod)m.MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript);
+				var interfaceImplementations = method.ImplementedInterfaceMembers.Where(m => method.IsExplicitInterfaceImplementation || _methodSemantics[(IMethod)m.MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript).ToList();
 
 				if (ssa != null) {
 					// [ScriptSkip] - Skip invocation of the method entirely.
@@ -972,7 +972,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (implementsInterfaceMember) {
+					else if (interfaceImplementations.Count > 0) {
 						Message(7122, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -1012,7 +1012,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					string generatedMethodName = GetNamedArgument<string>(ica, GeneratedMethodNamePropertyName);
 					string nonVirtualCode = GetNamedArgument<string>(ica, NonVirtualCodePropertyName);
 
-					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
+					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface && generatedMethodName == null) {
 						Message(7126, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -1024,11 +1024,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 					else if (method.IsOverridable && generatedMethodName == null) {
 						Message(7128, method);
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-						return;
-					}
-					else if (implementsInterfaceMember) {
-						Message(7129, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
@@ -1093,7 +1088,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 						var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
 						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
-							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
+							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							semantics = semantics.WithEnumerateAsArray();
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
@@ -1106,17 +1101,25 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = semantics;
 						return;
 					}
-					else if (implementsInterfaceMember) {
+					else if (interfaceImplementations.Count > 0) {
 						if (nameSpecified) {
 							Message(7135, method);
 						}
 
-						if (method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).Where(x => x.Type == MethodScriptSemantics.ImplType.NormalMethod).Select(x => x.Name).Distinct().Count() > 1) {
+						var candidateNames = method.ImplementedInterfaceMembers
+						                           .Select(im => GetMethodSemantics((IMethod)im.MemberDefinition))
+						                           .Select(s => s.Type == MethodScriptSemantics.ImplType.NormalMethod ? s.Name : (s.Type == MethodScriptSemantics.ImplType.InlineCode ? s.GeneratedMethodName : null))
+						                           .Where(name => name != null)
+						                           .Distinct();
+
+						if (candidateNames.Count() > 1) {
 							Message(7136, method);
 						}
 
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
 						var sem = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
+							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							sem = sem.WithEnumerateAsArray();
 						_methodSemantics[method] = sem;

@@ -4,6 +4,7 @@
 String.__typeName = 'String';
 String.__baseType = Object;
 String.__class = true;
+String.__interfaces = [ ss_IEquatable, ss_IComparable ];
 
 String.empty = '';
 

@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
     [ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-    public struct Char {
+    public struct Char : IComparable<Char>, IEquatable<Char> {
 		[InlineCode("0")]
 		public Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -54,5 +54,16 @@ namespace System {
         public new string ToLocaleString() {
             return null;
         }
+
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(char other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(char other) {
+		    return false;
+	    }
     }
 }

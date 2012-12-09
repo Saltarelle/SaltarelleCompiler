@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
     [ScriptName("Int32")]
     [Imported(ObeysTypeSystem = true)]
-    public struct UInt16 {
+    public struct UInt16 : IComparable<UInt16>, IEquatable<UInt16> {
 		[InlineCode("0")]
 		public UInt16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -52,5 +52,17 @@ namespace System {
         public string ToString(int radix) {
             return null;
         }
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+	    [CLSCompliant(false)]
+		public int CompareTo(ushort other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    [CLSCompliant(false)]
+		public bool Equals(ushort other) {
+		    return false;
+	    }
     }
 }

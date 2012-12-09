@@ -11,6 +11,12 @@ namespace CoreLibTests {
 			Assert.IsTrue((object)(decimal)0.5 is decimal);
 			Assert.AreEqual(typeof(decimal).FullName, "Number");
 			Assert.IsFalse(typeof(decimal).IsClass);
+			Assert.IsTrue(typeof(IComparable<decimal>).IsAssignableFrom(typeof(decimal)));
+			Assert.IsTrue(typeof(IEquatable<decimal>).IsAssignableFrom(typeof(decimal)));
+			object d = (decimal)0;
+			Assert.IsTrue(d is decimal);
+			Assert.IsTrue(d is IComparable<decimal>);
+			Assert.IsTrue(d is IEquatable<decimal>);
 		}
 
 		private T GetDefaultValue<T>() {
@@ -217,10 +223,39 @@ namespace CoreLibTests {
 
 		[Test]
 		public void EqualsWorks() {
+			Assert.IsTrue (((decimal)0).Equals((object)(decimal)0));
+			Assert.IsFalse(((decimal)1).Equals((object)(decimal)0));
+			Assert.IsFalse(((decimal)0).Equals((object)(decimal)0.5));
+			Assert.IsTrue (((decimal)1).Equals((object)(decimal)1));
+		}
+
+		[Test]
+		public void IEquatableEqualsWorks() {
 			Assert.IsTrue (((decimal)0).Equals((decimal)0));
 			Assert.IsFalse(((decimal)1).Equals((decimal)0));
 			Assert.IsFalse(((decimal)0).Equals((decimal)0.5));
 			Assert.IsTrue (((decimal)1).Equals((decimal)1));
+
+			Assert.IsTrue (((IEquatable<decimal>)((decimal)0)).Equals((decimal)0));
+			Assert.IsFalse(((IEquatable<decimal>)((decimal)1)).Equals((decimal)0));
+			Assert.IsFalse(((IEquatable<decimal>)((decimal)0)).Equals((decimal)0.5));
+			Assert.IsTrue (((IEquatable<decimal>)((decimal)1)).Equals((decimal)1));
+		}
+
+		[Test]
+		public void CompareToWorks() {
+			Assert.IsTrue(((decimal)0).CompareTo((decimal)0) == 0);
+			Assert.IsTrue(((decimal)1).CompareTo((decimal)0) > 0);
+			Assert.IsTrue(((decimal)0).CompareTo((decimal)0.5) < 0);
+			Assert.IsTrue(((decimal)1).CompareTo((decimal)1) == 0);
+		}
+
+		[Test]
+		public void IComparableCompareToWorks() {
+			Assert.IsTrue(((IComparable<decimal>)((decimal)0)).CompareTo((decimal)0) == 0);
+			Assert.IsTrue(((IComparable<decimal>)((decimal)1)).CompareTo((decimal)0) > 0);
+			Assert.IsTrue(((IComparable<decimal>)((decimal)0)).CompareTo((decimal)0.5) < 0);
+			Assert.IsTrue(((IComparable<decimal>)((decimal)1)).CompareTo((decimal)1) == 0);
 		}
 	}
 }

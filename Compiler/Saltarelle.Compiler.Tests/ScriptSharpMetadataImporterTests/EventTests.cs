@@ -130,23 +130,6 @@ class C1 {
 		}
 
 		[Test]
-		public void CannotSpecifyInlineCodeOnEventAccessorsImplementingInterfaceMembers() {
-			Prepare(
-@"using System.Runtime.CompilerServices;
-interface I {
-	event System.EventHandler Evt;
-}
-
-class C : I {
-	public event System.EventHandler Evt { [InlineCode(""|some code|"")] add {} [InlineCode(""|some code|"")] remove {} }
-}", expectErrors: true);
-
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(2));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C.add_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C.remove_Evt") && m.Contains("InlineCodeAttribute") && m.Contains("interface member")));
-		}
-
-		[Test]
 		public void CannotSpecifyInlineCodeOnEventAccessorsThatOverrideBaseMembers() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

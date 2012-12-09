@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-    public struct SByte {
+    public struct SByte : IComparable<SByte>, IEquatable<SByte> {
 		[InlineCode("0")]
 		public SByte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -51,5 +51,17 @@ namespace System {
         public string ToString(int radix) {
             return null;
         }
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+	    [CLSCompliant(false)]
+		public int CompareTo(sbyte other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    [CLSCompliant(false)]
+	    public bool Equals(sbyte other) {
+		    return false;
+	    }
     }
 }

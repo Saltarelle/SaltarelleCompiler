@@ -60,6 +60,12 @@ namespace RuntimeLibrary.Tests.Core {
 	public class EqualityComparerTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class IComparableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IEquatableTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class Int16Tests : CoreLibTestBase {}
 
 	[TestFixture]

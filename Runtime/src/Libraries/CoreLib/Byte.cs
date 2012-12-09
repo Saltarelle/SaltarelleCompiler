@@ -13,7 +13,7 @@ namespace System {
     [ScriptNamespace("ss")]
     [ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-    public struct Byte {
+    public struct Byte : IComparable<Byte>, IEquatable<Byte> {
 		[InlineCode("0")]
 		public Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -50,5 +50,15 @@ namespace System {
         public string ToString(int radix) {
             return null;
         }
+
+	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		public int CompareTo(byte other) {
+		    return 0;
+	    }
+
+	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
+	    public bool Equals(byte other) {
+		    return false;
+	    }
     }
 }
