@@ -240,6 +240,8 @@ if (typeof(window) == 'object') {
 
 #include "BCL\IteratorBlockEnumerator.js"
 
+#include "BCL\Lazy.js"
+
 #include "BCL\Task.js"
 
 #include "BCL\TaskCompletionSource.js"

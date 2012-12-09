@@ -22,6 +22,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BCL\Lazy.js" />
     <Content Include="BCL\IComparable.js" />
     <Content Include="BCL\EqualityComparer.js" />
     <Content Include="BCL\IEquatable.js" />

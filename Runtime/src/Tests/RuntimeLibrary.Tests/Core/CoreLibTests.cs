@@ -81,6 +81,9 @@ namespace RuntimeLibrary.Tests.Core {
 	public class JsDateTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class LazyTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class MathTests : CoreLibTestBase {}
 
 	[TestFixture]
