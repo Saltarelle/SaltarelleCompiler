@@ -1,3 +1,9 @@
+Added InlineConstantAttribute and convert a bunch of static properties in the runtime to inline constants.
+Added interfaces IComparable, IEquatable.
+Dictionary now supports a custom EqualityComparer.
+Support invoking and overriding object.Equals and object.GetHashCode
+Created type System.Lazy<T>
+
 Fixed issue causing ref and out parameters to anonymous methods and lambdas not to work (#98).
 
 1.6.3

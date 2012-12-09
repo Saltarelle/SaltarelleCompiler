@@ -18,9 +18,11 @@ namespace System {
 		public Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		public static char MinValue { [InlineCode("0")] get { return '\0'; } }
+		[InlineConstant]
+		public const char MinValue = '\0';
 
-		public static char MaxValue { [InlineCode("65535")] get { return '\0'; } }
+		[InlineConstant]
+		public const char MaxValue = '\xFFFF';
 
         public string Format(string format) {
             return null;

@@ -18,9 +18,11 @@ namespace System {
 		public Int16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		public static short MinValue { [InlineCode("-32768")] get { return 0; } }
+		[InlineConstant]
+		public const short MinValue = -32768;
 
-		public static short MaxValue { [InlineCode("32767")] get { return 0; } }
+		[InlineConstant]
+		public const short MaxValue = 32767;
 
         public string Format(string format) {
             return null;

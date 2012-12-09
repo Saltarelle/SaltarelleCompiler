@@ -18,13 +18,14 @@ namespace System {
 		public UInt64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		[InlineConstant]
 		[CLSCompliant(false)]
-		public static ulong MinValue { [InlineCode("0")] get { return 0; } }
+		public const ulong MinValue = 0;
 
 		[Obsolete("This number is not representable in Javascript", true)]
 		[CLSCompliant(false)]
 		[NonScriptable]
-		public static ulong MaxValue { get { return 0; } }
+		public const ulong MaxValue = 0;
 
         public string Format(string format) {
             return null;

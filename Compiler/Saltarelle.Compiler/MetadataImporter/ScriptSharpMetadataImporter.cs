@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -38,6 +38,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string ModuleNameAttribute                    = "System.Runtime.CompilerServices.ModuleNameAttribute";
 		private const string AsyncModuleAttribute                   = "System.Runtime.CompilerServices.AsyncModuleAttribute";
 		private const string EnumerateAsArrayAttribute              = "System.Runtime.CompilerServices.EnumerateAsArrayAttribute";
+		private const string InlineConstantAttribute                = "System.Runtime.CompilerServices.InlineConstantAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
 		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
 		private const string TestAttribute                          = "System.Testing.TestAttribute";
@@ -1243,8 +1244,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_fieldSemantics[field] = FieldScriptSemantics.Field("X");
 			}
 			else {
-				string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
-				usedNames[name] = true;
+				string name = (nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames));
+				if (GetAttributePositionalArgs(field, InlineConstantAttribute) != null) {
+					if (field.IsConst) {
+						name = null;
+					}
+					else {
+						Message(7152, field);
+					}
+				}
+				else {
+					usedNames[name] = true;
+				}
+
 				if (_typeSemantics[field.DeclaringTypeDefinition].IsNamedValues) {
 					string value = preferredName;
 					if (!nameSpecified) {	// This code handles the feature that it is possible to specify an invalid ScriptName for a member of a NamedValues enum, in which case that value has to be use as the constant value.
@@ -1255,7 +1267,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
 				}
-				else if (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames)) {
+				else if (name == null || (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames))) {
 					object value = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
 					if (value is bool)
 						_fieldSemantics[field] = FieldScriptSemantics.BooleanConstant((bool)value, name);

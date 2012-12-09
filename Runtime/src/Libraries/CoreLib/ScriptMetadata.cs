@@ -471,4 +471,15 @@ namespace System.Runtime.CompilerServices {
 		public EnumerateAsArrayAttribute() {
 		}
 	}
+
+	/// <summary>
+	/// Can be applied to a const field to indicate that the literal value of the constant should always be used instead of the symbolic field name.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field)]
+	[NonScriptable]
+	[Imported]
+	public sealed class InlineConstantAttribute : Attribute {
+		public InlineConstantAttribute() {
+		}
+	}
 }

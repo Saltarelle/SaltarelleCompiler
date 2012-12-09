@@ -18,11 +18,13 @@ namespace System {
 		public Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		[InlineConstant]
 		[CLSCompliant(false)]
-		public static byte MinValue { [InlineCode("0")] get { return 0; } }
+		public const byte MinValue = 0;
 
+		[InlineConstant]
 		[CLSCompliant(false)]
-		public static byte MaxValue { [InlineCode("255")] get { return 0; } }
+		public const byte MaxValue = 255;
 
         public string Format(string format) {
             return null;

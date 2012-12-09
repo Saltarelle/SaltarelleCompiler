@@ -18,11 +18,13 @@ namespace System {
 		public UInt16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
+		[InlineConstant]
 		[CLSCompliant(false)]
-		public static ushort MinValue { [InlineCode("0")] get { return 0; } }
+		public const ushort MinValue = 0;
 
+		[InlineConstant]
 		[CLSCompliant(false)]
-		public static ushort MaxValue { [InlineCode("65535")] get { return 0; } }
+		public const ushort MaxValue = 0xFFFF;
 
         public string Format(string format) {
             return null;

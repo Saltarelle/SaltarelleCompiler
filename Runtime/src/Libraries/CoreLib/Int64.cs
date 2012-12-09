@@ -20,11 +20,11 @@ namespace System {
 
 		[Obsolete("This number is not representable in Javascript", true)]
 		[NonScriptable]
-		public static long MinValue { get { return 0; } }
+		public const long MinValue = 0;
 
 		[Obsolete("This number is not representable in Javascript", true)]
 		[NonScriptable]
-		public static long MaxValue { get { return 0; } }
+		public const long MaxValue = 0;
 
         public string Format(string format) {
             return null;

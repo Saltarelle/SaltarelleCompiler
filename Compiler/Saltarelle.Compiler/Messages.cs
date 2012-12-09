@@ -82,6 +82,7 @@ namespace Saltarelle.Compiler {
 			{ 7149, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it has no parameters.") },
 			{ 7150, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because its only parameter is a 'params' array.") },
 			{ 7151, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [EnumerateAsArrayAttribute] because it is not a GetEnumerator() method for the iterator pattern.") },
+			{ 7152, Tuple.Create(MessageSeverity.Error, "The field {0} cannot have an [InlineConstantAttribute] because it is not constant.") },
 
 			{ 7500, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.") },
 			{ 7501, Tuple.Create(MessageSeverity.Error, "More than one unnamed constructor for the type {0}.") },

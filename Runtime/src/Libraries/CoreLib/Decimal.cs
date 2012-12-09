@@ -22,9 +22,12 @@ namespace System {
         [ScriptName("MIN_VALUE")]
         public const decimal MinValue = 0;
 
-        public static decimal Zero { [InlineCode("0")] get { return 0; } }
-        public static decimal One { [InlineCode("1")] get { return 0; } }
-        public static decimal MinusOne { [InlineCode("-1")] get { return 0; } }
+        [InlineConstant]
+		public const decimal Zero = 0;
+        [InlineConstant]
+        public const decimal One = 1;
+        [InlineConstant]
+        public const decimal MinusOne = -1;
 
 		[InlineCode("0")]
 		public Decimal(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {

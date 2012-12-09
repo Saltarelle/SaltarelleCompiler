@@ -313,5 +313,29 @@ public class C {
 			Assert.That(f.Name, Is.EqualTo("constructor$1"));
 			Assert.That(f.GenerateCode, Is.True);
 		}
+
+		[Test]
+		public void InlineConstantAttributeCausesAConstantImplementation() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	[InlineConstant]
+	public const int Value = 42;
+}", minimizeNames: false);
+
+			var f = FindField("C.Value");
+			Assert.That(f.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Constant));
+			Assert.That(f.Value, Is.EqualTo(42));
+			Assert.That(f.GenerateCode, Is.False);
+		}
+
+		[Test]
+		public void InlineConstantAttributeCannotBeAppliedToNonConstField() {
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineConstant] public static int Value = 42; }", expectErrors: true);
+
+			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1.Value")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("InlineConstantAttribute")));
+		}
 	}
 }
