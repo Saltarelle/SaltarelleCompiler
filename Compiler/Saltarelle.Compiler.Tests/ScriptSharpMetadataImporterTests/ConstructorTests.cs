@@ -108,6 +108,37 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		}
 
 		[Test]
+		public void AlternateSignatureAttributeDoesNotConsiderNonScriptableOrInlineCodeConstructors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[AlternateSignature] public C() {}
+	[AlternateSignature] public C(int i) {}
+	public C(int i, int j) {}
+	[InlineCode(""X"")] public C(int i, int j, int k) {}
+	[NonScriptable] public C(int i, int j, int k, int l) {}
+}");
+
+			var c1 = FindConstructor("C", 0);
+			Assert.That(c1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(c1.GenerateCode, Is.False);
+
+			var c2 = FindConstructor("C", 1);
+			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(c2.GenerateCode, Is.False);
+
+			var c3 = FindConstructor("C", 2);
+			Assert.That(c3.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(c3.GenerateCode, Is.True);
+
+			var c4 = FindConstructor("C", 3);
+			Assert.That(c4.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+
+			var c5 = FindConstructor("C", 4);
+			Assert.That(c5.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
 		public void InlineCodeAttributeCanBeSpecifiedForConstructor() {
 			Prepare(@"using System.Runtime.CompilerServices; public class C { [InlineCode(""$X$"")] public C() {} public C(int i) {} }");
 

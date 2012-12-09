@@ -473,7 +473,7 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_({sm_Int32})._({sm_Byte})._({sm_String})._($o)._($a)._($b)._($c);
+@"	_({ic_Int32})._({ic_Byte})._({ic_String})._($o)._($a)._($b)._($c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -490,7 +490,7 @@ class D : B<int> {
 		// END
 	}
 }",
-@"	_({sm_Int32})._({sm_String})._(this)._(1)._('X');
+@"	_({ic_Int32})._({ic_String})._(this)._(1)._('X');
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("X", nonVirtualInvocationLiteralCode: "_({T1})._({T2})._({this})._({x})._({y})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSkeleton: false);
 		}
 

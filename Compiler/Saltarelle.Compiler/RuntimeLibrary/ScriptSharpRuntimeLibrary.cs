@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			if (type.Kind == TypeKind.Delegate) {
 				return _createTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
-			else if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && context == TypeContext.TypeOf) {
+			else if (type.TypeParameterCount > 0 && !(type is ParameterizedType) && (context == TypeContext.TypeOf || context == TypeContext.InlineCode)) {
 				// This handles open generic types ( typeof(C<,>) )
 				return _createTypeReferenceExpression(type.GetDefinition().ToTypeReference());
 			}
@@ -55,7 +55,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 				if (_metadataImporter.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
-				else if (context != TypeContext.UseStaticMember && context != TypeContext.InvokeConstructor && !_metadataImporter.DoesTypeObeyTypeSystem(td)) {
+				else if (context != TypeContext.UseStaticMember && context != TypeContext.InlineCode && context != TypeContext.InvokeConstructor && !_metadataImporter.DoesTypeObeyTypeSystem(td)) {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else

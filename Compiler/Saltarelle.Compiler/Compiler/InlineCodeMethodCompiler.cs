@@ -242,7 +242,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						substitutions[s] = Tuple.Create(getJsType(typeArguments[token.Index], TypeContext.UseStaticMember), false);
+						substitutions[s] = Tuple.Create(getJsType(typeArguments[token.Index], TypeContext.InlineCode), false);
 						break;
 					}
 
@@ -257,7 +257,7 @@ namespace Saltarelle.Compiler.Compiler {
 							substitutions[s] = Tuple.Create((JsExpression)JsExpression.Null, false);
 						}
 						else {
-							substitutions[s] = Tuple.Create(getJsType(type, TypeContext.UseStaticMember), false);
+							substitutions[s] = Tuple.Create(getJsType(type, TypeContext.InlineCode), false);
 						}
 						break;
 					}

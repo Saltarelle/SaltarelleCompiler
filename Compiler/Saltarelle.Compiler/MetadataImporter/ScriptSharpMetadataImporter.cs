@@ -550,7 +550,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			var asa = GetAttributePositionalArgs(member, AlternateSignatureAttribute);
 			if (asa != null) {
-				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null && GetAttributePositionalArgs(m, NonScriptableAttribute) == null).ToList();
+				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null && GetAttributePositionalArgs(m, NonScriptableAttribute) == null && GetAttributePositionalArgs(m, InlineCodeAttribute) == null).ToList();
 				if (otherMembers.Count == 1) {
 					return DeterminePreferredMemberName(otherMembers[0]);
 				}

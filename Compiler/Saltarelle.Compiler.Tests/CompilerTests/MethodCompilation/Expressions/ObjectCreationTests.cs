@@ -193,6 +193,21 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingConstructorImplementedAsInlineCodeWorksForGenericType() {
+			AssertCorrect(
+@"class X<T1, T2> {
+	public X(int a, int b) {}
+}
+public void M() {
+	// BEGIN
+	var x = new X<string, int>(13, 42);
+	// END
+}",
+@"	var $x = __CreateX_({ic_String})._({ic_Int32})._(13)._(42);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_({T1})._({T2})._({a})._({b})"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
 		public void UsingConstructorMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);

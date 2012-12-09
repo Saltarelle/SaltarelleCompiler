@@ -839,6 +839,39 @@ class C1 {
 		}
 
 		[Test]
+		public void AlternateSignatureAttributeDoesNotConsiderNonScriptableOrInlineCodeMethods() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[AlternateSignature]
+	public void SomeMethod() {
+	}
+
+	[AlternateSignature]
+	public void SomeMethod(int x) {
+	}
+
+	[ScriptName(""RenamedMethod"")]
+	public void SomeMethod(int x, int y) {
+	}
+
+	[InlineCode(""X"")]
+	public void SomeMethod(int a, int b, int c) {
+	}
+
+	[NonScriptable]
+	public void SomeMethod(int a, int b, int c, int d) {
+	}
+}");
+
+			var methods = FindMethods("C1.SomeMethod");
+			Assert.That(methods.Where(m => m.Item1.Parameters.Count < 3).All(m => m.Item2.Name == "RenamedMethod"));
+			Assert.That(methods.Where(m => m.Item1.Parameters.Count < 3).All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Count == 2 ? m.Item2.Name : null)));
+			Assert.That(FindMethod("C1.SomeMethod", 3).Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(FindMethod("C1.SomeMethod", 4).Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+		}
+
+		[Test]
 		public void IfAnyMethodInAMethodGroupHasAnAlternateSignatureAttributeThenExactlyOneMethodMustNotHaveIt() {
 			Prepare(
 @"using System.Runtime.CompilerServices;

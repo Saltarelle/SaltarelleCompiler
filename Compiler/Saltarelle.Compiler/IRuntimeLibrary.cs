@@ -44,6 +44,11 @@ namespace Saltarelle.Compiler {
 		UseStaticMember,
 
 		/// <summary>
+		/// The type is being used to invoke one of its static methods. Should be handled like <see cref="UseStaticMember2"/>, except that open generic type should be returned
+		/// </summary>
+		InlineCode,
+
+		/// <summary>
 		/// The type is being used because a derived class uses the 'base' keyword.
 		/// </summary>
 		BindBaseCall,

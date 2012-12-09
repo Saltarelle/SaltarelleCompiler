@@ -18,6 +18,7 @@ namespace Saltarelle.Compiler.Tests {
 				case TypeContext.CastTarget:        return "ct";
 				case TypeContext.GetDefaultValue:   return "def";
 				case TypeContext.UseStaticMember:   return "sm";
+				case TypeContext.InlineCode:        return "ic";
 				case TypeContext.BindBaseCall:      return "bind";
 				default: throw new ArgumentException("c");
 			}
