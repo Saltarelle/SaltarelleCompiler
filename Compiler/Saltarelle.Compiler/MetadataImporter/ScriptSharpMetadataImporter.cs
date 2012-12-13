@@ -184,7 +184,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private string _mainModuleName;
 		private bool _isAsyncModule;
 
-		private readonly bool _minimizeNames;
+		private bool _minimizeNames;
+
+		public ScriptSharpMetadataImporter(IErrorReporter errorReporter) {
+			_errorReporter = errorReporter;
+		}
 
 		private void Message(int code, DomRegion r, params object[] additionalArgs) {
 			_errorReporter.Region = r;
@@ -200,10 +204,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
 			_errorReporter.Region = m.Region;
 			_errorReporter.Message(code, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
-		}
-
-		public ScriptSharpMetadataImporter(bool minimizeNames) {
-			_minimizeNames = minimizeNames;
 		}
 
 		private string MakeCamelCase(string s) {
@@ -1284,10 +1284,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		public void Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
+		public void Prepare(IEnumerable<ITypeDefinition> types, bool minimizeNames, IAssembly mainAssembly) {
+			_minimizeNames = minimizeNames;
 			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
 			_systemRecord = ReflectionHelper.ParseReflectionName("System.Record").Resolve(mainAssembly.Compilation.TypeResolveContext);
-			_errorReporter = errorReporter;
 			_compilation = mainAssembly.Compilation;
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
 			_delegateSemantics = new Dictionary<ITypeDefinition, DelegateScriptSemantics>();
@@ -1336,8 +1336,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					ProcessTypeMembers(t);
 				}
 				catch (Exception ex) {
-					errorReporter.Region = t.Region;
-					errorReporter.InternalError(ex, "Error importing type " + t.FullName);
+					_errorReporter.Region = t.Region;
+					_errorReporter.InternalError(ex, "Error importing type " + t.FullName);
 				}
 			}
 		}

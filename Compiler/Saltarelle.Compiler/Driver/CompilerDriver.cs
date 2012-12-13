@@ -7,18 +7,24 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Policy;
 using System.Text;
+using Castle.MicroKernel.Registration;
+using Castle.Windsor;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using System.Linq;
 using Mono.CSharp;
+using Mono.Cecil;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.OOPEmulator;
 using Saltarelle.Compiler.Linker;
 using Saltarelle.Compiler.RuntimeLibrary;
+using ArrayType = ICSharpCode.NRefactory.TypeSystem.ArrayType;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
 namespace Saltarelle.Compiler.Driver {
@@ -204,6 +210,17 @@ namespace Saltarelle.Compiler.Driver {
 				return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
 			}
 
+			private static IEnumerable<Assembly> TopologicalSortPlugins(IEnumerable<Tuple<IAssembly, Assembly>> references) {
+#warning TODO: Implement
+				return references.Where(r => r.Item2 != null).Select(r => r.Item2).ToList();
+			}
+
+			private static void RegisterPlugins(IWindsorContainer container, IEnumerable<Tuple<IAssembly, Assembly>> references) {
+				foreach (var asm in TopologicalSortPlugins(references)) {
+					container.Register(AllTypes.FromAssembly(asm).BasedOn<IJSTypeSystemRewriter>().WithServices(typeof(IJSTypeSystemRewriter)));
+				}
+			}
+
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
 				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
 				try {
@@ -221,45 +238,37 @@ namespace Saltarelle.Compiler.Driver {
 							return false;
 					}
 
-					// Compile the script
-					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
-					var n = new DefaultNamer();
-					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => new JsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition()));
-					var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: options.References.Count == 0 /* We allow user-defined structs in mscorlib only, which can be identified by the fact that it has no references*/);
-
 					var references = LoadReferences(settings.AssemblyReferences, er);
 					if (references == null)
 						return false;
 
-					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
-					var compiledTypes = compiler.Compile(compilation);
+					PreparedCompilation compilation = PreparedCompilation.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
 
-					IMethod entryPoint = null;
-					if (options.HasEntryPoint) {
-						List<IMethod> candidates;
-						if (!string.IsNullOrEmpty(options.EntryPointClass)) {
-							var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
-							if (t == null) {
-								er.Region = DomRegion.Empty;
-								er.Message(7950, "Could not find the entry point class " + options.EntryPointClass + ".");
-								return false;
-							}
-							candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
-						}
-						else {
-							candidates = compilation.Compilation.MainAssembly.GetAllTypeDefinitions().SelectMany(t => t.Methods).Where(IsEntryPointCandidate).ToList();
-						}
-						if (candidates.Count != 1) {
-							er.Region = DomRegion.Empty;
-							er.Message(7950, "Could not find a unique entry point.");
-							return false;
-						}
-						entryPoint = candidates[0];
-					}
+					IMethod entryPoint = FindEntryPoint(options, er, compilation);
 
-					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Process(compiledTypes, compilation.Compilation, entryPoint);
-					js = new DefaultLinker(md, n).Process(js, compilation.Compilation.MainAssembly);
+					var container = new WindsorContainer();
+					RegisterPlugins(container, references.Select(r => Tuple.Create(r.Item1.Resolve(compilation.Compilation.TypeResolveContext), r.Item2)).ToList());
+					RegisterPlugins(container, new[] { Tuple.Create(default(IAssembly), Assembly.GetExecutingAssembly()) });
+
+					// Compile the script
+					container.Register(Component.For<IMetadataImporter, IScriptSharpMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
+					                   Component.For<INamer>().ImplementedBy<DefaultNamer>(),
+					                   Component.For<IErrorReporter>().Instance(er),
+									   Component.For<ICompilation>().Instance(compilation.Compilation),
+					                   Component.For<IRuntimeLibrary>().ImplementedBy<ScriptSharpRuntimeLibrary>(),
+					                   Component.For<IOOPEmulator>().ImplementedBy<ScriptSharpOOPEmulator>(),
+					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>(),
+					                   Component.For<ILinker>().ImplementedBy<DefaultLinker>()
+					                  );
+
+					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions(), options.MinimizeScript, compilation.Compilation.MainAssembly);
+					var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
+
+					foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())
+						compiledTypes = rewriter.Rewrite(compiledTypes);
+
+					var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
+					js = container.Resolve<ILinker>().Process(js, compilation.Compilation.MainAssembly);
 
 					if (er.HasErrors)
 						return false;
@@ -315,6 +324,36 @@ namespace Saltarelle.Compiler.Driver {
 					}
 				}
 			}
+
+			private IMethod FindEntryPoint(CompilerOptions options, ErrorReporterWrapper er, PreparedCompilation compilation) {
+				if (options.HasEntryPoint) {
+					List<IMethod> candidates;
+					if (!string.IsNullOrEmpty(options.EntryPointClass)) {
+						var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
+						if (t == null) {
+							er.Region = DomRegion.Empty;
+							er.Message(7950, "Could not find the entry point class " + options.EntryPointClass + ".");
+							return null;
+						}
+						candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
+					}
+					else {
+						candidates =
+							compilation.Compilation.MainAssembly.GetAllTypeDefinitions()
+							           .SelectMany(t => t.Methods)
+							           .Where(IsEntryPointCandidate)
+							           .ToList();
+					}
+					if (candidates.Count != 1) {
+						er.Region = DomRegion.Empty;
+						er.Message(7950, "Could not find a unique entry point.");
+						return null;
+					}
+					return candidates[0];
+				}
+
+				return null;
+			}
 		}
 
 		/// <param name="options">Compile options</param>
@@ -332,6 +371,12 @@ namespace Saltarelle.Compiler.Driver {
 					if (runInSeparateAppDomain) {
 						var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
 						ad = AppDomain.CreateDomain("SCTask", null, setup);
+						ad.AssemblyResolve += (sender, args) => {
+							var parsedName = new AssemblyName(args.Name);
+							if (new[] { "Saltarelle.Compiler.JSModel", "Saltarelle.Compiler", "ICSharpCode.NRefactory", "ICSharpCode.NRefactory.CSharp", "Mono.Cecil", "JavaScriptParser", "Antlr3.Runtime" }.Contains(parsedName.Name))
+								return Assembly.GetExecutingAssembly(); // These assemblies are ILMerged.
+				            return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == parsedName.Name);    // Allow other plugins to be referenced, even though they have all been loaded without context.
+						};
 						executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
 					}
 					else {
@@ -355,7 +400,22 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		private static IEnumerable<IAssemblyReference> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
+		private static Assembly LoadPlugin(AssemblyDefinition def) {
+			foreach (var r in def.Modules.SelectMany(m => m.Resources).OfType<EmbeddedResource>()) {
+				if (r.Name.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase)) {
+					var data = r.GetResourceData();
+					var asm = AssemblyDefinition.ReadAssembly(new MemoryStream(data));
+
+					var result = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == asm.Name.Name);
+					if (result == null)
+						result = Assembly.Load(data);
+					return result;
+				}
+			}
+			return null;
+		}
+
+		private static IList<Tuple<IUnresolvedAssembly, Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
 			var loader = new CecilLoader { IncludeInternalMembers = true };
 			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
 
@@ -376,7 +436,7 @@ namespace Saltarelle.Compiler.Driver {
 				return null;
 			}
 
-			return assemblies.Select(a => loader.LoadAssembly(a)).ToList();
+			return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), LoadPlugin(asm))).ToList();
 		}
 	}
 }

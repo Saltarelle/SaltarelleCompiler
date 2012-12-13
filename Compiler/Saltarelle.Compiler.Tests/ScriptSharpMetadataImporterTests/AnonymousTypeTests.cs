@@ -31,9 +31,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		[Test]
 		public void ConstructorsAreReportedAsJsonConstructors() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var er = new MockErrorReporter(true);
-			md.Prepare(new ITypeDefinition[0], compilation.MainAssembly, er);
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
+			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
 			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
@@ -45,9 +45,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		[Test]
 		public void PropertiesAreImplementedAsFieldsWithTheSameName() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var er = new MockErrorReporter(true);
-			md.Prepare(new ITypeDefinition[0], compilation.MainAssembly, er);
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
+			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
 			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
@@ -64,9 +64,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		[Test]
 		public void AnonymousTypePropertyNamesAreNotMinimized() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var er = new MockErrorReporter(true);
-			md.Prepare(new ITypeDefinition[0], compilation.MainAssembly, er);
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
+			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
 			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
@@ -83,9 +83,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		[Test]
 		public void TransparentIdentiferIsValidJavascriptIdentifierStartingWithDollar() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
 			var er = new MockErrorReporter(true);
-			md.Prepare(new ITypeDefinition[0], compilation.MainAssembly, er);
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
+			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
 			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation, new[] { "<>Identifier" });
