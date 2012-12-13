@@ -115,7 +115,6 @@
     <Compile Include="Char.cs" />
     <Compile Include="Arguments.cs" />
     <Compile Include="Action.cs" />
-    <Compile Include="Testing\Assert.cs" />
     <Compile Include="Func.cs" />
     <Compile Include="Record.cs" />
     <Compile Include="DateTime.cs" />
@@ -153,8 +152,6 @@
     <Compile Include="..\..\ScriptSharp.cs">
       <Link>Properties\ScriptSharp.cs</Link>
     </Compile>
-    <Compile Include="Testing\QUnit.cs" />
-    <Compile Include="Testing\Attributes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="install.ps1" />

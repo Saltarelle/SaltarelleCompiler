@@ -372,10 +372,14 @@ namespace Saltarelle.Compiler.Driver {
 						var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
 						ad = AppDomain.CreateDomain("SCTask", null, setup);
 						ad.AssemblyResolve += (sender, args) => {
+							Console.WriteLine("Resolving " + args.Name);
 							var parsedName = new AssemblyName(args.Name);
-							if (new[] { "Saltarelle.Compiler.JSModel", "Saltarelle.Compiler", "ICSharpCode.NRefactory", "ICSharpCode.NRefactory.CSharp", "Mono.Cecil", "JavaScriptParser", "Antlr3.Runtime" }.Contains(parsedName.Name))
-								return Assembly.GetExecutingAssembly(); // These assemblies are ILMerged.
-				            return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == parsedName.Name);    // Allow other plugins to be referenced, even though they have all been loaded without context.
+							if (!parsedName.Name.StartsWith("System.") && !parsedName.Name.StartsWith("Microsoft.")) {
+								Console.WriteLine("using current assembly");
+								return Assembly.GetExecutingAssembly(); // Assume we have ILMerged all assemblies that are not system assemblies.
+							}
+							Console.WriteLine("not found");
+				            return null;
 						};
 						executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
 					}

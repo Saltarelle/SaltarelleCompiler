@@ -79,6 +79,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
 			opts.References.Clear();
 			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Web.dll")));
+			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.QUnit.dll")));
 			opts.References.Add(new Reference(Common.MscorlibPath));
 
 			try {

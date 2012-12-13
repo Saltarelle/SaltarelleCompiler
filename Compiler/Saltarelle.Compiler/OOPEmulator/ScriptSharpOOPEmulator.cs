@@ -113,36 +113,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		}
 
 		private void AddClassMembers(JsClass c, JsExpression typeRef, List<JsStatement> stmts) {
-			ICollection<JsMethod> instanceMethods;
-			if (_metadataImporter.IsTestFixture(c.CSharpTypeDefinition)) {
-				var tests = new List<Tuple<string, string, bool, int?, JsFunctionDefinitionExpression>>();
-				var instanceMethodList = new List<JsMethod>();
-				foreach (var m in c.InstanceMethods) {
-					var td = (m.CSharpMember is IMethod ? _metadataImporter.GetTestData((IMethod)m.CSharpMember) : null);
-					if (td != null) {
-						tests.Add(Tuple.Create(td.Description, td.Category, td.IsAsync, td.ExpectedAssertionCount, m.Definition));
-					}
-					else {
-						instanceMethodList.Add(m);
-					}
-				}
-				var testInvocations = new List<JsExpression>();
-				foreach (var category in tests.GroupBy(t => t.Item2).Select(g => new { Category = g.Key, Tests = g.Select(x => new { Description = x.Item1, IsAsync = x.Item3, ExpectedAssertionCount = x.Item4, Function = x.Item5 }) }).OrderBy(x => x.Category)) {
-					if (category.Category != null)
-						testInvocations.Add(JsExpression.Invocation(JsExpression.Identifier("module"), JsExpression.String(category.Category)));
-					testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), _runtimeLibrary.Bind(t.Function, JsExpression.This) } : new JsExpression[] { JsExpression.String(t.Description), _runtimeLibrary.Bind(t.Function, JsExpression.This) })));
-				}
-
-				instanceMethodList.Add(new JsMethod(null, "runTests", null, JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(testInvocations.Select(t => new JsExpressionStatement(t))))));
-
-				instanceMethods = instanceMethodList;
-			}
-			else {
-				instanceMethods = c.InstanceMethods;
-			}
-
-			if (instanceMethods.Count > 0) {
-				stmts.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(instanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null))))));
+			if (c.InstanceMethods.Count > 0) {
+				stmts.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null))))));
 			}
 
 			if (c.NamedConstructors.Count > 0) {

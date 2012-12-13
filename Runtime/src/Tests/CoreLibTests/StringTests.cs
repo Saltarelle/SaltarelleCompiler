@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Testing;
+using QUnit;
 using System.Globalization;
 using System.Text.RegularExpressions;
 

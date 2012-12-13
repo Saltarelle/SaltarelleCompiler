@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
 
 namespace CoreLibTests {

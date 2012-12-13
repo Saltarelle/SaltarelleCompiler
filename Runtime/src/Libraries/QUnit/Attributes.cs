@@ -1,12 +1,14 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace System.Testing {
+namespace QUnit {
     /// <summary>
     /// This attribute indicates that a class is a QUnit test fixture, and can contain test methods (methods decorated with a <see cref="TestAttribute"/> or <see cref="AsyncTestAttribute"/>.
     /// </summary>
+    #if !PLUGIN
 	[Imported]
     [NonScriptable]
+	#endif
 	[AttributeUsage(AttributeTargets.Class)]
     public sealed class TestFixtureAttribute : Attribute {
     }
@@ -14,8 +16,10 @@ namespace System.Testing {
 	/// <summary>
 	/// This attribute specifies that a method is a QUnit test. This means that instead of a normal method, a QUnit.test() call will be generated in the (generated) runTests method of the declaring class.
 	/// </summary>
+    #if !PLUGIN
 	[Imported]
-	[NonScriptable]
+    [NonScriptable]
+	#endif
 	[AttributeUsage(AttributeTargets.Method)]
 	public sealed class TestAttribute : Attribute {
 		public string Description { get; private set; }
@@ -27,6 +31,7 @@ namespace System.Testing {
 		}
 
 		public TestAttribute(string description) {
+			Description = description;
 			ExpectedAssertionCount = -1;
 		}
 	}
@@ -34,8 +39,10 @@ namespace System.Testing {
 	/// <summary>
 	/// This attribute specifies that a method is a QUnit test. This means that instead of a normal method, a QUnit.asyncTest() call will be generated in the (generated) runTests method of the declaring class.
 	/// </summary>
+    #if !PLUGIN
 	[Imported]
-	[NonScriptable]
+    [NonScriptable]
+	#endif
 	[AttributeUsage(AttributeTargets.Method)]
 	public sealed class AsyncTestAttribute : Attribute {
 		public string Description { get; private set; }
@@ -47,6 +54,7 @@ namespace System.Testing {
 		}
 
 		public AsyncTestAttribute(string description) {
+			Description = description;
 			ExpectedAssertionCount = -1;
 		}
 	}

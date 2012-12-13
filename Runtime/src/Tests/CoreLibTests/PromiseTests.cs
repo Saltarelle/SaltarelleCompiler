@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Html;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -49,7 +49,7 @@ namespace CoreLibTests {
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was completed.");
 				Assert.AreEqual(task.Result, new object[] { 42, "result 123", 101 }, "The result should be correct");
 
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
@@ -86,7 +86,7 @@ namespace CoreLibTests {
 				Assert.AreEqual(tasks[3].Result, 10, "Task 3 result should be correct");
 				Assert.AreEqual(tasks[4].Result, 42, "Task 4 result should be correct");
 				Assert.AreEqual(tasks[5].Result, 38, "Task 5 result should be correct");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
@@ -111,7 +111,7 @@ namespace CoreLibTests {
 				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed after promise");
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was completed.");
 				Assert.AreEqual(task.Result, new { i = 42, s = "result 123", j = 101 });
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
@@ -140,7 +140,7 @@ namespace CoreLibTests {
 				Assert.IsTrue(task.Exception.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
 				Assert.AreEqual(((PromiseException)task.Exception.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
@@ -157,7 +157,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.AreEqual(result, new object[] { 42, "result 123", 101 }, "The result should be correct");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 
 			result = await promise;
@@ -175,7 +175,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was rejected.");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 
 			try {
