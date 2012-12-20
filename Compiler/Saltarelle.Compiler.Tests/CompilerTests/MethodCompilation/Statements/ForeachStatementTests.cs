@@ -307,5 +307,26 @@ public void M() {
 	}
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetEnumerator" ? MethodScriptSemantics.InlineCode("X", enumerateAsArray: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
+
+
+		[Test]
+		public void ForEachOptimizedIntoForLoopWorksWhenTheIteratorIsUsedByReference() {
+			AssertCorrect(@"
+void F(ref object x) {}
+public void M() {
+	object[] arr = null;
+	// BEGIN
+	foreach (var o in arr) {
+		F(ref o);
+	}
+	// END
+}
+",
+@"	for (var $tmp1 = 0; $tmp1 < $arr.$Length; $tmp1++) {
+		var $o = { $: $arr[$tmp1] };
+		this.$F($o);
+	}
+");
+		}
 	}
 }

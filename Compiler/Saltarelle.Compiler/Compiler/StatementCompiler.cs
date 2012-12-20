@@ -665,7 +665,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32), foreachStatement.GetRegion());
 				var jsIndex = JsExpression.Identifier(_variables[index].Name);
-				var body = new[] { new JsVariableDeclarationStatement(_variables[iterator.Variable].Name, JsExpression.Index(array, jsIndex)) }
+				JsExpression iteratorValue = JsExpression.Index(array, jsIndex);
+				if (_variables[iterator.Variable].UseByRefSemantics)
+					iteratorValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", iteratorValue));
+
+				var body = new[] { new JsVariableDeclarationStatement(_variables[iterator.Variable].Name, iteratorValue) }
 				          .Concat(CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement).Statements);
 
 				_result.Add(new JsForStatement(new JsVariableDeclarationStatement(_variables[index].Name, JsExpression.Number(0)),

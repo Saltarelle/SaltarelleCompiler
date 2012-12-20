@@ -1,3 +1,4 @@
+Fixed issue causing incorrect code to be generated when the variable used by a foreach() loop optimized to a JS for loop was used by reference.
 Fixed issue causing ref and out parameters to anonymous methods and lambdas not to work (#98).
 
 1.6.3
