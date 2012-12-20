@@ -61,7 +61,7 @@ public class C {
 	}	
 }
 ",
-@"		var b = Date.areNotEqual(this.$f(), null);
+@"			var b = Date.areNotEqual(this.$f(), null);
 ");
 		}
 
@@ -75,16 +75,18 @@ public class C {
 		}
 	}
 }",
-@"////////////////////////////////////////////////////////////////////////////////
-// Ф.Класс
-var $Ф_Класс = function() {
-};
-$Ф_Класс.prototype = {
-	$я: function() {
-		var Щ = 'г';
-	}
-};
-Type.registerClass(global, 'Ф.Класс', $Ф_Класс, Object);
+@"(function() {
+	////////////////////////////////////////////////////////////////////////////////
+	// Ф.Класс
+	var $Ф_Класс = function() {
+	};
+	$Ф_Класс.prototype = {
+		$я: function() {
+			var Щ = 'г';
+		}
+	};
+	Type.registerClass(global, 'Ф.Класс', $Ф_Класс, Object);
+})();
 ");
 		}
 	}

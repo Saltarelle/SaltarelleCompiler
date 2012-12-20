@@ -185,7 +185,11 @@ namespace Saltarelle.Compiler.Linker {
 					                                                                            JsExpression.Identifier("require"),
 					                                                                            JsExpression.String(x.Key))))
 					                                                   .ToList()));
-				}						        
+				}
+				else {
+					 body = new List<JsStatement> { new JsExpressionStatement(JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };
+				}
+
 				return body;
 			}
 		}
