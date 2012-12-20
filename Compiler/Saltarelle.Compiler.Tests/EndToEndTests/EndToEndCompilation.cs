@@ -60,6 +60,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			opts.References.Clear();
 			opts.References.Add(new Reference(Common.MscorlibPath));
 			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Linq.dll")));
+			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.QUnit.dll")));
 
 			try {
 				var er = new MockErrorReporter();

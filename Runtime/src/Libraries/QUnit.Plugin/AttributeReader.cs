@@ -39,7 +39,7 @@ namespace QUnit.Plugin {
 					fld.SetValue(result, value);
 				}
 				else if (arg.Key is IProperty) {
-					var prop = typeof(TAttribute).GetField(arg.Key.Name);
+					var prop = typeof(TAttribute).GetProperty(arg.Key.Name);
 					prop.SetValue(result, value);
 				}
 			}

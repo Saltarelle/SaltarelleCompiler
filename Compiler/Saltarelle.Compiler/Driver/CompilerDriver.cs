@@ -372,10 +372,8 @@ namespace Saltarelle.Compiler.Driver {
 						var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
 						ad = AppDomain.CreateDomain("SCTask", null, setup);
 						ad.AssemblyResolve += (sender, args) => {
-							Console.WriteLine("Resolving " + args.Name);
 							var parsedName = new AssemblyName(args.Name);
 							if (!parsedName.Name.StartsWith("System.") && !parsedName.Name.StartsWith("Microsoft.")) {
-								Console.WriteLine("using current assembly");
 								return Assembly.GetExecutingAssembly(); // Assume we have ILMerged all assemblies that are not system assemblies.
 							}
 							Console.WriteLine("not found");
