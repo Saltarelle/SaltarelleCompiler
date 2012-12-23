@@ -559,7 +559,6 @@ namespace " + Utils.GetNamespace(null) + @" {
     <Compile Include=""..\..\..\ScriptSharp.cs"">
       <Link>Properties\ScriptSharp.cs</Link>
     </Compile>
-    <None Include=""*.js"" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include=""..\..\CoreLib\CoreLib.csproj"">
