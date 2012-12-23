@@ -1,50 +1,39 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="blind" namespace="effect" type="effect">
+<entry name="blind" type="effect">
+	<title>Blind Effect</title>
 	<desc>
 		The blind effect hides or shows an element by wrapping the element in a container, and "pulling the blinds"
 	</desc>
 	<longdesc>
-		The container has <code>overflow:hidden</code> applied, so height changes affect what's visible.
+		<p>The container has <code>overflow: hidden</code> applied, so height changes affect what's visible.</p>
 	</longdesc>
-	<options>
-		<option name="mode" type="String" default='"hide"'>
+	<arguments>
+		<argument name="direction" type="String" default='"up"'>
 			<desc>
-				<p>UI Effect Mode</p>
-				<p>Possible Values: </p>
-				<dl>
-					<dt>hide</dt>
-					<dd>Hides the element by pulling a blind in the direction</dd>
-					<dt>show</dt>
-					<dd>Shows the element by pulling a blind from the direction. This seems inverted from the hide.</dd>
-					<dt>toggle</dt>
-					<dd>Will use <code>hide</code> or <code>show</code> depending on the current visibility of the element</dd>
-				</dl>
+				<p>The direction the blind will be pulled to hide the element, or the direction from which the element will be revealed.</p>
+				<p>Possible Values: <code>up</code>, <code>down</code>, <code>left</code>, <code>right</code>, <code>vertical</code>, <code>horizontal</code>.</p>
 			</desc>
-		</option>
-		<option name="direction" type="String" default='"up"'>
-			<desc>
-				<p>The direction the blind will be pulled to "hide" the element., or the direction from which the element will be revealed.</p>
-				<p>Possible Values</p>
-				<dl>
-					<dt>up</dt>
-					<dt>down</dt>
-					<dt>left</dt>
-					<dt>right</dt>
-					<dt>vertical</dt>
-					<dt>horizontal</dt>
-				</dl>
-			</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default='"swing"'>
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-	</options>
+		</argument>
+	</arguments>
+	<example>
+		<height>200</height>
+		<desc>Toggle a div using the blind effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
+		<code><![CDATA[
+$( document ).click(function() {
+	$( "#toggle" ).toggle( "blind" );
+});
+]]></code>
+		<html><![CDATA[
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
+]]></html>
+	</example>
 	<category slug="effects"/>
 </entry>

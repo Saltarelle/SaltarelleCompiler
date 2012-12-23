@@ -1,38 +1,33 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="pulsate" namespace="effect" type="effect">
+<entry name="pulsate" type="effect">
+	<title>Pulsate Effect</title>
 	<desc>
 		The pulsate effect hides or shows an element by pulsing it in or out.
 	</desc>
-	<options>
-		<option name="mode" type="String" default='"hide"'>
-			<desc>
-				<p>UI Effect Mode</p>
-				<p>Possible Values: </p>
-				<dl>
-					<dt>hide</dt>
-					<dd>Hides the element.</dd>
-					<dt>show</dt>
-					<dd>Shows the element.</dd>
-					<dt>toggle</dt>
-					<dd>Will use <code>hide</code> or <code>show</code> depending on the current visibility of the element</dd>
-					<dt>effect</dt>
-					<dd>Just pulsates.</dd>
-				</dl>
-			</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default='"swing"'>
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-		<option name="times" type="Number" default="5">
-			<desc>The number of times the element should pulse.  An extra half pulse is added for hide/show</desc>
-		</option>
-	</options>
+	<arguments>
+		<argument name="times" type="Integer" default="5">
+			<desc>The number of times the element should pulse. An extra half pulse is added for hide/show.</desc>
+		</argument>
+	</arguments>
+	<example>
+		<height>200</height>
+		<desc>Toggle a div using the pulsate effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
+		<code><![CDATA[
+$( document ).click(function() {
+	$( "#toggle" ).toggle( "pulsate" );
+});
+]]></code>
+		<html><![CDATA[
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
+]]></html>
+	</example>
 	<category slug="effects"/>
 </entry>

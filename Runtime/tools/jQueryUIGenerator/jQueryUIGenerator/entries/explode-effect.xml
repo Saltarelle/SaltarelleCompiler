@@ -1,36 +1,33 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="explode" namespace="effect" type="effect">
+<entry name="explode" type="effect">
+	<title>Explode Effect</title>
 	<desc>
 		The explode effect hides or shows an element by splitting it into pieces.
 	</desc>
-	<options>
-		<option name="mode" type="String" default='"hide"'>
-			<desc>
-				<p>UI Effect Mode</p>
-				<p>Possible Values: </p>
-				<dl>
-					<dt>hide</dt>
-					<dd>Hides the element.</dd>
-					<dt>show</dt>
-					<dd>Shows the element.</dd>
-					<dt>toggle</dt>
-					<dd>Will use <code>hide</code> or <code>show</code> depending on the current visibility of the element</dd>
-				</dl>
-			</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default='"swing"'>
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-		<option name="pieces" type="Number" default="9">
+	<arguments>
+		<argument name="pieces" type="Integer" default="9">
 			<desc>The number of pieces to explode, should be a perfect square, any other values are rounded to the nearest square.</desc>
-		</option>
-	</options>
+		</argument>
+	</arguments>
+	<example>
+		<height>200</height>
+		<desc>Toggle a div using the explode effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
+		<code><![CDATA[
+$( document ).click(function() {
+	$( "#toggle" ).toggle( "explode" );
+});
+]]></code>
+		<html><![CDATA[
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
+]]></html>
+	</example>
 	<category slug="effects"/>
 </entry>

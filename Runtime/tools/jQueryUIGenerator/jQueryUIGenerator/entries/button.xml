@@ -1,81 +1,75 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="button" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>Themable button and buttonsets</desc>
+<entry name="button" type="widget" widget-element="element visually representing the button">
+	<title>Button Widget</title>
+	<desc>Themable buttons and button sets.</desc>
 	<longdesc>
-		<p>Button enhances standard form elements like button, input of type submit or reset or anchors to themable buttons with appropiate mouseover and active styles.</p>
+		<p>Button enhances standard form elements like buttons, inputs and anchors to themable buttons with appropiate hover and active styles.</p>
 
-		<p>In addition to basic push buttons, radio buttons and checkboxes (inputs of type radio and checkbox) can be converted to buttons: Their associated label is styled to appear as the button, while the underlying input is updated on click.</p>
+		<p>In addition to basic push buttons, radio buttons and checkboxes (inputs of type radio and checkbox) can be converted to buttons. Their associated label is styled to appear as the button, while the underlying input is updated on click. For the association to work properly, give the input an <code>id</code> attribute, and refer to that in the label's <code>for</code> attribute. Don't nest the input inside the label, as that <a href="http://www.paciellogroup.com/blog/2011/07/html5-accessibility-chops-form-control-labeling/">causes accessbility problems</a>.</p>
 
-		<p>In order to group radio buttons, Button also provides an additional widget-method, called buttonset. Its used by selecting a container element (which contains the radio buttons) and calling buttonset(). Buttonset will also provide visual grouping, and therefore should be used whenever you have a group of buttons. It works by selecting all descendents and applying button() to them. You can enable and disable a buttonset, which will enable and disable all contained buttons. Destroying a buttonset also calls each button's destroy method.</p>
+		<p>In order to group radio buttons, Button also provides an additional widget, called Buttonset. Buttonset is used by selecting a container element (which contains the radio buttons) and calling <code>.buttonset()</code>. Buttonset will also provide visual grouping, and therefore should be used whenever you have a group of buttons. It works by selecting all descendants and applying <code>.button()</code> to them. You can enable and disable a button set, which will enable and disable all contained buttons. Destroying a button set also calls each button's <code>destroy</code> method.</p>
 
 		<p>When using an input of type button, submit or reset, support is limited to plain text labels with no icons.</p>
 
-		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+		</ul>
 	</longdesc>
-	<created>1.0</created>
+	<note id="functional-css"/>
+	<added>1.8</added>
 	<options>
-		<option name="disabled" default="false">
-			<desc>Disables the button if set to true.</desc>
-			<type name="Boolean" />
+		<xi:include href="../includes/widget-option-disabled.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<option name="icons" default="{ primary: null, secondary: null }" example-value='{ primary: "ui-icon-gear", secondary: "ui-icon-triangle-1-s" }'>
+			<desc>Icons to display, with or without text (see <a href="#option-text"><code>text</code></a> option). By default, the primary icon is displayed on the left of the label text and the secondary is displayed on the right. The positioning can be controlled via CSS. The value for the <code>primary</code> and <code>secondary</code> properties must be a class name, e.g., <code>"ui-icon-gear"</code>. For using only one icon: <code>icons: { primary: "ui-icon-locked" }</code>. For using two icons: <code>icons: { primary: "ui-icon-gear", secondary: "ui-icon-triangle-1-s" }</code>.</desc>
+			<type name="Object" />
 		</option>
-		<option name="icons" default='{ primary: null, secondary: null }'>
-			<desc>Icons to display, with or without text (see text option). The primary icon is displayed by default on the left of the label text, the secondary by default is on the right. Value for the primary and secondary properties must be a classname (String), eg. "ui-icon-gear". For using only one icon: icons: {primary:'ui-icon-locked'}. For using two icons: icons: {primary:'ui-icon-gear',secondary:'ui-icon-triangle-1-s'}</desc>
-			<type name="Options" />
-		</option>
-		<option name="label" default='HTML content of the button, or value attribute'>
-			<desc>Text to show on the button. When not specified (null), the element's html content is used, or its value attribute when it's an input element of type submit or reset; or the html content of the associated label element if its an input of type radio or checkbox</desc>
+		<option name="label" default="null" example-value='"custom label"'>
+			<desc>Text to show in the button. When not specified (<code>null</code>), the element's HTML content is used, or its <code>value</code> attribute if the element is an input element of type submit or reset, or the HTML content of the associated label element if the element is an input of type radio or checkbox.</desc>
 			<type name="String" />
 		</option>
-		<option name="text" default='true'>
-			<desc>Whether to show any text - when set to false (display no text), icons (see icons option) must be enabled, otherwise it'll be ignored.</desc>
+		<option name="text" default="true" example-value="false">
+			<desc>Whether to show the label. When set to <code>false</code> no text will be displayed, but the <a href="#options-icons"><code>icons</code></a> option must be enabled, otherwise the <code>text</code> option will be ignored.</desc>
 			<type name="Boolean" />
 		</option>
 	</options>
 	<events>
-		<event name="create">
-			<desc>
-				This event is triggered when the button is created.
-			</desc>
-			<argument name="event" type="Event">
-			</argument>
-			<argument name="ui" type="Object">
-			</argument>
-		</event>
+		<xi:include href="../includes/widget-event-create.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</events>
 	<methods>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
-		<widget-inherit id="widget-enable" />
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-disable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-enable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 		<method name="refresh">
-			<desc>Refreshes the visual state of the button. Useful for updating button state after the native element's checked or disabled state is changed programatically.</desc>
+			<desc>Refreshes the visual state of the button. Useful for updating button state after the native element's checked or disabled state is changed programmatically.</desc>
 		</method>
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<widget-inherit id="widget-widget" />
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</methods>
 	<example>
-
-		<desc>A simple jQuery UI Button.</desc>
-		<code><![CDATA[$("button").button();]]></code>
+		<height>100</height>
+		<desc>A simple jQuery UI Button</desc>
+		<code><![CDATA[
+$( "button" ).button();
+]]></code>
 		<html><![CDATA[
 <button>Button label</button>
-
 ]]></html>
-
-		<desc>A simple jQuery UI Button.</desc>
-		<code><![CDATA[$("#radio").buttonset();]]></code>
+	</example>
+	<example>
+		<height>100</height>
+		<desc>A simple jQuery UI Buttonset</desc>
+		<code><![CDATA[
+$( "#radio" ).buttonset();
+]]></code>
 		<html><![CDATA[
 <div id="radio">
-	<input type="radio" id="radio1" name="radio" /><label for="radio1">Choice 1</label>
-	<input type="radio" id="radio2" name="radio" checked="checked" /><label for="radio2">Choice 2</label>
-	<input type="radio" id="radio3" name="radio" /><label for="radio3">Choice 3</label>
+	<input type="radio" id="radio1" name="radio"><label for="radio1">Choice 1</label>
+	<input type="radio" id="radio2" name="radio" checked="checked"><label for="radio2">Choice 2</label>
+	<input type="radio" id="radio3" name="radio"><label for="radio3">Choice 3</label>
 </div>
-
 ]]></html>
-
 	</example>
 	<category slug="widgets"/>
 </entry>

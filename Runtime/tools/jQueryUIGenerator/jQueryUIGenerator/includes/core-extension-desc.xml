@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<p>This plugin extends jQuery's built-in <placeholder name="core-link"/> method. If jQuery UI is not loaded, calling the <code>.<placeholder name="name"/>()</code> method may not fail directly, as the method still exists. However, the expected behavior will not occur.</p>

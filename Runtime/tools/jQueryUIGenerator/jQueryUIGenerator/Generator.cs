@@ -30,8 +30,6 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
         private string DestinationPath;
         private TextWriter Messages;
 
-        private string[] excludeJQueryMethods = new string[] { "show", "hide", "toarray" };
-
         /// <summary>
         /// Creates a generator of ScriptSharp jQueryUI library.
         /// </summary>
@@ -58,38 +56,34 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 destination.Delete(true);
             }
 
-            foreach (Entry entry in entries) {
+            foreach (Entry entry in entries.Where(e => e.Type != "selector" && e.Name != "jQuery.ui.mouse" && e.Name != "jQuery.widget")) {
                 Messages.WriteLine("Generating " + Path.Combine(DestinationPath, Utils.PascalCase(entry.Name)));
 
-                Entry baseEntry = null;
-                if (!string.IsNullOrEmpty(entry.Type)) {
-                    // find the base entry
-                    baseEntry = entries.SingleOrDefault(e => e.Name.ToLowerInvariant() == entry.Type.ToLowerInvariant());
-                }
-
-                RenderEntry(entry, baseEntry);
+                RenderEntry(entry);
             }
 
             Messages.WriteLine("Generating jQueryUI base files.");
             RenderEventHandler();
             RenderBox();
             RenderSize();
-            RenderEffectExtensionMethods(entries.Where(e => e.Category == "effects" && e.Name != "effect"));
-            RenderInteractionOrWidgetExtensionMethods("Interaction", entries.Where(e => e.Category == "interactions"));
-            RenderInteractionOrWidgetExtensionMethods("Widget", entries.Where(e => e.Category == "widgets" && e.Name != "widget"));
-            RenderPositionExtensionMethods(entries.Single(e => e.Name == "position"));
+            RenderEffectExtensionMethods(entries.Where(e => e.Type == "effect"));
+            RenderInteractionOrWidgetExtensionMethods("Interaction", entries.Where(e => e.Categories.Contains("interactions") && e.Name != "jQuery.ui.mouse"));
+            RenderInteractionOrWidgetExtensionMethods("Widget", entries.Where(e => e.Categories.Contains("widgets") && e.Name != "jQuery.Widget"));
+            RenderExtensionMethods(entries.Where(e => e.Type == "method"));
         }
 
-        private void RenderEntry(Entry entry, Entry baseEntry = null) {
-            if (entry == null || entry.Name == "widget") {
+        private void RenderEntry(Entry entry) {
+            if (entry == null) {
                 return;
             }
 
-            if (entry.Category != "effect" && entry.Name != "position") {
+            if (entry.Name != "position" && entry.Type != "effect" && entry.Type != "method" && entry.Name != "jQuery.Widget") {
                 RenderObject(entry);
             }
-            RenderOptions(entry);
-            RenderEvents(entry);
+			if ((entry.Type != "method" || (entry.Name != "effect" && entry.Name != "show" && entry.Name != "hide" && entry.Name != "toggle")) && entry.Name != "jQuery.Widget") {
+				RenderOptions(entry);
+			}
+			RenderEvents(entry);
         }
 
         private void RenderObject(Entry entry) {
@@ -130,7 +124,6 @@ namespace {5} {{
 
             foreach (var method in entry.Methods
                                         // exclude the jQuery methods as they will be inherit
-                                        .Where(m => entry.Name.ToLowerInvariant() == "widget" || !excludeJQueryMethods.Contains(m.Name.ToLowerInvariant()))
                                         .OrderBy(m => m.Name)) {
 
                 methodsContent.AppendLine();
@@ -172,16 +165,13 @@ namespace {5} {{
                 methodsContent.AppendLine("        }");
             }
 
-            foreach (Event @event in entry.Events.Where(e => !e.Type.StartsWith("function")).OrderBy(e => e.Name)) {
+            foreach (Event @event in entry.Events.OrderBy(e => e.Name)) {
                 string eventType;
-                if (string.IsNullOrEmpty(@event.Type)) {
-                    eventType = "jQueryEventHandler";
-                }
-                else if (@event.Arguments.All(a => a.Properties.Count == 0)) {
-                    eventType = "jQueryUIEventHandler<jQueryObject>";
+				if (@event.Arguments.All(a => a.Properties.Count == 0)) {
+                    eventType = "jQueryUIEventHandler<object>";
                 }
                 else {
-                    eventType = "jQueryUIEventHandler<" + Utils.PascalCase(@event.Type.Replace(@event.Name.ToLowerInvariant(), Utils.PascalCase(@event.Name))) + "Event" + ">";
+                    eventType = "jQueryUIEventHandler<" + Utils.PascalCase(entry.Name) + Utils.PascalCase(@event.Name) + "Event" + ">";
                 }
 
                 methodsContent.AppendLine();
@@ -208,7 +198,7 @@ namespace {5} {{
                                 , string.Empty
                                 , Utils.GetNamespace(entry));
 
-            Utils.CreateFile(Path.Combine(DestinationPath, Utils.PascalCase(entry.Category), Utils.PascalCase(entry.Name)), className, formatedContent);
+            Utils.CreateFile(Path.Combine(DestinationPath, Utils.PascalCase(entry.Categories[0]), Utils.PascalCase(entry.Name)), className, formatedContent);
         }
 
         private void RenderOptions(Entry entry) {
@@ -234,35 +224,27 @@ namespace {3} {{
             StringBuilder eventsContent = new StringBuilder();
 
             foreach (Event @event in entry.Events.OrderBy(e => e.Name)) {
-                if (!@event.Type.StartsWith("function")) {
-                    if (!string.IsNullOrEmpty(@event.Description)) {
-                        eventsContent.Append(
+                if (!string.IsNullOrEmpty(@event.Description)) {
+                    eventsContent.Append(
 @"
         /// <summary>
         /// " + Utils.FormatXmlComment(@event.Description.Replace("<entryname />", entry.Name)) + @"
         /// </summary>");
-                    }
+                }
 
-                    string eventType;
+                string eventType;
+                if (@event.Arguments.All(a => a.Properties.Count == 0)) {
+                    eventType = "jQueryUIEventHandler<object>";
+                } else {
+                    eventType = "jQueryUIEventHandler<" + Utils.PascalCase(entry.Name) + Utils.PascalCase(@event.Name) + "Event" + ">";
+                }
 
-                    if (string.IsNullOrEmpty(@event.Type)) {
-                        eventType = "jQueryEventHandler";
-                    } else {
-                        if (@event.Arguments.All(a => a.Properties.Count == 0)) {
-                            eventType = "jQueryUIEventHandler<jQueryObject>";
-                        } else {
-                            eventType = "jQueryUIEventHandler<" + Utils.PascalCase(@event.Type.Replace(@event.Name.ToLowerInvariant(), Utils.PascalCase(@event.Name))) + "Event" + ">";
-                        }
-
-                    }
-
-                    eventsContent.AppendLine(
+                eventsContent.AppendLine(
 @"
         [ScriptName(""" + @event.Name + @""")]
         public " + eventType + " On" + Utils.PascalCase(@event.Name) + @" {
              get; set;
         }");
-                }
             }
 
             StringBuilder optionsContent = new StringBuilder();
@@ -284,7 +266,7 @@ namespace {3} {{
         }");
             }
 
-            Utils.CreateFile(Path.Combine(DestinationPath, Utils.PascalCase(entry.Category), Utils.PascalCase(entry.Name)), className
+            Utils.CreateFile(Path.Combine(DestinationPath, entry.Categories[0] == "methods" ? "." : Utils.PascalCase(entry.Categories[0]), Utils.PascalCase(entry.Name)), className
                 , string.Format(content
                                 , className
                                 , optionsContent.ToString()
@@ -320,10 +302,7 @@ namespace {2} {{
 
             foreach (var @event in entry.Events
                                           .OrderBy(e => e.Name)) {
-                if (@event.Type.StartsWith("function")) continue;
-                if (string.IsNullOrEmpty(@event.Type)) continue;
-
-                string eventType = @event.Type.Replace(@event.Name.ToLowerInvariant(), Utils.PascalCase(@event.Name));
+                string eventType = Utils.PascalCase(entry.Name) + Utils.PascalCase(@event.Name);
 
                 foreach (Argument arg in @event.Arguments) {
                     if (arg.Name != "ui") continue;
@@ -337,7 +316,7 @@ namespace {2} {{
                         properties.Append(string.Format(property, Utils.PascalCase(prop.Name), Utils.MapDataType(prop.Type, className, prop.Description)));
                     }
 
-                    Utils.CreateFile(Path.Combine(DestinationPath, Utils.PascalCase(entry.Category), Utils.PascalCase(entry.Name))
+                    Utils.CreateFile(Path.Combine(DestinationPath, Utils.PascalCase(entry.Categories[0]), Utils.PascalCase(entry.Name))
                                     , className
                                     , string.Format(content, className, properties.ToString(), Utils.GetNamespace(entry)));
                 }
@@ -367,8 +346,8 @@ namespace jQueryApi.UI.Effects {{
                     methods.AppendLine("        /// <summary>");
                     methods.AppendLine("        /// " + Utils.FormatXmlComment(effect.Description.Replace("<entryname />", effect.Name)));
                     methods.AppendLine("        /// </summary>");
-                    methods.AppendLine("        [InlineCode(\"{q}." + (facet == "" ? "effect" : facet) + "('" + effect.Name + "', {options}, {speed}, {callback})\")]");
-                    methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, object speed = null, Action callback = null) {");
+                    methods.AppendLine("        [InlineCode(\"{q}." + (facet == "" ? "effect" : facet) + "('" + effect.Name + "', {options}, {duration}, {callback})\")]");
+                    methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, TypeOption<int, string> duration = null, Action callback = null) {");
                     methods.AppendLine("            return null;");
                     methods.AppendLine("        }");
 
@@ -377,8 +356,8 @@ namespace jQueryApi.UI.Effects {{
                     methods.AppendLine("        /// <summary>");
                     methods.AppendLine("        /// " + Utils.FormatXmlComment(effect.Description.Replace("<entryname />", effect.Name)));
                     methods.AppendLine("        /// </summary>");
-                    methods.AppendLine("        [InlineCode(\"{$System.Threading.Tasks.Task}.fromDoneCallback({q}, '" + (facet == "" ? "effect" : facet) + "', -1, '" + effect.Name + "', {options}, {speed})\")]");
-                    methods.AppendLine("        public static Task " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "Task(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, object speed = null) {");
+                    methods.AppendLine("        [InlineCode(\"{$System.Threading.Tasks.Task}.fromDoneCallback({q}, '" + (facet == "" ? "effect" : facet) + "', -1, '" + effect.Name + "', {options}, {duration})\")]");
+                    methods.AppendLine("        public static Task " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "Task(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, TypeOption<int, string> duration = null) {");
                     methods.AppendLine("            return null;");
                     methods.AppendLine("        }");
                 }
@@ -426,7 +405,7 @@ namespace jQueryApi.UI.{0}s {{
             Utils.CreateFile(Path.Combine(DestinationPath, category + "s"), category + "Extensions", string.Format(content, category, methods.ToString()));
         }
 
-        private void RenderPositionExtensionMethods(Entry entry) {
+        private void RenderExtensionMethods(IEnumerable<Entry> entries) {
             string content =
 @"using System;
 using System.Html;
@@ -436,22 +415,33 @@ namespace jQueryApi.UI {{
 
     [Imported]
     [IgnoreNamespace]
-    public static class PositionExtensions {{{0}
+    public static class jQueryUIExtensions {{{0}
     }}
 }}";
+			var methods = new StringBuilder();
 
-            var methods = new StringBuilder();
-            methods.AppendLine();
-            methods.AppendLine();
-            methods.AppendLine("        /// <summary>");
-            methods.AppendLine("        /// " + Utils.FormatXmlComment(entry.Description.Replace("<entryname />", entry.Name)));
-            methods.AppendLine("        /// </summary>");
-            methods.AppendLine("        [InstanceMethodOnFirstArgument]");
-            methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(entry.Name) + "(this jQueryObject q, " + Utils.PascalCase(entry.Name) + "Options options) {");
-            methods.AppendLine("            return null;");
-            methods.AppendLine("        }");
+			foreach (var entry in entries.Where(e => e.Name != "effect" && e.Name != "show" && e.Name != "hide" && e.Name != "toggle" && e.Name != "jQuery.widget")) {
+				methods.AppendLine();
+				methods.AppendLine();
+				methods.AppendLine("        /// <summary>");
+				methods.AppendLine("        /// " + Utils.FormatXmlComment(entry.Description.Replace("<entryname />", entry.Name)));
+				methods.AppendLine("        /// </summary>");
+				methods.AppendLine("        [InstanceMethodOnFirstArgument]");
+				methods.Append(    "        public static jQueryObject " + Utils.PascalCase(entry.Name) + "(this jQueryObject q");
+				foreach (var arg in entry.Arguments) {
+					methods.Append(", ");
+					if (arg.Name == "options")
+						methods.Append(Utils.PascalCase(entry.Name) + "Options");
+					else
+						methods.Append(Utils.MapDataType(arg.Type, null, ""));
+					methods.Append(" ").Append(Utils.EnsureValidCSharpIdentifier(arg.Name));
+				}
+				methods.AppendLine(") {");
+				methods.AppendLine("            return null;");
+				methods.AppendLine("        }");
 
-            Utils.CreateFile(Path.Combine(DestinationPath, "Position"), "PositionExtensions", string.Format(content, methods.ToString()));
+				Utils.CreateFile(DestinationPath, "jQueryUIExtensions", string.Format(content, methods.ToString()));
+			}
         }
 
         private void RenderEventHandler() {
@@ -520,7 +510,7 @@ namespace " + Utils.GetNamespace(null) + @" {
         /// Renders project file with included all generated files.
         /// </summary>
         /// <param name="entries">List of jQueryUI entries.</param>
-        public void RenderProjectFile(IList<Entry> entries) {
+        public void RenderProjectFile() {
             string content = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Project ToolsVersion=""4.0"" DefaultTargets=""Build"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
   <PropertyGroup>
@@ -565,21 +555,10 @@ namespace " + Utils.GetNamespace(null) + @" {
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-";
-            foreach (Entry entry in entries) {
-                content += @"    <Compile Include=""" + Path.Combine(Utils.PascalCase(entry.Category), Utils.PascalCase(entry.Name)) + @"\*.cs"" />
-";
-            }
-
-            content += @"    <Compile Include=""Properties\AssemblyInfo.cs"" />
-    <Compile Include=""Properties\Version.cs"" />
-    <Compile Include=""Effects\EffectExtensions.cs"" />
-    <Compile Include=""Interactions\InteractionExtensions.cs"" />
-    <Compile Include=""Widgets\WidgetExtensions.cs"" />
+    <Compile Include=""**\*.cs"" />
     <Compile Include=""..\..\..\ScriptSharp.cs"">
       <Link>Properties\ScriptSharp.cs</Link>
     </Compile>
-    <None Include=""*.js"" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include=""..\..\CoreLib\CoreLib.csproj"">

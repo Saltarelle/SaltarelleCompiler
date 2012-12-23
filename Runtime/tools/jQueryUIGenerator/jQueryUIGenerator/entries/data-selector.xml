@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<entry type="selector" name="data">
+	<title>:data() Selector</title>
+	<sample>:data(key)</sample>
+	<signature>
+		<argument name="key" type="String">
+			<desc>The data key.</desc>
+		</argument>
+	</signature>
+	<desc>Selects elements which have data stored under the specified key.</desc>
+	<longdesc>
+		<p>The expression <code>$( "div:data(foo)")</code> matches a <code>&lt;div&gt;</code> if it has data stored via <code>.data( "foo", value )</code>.</p>
+	</longdesc>
+	<example>
+		<height>120</height>
+		<desc>Select elements with data and change their background color.</desc>
+		<css><![CDATA[
+	div {
+		width: 100px;
+		height: 100px;
+		border: 1px solid #000;
+		float: left;
+	}
+]]></css>
+		<html><![CDATA[
+<div id="one"></div>
+<div id="two"></div>
+<div id="three"></div>
+]]></html>
+		<code><![CDATA[
+$( "#one" ).data( "color", "blue" );
+$( "#three" ).data( "color", "green" );
+
+$( ":data(color)" ).each(function() {
+	var element = $( this );
+	element.css( "backgroundColor", element.data( "color" ) );
+});
+]]></code>
+	</example>
+	<category slug="selectors"/>
+	<category slug="ui-core"/>
+</entry>

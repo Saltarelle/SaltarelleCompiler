@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<signature>
+	<argument name="options" type="Object">
+		<desc>All animation settings. The only required property is <code>effect</code>.</desc>
+		<property name="effect" type="String">
+			<desc>A string indicating which <a href="/category/effect/">effect</a> to use for the transition.</desc>
+		</property>
+		<property name="easing" type="String" default='"swing"'>
+			<desc>A string indicating which <a href="/easings/">easing</a> function to use for the transition.</desc>
+		</property>
+		<property name="duration" default="400">
+			<desc>A string or number determining how long the animation will run.</desc>
+			<type name="Number">
+				<desc>The duration in milliseconds.</desc>
+			</type>
+			<type name="String">
+				<desc>The strings <code>"fast"</code> and <code>"slow"</code> can be supplied to indicate durations of 200 and 600 milliseconds, respectively.</desc>
+			</type>
+		</property>
+		<property name="complete" type="Function">
+			<desc>A function to call once the animation is complete.</desc>
+		</property>
+	</argument>
+</signature>

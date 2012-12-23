@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<method name="enable">
+	<desc>
+		Enables the <placeholder name="name"/>.
+	</desc>
+</method>
