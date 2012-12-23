@@ -44,6 +44,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreLibTests", "Tests\CoreL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NodeJS", "Libraries\NodeJS\NodeJS.csproj", "{982279B6-0070-4614-91A6-02F1AEE36E4F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D09CDE45-FFC0-44CC-B693-31C4A0F37602}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\history.txt = ..\..\history.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_NoAsync|Any CPU = Debug_NoAsync|Any CPU
