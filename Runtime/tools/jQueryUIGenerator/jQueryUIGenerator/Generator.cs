@@ -30,8 +30,6 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
         private string DestinationPath;
         private TextWriter Messages;
 
-        private string[] excludeJQueryMethods = new string[] { "show", "hide", "toarray" };
-
         /// <summary>
         /// Creates a generator of ScriptSharp jQueryUI library.
         /// </summary>
@@ -70,8 +68,8 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
             RenderSize();
             RenderEffectExtensionMethods(entries.Where(e => e.Type == "effect"));
             RenderInteractionOrWidgetExtensionMethods("Interaction", entries.Where(e => e.Categories.Contains("interactions") && e.Name != "jQuery.ui.mouse"));
-            RenderInteractionOrWidgetExtensionMethods("Widget", entries.Where(e => e.Categories.Contains("widgets") && e.Name != "jQuery.widget"));
-            RenderPositionExtensionMethods(entries.Single(e => e.Name == "position"));
+            RenderInteractionOrWidgetExtensionMethods("Widget", entries.Where(e => e.Categories.Contains("widgets") && e.Name != "jQuery.Widget"));
+            RenderExtensionMethods(entries.Where(e => e.Type == "method"));
         }
 
         private void RenderEntry(Entry entry) {
@@ -79,10 +77,10 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 return;
             }
 
-            if (entry.Name != "position" && entry.Type != "effect" && entry.Type != "method") {
+            if (entry.Name != "position" && entry.Type != "effect" && entry.Type != "method" && entry.Name != "jQuery.Widget") {
                 RenderObject(entry);
             }
-			if (entry.Type != "method" || (entry.Name != "effect" && entry.Name != "show" && entry.Name != "hide" && entry.Name != "toggle")) {
+			if ((entry.Type != "method" || (entry.Name != "effect" && entry.Name != "show" && entry.Name != "hide" && entry.Name != "toggle")) && entry.Name != "jQuery.Widget") {
 				RenderOptions(entry);
 			}
 			RenderEvents(entry);
@@ -126,7 +124,6 @@ namespace {5} {{
 
             foreach (var method in entry.Methods
                                         // exclude the jQuery methods as they will be inherit
-                                        .Where(m => entry.Name.ToLowerInvariant() == "widget" || !excludeJQueryMethods.Contains(m.Name.ToLowerInvariant()))
                                         .OrderBy(m => m.Name)) {
 
                 methodsContent.AppendLine();
@@ -349,8 +346,8 @@ namespace jQueryApi.UI.Effects {{
                     methods.AppendLine("        /// <summary>");
                     methods.AppendLine("        /// " + Utils.FormatXmlComment(effect.Description.Replace("<entryname />", effect.Name)));
                     methods.AppendLine("        /// </summary>");
-                    methods.AppendLine("        [InlineCode(\"{q}." + (facet == "" ? "effect" : facet) + "('" + effect.Name + "', {options}, {speed}, {callback})\")]");
-                    methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, object speed = null, Action callback = null) {");
+                    methods.AppendLine("        [InlineCode(\"{q}." + (facet == "" ? "effect" : facet) + "('" + effect.Name + "', {options}, {duration}, {callback})\")]");
+                    methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, TypeOption<int, string> duration = null, Action callback = null) {");
                     methods.AppendLine("            return null;");
                     methods.AppendLine("        }");
 
@@ -359,8 +356,8 @@ namespace jQueryApi.UI.Effects {{
                     methods.AppendLine("        /// <summary>");
                     methods.AppendLine("        /// " + Utils.FormatXmlComment(effect.Description.Replace("<entryname />", effect.Name)));
                     methods.AppendLine("        /// </summary>");
-                    methods.AppendLine("        [InlineCode(\"{$System.Threading.Tasks.Task}.fromDoneCallback({q}, '" + (facet == "" ? "effect" : facet) + "', -1, '" + effect.Name + "', {options}, {speed})\")]");
-                    methods.AppendLine("        public static Task " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "Task(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, object speed = null) {");
+                    methods.AppendLine("        [InlineCode(\"{$System.Threading.Tasks.Task}.fromDoneCallback({q}, '" + (facet == "" ? "effect" : facet) + "', -1, '" + effect.Name + "', {options}, {duration})\")]");
+                    methods.AppendLine("        public static Task " + Utils.PascalCase(facet) + Utils.PascalCase(effect.Name) + "Task(this jQueryObject q, " + Utils.PascalCase(effect.Name) + "Options options = null, TypeOption<int, string> duration = null) {");
                     methods.AppendLine("            return null;");
                     methods.AppendLine("        }");
                 }
@@ -408,7 +405,7 @@ namespace jQueryApi.UI.{0}s {{
             Utils.CreateFile(Path.Combine(DestinationPath, category + "s"), category + "Extensions", string.Format(content, category, methods.ToString()));
         }
 
-        private void RenderPositionExtensionMethods(Entry entry) {
+        private void RenderExtensionMethods(IEnumerable<Entry> entries) {
             string content =
 @"using System;
 using System.Html;
@@ -418,22 +415,33 @@ namespace jQueryApi.UI {{
 
     [Imported]
     [IgnoreNamespace]
-    public static class PositionExtensions {{{0}
+    public static class jQueryUIExtensions {{{0}
     }}
 }}";
+			var methods = new StringBuilder();
 
-            var methods = new StringBuilder();
-            methods.AppendLine();
-            methods.AppendLine();
-            methods.AppendLine("        /// <summary>");
-            methods.AppendLine("        /// " + Utils.FormatXmlComment(entry.Description.Replace("<entryname />", entry.Name)));
-            methods.AppendLine("        /// </summary>");
-            methods.AppendLine("        [InstanceMethodOnFirstArgument]");
-            methods.AppendLine("        public static jQueryObject " + Utils.PascalCase(entry.Name) + "(this jQueryObject q, " + Utils.PascalCase(entry.Name) + "Options options) {");
-            methods.AppendLine("            return null;");
-            methods.AppendLine("        }");
+			foreach (var entry in entries.Where(e => e.Name != "effect" && e.Name != "show" && e.Name != "hide" && e.Name != "toggle" && e.Name != "jQuery.widget")) {
+				methods.AppendLine();
+				methods.AppendLine();
+				methods.AppendLine("        /// <summary>");
+				methods.AppendLine("        /// " + Utils.FormatXmlComment(entry.Description.Replace("<entryname />", entry.Name)));
+				methods.AppendLine("        /// </summary>");
+				methods.AppendLine("        [InstanceMethodOnFirstArgument]");
+				methods.Append(    "        public static jQueryObject " + Utils.PascalCase(entry.Name) + "(this jQueryObject q");
+				foreach (var arg in entry.Arguments) {
+					methods.Append(", ");
+					if (arg.Name == "options")
+						methods.Append(Utils.PascalCase(entry.Name) + "Options");
+					else
+						methods.Append(Utils.MapDataType(arg.Type, null, ""));
+					methods.Append(" ").Append(Utils.EnsureValidCSharpIdentifier(arg.Name));
+				}
+				methods.AppendLine(") {");
+				methods.AppendLine("            return null;");
+				methods.AppendLine("        }");
 
-            Utils.CreateFile(Path.Combine(DestinationPath, "Position"), "PositionExtensions", string.Format(content, methods.ToString()));
+				Utils.CreateFile(DestinationPath, "jQueryUIExtensions", string.Format(content, methods.ToString()));
+			}
         }
 
         private void RenderEventHandler() {

@@ -47,7 +47,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 		private void ResolveIncludes(XmlDocument doc, string basePath) {
 			var nsm = new XmlNamespaceManager(new NameTable());
 			nsm.AddNamespace("xi", "http://www.w3.org/2003/XInclude");
-			foreach (XmlNode n in doc.SelectNodes("//xi:include", nsm)) {
+			foreach (XmlNode n in doc.SelectNodes(".//xi:include", nsm)) {
 				XmlAttribute href = n.Attributes["href"];
 				if (href == null || string.IsNullOrEmpty(href.Value))
 					throw new ArgumentException("Missing 'href' in include");
@@ -59,7 +59,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 			}
 		}
 
-        private Entry ParseFile(string file) {
+        private IEnumerable<Entry> ParseFile(string file) {
             Messages.Write("Parsing " + file + " ...");
 
             XmlDocument document = new XmlDocument();
@@ -68,22 +68,16 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 document.Load(file);
             } catch {
                 Messages.WriteLine("Failed");
-                return null;
+                yield break;
             }
 
 			ResolveIncludes(document, Path.GetDirectoryName(file));
 
-            XmlNode xmlEntry = document.SelectSingleNode("//entry");
-
-            if (xmlEntry == null) {
-                Messages.WriteLine("Failed");
-            }
-
-            Entry entry = ParseEntry(xmlEntry);
-
-            Messages.WriteLine("Ok");
-
-            return entry;
+            foreach (XmlNode xmlEntry in document.SelectNodes(".//entry")) {
+				foreach (var e in ParseEntry(xmlEntry))
+					yield return e;
+	            Messages.WriteLine("Ok");
+			}
         }
         
         /// <summary>
@@ -94,12 +88,12 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
             DirectoryInfo source = new DirectoryInfo(SourcePath);
             FileInfo[] files = source.GetFiles("*.xml", SearchOption.AllDirectories);
 
-	        return files.Select(file => ParseFile(file.FullName)).Where(entry => entry != null).ToList();
+	        return files.SelectMany(file => ParseFile(file.FullName)).Where(entry => entry != null).ToList();
         }
 
-        private Entry ParseEntry(XmlNode xmlEntry) {
+        private IEnumerable<Entry> ParseEntry(XmlNode xmlEntry) {
             if (xmlEntry == null) {
-                return null;
+                yield break;
             }
 
             Entry entry = new Entry();
@@ -111,32 +105,44 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
             entry.LongDescription = GetNodeInnerXml(xmlEntry, "longdesc", entry.Name);
             entry.Created = GetNodeInnerXml(xmlEntry, "created", entry.Name);
 
+            XmlNode xmlExample = xmlEntry.SelectSingleNode(".//example");
+            if (xmlExample != null) {
+                entry.Example = ParseExample(xmlExample);
+            }
+
+            entry.Categories = ParseCategories(GetNodeList(xmlEntry, ".//category"));
+            entry.Events = ParseEvents(GetNodeList(xmlEntry, ".//events//event"), entry.Name);
+            entry.Methods = ParseMethods(GetNodeList(xmlEntry, ".//methods/*"), entry.Name);
+
 			if (entry.Type == "effect") {
 				entry.Options = new[] { new Option { Name = "easing", Description = "The easing to use for the effect", Type = "string" } }
 				                .Concat(ParseArguments(GetNodeList(xmlEntry, "arguments/argument")).Select(a => new Option { Name = a.Name, Description = a.Description, Type = a.Type }))
 								.ToList();
 			}
 			else if (entry.Type == "method") {
-				entry.Options = ParseArguments(GetNodeList(xmlEntry, "signature/argument[@name='options']/property")).Select(a => new Option { Name = a.Name, Description = a.Description, Type = a.Type }).ToList();
+				var signatures = GetNodeList(xmlEntry, "signature");
+				if (signatures.Count > 1) {
+					foreach (XmlNode sign in signatures) {
+						var innerEntry = entry.Clone();
+						innerEntry.Arguments = ParseArguments(GetNodeList(sign, "argument"));
+						innerEntry.Options = ParseArguments(GetNodeList(sign, "argument[@name='options']/property")).Select(a => new Option { Name = a.Name, Description = a.Description, Type = a.Type }).ToList();
+						yield return innerEntry;
+					}
+					yield break;
+				}
+				else {
+					entry.Arguments = ParseArguments(GetNodeList(xmlEntry, "signature/argument"));
+					entry.Options = ParseArguments(GetNodeList(xmlEntry, "signature/argument[@name='options']/property")).Select(a => new Option { Name = a.Name, Description = a.Description, Type = a.Type }).ToList();
+				}
 			}
 			else {
-				entry.Options = ParseOptions(GetNodeList(xmlEntry, "//options//option"));
+				entry.Options = ParseOptions(GetNodeList(xmlEntry, ".//options//option"), entry.Name);
 			}
 
-            entry.Events = ParseEvents(GetNodeList(xmlEntry, "//events//event"));
-            entry.Methods = ParseMethods(GetNodeList(xmlEntry, "//methods/*"));
-
-            XmlNode xmlExample = xmlEntry.SelectSingleNode("//example");
-            if (xmlExample != null) {
-                entry.Example = ParseExample(xmlExample);
-            }
-
-            entry.Categories = ParseCategories(GetNodeList(xmlEntry, "//category"));
-
-            return entry;
+            yield return entry;
         }
 
-        private IList<Option> ParseOptions(XmlNodeList xmlOptions) {
+        private IList<Option> ParseOptions(XmlNodeList xmlOptions, string placeholderNameValue) {
             IList<Option> options = new List<Option>();
 
             if (xmlOptions == null) {
@@ -149,7 +155,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 Option option = new Option();
                 option.Name = GetAttributeStringValue(xmlOption, "name");
                 option.Default = GetAttributeStringValue(xmlOption, "default");
-                option.Description = GetNodeInnerXml(xmlOption, "desc", null);
+                option.Description = GetNodeInnerXml(xmlOption, "desc", placeholderNameValue);
 
                 // Type appears not only as attribute but also as an XML node.
                 // see comment from jzaefferer: https://github.com/jquery/api.jqueryui.com/pull/1#issuecomment-6151386
@@ -167,7 +173,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
             return options;
         }
 
-        private IList<Event> ParseEvents(XmlNodeList xmlEvents) {
+        private IList<Event> ParseEvents(XmlNodeList xmlEvents, string placeholderNameValue) {
             IList<Event> events = new List<Event>();
 
             if (xmlEvents == null) {
@@ -179,7 +185,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 
                 Event @event = new Event();
                 @event.Name = GetAttributeStringValue(xmlEvent, "name");
-                @event.Description = GetNodeInnerXml(xmlEvent, "desc", null);
+                @event.Description = GetNodeInnerXml(xmlEvent, "desc", placeholderNameValue);
                 @event.Arguments = ParseArguments(GetNodeList(xmlEvent, "argument"));
 
                 events.Add(@event);
@@ -188,7 +194,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
             return events;
         }
 
-        private IList<Method> ParseMethods(XmlNodeList xmlMethods) {
+        private IList<Method> ParseMethods(XmlNodeList xmlMethods, string placeholderNameValue) {
             IList<Method> methods = new List<Method>();
 
             if (xmlMethods == null) {
@@ -205,7 +211,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 						methods.Add(new Method {
 							Name = name,
 							ReturnType = GetAttributeStringValue(n, "return"),
-							Description = GetNodeInnerXml(n, "desc", null),
+							Description = GetNodeInnerXml(n, "desc", placeholderNameValue),
 							Arguments = ParseArguments(GetNodeList(n, "argument"))
 						});
 					}
@@ -337,17 +343,16 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 			if (resultNode == null)
 				return string.Empty;
 
-			foreach (XmlNode n in resultNode.SelectNodes("//placeholder[@name='name' or @name='widget-element']")) {
+			foreach (XmlNode n in resultNode.SelectNodes(".//placeholder[@name='name' or @name='widget-element' or @name='core-link' or @name='animated-element']")) {
 				if (placeholderNameValue == null)
 					throw new ArgumentException("Need a value for the 'name' placeholder");
 				n.ParentNode.ReplaceChild(n.OwnerDocument.CreateTextNode(placeholderNameValue), n);
 			}
-/*
-			foreach (XmlNode n in resultNode.SelectNodes("//placeholder")) {
+
+			foreach (XmlNode n in resultNode.SelectNodes(".//placeholder")) {
 				throw new ArgumentException("Unexpected placeholder " + n.Attributes["name"].Value);
 			}
-			*/
-#warning TODO
+
             return resultNode.InnerXml;
         }
 

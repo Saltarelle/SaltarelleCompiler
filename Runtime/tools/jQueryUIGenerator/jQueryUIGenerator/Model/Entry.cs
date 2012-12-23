@@ -68,5 +68,14 @@ namespace ScriptSharp.Tools.jQueryUIGenerator.Model {
             get;
             set;
         }
+
+        public IList<Argument> Arguments {
+            get;
+            set;
+        }
+
+		internal Entry Clone() {
+			return (Entry)MemberwiseClone();
+		}
     }
 }

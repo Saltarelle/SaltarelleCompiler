@@ -59,7 +59,6 @@
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Changes.txt" />
     <Content Include="entries\accordion.xml">
       <SubType>Designer</SubType>
     </Content>

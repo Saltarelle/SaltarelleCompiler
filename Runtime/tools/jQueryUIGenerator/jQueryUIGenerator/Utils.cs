@@ -145,7 +145,6 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 case "boolean":
                     return "bool";
                 case "function":
-//                case "$.datepicker.iso8601week": // I consider this a bug in the docs, so we have to work around it.
                     return "Delegate";
                 case "jquery":
                     return "jQueryObject";
@@ -157,7 +156,9 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 case "rest":
                     return "params object[]";
                 case "date":
-                    return "DateTime";
+                    return "JsDate";
+				case "jqxhr":
+					return "jQueryXmlHttpRequest";
                 default:
                     return type;
             }
@@ -255,5 +256,9 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 
             return type.Split(new char[] { ',', '/', ' ', '|' }).Where(s => s != "or").ToArray();
         }
+
+		public static string EnsureValidCSharpIdentifier(string identifier) {
+			return (new[] { "switch" }.Contains(identifier) ? "@" : "") + identifier;
+		}
     }
 }
