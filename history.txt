@@ -1,3 +1,4 @@
+Added parameterless versions of ObservableArray.RemoveAll and ObservableArray.DestroyAll (#104).
 Fixed internal error when using the result of dynamic method calls in certain invalid ways (#105).
 Generate all code inside an anonymous function when not using a module loader (#99).
 Fixed issue causing incorrect code to be generated when the variable used by a foreach() loop optimized to a JS for loop was used by reference.
