@@ -1,193 +1,199 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="autocomplete" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>Autocomplete, when added to an input field, enables users to quickly find and select from a pre-populated list of values as they type, leveraging searching and filtering.</desc>
+<entry name="autocomplete" type="widget">
+	<title>Autocomplete Widget</title>
+	<desc>Autocomplete enables users to quickly find and select from a pre-populated list of values as they type, leveraging searching and filtering.</desc>
 	<longdesc>
 		<p>By giving an Autocomplete field focus or entering something into it, the plugin starts searching for entries that match and displays a list of values to choose from. By entering more characters, the user can filter down the list to better matches.</p>
 
-		<p>This can be used to enter previous selected values, for example you could use Autocomplete for entering tags, to complete an address, you could enter a city name and get the zip code, or maybe enter email addresses from an address book.</p>
+		<p>This can be used to choose previously selected values, such as entering tags for articles or entering email addresses from an address book. Autocomplete can also be used to populate associated information, such as entering a city name and getting the zip code.</p>
 
-		<p>You can pull data in from a local and/or a remote source: Local is good for small data sets (like an address book with 50 entries), remote is necessary for big data sets, like a database with hundreds or millions of entries to select from.</p>
+		<p>You can pull data in from a local or remote source: Local is good for small data sets, e.g., an address book with 50 entries; remote is necessary for big data sets, such as a database with hundreds or millions of entries to select from. To find out more about customizing the data soure, see the documentation for the <a href="#option-source"><code>source</code></a> option.</p>
 
-		<p>Autocomplete can be customized to work with various data sources, by just specifying the source option.</p>
+		<h3>Keyboard interaction</h3>
 
-		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+		<p>When the menu is open, the following key commands are available:</p>
+		<ul>
+			<li>UP - Move focus to the previous item. If on first item, move focus to the input. If on the input, move focus to last item.</li>
+			<li>DOWN - Move focus to the next item. If on last item, move focus to the input. If on the input, move focus to the first item.</li>
+			<li>ESCAPE - Close the menu.</li>
+			<li>ENTER - Select the currently focused item and close the menu.</li>
+			<li>TAB - Select the currently focused item, close the menu, and move focus to the next focusable element.</li>
+			<li>PAGE UP/DOWN - Scroll through a page of items (based on height of menu). <em>It's generally a bad idea to display so many items that users need to page.</em>.</li>
+		</ul>
+
+		<p>When the menu is closed, the following key commands are available:</p>
+		<ul>
+			<li>UP/DOWN - Open the menu, if the <a href="#option-minLength"><code>minLength</code></a> has been met.</li>
+		</ul>
+
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+			<li><a href="/position/">Position</a></li>
+			<li><a href="/menu/">Menu</a></li>
+		</ul>
 	</longdesc>
-	<created>1.0</created>
+	<note id="functional-css"/>
+	<added>1.8</added>
 	<options>
-		<option name="appendTo" type="Selector" default='"body"'>
-			<desc>Which element the menu should be appended to. Override this when the autocomplete is inside a <code>position:fixed</code> element. Otherwise the popup menu would still scroll with the page.</desc>
+		<option name="appendTo" type="Selector" default='"body"' example-value='"#someElem"'>
+			<desc>Which element the menu should be appended to. Override this when the autocomplete is inside a <code>position: fixed</code> element. Otherwise the popup menu would still scroll with the page.</desc>
 		</option>
-		<option name="autoFocus" type="Boolean" default='false'>
-			<desc>If set to true the first item will be automatically focused.</desc>
+		<option name="autoFocus" type="Boolean" default="false" example-value="true">
+			<desc>If set to <code>true</code> the first item will automatically be focused when the menu is shown.</desc>
 		</option>
-		<option name="delay" type="Integer" default='300'>
-			<desc>The delay in milliseconds the Autocomplete waits after a keystroke to activate itself. A zero-delay makes sense for local data (more responsive), but can produce a lot of load for remote data, while being less responsive.</desc>
+		<option name="delay" type="Integer" default="300" example-value="500">
+			<desc>The delay in milliseconds between when a keystroke occurs and when a search is performed. A zero-delay makes sense for local data (more responsive), but can produce a lot of load for remote data, while being less responsive.</desc>
 		</option>
-		<option name="disabled" type="Boolean" default="false">
-			<desc>Disables the autocomplete if set to true.</desc>
+		<xi:include href="../includes/widget-option-disabled.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<option name="minLength" type="Integer" default="1" example-value="0">
+			<desc>The minimum number of characters a user must type before a search is performed. Zero is useful for local data with just a few items, but a higher value should be used when a single character search could match a few thousand items.</desc>
 		</option>
-		<option name="minLength" type="Integer" default='1'>
-			<desc>The minimum number of characters a user has to type before the Autocomplete activates. Zero is useful for local data with just a few items. Should be increased when there are a lot of items, where a single character would match a few thousand items.</desc>
+		<option name="position" type="Object" default='{ my: "left top", at: "left bottom", collision: "none" }' example-value='{ my : "right top", at: "right bottom" }'>
+			<desc>Identifies the position of the suggestions menu in relation to the associated input element. The <code>of</code> option defaults to the input element, but you can specify another element to position against. You can refer to the <a href="/position">jQuery UI Position</a> utility for more details about the various options.</desc>
 		</option>
-		<option name="position" type="Object" default='{ my: "left top", at: "left bottom", collision: "none" }'>
-			<desc>Identifies the position of the Autocomplete widget in relation to the associated input element. The "of" option defaults to the input element, but you can specify another element to position against. You can refer to the [http://docs.jquery.com/UI/Position jQuery UI Position] utility for more details about the various options.</desc>
-		</option>
-		<option name="source" default='none, must be specified'>
+		<option name="source" default="none; must be specified" example-value='[ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby" ]'>
 			<desc>
 				Defines the data to use, must be specified.
-				<p>Independent of the variant you use, the label is always treated as text. If you want the label to be treated as html you can use [https://github.com/scottgonzalez/jquery-ui-extensions/blob/master/autocomplete/jquery.ui.autocomplete.html.js Scott González' html extension]. The demos all focus on different variations of the source-option - look for the one that matches your use case, and take a look at the code.</p>
+				<p>Independent of the variant you use, the label is always treated as text. If you want the label to be treated as html you can use <a href="https://github.com/scottgonzalez/jquery-ui-extensions/blob/master/autocomplete/jquery.ui.autocomplete.html.js">Scott González' html extension</a>. The demos all focus on different variations of the <code>source</code> option - look for one that matches your use case, and check out the code.</p>
 			</desc>
 			<type name="Array">
 				<desc>
 					An array can be used for local data. There are two supported formats:
 					<ul>
-						<li>An Array of Strings: <code>[ "Choice1", "Choice2" ]</code></li>
-						<li>An Array of Objects with label and value properties: <code>[ { label: "Choice1", value: "value1" }, ... ]</code></li>
+						<li>An array of strings: <code>[ "Choice1", "Choice2" ]</code></li>
+						<li>An array of objects with <code>label</code> and <code>value</code> properties: <code>[ { label: "Choice1", value: "value1" }, ... ]</code></li>
 					</ul>
-					The label property is displayed in the suggestion menu. The value will be inserted into the input element after the user selected something from the menu. If just one property is specified, it will be used for both, eg. if you provide only value-properties, the value will also be used as the label.
+					The label property is displayed in the suggestion menu. The value will be inserted into the input element when a user selects an item. If just one property is specified, it will be used for both, e.g., if you provide only <code>value</code> properties, the value will also be used as the label.
 				</desc>
 			</type>
 			<type name="String">
-				<desc>When a String is used, the Autocomplete plugin expects that string to point to a URL resource that will return JSON data. It can be on the same host or on a different one (must provide JSONP). The Autocomplete plugin does not filter the results, instead the request parameter "term" gets added to the URL, which the server-side script should use for filtering the results. The data itself can be in the same format as the local data described above.</desc>
+				<desc>When a string is used, the Autocomplete plugin expects that string to point to a URL resource that will return JSON data. It can be on the same host or on a different one (must provide JSONP). The Autocomplete plugin does not filter the results, instead a query string is added with a <code>term</code> field, which the server-side script should use for filtering the results. For example, if the <code>source</code> option is set to <code>"http://example.com"</code> and the user types <code>foo</code>, a GET request would be made to <code>http://example.com?term=foo</code>. The data itself can be in the same format as the local data described above.</desc>
 			</type>
 			<type name="Function">
-				<argument name="request" type="Object" />
+				<argument name="request" type="Object"/>
 				<argument name="response" type="Function">
-					<argument name="data" type="Object" />
+					<argument name="data" type="Object"/>
 				</argument>
 				<desc>
-					The third variation, the callback, provides the most flexibility, and can be used to connect any data source to Autocomplete. The callback gets two arguments:
+					The third variation, a callback, provides the most flexibility and can be used to connect any data source to Autocomplete. The callback gets two arguments:
 					<ul>
-						<li>A request object, with a single property called "term", which refers to the value currently in the text input. For example, when the user entered "new yo" in a city field, the Autocomplete term will equal "new yo".</li>
-						<li>A response callback, which expects a single argument to contain the data to suggest to the user. This data should be filtered based on the provided term, and can be in any of the formats described above for simple local data (String-Array or Object-Array with label/value/both properties). It's important when providing a custom source callback to handle errors during the request. You must always call the response callback even if you encounter an error. This ensures that the widget always has the correct state.</li>
+						<li>A <code>request</code> object, with a single <code>term</code> property, which refers to the value currently in the text input. For example, if the user enters <code>"new yo"</code> in a city field, the Autocomplete term will equal <code>"new yo"</code>.</li>
+						<li>A <code>response</code> callback, which expects a single argument: the data to suggest to the user. This data should be filtered based on the provided term, and can be in any of the formats described above for simple local data. It's important when providing a custom source callback to handle errors during the request. You must always call the <code>response</code> callback even if you encounter an error. This ensures that the widget always has the correct state.</li>
 					</ul>
+					<p>When filtering data locally, you can make use of the built-in <code>$.ui.autocomplete.escapeRegex</code> function. It'll take a single string argument and escape all regex characters, making the result safe to pass to <code>new RegExp()</code>.</p>
 				</desc>
 			</type>
 		</option>
 	</options>
 	<events>
-		<event name="change" type="autocompletechange">
-			<desc>Triggered when the field is blurred, if the value has changed; ui.item refers to the selected item.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="change">
+			<desc>Triggered when the field is blurred, if the value has changed.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="item">
+				<property name="item" type="jQuery">
 					<desc>The item selected from the menu, if any. Otherwise the property is <code>null</code>.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="close" type="autocompleteclose">
-			<desc>When the list is hidden - doesn't have to occur together with a change.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="close">
+			<desc>Triggered when the menu is hidden. Not every <code>close</code> event will be accompanied by a <code>change</code> event.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="create">
+		<xi:include href="../includes/widget-event-create.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<event name="focus">
 			<desc>
-				This event is triggered when the autocomplete is created.
-			</desc>
-			<argument name="event" type="Event">
-			</argument>
-			<argument name="ui" type="Object">
-			</argument>
-		</event>
-		<event name="focus" type="autocompletefocus">
-			<desc>
-				Before focus is moved to an item (not selecting), ui.item refers to the focused item. The default action of focus is to replace the text field's value with the value of the focused item, though only if the focus event was triggered by a keyboard interaction.
+				Triggered when focus is moved to an item (not selecting). The default action is to replace the text field's value with the value of the focused item, though only if the event was triggered by a keyboard interaction.
 				<p>Canceling this event prevents the value from being updated, but does not prevent the menu item from being focused.</p>
 			</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="item">
-					<desc>The to-be-focused item</desc>
+				<property name="item" type="jQuery">
+					<desc>The focused item.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="open" type="autocompleteopen">
+		<event name="open">
 			<desc>Triggered when the suggestion menu is opened or updated.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="response" type="autocompleteresponse">
-			<desc>Triggered after a request (source-option) completes, before the menu is shown. Useful for local manipulation of suggestion data, where a custom source-option callback is not required.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="response">
+			<desc>Triggered after a search completes, before the menu is shown. Useful for local manipulation of suggestion data, where a custom <a href="#option-source"><code>source</code></a> option callback is not required. This event is always triggered when a search completes, even if the menu will not be shown because there are no results or the Autocomplete is disabled.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="content">
-					<desc>Contains the response result and can be modified to change the results that will be shown.</desc>
+				<property name="content" type="Array">
+					<desc>Contains the response data and can be modified to change the results that will be shown. This data is already normalized, so if you modify the data, make sure to include both <code>value</code> and <code>label</code> properties for each item.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="search" type="autocompletesearch">
-			<desc>Before a request (source-option) is started, after minLength and delay are met. Can be canceled, then no request will be started and no items suggested.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="search">
+			<desc>Triggered before a search is performed, after <a href="#option-minLength"><code>minLength</code></a> and <a href="#option-delay"><code>delay</code></a> are met. If canceled, then no request will be started and no items suggested.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="select" type="autocompleteselect">
+		<event name="select">
 			<desc>
-				Triggered when an item is selected from the menu; ui.item refers to the selected item. The default action of select is to replace the text field's value with the value of the selected item.
+				Triggered when an item is selected from the menu. The default action is to replace the text field's value with the value of the selected item.
 				<p>Canceling this event prevents the value from being updated, but does not prevent the menu from closing.</p>
 			</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="item">
-					<desc>The to-be-selected item</desc>
+				<property name="item" type="jQuery">
+					<desc>The selected item.</desc>
 				</property>
 			</argument>
 		</event>
 	</events>
 	<methods>
 		<method name="close">
-			<desc>Close the Autocomplete menu. Useful in combination with the search method, to close the open menu.</desc>
+			<desc>Closes the Autocomplete menu. Useful in combination with the <a href="#method-search"><code>search</code></a> method, to close the open menu.</desc>
 		</method>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
-		<widget-inherit id="widget-enable" />
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<method name="search">
-			<desc>Triggers a search event, which, when data is available, then will display the suggestions; can be used by a selectbox-like button to open the suggestions when clicked. If no value argument is specified, the current input's value is used. Can be called with an empty string and minLength: 0 to display all items.</desc>
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-disable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-enable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<method name="search" example-params='""'>
+			<desc>Triggers a <a href="#event-search"><code>search</code></a> event and invokes the data source if the event is not canceled. Can be used by a selectbox-like button to open the suggestions when clicked. When invoked with no parameters, the current input's value is used. Can be called with an empty string and <code>minLength: 0</code> to display all items.</desc>
 			<argument name="value" type="String" optional="true">
 				<desc></desc>
 			</argument>
 		</method>
-		<widget-inherit id="widget-widget" />
+		<method name="widget">
+			<desc>Returns a <code>jQuery</code> object containing the menu element. Although the menu items are constantly created and destroyed, the menu element itself is created during initialization and is constantly reused.</desc>
+		</method>
 	</methods>
 	<example>
-
-		<desc>A simple jQuery UI Autocomplete.</desc>
-		<code><![CDATA[$("input#autocomplete").autocomplete({
-    source: ["c++", "java", "php", "coldfusion", "javascript", "asp", "ruby"]
-});]]></code>
+		<desc>A simple jQuery UI Autocomplete</desc>
+		<code><![CDATA[
+$( "#autocomplete" ).autocomplete({
+	source: [ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby" ]
+});
+]]></code>
 		<html><![CDATA[
-<input id="autocomplete" />
-
+<label for="autocomplete">Select a programming language: </label>
+<input id="autocomplete">
 ]]></html>
-
+	</example>
+	<example>
+		<desc>Using a custom source callback to match only the beginning of terms</desc>
+		<code><![CDATA[
+var tags = [ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby" ];
+$( "#autocomplete" ).autocomplete({
+	source: function( request, response ) {
+	        var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( request.term ), "i" );
+	        response( $.grep( tags, function( item ){
+	            return matcher.test( item );
+	        }) );
+	    }
+});
+]]></code>
+		<html><![CDATA[
+<label for="autocomplete">Select a programming language: </label>
+<input id="autocomplete">
+]]></html>
 	</example>
 	<category slug="widgets"/>
 </entry>

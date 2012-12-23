@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<method name="widget" return="jQuery" example-return-var="widget">
+	<desc>
+		Returns a <code>jQuery</code> object containing the <placeholder name="widget-element"/>.
+	</desc>
+</method>

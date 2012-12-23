@@ -48,7 +48,6 @@
     <Compile Include="Generator.cs" />
     <Compile Include="Model\Argument.cs" />
     <Compile Include="Model\Property.cs" />
-    <Compile Include="Model\Signature.cs" />
     <Compile Include="Model\Entry.cs" />
     <Compile Include="Model\Event.cs" />
     <Compile Include="Model\Example.cs" />
@@ -60,44 +59,80 @@
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="entries\accordion.xml" />
+    <Content Include="Changes.txt" />
+    <Content Include="entries\accordion.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="entries\addClass.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="entries\autocomplete.xml" />
     <Content Include="entries\blind-effect.xml" />
     <Content Include="entries\bounce-effect.xml" />
     <Content Include="entries\button.xml" />
     <Content Include="entries\clip-effect.xml" />
-    <Content Include="entries\core.xml" />
+    <Content Include="entries\data-selector.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="entries\datepicker.xml" />
     <Content Include="entries\dialog.xml" />
+    <Content Include="entries\disableSelection.xml" />
     <Content Include="entries\draggable.xml" />
     <Content Include="entries\drop-effect.xml" />
     <Content Include="entries\droppable.xml" />
     <Content Include="entries\effect.xml" />
+    <Content Include="entries\enableSelection.xml" />
     <Content Include="entries\explode-effect.xml" />
     <Content Include="entries\fade-effect.xml" />
+    <Content Include="entries\focus.xml" />
+    <Content Include="entries\focusable-selector.xml" />
     <Content Include="entries\fold-effect.xml" />
+    <Content Include="entries\hide.xml" />
     <Content Include="entries\highlight-effect.xml" />
-    <Content Include="entries\jquery-ui-1.8.21.js" />
-    <Content Include="entries\jquery-ui-1.8.21.min.js" />
+    <Content Include="entries\jQuery.widget.xml" />
     <Content Include="entries\menu.xml" />
+    <Content Include="entries\mouse.xml" />
     <Content Include="entries\position.xml" />
     <Content Include="entries\progressbar.xml" />
     <Content Include="entries\puff-effect.xml" />
     <Content Include="entries\pulsate-effect.xml" />
-    <Content Include="Changes.txt" />
+    <Content Include="entries\removeClass.xml" />
+    <Content Include="entries\removeUniqueId.xml" />
     <Content Include="entries\resizable.xml" />
     <Content Include="entries\scale-effect.xml" />
+    <Content Include="entries\scrollParent.xml" />
     <Content Include="entries\selectable.xml" />
     <Content Include="entries\shake-effect.xml" />
+    <Content Include="entries\show.xml" />
     <Content Include="entries\size-effect.xml" />
     <Content Include="entries\slide-effect.xml" />
     <Content Include="entries\slider.xml" />
     <Content Include="entries\sortable.xml" />
     <Content Include="entries\spinner.xml" />
+    <Content Include="entries\switchClass.xml" />
+    <Content Include="entries\tabbable-selector.xml" />
     <Content Include="entries\tabs.xml" />
+    <Content Include="entries\toggle.xml" />
+    <Content Include="entries\toggleClass.xml" />
     <Content Include="entries\tooltip.xml" />
     <Content Include="entries\transfer-effect.xml" />
-    <Content Include="entries\widget.xml" />
+    <Content Include="entries\uniqueId.xml" />
+    <Content Include="entries\zIndex.xml" />
+    <Content Include="includes\animation-argument-complete.xml" />
+    <Content Include="includes\animation-argument-duration.xml" />
+    <Content Include="includes\animation-argument-easing.xml" />
+    <Content Include="includes\animation-signature-options.xml" />
+    <Content Include="includes\class-animation-desc.xml" />
+    <Content Include="includes\core-extension-desc.xml" />
+    <Content Include="includes\widget-event-create.xml" />
+    <Content Include="includes\widget-method-destroy.xml" />
+    <Content Include="includes\widget-method-disable.xml" />
+    <Content Include="includes\widget-method-enable.xml" />
+    <Content Include="includes\widget-method-option.xml" />
+    <Content Include="includes\widget-method-widget.xml" />
+    <Content Include="includes\widget-option-disabled.xml" />
+    <Content Include="includes\widget-option-hide.xml" />
+    <Content Include="includes\widget-option-show.xml" />
     <Content Include="Readme.txt" />
   </ItemGroup>
   <ItemGroup>

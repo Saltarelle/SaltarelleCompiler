@@ -1,52 +1,61 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="scale" namespace="effect" type="effect">
+<entry name="scale" type="effect">
+	<title>Scale Effect</title>
 	<desc>
 		Shrink or grow an element by a percentage factor.
 	</desc>
-	<options>
-		<option name="direction" type="String" default="both">
-			<desc>The direction of the effect. Can be "both", "vertical" or "horizontal".</desc>
-		</option>
-		<option name="origin" type="Array" default="['middle','center']">
-			<desc>The vanishing point, default for show/hide.</desc>
-		</option>
-		<option name="percent" type="Number" default="0/100">
+	<arguments>
+		<argument name="direction" type="String" default='"both"'>
+			<desc>The direction of the effect. Possible values: <code>"both"</code>, <code>"vertical"</code> or <code>"horizontal"</code>.</desc>
+		</argument>
+		<argument name="origin" type="Array" default='[ "middle", "center" ]'>
+			<desc>The vanishing point.</desc>
+		</argument>
+		<argument name="percent" type="Number">
 			<desc>The percentage to scale to.</desc>
-		</option>
-		<option name="scale" type="String" default="both">
-			<desc>Which areas of the element will be resized: 'both', 'box', 'content' Box resizes the border and padding of the element Content resizes any content inside of the element</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default="swing">
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-	</options>
+		</argument>
+		<argument name="scale" type="String" default='"both"'>
+			<desc>Which areas of the element will be resized: <code>"both"</code>, <code>"box"</code>, <code>"content"</code>. Box resizes the border and padding of the element; content resizes any content inside of the element.</desc>
+		</argument>
+	</arguments>
 	<example>
-		<desc>Scale the element to 0%, with the hide method (center vanishing point).</desc>
+		<height>200</height>
+		<desc>Toggle a div using the scale effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
 		<code><![CDATA[
-$("div").click(function () {
-    $(this).hide("scale", {}, 1000);
+$( document ).click(function() {
+	$( "#toggle" ).toggle( "scale" );
 });
 ]]></code>
 		<html><![CDATA[
-<div></div>
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
 ]]></html>
 	</example>
 	<example>
-		<desc>Scale the element to 200%, only horizontal.</desc>
+		<height>200</height>
+		<desc>Toggle a div using the scale effect in just one direction.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
 		<code><![CDATA[
-$("div").click(function () {
-      $(this).effect("scale", { percent: 200, direction: 'horizontal' }, 1000);
+$( document ).click(function() {
+	$( "#toggle" ).toggle({ effect: "scale", direction: "horizontal" });
 });
 ]]></code>
 		<html><![CDATA[
-<div></div>
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
 ]]></html>
 	</example>
 	<category slug="effects"/>

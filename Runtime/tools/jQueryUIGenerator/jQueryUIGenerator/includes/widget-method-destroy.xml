@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<method name="destroy">
+	<desc>
+		Removes the <placeholder name="name"/> functionality completely. This will return the element back to its pre-init state.
+	</desc>
+</method>

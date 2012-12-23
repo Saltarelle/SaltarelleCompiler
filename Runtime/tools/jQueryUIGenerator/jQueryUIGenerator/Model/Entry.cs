@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace ScriptSharp.Tools.jQueryUIGenerator.Model {
     public class Entry {
-        public string Category {
+        public string[] Categories {
             get;
             set;
         }
@@ -59,27 +59,12 @@ namespace ScriptSharp.Tools.jQueryUIGenerator.Model {
             set; 
         }
 
-        public string Namespace {
-            get;
-            set;
-        }
-
         public IList<Option> Options {
             get;
             set;
         }
 
-        public IList<Signature> Signatures {
-            get;
-            set;
-        }
-
         public string Type {
-            get;
-            set;
-        }
-
-        public string WidgetNamespace {
             get;
             set;
         }

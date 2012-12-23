@@ -56,7 +56,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator
             }
 
             if (includeProjectFile) {
-                generator.RenderProjectFile(entries);
+                generator.RenderProjectFile();
             }
         }
     }

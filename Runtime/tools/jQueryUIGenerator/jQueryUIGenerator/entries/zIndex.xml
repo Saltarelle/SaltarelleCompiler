@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<entries>
+	<entry type="method" name="zIndex" return="jQuery">
+		<title>.zIndex()</title>
+		<desc>Get the z-index for an element.</desc>
+		<signature/>
+		<longdesc>
+			<p>The <code>.zIndex()</code> method is useful for finding the z-index of an element, regardless of whether the z-index is set directly on the element or on one of its ancestors. In order to determine the z-index, this method will start at the specified element and walk up the DOM until it finds an element that is positioned and has a z-index set. If no such element is found, then the method will return a value of <code>0</code>.</p>
+			<p>This method assumes that elements with nested z-indexes would not have a z-index of <code>0</code>. For example, given the following DOM the inner element will be treated as if it does not have a z-index set because it is impossible to differentiate between an explicit value of <code>0</code> and no value in Internet Explorer.</p>
+			<pre><code>
+				&lt;div style="z-index: -10;">
+					&lt;div style="z-index: 0;">&lt;/div>
+				&lt;/div>
+			</code></pre>
+		</longdesc>
+		<category slug="methods"/>
+		<category slug="ui-core"/>
+	</entry>
+	<entry type="method" name="zIndex" return="Integer">
+		<title>.zIndex()</title>
+		<desc>Set the z-index for an element.</desc>
+		<signature>
+			<argument name="zIndex" type="Integer">
+				<desc>The z-index to set.</desc>
+			</argument>
+		</signature>
+		<longdesc>
+			<p>This is equivalent to <code>.css( "zIndex", zIndex )</code>.</p>
+		</longdesc>
+		<category slug="methods"/>
+		<category slug="ui-core"/>
+	</entry>
+</entries>

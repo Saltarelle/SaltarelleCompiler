@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<entry type="method" name="enableSelection" return="jQuery">
+	<title>.enableSelection()</title>
+	<desc>Enable selection of text content within the set of matched elements.</desc>
+	<signature added="1.6" deprecated="1.9"/>
+	<longdesc>
+		<p>The <code>.enableSelection()</code> method can be used to re-enable selection of text that was disabled via <a href="/disableSelection/"><code>.disableSelection()</code></a>.</p>
+	</longdesc>
+	<category slug="methods"/>
+	<category slug="ui-core"/>
+</entry>
