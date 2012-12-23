@@ -688,7 +688,11 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.");
 
 				var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
-				var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrent.Expression)) }).ToList();
+				JsExpression getCurrentValue = getCurrent.Expression;
+				if (_variables[iterator.Variable].UseByRefSemantics)
+					getCurrentValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", getCurrentValue));
+
+				var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrentValue)) }).ToList();
 				var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
 
 				body = new JsBlockStatement(preBody.Concat(body.Statements));

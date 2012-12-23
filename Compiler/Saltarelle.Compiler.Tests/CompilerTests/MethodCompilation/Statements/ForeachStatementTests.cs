@@ -328,5 +328,34 @@ public void M() {
 	}
 ");
 		}
+
+		[Test]
+		public void ForEachWorksWhenTheIteratorIsUsedByReference() {
+			AssertCorrect(@"
+class MyEnumerable {
+	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
+}
+void F(ref object x) {}
+public void M() {
+	MyEnumerable enm = null;
+	// BEGIN
+	foreach (var o in enm) {
+		F(ref o);
+	}
+	// END
+}
+",
+@"	var $tmp1 = $enm.$GetEnumerator();
+	try {
+		while ($tmp1.$MoveNext()) {
+			var $o = { $: $tmp1.get_$Current() };
+			this.$F($o);
+		}
+	}
+	finally {
+		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
+	}
+");
+		}
 	}
 }
