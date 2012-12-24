@@ -161,7 +161,9 @@
 				<desc></desc>
 			</argument>
 		</method>
-		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<method name="widget" return="jQuery">
+			<desc>Returns a <code>jQuery</code> object containing the menu element. Although the menu items are constantly created and destroyed, the menu element itself is created during initialization and is constantly reused.</desc>
+		</method>
 	</methods>
 	<example>
 		<desc>A simple jQuery UI Autocomplete</desc>
