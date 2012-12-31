@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8834B978-9A63-46D4-882C-E4961FBC175F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PaperJS</RootNamespace>
+    <AssemblyName>Script.PaperJS</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <NoStdLib>True</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\bin\Script.PaperJS.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Compiled\CharacterStyle.cs" />
+    <Compile Include="Compiled\Color.cs" />
+    <Compile Include="Compiled\ColorType.cs" />
+    <Compile Include="Compiled\CompoundPath.cs" />
+    <Compile Include="Compiled\Curve.cs" />
+    <Compile Include="Compiled\CurveLocation.cs" />
+    <Compile Include="Compiled\GlobalScope.cs" />
+    <Compile Include="Compiled\Gradient.cs" />
+    <Compile Include="Compiled\GradientColor.cs" />
+    <Compile Include="Compiled\GradientStop.cs" />
+    <Compile Include="Compiled\GrayColor.cs" />
+    <Compile Include="Compiled\Group.cs" />
+    <Compile Include="Compiled\HitResult.cs" />
+    <Compile Include="Compiled\HitResultName.cs" />
+    <Compile Include="Compiled\HitResultType.cs" />
+    <Compile Include="Compiled\HsbColor.cs" />
+    <Compile Include="Compiled\HslColor.cs" />
+    <Compile Include="Compiled\Item.cs" />
+    <Compile Include="Compiled\ItemBlendMode.cs" />
+    <Compile Include="Compiled\Key.cs" />
+    <Compile Include="Compiled\KeyEvent.cs" />
+    <Compile Include="Compiled\KeyEventType.cs" />
+    <Compile Include="Compiled\Layer.cs" />
+    <Compile Include="Compiled\Matrix.cs" />
+    <Compile Include="Compiled\PaperScope.cs" />
+    <Compile Include="Compiled\PaperScript.cs" />
+    <Compile Include="Compiled\ParagraphStyle.cs" />
+    <Compile Include="Compiled\ParagraphStyleJustification.cs" />
+    <Compile Include="Compiled\Path.cs" />
+    <Compile Include="Compiled\PathItem.cs" />
+    <Compile Include="Compiled\PathStyle.cs" />
+    <Compile Include="Compiled\PlacedItem.cs" />
+    <Compile Include="Compiled\PlacedSymbol.cs" />
+    <Compile Include="Compiled\Point.cs" />
+    <Compile Include="Compiled\PointText.cs" />
+    <Compile Include="Compiled\Project.cs" />
+    <Compile Include="Compiled\Raster.cs" />
+    <Compile Include="Compiled\Rectangle.cs" />
+    <Compile Include="Compiled\RgbColor.cs" />
+    <Compile Include="Compiled\Segment.cs" />
+    <Compile Include="Compiled\Size.cs" />
+    <Compile Include="Compiled\StrokeCap.cs" />
+    <Compile Include="Compiled\Symbol.cs" />
+    <Compile Include="Compiled\TextItem.cs" />
+    <Compile Include="Compiled\Tool.cs" />
+    <Compile Include="Compiled\ToolEvent.cs" />
+    <Compile Include="Compiled\ToolEventType.cs" />
+    <Compile Include="Compiled\View.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Script.jQuery">
+      <HintPath>..\packages\Saltarelle.jQuery.1.6.3\lib\Script.jQuery.dll</HintPath>
+    </Reference>
+    <Reference Include="Script.Web">
+      <HintPath>..\packages\Saltarelle.Web.1.6.3\lib\Script.Web.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib\CoreLib.csproj">
+      <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
+      <Name>CoreLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="!Exists('$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets')" />
+  <Import Project="$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets" Condition="Exists('$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
