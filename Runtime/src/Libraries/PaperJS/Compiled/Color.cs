@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
-    /// All properties and functions that expect color values accept instances of the different color classes such as RgbColor, HsbColor and GrayColor, and also accept named colors and hex values as strings which are then converted to instances of RgbColor internally.  Example &mdash; Named color values:   Run
+    /// All properties and functions that expect color values accept instances of the different color classes such as RgbColor, HsbColor and GrayColor, and also accept named colors and hex values as strings which are then converted to instances of RgbColor internally.  Example  Named color values:   Run
     /// </summary>
     [Imported, IgnoreNamespace]
     public partial class Color
@@ -79,7 +79,7 @@ namespace Script.PaperJs
         /// <summary>
         ///
         /// </summary>
-        /// <returns> / HsbColor&nbsp;- a copy of the color object</returns>
+        /// <returns> / HsbColor- a copy of the color object</returns>
         public Color Clone() { return default(RgbColor); }
         
         /// <summary>
@@ -87,12 +87,6 @@ namespace Script.PaperJs
         /// </summary>
         /// <returns>true if the color has an alpha value, false otherwise</returns>
         public bool HasAlpha() { return default(bool); }
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the color.</returns>
-        public string ToString() { return default(string); }
         
         /// <summary>
         ///

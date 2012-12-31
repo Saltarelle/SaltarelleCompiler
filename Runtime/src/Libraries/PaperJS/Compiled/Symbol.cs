@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// Symbols allow you to place multiple instances of an item in your project. This can save memory, since all instances of a symbol simply refer to the original item and it can speed up moving around complex objects, since internal properties such as segment lists and gradient positions don't need to be updated with every transformation.
@@ -26,6 +26,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Symbol(){ }
         
         /// <summary>

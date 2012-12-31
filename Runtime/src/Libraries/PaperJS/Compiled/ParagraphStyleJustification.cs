@@ -1,13 +1,28 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
+    /// <summary>
+    ///
+    /// </summary>
     [NamedValues]
     public enum ParagraphStyleJustification
     {
-          [ScriptName("left")] Left,
-          [ScriptName("right")] Right,
-          [ScriptName("center")] Center,
+        
+        /// <summary>
+        /// Javascript value: 'left'
+        /// </summary>
+        [ScriptName("left")] Left,
+        
+        /// <summary>
+        /// Javascript value: 'right'
+        /// </summary>
+        [ScriptName("right")] Right,
+        
+        /// <summary>
+        /// Javascript value: 'center'
+        /// </summary>
+        [ScriptName("center")] Center,
     }
 }

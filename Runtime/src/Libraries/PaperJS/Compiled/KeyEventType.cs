@@ -1,12 +1,23 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
+    /// <summary>
+    ///
+    /// </summary>
     [NamedValues]
     public enum KeyEventType
     {
-          [ScriptName("keydown")] KeyDown,
-          [ScriptName("keyup")] KeyUp,
+        
+        /// <summary>
+        /// Javascript value: 'keydown'
+        /// </summary>
+        [ScriptName("keydown")] KeyDown,
+        
+        /// <summary>
+        /// Javascript value: 'keyup'
+        /// </summary>
+        [ScriptName("keyup")] KeyUp,
     }
 }

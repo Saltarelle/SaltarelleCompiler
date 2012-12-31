@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// A PlacedSymbol represents an instance of a symbol which has been placed in a Paper.js project.
@@ -21,6 +21,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected PlacedSymbol(){ }
         
         /// <summary>

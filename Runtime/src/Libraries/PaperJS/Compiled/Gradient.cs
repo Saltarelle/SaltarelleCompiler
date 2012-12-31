@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The Gradient object.
@@ -21,6 +21,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Gradient(){ }
         
         /// <summary>

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// A Rectangle specifies an area that is enclosed by it's top-left point (x, y), its width, and its height. It should not be confused with a rectangular path, it is not an item.
@@ -111,6 +111,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Rectangle(){ }
         
         /// <summary>
@@ -165,12 +168,6 @@ namespace Script.PaperJs
         /// </summary>
         /// <returns>true the rectangle is empty, false otherwise</returns>
         public bool IsEmpty() { return default(bool); }
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of this rectangle.</returns>
-        public string ToString() { return default(string); }
         
         /// <summary>
         /// Tests if the specified point is inside the boundary of the rectangle.

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// A Group is a collection of items. When you transform a Group, its children are treated as a single unit without changing their relative positions.

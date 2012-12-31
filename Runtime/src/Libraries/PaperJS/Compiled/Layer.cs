@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The Layer item represents a layer in a Paper.js project. The layer which is currently active can be accessed through project.activeLayer. An array of all layers in a project can be accessed through project.layers.

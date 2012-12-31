@@ -1,43 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Html;
+using System.Html.Media.Graphics;
 using System.Runtime.CompilerServices;
 using jQueryApi;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     public partial class Color
     {
+        /// <summary>
+        /// Uses string instead of Color class. Color names (eg. blue, red, green, etc) and hex values (eg. #ff0000, etc) can be used.
+        /// </summary>
+        /// <param name="value">The string representation of the color.</param>
+        /// <returns>An implicit color class. In JS it remain plain string.</returns>
         [InlineCode("{value}")]
         static public implicit operator Color(string value) { return null; }
     }
 
+    /// <summary>
+    /// Modifiers of a Tool Event
+    /// </summary>
     [Imported, IgnoreNamespace]
     public class EventModifiers
     {
+        /// <summary>
+        /// True if the Shift key was pressed when the event happened, false otherwise
+        /// </summary>
         public bool Shift;
+
+        /// <summary>
+        /// True if the Control key was pressed when the event happened, false otherwise
+        /// </summary>
         public bool Control;
+
+        /// <summary>
+        /// True if the Option (Mac) key was pressed when the event happened, false otherwise
+        /// </summary>
         public bool Option;
+
+        /// <summary>
+        /// True if the Command (Mac) key was pressed when the event happened, false otherwise
+        /// </summary>
         public bool Command;
+
+        /// <summary>
+        /// True if the CapsLock key was pressed when the event happened, false otherwise
+        /// </summary>
         public bool CapsLock;
     }
 
+    /// <summary>
+    /// Base class for Paper.js events
+    /// </summary>
     public class Event { }
-    public class Context { }
-    public class Canvas { }
-    public class CanvasRenderingContext2D { }
-    public class ImageData
-    {
-        public ulong Width { get { return 0; } }
-        public ulong Height { get { return 0; } }
-        public CanvasPixelArray Data { get { return null; } }
-    }
-    public class CanvasPixelArray
-    {
-        public ulong Length { get { return 0; } }
-        public byte this[ulong i] { get { return 0; } set { } }
-    }
+
+    /// <summary>
+    /// DOM representation of a HTML img element.
+    /// </summary>
     public class HTMLImageElement { }
+
+    /// <summary>
+    /// DOM representation of a HTML canvas element.
+    /// </summary>
     public class HTMLCanvasElement
     {
         /// <summary>
@@ -55,7 +80,7 @@ namespace Script.PaperJs
         /// </summary>
         /// <returns>A drawing context on the canvas</returns>
         [InlineCode("getContext('2d')")]
-        public CanvasRenderingContext2D GetContext2D() { return null; }
+        public CanvasContext2D GetContext2D() { return null; }
     }
 
     public partial class Point
@@ -73,7 +98,7 @@ namespace Script.PaperJs
         /// <summary>
         /// Sets up an empty project for us. If a canvas is provided, it also creates a View for it, both linked to this scope.
         /// </summary>
-        /// <param name="canvas">The canvas this scope should be associated with.</param>
+        /// <param name="canvasId">The id of the canvas this scope should be associated with.</param>
         public void Setup(string canvasId) { }        
     }
 

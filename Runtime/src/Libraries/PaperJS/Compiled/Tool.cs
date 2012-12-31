@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The Tool object refers to a script that the user can interact with by using the mouse and keyboard and can be accessed through the global tool variable. All its properties are also available in the paper scope. The global tool variable only exists in scripts that contain mouse handler functions (onMouseMove, onMouseDown, onMouseDrag, onMouseUp) or a keyboard handler function (onKeyDown, onKeyUp).  Example   var path; // Only execute onMouseDrag when the mouse // has moved at least 10 points: tool.distanceThreshold = 10; function onMouseDown(event) { // Create a new path every time the mouse is clicked path = new Path(); path.add(event.point); path.strokeColor = 'black'; } function onMouseDrag(event) { // Add a point to the path every time the mouse is dragged path.add(event.point); }

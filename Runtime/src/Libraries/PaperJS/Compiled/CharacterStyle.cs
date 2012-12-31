@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The CharacterStyle object represents the character style of a text item (textItem.characterStyle)  Example   var text = new PointText(new Point(50, 50)); text.content = 'Hello world.'; text.characterStyle = { fontSize: 50, fillColor: 'black', };

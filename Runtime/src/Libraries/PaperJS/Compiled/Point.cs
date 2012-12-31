@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
-    /// The Point object represents a point in the two dimensional space of the Paper.js project. It is also used to represent two dimensional vector objects.  Example &mdash; Create a point at x: 10, y: 5   var point = new Point(10, 5); console.log(point.x); // 10 console.log(point.y); // 5
+    /// The Point object represents a point in the two dimensional space of the Paper.js project. It is also used to represent two dimensional vector objects.  Example  Create a point at x: 10, y: 5   var point = new Point(10, 5); console.log(point.x); // 10 console.log(point.y); // 5
     /// </summary>
     [Imported, IgnoreNamespace]
     public partial class Point
@@ -51,6 +51,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Point(){ }
         
         /// <summary>
@@ -238,12 +241,6 @@ namespace Script.PaperJs
         /// </summary>
         /// <returns>the cloned point</returns>
         public Point Clone() { return default(Point); }
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the point.</returns>
-        public string ToString() { return default(string); }
         
         /// <summary>
         /// Transforms the point by the matrix as a new point. The object itself is not modified!

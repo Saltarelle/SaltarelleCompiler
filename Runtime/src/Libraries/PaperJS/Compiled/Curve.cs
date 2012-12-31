@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The Curve object represents the parts of a path that are connected by two following Segment objects. The curves of a path can be accessed through its path.curves array. While a segment describe the anchor point and its incoming and outgoing handles, a Curve object describes the curve passing between two such segments. Curves and segments represent two different ways of looking at the same thing, but focusing on different aspects. Curves for example offer many convenient ways to work with parts of the path, finding lengths, positions or tangents at given offsets.
@@ -76,6 +76,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Curve(){ }
         
         /// <summary>
@@ -154,12 +157,6 @@ namespace Script.PaperJs
         /// </summary>
         /// <returns></returns>
         public Curve Clone() { return default(Curve); }
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the curve.</returns>
-        public string ToString() { return default(string); }
         
         #endregion
         

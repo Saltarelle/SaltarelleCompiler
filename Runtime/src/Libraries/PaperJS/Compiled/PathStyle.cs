@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// PathStyle is used for changing the visual styles of items contained within a Paper.js project and is returned by item.style and project.currentStyle. All properties of PathStyle are also reflected directly in Item, i.e.: item.fillColor. To set multiple style properties in one go, you can pass an object to item.style. This is a convenient way to define a style once and apply it to a series of items:  Example   Run

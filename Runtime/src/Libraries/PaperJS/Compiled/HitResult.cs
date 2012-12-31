@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// A HitResult object contains information about the results of a hit test. It is returned by item.hitTest(point) and project.hitTest(point).

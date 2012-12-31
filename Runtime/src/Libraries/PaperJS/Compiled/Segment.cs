@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The Segment object represents the points of a path through which its Curve objects pass. The segments of a path can be accessed through its path.segments array. Each segment consists of an anchor point (segment.point) and optionaly an incoming and an outgoing handle (segment.handleIn and segment.handleOut), describing the tangents of the two Curve objects that are connected by this segment.
@@ -61,6 +61,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Segment(){ }
         
         /// <summary>
@@ -89,12 +92,6 @@ namespace Script.PaperJs
         ///
         /// </summary>
         public void Remove() { }
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the segment.</returns>
-        public string ToString() { return default(string); }
         
         #endregion
         

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The Raster item represents an image in a Paper.js project.
@@ -33,12 +33,12 @@ namespace Script.PaperJs
         public Size Ppi;
         
         /// <summary>
-        /// The Canvas 2d drawing context of the raster.
+        /// The HTMLCanvasElement 2d drawing context of the raster.
         /// </summary>
-        public Context Context;
+        public System.Html.Media.Graphics.CanvasContext2D Context;
         
         /// <summary>
-        /// The HTMLImageElement or Canvas of the raster.
+        /// The HTMLImageElement or HTMLCanvasElement of the raster.
         /// </summary>
         public HTMLImageElement Image;
         
@@ -64,7 +64,7 @@ namespace Script.PaperJs
         /// </summary>
         /// <param name="_object">optional</param>
         [ScriptName("")]
-        public Raster(Canvas _object){ }
+        public Raster(HTMLCanvasElement _object){ }
         
         /// <summary>
         /// Creates a new raster item and places it in the active layer.
@@ -82,7 +82,7 @@ namespace Script.PaperJs
         /// </summary>
         /// <param name="rect">the boundaries of the sub image in pixel coordinates</param>
         /// <returns></returns>
-        public Canvas GetSubImage(Rectangle rect) { return default(Canvas); }
+        public HTMLCanvasElement GetSubImage(Rectangle rect) { return default(HTMLCanvasElement); }
         
         /// <summary>
         /// Draws an image on the raster.
@@ -96,7 +96,7 @@ namespace Script.PaperJs
         /// </summary>
         /// <param name="image"></param>
         /// <param name="point">the offset of the image as a point in pixel coordinates</param>
-        public void DrawImage(Canvas image, Point point) { }
+        public void DrawImage(HTMLCanvasElement image, Point point) { }
         
         /// <summary>
         /// Calculates the average color of the image within the given path, rectangle or point. This can be used for creating raster image effects.
@@ -154,14 +154,14 @@ namespace Script.PaperJs
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        public ImageData CreateData(Size size) { return default(ImageData); }
+        public System.Html.Media.Graphics.ImageData CreateData(Size size) { return default(System.Html.Media.Graphics.ImageData); }
         
         /// <summary>
         ///
         /// </summary>
         /// <param name="rect"></param>
         /// <returns></returns>
-        public ImageData GetData(Rectangle rect) { return default(ImageData); }
+        public System.Html.Media.Graphics.ImageData GetData(Rectangle rect) { return default(System.Html.Media.Graphics.ImageData); }
         
         /// <summary>
         ///
@@ -169,7 +169,7 @@ namespace Script.PaperJs
         /// <param name="data"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public ImageData SetData(ImageData data, Point point) { return default(ImageData); }
+        public System.Html.Media.Graphics.ImageData SetData(System.Html.Media.Graphics.ImageData data, Point point) { return default(System.Html.Media.Graphics.ImageData); }
         
         #endregion
         

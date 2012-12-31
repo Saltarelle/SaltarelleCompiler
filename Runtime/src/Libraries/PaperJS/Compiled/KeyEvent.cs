@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// KeyEvent The KeyEvent object is received by the Tool's keyboard handlers tool.onKeyDown, tool.onKeyUp, The KeyEvent object is the only parameter passed to these functions and contains information about the keyboard event.
@@ -36,11 +36,7 @@ namespace Script.PaperJs
         
         #region Methods
         
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the key event.</returns>
-        public string ToString() { return default(string); }
+        
         
         #endregion
         

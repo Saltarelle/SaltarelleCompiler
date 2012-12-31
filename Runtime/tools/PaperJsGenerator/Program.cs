@@ -332,7 +332,7 @@ namespace PaperJsGenerator
             @"using System;
               using System.Runtime.CompilerServices;
 
-              namespace Script.PaperJs";
+              namespace PaperJs";
 
         static string GenerateSaltarelleCode(ClassData classData)
         {
@@ -377,6 +377,9 @@ namespace PaperJsGenerator
 
                         #region Constructors" + (constructors.Any(x => x.Parameters2.Length == 0) ? "" : @"
         
+                        /// <summary>
+                        /// Constructor for enable inheritance
+                        /// </summary>
                         protected " + classData.Name + @"(){ }") + @"
 
                         " + constructors.Select(m => getComment(m) + @"                        
@@ -401,7 +404,7 @@ namespace PaperJsGenerator
 
                         #region Methods
 
-                        " + methods.Select(m =>
+                        " + methods.Where(m => m.CsName != "ToString").Select(m =>
                         getComment(m) + @"
                         public " + m.ReturnCsType + @" " + m.CsName + genParamList(m) + genBody(m)).Join("\n\n") + @"
 
@@ -505,7 +508,7 @@ namespace PaperJsGenerator
                 SplitByParameters(classData);
                 FixErrors(classData);
 
-                Log(String.Join(Environment.NewLine, classData.Members.Select(x => "[" + x.Type + "] " + x.ToString()).ToArray()));
+                //Log(String.Join(Environment.NewLine, classData.Members.Select(x => "[" + x.Type + "] " + x.ToString()).ToArray()));
 
                 if (classData.Extends != null)
                     Log("Extends: {0}", classData.Extends.Join(", "));
@@ -520,6 +523,10 @@ namespace PaperJsGenerator
 
             FillInheritance(classDatas);
 
+            foreach (var classData in classDatas)
+                foreach (var member in classData.Members)
+                    FillCsData(member);
+
             var baseMembersAlreadyRemoved = new HashSet<ClassData>();
             Action<ClassData> removeBaseMembers = null;
             removeBaseMembers = cd =>
@@ -530,12 +537,7 @@ namespace PaperJsGenerator
                 {
                     removeBaseMembers(cd.InheritParent);
                     var parentMembers = cd.InheritParent.GetInheritChain().SelectMany(x => x.Members);
-                    cd.Members = cd.Members.Where(m => !parentMembers.Any(pm =>
-                    {
-                        var s1 = pm.ToString();
-                        var s2 = m.ToString();
-                        return s1 == s2;
-                    })).ToArray();
+                    cd.Members = cd.Members.Where(m => !parentMembers.Any(pm => pm.ToStringCs(false, false) == m.ToStringCs(false, false))).ToArray();
                 }
 
                 baseMembersAlreadyRemoved.Add(cd);
@@ -543,13 +545,19 @@ namespace PaperJsGenerator
 
             foreach (var classData in classDatas)
             {
-                Log("Classes: {0} -> {1}", classData.Name, classData.InheritParent == null ? "" : classData.InheritParent.Name);
-                removeBaseMembers(classData);
+                Log();
+                Log("==================================");
+                Log("Class members: {0}...", classData.Name);
+                Log("==================================");
+                Log();
+                Log(String.Join(Environment.NewLine, classData.Members.Select(x => "[" + x.Type + "] " + x.ToStringCs(false, true)).ToArray()));
             }
 
             foreach (var classData in classDatas)
-                foreach (var member in classData.Members)
-                    FillCsData(member);
+            {
+                Log("Classes: {0} -> {1}", classData.Name, classData.InheritParent == null ? "" : classData.InheritParent.Name);
+                removeBaseMembers(classData);
+            }
 
             foreach (var classData in classDatas)
             {
@@ -582,9 +590,10 @@ namespace PaperJsGenerator
                     ToDictionary(x => x.Key, x => x.ToArray()).OrderBy(x => x.Key).ToArray();
 
             var usedTypes = getUsedTypes();
+            var enumTypes = usedTypes.Where(x => x.Key.StartsWith("String(") && x.Value.All(y => y.Type == MemberTypes.Property)).ToArray();
 
             var enumNames = new List<string>();
-            foreach (var enumDesc in usedTypes.Where(x => x.Key.StartsWith("String(") && x.Value.All(y => y.Type == MemberTypes.Property)))
+            foreach (var enumDesc in enumTypes)
             {
                 var name = (enumDesc.Value.Length == 1 ? enumDesc.Value[0].Class.Name : "") + enumDesc.Value[0].CsName;
                 var values = enumDesc.Key.Replace("String(", "").Replace(")", "").Replace("'", "").Split(new[]{ ", " }, StringSplitOptions.RemoveEmptyEntries);
@@ -604,10 +613,17 @@ namespace PaperJsGenerator
                 var enumFileContent = IndentFix(@"
                     " + FileHeaders + @"
                     {
+                        /// <summary>
+                        /// 
+                        /// </summary>
                         [NamedValues]
                         public enum " + name + @"
                         {
-                              " + enums.Select(x => @"[ScriptName(""" + x.jsName + @""")] " + x.csName + ",").Join("\n") + @"
+                            " + enums.Select(x => @"
+                            /// <summary>
+                            /// Javascript value: '" + x.jsName + @"'
+                            /// </summary>
+                            [ScriptName(""" + x.jsName + @""")] " + x.csName + ",").Join("\n") + @"
                         }
                     }");
 
@@ -690,6 +706,11 @@ namespace PaperJsGenerator
             { "&mdash;&nbsp;", "- " },
             { "double(?= (index|Index|num|id|Id))", "int" },
             { "public RgbColor ", "public Color " },
+            { "(&nbsp;|&mdash;)", "" },
+            { "CanvasRenderingContext2D", "System.Html.Media.Graphics.CanvasContext2D" },
+            { "ImageData", "System.Html.Media.Graphics.ImageData" },
+            { "public Context Context;", "public System.Html.Media.Graphics.CanvasContext2D Context;" },
+            { "(?<=[ (])Canvas(?=[ )])", "HTMLCanvasElement" },
         };
 
         public static OperatorData[] OperatorsList = new[]
@@ -799,6 +820,13 @@ namespace PaperJsGenerator
             return ((ReturnJsType ?? PropertyJsType) != null ? (ReturnJsType ?? PropertyJsType) + " " : "") + (showClassName ? Class.Name + "." : "") + 
                 JsName + (OperandTypeJs != null ? "(" + OperandTypeJs + ")" : "") +
                 (Parameters2 != null ? "(" + String.Join(", ", Parameters2.Select(x => x.JsType + " " + x.Name)) + ")" : "");            
+        }
+
+        public string ToStringCs(bool showClassName = false, bool showParamNames = true)
+        {
+            return ReturnCsType + PropertyCsType + " " + (showClassName ? Class.Name + "." : "") +
+                (Operator != null && Operator.Type == OperatorTypes.Equals ? "Equals" : CsName) + (OperandTypeCs != null ? "(" + OperandTypeCs + ")" : "") +
+                (Parameters2 != null ? "(" + String.Join(", ", Parameters2.Select(x => x.CsType + (showParamNames ? " " + x.Name : ""))) + ")" : "");
         }
 
         public override string ToString()

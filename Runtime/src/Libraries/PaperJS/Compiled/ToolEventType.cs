@@ -1,14 +1,33 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
+    /// <summary>
+    ///
+    /// </summary>
     [NamedValues]
     public enum ToolEventType
     {
-          [ScriptName("mousedown")] MouseDown,
-          [ScriptName("mouseup")] MouseUp,
-          [ScriptName("mousemove")] MouseMove,
-          [ScriptName("mousedrag")] MouseDrag,
+        
+        /// <summary>
+        /// Javascript value: 'mousedown'
+        /// </summary>
+        [ScriptName("mousedown")] MouseDown,
+        
+        /// <summary>
+        /// Javascript value: 'mouseup'
+        /// </summary>
+        [ScriptName("mouseup")] MouseUp,
+        
+        /// <summary>
+        /// Javascript value: 'mousemove'
+        /// </summary>
+        [ScriptName("mousemove")] MouseMove,
+        
+        /// <summary>
+        /// Javascript value: 'mousedrag'
+        /// </summary>
+        [ScriptName("mousedrag")] MouseDrag,
     }
 }

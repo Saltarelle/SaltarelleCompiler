@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// An HsbColor object is used to represent any HSB color value.
@@ -12,6 +12,9 @@ namespace Script.PaperJs
     
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected HsbColor(){ }
         
         /// <summary>
@@ -34,17 +37,5 @@ namespace Script.PaperJs
         public HsbColor(double hue, double saturation, double brightness){ }
 
         #endregion
-        
-        #region Methods
-        
-        /// <summary>
-        /// Checks if the component color values of the color are the same as those of the supplied one.
-        /// </summary>
-        /// <param name="color">the color to compare with</param>
-        /// <returns>true if the colors are the same, false otherwise</returns>
-        public bool Equals(Color color) { return default(bool); }
-        
-        #endregion
-        
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// An affine transform performs a linear mapping from 2D coordinates to other 2D coordinates that preserves the "straightness" and "parallelness" of lines. Such a coordinate transformation can be represented by a 3 row by 3 column matrix with an implied last row of [ 0 0 1 ]. This matrix transforms source coordinates (x,y) into destination coordinates (x',y') by considering them to be a column vector and multiplying the coordinate vector by the matrix according to the following process:  [ x ]  [ a b tx ] [ x ]  [ a * x + b * y + tx ] [ y ] = [ c d ty ] [ y ] = [ c * x + d * y + ty ] [ 1 ]  [ 0 0 1 ] [ 1 ]  [     1     ]  This class is optimized for speed and minimizes calculations based on its knowledge of the underlying matrix (as opposed to say simply performing matrix multiplication).
@@ -56,6 +56,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Matrix(){ }
         
         /// <summary>
@@ -189,12 +192,6 @@ namespace Script.PaperJs
         public Matrix Shear(double hor, double ver) { return default(Matrix); }
         
         /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of this transform.</returns>
-        public string ToString() { return default(string); }
-        
-        /// <summary>
         /// Concatenates an affine transform to this transform.
         /// </summary>
         /// <param name="mx">The transform to concatenate</param>
@@ -290,17 +287,17 @@ namespace Script.PaperJs
         public Matrix SetToRotation(double angle, double x, double y) { return default(Matrix); }
         
         /// <summary>
-        /// Applies this matrix to the specified Canvas Context.
+        /// Applies this matrix to the specified HTMLCanvasElement Context.
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="reset">optional, default: false</param>
-        public void ApplyToContext(CanvasRenderingContext2D ctx, bool reset) { }
+        public void ApplyToContext(System.Html.Media.Graphics.CanvasContext2D ctx, bool reset) { }
         
         /// <summary>
-        /// Applies this matrix to the specified Canvas Context.
+        /// Applies this matrix to the specified HTMLCanvasElement Context.
         /// </summary>
         /// <param name="ctx"></param>
-        public void ApplyToContext(CanvasRenderingContext2D ctx) { }
+        public void ApplyToContext(System.Html.Media.Graphics.CanvasContext2D ctx) { }
         
         #endregion
         

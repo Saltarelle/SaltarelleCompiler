@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// The PlacedItem class is the base for any items that have a matrix associated with them, describing their placement in the project, such as Raster and PlacedSymbol.

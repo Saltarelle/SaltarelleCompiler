@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// CurveLocation objects describe a location on Curve objects, as defined by the curve parameter, a value between 0 (beginning of the curve) and 1 (end of the curve). If the curve is part of a Path item, its index inside the path.curves array is also provided. The class is in use in many places, such as path.getLocationAt(offset), Path#getNearestLocation(point), etc.
@@ -71,6 +71,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected CurveLocation(){ }
         
         /// <summary>
@@ -87,11 +90,7 @@ namespace Script.PaperJs
         
         #region Methods
         
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the curve location.</returns>
-        public string ToString() { return default(string); }
+        
         
         #endregion
         

@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
-    /// The Size object is used to describe the size of something, through its width and height properties.  Example &mdash; Create a size that is 10pt wide and 5pt high   var size = new Size(10, 5); console.log(size.width); // 10 console.log(size.height); // 5
+    /// The Size object is used to describe the size of something, through its width and height properties.  Example  Create a size that is 10pt wide and 5pt high   var size = new Size(10, 5); console.log(size.width); // 10 console.log(size.height); // 5
     /// </summary>
     [Imported, IgnoreNamespace]
     public partial class Size
@@ -26,6 +26,9 @@ namespace Script.PaperJs
         
         #region Constructors
 
+        /// <summary>
+        /// Constructor for enable inheritance
+        /// </summary>
         protected Size(){ }
         
         /// <summary>
@@ -201,12 +204,6 @@ namespace Script.PaperJs
         #endregion
         
         #region Methods
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the size.</returns>
-        public string ToString() { return default(string); }
         
         /// <summary>
         ///

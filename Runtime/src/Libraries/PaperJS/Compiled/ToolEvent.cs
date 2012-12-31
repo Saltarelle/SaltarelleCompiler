@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Script.PaperJs
+namespace PaperJs
 {
     /// <summary>
     /// ToolEvent The ToolEvent object is received by the Tool's mouse event handlers tool.onMouseDown, tool.onMouseDrag, tool.onMouseMove and tool.onMouseUp. The ToolEvent object is the only parameter passed to these functions and contains information about the mouse event.
@@ -61,11 +61,7 @@ namespace Script.PaperJs
         
         #region Methods
         
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns>A string representation of the tool event.</returns>
-        public string ToString() { return default(string); }
+        
         
         #endregion
         
