@@ -7,8 +7,8 @@
     <ProjectGuid>{8834B978-9A63-46D4-882C-E4961FBC175F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PaperJS</RootNamespace>
-    <AssemblyName>Script.PaperJS</AssemblyName>
+    <RootNamespace>PaperJs</RootNamespace>
+    <AssemblyName>Script.PaperJs</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>True</NoStdLib>
@@ -37,7 +37,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\bin\Script.PaperJS.xml</DocumentationFile>
+    <DocumentationFile>..\..\..\bin\Script.PaperJs.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -128,6 +128,10 @@
     <ProjectReference Include="..\CoreLib\CoreLib.csproj">
       <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
       <Name>CoreLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Web\Web.csproj">
+      <Project>{3681a9a8-fc40-4125-b842-7775713c8dce}</Project>
+      <Name>Web</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
