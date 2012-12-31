@@ -12,6 +12,21 @@
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>True</NoStdLib>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,55 +52,62 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Compiled\CharacterStyle.cs" />
-    <Compile Include="Compiled\Color.cs" />
-    <Compile Include="Compiled\ColorType.cs" />
-    <Compile Include="Compiled\CompoundPath.cs" />
-    <Compile Include="Compiled\Curve.cs" />
-    <Compile Include="Compiled\CurveLocation.cs" />
-    <Compile Include="Compiled\GlobalScope.cs" />
-    <Compile Include="Compiled\Gradient.cs" />
-    <Compile Include="Compiled\GradientColor.cs" />
-    <Compile Include="Compiled\GradientStop.cs" />
-    <Compile Include="Compiled\GrayColor.cs" />
-    <Compile Include="Compiled\Group.cs" />
-    <Compile Include="Compiled\HitResult.cs" />
-    <Compile Include="Compiled\HitResultName.cs" />
-    <Compile Include="Compiled\HitResultType.cs" />
-    <Compile Include="Compiled\HsbColor.cs" />
-    <Compile Include="Compiled\HslColor.cs" />
-    <Compile Include="Compiled\Item.cs" />
-    <Compile Include="Compiled\ItemBlendMode.cs" />
-    <Compile Include="Compiled\Key.cs" />
-    <Compile Include="Compiled\KeyEvent.cs" />
-    <Compile Include="Compiled\KeyEventType.cs" />
-    <Compile Include="Compiled\Layer.cs" />
-    <Compile Include="Compiled\Matrix.cs" />
-    <Compile Include="Compiled\PaperScope.cs" />
-    <Compile Include="Compiled\PaperScript.cs" />
-    <Compile Include="Compiled\ParagraphStyle.cs" />
-    <Compile Include="Compiled\ParagraphStyleJustification.cs" />
-    <Compile Include="Compiled\Path.cs" />
-    <Compile Include="Compiled\PathItem.cs" />
-    <Compile Include="Compiled\PathStyle.cs" />
-    <Compile Include="Compiled\PlacedItem.cs" />
-    <Compile Include="Compiled\PlacedSymbol.cs" />
-    <Compile Include="Compiled\Point.cs" />
-    <Compile Include="Compiled\PointText.cs" />
-    <Compile Include="Compiled\Project.cs" />
-    <Compile Include="Compiled\Raster.cs" />
-    <Compile Include="Compiled\Rectangle.cs" />
-    <Compile Include="Compiled\RgbColor.cs" />
-    <Compile Include="Compiled\Segment.cs" />
-    <Compile Include="Compiled\Size.cs" />
-    <Compile Include="Compiled\StrokeCap.cs" />
-    <Compile Include="Compiled\Symbol.cs" />
-    <Compile Include="Compiled\TextItem.cs" />
-    <Compile Include="Compiled\Tool.cs" />
-    <Compile Include="Compiled\ToolEvent.cs" />
-    <Compile Include="Compiled\ToolEventType.cs" />
-    <Compile Include="Compiled\View.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Color.cs" />
+    <Compile Include="Generated\CharacterStyle.cs" />
+    <Compile Include="Generated\Color.cs" />
+    <Compile Include="Generated\ColorType.cs" />
+    <Compile Include="Generated\CompoundPath.cs" />
+    <Compile Include="Generated\Curve.cs" />
+    <Compile Include="Generated\CurveLocation.cs" />
+    <Compile Include="Generated\GlobalScope.cs" />
+    <Compile Include="Generated\Gradient.cs" />
+    <Compile Include="Generated\GradientColor.cs" />
+    <Compile Include="Generated\GradientStop.cs" />
+    <Compile Include="Generated\GrayColor.cs" />
+    <Compile Include="Generated\Group.cs" />
+    <Compile Include="Generated\HitResult.cs" />
+    <Compile Include="Generated\HitResultName.cs" />
+    <Compile Include="Generated\HitResultType.cs" />
+    <Compile Include="Generated\HsbColor.cs" />
+    <Compile Include="Generated\HslColor.cs" />
+    <Compile Include="Generated\Item.cs" />
+    <Compile Include="Generated\ItemBlendMode.cs" />
+    <Compile Include="Generated\Key.cs" />
+    <Compile Include="Generated\KeyEvent.cs" />
+    <Compile Include="Generated\KeyEventType.cs" />
+    <Compile Include="Generated\Layer.cs" />
+    <Compile Include="Generated\Matrix.cs" />
+    <Compile Include="Generated\PaperScope.cs" />
+    <Compile Include="Generated\PaperScript.cs" />
+    <Compile Include="Generated\ParagraphStyle.cs" />
+    <Compile Include="Generated\ParagraphStyleJustification.cs" />
+    <Compile Include="Generated\Path.cs" />
+    <Compile Include="Generated\PathItem.cs" />
+    <Compile Include="Generated\PathStyle.cs" />
+    <Compile Include="Generated\PlacedItem.cs" />
+    <Compile Include="Generated\PlacedSymbol.cs" />
+    <Compile Include="Generated\Point.cs" />
+    <Compile Include="Generated\PointText.cs" />
+    <Compile Include="Generated\Project.cs" />
+    <Compile Include="Generated\Raster.cs" />
+    <Compile Include="Generated\Rectangle.cs" />
+    <Compile Include="Generated\RgbColor.cs" />
+    <Compile Include="Generated\Segment.cs" />
+    <Compile Include="Generated\Size.cs" />
+    <Compile Include="Generated\StrokeCap.cs" />
+    <Compile Include="Generated\Symbol.cs" />
+    <Compile Include="Generated\TextItem.cs" />
+    <Compile Include="Generated\Tool.cs" />
+    <Compile Include="Generated\ToolEvent.cs" />
+    <Compile Include="Generated\ToolEventType.cs" />
+    <Compile Include="Generated\View.cs" />
+    <Compile Include="Event.cs" />
+    <Compile Include="EventModifiers.cs" />
+    <Compile Include="HTMLCanvasElement.cs" />
+    <Compile Include="HTMLImageElement.cs" />
+    <Compile Include="PaperScope.cs" />
+    <Compile Include="Path.cs" />
+    <Compile Include="Point.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -107,6 +129,18 @@
       <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
       <Name>CoreLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="!Exists('$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets')" />
   <Import Project="$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets" Condition="Exists('$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets')" />

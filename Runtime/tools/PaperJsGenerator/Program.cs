@@ -492,7 +492,7 @@ namespace PaperJsGenerator
             //    Console.WriteLine(idxs.Select(x => x.ToString()).Join(", "));
 
             var prgPath = AppDomain.CurrentDomain.BaseDirectory;
-            var srcDir = Utils.ProvidePath(prgPath + @"\..\..\..\..\src\Libraries\PaperJS\Compiled\");
+            var srcDir = Utils.ProvidePath(prgPath + @"\..\..\..\..\src\Libraries\PaperJS\Generated\");
 
             var classDatas = DownloadClassDatas(prgPath);
 
