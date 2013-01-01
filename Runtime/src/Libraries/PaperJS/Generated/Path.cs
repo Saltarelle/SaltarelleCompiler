@@ -268,7 +268,8 @@ namespace PaperJs
         /// <param name="pt1">the first anchor point of the path</param>
         /// <param name="pt2">the second anchor point of the path</param>
         /// <returns>the newly created path</returns>
-        public static Path Line(Point pt1, Point pt2) { return default(Path); }
+        [ScriptAlias("new (Path.Line)")]
+        public static Path CreateLine(Point pt1, Point pt2) { return default(Path); }
         
         /// <summary>
         /// Creates a rectangle shaped Path Item from the passed point and size.
@@ -276,7 +277,8 @@ namespace PaperJs
         /// <param name="point"></param>
         /// <param name="size"></param>
         /// <returns>the newly created path</returns>
-        public static Path Rectangle(Point point, Size size) { return default(Path); }
+        [ScriptAlias("new (Path.Rectangle)")]
+        public static Path CreateRectangle(Point point, Size size) { return default(Path); }
         
         /// <summary>
         /// Creates a rectangle shaped Path Item from the passed points. These do not necessarily need to be the top left and bottom right corners, the constructor figures out how to fit a rectangle between them.
@@ -284,14 +286,16 @@ namespace PaperJs
         /// <param name="point1">The first point defining the rectangle</param>
         /// <param name="point2">The second point defining the rectangle</param>
         /// <returns>the newly created path</returns>
-        public static Path Rectangle(Point point1, Point point2) { return default(Path); }
+        [ScriptAlias("new (Path.Rectangle)")]
+        public static Path CreateRectangle(Point point1, Point point2) { return default(Path); }
         
         /// <summary>
         /// Creates a rectangle shaped Path Item from the passed abstract Rectangle.
         /// </summary>
         /// <param name="rect"></param>
         /// <returns>the newly created path</returns>
-        public static Path Rectangle(Rectangle rect) { return default(Path); }
+        [ScriptAlias("new (Path.Rectangle)")]
+        public static Path CreateRectangle(Rectangle rect) { return default(Path); }
         
         /// <summary>
         /// Creates a rectangular Path Item with rounded corners.
@@ -299,7 +303,8 @@ namespace PaperJs
         /// <param name="rect"></param>
         /// <param name="size">the size of the rounded corners</param>
         /// <returns>the newly created path</returns>
-        public static Path RoundRectangle(Rectangle rect, Size size) { return default(Path); }
+        [ScriptAlias("new (Path.RoundRectangle)")]
+        public static Path CreateRoundRectangle(Rectangle rect, Size size) { return default(Path); }
         
         /// <summary>
         /// Creates an oval shaped Path Item.
@@ -307,14 +312,16 @@ namespace PaperJs
         /// <param name="rect"></param>
         /// <param name="circumscribed">when set to true the oval shaped path will be created so the rectangle fits into it. When set to false the oval path will fit within the rectangle. - optional, default: false</param>
         /// <returns>the newly created path</returns>
-        public static Path Oval(Rectangle rect, bool circumscribed) { return default(Path); }
+        [ScriptAlias("new (Path.Oval)")]
+        public static Path CreateOval(Rectangle rect, bool circumscribed) { return default(Path); }
         
         /// <summary>
         /// Creates an oval shaped Path Item.
         /// </summary>
         /// <param name="rect"></param>
         /// <returns>the newly created path</returns>
-        public static Path Oval(Rectangle rect) { return default(Path); }
+        [ScriptAlias("new (Path.Oval)")]
+        public static Path CreateOval(Rectangle rect) { return default(Path); }
         
         /// <summary>
         /// Creates a circle shaped Path Item.
@@ -322,7 +329,8 @@ namespace PaperJs
         /// <param name="center">the center point of the circle</param>
         /// <param name="radius">the radius of the circle</param>
         /// <returns>the newly created path</returns>
-        public static Path Circle(Point center, double radius) { return default(Path); }
+        [ScriptAlias("new (Path.Circle)")]
+        public static Path CreateCircle(Point center, double radius) { return default(Path); }
         
         /// <summary>
         /// Creates a circular arc shaped Path Item.
@@ -331,7 +339,8 @@ namespace PaperJs
         /// <param name="through">the point the arc passes through</param>
         /// <param name="to">the end point of the arc</param>
         /// <returns>the newly created path</returns>
-        public static Path Arc(Point from, Point through, Point to) { return default(Path); }
+        [ScriptAlias("new (Path.Arc)")]
+        public static Path CreateArc(Point from, Point through, Point to) { return default(Path); }
         
         /// <summary>
         /// Creates a regular polygon shaped Path Item.
@@ -340,7 +349,8 @@ namespace PaperJs
         /// <param name="numSides">the number of sides of the polygon</param>
         /// <param name="radius">the radius of the polygon</param>
         /// <returns>the newly created path</returns>
-        public static Path RegularPolygon(Point center, int numSides, double radius) { return default(Path); }
+        [ScriptAlias("new (Path.RegularPolygon)")]
+        public static Path CreateRegularPolygon(Point center, int numSides, double radius) { return default(Path); }
         
         /// <summary>
         /// Creates a star shaped Path Item. The largest of radius1 and radius2 will be the outer radius of the star. The smallest of radius1 and radius2 will be the inner radius.
@@ -350,7 +360,8 @@ namespace PaperJs
         /// <param name="radius1"></param>
         /// <param name="radius2"></param>
         /// <returns>the newly created path</returns>
-        public static Path Star(Point center, int numPoints, double radius1, double radius2) { return default(Path); }
+        [ScriptAlias("new (Path.Star)")]
+        public static Path CreateStar(Point center, int numPoints, double radius1, double radius2) { return default(Path); }
         
         #endregion
     }

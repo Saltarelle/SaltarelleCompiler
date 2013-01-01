@@ -180,6 +180,7 @@ namespace PaperJsGenerator
                         {
                             member.JsName = member.JsName.Substring(member.Class.Name.Length + 1);
                             member.Type = MemberTypes.StaticMethod;
+                            member.CallWithNew = member.JsName.Length >= 1 && Char.IsUpper(member.JsName[0]);
                         }
                         else
                             member.Type = MemberTypes.Method;
@@ -413,8 +414,9 @@ namespace PaperJsGenerator
                         #region Static Methods
 
                         " + staticMethods.Select(m =>
-                        getComment(m) + @"
-                        public static " + m.ReturnCsType + @" " + m.CsName + genParamList(m) + genBody(m)).Join("\n\n") + @"
+                        getComment(m) + (!m.CallWithNew ? "" : @"
+                        [ScriptAlias(""new (" + classData.Name + "." + m.CsName + @")"")]") + @"
+                        public static " + m.ReturnCsType + @" " + (m.CallWithNew ? "Create" : "") + m.CsName + genParamList(m) + genBody(m)).Join("\n\n") + @"
 
                         #endregion") + @"
                     }
@@ -813,7 +815,7 @@ namespace PaperJsGenerator
         public bool ReturnArrayType;
 
         public string ReturnDescription;
-
+        public bool CallWithNew;
 
         public string ToString(bool showClassName = false)
         {
@@ -856,7 +858,8 @@ namespace PaperJsGenerator
                 ReturnJsType = ReturnJsType,
                 ReturnCsType = ReturnCsType,
                 ReturnArrayType = ReturnArrayType,
-                ReturnDescription = ReturnDescription                
+                ReturnDescription = ReturnDescription,
+                CallWithNew = CallWithNew
             };
         }
     }
