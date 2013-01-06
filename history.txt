@@ -1,3 +1,4 @@
+Fixed issue using object initializers when creating instances of type parameters (#111).
 Fixed issue with [InlineCode("new a.b()")] (#109)
 Fixed issue (sometimes) causing errors when deriving from a nested type (#108)
 Added static methods Object.Keys and Object.GetOwnPropertyNames

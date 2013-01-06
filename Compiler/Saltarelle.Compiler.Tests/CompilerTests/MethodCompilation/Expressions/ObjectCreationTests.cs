@@ -917,5 +917,22 @@ public void M() {
 	$tmp3.set_$X($tmp2);
 ");
 		}
+
+		[Test]
+		public void ObjectInitializersWithTypeParameters() {
+			AssertCorrect(
+@"public class X {
+    public string A;
+}
+public void M<T>(string a) where T : X, new() {
+	// BEGIN
+	var x = new T { A = a };
+	// END
+}",
+@"	var $tmp1 = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, ga_$T).call(null);
+	$tmp1.$A = $a;
+	var $x = $tmp1;
+");
+		}
 	}
 }
