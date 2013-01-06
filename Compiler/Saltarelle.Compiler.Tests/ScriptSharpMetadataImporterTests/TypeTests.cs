@@ -1497,5 +1497,18 @@ public class C3 {
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2"]));
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));
 		}
+
+
+		[Test]
+		public void CanInheritFromInnerClass() {
+			Prepare(@"
+public class TestClass {
+	public class InnerClass	{}
+}
+
+public class DerivedClass : TestClass.InnerClass {}");
+
+			// No error is good enough
+		}
 	}
 }

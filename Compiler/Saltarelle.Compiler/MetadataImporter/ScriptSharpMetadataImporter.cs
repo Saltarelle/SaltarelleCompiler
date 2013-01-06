@@ -352,6 +352,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			foreach (var b in typeDefinition.DirectBaseTypes)
 				ProcessType(b.GetDefinition());
+			if (typeDefinition.DeclaringType != null)
+				ProcessType(typeDefinition.DeclaringTypeDefinition);
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, true, false, false, false, null);
