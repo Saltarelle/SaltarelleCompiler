@@ -331,6 +331,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\License.txt" target=""/>
 		<file src="$baseDir\Runtime\bin\Script.PaperJS.dll" target="lib"/>
 		<file src="$baseDir\Runtime\bin\Script.PaperJS.xml" target="lib"/>
+		<file src="$baseDir\Runtime\src\Libraries\PaperJS\paper*.js" target=""/>
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\PaperJS.nuspec"
