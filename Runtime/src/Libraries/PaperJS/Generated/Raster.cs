@@ -1,4 +1,5 @@
 using System;
+using System.Html;
 using System.Runtime.CompilerServices;
 
 namespace PaperJs
@@ -40,7 +41,7 @@ namespace PaperJs
         /// <summary>
         /// The HTMLImageElement or HTMLCanvasElement of the raster.
         /// </summary>
-        public HTMLImageElement Image;
+        public ImageElement Image;
         
         #endregion
         
@@ -51,7 +52,7 @@ namespace PaperJs
         /// </summary>
         /// <param name="_object">optional</param>
         [ScriptName("")]
-        public Raster(HTMLImageElement _object){ }
+        public Raster(ImageElement _object){ }
         
         /// <summary>
         /// Creates a new raster item and places it in the active layer.
@@ -64,7 +65,7 @@ namespace PaperJs
         /// </summary>
         /// <param name="_object">optional</param>
         [ScriptName("")]
-        public Raster(HTMLCanvasElement _object){ }
+        public Raster(CanvasElement _object){ }
         
         /// <summary>
         /// Creates a new raster item and places it in the active layer.
@@ -82,21 +83,21 @@ namespace PaperJs
         /// </summary>
         /// <param name="rect">the boundaries of the sub image in pixel coordinates</param>
         /// <returns></returns>
-        public HTMLCanvasElement GetSubImage(Rectangle rect) { return default(HTMLCanvasElement); }
+        public CanvasElement GetSubImage(Rectangle rect) { return default(CanvasElement); }
         
         /// <summary>
         /// Draws an image on the raster.
         /// </summary>
         /// <param name="image"></param>
         /// <param name="point">the offset of the image as a point in pixel coordinates</param>
-        public void DrawImage(HTMLImageElement image, Point point) { }
+        public void DrawImage(ImageElement image, Point point) { }
         
         /// <summary>
         /// Draws an image on the raster.
         /// </summary>
         /// <param name="image"></param>
         /// <param name="point">the offset of the image as a point in pixel coordinates</param>
-        public void DrawImage(HTMLCanvasElement image, Point point) { }
+        public void DrawImage(CanvasElement image, Point point) { }
         
         /// <summary>
         /// Calculates the average color of the image within the given path, rectangle or point. This can be used for creating raster image effects.

@@ -1,4 +1,5 @@
 using System;
+using System.Html;
 using System.Runtime.CompilerServices;
 
 namespace PaperJs
@@ -71,7 +72,7 @@ namespace PaperJs
         /// Sets up an empty project for us. If a canvas is provided, it also creates a View for it, both linked to this scope.
         /// </summary>
         /// <param name="canvas">The canvas this scope should be associated with.</param>
-        public void Setup(HTMLCanvasElement canvas) { }
+        public void Setup(CanvasElement canvas) { }
         
         #endregion
         

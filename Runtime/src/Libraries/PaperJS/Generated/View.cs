@@ -1,4 +1,5 @@
 using System;
+using System.Html;
 using System.Runtime.CompilerServices;
 
 namespace PaperJs
@@ -15,7 +16,7 @@ namespace PaperJs
         /// <summary>
         /// The underlying native canvas element.
         /// </summary>
-        public HTMLCanvasElement Canvas;
+        public CanvasElement Canvas;
         
         /// <summary>
         /// The size of the view canvas. Changing the view's size will resize it's underlying canvas.
@@ -66,7 +67,7 @@ namespace PaperJs
         /// </summary>
         /// <param name="canvas">The canvas object that this view should wrap, or the String id that represents it</param>
         [ScriptName("")]
-        public View(HTMLCanvasElement canvas){ }
+        public View(CanvasElement canvas){ }
         
         /// <summary>
         /// Creates a view object

@@ -9,7 +9,7 @@ namespace PaperJs
         /// </summary>
         /// <param name="value">The string representation of the color.</param>
         /// <returns>An implicit color class. In JS it remain plain string.</returns>
-        [InlineCode("{value}")]
+        [ScriptSkip]
         static public implicit operator Color(string value) { return null; }
     }
 }

@@ -104,36 +104,12 @@
     <Compile Include="Generated\View.cs" />
     <Compile Include="Event.cs" />
     <Compile Include="EventModifiers.cs" />
-    <Compile Include="HTMLCanvasElement.cs" />
-    <Compile Include="HTMLImageElement.cs" />
     <Compile Include="PaperScope.cs" />
     <Compile Include="Path.cs" />
     <Compile Include="Point.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Script.jQuery">
-      <HintPath>..\packages\Saltarelle.jQuery.1.6.3\lib\Script.jQuery.dll</HintPath>
-    </Reference>
-    <Reference Include="Script.Web">
-      <HintPath>..\packages\Saltarelle.Web.1.6.3\lib\Script.Web.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CoreLib\CoreLib.csproj">
-      <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
-      <Name>CoreLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Web\Web.csproj">
-      <Project>{3681a9a8-fc40-4125-b842-7775713c8dce}</Project>
-      <Name>Web</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -146,6 +122,16 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib\CoreLib.csproj">
+      <Project>{36d4b098-a21c-4725-acd3-400922885f38}</Project>
+      <Name>CoreLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Web\Web.csproj">
+      <Project>{3681a9a8-fc40-4125-b842-7775713c8dce}</Project>
+      <Name>Web</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="!Exists('$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets')" />
   <Import Project="$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets" Condition="Exists('$(SolutionDir)packages\Saltarelle.Compiler.1.6.3\tools\Saltarelle.Compiler.targets')" />
