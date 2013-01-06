@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
+		<UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
@@ -44,6 +44,7 @@
     <DocumentationFile>..\..\..\bin\SSLoader.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Properties\Version.cs" />
     <Compile Include="ScriptInfo.cs" />
     <Compile Include="ScriptLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

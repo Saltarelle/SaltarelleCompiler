@@ -82,6 +82,7 @@
     <Compile Include="NotSupportedException.cs" />
     <Compile Include="ObjectEnumerator.cs" />
     <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
+    <Compile Include="Properties\Version.cs" />
     <Compile Include="Text\RegexMatch.cs" />
     <Compile Include="Threading\Tasks\PromiseException.cs" />
     <Compile Include="Threading\Tasks\TaskAwaiter.cs" />
