@@ -1,3 +1,4 @@
+Fixed issue with KeyValuePair constructors (#112)
 Added parameterless versions of ObservableArray.RemoveAll and ObservableArray.DestroyAll (#104).
 Fixed internal error when using the result of dynamic method calls in certain invalid ways (#105).
 Generate all code inside an anonymous function when not using a module loader (#99).
