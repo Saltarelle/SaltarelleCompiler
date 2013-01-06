@@ -240,12 +240,14 @@ namespace Saltarelle.Compiler.JSModel
 						break;
 				}
 			}
-            VisitExpression(expression.Constructor, needParens);
-            _cb.Append("(");
-            VisitExpressionList(expression.Arguments);
-            _cb.Append(")");
-            return null;
-        }
+			VisitExpression(expression.Constructor, needParens);
+			if (expression.Arguments != null) {
+				_cb.Append("(");
+				VisitExpressionList(expression.Arguments);
+				_cb.Append(")");
+			}
+			return null;
+		}
 
         public object VisitUnaryExpression(JsUnaryExpression expression, bool parenthesized) {
             string prefix = "", postfix = "";

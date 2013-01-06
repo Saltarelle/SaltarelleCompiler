@@ -124,7 +124,7 @@ namespace Saltarelle.Compiler.JSModel
 
         public virtual JsExpression VisitNewExpression(JsNewExpression expression, TData data) {
             var constructor = VisitExpression(expression.Constructor, data);
-            var arguments   = VisitExpressions(expression.Arguments, data);
+            var arguments   = expression.Arguments != null ? VisitExpressions(expression.Arguments, data) : null;
             return ReferenceEquals(constructor, expression.Constructor) && ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.New(constructor, arguments);
         }
 

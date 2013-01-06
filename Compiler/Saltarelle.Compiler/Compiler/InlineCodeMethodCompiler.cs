@@ -369,7 +369,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
 				var c = VisitExpression(expression.Constructor, null);
-				var a = VisitWithParamExpansion(expression.Arguments);
+				var a = expression.Arguments != null ? VisitWithParamExpansion(expression.Arguments) : null;
 				return ReferenceEquals(c, expression.Constructor) && ReferenceEquals(a, expression.Arguments) ? expression : JsExpression.New(c, a);
 			}
 

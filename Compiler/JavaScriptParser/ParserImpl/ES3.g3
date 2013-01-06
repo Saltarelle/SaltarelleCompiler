@@ -692,24 +692,23 @@ memberExpression
 	;
 
 newExpression
-	: NEW^ leftHandSideExpression[false]
+	: NEW^ leftHandSideExpression[false] ( (LPAREN) => arguments )?
 	;
 
-	
 arguments
 	: LPAREN ( assignmentExpression ( COMMA assignmentExpression )* )? RPAREN
 	-> ^( ARGS assignmentExpression* )
 	;
 	
-leftHandSideExpression[bool allowArguments]
+leftHandSideExpression[bool allowCalls]
 	:
 	(
 		memberExpression 		-> memberExpression
 	)
 	(
-		{ allowArguments }? arguments	-> ^( CALL $leftHandSideExpression arguments )
-		| LBRACK expression RBRACK		-> ^( BYINDEX $leftHandSideExpression expression )
-		| DOT Identifier				-> ^( BYFIELD $leftHandSideExpression Identifier )
+		{ allowCalls }? arguments			-> ^( CALL $leftHandSideExpression arguments )
+		| (LBRACK) => LBRACK expression RBRACK	-> ^( BYINDEX $leftHandSideExpression expression )
+		| (DOT) => DOT Identifier		-> ^( BYFIELD $leftHandSideExpression Identifier )
 	)*
 	;
 
