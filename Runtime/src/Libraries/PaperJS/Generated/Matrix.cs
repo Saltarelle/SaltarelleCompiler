@@ -1,4 +1,5 @@
 using System;
+using System.Html;
 using System.Runtime.CompilerServices;
 
 namespace PaperJs
@@ -287,14 +288,14 @@ namespace PaperJs
         public Matrix SetToRotation(double angle, double x, double y) { return default(Matrix); }
         
         /// <summary>
-        /// Applies this matrix to the specified HTMLCanvasElement Context.
+        /// Applies this matrix to the specified CanvasElement Context.
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="reset">optional, default: false</param>
         public void ApplyToContext(System.Html.Media.Graphics.CanvasContext2D ctx, bool reset) { }
         
         /// <summary>
-        /// Applies this matrix to the specified HTMLCanvasElement Context.
+        /// Applies this matrix to the specified CanvasElement Context.
         /// </summary>
         /// <param name="ctx"></param>
         public void ApplyToContext(System.Html.Media.Graphics.CanvasContext2D ctx) { }

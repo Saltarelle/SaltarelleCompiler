@@ -331,6 +331,7 @@ namespace PaperJsGenerator
 
         private const string FileHeaders =
             @"using System;
+              using System.Html;
               using System.Runtime.CompilerServices;
 
               namespace PaperJs";
@@ -634,7 +635,7 @@ namespace PaperJsGenerator
 
             usedTypes = getUsedTypes();
             
-            var knownTypes = classDatas.Select(x => x.Name).Union(new[] { "bool", "Array", "string", "double", "Action<ToolEvent>", "Action<KeyEvent>", "Action<Event>", "void" }).Union(enumNames).ToArray();
+            var knownTypes = classDatas.Select(x => x.Name).Union(new[] { "bool", "Array", "string", "double", "Action<ToolEvent>", "Action<KeyEvent>", "Action<Event>", "void", "CanvasElement" }).Union(enumNames).ToArray();
 
             var unknownTypes = usedTypes.Where(x => !knownTypes.Contains(x.Key)).ToArray();
 
@@ -689,7 +690,9 @@ namespace PaperJsGenerator
             { "true",    "bool" },
             { "item",    "Item" },
             { "Index",   "int" },
-            { "HTMLImageELement", "HTMLImageElement" }
+            { "HTMLImageELement", "ImageElement" },
+            { "HTMLImageElement", "ImageElement" },
+			{ "HTMLCanvasElement", "CanvasElement" },
         };
 
         public static Dictionary<string, string> NameToTypeDict = new Dictionary<string, string>
@@ -712,7 +715,7 @@ namespace PaperJsGenerator
             { "CanvasRenderingContext2D", "System.Html.Media.Graphics.CanvasContext2D" },
             { "ImageData", "System.Html.Media.Graphics.ImageData" },
             { "public Context Context;", "public System.Html.Media.Graphics.CanvasContext2D Context;" },
-            { "(?<=[ (])Canvas(?=[ )])", "HTMLCanvasElement" },
+            { "(?<=[ (])Canvas(?=[ )])", "CanvasElement" },
         };
 
         public static OperatorData[] OperatorsList = new[]

@@ -34,12 +34,12 @@ namespace PaperJs
         public Size Ppi;
         
         /// <summary>
-        /// The HTMLCanvasElement 2d drawing context of the raster.
+        /// The CanvasElement 2d drawing context of the raster.
         /// </summary>
         public System.Html.Media.Graphics.CanvasContext2D Context;
         
         /// <summary>
-        /// The HTMLImageElement or HTMLCanvasElement of the raster.
+        /// The HTMLImageElement or CanvasElement of the raster.
         /// </summary>
         public ImageElement Image;
         
