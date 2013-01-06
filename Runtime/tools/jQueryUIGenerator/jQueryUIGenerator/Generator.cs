@@ -388,6 +388,7 @@ namespace jQueryApi.UI.{0}s {{
                 methods.AppendLine("        /// " + Utils.FormatXmlComment(inter.Description.Replace("<entryname />", inter.Name)));
                 methods.AppendLine("        /// </summary>");
                 methods.AppendLine("        [InstanceMethodOnFirstArgument]");
+                methods.AppendLine("        [ScriptName(\"" + inter.Name + "\")]");
                 methods.AppendLine("        public static " + Utils.PascalCase(inter.Name) + "Object " + Utils.PascalCase(inter.Name) + "(this jQueryObject q) {");
                 methods.AppendLine("            return null;");
                 methods.AppendLine("        }");
@@ -397,6 +398,7 @@ namespace jQueryApi.UI.{0}s {{
                 methods.AppendLine("        /// " + Utils.FormatXmlComment(inter.Description.Replace("<entryname />", inter.Name)));
                 methods.AppendLine("        /// </summary>");
                 methods.AppendLine("        [InstanceMethodOnFirstArgument]");
+                methods.AppendLine("        [ScriptName(\"" + inter.Name + "\")]");
                 methods.AppendLine("        public static " + Utils.PascalCase(inter.Name) + "Object " + Utils.PascalCase(inter.Name) + "(this jQueryObject q, " + Utils.PascalCase(inter.Name) + "Options options) {");
                 methods.AppendLine("            return null;");
                 methods.AppendLine("        }");
