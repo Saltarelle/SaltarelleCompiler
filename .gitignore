@@ -16,3 +16,4 @@ Compiler/JavaScriptParser/ParserImpl/ES3Walker.tokens
 Compiler/packages-manual/antlr/Tool/Templates/messages/languages/*.stg
 Runtime/src/Libraries/Knockout/Properties/Version.cs
 Runtime/src/Libraries/NodeJS/Properties/Version.cs
+Runtime/src/Libraries/PaperJS/Properties/Version.cs
