@@ -307,5 +307,55 @@ public void M() {
 	}
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetEnumerator" ? MethodScriptSemantics.InlineCode("X", enumerateAsArray: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
+
+
+		[Test]
+		public void ForEachOptimizedIntoForLoopWorksWhenTheIteratorIsUsedByReference() {
+			AssertCorrect(@"
+void F(ref object x) {}
+public void M() {
+	object[] arr = null;
+	// BEGIN
+	foreach (var o in arr) {
+		F(ref o);
+	}
+	// END
+}
+",
+@"	for (var $tmp1 = 0; $tmp1 < $arr.$Length; $tmp1++) {
+		var $o = { $: $arr[$tmp1] };
+		this.$F($o);
+	}
+");
+		}
+
+		[Test]
+		public void ForEachWorksWhenTheIteratorIsUsedByReference() {
+			AssertCorrect(@"
+class MyEnumerable {
+	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
+}
+void F(ref object x) {}
+public void M() {
+	MyEnumerable enm = null;
+	// BEGIN
+	foreach (var o in enm) {
+		F(ref o);
+	}
+	// END
+}
+",
+@"	var $tmp1 = $enm.$GetEnumerator();
+	try {
+		while ($tmp1.$MoveNext()) {
+			var $o = { $: $tmp1.get_$Current() };
+			this.$F($o);
+		}
+	}
+	finally {
+		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
+	}
+");
+		}
 	}
 }

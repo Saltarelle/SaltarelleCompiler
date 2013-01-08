@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="dialog" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>Open content in an interactive overlay</desc>
+<entry name="dialog" type="widget" widget-element="generated wrapper">
+	<title>Dialog Widget</title>
+	<desc>Open content in an interactive overlay.</desc>
 	<longdesc>
 		<p>A dialog is a floating window that contains a title bar and a content area. The dialog window can be moved, resized and closed with the 'x' icon by default.</p>
 
@@ -9,278 +9,285 @@
 
 		<p>A bottom button bar and semi-transparent modal overlay layer are common options that can be added.</p>
 
-		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+			<li><a href="/position/">Position</a></li>
+			<li><a href="/button/">Button</a></li>
+			<li><a href="/draggable/">Draggable</a> (optional; for use with the <a href="#option-draggable"><code>draggable</code></a> option)</li>
+			<li><a href="/resizable/">Resizable</a> (optional; for use with the <a href="#option-resizable"><code>resizable</code></a> option)</li>
+			<li><a href="/category/effects-core/">Effects Core</a> (optional; for use with the <a href="#option-show"><code>show</code></a> and <a href="#option-hide"><code>hide</code></a> options)</li>
+		</ul>
 	</longdesc>
-	<created>1.0</created>
+	<note id="functional-css"/>
+	<added>1.0</added>
 	<options>
-		<option name="autoOpen" default='true'>
-			<desc>When ''autoOpen'' is ''true'' the dialog will open automatically when ''dialog'' is called. If ''false'' it will stay hidden until ''.dialog("open")'' is called on it.</desc>
+		<option name="autoOpen" default="true" example-value="false">
+			<desc>If set to <code>true</code>, the dialog will automatically open upon initialization. If <code>false</code>, the dialog will stay hidden until the <a href="#method-open"><code>open()</code></a> method is called.</desc>
 			<type name="Boolean" />
 		</option>
-		<option name="buttons" default='{ }'>
-			<desc>Specifies which buttons should be displayed on the dialog. The property key is the text of the button. The value is the callback function for when the button is clicked.  The context of the callback is the dialog element; if you need access to the button, it is available as the target of the event object.</desc>
-			<type name="Object" />
+		<option name="buttons" default="{}" example-value='[ { text: "Ok", click: function() { $( this ).dialog( "close" ); } ]'>
+			<desc>Specifies which buttons should be displayed on the dialog. The context of the callback is the dialog element; if you need access to the button, it is available as the target of the event object.</desc>
+			<type name="Object">
+				<desc>The keys are the button labels and the values are the callbacks for when the associated button is clicked.</desc>
+			</type>
+			<type name="Array">
+				<desc>Each element of the array must be an object defining the attributes, properties, and event handlers to set on the button.</desc>
+			</type>
 		</option>
-		<option name="buttons" default='[ ]'>
-			<desc>Specifies which buttons should be displayed on the dialog. Each element of the array must be an Object defining the properties to set on the button.</desc>
-			<type name="Array" />
-		</option>
-		<option name="closeOnEscape" default='true'>
+		<option name="closeOnEscape" default="true" example-value="false">
 			<desc>Specifies whether the dialog should close when it has focus and the user presses the esacpe (ESC) key.</desc>
 			<type name="Boolean" />
 		</option>
-		<option name="closeText" default='"close"'>
+		<option name="closeText" default='"close"' example-value='"hide"'>
 			<desc>Specifies the text for the close button. Note that the close text is visibly hidden when using a standard theme.</desc>
 			<type name="String" />
 		</option>
-		<option name="dialogClass" default='""'>
+		<option name="dialogClass" default='""' example-value='"alert"'>
 			<desc>The specified class name(s) will be added to the dialog, for additional theming.</desc>
 			<type name="String" />
 		</option>
-		<option name="disabled" default="false">
-			<desc>Disables the dialog if set to true.</desc>
+		<option name="draggable" default="true" example-value="false">
+			<desc>If set to <code>true</code>, the dialog will be draggable by the title bar. Requires the <a href="/draggable/">jQuery UI Draggable wiget</a> to be included.</desc>
 			<type name="Boolean" />
 		</option>
-		<option name="draggable" default='true'>
-			<desc>If set to true, the dialog will be draggable by the titlebar.</desc>
-			<type name="Boolean" />
+		<option name="height" default='"auto"' example-value="400">
+			<desc>The height of the dialog.</desc>
+			<type name="Number">
+				<desc>The height in pixels.</desc>
+			</type>
+			<type name="String">
+				<desc>The only supported string value is <code>"auto"</code> which will allow the dialog height to adjust based on its content.</desc>
+			</type>
 		</option>
-		<option name="height" default='"auto"'>
-			<desc>The height of the dialog, in pixels. Specifying 'auto' is also supported to make the dialog adjust based on its content.</desc>
-			<type name="Number" />
+		<option name="hide" default="null" example-value='"explode"'>
+			<desc>If and how to animate the hiding of the dialog.</desc>
+			<type name="Number">
+				<desc>
+					The dialog will fade out while animating the height and width for the specified duration.
+				</desc>
+			</type>
+			<type name="String">
+				<desc>
+					The dialog will be hidden using the specified jQuery UI effect. See the <a href="/category/effects/">list of effects</a> for possible values.
+				</desc>
+			</type>
+			<type name="Object">
+				<desc>If the value is an object, then <code>effect</code>, <code>duration</code>, and <code>easing</code> properties may be provided. The <code>effect</code> property must be the name of a jQuery UI effect. When using a jQuery UI effect that supports additional settings, you may include those settings in the object and they will be passed to the effect. If <code>duration</code> or <code>easing</code> is omitted, then the default values will be used.</desc>
+			</type>
 		</option>
-		<option name="hide" default='null'>
-			<desc>The effect to be used when the dialog is closed.</desc>
-			<type name="String" />
-		</option>
-		<option name="hide" default='null'>
-			<desc>The effect to be used when the dialog is closed.</desc>
-			<type name="Object" />
-		</option>
-		<option name="maxHeight" default='false'>
+		<option name="maxHeight" default="false" example-value="600">
 			<desc>The maximum height to which the dialog can be resized, in pixels.</desc>
 			<type name="Number" />
 		</option>
-		<option name="maxWidth" default='false'>
+		<option name="maxWidth" default="false" example-value="600">
 			<desc>The maximum width to which the dialog can be resized, in pixels.</desc>
 			<type name="Number" />
 		</option>
-		<option name="minHeight" default='150'>
+		<option name="minHeight" default="150" example-value="200">
 			<desc>The minimum height to which the dialog can be resized, in pixels.</desc>
 			<type name="Number" />
 		</option>
-		<option name="minWidth" default='150'>
+		<option name="minWidth" default="150" example-value="200">
 			<desc>The minimum width to which the dialog can be resized, in pixels.</desc>
 			<type name="Number" />
 		</option>
-		<option name="modal" default='false'>
-			<desc>If set to true, the dialog will have modal behavior; other items on the page will be disabled (i.e. cannot be interacted with). Modal dialogs create an overlay below the dialog but above other page elements.</desc>
+		<option name="modal" default="false" example-value="true">
+			<desc>If set to <code>true</code>, the dialog will have modal behavior; other items on the page will be disabled, i.e., cannot be interacted with. Modal dialogs create an overlay below the dialog but above other page elements.</desc>
 			<type name="Boolean" />
 		</option>
-		<option name="position" default='"center"'>
-			<desc>Specifies where the dialog should be displayed. Possible values: <br/>1) a single string representing position within viewport: 'center', 'left', 'right', 'top', 'bottom'. <br/>2) an array containing an <em>x,y</em> coordinate pair in pixel offset from left, top corner of viewport (e.g. [350,100]) <br/>3) an array containing <em>x,y</em> position string values (e.g. ['right','top'] for top right corner).</desc>
-			<type name="String" />
-			<type name="Array" />
+		<option name="position" default='{ my: "center", at: "center", of: window }' example-value='{ my: "left top", at: "left bottom", of: button }'>
+			<desc>Specifies where the dialog should be displayed. The dialog will handle collisions such that as much of the dialog is visible as possible.</desc>
+			<type name="Object">
+				<desc>Identifies the position of the dialog when opened. The <code>of</code> option defaults to the window, but you can specify another element to position against. You can refer to the <a href="/position">jQuery UI Position</a> utility for more details about the various options.</desc>
+			</type>
+			<type name="String">
+				<desc>A string representing the position within the viewport. Possible values: <code>"center"</code>, <code>"left"</code>, <code>"right"</code>, <code>"top"</code>, <code>"bottom"</code>.</desc>
+			</type>
+			<type name="Array">
+				<desc>An array containing an <em>x, y</em> coordinate pair in pixel offset from the top left corner of the viewport or the name of a possible string value.</desc>
+			</type>
 		</option>
-		<option name="resizable" default='true'>
-			<desc>If set to true, the dialog will be resizable.</desc>
+		<option name="resizable" default="true" example-value="false">
+			<desc>If set to <code>true</code>, the dialog will be resizable. Requires the <a href="/resizable/">jQuery UI Resizable widget</a> to be included.</desc>
 			<type name="Boolean" />
 		</option>
-		<option name="show" default='null'>
-			<desc>The effect to be used when the dialog is opened.</desc>
-			<type name="String" />
+		<option name="show" default="null" example-value='"slow"'>
+			<desc>If and how to animate the showing of the dialog.</desc>
+			<type name="Number">
+				<desc>
+					The dialog will fade in while animating the height and width for the specified duration.
+				</desc>
+			</type>
+			<type name="String">
+				<desc>
+					The dialog will be shown using the specified jQuery UI effect. See the <a href="/category/effects/">list of effects</a> for possible values.
+				</desc>
+			</type>
+			<type name="Object">
+				<desc>If the value is an object, then <code>effect</code>, <code>duration</code>, and <code>easing</code> properties may be provided. The <code>effect</code> property must be the name of a jQuery UI effect. When using a jQuery UI effect that supports additional settings, you may include those settings in the object and they will be passed to the effect. If <code>duration</code> or <code>easing</code> is omitted, then the default values will be used.</desc>
+			</type>
 		</option>
-		<option name="show" default='null'>
-			<desc>The effect to be used when the dialog is opened.</desc>
-			<type name="Object" />
-		</option>
-		<option name="stack" default='true'>
+		<option name="stack" default="true" example-value="false">
 			<desc>Specifies whether the dialog will stack on top of other dialogs. This will cause the dialog to move to the front of other dialogs when it gains focus.</desc>
 			<type name="Boolean" />
 		</option>
-		<option name="title" default='""'>
-			<desc>Specifies the title of the dialog. Any valid HTML may be set as the title. The title can also be specified by the title attribute on the dialog source element.</desc>
+		<option name="title" default='""' example-value='"Dialog Title"'>
+			<desc>Specifies the title of the dialog. Any valid HTML may be set as the title. The title can also be specified by the <code>title</code> attribute on the dialog source element.</desc>
 			<type name="String" />
 		</option>
-		<option name="width" default='300'>
+		<option name="width" default="300" example-value="500">
 			<desc>The width of the dialog, in pixels.</desc>
 			<type name="Number" />
 		</option>
-		<option name="zIndex" default='1000'>
+		<option name="zIndex" default="1000" example-value="20">
 			<desc>The starting z-index for the dialog.</desc>
-			<type name="Number" />
+			<type name="Integer" />
 		</option>
-
 	</options>
 	<events>
-		<event name="beforeClose" type="dialogbeforeclose">
-			<desc>This event is triggered when a dialog attempts to close. If the beforeClose event handler (callback function) returns false, the close will be prevented.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="beforeClose">
+			<desc>Triggered when a dialog is about to close. If canceled, the dialog will not close.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="create">
-			<desc>
-				This event is triggered when the dialog is created.
-			</desc>
-			<argument name="event" type="Event">
-			</argument>
-			<argument name="ui" type="Object">
-			</argument>
+		<xi:include href="../includes/widget-event-create.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<event name="open">
+			<desc>Triggered when the dialog is opened.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="open" type="dialogopen">
-			<desc>This event is triggered when dialog is opened.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="focus">
+			<desc>Triggered when the dialog gains focus.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="focus" type="dialogfocus">
-			<desc>This event is triggered when the dialog gains focus.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="dragStart">
+			<desc>Triggered when the user starts dragging the dialog.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
-		</event>
-		<event name="dragStart" type="dialogdragstart">
-			<desc>This event is triggered at the beginning of the dialog being dragged.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="position" type="Object">
-					<desc>The current position of the dialog relative to the offset</desc>
+					<desc>The current CSS position of the dialog.</desc>
 				</property>
 				<property name="offset" type="Object">
-					<desc>The current absolute position of the dialog, relative to the page</desc>
+					<desc>The current offset position of the dialog.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="drag" type="dialogdrag">
-			<desc>This event is triggered when the dialog is dragged.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="drag">
+			<desc>Triggered while the dialog is being dragged.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="position" type="Object">
-					<desc>The current position of the dialog relative to the offset</desc>
+					<desc>The current CSS position of the dialog.</desc>
 				</property>
 				<property name="offset" type="Object">
-					<desc>The current absolute position of the dialog, relative to the page</desc>
+					<desc>The current offset position of the dialog.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="dragStop" type="dialogdragstop">
-			<desc>This event is triggered after the dialog has been dragged.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="dragStop">
+			<desc>Triggered after the dialog has been dragged.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="position" type="Object">
-					<desc>The current position of the dialog relative to the offset</desc>
+					<desc>The current CSS position of the dialog.</desc>
 				</property>
 				<property name="offset" type="Object">
-					<desc>The current absolute position of the dialog, relative to the page</desc>
+					<desc>The current offset position of the dialog.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="resizeStart" type="dialogresizestart">
-			<desc>This event is triggered at the beginning of the dialog being resized.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="resizeStart">
+			<desc>Triggered when the user starts resizing the dialog.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
+				<property name="orginalPosition" type="Object">
+					<desc>The CSS position of the dialog prior to being resized.</desc>
+				</property>
 				<property name="position" type="Object">
-					<desc>The current position of the dialog relative to the offset</desc>
+					<desc>The current CSS position of the dialog.</desc>
 				</property>
-				<property name="offset" type="Object">
-					<desc>The current absolute position of the dialog, relative to the page</desc>
+				<property name="originalSize" type="Object">
+					<desc>The size of the dialog prior to being resized.</desc>
+				</property>
+				<property name="size" type="Object">
+					<desc>The current size of the dialog.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="resize" type="dialogresize">
-			<desc>This event is triggered when the dialog is resized.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="resize">
+			<desc>Triggered while the dialog is being resized.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
+				<property name="orginalPosition" type="Object">
+					<desc>The CSS position of the dialog prior to being resized.</desc>
+				</property>
 				<property name="position" type="Object">
-					<desc>The current position of the dialog relative to the offset</desc>
+					<desc>The current CSS position of the dialog.</desc>
 				</property>
-				<property name="offset" type="Object">
-					<desc>The current absolute position of the dialog, relative to the page</desc>
+				<property name="originalSize" type="Object">
+					<desc>The size of the dialog prior to being resized.</desc>
+				</property>
+				<property name="size" type="Object">
+					<desc>The current size of the dialog.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="resizeStop" type="dialogresizestop">
-			<desc>This event is triggered after the dialog has been resized.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="resizeStop">
+			<desc>Triggered after the dialog has been resized.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
+				<property name="orginalPosition" type="Object">
+					<desc>The CSS position of the dialog prior to being resized.</desc>
+				</property>
 				<property name="position" type="Object">
-					<desc>The current position of the dialog relative to the offset</desc>
+					<desc>The current CSS position of the dialog.</desc>
 				</property>
-				<property name="offset" type="Object">
-					<desc>The current absolute position of the dialog, relative to the page</desc>
+				<property name="originalSize" type="Object">
+					<desc>The size of the dialog prior to being resized.</desc>
+				</property>
+				<property name="size" type="Object">
+					<desc>The current size of the dialog.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="close" type="dialogclose">
-			<desc>This event is triggered when the dialog is closed.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="close">
+			<desc>Triggered when the dialog is closed.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-
 	</events>
 	<methods>
 		<method name="close">
-			<desc>Close the dialog.</desc>
+			<desc>Closes the dialog.</desc>
 		</method>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
-		<widget-inherit id="widget-enable" />
-		<method name="isOpen">
-			<desc>Returns true if the dialog is currently open.</desc>
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<method name="isOpen" return="Boolean" example-return-var="isOpen">
+			<desc>Whether the dialog is currently open.</desc>
 		</method>
 		<method name="moveToTop">
-			<desc>Move the dialog to the top of the dialogs stack.</desc>
+			<desc>Moves the dialog to the top of the dialog stack.</desc>
 		</method>
 		<method name="open">
-			<desc>Open the dialog.</desc>
+			<desc>Opens the dialog.</desc>
 		</method>
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<widget-inherit id="widget-widget" />
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</methods>
 	<example>
-
-		<desc>A simple jQuery UI Dialog.</desc>
-		<code><![CDATA[$("#dialog").dialog();]]></code>
+		<desc>A simple jQuery UI Dialog</desc>
+		<code><![CDATA[
+$( "#dialog" ).dialog({ autoOpen: false });
+$( "#opener" ).click(function() {
+	$( "#dialog" ).dialog( "open" );
+});
+]]></code>
 		<html><![CDATA[
-<div id="dialog" title="Dialog Title">I'm in a dialog</div>
-
+<button id="opener">open the dialog</button>
+<div id="dialog" title="Dialog Title">I'm a dialog</div>
 ]]></html>
-
 	</example>
 	<category slug="widgets"/>
 </entry>

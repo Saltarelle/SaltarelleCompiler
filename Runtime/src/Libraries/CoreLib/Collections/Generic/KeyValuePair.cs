@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
 	[Serializable]
+	[Imported]
     public sealed class KeyValuePair<TKey, TValue> {
 
         public KeyValuePair() {

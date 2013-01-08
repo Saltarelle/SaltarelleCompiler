@@ -32,7 +32,7 @@ namespace System.Collections.Generic {
 
 		public int Count { get { return 0; } }
 
-		public ICollection<TKey> Keys { get { return null; } }
+		public new ICollection<TKey> Keys { get { return null; } }
 
 		public ICollection<TValue> Values { get { return null; } }
 

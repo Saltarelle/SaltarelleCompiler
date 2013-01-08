@@ -1,97 +1,42 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="effect" namespace="fn" widgetnamespace="ui" type="ui">
-	<desc></desc>
-	<longdesc></longdesc>
-	<methods>
-        <method name="effect">
-            <desc></desc>
-            <argument name="effect" type="String"></argument>
-            <argument name="options" type="Object"></argument>
-            <argument name="speed" type="String, Number"></argument>
-            <argument name="callback" type="Function"></argument>
-        </method>
-		<method name="addClass">
-			<desc></desc>
-			<argument name="classNames" type="String"></argument>
-            <argument name="speed" type="String, Number"></argument>
-            <argument name="easing" type="Object"></argument>
-            <argument name="callback" type="Function"></argument>
-		</method>
-        <method name="removeClass">
-          <desc></desc>
-            <argument name="classNames" type="String"></argument>
-            <argument name="speed" type="String, Number"></argument>
-            <argument name="easing" type="Object"></argument>
-            <argument name="callback" type="Function"></argument>
-        </method>
-        <method name="toggleClass">
-          <desc></desc>
-            <argument name="classNames" type="String"></argument>
-            <argument name="force" type="Boolean"></argument>
-            <argument name="speed" type="String, Number"></argument>
-            <argument name="easing" type="Object"></argument>
-            <argument name="callback" type="Function"></argument>
-        </method>
-        <method name="switchClass">
-          <desc></desc>
-            <argument name="remove" type="String"></argument>
-            <argument name="add" type="String"></argument>
-            <argument name="speed" type="String, Number"></argument>
-            <argument name="easing" type="Object"></argument>
-            <argument name="callback" type="Function"></argument>
-        </method>
-        <method name="save">
-            <desc></desc>
-            <argument name="element" type="Object"></argument>
-            <argument name="set" type="Object"></argument>
-        </method>
-        <method name="restore">
-            <desc></desc>
-            <argument name="element" type="Object"></argument>
-            <argument name="set" type="Object"></argument>
-        </method>
-        <method name="setMode">
-            <desc></desc>
-            <argument name="el" type="Object"></argument>
-            <argument name="mode" type="Object"></argument>
-        </method>
-        <method name="getBaseline">
-            <desc></desc>
-            <argument name="origin" type="Object"></argument>
-            <argument name="original" type="Object"></argument>
-        </method>
-        <method name="createWrapper">
-            <desc></desc>
-            <argument name="element" type="Object"></argument>
-        </method>
-        <method name="removeWrapper">
-            <desc></desc>
-            <argument name="element" type="Object"></argument>
-        </method>
-        <method name="setTransition">
-            <desc></desc>
-            <argument name="element" type="Object"></argument>
-            <argument name="list" type="Object"></argument>
-            <argument name="factor" type="Object"></argument>
-            <argument name="value" type="Object"></argument>
-        </method>
-        <method name="show">
-            <desc></desc>
-            <argument name="speed" type="String, Number"></argument>
-        </method>
-        <method name="hide">
-            <desc></desc>
-            <argument name="speed" type="String, Number"></argument>
-        </method>
-        <method name="toggle">
-            <desc></desc>
-            <argument name="speed" type="String, Number"></argument>
-        </method>
-        <method name="cssUnit">
-            <desc></desc>
-            <argument name="key" type="String"></argument>
-        </method>
-	</methods>
+<entry name="effect" type="method" return="jQuery">
+	<title>.effect()</title>
+	<desc>Apply an animation effect to an element.</desc>
+	<longdesc>
+		<p>The <code>.effect()</code> method applies a named animation <a href="/category/effects/">effect</a> to an element. Many effects also support a show or hide mode, which can be accomplished with the <a href="/show/"><code>.show()</code></a>, <a href="/hide/"><code>.hide()</code></a>, and <a href="/toggle/"><code>.toggle()</code></a> methods.</p>
+	</longdesc>
+	<signature>
+		<argument name="effect" type="String">
+			<desc>A string indicating which <a href="/category/effect/">effect</a> to use for the transition.</desc>
+		</argument>
+		<argument name="options" type="Object" optional="true">
+			<desc>Effect-specific settings and <a href="/easings/">easing</a>.</desc>
+		</argument>
+		<xi:include href="../includes/animation-argument-duration.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/animation-argument-complete.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+	</signature>
+	<xi:include href="../includes/animation-signature-options.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+	<example>
+		<desc>Apply the bounce effect to a div.</desc>
+		<css><![CDATA[
+	div {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+		border: 1px solid #000;
+	}
+]]></css>
+		<html><![CDATA[
+<p>Click anywhere to apply the effect.</p>
+<div></div>
+]]></html>
+		<code><![CDATA[
+$( document ).click(function() {
+	$( "div" ).effect( "bounce", "slow" );
+});
+]]></code>
+	</example>
+	<category slug="methods"/>
 	<category slug="effects"/>
+	<category slug="effects-core"/>
 </entry>

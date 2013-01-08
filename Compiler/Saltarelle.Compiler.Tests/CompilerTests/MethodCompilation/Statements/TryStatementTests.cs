@@ -407,7 +407,7 @@ public void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug, // BEGIN comment is inserted after the try token")]
+		[Test]
 		public void TryCatchFinallyBlockWorks() {
 			AssertCorrect(
 @"class ArgumentException : Exception {}

@@ -665,7 +665,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32), foreachStatement.GetRegion());
 				var jsIndex = JsExpression.Identifier(_variables[index].Name);
-				var body = new[] { new JsVariableDeclarationStatement(_variables[iterator.Variable].Name, JsExpression.Index(array, jsIndex)) }
+				JsExpression iteratorValue = JsExpression.Index(array, jsIndex);
+				if (_variables[iterator.Variable].UseByRefSemantics)
+					iteratorValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", iteratorValue));
+
+				var body = new[] { new JsVariableDeclarationStatement(_variables[iterator.Variable].Name, iteratorValue) }
 				          .Concat(CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement).Statements);
 
 				_result.Add(new JsForStatement(new JsVariableDeclarationStatement(_variables[index].Name, JsExpression.Number(0)),
@@ -684,7 +688,11 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.");
 
 				var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
-				var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrent.Expression)) }).ToList();
+				JsExpression getCurrentValue = getCurrent.Expression;
+				if (_variables[iterator.Variable].UseByRefSemantics)
+					getCurrentValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", getCurrentValue));
+
+				var preBody = getCurrent.AdditionalStatements.Concat(new[] { new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[iterator.Variable].Name, getCurrentValue)) }).ToList();
 				var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
 
 				body = new JsBlockStatement(preBody.Concat(body.Statements));

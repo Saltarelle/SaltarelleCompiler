@@ -326,9 +326,15 @@ expr returns [JsExpression result]
 
 leftHandSideExpression returns [JsExpression result]
 	: x=primaryExpression  { $result = x; }
+	| x=newExpression      { $result = x; }
 	| x=functionExpression { $result = x; }
 	| x=callExpression     { $result = x; }
 	| x=memberExpression   { $result = x; }
+	;
+
+newExpression returns [JsExpression result]
+@init { List<JsExpression> args = null; }
+	: ^( NEW t=leftHandSideExpression ( ^( ARGS { args = new List<JsExpression>(); } (a=expr { args.Add(a); })* ) )? ) { $result = JsExpression.New(t, args); }
 	;
 
 functionExpression returns [JsExpression result]
@@ -343,8 +349,7 @@ functionDeclaration returns [JsStatement result]
 
 callExpression returns [JsExpression result]
 @init { var args = new List<JsExpression>(); }
-	: ^( CALL ^( NEW t=leftHandSideExpression ) ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.New(t, args); }
-	| ^( CALL t=leftHandSideExpression ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.Invocation(t, args); }
+	: ^( CALL t=leftHandSideExpression ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.Invocation(t, args); }
 	;
 	
 memberExpression returns [JsExpression result]

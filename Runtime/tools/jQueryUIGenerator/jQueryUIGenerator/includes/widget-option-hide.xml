@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<option name="hide" default="null" example-value='{ effect: "explode", duration: 1000 }'>
+	<desc>If and how to animate the hiding of the <placeholder name="animated-element"/>.</desc>
+	<type name="Boolean">
+		<desc>
+			When set to <code>false</code>, no animation will be used and the <placeholder name="animated-element"/> will be hidden immediately.
+			When set to <code>true</code>, the <placeholder name="animated-element"/> will fade out with the default duration and the default easing.
+		</desc>
+	</type>
+	<type name="Number">
+		<desc>
+			The <placeholder name="animated-element"/> will fade out with the specified duration and the default easing.
+		</desc>
+	</type>
+	<type name="String">
+		<desc>
+			The <placeholder name="animated-element"/> will be hidden using the specified effect.
+			The value can either be the name of a built-in jQuery animateion method, such as <code>"slideUp"</code>, or the name of a jQuery UI effect, such as <code>"fold"</code>.
+			In either case the effect will be used with the default duration and the default easing.
+		</desc>
+	</type>
+	<type name="Object">
+		<desc>If the value is an object, then <code>effect</code>, <code>duration</code>, and <code>easing</code> properties may be provided. If the <code>effect</code> property contains the name of a jQuery method, then that method will be used; otherwise it is assumed to be the name of a jQuery UI effect. When using a jQuery UI effect that supports additional settings, you may include those settings in the object and they will be passed to the effect. If <code>duration</code> or <code>easing</code> is omitted, then the default values will be used. If <code>effect</code> is omitted, then <code>"fadeOut"</code> will be used.</desc>
+	</type>
+</option>

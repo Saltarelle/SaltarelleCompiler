@@ -45,8 +45,10 @@ namespace Saltarelle.Compiler.Tests.LinkerTests {
 			}, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
-@"$GlobalType;
-return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
+@"(function() {
+	$GlobalType;
+	return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
+})();
 ");
 		}
 
@@ -60,8 +62,10 @@ return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
-@"$$GlobalType;
-return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
+@"(function() {
+	$$GlobalType;
+	return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
+})();
 ");
 		}
 
@@ -73,7 +77,11 @@ return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(type), "x"), JsExpression.Number(1)))
 			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.FullName), IsImported = t => ReferenceEquals(t, type) });
 
-			AssertCorrect(actual, "return $MyImportedType.x + 1;\n");
+			AssertCorrect(actual,
+@"(function() {
+	return $MyImportedType.x + 1;
+})();
+");
 		}
 
 		[Test]
@@ -100,7 +108,11 @@ return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", asm)), "x")),
 			}, mainAssembly: asm, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(""), GetModuleName = t => "my-module", MainModuleName = "my-module" });
 
-			AssertCorrect(actual, "exports.x;\n");
+			AssertCorrect(actual,
+@"(function() {
+	exports.x;
+})();
+");
 		}
 
 		[Test]
@@ -123,7 +135,11 @@ $mymodule.x;
 				new JsExpressionStatement(new JsMemberAccessExpression(new JsTypeReferenceExpression(CreateMockType("GlobalType", CreateMockAssembly())), "x")),
 			}, metadata: new MockScriptSharpMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
-			AssertCorrect(actual, "x;\n");
+			AssertCorrect(actual,
+@"(function() {
+	x;
+})();
+");
 		}
 
 		[Test]

@@ -1,165 +1,131 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="selectable" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>Use the mouse to select individual or a group of elements</desc>
+<entry name="selectable" type="widget" widget-element="selectable element">
+	<title>Selectable Widget</title>
+	<desc>Use the mouse to select elements, individually or in a group.</desc>
 	<longdesc>
-		<p>The jQuery UI Selectable plugin allows for elements to be selected by dragging a box (sometimes called a lasso) with the mouse over the elements. Also, elements can be selected by click or drag while holding the Ctrl/Meta key, allowing for multiple (non-contiguous) selections.</p>
+		<p>The jQuery UI Selectable plugin allows for elements to be selected by dragging a box (sometimes called a lasso) with the mouse over the elements. Elements can also be selected via click or drag while holding the ctrl/meta key, allowing for multiple (non-contiguous) selections.</p>
 
-		<p>This interaction requires some functional CSS, otherwise it won't work. If you build a custom theme, use the interaction's specific CSS file as a starting point.</p>
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+			<li><a href="/mouse/">Mouse Interaction</a></li>
+		</ul>
 	</longdesc>
-	<created>1.0</created>
+	<note id="functional-css"/>
+	<added>1.0</added>
 	<options>
-		<option name="autoRefresh" default='true'>
-			<desc>This determines whether to refresh (recalculate) the position and size of each selectee at the beginning of each select operation. If you have many many items, you may want to set this to false and call the refresh method manually.</desc>
-			<type name="Boolean" />
+		<option name="appendTo" type="Selector" default='"body"' example-value='"#someElem"'>
+			<desc>Which element the selection helper (the lasso) should be appended to.</desc>
 		</option>
-		<option name="cancel" default='":input,option"'>
+		<option name="autoRefresh" type="Boolean" default="true" example-value='false'>
+			<desc>This determines whether to refresh (recalculate) the position and size of each selectee at the beginning of each select operation. If you have many items, you may want to set this to false and call the <a href="#method-refresh"><code>refresh()</code></a> method manually.</desc>
+		</option>
+		<option name="cancel" type="Selector" default='"input,textarea,button,select,option"' example-value='a,.cancel'>
 			<desc>Prevents selecting if you start on elements matching the selector.</desc>
-			<type name="Selector" />
 		</option>
-		<option name="delay" default='0'>
-			<desc>Time in milliseconds to define when the selecting should start. It helps preventing unwanted selections when clicking on an element.</desc>
-			<type name="Number" />
+		<option name="delay" type="Integer" default="0" example-value='150'>
+			<desc>Time in milliseconds to define when the selecting should start. This helps prevent unwanted selections when clicking on an element.</desc>
 		</option>
-		<option name="disabled" default="false">
-			<desc>Disables the selectable if set to true.</desc>
-			<type name="Boolean" />
+		<xi:include href="../includes/widget-option-disabled.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<option name="distance" type="Number" default="0" example-value='30'>
+			<desc>Tolerance, in pixels, for when selecting should start. If specified, selecting will not start until the mouse has been dragged beyond the specified distance.</desc>
 		</option>
-		<option name="distance" default='0'>
-			<desc>Tolerance, in pixels, for when selecting should start. If specified, selecting will not start until after mouse is dragged beyond distance.</desc>
-			<type name="Number" />
-		</option>
-		<option name="filter" default='"*"'>
+		<option name="filter" type="Selector" default='"*"' example-value='li'>
 			<desc>The matching child elements will be made selectees (able to be selected).</desc>
-			<type name="Selector" />
 		</option>
-		<option name="tolerance" default='"touch"'>
+		<option name="tolerance" type="String" default='"touch"' example-value='"fit"'>
 			<desc>
-				Possible values: 'touch', 'fit'.
+				Specifies which mode to use for testing whether the lasso should select an item. Possible values:
 				<ul>
-					<li>'''fit''': draggable overlaps the droppable entirely</li>
-					<li>'''touch''': draggable overlaps the droppable any amount</li>
+					<li><code>"fit"</code>: Lasso overlaps the item entirely.</li>
+					<li><code>"touch"</code>: Lasso overlaps the item by any amount.</li>
 				</ul>
 			</desc>
-			<type name="String" />
 		</option>
-
 	</options>
 	<events>
-		<event name="create">
-			<desc>
-				This event is triggered when the selectable is created.
-			</desc>
-			<argument name="event" type="Event">
-			</argument>
+		<xi:include href="../includes/widget-event-create.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<event name="selected">
+			<desc>Triggered at the end of the select operation, on each element added to the selection.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-			</argument>
-		</event>
-		<event name="selected" type="selectableselected">
-			<desc>This event is triggered at the end of the select operation, on each element added to the selection.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="selected" type="Object">
-					<desc>The selectable item that has been selected</desc>
+				<property name="selected" type="Element">
+					<desc>The selectable item that has been selected.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="selecting" type="selectableselecting">
-			<desc>This event is triggered during the select operation, on each element added to the selection.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="selecting">
+			<desc>Triggered during the select operation, on each element added to the selection.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="selecting" type="Object">
-					<desc>The current selectable item being selected</desc>
+				<property name="selecting" type="Element">
+					<desc>The current selectable item being selected.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="start" type="selectablestart">
-			<desc>This event is triggered at the beginning of the select operation.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="start">
+			<desc>Triggered at the beginning of the select operation.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="stop" type="selectablestop">
-			<desc>This event is triggered at the end of the select operation.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-			</argument>
+		<event name="stop">
+			<desc>Triggered at the end of the select operation.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object"/>
 		</event>
-		<event name="unselected" type="selectableunselected">
-			<desc>This event is triggered at the end of the select operation, on each element removed from the selection.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="unselected">
+			<desc>Triggered at the end of the select operation, on each element removed from the selection.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="unselected" type="Object">
-					<desc>The selectable item that has been unselected</desc>
+				<property name="unselected" type="Element">
+					<desc>The selectable item that has been unselected.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="unselecting" type="selectableunselecting">
-			<desc>This event is triggered during the select operation, on each element removed from the selection.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="unselecting">
+			<desc>Triggered during the select operation, on each element removed from the selection.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="unselecting" type="Object">
-					<desc>The current selectable item being unselected</desc>
+				<property name="unselecting" type="Element">
+					<desc>The current selectable item being unselected.</desc>
 				</property>
 			</argument>
 		</event>
-
 	</events>
 	<methods>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
-		<widget-inherit id="widget-enable" />
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-disable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-enable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 		<method name="refresh">
-			<desc> Refresh the position and size of each selectee element. This method can be used to manually recalculate the position and size of each selectee element. Very useful if autoRefresh is set to false.</desc>
+			<desc>Refresh the position and size of each selectee element. This method can be used to manually recalculate the position and size of each selectee when the <a href="#option-autoRefresh"><code>autoRefresh</code></a> option is set to <code>false</code>.</desc>
 		</method>
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<widget-inherit id="widget-widget" />
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</methods>
 	<example>
-
+		<height>150</height>
 		<desc>A simple jQuery UI Selectable.</desc>
-		<inhead><![CDATA[<style type="text/css">
-#selectable .ui-selecting {
-	background: silver;
-}
-#selectable .ui-selected {
-	background: gray;
-}
-</style>
-]]></inhead>
-		<code><![CDATA[$("#selectable").selectable();]]></code>
+		<css><![CDATA[
+	#selectable .ui-selecting {
+		background: #ccc;
+	}
+	#selectable .ui-selected {
+		background: #999;
+	}
+]]></css>
+		<code><![CDATA[
+$( "#selectable" ).selectable();
+]]></code>
 		<html><![CDATA[
 <ul id="selectable">
-<li>Item 1</li>
-<li>Item 2</li>
-<li>Item 3</li>
-<li>Item 4</li>
-<li>Item 5</li>
+	<li>Item 1</li>
+	<li>Item 2</li>
+	<li>Item 3</li>
+	<li>Item 4</li>
+	<li>Item 5</li>
 </ul>
-
 ]]></html>
-
 	</example>
 	<category slug="interactions"/>
 </entry>

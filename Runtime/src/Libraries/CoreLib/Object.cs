@@ -54,5 +54,21 @@ namespace System {
 		public static bool Equals(object a, object b) {
 			return false;
 		}
+
+		/// <summary>
+		/// Returns an array of a given object's own enumerable properties, in the same order as that provided by a for-in loop (the difference being that a for-in loop enumerates properties in the prototype chain as well).
+		/// </summary>
+		/// <param name="obj">Object to investigate</param>
+		public static string[] Keys(object obj) {
+			return null;
+		}
+
+		/// <summary>
+		/// Returns an array of all properties (enumerable or not) found directly upon a given object.
+		/// </summary>
+		/// <param name="obj">Object to investigate</param>
+		public static string[] GetOwnPropertyNames(object obj) {
+			return null;
+		}
     }
 }

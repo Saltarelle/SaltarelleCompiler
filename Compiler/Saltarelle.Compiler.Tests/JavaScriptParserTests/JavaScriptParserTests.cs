@@ -188,6 +188,10 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		public void ObjectCreation() {
 			RoundtripExpression("new f()");
 			RoundtripExpression("new f(a, b)");
+			RoundtripExpression("new f");
+			RoundtripExpression("new f.x()");
+			RoundtripExpression("new new f", "new (new f)");
+			RoundtripExpression("new (new f())");
 		}
 
 		[Test]

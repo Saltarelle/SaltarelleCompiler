@@ -1,45 +1,36 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="clip" namespace="effect" type="effect">
+<entry name="clip" type="effect">
+	<title>Clip Effect</title>
 	<desc>
-		The clip effect will hide or show an element by clipping the element vertically or horizontally
+		The clip effect will hide or show an element by clipping the element vertically or horizontally.
 	</desc>
-	<options>
-		<option name="mode" type="String" default='"hide"'>
+	<arguments>
+		<argument name="direction" type="String" default='"up"'>
 			<desc>
-				<p>UI Effect Mode</p>
-				<p>Possible Values: </p>
-				<dl>
-					<dt>hide</dt>
-					<dd>Hides the element</dd>
-					<dt>show</dt>
-					<dd>Shows the element.</dd>
-					<dt>toggle</dt>
-					<dd>Will use <code>hide</code> or <code>show</code> depending on the current visibility of the element</dd>
-				</dl>
+				<p>The plane in which the clip effect will hide or show its element.</p>
+				<p><code>vertical</code> clips the top and bottom edges, while <code>horizontal</code> clips the right and left edges.</p>
 			</desc>
-		</option>
-		<option name="direction" type="String" default='"up"'>
-			<desc>
-				<p>The plane in which the clip effect will hide or show its element</p>
-				<p>Possible Values</p>
-				<dl>
-					<dt>vertical</dt>
-					<dd>Uses top &amp; bottom edges</dd>
-					<dt>horizontal</dt>
-					<dd>Uses left &amp; right edges</dd>
-				</dl>
-			</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default='"swing"'>
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-	</options>
+		</argument>
+	</arguments>
+	<example>
+		<height>200</height>
+		<desc>Toggle a div using the clip effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
+		<code><![CDATA[
+$( document ).click(function() {
+	$( "#toggle" ).toggle( "clip" );
+});
+]]></code>
+		<html><![CDATA[
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
+]]></html>
+	</example>
 	<category slug="effects"/>
 </entry>

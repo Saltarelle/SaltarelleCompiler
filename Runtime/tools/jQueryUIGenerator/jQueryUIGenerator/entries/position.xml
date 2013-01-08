@@ -1,83 +1,95 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="position" namespace="fn" type="ui">
-	<desc>Place an element relative to another</desc>
+<entry name="position" type="method" return="jQuery">
+	<title>.position()</title>
+	<desc>Position an element relative to another.</desc>
 	<longdesc>
-		<p>Utility script for positioning any widget relative to the window, document, a particular element, or the cursor/mouse.</p>
+		<p>The jQuery UI <code>.position()</code> method allows you to position an element relative to the window, document, another element, or the cursor/mouse, without worrying about offset parents.</p>
 		<p><em>Note: jQuery UI does not support positioning hidden elements.</em></p>
 		<p>This is a standalone jQuery plugin and has no dependencies on other jQuery UI components.</p>
-		<p>This plugin extends jQuery's built-in position getter method. If you forget to include this plugin, code calling position() won't fail directly, as the method still exists. But it'll just retrieve the position instead of setting it.</p>
+		<xi:include href="../includes/core-extension-desc.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</longdesc>
+	<added>1.8</added>
 	<signature>
-		<argument name="options" type="Options"></argument>
+		<argument name="options" type="Object">
+			<property name="my" default='"center"'>
+				<desc>Defines which position <strong>on the element being positioned</strong> to align with the target element: "horizontal vertical" alignment. A single value such as <code>"right"</code> will be normalized to <code>"right center"</code>, <code>"top"</code> will be normalized to <code>"center top"</code> (following CSS convention). Acceptable horizontal values: <code>"left"</code>, <code>"center"</code>, <code>"right"</code>. Acceptable vertical values: <code>"top"</code>, <code>"center"</code>, <code>"bottom"</code>. Example: <code>"left top"</code> or <code>"center center"</code>. Each dimension can also contain offsets, in pixels or percent, e.g., <code>"right+10 top-25%"</code>. Percentage offsets are relative to the element being positioned.</desc>
+				<type name="String"/>
+			</property>
+			<property name="at" default='"center"'>
+				<desc>Defines which position <strong>on the target element</strong> to align the positioned element against: "horizontal vertical" alignment. See the <a href="#option-my"><code>my</code></a> option for full details on possible values. Perecentage offsets are relative to the target element.</desc>
+				<type name="String"/>
+			</property>
+			<property name="of" default="null">
+				<desc>Which element to position against. If you provide a selector or jQuery object, the first matching element will be used. If you provide an event object, the <code>pageX</code> and <code>pageY</code> properties will be used. Example: <code>"#top-menu"</code></desc>
+				<type name="Selector"/>
+				<type name="Element"/>
+				<type name="jQuery"/>
+				<type name="Event"/>
+			</property>
+			<property name="collision" default='"flip"'>
+				<desc>
+					<p>When the positioned element overflows the window in some direction, move it to an alternative position. Similar to <a href="#option-my"><code>my</code></a> and <a href="#option-at"><code>at</code></a>, this accepts a single value or a pair for horizontal/vertical, e.g., <code>"flip"</code>, <code>"fit"</code>, <code>"fit flip"</code>, <code>"fit none"</code>.</p>
+					<ul>
+						<li><code>"flip"</code>: Flips the element to the opposite side of the target and the collision detection is run again to see if it will fit. Whichever side allows more of the element to be visible will be used.</li>
+						<li><code>"fit"</code>: Shift the element away from the edge of the window.</li>
+						<li><code>"flipfit"</code>: First applies the flip logic, placing the element on whichever side allows more of the element to be visible. Then the fit logic is applied to ensure as much of the element is visible as possible.</li>
+						<li><code>"none"</code>: Does not apply any collision detection.</li>
+					</ul>
+				</desc>
+				<type name="String"/>
+			</property>
+			<property name="using" default="null">
+				<desc>
+					When specified, the actual property setting is delegated to this callback. Receives two parameters: The first is a hash of <code>top</code> and <code>left</code> values for the position that should be set and can be forwarded to <code>.css()</code> or <code>.animate()</code>.
+					<p>The second provides feedback about the position and dimensions of both elements, as well as calculations to their relative position. Both <code>target</code> and <code>element</code> have these properties: <code>element</code>, <code>left</code>, <code>top</code>, <code>width</code>, <code>height</code>. In addition, there's <code>horizontal</code>, <code>vertical</code> and <code>important</code>, giving you twelve potential directions like <code>{ horizontal: "center", vertical: "left", important: "horizontal" }</code>.</p>
+				</desc>
+				<type name="Function"/>
+			</property>
+			<property name="within" default="window">
+				<desc>Element to position within, affecting collision detection. If you provide a selector or jQuery object, the first matching element will be used.</desc>
+				<type name="Selector"/>
+				<type name="Element"/>
+				<type name="jQuery"/>
+			</property>
+		</argument>
 	</signature>
-	<options>
-		<option name="my" default='"center"'>
-			<desc>Defines which position <strong>on the element being positioned</strong> to align with the target element: "horizontal vertical" alignment. A single value such as "right" will default to "right center", "top" will default to "center top" (following CSS convention). Acceptable values: "top", "center", "bottom", "left", "right". Example: "left top" or "center center". Each dimension can also contains offsets, in pixels or percent, e.g. `right+10 top-25%`. A perecentage is relative to the element being positioned.</desc>
-			<type name="String" />
-		</option>
-		<option name="at" default='"center"'>
-			<desc>Defines which position <strong>on the target element</strong> to align the positioned element against: "horizontal vertical" alignment. A single value such as "right" will default to "right center", "top" will default to "center top" (following CSS convention). Acceptable values: "top", "center", "bottom", "left", "right". Example: "left top" or "center center". Each dimension can also contains offsets, in pixels or percent, e.g. `right+10 top-25%`. A perecentage is relative to the target element.</desc>
-			<type name="String" />
-		</option>
-		<option name="of" type="Selector, Element, jQuery, Event" default='null'>
-			<desc>Element to position against. If you provide a selector or jQuery object, the first matching element will be used. If you provide an event object, the pageX and pageY properties will be used. Example: "#top-menu"</desc>
-			<type name="Selector" />
-			<type name="Element" />
-			<type name="jQuery" />
-			<type name="Event" />
-		</option>
-		<option name="collision" default='"flip"'>
-			<desc>
-				<p>When the positioned element overflows the window in some direction, move it to an alternative position. Similar to my and at, this accepts a single value or a pair for horizontal/vertical, eg. "flip", "fit", "fit flip", "fit none".</p>
-				<ul>
-					<li><b>flip</b>: to the opposite side and the collision detection is run again to see if it will fit. Whichever side allows more of the element to be visible will be used.</li>
-					<li><b>fit</b>: so the element keeps in the desired direction, but is re-positioned so it fits.</li>
-					<li><b>flipfit</b>: apply both flip and fit. If flip works out, fit won't do anything, if flip gives up, fit should help.</li>
-					<li><b>none</b>: no collision detection.</li>
-				</ul>
-			</desc>
-			<type name="String" />
-		</option>
-		<option name="using" default='null'>
-			<desc>
-				When specified the actual property setting is delegated to this callback. Receives two parameters: The first is a hash of top and left values for the position that should be set and can be forwarded to offset() or animate() calls.
-				<p>The second provides feedback about the position and dimensions of both elements, as well as calculations to their relative position. Both `target` and `element` have these properties: element, left, top, width, height. In addition, there's `horizontal`, `vertical` and `important`, giving you twelve potential directions like { horizontal: "center", vertical: "left", important: "horizontal" }.</p>
-			</desc>
-			<type name="Function" />
-		</option>
-		<option name="within" default='window'>
-			<desc>Element to position within, affecting collision detection. If you provide a selector or jQuery object, the first matching element will be used.</desc>
-			<type name="Selector" />
-			<type name="Element" />
-			<type name="jQuery" />
-		</option>
-	</options>
 	<example>
-		<desc>Clicking on the green element transfers to the other.</desc>
-		<code><![CDATA[$("#position1").position({
+		<desc>A simple jQuery UI Position example.</desc>
+		<css><![CDATA[
+	.positionDiv {
+		position: absolute;
+		width: 75px;
+		height: 75px;
+		background: green;
+	}
+]]></css>
+		<code><![CDATA[
+$( "#position1" ).position({
 	my: "center",
 	at: "center",
 	of: "#targetElement"
 });
-$("#position2").position({
+
+$( "#position2" ).position({
 	my: "left top",
 	at: "left top",
 	of: "#targetElement"
 });
-$("#position3").position({
+
+$( "#position3" ).position({
 	my: "right center",
 	at: "right bottom",
 	of: "#targetElement"
 });
-$(document).mousemove(function(ev){
-	$("#position4").position({
-		my: "left bottom",
-		of: ev,
-		offset: "3 -3",
+
+$( document ).mousemove(function( event ) {
+	$( "#position4" ).position({
+		my: "left+3 bottom-3",
+		of: event,
 		collision: "fit"
 	});
-});]]></code>
+});
+]]></code>
 		<html><![CDATA[
 <div id="targetElement">
 	<div class="positionDiv" id="position1"></div>
@@ -85,8 +97,9 @@ $(document).mousemove(function(ev){
 	<div class="positionDiv" id="position3"></div>
 	<div class="positionDiv" id="position4"></div>
 </div>
-
 ]]></html>
 	</example>
-	<category slug=""/>
+	<category slug="methods"/>
+	<category slug="overrides"/>
+	<category slug="utilities"/>
 </entry>

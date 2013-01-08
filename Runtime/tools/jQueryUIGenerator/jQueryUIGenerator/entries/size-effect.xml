@@ -1,36 +1,38 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="size" namespace="effect" type="effect">
+<entry name="size" type="effect">
+	<title>Size Effect</title>
 	<desc>Resize an element to a specified width and height.</desc>
-	<options>
-		<option name="to" type="Object">
-			<desc>Height and width to resize to.{ height: .., width: .. }</desc>
-		</option>
-		<option name="origin" type="Array" default="['top','left']">
-			<desc>The vanishing point, default for show/hide.</desc>
-		</option>
-		<option name="scale" type="String" default="both">
-			<desc>Which areas of the element will be resized: 'both', 'box', 'content' Box resizes the border and padding of the element Content resizes any content inside of the element.</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default="swing">
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-	</options>
+	<arguments>
+		<argument name="to" type="Object">
+			<desc>Height and width to resize to.</desc>
+		</argument>
+		<argument name="origin" type="Array" default='[ "top", "left" ]'>
+			<desc>The vanishing point.</desc>
+		</argument>
+		<argument name="scale" type="String" default='"both"'>
+			<desc>Which areas of the element will be resized: <code>"both"</code>, <code>"box"</code>, <code>"content"</code>. Box resizes the border and padding of the element; content resizes any content inside of the element.</desc>
+		</argument>
+	</arguments>
 	<example>
-		<desc>Size an element to 200 x 60.</desc>
+		<height>200</height>
+		<desc>Resize the element using the size effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
 		<code><![CDATA[
-$("div").click(function () {
-      $(this).effect("size", { to: {width: 200,height: 60} }, 1000);
+$( document ).click(function() {
+	$( "#toggle" ).effect( "size", {
+		to: { width: 200, height: 60 }
+	}, 1000 );
 });
 ]]></code>
 		<html><![CDATA[
-<div></div>
+<p>Click anywhere to resize the box.</p>
+<div id="toggle"></div>
 ]]></html>
 	</example>
 	<category slug="effects"/>

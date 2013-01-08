@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<entry type="selector" name="tabbable">
+	<title>:tabbable Selector</title>
+	<sample>:tabbable</sample>
+	<signature/>
+	<desc>Selects elements which the user can focus via tabbing.</desc>
+	<longdesc>
+		<p>Some elements are natively tabbable, while others require explictly setting a positive tab index. In all cases, the element must be visible in order to be tabbable.</p>
+
+		<p>Elements of the following type are tabbale if they do not have a negative tab index and are not disabled: <code>input</code>, <code>select</code>, <code>textarea</code>, <code>button</code>, and <code>object</code>. Anchors are focusable if they have an <code>href</code> or positive <code>tabindex</code> attribute. <code>area</code> elements are focusable if they are inside a named map, have an <code>href</code> attribute, and there is a visible image using the map. All other elements are tabbable based solely on their <code>tabindex</code> attribute and visibility.</p>
+
+		<p><em>Note: Elements with a negative tab index are <a href="/focusable-selector/"><code>:focusable</code></a>, but not <code>:tabbable</code>.</em></p>
+	</longdesc>
+	<example>
+		<height>150</height>
+		<desc>Select tabbable elements and highlight them with a red border.</desc>
+		<css><![CDATA[
+	input {
+		border: 1px solid #000;
+	}
+	div {
+		padding: 5px;
+	}
+]]></css>
+		<html><![CDATA[
+<div><input value="no tabindex"></div>
+<div><input tabindex="5" value="positive tabindex"></div>
+<div><input tabindex="-1" value="negative tabindex"></div>
+]]></html>
+		<code><![CDATA[
+$( ":tabbable" ).css( "border-color", "red" );
+]]></code>
+	</example>
+	<category slug="selectors"/>
+	<category slug="ui-core"/>
+</entry>
