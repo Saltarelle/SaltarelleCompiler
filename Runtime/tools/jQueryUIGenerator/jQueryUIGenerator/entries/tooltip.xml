@@ -1,92 +1,73 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="tooltip" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>
-		Customizable, themeable tooltips, replacing native tooltips.
-	</desc>
+<entry name="tooltip" type="widget" animated-element="tooltip" widget-element="original element">
+	<title>Tooltip Widget</title>
+	<desc>Customizable, themeable tooltips, replacing native tooltips.</desc>
 	<longdesc>
-		<p>Tooltip replaces native tooltips, making them themable as well as  allowing various customizations:</p>
+		<p>Tooltip replaces native tooltips, making them themable as well as allowing various customizations:</p>
 
 		<ul>
-			<li>display other content than just the title, like inline footnotes or extra content retrieved via Ajax</li>
-			<li>customize the positioning, eg. to center the tooltip above elements</li>
-			<li>add extra classes to customize the appearance, for warning or error fields</li>
+			<li>Display other content than just the title, like inline footnotes or extra content retrieved via Ajax.</li>
+			<li>Customize the positioning, e.g., to center the tooltip above elements.</li>
+			<li>Add extra styling to customize the appearance, for warning or error fields.</li>
 		</ul>
 
-		<p>A fade animation is used by default to show and hide the tooltip, making the appearance a bit more organic, compared to just toggling the visiblity. This can be customized with the <code>show</code> and <code>hide</code> options.</p>
+		<p>A fade animation is used by default to show and hide the tooltip, making the appearance a bit more organic, compared to just toggling the visiblity. This can be customized with the <a href="#option-show"><code>show</code></a> and <a href="#option-hide"><code>hide</code></a> options.</p>
 
-		<p>The <code>title</code> and <code>content</code> options need to stay in-sync. If you change one of them, you need to change the other.</p>
+		<p>The <a href="#option-items"><code>items</code></a> and <a href="#option-content"><code>content</code></a> options need to stay in-sync. If you change one of them, you need to change the other.</p>
 
-		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+		<p>In general, disabled elements do not trigger any DOM events. Therefore, it is not possible to properly control tooltips for disabled elements, since we need to listen to events to determine when to show and hide the tooltip. As a result, jQuery UI does not guarantee any level of support for tooltips attached to disabled elements. Unfortunately, this means that if you require tooltips on disabled elements, you may end up with a mixture of native tooltips and jQuery UI tooltips.</p>
+
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+			<li><a href="/position/">Position</a></li>
+			<li><a href="/category/effects-core/">Effects Core</a> (optional; for use with the <a href="#option-show"><code>show</code></a> and <a href="#option-hide"><code>hide</code></a> options)</li>
+		</ul>
 	</longdesc>
-	<created>1.9</created>
+	<note id="functional-css"/>
+	<added>1.9</added>
 	<options>
-		<option name="content" default="function returning the title attribute">
+		<option name="content" default="function returning the title attribute" example-value='"Awesome title!"'>
 			<desc>
-				The content of the tooltip. The callback can either return the content directly, or call the first argument, passing in the content, eg. for ajax content.
+				<p>The content of the tooltip.</p>
 
-				When changing this option, you likely need to also change the items option.</desc>
-			<type name="Function" />
-			<example>
-				function(response) {
-				  $.getJSON("tooltipcontent.html", response);
-				}
-			</example>
+				<p><em>When changing this option, you likely need to also change the <a href="#option-items"><code>items</code></a> option.</em></p>
+			</desc>
+			<type name="Function">
+				<desc>A callback which can either return the content directly, or call the first argument, passing in the content, e.g., for Ajax content.</desc>
+			</type>
+			<type name="String">
+				<desc>A string of HTML to use for the tooltip content.</desc>
+			</type>
 		</option>
-		<option name="disabled" type="Boolean" default="false">
-			<desc>Disables the tooltip if set to true.</desc>
-		</option>
-		<option name="hide" default="true">
-			<desc>How to hide the tooltip.</desc>
-			<type name="Boolean" />
-			<type name="Object" />
-			<example>
-				{
-					effect: 'explode',
-					delay: 250
-				}
-			</example>
-		</option>
-		<option name="items" default="[title]">
+		<xi:include href="../includes/widget-option-disabled.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-option-hide.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<option name="items" default="[title]" example-value='"img[alt]"'>
 			<desc>
-				A selector matched when activating a tooltip. Customize if you're using something other then the title attribute for the tooltip content, or if you need a different selector for event delegation.
+				<p>A selector indicating which items should show tooltips. Customize if you're using something other then the title attribute for the tooltip content, or if you need a different selector for event delegation.</p>
 
-				When changing this option, you likely need to also change the content option.
+				<p><em>When changing this option, you likely need to also change the <a href="#option-content"><code>content</code></a> option.</em></p>
 			</desc>
 			<type name="Selector" />
-			<example>
-				'.tooltipped'
-			</example>
 		</option>
-		<option name="position" default="{ my: 'left+15 center', at: 'right center', collision: 'flipfit flipfit' }">
-			<desc>Configuration for the Position  utility. The of property defaults to the target element, but can also be overriden.</desc>
+		<option name="position" default='{ my: "left top+15", at: "left bottom", collision: "flipfit" }' example-value='{ my: "left+15 center", at: "right center" }'>
+			<desc>
+				<p>Configuration for the Position utility. The <code>of</code> property defaults to the target element, but can also be overriden.</p>
+
+				<p><em>Note: In 1.9.0, the default value was <code>{ my: "left+15 center", at: "right center", collision: "flipfit" }</code>, but this was changed to more closely match native tooltip positioning.</em></p>
+			</desc>
 			<type name="Object" />
-			<example>
-				{ my: 'center' }
-			</example>
 		</option>
-		<option name="show" default="true">
-			<desc>How to show the tooltip.</desc>
-			<type name="Boolean" />
-			<type name="Object" />
-			<example>
-				{
-					effect: 'slideDown',
-					delay: 250
-				}
-			</example>
-		</option>
-		<option name="tooltipClass" default="null">
+		<xi:include href="../includes/widget-option-show.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<option name="tooltipClass" default="null" example-value='"custom-tooltip-styling"'>
 			<desc>
 				A class to add to the widget, can be used to display various tooltip types, like warnings or errors.
 				<p>This may get replaced by the <a href="http://bugs.jqueryui.com/ticket/7053">classes option</a>.</p>
 			</desc>
 			<type name="String" />
-			<example>
-				'ui-state-highlight'
-			</example>
 		</option>
-		<option name="track" type="Boolean" default="false">
+		<option name="track" type="Boolean" default="false" example-value="true">
 			<desc>
 				Whether the tooltip should track (follow) the mouse.
 			</desc>
@@ -95,95 +76,55 @@
 	<methods>
 		<method name="close">
 			<desc>
-				Programmatically close a tooltip. Sames rules as for <code>open</code> method.
+				Closes a tooltip. This is only intended to be called for non-delegated tooltips.
 			</desc>
-			<argument name="event" type="Event" optional="true">
-				<desc>What triggered the method.</desc>
-			</argument>
 		</method>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
-		<widget-inherit id="widget-enable" />
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-disable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-enable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 		<method name="open">
 			<desc>
-				Programmatically open a tooltip. If the widget's element is the target, the event argument is optional. Otherwise you have to pass an event object with the <code>currentTarget</code> property pointing at the target.
+				Programmatically open a tooltip. This is only intended to be called for non-delegated tooltips.
 			</desc>
-			<argument name="event" type="Event" optional="true">
-				<desc>What triggered the method.</desc>
-			</argument>
 		</method>
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<widget-inherit id="widget-widget" />
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</methods>
 	<events>
-		<event name="create">
+		<xi:include href="../includes/widget-event-create.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<event name="open">
 			<desc>
-				This event is triggered when the tooltip is created.
+				Triggered when a tooltip is shown, triggered on <code>focusin</code> or <code>mouseover</code>.
 			</desc>
-			<argument name="event" type="Event">
-			</argument>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-			</argument>
-		</event>
-		<event name="open" type="tooltipopen">
-			<desc>
-				Triggered when a tooltip is shown, triggered on focusin or mouseover.
-
-				Can be used further modify or position the widget, eg. have it follow the mouse movement.
-			</desc>
-			<argument name="event" type="Event" null="true">
-			</argument>
-			<argument name="ui" type="Object">
-				<desc>
-					Extra event data for the ui tooltip open event
-				</desc>
 				<property name="tooltip" type="jQuery">
-					<desc>The generated tooltip element</desc>
+					<desc>The generated tooltip element.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="close" type="tooltipclose">
+		<event name="close">
 			<desc>
-				Triggered when a tooltip is shown, triggered on focusin or mouseover.
+				Triggered when a tooltip is closed, triggered on <code>focusout</code> or <code>mouseleave</code>.
 			</desc>
-			<argument name="event" type="Event" null="true">
-			</argument>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc>
-					Extra event data for the ui tooltip open event
-				</desc>
 				<property name="tooltip" type="jQuery">
-					<desc>The generated tooltip element</desc>
+					<desc>The generated tooltip element.</desc>
 				</property>
 			</argument>
 		</event>
 	</events>
 	<example>
-        <desc>Create a tooltip on the document, using event delegation for all elements with a title attribute.</desc>
-        <code><![CDATA[
-	$(document).tooltip();
+		<height>80</height>
+		<desc>Create a tooltip on the document, using event delegation for all elements with a title attribute.</desc>
+		<code><![CDATA[
+	$( document ).tooltip();
 ]]></code>
-		<html><![CDATA[<p>
+		<html><![CDATA[
+<p>
 	<a href="#" title="Anchor description">Anchor text</a>
-	<input title="Input help" />
-</p>]]></html>
-	</example>
-	<example>
-        <desc>Create a tooltip on the paragraph element, matching all images with an alt attribute. Use the alt attribute as the tooltip's content for each image.</desc>
-        <code><![CDATA[
-	$("p").tooltip({
-		items: "img[alt]",
-		content: function() {
-			return $( this ).attr( "alt" );
-		}
-	});
-]]></code>
-		<html><![CDATA[<p>
-	<img src="images/st-stephens.jpg" alt="St. Stephen's Cathedral">
-	<img src="images/tower-bridge.jpg" alt="Tower Bridge">
+	<input title="Input help">
 </p>]]></html>
 	</example>
 	<category slug="widgets"/>

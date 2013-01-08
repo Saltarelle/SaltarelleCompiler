@@ -44,6 +44,12 @@ namespace KnockoutApi {
         }
 
         /// <summary>
+        /// Marks all values as deleted.
+        /// </summary>
+        public void DestroyAll() {
+        }
+
+        /// <summary>
         /// Gets the underlying items within the observable array.
         /// This is a Copy of the Values in the Observable
         /// </summary>
@@ -126,6 +132,14 @@ namespace KnockoutApi {
         /// <param name="values">An array of items to remove.</param>
         /// <returns>The removed values.</returns>
         public T[] RemoveAll(params T[] values) {
+            return null;
+        }
+
+        /// <summary>
+        /// Removes all values and returns them.
+        /// </summary>
+        /// <returns>The removed values.</returns>
+        public T[] RemoveAll() {
             return null;
         }
 

@@ -299,10 +299,10 @@ public class C {
 		// END
 	}
 }",
-@"		d = i;
-		i = ss.Nullable.unbox(Type.cast(d, ss.Int32));
-		d = o;
-		o = d;
+@"			d = i;
+			i = ss.Nullable.unbox(Type.cast(d, ss.Int32));
+			d = o;
+			o = d;
 ");
 		}
 	}

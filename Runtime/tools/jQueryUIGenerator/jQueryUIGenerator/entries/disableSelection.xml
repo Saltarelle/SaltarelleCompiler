@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<entry type="method" name="disableSelection" return="jQuery">
+	<title>.disableSelection()</title>
+	<desc>Disable selection of text content within the set of matched elements.</desc>
+	<signature added="1.6" deprecated="1.9"/>
+	<longdesc>
+		<p>Disabling text selection is bad. Don't use this.</p>
+	</longdesc>
+	<category slug="methods"/>
+	<category slug="ui-core"/>
+</entry>

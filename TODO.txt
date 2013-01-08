@@ -4,7 +4,6 @@ Other reference importers.
 Improve exception mapping (eg. TypeError => InvalidCastException, etc).
 operator true + operator false.
 Don't assign a field the default value when it is always assigned before being read in the constructor.
-Ensure that type initializers are run in the correct order.
 NAnt task
 Allow a class to inherit from two types with a member with the same name IFF both the members are implemented by the same method.
 

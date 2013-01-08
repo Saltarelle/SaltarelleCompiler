@@ -52,10 +52,12 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			              "(1?2:3)");
         }
 
-        [Test]
-        public void NewArgumentListContainsNoSpaces() {
+		[Test]
+		public void NewArgumentListContainsNoSpaces() {
+			AssertCorrect(JsExpression.New(JsExpression.Identifier("x"), null), "new x");
+			AssertCorrect(JsExpression.New(JsExpression.Identifier("x")), "new x()");
 			AssertCorrect(JsExpression.New(JsExpression.Identifier("x"), JsExpression.Number(1), JsExpression.Number(2), JsExpression.Number(3)), "new x(1,2,3)");
-        }
+		}
 
         [Test]
         public void InvocationArgumentListContainsNoSpaces() {

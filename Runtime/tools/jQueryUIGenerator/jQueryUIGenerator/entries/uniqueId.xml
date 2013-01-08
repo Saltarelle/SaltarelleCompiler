@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<entry type="method" name="uniqueId" return="jQuery">
+	<title>.uniqueId()</title>
+	<desc>Generate and apply a unique id for the set of matched elements.</desc>
+	<signature>
+		<added>1.9</added>
+	</signature>
+	<longdesc>
+		<p>Many widgets need to generate unique ids for elements. <code>.uniqueId()</code> will check if the element has an id, and if not, it will generate one and set it on the element. It is safe to call <code>.uniqueId()</code> on an element without checking if it already has an id. If/when the widget needs to clean up after itself, the <a href="/removeUniqueId"><code>.removeUniqueId()</code></a> method will remove the id from the element if it was added by <code>.uniqueId()</code> and leave the id alone if it was not. <code>.removeUniqueId()</code> is able to be smart about this because the generated ids have a prefix of <code>"ui-id-"</code>.</p>
+	</longdesc>
+	<category slug="methods"/>
+	<category slug="ui-core"/>
+</entry>

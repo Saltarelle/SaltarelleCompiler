@@ -1,3 +1,17 @@
+1.7.0
+Added heuristic to run type initializers in the correct order (#96)
+Fixed issue with the casing of some jQueryUI widgets (#107)
+Fixed issue using object initializers when creating instances of type parameters (#111).
+Fixed issue with [InlineCode("new a.b()")] (#109)
+Fixed issue (sometimes) causing errors when deriving from a nested type (#108)
+Added static methods Object.Keys and Object.GetOwnPropertyNames
+Fixed issue with KeyValuePair constructors (#112)
+Added parameterless versions of ObservableArray.RemoveAll and ObservableArray.DestroyAll (#104).
+Fixed internal error when using the result of dynamic method calls in certain invalid ways (#105).
+Generate all code inside an anonymous function when not using a module loader (#99).
+Fixed issue causing incorrect code to be generated when the variable declared by a foreach() loop was used by reference.
+Fixed issue causing ref and out parameters to anonymous methods and lambdas not to work (#98).
+
 1.6.3
 Fixed issues with user-defined conversion operators (#97)
 Knockout API updates

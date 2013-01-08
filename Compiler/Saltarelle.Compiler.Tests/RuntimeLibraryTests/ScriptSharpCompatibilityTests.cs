@@ -26,7 +26,7 @@ public class C {
 		// END
 	}
 }",
-@"		var d = b;
+@"			var d = b;
 ");
 		}
 
@@ -45,7 +45,7 @@ public class C {
 		// END
 	}
 }",
-@"		var i = ni;
+@"			var i = ni;
 ");
 		}
 	}

@@ -33,10 +33,5 @@ namespace ScriptSharp.Tools.jQueryUIGenerator.Model {
             get;
             set;
         }
-
-        public string Type {
-            get;
-            set;
-        }
     }
 }

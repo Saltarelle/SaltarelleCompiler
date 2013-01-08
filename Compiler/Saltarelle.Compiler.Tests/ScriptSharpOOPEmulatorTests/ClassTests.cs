@@ -573,9 +573,9 @@ var $ResourceClass = { Field1: 'the value', Field2: 123, Field3: null };
 			new JsClass(CreateMockTypeDefinition("Interface"), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]),
 			new JsClass(CreateMockTypeDefinition("GenericInterface"), JsClass.ClassTypeEnum.Interface, new[] { "T1" }, null, new JsExpression[0]),
 			new JsClass(CreateMockTypeDefinition("ResourceClass"), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field1"), JsExpression.String("the value"))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field2"), JsExpression.Number(123))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass")), "Field3"), JsExpression.Null)),
+				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass1")), "Field1"), JsExpression.String("the value"))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass2")), "Field2"), JsExpression.Number(123))),
+				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockType("SomeNamespace.InnerNamespace.MyClass3")), "Field3"), JsExpression.Null)),
 				                       }
 			});
 		}

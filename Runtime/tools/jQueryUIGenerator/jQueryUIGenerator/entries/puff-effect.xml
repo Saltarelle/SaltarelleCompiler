@@ -1,36 +1,32 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="puff" namespace="effect" type="effect">
+<entry name="puff" type="effect">
+	<title>Puff Effect</title>
 	<desc>
 		Creates a puff effect by scaling the element up and hiding it at the same time.
 	</desc>
-	<longdesc>This is the only effect without a separate file, it shares a file with the scale effect.</longdesc>
-	<options>
-		<option name="mode" type="String" default="hide">
-			<desc>The mode of the effect. Can be "show" or "hide"</desc>
-		</option>
-		<option name="percent" type="Number" default="150">
+	<arguments>
+		<argument name="percent" type="Number" default="150">
 			<desc>The percentage to scale to.</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default="swing">
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-	</options>
+		</argument>
+	</arguments>
 	<example>
-		<desc>Puff the element away.</desc>
+		<height>200</height>
+		<desc>Toggle a div using the puff effect.</desc>
+		<css><![CDATA[
+	#toggle {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+	}
+]]></css>
 		<code><![CDATA[
-$("div").click(function () {
-      $(this).hide("puff", {}, 1000);
+$( document ).click(function() {
+	$( "#toggle" ).toggle( "puff" );
 });
 ]]></code>
 		<html><![CDATA[
-<div></div>
+<p>Click anywhere to toggle the box.</p>
+<div id="toggle"></div>
 ]]></html>
 	</example>
 	<category slug="effects"/>

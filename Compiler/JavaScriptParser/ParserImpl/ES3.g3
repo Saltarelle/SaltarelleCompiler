@@ -692,24 +692,23 @@ memberExpression
 	;
 
 newExpression
-	: NEW^ primaryExpression
+	: NEW^ leftHandSideExpression[false] ( (LPAREN) => arguments )?
 	;
 
-	
 arguments
 	: LPAREN ( assignmentExpression ( COMMA assignmentExpression )* )? RPAREN
 	-> ^( ARGS assignmentExpression* )
 	;
 	
-leftHandSideExpression
+leftHandSideExpression[bool allowCalls]
 	:
 	(
 		memberExpression 		-> memberExpression
 	)
 	(
-		arguments			-> ^( CALL $leftHandSideExpression arguments )
-		| LBRACK expression RBRACK	-> ^( BYINDEX $leftHandSideExpression expression )
-		| DOT Identifier		-> ^( BYFIELD $leftHandSideExpression Identifier )
+		{ allowCalls }? arguments			-> ^( CALL $leftHandSideExpression arguments )
+		| (LBRACK) => LBRACK expression RBRACK	-> ^( BYINDEX $leftHandSideExpression expression )
+		| (DOT) => DOT Identifier		-> ^( BYFIELD $leftHandSideExpression Identifier )
 	)*
 	;
 
@@ -724,7 +723,7 @@ We only must promote EOLs when the la is INC or DEC because this production is c
 In other words: only promote EOL when we are really in a postfix expression. A check on the la will ensure this.
 */
 postfixExpression
-	: leftHandSideExpression { if (input.LA(1) == INC || input.LA(1) == DEC) PromoteEOL(null); } ( postfixOperator^ )?
+	: leftHandSideExpression[true] { if (input.LA(1) == INC || input.LA(1) == DEC) PromoteEOL(null); } ( postfixOperator^ )?
 	;
 	
 postfixOperator

@@ -1022,9 +1022,9 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = o;
-		var v2 = o;
-		var v3 = ss.isValue(o);
+@"			var v1 = o;
+			var v2 = o;
+			var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1047,9 +1047,9 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = o;
-		var v2 = o;
-		var v3 = ss.isValue(o);
+@"			var v1 = o;
+			var v2 = o;
+			var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1072,9 +1072,9 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = o;
-		var v2 = o;
-		var v3 = ss.isValue(o);
+@"			var v1 = o;
+			var v2 = o;
+			var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1099,9 +1099,9 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = o;
-		var v2 = o;
-		var v3 = ss.isValue(o);
+@"			var v1 = o;
+			var v2 = o;
+			var v3 = ss.isValue(o);
 ");
 		}
 
@@ -1121,10 +1121,10 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = ss.isNullOrUndefined(o);
-		var v2 = ss.isNullOrUndefined(o);
-		var v3 = ss.isValue(o);
-		var v4 = ss.isValue(o);
+@"			var v1 = ss.isNullOrUndefined(o);
+			var v2 = ss.isNullOrUndefined(o);
+			var v3 = ss.isValue(o);
+			var v4 = ss.isValue(o);
 ");
 		}
 
@@ -1144,10 +1144,10 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = o === 'X';
-		var v2 = 'X' === o;
-		var v3 = o !== 'X';
-		var v4 = 'X' !== o;
+@"			var v1 = o === 'X';
+			var v2 = 'X' === o;
+			var v3 = o !== 'X';
+			var v4 = 'X' !== o;
 ");
 		}
 
@@ -1165,8 +1165,8 @@ public class C {
 		// END
 	}
 }",
-@"		var v1 = ss.referenceEquals(o1, o2);
-		var v2 = !ss.referenceEquals(o1, o2);
+@"			var v1 = ss.referenceEquals(o1, o2);
+			var v2 = !ss.referenceEquals(o1, o2);
 ");
 		}
 
@@ -1183,7 +1183,7 @@ public class C {
 		// END
 	}
 }",
-@"		var b = !!d;
+@"			var b = !!d;
 ");
 		}
 

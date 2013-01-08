@@ -892,7 +892,7 @@ class Program {
 				Assert.That(er.AllMessages, Is.Empty);
 
 				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
-				Assert.That(content.Replace("\r\n", "\n").EndsWith("$Class1.main();\n"), Is.True);
+				Assert.That(content.Replace("\r\n", "\n").EndsWith("\t$Class1.main();\n})();\n"), Is.True);
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
@@ -917,7 +917,7 @@ class Program {
 				Assert.That(er.AllMessages, Is.Empty);
 
 				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
-				Assert.That(content.Replace("\r\n", "\n").EndsWith("$MyNamespace_SomeClass.main();\n"), Is.True);
+				Assert.That(content.Replace("\r\n", "\n").EndsWith("\t$MyNamespace_SomeClass.main();\n})();\n"), Is.True);
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 

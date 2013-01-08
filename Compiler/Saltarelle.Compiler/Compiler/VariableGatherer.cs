@@ -39,13 +39,13 @@ namespace Saltarelle.Compiler.Compiler {
             return Tuple.Create((IDictionary<IVariable, VariableData>)_result, (ISet<string>)_usedNames);
         }
 
-    	private void AddVariable(AstNode variableNode, string variableName) {
+    	private void AddVariable(AstNode variableNode, string variableName, bool isUsedByReference = false) {
 			var resolveResult = _resolver.Resolve(variableNode);
             if (!(resolveResult is LocalResolveResult)) {
                 _errorReporter.InternalError("Variable " + variableName + " does not resolve to a local (resolves to " + (resolveResult != null ? resolveResult.ToString() : "null") + ")");
                 return;
             }
-			AddVariable(((LocalResolveResult)resolveResult).Variable);
+			AddVariable(((LocalResolveResult)resolveResult).Variable, isUsedByReference);
     	}
 
 		private void AddVariable(IVariable v, bool isUsedByReference = false) {
@@ -90,7 +90,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_isInsideLoop = false;
 
 				foreach (var p in lambdaExpression.Parameters)
-					AddVariable(p, p.Name);
+					AddVariable(p, p.Name, p.ParameterModifier == ParameterModifier.Out || p.ParameterModifier == ParameterModifier.Ref);
 
 				base.VisitLambdaExpression(lambdaExpression);
 			}
@@ -108,7 +108,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_isInsideLoop = false;
 
 				foreach (var p in anonymousMethodExpression.Parameters)
-					AddVariable(p, p.Name);
+					AddVariable(p, p.Name, p.ParameterModifier == ParameterModifier.Out || p.ParameterModifier == ParameterModifier.Ref);
 
 				base.VisitAnonymousMethodExpression(anonymousMethodExpression);
 			}

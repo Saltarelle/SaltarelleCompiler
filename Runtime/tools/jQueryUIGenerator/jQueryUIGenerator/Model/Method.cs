@@ -38,10 +38,5 @@ namespace ScriptSharp.Tools.jQueryUIGenerator.Model {
             get; 
             set; 
         }
-
-        public IList<Signature> Signatures { 
-            get; 
-            set; 
-        }
     }
 }

@@ -1167,6 +1167,25 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.ObjectLiteral(jsProperties);
 		}
 
+		private JsExpression CompileInitializerStatements(JsExpression objectBeingInitialized, IType objectType, IList<ResolveResult> initializerStatements) {
+			if (initializerStatements != null && initializerStatements.Count > 0) {
+				var obj = _createTemporaryVariable(objectType);
+				var oldObjectBeingInitialized = _objectBeingInitialized;
+				_objectBeingInitialized = obj;
+				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, objectBeingInitialized));
+				foreach (var init in initializerStatements) {
+					var js = VisitResolveResult(init, false);
+					_additionalStatements.Add(new JsExpressionStatement(js));
+				}
+				_objectBeingInitialized = oldObjectBeingInitialized;
+
+				return JsExpression.Identifier(_variables[obj].Name);
+			}
+			else {
+				return objectBeingInitialized;
+			}
+		}
+
 		private JsExpression CompileConstructorInvocation(ConstructorScriptSemantics impl, IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool isExpandedForm) {
 			var typeToConstruct = method.DeclaringType;
 			var typeToConstructDef = typeToConstruct.GetDefinition();
@@ -1216,22 +1235,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 				}
 
-				if (initializerStatements != null && initializerStatements.Count > 0) {
-					var obj = _createTemporaryVariable(method.DeclaringType);
-					var oldObjectBeingInitialized = _objectBeingInitialized;
-					_objectBeingInitialized = obj;
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, constructorCall));
-					foreach (var init in initializerStatements) {
-						var js = VisitResolveResult(init, false);
-						_additionalStatements.Add(new JsExpressionStatement(js));
-					}
-					_objectBeingInitialized = oldObjectBeingInitialized;
-
-					return JsExpression.Identifier(_variables[obj].Name);
-				}
-				else {
-					return constructorCall;
-				}
+				return CompileInitializerStatements(constructorCall, method.DeclaringType, initializerStatements);
 			}
 		}
 
@@ -1264,7 +1268,8 @@ namespace Saltarelle.Compiler.Compiler {
 							var activator = ReflectionHelper.ParseReflectionName("System.Activator").Resolve(_compilation);
 							var createInstance = activator.GetMethods(m => m.Name == "CreateInstance" && m.IsStatic && m.TypeParameters.Count == 1 && m.Parameters.Count == 0).Single();
 							var createInstanceSpec = new SpecializedMethod(createInstance, new TypeParameterSubstitution(EmptyList<IType>.Instance, new[] { method.DeclaringType }));
-							return CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new JsExpression[] { _runtimeLibrary.GetScriptType(activator, TypeContext.UseStaticMember) }, false, false);
+							var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new JsExpression[] { _runtimeLibrary.GetScriptType(activator, TypeContext.UseStaticMember) }, false, false);
+							return CompileInitializerStatements(createdObject, method.DeclaringType, initializerStatements);
 						}
 						else {
 							return CompileConstructorInvocation(_metadataImporter.GetConstructorSemantics(method), method, argumentsForCall, argumentToParameterMap, initializerStatements, isExpandedForm);

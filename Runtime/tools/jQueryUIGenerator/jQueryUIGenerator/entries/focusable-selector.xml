@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<entry type="selector" name="focusable">
+	<title>:focusable Selector</title>
+	<sample>:focusable</sample>
+	<signature/>
+	<desc>Selects elements which can be focused.</desc>
+	<longdesc>
+		<p>Some elements are natively focusable, while others require explictly setting a tab index. In all cases, the element must be visible in order to be focusable.</p>
+
+		<p>Elements of the following type are focusable if they are not disabled: <code>input</code>, <code>select</code>, <code>textarea</code>, <code>button</code>, and <code>object</code>. Anchors are focusable if they have an <code>href</code> or <code>tabindex</code> attribute. <code>area</code> elements are focusable if they are inside a named map, have an <code>href</code> attribute, and there is a visible image using the map. All other elements are focusable based solely on their <code>tabindex</code> attribute and visibility.</p>
+
+		<p><em>Note: Elements with a negative tab index are <code>:focusable</code>, but not <a href="/tabbable-selector/"><code>:tabbable</code></a>.</em></p>
+	</longdesc>
+	<example>
+		<desc>Select focusable elements and highlight them with a red border.</desc>
+		<css><![CDATA[
+	input, a, p {
+		border: 1px solid #000;
+	}
+	div {
+		padding: 5px;
+	}
+]]></css>
+		<html><![CDATA[
+<div><input value="text input"></div>
+<div><a>anchor without href</a></div>
+<div><a href="#">anchor with href</a></div>
+<div><p>paragraph without tabindex</p></div>
+<div><p tabindex="1">paragraph with tabindex</p></div>
+]]></html>
+		<code><![CDATA[
+$( ":focusable" ).css( "border-color", "red" );
+]]></code>
+	</example>
+	<category slug="selectors"/>
+	<category slug="ui-core"/>
+</entry>
