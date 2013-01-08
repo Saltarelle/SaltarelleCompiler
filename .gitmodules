@@ -1,6 +1,3 @@
 [submodule "Compiler/NRefactory"]
 	path = Compiler/NRefactory
 	url = git://github.com/erik-kallen/NRefactory.git
-[submodule "Compiler/Mono.Cecil"]
-	path = Compiler/Mono.Cecil
-	url = git://github.com/jbevain/cecil.git
