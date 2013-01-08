@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<entry name="addClass" type="method" return="jQuery">
+	<title>.addClass()</title>
+	<desc>Adds the specified class(es) to each of the set of matched elements while animating all style changes.</desc>
+	<longdesc>
+		<xi:include href="../includes/class-animation-desc.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/core-extension-desc.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+	</longdesc>
+	<signature>
+		<argument name="className" type="String">
+			<desc>One or more class names (space separated) to be added to the class attribute of each matched element.</desc>
+		</argument>
+		<xi:include href="../includes/animation-argument-duration.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/animation-argument-easing.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/animation-argument-complete.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+	</signature>
+	<example>
+		<desc>Adds the class "big-blue" to the matched elements.</desc>
+		<css><![CDATA[
+	div {
+		width: 100px;
+		height: 100px;
+		background-color: #ccc;
+	}
+	.big-blue {
+		width: 200px;
+		height: 200px;
+		background-color: #00f;
+	}
+]]></css>
+		<html><![CDATA[
+<div></div>
+]]></html>
+		<code><![CDATA[
+$( "div" ).click(function() {
+	$( this ).addClass( "big-blue", 1000, "easeOutBounce" );
+});
+]]></code>
+	</example>
+	<category slug="effects"/>
+	<category slug="effects-core"/>
+	<category slug="overrides"/>
+</entry>

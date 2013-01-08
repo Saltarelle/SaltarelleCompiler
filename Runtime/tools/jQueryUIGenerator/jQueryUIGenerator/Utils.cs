@@ -96,15 +96,15 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 return @namespace;
             }
 
-            if (entry.Name.ToLowerInvariant() == "widget" || entry.Category.ToLowerInvariant() == "utilities") {
+            if (entry.Name.ToLowerInvariant() == "widget" || entry.Categories.Any(c => c.ToLowerInvariant() == "utilities")) {
                 return @namespace;
             }
 
-            if (string.IsNullOrEmpty(entry.Category)) {
+            if (entry.Categories.Length == 0) {
                 return @namespace;
             }
 
-            return @namespace + "." + PascalCase(entry.Category);
+            return @namespace + "." + PascalCase(entry.Categories[0]);
         }
 
         private static readonly Regex hashRegex = new Regex(@"\<code\>\s*{((?:\s*[a-zA-Z0-9]+\s*\:?\s*,?\s*)+)}</code>");
@@ -119,6 +119,7 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 case "hash":
                 case "options":
                 case "object":
+                case "plainobject":
                 case "": {
                     var hashMatch = hashRegex.Match(entryDoc);
                     if (hashMatch.Success) {
@@ -144,7 +145,6 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 case "boolean":
                     return "bool";
                 case "function":
-                case "$.datepicker.iso8601week": // I consider this a bug in the docs, so we have to work around it.
                     return "Delegate";
                 case "jquery":
                     return "jQueryObject";
@@ -156,7 +156,9 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
                 case "rest":
                     return "params object[]";
                 case "date":
-                    return "DateTime";
+                    return "JsDate";
+				case "jqxhr":
+					return "jQueryXmlHttpRequest";
                 default:
                     return type;
             }
@@ -254,5 +256,9 @@ namespace ScriptSharp.Tools.jQueryUIGenerator {
 
             return type.Split(new char[] { ',', '/', ' ', '|' }).Where(s => s != "or").ToArray();
         }
+
+		public static string EnsureValidCSharpIdentifier(string identifier) {
+			return (new[] { "switch" }.Contains(identifier) ? "@" : "") + identifier;
+		}
     }
 }

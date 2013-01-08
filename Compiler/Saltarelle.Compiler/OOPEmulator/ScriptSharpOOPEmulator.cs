@@ -286,7 +286,9 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                                 }
 			                             })
 			                .Select(expr => new JsExpressionStatement(expr)));
-			result.AddRange(orderedTypes.OfType<JsClass>().Where(c => c.TypeArgumentNames.Count == 0 && !_metadataImporter.IsResources(c.CSharpTypeDefinition)).SelectMany(t => t.StaticInitStatements));
+			result.AddRange(GetStaticInitializationOrder(orderedTypes.OfType<JsClass>(), 1)
+			                .Where(c => c.TypeArgumentNames.Count == 0 && !_metadataImporter.IsResources(c.CSharpTypeDefinition))
+			                .SelectMany(c => c.StaticInitStatements));
 
 			if (entryPoint != null) {
 				if (entryPoint.Parameters.Count > 0) {
@@ -303,6 +305,59 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.DeclaringTypeDefinition), sem.Name))));
 					}
 				}
+			}
+
+			return result;
+		}
+
+		private HashSet<ITypeDefinition> GetDependencies(JsClass c, int pass) {
+			// Consider the following reference locations:
+			// Pass 1: static init statements, static methods, instance methods, constructors
+			// Pass 2: static init statements, static methods
+			// Pass 3: static init statements only
+
+			var result = new HashSet<ITypeDefinition>();
+			switch (pass) {
+				case 1:
+					foreach (var r in c.InstanceMethods.Where(m => m.Definition != null).SelectMany(m => TypeReferenceFinder.Analyze(m.Definition)))
+						result.Add(r);
+					foreach (var r in c.NamedConstructors.Where(m => m.Definition != null).SelectMany(m => TypeReferenceFinder.Analyze(m.Definition)))
+						result.Add(r);
+					if (c.UnnamedConstructor != null) {
+						foreach (var r in TypeReferenceFinder.Analyze(c.UnnamedConstructor))
+							result.Add(r);
+					}
+					goto case 2;
+
+				case 2:
+					foreach (var r in c.StaticMethods.Where(m => m.Definition != null).SelectMany(m => TypeReferenceFinder.Analyze(m.Definition)))
+						result.Add(r);
+					goto case 3;
+
+				case 3:
+					foreach (var r in TypeReferenceFinder.Analyze(c.StaticInitStatements))
+						result.Add(r);
+					break;
+
+				default:
+					throw new ArgumentException("pass");
+			}
+			return result;
+		}
+
+		private IEnumerable<JsClass> GetStaticInitializationOrder(IEnumerable<JsClass> types, int pass) {
+			if (pass > 3)
+				return types;	// If we can't find a non-circular order after 3 passes, just use some random order.
+
+			// We run the algorithm in 3 passes, each considering less types of references than the previous one.
+			var dict = types.ToDictionary(t => t.CSharpTypeDefinition, t => new { deps = GetDependencies(t, pass), backref = t });
+			foreach (var v in dict.Values)
+				v.deps.RemoveWhere(x => !dict.ContainsKey(x));
+
+			var result = new List<JsClass>();
+			foreach (var group in Tarjan.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), t => dict[t].deps)) {
+				var backrefed = group.Select(t => dict[t].backref);
+				result.AddRange(group.Count > 1 ? GetStaticInitializationOrder(backrefed.ToList(), pass + 1) : backrefed);
 			}
 
 			return result;

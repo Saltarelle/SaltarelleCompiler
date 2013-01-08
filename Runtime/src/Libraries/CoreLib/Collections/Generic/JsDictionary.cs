@@ -28,7 +28,7 @@ namespace System.Collections.Generic {
             }
         }
 
-        public ICollection<TKey> Keys {
+        public new ICollection<TKey> Keys {
 			[InlineCode("{$System.Object}.keys({this})")]
             get {
                 return null;

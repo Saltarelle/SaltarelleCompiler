@@ -349,6 +349,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			foreach (var b in typeDefinition.DirectBaseTypes)
 				ProcessType(b.GetDefinition());
+			if (typeDefinition.DeclaringType != null)
+				ProcessType(typeDefinition.DeclaringTypeDefinition);
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, true, false, false, null);
@@ -423,7 +425,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			if (isSerializable) {
 				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
-				if (!baseClass.Equals(_systemObject) && !baseClass.Equals(_systemRecord) && !_typeSemantics[baseClass].IsSerializable) {
+				if (!baseClass.Equals(_systemObject) && !baseClass.Equals(_systemRecord) && !GetTypeSemanticsInternal(baseClass).IsSerializable) {
 					Message(7009, typeDefinition);
 					isSerializable = false;
 				}
@@ -446,7 +448,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else {
 				var baseClass = typeDefinition.DirectBaseTypes.SingleOrDefault(c => c.Kind == TypeKind.Class);
-				if (baseClass != null && _typeSemantics[baseClass.GetDefinition()].IsSerializable) {
+				if (baseClass != null && GetTypeSemanticsInternal(baseClass.GetDefinition()).IsSerializable) {
 					Message(7008, typeDefinition, baseClass.FullName);
 				}
 
@@ -532,13 +534,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				defaultName = "$ctor";
 			}
 			else if (Utils.IsPublic(member)) {
-				defaultName = _typeSemantics[member.DeclaringTypeDefinition].PreserveMemberCases ? member.Name : MakeCamelCase(member.Name);
+				defaultName = GetTypeSemanticsInternal(member.DeclaringTypeDefinition).PreserveMemberCases ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {
 				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
 					defaultName = null;
 				else
-					defaultName = "$" + (_typeSemantics[member.DeclaringTypeDefinition].PreserveMemberCases ? member.Name : MakeCamelCase(member.Name));
+					defaultName = "$" + (GetTypeSemanticsInternal(member.DeclaringTypeDefinition).PreserveMemberCases ? member.Name : MakeCamelCase(member.Name));
 			}
 
 
@@ -554,7 +556,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			var typeSemantics = _typeSemantics[member.DeclaringTypeDefinition];
+			var typeSemantics = GetTypeSemanticsInternal(member.DeclaringTypeDefinition);
 
 			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
 			if (sna != null) {
@@ -622,7 +624,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			                     group new { m, name } by name.Item1 into g
 			                    select new { Name = g.Key, Members = g.Select(x => new { Member = x.m, NameSpecified = x.name.Item2 }).ToList() };
 
-			bool isSerializable = _typeSemantics[typeDefinition].IsSerializable;
+			bool isSerializable = GetTypeSemanticsInternal(typeDefinition).IsSerializable;
 			foreach (var current in membersByName) {
 				foreach (var m in current.Members.OrderByDescending(x => x.NameSpecified).ThenBy(x => x.Member, MemberOrderer.Instance)) {
 					if (m.Member is IMethod) {
@@ -638,7 +640,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (m.Member is IProperty) {
 						var p = (IProperty)m.Member;
 						ProcessProperty(p, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
-						var ps = _propertySemantics[p];
+						var ps = GetPropertySemantics(p);
 						if (p.CanGet)
 							_methodSemantics[p.Getter] = ps.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods ? ps.GetMethod : MethodScriptSemantics.NotUsableFromScript();
 						if (p.CanSet)
@@ -650,7 +652,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (m.Member is IEvent) {
 						var e = (IEvent)m.Member;
 						ProcessEvent((IEvent)m.Member, current.Name, m.NameSpecified, m.Member.IsStatic ? staticMembers : instanceMembers);
-						var es = _eventSemantics[e];
+						var es = GetEventSemantics(e);
 						_methodSemantics[e.AddAccessor]    = es.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods ? es.AddMethod    : MethodScriptSemantics.NotUsableFromScript();
 						_methodSemantics[e.RemoveAccessor] = es.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods ? es.RemoveMethod : MethodScriptSemantics.NotUsableFromScript();
 					}
@@ -685,7 +687,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var epa = GetAttributePositionalArgs(source, ExpandParamsAttribute);
 			var ola = GetAttributePositionalArgs(source, ObjectLiteralAttribute);
 
-			if (nsa != null || _typeSemantics[source.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (nsa != null || GetTypeSemanticsInternal(source.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -699,8 +701,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				Message(7102, constructor);
 			}
 
-			bool isSerializable = _typeSemantics[source.DeclaringTypeDefinition].IsSerializable;
-			bool isImported     = _typeSemantics[source.DeclaringTypeDefinition].IsImported;
+			bool isSerializable = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsSerializable;
+			bool isImported     = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported;
 
 			var ica = GetAttributePositionalArgs(source, InlineCodeAttribute);
 			if (ica != null) {
@@ -720,7 +722,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null);
 				return;
 			}
-			else if (ola != null || (isSerializable && _typeSemantics[source.DeclaringTypeDefinition].IsImported)) {
+			else if (ola != null || (isSerializable && GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported)) {
 				if (isSerializable) {
 					bool hasError = false;
 					var members = source.DeclaringTypeDefinition.Members.Where(m => m.EntityType == EntityType.Property || m.EntityType == EntityType.Field).ToDictionary(m => m.Name.ToLowerInvariant());
@@ -792,7 +794,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (_typeSemantics[property.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(property, NonScriptableAttribute) != null) {
+			if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(property, NonScriptableAttribute) != null) {
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -806,7 +808,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
 			}
-			else if (_typeSemantics[property.DeclaringTypeDefinition].IsSerializable && !property.IsStatic) {
+			else if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).IsSerializable && !property.IsStatic) {
 				usedNames[preferredName] = true;
 				_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
 				return;
@@ -836,7 +838,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else
 						Message(7109, property);
 				}
-				else if (property.IsOverride && _propertySemantics[(IProperty)InheritanceHelper.GetBaseMember(property).MemberDefinition].Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
+				else if (property.IsOverride && GetPropertySemantics((IProperty)InheritanceHelper.GetBaseMember(property).MemberDefinition).Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 					if (property.IsIndexer)
 						Message(7110, property.Region);
 					else
@@ -848,7 +850,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else
 						Message(7113, property);
 				}
-				else if (property.IsExplicitInterfaceImplementation || property.ImplementedInterfaceMembers.Any(m => _propertySemantics[(IProperty)m.MemberDefinition].Type != PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
+				else if (property.IsExplicitInterfaceImplementation || property.ImplementedInterfaceMembers.Any(m => GetPropertySemantics((IProperty)m.MemberDefinition).Type != PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
 					if (property.IsIndexer)
 						Message(7114, property.Region);
 					else
@@ -870,7 +872,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			if (property.IsExplicitInterfaceImplementation && property.ImplementedInterfaceMembers.Any(m => _propertySemantics[(IProperty)m.MemberDefinition].Type == PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
+			if (property.IsExplicitInterfaceImplementation && property.ImplementedInterfaceMembers.Any(m => GetPropertySemantics((IProperty)m.MemberDefinition).Type == PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
 				// Inherit [NonScriptable] for explicit interface implementations.
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
 				return;
@@ -883,7 +885,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames);
-				getter = _methodSemantics[property.Getter];
+				getter = GetMethodSemantics(property.Getter);
 			}
 			else {
 				getter = null;
@@ -895,7 +897,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames);
-				setter = _methodSemantics[property.Setter];
+				setter = GetMethodSemantics(property.Setter);
 			}
 			else {
 				setter = null;
@@ -921,14 +923,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var epa = GetAttributePositionalArgs(method, ExpandParamsAttribute);
 			var asa = GetAttributePositionalArgs(method, AlternateSignatureAttribute);
 
-			bool isImported = _typeSemantics[method.DeclaringTypeDefinition].IsImported;
+			bool isImported = GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsImported;
 
 			if (eaa != null && (method.Name != "GetEnumerator" || method.IsStatic || method.TypeParameters.Count > 0 || method.Parameters.Count > 0)) {
 				Message(7151, method);
 				eaa = null;
 			}
 
-			if (nsa != null || _typeSemantics[method.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (nsa != null || GetTypeSemanticsInternal(method.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -956,7 +958,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					else if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						Message(7120, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -1011,7 +1013,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					else if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						Message(7127, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -1072,7 +1074,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 				}
 				else {
-					if (method.IsOverride && _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						if (nameSpecified) {
 							Message(7132, method);
 						}
@@ -1080,7 +1082,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							Message(7133, method);
 						}
 
-						var semantics = _methodSemantics[(IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition];
+						var semantics = GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition);
 						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
 							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
@@ -1111,7 +1113,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						}
 
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
-						var sem = method.ImplementedInterfaceMembers.Select(im => _methodSemantics[(IMethod)im.MemberDefinition]).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						var sem = method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
 						if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
 							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
@@ -1152,7 +1154,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 							if (asa == null)
 								usedNames[name] = true;
-							if (_typeSemantics[method.DeclaringTypeDefinition].IsSerializable && !method.IsStatic) {
+							if (GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsSerializable && !method.IsStatic) {
 								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 							else {
@@ -1165,7 +1167,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (_typeSemantics[evt.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(evt, NonScriptableAttribute) != null) {
+			if (GetTypeSemanticsInternal(evt.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(evt, NonScriptableAttribute) != null) {
 				_eventSemantics[evt] = EventScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -1182,7 +1184,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
-				adder = _methodSemantics[evt.AddAccessor];
+				adder = GetMethodSemantics(evt.AddAccessor);
 			}
 			else {
 				adder = null;
@@ -1194,7 +1196,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
-				remover = _methodSemantics[evt.RemoveAccessor];
+				remover = GetMethodSemantics(evt.RemoveAccessor);
 			}
 			else {
 				remover = null;
@@ -1204,7 +1206,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessField(IField field, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (_typeSemantics[field.DeclaringTypeDefinition].Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(field, NonScriptableAttribute) != null) {
+			if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(field, NonScriptableAttribute) != null) {
 				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();
 			}
 			else if (preferredName == "") {
@@ -1225,7 +1227,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					usedNames[name] = true;
 				}
 
-				if (_typeSemantics[field.DeclaringTypeDefinition].IsNamedValues) {
+				if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).IsNamedValues) {
 					string value = preferredName;
 					if (!nameSpecified) {	// This code handles the feature that it is possible to specify an invalid ScriptName for a member of a NamedValues enum, in which case that value has to be use as the constant value.
 						var sna = GetAttributePositionalArgs(field, ScriptNameAttribute);
@@ -1309,12 +1311,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
+		private TypeSemantics GetTypeSemanticsInternal(ITypeDefinition typeDefinition) {
+			TypeSemantics ts;
+			if (_typeSemantics.TryGetValue(typeDefinition, out ts))
+				return ts;
+			throw new ArgumentException(string.Format("Type semantics for type {0} were not correctly imported", typeDefinition.FullName));
+		}
+
 		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
 			if (typeDefinition.Kind == TypeKind.Delegate)
 				return TypeScriptSemantics.NormalType(Function);
 			else if (typeDefinition.Kind == TypeKind.Array)
 				return TypeScriptSemantics.NormalType(Array);
-			return _typeSemantics[typeDefinition].Semantics;
+			return GetTypeSemanticsInternal(typeDefinition).Semantics;
 		}
 
 		public string GetTypeParameterName(ITypeParameter typeParameter) {
@@ -1326,7 +1335,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				case TypeKind.Delegate:
 					return MethodScriptSemantics.NotUsableFromScript();
 				default:
-					return _methodSemantics[(IMethod)method.MemberDefinition];
+					MethodScriptSemantics result;
+					if (!_methodSemantics.TryGetValue((IMethod)method.MemberDefinition, out result))
+						throw new ArgumentException(string.Format("Semantics for method " + method + " were not imported"));
+					return result;
 			}
 		}
 
@@ -1337,7 +1349,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				case TypeKind.Delegate:
 					return ConstructorScriptSemantics.NotUsableFromScript();
 				default:
-					return _constructorSemantics[(IMethod)method.MemberDefinition];
+					ConstructorScriptSemantics result;
+					if (!_constructorSemantics.TryGetValue((IMethod)method.MemberDefinition, out result))
+						throw new ArgumentException(string.Format("Semantics for constructor " + method + " were not imported"));
+					return result;
 			}
 		}
 
@@ -1348,12 +1363,18 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				case TypeKind.Delegate:
 					return PropertyScriptSemantics.NotUsableFromScript();
 				default:
-					return _propertySemantics[(IProperty)property.MemberDefinition];
+					PropertyScriptSemantics result;
+					if (!_propertySemantics.TryGetValue((IProperty)property.MemberDefinition, out result))
+						throw new ArgumentException(string.Format("Semantics for property " + property + " were not imported"));
+					return result;
 			}
 		}
 
 		public DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType) {
-			return _delegateSemantics[delegateType];
+			DelegateScriptSemantics result;
+			if (!_delegateSemantics.TryGetValue(delegateType, out result))
+				throw new ArgumentException(string.Format("Semantics for delegate " + delegateType + " were not imported"));
+			return result;
 		}
 
 		private string GetBackingFieldName(ITypeDefinition declaringTypeDefinition, string memberName) {
@@ -1386,7 +1407,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				case TypeKind.Delegate:
 					return FieldScriptSemantics.NotUsableFromScript();
 				default:
-					return _fieldSemantics[(IField)field.MemberDefinition];
+					FieldScriptSemantics result;
+					if (!_fieldSemantics.TryGetValue((IField)field.MemberDefinition, out result))
+						throw new ArgumentException(string.Format("Semantics for field " + field + " were not imported"));
+					return result;
 			}
 		}
 
@@ -1395,7 +1419,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				case TypeKind.Delegate:
 					return EventScriptSemantics.NotUsableFromScript();
 				default:
-					return _eventSemantics[(IEvent)evt.MemberDefinition];
+					EventScriptSemantics result;
+					if (!_eventSemantics.TryGetValue((IEvent)evt.MemberDefinition, out result))
+						throw new ArgumentException(string.Format("Semantics for field " + evt + " were not imported"));
+					return result;
 			}
 		}
 
@@ -1410,32 +1437,32 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		public bool IsNamedValues(ITypeDefinition t) {
-			return _typeSemantics[t].IsNamedValues;
+			return GetTypeSemanticsInternal(t).IsNamedValues;
 		}
 
 		public bool IsResources(ITypeDefinition t) {
-			return _typeSemantics[t].IsResources;
+			return GetTypeSemanticsInternal(t).IsResources;
 		}
 
 		public bool IsMixin(ITypeDefinition t) {
-			return _typeSemantics[t].IsMixin;
+			return GetTypeSemanticsInternal(t).IsMixin;
 		}
 
 		public bool IsSerializable(ITypeDefinition t) {
-			return _typeSemantics[t].IsSerializable;
+			return GetTypeSemanticsInternal(t).IsSerializable;
 		}
 
 		public bool DoesTypeObeyTypeSystem(ITypeDefinition t) {
-			return _typeSemantics[t].ObeysTypeSystem;
+			return GetTypeSemanticsInternal(t).ObeysTypeSystem;
 		}
 
 		public bool IsImported(ITypeDefinition t) {
-			return _typeSemantics[t].IsImported;
+			return GetTypeSemanticsInternal(t).IsImported;
 		}
 
 		public string GetModuleName(ITypeDefinition t) {
 			for (var current = t; current != null; current = current.DeclaringTypeDefinition) {
-				var n = _typeSemantics[current].ModuleName;
+				var n = GetTypeSemanticsInternal(current).ModuleName;
 				if (n != null)
 					return n != "" ? n : null;
 			}

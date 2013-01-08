@@ -1,150 +1,112 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="resizable" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>Change the size of an element using the mouse</desc>
+<entry name="resizable" type="widget" widget-element="resizable element" event-prefix="resize">
+	<title>Resizable Widget</title>
+	<desc>Change the size of an element using the mouse.</desc>
 	<longdesc>
 		<p>The jQuery UI Resizable plugin makes selected elements resizable (meaning they have draggable resize handles). You can specify one or more handles as well as min and max width and height.</p>
-		<p>All callbacks (start,stop,resize) receive two arguments: The original browser event and a prepared ui object.</p>
-		<p>This interaction requires some functional CSS, otherwise it won't work. If you build a custom theme, use the interaction's specific CSS file as a starting point.</p>
+
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+			<li><a href="/mouse/">Mouse Interaction</a></li>
+		</ul>
 	</longdesc>
-	<created>1.0</created>
+	<note id="functional-css"/>
+	<added>1.0</added>
 	<options>
-		<option name="alsoResize" default='false'>
-			<desc>Resize these elements synchronous when resizing.</desc>
-			<type name="Selector" />
-			<type name="jQuery" />
-			<type name="Element" />
+		<option name="alsoResize" default="false" example-value='"#mirror"'>
+			<desc>One or more elements to resize synchronously with the resizable element.</desc>
+			<type name="Selector"/>
+			<type name="jQuery"/>
+			<type name="Element"/>
 		</option>
-		<option name="animate" default='false'>
+		<option name="animate" type="Boolean" default="false" example-value='true'>
 			<desc>Animates to the final size after resizing.</desc>
-			<type name="Boolean" />
 		</option>
-		<option name="animateDuration" default='"slow"'>
-			<desc>Duration time for animating, in milliseconds. Other possible values: 'slow', 'normal', 'fast'.</desc>
-			<type name="Number" />
-			<type name="String" />
+		<option name="animateDuration" default='"slow"' example-value='"fast"'>
+			<desc>How long to animate when using the <a href="#option-animate"><code>animate</code></a> option.</desc>
+			<type name="Number">
+				<desc>Duration in milliseconds.</desc>
+			</type>
+			<type name="String">
+				<desc>A named duration, such as <code>"slow"</code> or <code>"fast"</code>.</desc>
+			</type>
 		</option>
-		<option name="animateEasing" default='"swing"'>
-			<desc>Easing effect for animating.</desc>
-			<type name="String" />
+		<option name="animateEasing" type="String" default='"swing"' example-value='"easeOutBounce"'>
+			<desc>Which <a href="/easings/">easing</a> to apply when using the <a href="#option-animate"><code>animate</code></a> option.</desc>
 		</option>
-		<option name="aspectRatio" default='false'>
-			<desc>If set to true, resizing is constrained by the original aspect ratio. Otherwise a custom aspect ratio can be specified, such as 9 / 16, or 0.5.</desc>
-			<type name="Boolean" />
-			<type name="Number" />
+		<option name="aspectRatio" default="false" example-value='true'>
+			<desc>Whether the element should be constrained to a specific aspect ratio.</desc>
+			<type name="Boolean">
+				<desc>When set to <code>true</code>, the element will maintain its original aspect ratio.</desc>
+			</type>
+			<type name="Number">
+				<desc>Force the element to maintain a specific aspect ratio during resizing.</desc>
+			</type>
 		</option>
-		<option name="autoHide" default='false'>
-			<desc>If set to true, automatically hides the handles except when the mouse hovers over the element.</desc>
-			<type name="Boolean" />
+		<option name="autoHide" type="Boolean" default="false" example-value='true'>
+			<desc>Whether the handles should hide when the user is not hovering over the element.</desc>
 		</option>
-		<option name="cancel" default='":input,option"'>
-			<desc>Prevents resizing if you start on elements matching the selector.</desc>
-			<type name="Selector" />
+		<option name="cancel" type="Selector" default='"input,textarea,button,select,option"' example-value='".cancel"'>
+			<desc>Prevents resizing from starting on specified elements.</desc>
 		</option>
-		<option name="containment" default='false'>
-			<desc>Constrains resizing to within the bounds of the specified element. Possible values: 'parent', 'document', a DOMElement, or a Selector.</desc>
-			<type name="String" />
-			<type name="Element" />
-			<type name="Selector" />
+		<option name="containment" default="false" example-value='"parent"'>
+			<desc>Constrains resizing to within the bounds of the specified element or region.</desc>
+			<type name="Selector">
+				<desc>The resizable element will be contained to the bounding box of the first element found by the selector. If no element is found, no containment will be set.</desc>
+			</type>
+			<type name="Element">
+				<desc>The resizable element will be contained to the bounding box of this element.</desc>
+			</type>
+			<type name="String">
+				<desc>Possible values: <code>"parent"</code> and <code>"document"</code>.</desc>
+			</type>
 		</option>
-		<option name="delay" default='0'>
+		<option name="delay" type="Number" default="0" example-value='150'>
 			<desc>Tolerance, in milliseconds, for when resizing should start. If specified, resizing will not start until after mouse is moved beyond duration. This can help prevent unintended resizing when clicking on an element.</desc>
-			<type name="Number" />
 		</option>
-		<option name="disabled" default="false">
-			<desc>Disables the resizable if set to true.</desc>
-			<type name="Boolean" />
-		</option>
-		<option name="distance" default='1'>
+		<xi:include href="../includes/widget-option-disabled.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<option name="distance" type="Number" default="1" example-value='30'>
 			<desc>Tolerance, in pixels, for when resizing should start. If specified, resizing will not start until after mouse is moved beyond distance. This can help prevent unintended resizing when clicking on an element.</desc>
-			<type name="Number" />
 		</option>
-		<option name="ghost" default='false'>
-			<desc>If set to true, a semi-transparent helper element is shown for resizing.</desc>
-			<type name="Boolean" />
+		<option name="ghost" type="Boolean" default="false" example-value='true'>
+			<desc>If set to <code>true</code>, a semi-transparent helper element is shown for resizing.</desc>
 		</option>
-		<option name="grid" default='false'>
-			<desc>Snaps the resizing element to a grid, every x and y pixels. Array values: [x, y]</desc>
-			<type name="Array" />
+		<option name="grid" type="Array" default="false" example-value='[ 20, 10 ]'>
+			<desc>Snaps the resizing element to a grid, every x and y pixels. Array values: <code>[ x, y ]</code>.</desc>
 		</option>
-		<option name="handles" default='"e, s, se"'>
-			<desc>
-				If specified as a string, should be a comma-split list of any of the following: 'n, e, s, w, ne, se, sw, nw, all'. The necessary handles will be auto-generated by the plugin.
-
-				<p>If specified as an object, the following keys are supported: { n, e, s, w, ne, se, sw, nw }. The value of any specified should be a jQuery selector matching the child element of the resizable to use as that handle. If the handle is not a child of the resizable, you can pass in the DOMElement or a valid jQuery object directly.</p>
-			</desc>
-			<type name="String" />
-			<type name="Object" />
+		<option name="handles" default='"e, s, se"' example-value='"n, e, s, w"'>
+			<desc>Which handles can be used for resizing.</desc>
+			<type name="String">
+				<desc>A comma delimited list of any of the following: n, e, s, w, ne, se, sw, nw, all. The necessary handles will be auto-generated by the plugin.</desc>
+			</type>
+			<type name="Object">
+				<desc>The following keys are supported: { n, e, s, w, ne, se, sw, nw }. The value of any specified should be a jQuery selector matching the child element of the resizable to use as that handle. If the handle is not a child of the resizable, you can pass in the DOMElement or a valid jQuery object directly.</desc>
+			</type>
 		</option>
-		<option name="helper" default='false'>
-			<desc>This is the css class that will be added to a proxy element to outline the resize during the drag of the resize handle. Once the resize is complete, the original element is sized.</desc>
-			<type name="String" />
+		<option name="helper" type="String" default="false" example-value='"resizable-helper"'>
+			<desc>A class name that will be added to a proxy element to outline the resize during the drag of the resize handle. Once the resize is complete, the original element is sized.</desc>
 		</option>
-		<option name="maxHeight" default='null'>
-			<desc>This is the maximum height the resizable should be allowed to resize to.</desc>
-			<type name="Number" />
+		<option name="maxHeight" type="Number" default="null" example-value='300'>
+			<desc>The maximum height the resizable should be allowed to resize to.</desc>
 		</option>
-		<option name="maxWidth" default='null'>
-			<desc>This is the maximum width the resizable should be allowed to resize to.</desc>
-			<type name="Number" />
+		<option name="maxWidth" type="Number" default="null" example-value='300'>
+			<desc>The maximum width the resizable should be allowed to resize to.</desc>
 		</option>
-		<option name="minHeight" default='10'>
-			<desc>This is the minimum height the resizable should be allowed to resize to.</desc>
-			<type name="Number" />
+		<option name="minHeight" type="Number" default="10" example-value='150'>
+			<desc>The minimum height the resizable should be allowed to resize to.</desc>
 		</option>
-		<option name="minWidth" default='10'>
-			<desc>This is the minimum width the resizable should be allowed to resize to.</desc>
-			<type name="Number" />
+		<option name="minWidth" type="Number" default="10" example-value='150'>
+			<desc>The minimum width the resizable should be allowed to resize to.</desc>
 		</option>
-
 	</options>
 	<events>
-		<event name="create">
-			<desc>
-				This event is triggered when the resizable is created.
-			</desc>
-			<argument name="event" type="Event">
-			</argument>
-			<argument name="ui" type="Object">
-			</argument>
-		</event>
-		<event name="start" type="resizestart">
+		<xi:include href="../includes/widget-event-create.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<event name="start">
 			<desc>This event is triggered at the start of a resize operation.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="element" type="jQuery">
-					<desc>The jQuery object representing the element to be resized</desc>
-				</property>
-				<property name="helper" type="jQuery">
-					<desc>The jQuery object representing the helper that's being resized</desc>
-				</property>
-				<property name="originalElement" type="jQuery">
-					<desc>The jQuery object representing the original element before it is wrapped</desc>
-				</property>
-				<property name="originalPosition" type="jQuery">
-					<desc>The position represented as <code>{ left, top }</code> before the resizable is resized</desc>
-				</property>
-				<property name="originalSize" type="Object">
-					<desc>The size represented as <code>{ width, height }</code> before the resizable is resized</desc>
-				</property>
-				<property name="position" type="Object">
-					<desc>The current position represented as <code>{ left, top }</code></desc>
-				</property>
-				<property name="size" type="Object">
-					<desc>The current size represented as <code>{ width, height }</code></desc>
-				</property>
-			</argument>
-		</event>
-		<event name="resize" type="resize">
-			<desc>This event is triggered during the resize, on the drag of the resize handler.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="element" type="jQuery">
 					<desc>The jQuery object representing the element to be resized</desc>
 				</property>
@@ -168,13 +130,10 @@
 				</property>
 			</argument>
 		</event>
-		<event name="stop" type="resizestop">
-			<desc>This event is triggered at the end of a resize operation.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="resize">
+			<desc>This event is triggered during the resize, on the drag of the resize handler.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="element" type="jQuery">
 					<desc>The jQuery object representing the element to be resized</desc>
 				</property>
@@ -184,7 +143,7 @@
 				<property name="originalElement" type="jQuery">
 					<desc>The jQuery object representing the original element before it is wrapped</desc>
 				</property>
-				<property name="originalPosition" type="jQuery">
+				<property name="originalPosition" type="Object">
 					<desc>The position represented as <code>{ left, top }</code> before the resizable is resized</desc>
 				</property>
 				<property name="originalSize" type="Object">
@@ -198,30 +157,55 @@
 				</property>
 			</argument>
 		</event>
-
+		<event name="stop">
+			<desc>This event is triggered at the end of a resize operation.</desc>
+			<argument name="event" type="Event"/>
+			<argument name="ui" type="Object">
+				<property name="element" type="jQuery">
+					<desc>The jQuery object representing the element to be resized</desc>
+				</property>
+				<property name="helper" type="jQuery">
+					<desc>The jQuery object representing the helper that's being resized</desc>
+				</property>
+				<property name="originalElement" type="jQuery">
+					<desc>The jQuery object representing the original element before it is wrapped</desc>
+				</property>
+				<property name="originalPosition" type="Object">
+					<desc>The position represented as <code>{ left, top }</code> before the resizable is resized</desc>
+				</property>
+				<property name="originalSize" type="Object">
+					<desc>The size represented as <code>{ width, height }</code> before the resizable is resized</desc>
+				</property>
+				<property name="position" type="Object">
+					<desc>The current position represented as <code>{ left, top }</code></desc>
+				</property>
+				<property name="size" type="Object">
+					<desc>The current size represented as <code>{ width, height }</code></desc>
+				</property>
+			</argument>
+		</event>
 	</events>
 	<methods>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
-		<widget-inherit id="widget-enable" />
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<widget-inherit id="widget-widget" />
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-disable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-enable.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</methods>
 	<example>
-
 		<desc>A simple jQuery UI Resizable.</desc>
-		<inhead><![CDATA[<style type="text/css">
-    #resizable { width: 100px; height: 100px; background: silver; }
-  </style>]]></inhead>
-		<code><![CDATA[$("#resizable").resizable();]]></code>
+		<css><![CDATA[
+	#resizable {
+		width: 100px;
+		height: 100px;
+		background: #ccc;
+}]]></css>
+		<code><![CDATA[
+$( "#resizable" ).resizable();
+]]></code>
 		<html><![CDATA[
 <div id="resizable"></div>
-
 ]]></html>
-
 	</example>
 	<category slug="interactions"/>
 </entry>

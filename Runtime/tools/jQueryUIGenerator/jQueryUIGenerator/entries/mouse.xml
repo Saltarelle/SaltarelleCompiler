@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<entry type="widget" name="jQuery.ui.mouse">
+	<title>Mouse Interaction</title>
+	<desc>The base interaction layer.</desc>
+	<longdesc>
+		<p>Similar to <a href="/jQuery.Widget#jQuery-Widget2"><code>jQuery.Widget</code></a>, the mouse interaction is not intended to be used directly. It is purely a base layer for other widgets to inherit from. This page only documents what is added to <code>jQuery.Widget</code>, but it does include internal methods that are not intended to be overwritten. The intended public API is <a href="#method-_mouseStart"><code>_mouseStart()</code></a>, <a href="#method-_mouseDrag"><code>_mouseDrag()</code></a>, <a href="#method-_mouseStop"><code>_mouseStop()</code></a>, and <a href="#method-_mouseCapture"><code>_mouseCapture()</code></a>.</p>
+
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+		</ul>
+	</longdesc>
+	<options>
+		<option name="cancel" type="Selector" default='"input,textarea,button,select,option"' example-value='".title"'>
+			<desc>Prevents interactions from starting on specified elements.</desc>
+		</option>
+		<option name="delay" type="Number" default="0" example-value="300">
+			<desc>Time in milliseconds after mousedown until the interaction should start. This option can be used to prevent unwanted interactions when clicking on an element.</desc>
+		</option>
+		<option name="distance" type="Number" default="1" example-value="10">
+			<desc>Distance in pixels after mousedown the mouse must move before the interaction should start. This option can be used to prevent unwanted interactions when clicking on an element.</desc>
+		</option>
+	</options>
+	<methods>
+		<method name="_mouseInit">
+			<desc>
+				Initializes the interaction event handlers. This must be called from the extending widget's <code>_create()</code> method.
+			</desc>
+		</method>
+		<method name="_mouseDestroy">
+			<desc>
+				Destroys the interaction event handlers. This must be called from the extending widget's <code>_destroy()</code> method.
+			</desc>
+		</method>
+		<method name="_mouseDown">
+			<desc>
+				Handles the beginning of an interaction. Verifies that the event is associated with the primary mouse button and ensures that the <a href="#option-delay"><code>delay</code></a> and <a href="#option-distance"><code>distance</code></a> options are met prior to starting the interaction. When the interaction is ready to start, invokes the <a href="#method-_mouseStart"><code>_mouseStart()</code></a> method for the extending widget to handle.
+			</desc>
+		</method>
+		<method name="_mouseMove">
+			<desc>
+				Handles each movement of the interaction. Invokes the <a href="#method-_mouseDrag"><code>mouseDrag()</code></a> method for the extending widget to handle.
+			</desc>
+		</method>
+		<method name="_mouseUp">
+			<desc>
+				Handles the end of the interaction. Invokes the <a href="#method-_mouseStop"><code>mouseStop()</code></a> method for the extending widget to handle.
+			</desc>
+		</method>
+		<method name="_mouseDistanceMet" return="Boolean">
+			<desc>
+				Determines whether the <a href="#option-distance"><code>distance</code></a> option has been met for the current interaction.
+			</desc>
+		</method>
+		<method name="_mouseDelayMet" return="Boolean">
+			<desc>
+				Determines whether the <a href="#option-delay"><code>delay</code></a> option has been met for the current interaction.
+			</desc>
+		</method>
+		<method name="_mouseStart">
+			<desc>
+				The extending widget should implement a <code>_mouseStart()</code> method to handle the beginning of an interaction. This method will receive the mouse event associated with the start of the interaction.
+			</desc>
+		</method>
+		<method name="_mouseDrag">
+			<desc>
+				The extending widget should implement a <code>_mouseDrag()</code> method to handle each movement of an interaction. This method will receive the mouse event associated with the movement.
+			</desc>
+		</method>
+		<method name="_mouseStop">
+			<desc>
+				The extending widget should implement a <code>_mouseStop()</code> method to handle the end of an interaction. This method will receive the mouse event associated with the end of the interaction.
+			</desc>
+		</method>
+		<method name="_mouseCapture" return="Boolean">
+			<desc>
+				Determines whether an interaction should start based on event target of the interaction. The default implementation always returns <code>true</code>.
+			</desc>
+		</method>
+	</methods>
+	<category slug="utilities"/>
+	<category slug="interactions"/>
+</entry>

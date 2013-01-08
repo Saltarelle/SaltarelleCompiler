@@ -262,7 +262,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\License.txt" target=""/>
 		<file src="$baseDir\Runtime\bin\Script.jQuery.UI.dll" target="lib"/>
 		<file src="$baseDir\Runtime\bin\Script.jQuery.UI.xml" target="lib"/>
-		<file src="$baseDir\Runtime\src\Libraries\jQuery\jQuery.UI\*.js" target=""/>
+		<file src="$baseDir\Runtime\src\Libraries\jQuery\jquery-ui*.js" target=""/>
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\jQuery.UI.nuspec"

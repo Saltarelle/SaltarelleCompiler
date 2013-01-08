@@ -48,6 +48,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QUnit", "Libraries\QUnit\QU
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QUnit.Plugin", "Libraries\QUnit.Plugin\QUnit.Plugin.csproj", "{E23A7D8C-B41F-45A5-973C-9A2E1F4B88B5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D09CDE45-FFC0-44CC-B693-31C4A0F37602}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\history.txt = ..\..\history.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_NoAsync|Any CPU = Debug_NoAsync|Any CPU

@@ -1,285 +1,245 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="tabs" namespace="fn" type="Widget" widgetnamespace="ui">
-	<desc>A single content area with multiple panels, each associated with a header in a list</desc>
+<entry name="tabs" type="widget" animated-element="panel" widget-element="tabs container">
+	<title>Tabs Widget</title>
+	<desc>A single content area with multiple panels, each associated with a header in a list.</desc>
 	<longdesc>
 		<p>Tabs are generally used to break content into multiple sections that can be swapped to save space, much like an accordion.</p>
 
-		<p>By default a tab widget will swap between tabbed sections on click, but the events can be changed to onHover through an option. Tab content can be loaded via Ajax by setting an href on a tab.</p>
+		<p>The content for each tab panel can be defined in-page or can be loaded via Ajax; both are handled automatically based on the <code>href</code> of the anchor associated with the tab. By default tabs are activated on click, but the events can be changed to hover via the <a href="#option-event"><code>event</code></a> option.</p>
 
-		<p>This widget requires some functional CSS, otherwise it won't work. If you build a custom theme, use the widget's specific CSS file as a starting point.</p>
+		<h3>Keyboard interaction</h3>
+
+		<p>When focus is on a tab, the following key commands are available:</p>
+		<ul>
+			<li>UP/LEFT: Move focus to the previous tab. If on first tab, moves focus to last tab. Activate focused tab after a short delay.</li>
+			<li>DOWN/RIGHT: Move focus to the next tab. If on last tab, moves focus to first tab. Activate focused tab after a short delay.</li>
+			<li>HOME: Move focus to the first tab. Activate focused tab after a short delay.</li>
+			<li>END: Move focus to the last tab. Activate focused tab after a short delay.</li>
+			<li>SPACE: Activate panel associated with focused tab.</li>
+			<li>ENTER: Activate or toggle panel associated with focused tab.</li>
+			<li>ALT+PAGE UP: Move focus to the previous tab and immediately activate.</li>
+			<li>ALT+PAGE DOWN: Move focus to the next tab and immediately activate.</li>
+		</ul>
+
+		<p>When focus is in a panel, the following key commands are available:</p>
+		<ul>
+			<li>CTRL+UP: Move focus to associated tab.</li>
+			<li>ALT+PAGE UP: Move focus to the previous tab and immediately activate.</li>
+			<li>ALT+PAGE DOWN: Move focus to the next tab and immediately activate.</li>
+		</ul>
+
+		<h3>Dependencies</h3>
+		<ul>
+			<li><a href="/category/ui-core/">UI Core</a></li>
+			<li><a href="/jQuery.widget/">Widget Factory</a></li>
+			<li><a href="/category/effects-core/">Effects Core</a> (optional; for use with the <a href="#option-show"><code>show</code></a> and <a href="#option-hide"><code>hide</code></a> options)</li>
+		</ul>
 	</longdesc>
-	<created>1.0</created>
+	<note id="functional-css"/>
+	<added>1.0</added>
 	<options>
-		<option name="active" default='0'>
+		<option name="active" default="0" example-value="1">
 			<desc>
-				The zero-based index of the panel that is active (open). A negative value select panels going backward from the last panel.
-				<p>When collapsible is set to true, a false value closes the accordion, otherwise nothing happens</p>
+				Which panel is currently open.
 			</desc>
-			<type name="Boolean" />
-			<type name="Number" />
+			<type name="Boolean">
+				<desc>Setting <code>active</code> to <code>false</code> will collapse all panels. This requires the <a href="#option-collapsible"><code>collapsible</code></a> option to be <code>true</code>.</desc>
+			</type>
+			<type name="Integer">
+				<desc>The zero-based index of the panel that is active (open). A negative value selects panels going backward from the last panel.</desc>
+			</type>
 		</option>
-		<option name="collapsible" default='false'>
-			<desc>Allow the active panel to be closed.</desc>
-			<type name="Boolean" />
+		<option name="collapsible" type="Boolean" default="false" example-value="true">
+			<desc>When set to <code>true</code>, the active panel can be closed.</desc>
 		</option>
-		<option name="disabled" default='false'>
-			<desc>An array containing the position of the tabs (zero-based index) that should be disabled.</desc>
-			<type name="Boolean" />
-			<type name="Array" />
+		<option name="disabled" default="false" example-value="[ 0, 2 ]">
+			<desc>Which tabs are disabled.</desc>
+			<type name="Boolean">
+				<desc>Enable or disable all tabs.</desc>
+			</type>
+			<type name="Array">
+				<desc>An array containing the zero-based indexes of the tabs that should be disabled, e.g., <code>[ 0, 2 ]</code> would disable the first and third tab.</desc>
+			</type>
 		</option>
-		<option name="event" type="String" default='"click"'>
-			<desc>The type of event to be used for activating a tab. To activate on hover, use "mouseover".</desc>
-			<type name="String" />
+		<option name="event" type="String" default='"click"' example-value='"mouseover"'>
+			<desc>The type of event that the tabs should react to in order to activate the tab. To activate on hover, use <code>"mouseover"</code>.</desc>
 		</option>
-		<option name="heightStyle" default="content">
+		<option name="heightStyle" type="String" default='"content"' example-value='"fill"'>
 			<desc>
 				Controls the height of the tabs widget and each panel. Possible values:
 				<ul>
-					<li>auto: all panels will be set to the height of the tallest panel</li>
-					<li>fill: expand to the available height based on the tabs's parent height</li>
-					<li>content: each panel will be only as tall as its content</li>
+					<li><code>"auto"</code>: All panels will be set to the height of the tallest panel.</li>
+					<li><code>"fill"</code>: Expand to the available height based on the tabs' parent height.</li>
+					<li><code>"content"</code>: Each panel will be only as tall as its content.</li>
 				</ul>
 			</desc>
-			<type name="String" />
 		</option>
-		<option name="hide" default="true">
-			<desc>How to hide a panel.</desc>
-			<type name="Boolean" />
-			<type name="Object" />
-			<example>
-				{
-					effect: 'explode',
-					delay: 250
-				}
-			</example>
-		</option>
+		<xi:include href="../includes/widget-option-hide.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<xi:include href="../includes/widget-option-show.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</options>
 	<events>
-		<event name="create">
-			<desc>
-				This event is triggered when the tabs widget is created.
-			</desc>
-			<argument name="event" type="Event">
-			</argument>
+		<event name="activate">
+			<desc>Triggered after a tab has been activated (after animation completes). If the tabs were previously collapsed, <code>ui.oldTab</code> and <code>ui.oldPanel</code> will be empty jQuery objects. If the tabs are collapsing, <code>ui.newTab</code> and <code>ui.newPanel</code> will be empty jQuery objects.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-			</argument>
-		</event>
-		<event name="beforeActivate" type="tabsselect">
-			<desc>Triggered directly after a tab is activated. Can be cancelled to prevent the tab from activating.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="newTab" type="jQuery">
-					<desc>The jQuery object representing the new tab to be activated</desc>
+					<desc>The tab that was just activated.</desc>
 				</property>
 				<property name="oldTab" type="jQuery">
-					<desc>The jQuery object representing the current tab to be deactivated</desc>
+					<desc>The tab that was just deactivated.</desc>
 				</property>
 				<property name="newPanel" type="jQuery">
-					<desc>The jQuery object representing the new panel to be shown</desc>
+					<desc>The panel that was just activated.</desc>
 				</property>
 				<property name="oldPanel" type="jQuery">
-					<desc>The jQuery object representing the current panel to be hidden</desc>
+					<desc>The panel that was just deactivated.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="activate" type="tabsselect">
-			<desc>Triggered after a tab has been activated and the associated panels have been shown and hidden.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="beforeActivate">
+			<desc>Triggered directly after a tab is activated. Can be canceled to prevent the tab from activating. If the tabs are currently collapsed, <code>ui.oldTab</code> and <code>ui.oldPanel</code> will be empty jQuery objects. If the tabs are collapsing, <code>ui.newTab</code> and <code>ui.newPanel</code> will be empty jQuery objects.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="newTab" type="jQuery">
-					<desc>The jQuery object representing the new tab to be activated</desc>
+					<desc>The tab that is about to be activated.</desc>
 				</property>
 				<property name="oldTab" type="jQuery">
-					<desc>The jQuery object representing the current tab to be deactivated</desc>
+					<desc>The tab that is about to be deactivated.</desc>
 				</property>
 				<property name="newPanel" type="jQuery">
-					<desc>The jQuery object representing the new panel to be shown</desc>
+					<desc>The panel that is about to be activated.</desc>
 				</property>
 				<property name="oldPanel" type="jQuery">
-					<desc>The jQuery object representing the current panel to be hidden</desc>
+					<desc>The panel that is about to be deactivated.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="beforeLoad" type="tabsload">
-			<desc>Triggered after beforeActivate for a remote tab. Can be cancelled to prevent the tab panel from loading content.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="beforeLoad">
+			<desc>Triggered when a remote tab is about to be loaded, after the <a href="#event-beforeActivate"><code>beforeActivate</code></a> event. Can be canceled to prevent the tab panel from loading content; though the panel will still be activated. This event is triggered just before the Ajax request is made, so modifications can be made to <code>ui.jqXHR</code> and <code>ui.ajaxSettings</code>.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="tab" type="jQuery">
-					<desc>The jQuery object representing the current active tab</desc>
+					<desc>The tab that is being loaded.</desc>
 				</property>
 				<property name="panel" type="jQuery">
-					<desc>The jQuery object representing the current visible panel</desc>
+					<desc>The panel which will be populated by the Ajax response.</desc>
 				</property>
-				<property name="jqXHR" type="Object">
-					<desc>The jqXHR returned by jQuery.ajax when loading remote content</desc>
+				<property name="jqXHR" type="jqXHR">
+					<desc>The <code>jqXHR</code> object that is requesting the content.</desc>
 				</property>
 				<property name="ajaxSettings" type="Object">
-					<desc>The settings used when making the jQuery.ajax call to load remote content</desc>
+					<desc>The settings that will be used by <a href="//api.jquery.com/jQuery.ajax"><code>jQuery.ajax</code></a> to request the content.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="load" type="tabsload">
-			<desc>Triggered after a remote tab has been loaded.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="create">
+			<desc>Triggered when the tabs are created. If the tabs are collapsed, <code>ui.tab</code> and <code>ui.panel</code> will be empty jQuery objects.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
 				<property name="tab" type="jQuery">
-					<desc>The jQuery object representing the current active tab</desc>
+					<desc>The active tab.</desc>
 				</property>
 				<property name="panel" type="jQuery">
-					<desc>The jQuery object representing the current visible panel</desc>
+					<desc>The active panel.</desc>
 				</property>
 			</argument>
 		</event>
-		<event name="enable" type="tabsenable">
-			<desc>Triggered after a disabled tab has been enabled.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
+		<event name="load">
+			<desc>Triggered after a remote tab has been loaded.</desc>
+			<argument name="event" type="Event"/>
 			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="tab" type="Element">
-					<desc>The tab element that has been enabled</desc>
-				</property>
-				<property name="panel" type="Element">
-					<desc>The panel element that has been enabled</desc>
-				</property>
-			</argument>
-		</event>
-		<event name="disable" type="tabsdisable">
-			<desc>Triggered after an enabled tab has been disabled.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="tab" type="Element">
-					<desc>The tab element that has been disabled</desc>
-				</property>
-				<property name="panel" type="Element">
-					<desc>The panel element that has been disabled</desc>
-				</property>
-			</argument>
-		</event>
-		<event name="add" type="tabsadd">
-			<desc>Triggered after a new tab is added.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="tab" type="Element">
-					<desc>The tab element to be added</desc>
-				</property>
-				<property name="panel" type="Element">
-					<desc>The panel element to be added</desc>
-				</property>
-			</argument>
-		</event>
-		<event name="remove" type="tabsremove">
-			<desc>Triggered after a tab has been removed.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="tab" type="Element">
-					<desc>The anchor element from the tab that has been removed</desc>
-				</property>
-				<property name="panel" type="Element">
-					<desc>The panel element that has been removed</desc>
-				</property>
-			</argument>
-		</event>
-		<event name="show" type="tabsshow">
-			<desc>Triggered after a tab has been shown.</desc>
-			<argument name="event" type="Event">
-				<desc></desc>
-			</argument>
-			<argument name="ui" type="Object">
-				<desc></desc>
-				<property name="tab" type="Element">
-					<desc>The anchor element from the tab that has been shown</desc>
+				<property name="tab" type="jQuery">
+					<desc>The tab that was just loaded.</desc>
 				</property>
 				<property name="panel" type="jQuery">
-					<desc>The panel element that has been shown</desc>
+					<desc>The panel which was just populated by the Ajax response.</desc>
 				</property>
 			</argument>
 		</event>
 	</events>
 	<methods>
-		<widget-inherit id="widget-destroy" />
-		<widget-inherit id="widget-disable" />
+		<xi:include href="../includes/widget-method-destroy.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 		<method name="disable">
-			<desc>
-				Disable a tab. The selected tab cannot be disabled. To disable more than one tab at once use: <code>$('#example').tabs("option","disabled", [1, 2, 3]);</code>
-				<p>The argument is the zero-based index of the tab to be disabled. Instead of an index, the href of the tab may be passed.</p>
-			</desc>
-			<argument name="index" type="Number, String">
-				<desc></desc>
-			</argument>
+			<signature>
+				<desc>Disables all tabs.</desc>
+			</signature>
+			<signature example-params='1'>
+				<desc>
+					Disables a tab. The selected tab cannot be disabled. To disable more than one tab at once, set the <a href="#option-disabled"><code>disabled</code></a> option: <code>$( "#tabs" ).tabs( "option", "disabled", [ 1, 2, 3 ] )</code>.
+				</desc>
+				<argument name="index">
+					<desc>Which tab to disable.</desc>
+					<type name="Number">
+						<desc>The zero-based index of the tab to disable.</desc>
+					</type>
+					<type name="String">
+						<desc>The <code>href</code> of the tab to disable.</desc>
+					</type>
+				</argument>
+			</signature>
 		</method>
-		<widget-inherit id="widget-enable" />
 		<method name="enable">
-			<desc>
-				Enable a disabled tab. To enable more than one tab at once reset the disabled property like: <code>$('#example').tabs("option","disabled",[]);</code>.
-				<p>The argument is the zero-based index of the tab to be enabled. Instead of an index, the href of the tab may be passed.</p>
-			</desc>
-			<argument name="index" type="Number, String">
-				<desc></desc>
+			<signature>
+				<desc>Enables all tabs.</desc>
+			</signature>
+			<signature example-params='1'>
+				<desc>Enables a tab. To enable more than one tab at once reset the disabled property like: <code>$( "#example" ).tabs( "option", "disabled", [] );</code>.</desc>
+				<argument name="index">
+					<desc>Which tab to enable.</desc>
+					<type name="Number">
+						<desc>The zero-based index of the tab to enable.</desc>
+					</type>
+					<type name="String">
+						<desc>The <code>href</code> of the tab to enable.</desc>
+					</type>
+				</argument>
+			</signature>
+		</method>
+		<method name="load" example-params='1'>
+			<desc>Loads the panel content of a remote tab.</desc>
+			<argument name="index">
+				<desc>Which tab to load.</desc>
+				<type name="Number">
+					<desc>The zero-based index of the tab to load.</desc>
+				</type>
+				<type name="String">
+					<desc>The <code>href</code> of the tab to load.</desc>
+				</type>
 			</argument>
 		</method>
-		<method name="load">
-			<desc>Load the panel content of a remote tab (specified by index)</desc>
-			<argument name="index" type="Number, String">
-				<desc>may also be the href value of a tab</desc>
-			</argument>
+		<xi:include href="../includes/widget-method-option.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+		<method name="refresh">
+			<desc>Process any tabs that were added or removed directly in the DOM and recompute the height of the tab panels. Results depend on the content and the <a href="#option-heightStyle"><code>heightStyle</code></a> option.</desc>
 		</method>
-		<widget-inherit id="widget-get-options" />
-		<widget-inherit id="widget-get-option" />
-		<widget-inherit id="widget-set-option" />
-		<widget-inherit id="widget-set-options" />
-		<widget-inherit id="widget-widget" />
+		<xi:include href="../includes/widget-method-widget.xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
 	</methods>
 	<example>
-
-		<desc>A simple jQuery UI Tabs.</desc>
-		<code><![CDATA[$("#tabs").tabs();]]></code>
+		<desc>A simple jQuery UI Tabs</desc>
+		<code><![CDATA[
+$( "#tabs" ).tabs();
+]]></code>
 		<html><![CDATA[
 <div id="tabs">
-    <ul>
-        <li><a href="#fragment-1"><span>One</span></a></li>
-        <li><a href="#fragment-2"><span>Two</span></a></li>
-        <li><a href="#fragment-3"><span>Three</span></a></li>
-    </ul>
-    <div id="fragment-1">
-        <p>First tab is active by default:</p>
-        <pre><code>$('#example').tabs();</code></pre
-    </div>
-    <div id="fragment-2">
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-    </div>
-    <div id="fragment-3">
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-    </div>
+	<ul>
+		<li><a href="#fragment-1"><span>One</span></a></li>
+		<li><a href="#fragment-2"><span>Two</span></a></li>
+		<li><a href="#fragment-3"><span>Three</span></a></li>
+	</ul>
+	<div id="fragment-1">
+		<p>First tab is active by default:</p>
+		<pre><code>$( "#tabs" ).tabs(); </code></pre>
+	</div>
+	<div id="fragment-2">
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+	</div>
+	<div id="fragment-3">
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+	</div>
 </div>
 ]]></html>
-
 	</example>
 	<category slug="widgets"/>
 </entry>

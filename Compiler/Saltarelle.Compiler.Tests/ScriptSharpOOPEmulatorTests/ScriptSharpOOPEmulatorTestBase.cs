@@ -43,6 +43,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}
 
+		protected string Process(params JsType[] types) {
+			return Process((IEnumerable<JsType>)types);
+		}
+
 		protected void AssertCorrect(string expected, IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null, IMethod entryPoint = null) {
 			var actual = Process(types, metadataImporter: metadataImporter, entryPoint: entryPoint);
 

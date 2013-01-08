@@ -30,7 +30,7 @@ namespace System.Collections {
             }
         }
 
-        public ICollection<string> Keys {
+        public new ICollection<string> Keys {
 			[InlineCode("{$System.Object}.keys({this})")]
             get {
                 return null;

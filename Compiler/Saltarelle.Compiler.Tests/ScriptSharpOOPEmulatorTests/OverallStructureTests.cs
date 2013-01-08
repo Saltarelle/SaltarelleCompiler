@@ -69,8 +69,8 @@ $OuterNamespace_InnerNamespace2_OtherType.prototype = {
 {Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
 {Type}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface, []);
 {Type}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
-y = 1;
 x = 1;
+y = 1;
 ",
 
 			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType"), JsClass.ClassTypeEnum.Class, null, null, null) {

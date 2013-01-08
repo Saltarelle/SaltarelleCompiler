@@ -1,38 +1,51 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="../entries2html.xsl" ?>
-<entry name="transfer" namespace="effect" type="effect">
+<entry name="transfer" type="effect">
+	<title>Transfer Effect</title>
 	<desc>Transfers the outline of an element to another element</desc>
 	<longdesc>
-		Very useful when trying to visualize interaction between two elements.
-		<p>The transfer element iself has the class name "ui-effects-transfer", and needs to be styled by you, for example by adding a background or border.</p>
+		<p>Very useful when trying to visualize interaction between two elements.</p>
+		<p>The transfer element iself has the class <code>ui-effects-transfer</code>, and needs to be styled by you, for example by adding a background or border.</p>
 	</longdesc>
-	<options>
-		<option name="className" type="String">
-			<desc>Optional class name the transfer element will receive.</desc>
-		</option>
-		<option name="to" type="String">
+	<arguments>
+		<argument name="className" type="String">
+			<desc>argumental class name the transfer element will receive.</desc>
+		</argument>
+		<argument name="to" type="String">
 			<desc>jQuery selector, the element to transfer to.</desc>
-		</option>
-		<option name="duration" type="Number" default="400">
-			<desc>The number of ms the animation will run for</desc>
-		</option>
-		<option name="easing" type="String" default="swing">
-			<desc>The easing function to use</desc>
-		</option>
-		<option name="complete" type="function">
-			<desc>A callback function, executed when the effect completes</desc>
-		</option>
-	</options>
+		</argument>
+	</arguments>
 	<example>
+		<height>150</height>
 		<desc>Clicking on the green element transfers to the other.</desc>
+		<css><![CDATA[
+	div.green {
+		width: 100px;
+		height: 80px;
+		background: green;
+		border: 1px solid black;
+		position: relative;
+	}
+	div.red {
+		margin-top: 10px;
+		width: 50px;
+		height: 30px;
+		background: red;
+		border: 1px solid black;
+		position: relative;
+	}
+	.ui-effects-transfer {
+		border: 1px dotted black;
+	}
+]]></css>
 		<code><![CDATA[
-$("div").click(function () {
-      var i = 1 - $("div").index(this);
-      $(this).effect("transfer", { to: $("div").eq(i) }, 1000);
+$( "div" ).click(function() {
+	var i = 1 - $( "div" ).index( this );
+	$( this ).effect( "transfer", { to: $( "div" ).eq( i ) }, 1000 );
 });
 ]]></code>
 		<html><![CDATA[
-<div></div>
+<div class="green"></div>
+<div class="red"></div>
 ]]></html>
 	</example>
 	<category slug="effects"/>
