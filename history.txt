@@ -1,3 +1,4 @@
+Added heuristic to run type initializers in the same order (#96)
 Fixed issue with the casing of some jQueryUI widgets (#107)
 Fixed issue using object initializers when creating instances of type parameters (#111).
 Fixed issue with [InlineCode("new a.b()")] (#109)
