@@ -5,11 +5,11 @@ using System.Text;
 using NUnit.Framework;
 using Saltarelle.Compiler.OOPEmulator;
 
-namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
+namespace Saltarelle.Compiler.Tests {
 	[TestFixture]
 	public class TarjanTests {
 		private List<string> RunTest(int numNodes, params string[] edges) {
-			var result = Tarjan.FindAndTopologicallySortStronglyConnectedComponents(Enumerable.Range('a', numNodes).Select(c => ((char)c)), x => edges.Where(e => e[0] == x).Select(e => e[1]));
+			var result = TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(Enumerable.Range('a', numNodes).Select(c => ((char)c)), edges.Select(e => Tuple.Create(e[0], e[1])));
 			return result.Select(x => new string(x.ToArray())).ToList();
 		}
 
@@ -32,10 +32,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			Assert.That(idx6, Is.GreaterThanOrEqualTo(0), "Component k not found");
 			Assert.That(idx7, Is.GreaterThanOrEqualTo(0), "Component l not found");
 
-			Assert.That(idx3, Is.GreaterThanOrEqualTo(idx1));
-			Assert.That(idx3, Is.GreaterThanOrEqualTo(idx2));
-			Assert.That(idx2, Is.GreaterThanOrEqualTo(idx1));
-			Assert.That(idx7, Is.GreaterThanOrEqualTo(idx6));
+			Assert.That(idx3, Is.LessThanOrEqualTo(idx1));
+			Assert.That(idx3, Is.LessThanOrEqualTo(idx2));
+			Assert.That(idx2, Is.LessThanOrEqualTo(idx1));
+			Assert.That(idx7, Is.LessThanOrEqualTo(idx6));
 		}
 	}
 }
