@@ -6,10 +6,11 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace System.Testing {
+namespace QUnit {
     [IgnoreNamespace]
     [Imported]
-    public static class QUnit {
+	[ScriptName("QUnit")]
+    public static class Engine {
         [ScriptName("start")]
         public static void Start() {
         }

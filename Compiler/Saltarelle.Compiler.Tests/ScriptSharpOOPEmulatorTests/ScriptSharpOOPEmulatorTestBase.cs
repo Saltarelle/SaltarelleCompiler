@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			if (verifyNoErrors)
 				Assert.That(((MockErrorReporter)errorReporter).AllMessages, Is.Empty, "Should not have errors");
 
-			var rewritten = obj.Process(types, comp, entryPoint);
+			var rewritten = obj.Process(types, entryPoint);
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}
 

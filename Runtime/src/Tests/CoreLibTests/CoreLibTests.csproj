@@ -107,6 +107,10 @@
       <Name>CoreLib</Name>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\QUnit\QUnit.csproj">
+      <Project>{278d9898-ef61-4ccd-a6ac-5f7f31a024a4}</Project>
+      <Name>QUnit</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Web\Web.csproj">
       <Project>{3681A9A8-FC40-4125-B842-7775713C8DCE}</Project>
       <Name>Web</Name>

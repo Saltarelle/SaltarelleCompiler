@@ -40,9 +40,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private const string EnumerateAsArrayAttribute              = "System.Runtime.CompilerServices.EnumerateAsArrayAttribute";
 		private const string InlineConstantAttribute                = "System.Runtime.CompilerServices.InlineConstantAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
-		private const string TestFixtureAttribute                   = "System.Testing.TestFixtureAttribute";
-		private const string TestAttribute                          = "System.Testing.TestAttribute";
-		private const string AsyncTestAttribute                     = "System.Testing.AsyncTestAttribute";
 		private const string CategoryPropertyName               = "Category";
 		private const string ExpectedAssertionCountPropertyName = "ExpectedAssertionCount";
 		private const string ObeysTypeSystemPropertyName        = "ObeysTypeSystem";
@@ -143,10 +140,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			public bool ObeysTypeSystem { get; private set; }
 			public bool IsResources { get; private set; }
 			public bool IsMixin { get; private set; }
-			public bool IsTestFixture { get; private set; }
 			public string ModuleName { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool preserveMemberNames, bool preserveMemberCases, bool isSerializable, bool isNamedValues, bool isImported, bool obeysTypeSystem, bool isResources, bool isMixin, bool isTestFixture, string moduleName) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool preserveMemberNames, bool preserveMemberCases, bool isSerializable, bool isNamedValues, bool isImported, bool obeysTypeSystem, bool isResources, bool isMixin, string moduleName) {
 				Semantics           = semantics;
 				PreserveMemberNames = preserveMemberNames;
 				PreserveMemberCases = preserveMemberCases;
@@ -156,7 +152,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				ObeysTypeSystem     = obeysTypeSystem;
 				IsResources         = isResources;
 				IsMixin             = isMixin;
-				IsTestFixture       = isTestFixture;
 				ModuleName          = moduleName;
 			}
 		}
@@ -174,7 +169,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private Dictionary<IEvent, string> _eventBackingFieldNames;
 		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
 		private Dictionary<Tuple<IAssembly, string>, int> _internalTypeCountPerAssemblyAndNamespace;
-		private Dictionary<IMethod, TestMethodData> _methodTestData;
 		private IErrorReporter _errorReporter;
 		private IType _systemObject;
 		private IType _systemRecord;
@@ -184,7 +178,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		private string _mainModuleName;
 		private bool _isAsyncModule;
 
-		private readonly bool _minimizeNames;
+		private bool _minimizeNames;
+
+		public ScriptSharpMetadataImporter(IErrorReporter errorReporter) {
+			_errorReporter = errorReporter;
+		}
 
 		private void Message(int code, DomRegion r, params object[] additionalArgs) {
 			_errorReporter.Region = r;
@@ -200,10 +198,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
 			_errorReporter.Region = m.Region;
 			_errorReporter.Message(code, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
-		}
-
-		public ScriptSharpMetadataImporter(bool minimizeNames) {
-			_minimizeNames = minimizeNames;
 		}
 
 		private string MakeCamelCase(string s) {
@@ -359,7 +353,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				ProcessType(typeDefinition.DeclaringTypeDefinition);
 
 			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, true, false, false, false, null);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, true, false, false, null);
 				return;
 			}
 
@@ -505,12 +499,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
 
 			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
-			var tfa = GetAttributePositionalArgs(typeDefinition, TestFixtureAttribute);
 			var mna = GetAttributePositionalArgs(typeDefinition, ModuleNameAttribute);
 			if (mna != null && mna[0] == null) {
 				mna[0] = "";
 			}
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, obeysTypeSystem: obeysTypeSystem, isResources: isResources, isMixin: isMixin, isTestFixture: tfa != null, moduleName: mna != null ? (string)mna[0] : null);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, obeysTypeSystem: obeysTypeSystem, isResources: isResources, isMixin: isMixin, moduleName: mna != null ? (string)mna[0] : null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -1165,31 +1158,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 							else {
-								if (GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsTestFixture && name == "runTests") {
-									Message(7019, method);
-								}
-								var sta = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == TestAttribute);
-								var ata = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == AsyncTestAttribute);
-								if (sta != null && ata != null) {
-									Message(7021, method);
-								}
-								else if (sta != null || ata != null) {
-									if (!GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsTestFixture) {
-										Message(7022, method);
-									}
-									if (!method.ReturnType.Equals(_compilation.FindType(KnownTypeCode.Void)) || method.TypeParameters.Any() || method.Parameters.Any() || method.IsStatic || !method.IsPublic) {
-										Message(7020, method);
-									}
-									else {
-										var ta = sta ?? ata;
-										bool isAsync = ata != null;
-										string description = (ta.PositionalArguments.Count > 0 ? (string)ta.PositionalArguments[0].ConstantValue : null) ?? method.Name;
-										string category = GetNamedArgument<string>(ta, CategoryPropertyName);
-										int? expectedAssertionCount = GetNamedArgument<int?>(ta, ExpectedAssertionCountPropertyName) ?? -1;
-										_methodTestData[method] = new TestMethodData(description, category, isAsync, expectedAssertionCount >= 0 ? expectedAssertionCount : (int?)null);
-									}
-								}
-
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 						}
@@ -1286,10 +1254,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		public void Prepare(IEnumerable<ITypeDefinition> types, IAssembly mainAssembly, IErrorReporter errorReporter) {
+		public void Prepare(IEnumerable<ITypeDefinition> types, bool minimizeNames, IAssembly mainAssembly) {
+			_minimizeNames = minimizeNames;
 			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
 			_systemRecord = ReflectionHelper.ParseReflectionName("System.Record").Resolve(mainAssembly.Compilation.TypeResolveContext);
-			_errorReporter = errorReporter;
 			_compilation = mainAssembly.Compilation;
 			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
 			_delegateSemantics = new Dictionary<ITypeDefinition, DelegateScriptSemantics>();
@@ -1304,7 +1272,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_eventBackingFieldNames = new Dictionary<IEvent, string>();
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
 			_internalTypeCountPerAssemblyAndNamespace = new Dictionary<Tuple<IAssembly, string>, int>();
-			_methodTestData = new Dictionary<IMethod, TestMethodData>();
 
 			var sna = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptNamespaceAttribute);
 			if (sna != null) {
@@ -1338,8 +1305,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					ProcessTypeMembers(t);
 				}
 				catch (Exception ex) {
-					errorReporter.Region = t.Region;
-					errorReporter.InternalError(ex, "Error importing type " + t.FullName);
+					_errorReporter.Region = t.Region;
+					_errorReporter.InternalError(ex, "Error importing type " + t.FullName);
 				}
 			}
 		}
@@ -1493,10 +1460,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			return GetTypeSemanticsInternal(t).IsImported;
 		}
 
-		public bool IsTestFixture(ITypeDefinition t) {
-			return GetTypeSemanticsInternal(t).IsTestFixture;
-		}
-
 		public string GetModuleName(ITypeDefinition t) {
 			for (var current = t; current != null; current = current.DeclaringTypeDefinition) {
 				var n = GetTypeSemanticsInternal(current).ModuleName;
@@ -1508,12 +1471,6 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return (string)asmModuleName[0];
 
 			return null;
-		}
-
-		public TestMethodData GetTestData(IMethod m) {
-			TestMethodData result;
-			_methodTestData.TryGetValue(m, out result);
-			return result;
 		}
 
 		public bool OmitDowncasts {

@@ -274,7 +274,6 @@
     <Compile Include="ScriptSharpMetadataImporterTests\PropertyTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\MethodTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\SerializableTypeTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\TestingTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\TypeTests.cs" />
     <Compile Include="ScriptSharpMetadataImporterTests\ScriptSharpMetadataImporterTestBase.cs" />
     <Compile Include="ScriptSharpOOPEmulatorTests\ClassTests.cs" />

@@ -7,7 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
-namespace System.Testing {
+namespace QUnit {
 
     [IgnoreNamespace]
 	[Imported]

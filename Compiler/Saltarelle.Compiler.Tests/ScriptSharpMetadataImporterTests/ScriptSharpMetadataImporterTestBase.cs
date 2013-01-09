@@ -37,9 +37,9 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			var compilation = project.CreateCompilation();
 
 			errorReporter = new MockErrorReporter(!expectErrors);
-			Metadata = new MetadataImporter.ScriptSharpMetadataImporter(minimizeNames);
+			Metadata = new MetadataImporter.ScriptSharpMetadataImporter(errorReporter);
 
-			Metadata.Prepare(compilation.GetAllTypeDefinitions(), compilation.MainAssembly, errorReporter);
+			Metadata.Prepare(compilation.GetAllTypeDefinitions(), minimizeNames, compilation.MainAssembly);
 
 			AllErrors = errorReporter.AllMessages.ToList().AsReadOnly();
 			AllErrorTexts = errorReporter.AllMessagesText.ToList().AsReadOnly();

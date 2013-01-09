@@ -81,15 +81,15 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
 		internal Tuple<string, ICompilation, IMetadataImporter, MockErrorReporter> Compile(string source, bool includeLinq = false, bool expectErrors = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
-			var md = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var n = new DefaultNamer();
             var er = new MockErrorReporter(!expectErrors);
-			PreparedCompilation compilation = null;
-			var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => new JsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition()));
-            var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: false);
-
+			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
+			var n = new DefaultNamer();
             var references = includeLinq ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
-			compilation = compiler.CreateCompilation(new[] { sourceFile }, references, null);
+			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);;
+			var rtl = new ScriptSharpRuntimeLibrary(md, er, n, compilation.Compilation);
+			md.Prepare(compilation.Compilation.GetAllTypeDefinitions(), false, compilation.Compilation.MainAssembly);
+            var compiler = new Compiler.Compiler(md, n, rtl, er);
+
 			var compiledTypes = compiler.Compile(compilation);
 
 			if (expectErrors) {
@@ -99,7 +99,7 @@ namespace Saltarelle.Compiler.Tests.RuntimeLibraryTests {
 
             er.AllMessagesText.Should().BeEmpty("Compile should not generate errors");
 
-			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Process(compiledTypes, compilation.Compilation, null);
+			var js = new OOPEmulator.ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Process(compiledTypes, null);
 			js = new DefaultLinker(md, n).Process(js, compilation.Compilation.MainAssembly);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));

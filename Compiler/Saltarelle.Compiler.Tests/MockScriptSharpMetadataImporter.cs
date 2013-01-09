@@ -11,8 +11,6 @@ namespace Saltarelle.Compiler.Tests {
 			DoesTypeObeyTypeSystem = t => true;
 			IsImported             = t => false;
 			IsMixin                = t => false;
-			IsTestFixture          = t => false;
-			GetTestData            = m => null;
 			GetModuleName          = t => null;
 		}
 
@@ -22,8 +20,6 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeDefinition, bool> DoesTypeObeyTypeSystem { get; set; }
 		public Func<ITypeDefinition, bool> IsImported { get; set; }
 		public Func<ITypeDefinition, bool> IsMixin { get; set; }
-		public Func<ITypeDefinition, bool> IsTestFixture { get; set; }
-		public Func<IMethod, TestMethodData> GetTestData { get; set; }
 		public Func<ITypeDefinition, string> GetModuleName { get; set; }
 
 		bool IScriptSharpMetadataImporter.IsNamedValues(ITypeDefinition t) {
@@ -48,14 +44,6 @@ namespace Saltarelle.Compiler.Tests {
 
 		bool IScriptSharpMetadataImporter.IsMixin(ITypeDefinition t) {
 			return IsMixin(t);
-		}
-
-		bool IScriptSharpMetadataImporter.IsTestFixture(ITypeDefinition t) {
-			return IsTestFixture(t);
-		}
-
-		TestMethodData IScriptSharpMetadataImporter.GetTestData(IMethod m) {
-			return GetTestData(m);
 		}
 
 		string IScriptSharpMetadataImporter.GetModuleName(ITypeDefinition t) {

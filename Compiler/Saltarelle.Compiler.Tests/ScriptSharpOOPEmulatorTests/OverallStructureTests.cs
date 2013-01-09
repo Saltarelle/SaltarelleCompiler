@@ -4,13 +4,13 @@ using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using Moq;
 using NUnit.Framework;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.OOPEmulator;
 using Saltarelle.Compiler.ScriptSemantics;
-using Is = NUnit.Framework.Is;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 	[TestFixture]
@@ -118,7 +118,7 @@ x = 1;
 			};
 
 			var rnd = new Random(3);
-			var unorderedNames = names.Select(n => new { n = n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
+			var unorderedNames = names.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
 			
 			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockTypeDefinition(n), JsClass.ClassTypeEnum.Class, null, null, null)));
 
@@ -135,10 +135,7 @@ public interface I1 {}
 public class C2 : C3 {}
 public class C1 : C2, I1 {}
 ");
-			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var n = new MockNamer();
-            var er = new MockErrorReporter(true);
-			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er, allowUserDefinedStructs: false).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
+			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
 
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
@@ -176,10 +173,7 @@ public class B<T> {}
 public interface I<T> {}
 public class A : B<int>, I<int> {}
 ");
-			var nc = new MetadataImporter.ScriptSharpMetadataImporter(false);
-			var n = new MockNamer();
-            var er = new MockErrorReporter(true);
-			var compilation = new Saltarelle.Compiler.Compiler.Compiler(nc, n, new MockRuntimeLibrary(), er, allowUserDefinedStructs: false).CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
+			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
 
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////

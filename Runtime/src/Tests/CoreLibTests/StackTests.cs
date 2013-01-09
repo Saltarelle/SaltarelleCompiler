@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Testing;
+using QUnit;
 using System.Text;
 
 namespace CoreLibTests {

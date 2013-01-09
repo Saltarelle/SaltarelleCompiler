@@ -43,20 +43,21 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			        select s;
 		}
 
+		private readonly ICompilation _compilation;
+		private readonly JsTypeReferenceExpression _systemType;
 		private readonly IScriptSharpMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
-		private readonly ICompilation _compilation;
-		private readonly JsTypeReferenceExpression _systemType;
 
 		public ScriptSharpOOPEmulator(ICompilation compilation, IScriptSharpMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
+			_compilation = compilation;
+			_systemType = new JsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Type).GetDefinition());
+
 			_metadataImporter = metadataImporter;
 			_runtimeLibrary = runtimeLibrary;
 			_namer = namer;
 			_errorReporter = errorReporter;
-			_compilation = compilation;
-			_systemType = new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Type).GetDefinition());
 		}
 
 		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName, string nmspace = "System.Runtime.CompilerServices") {
@@ -111,37 +112,9 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			}
 		}
 
-		private void AddClassMembers(JsClass c, JsExpression typeRef, ICompilation compilation, List<JsStatement> stmts) {
-			ICollection<JsMethod> instanceMethods;
-			if (_metadataImporter.IsTestFixture(c.CSharpTypeDefinition)) {
-				var tests = new List<Tuple<string, string, bool, int?, JsFunctionDefinitionExpression>>();
-				var instanceMethodList = new List<JsMethod>();
-				foreach (var m in c.InstanceMethods) {
-					var td = (m.CSharpMember is IMethod ? _metadataImporter.GetTestData((IMethod)m.CSharpMember) : null);
-					if (td != null) {
-						tests.Add(Tuple.Create(td.Description, td.Category, td.IsAsync, td.ExpectedAssertionCount, m.Definition));
-					}
-					else {
-						instanceMethodList.Add(m);
-					}
-				}
-				var testInvocations = new List<JsExpression>();
-				foreach (var category in tests.GroupBy(t => t.Item2).Select(g => new { Category = g.Key, Tests = g.Select(x => new { Description = x.Item1, IsAsync = x.Item3, ExpectedAssertionCount = x.Item4, Function = x.Item5 }) }).OrderBy(x => x.Category)) {
-					if (category.Category != null)
-						testInvocations.Add(JsExpression.Invocation(JsExpression.Identifier("module"), JsExpression.String(category.Category)));
-					testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), _runtimeLibrary.Bind(t.Function, JsExpression.This) } : new JsExpression[] { JsExpression.String(t.Description), _runtimeLibrary.Bind(t.Function, JsExpression.This) })));
-				}
-
-				instanceMethodList.Add(new JsMethod(null, "runTests", null, JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(testInvocations.Select(t => new JsExpressionStatement(t))))));
-
-				instanceMethods = instanceMethodList;
-			}
-			else {
-				instanceMethods = c.InstanceMethods;
-			}
-
-			if (instanceMethods.Count > 0) {
-				stmts.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(instanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null))))));
+		private void AddClassMembers(JsClass c, JsExpression typeRef, List<JsStatement> stmts) {
+			if (c.InstanceMethods.Count > 0) {
+				stmts.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null))))));
 			}
 
 			if (c.NamedConstructors.Count > 0) {
@@ -215,7 +188,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				return JsExpression.Identifier(string.IsNullOrEmpty(_metadataImporter.GetModuleName(type)) ? "global" : "exports");
 		}
 
-		public IList<JsStatement> Process(IEnumerable<JsType> types, ICompilation compilation, IMethod entryPoint) {
+		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
 			var result = new List<JsStatement>();
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
@@ -244,11 +217,11 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 							if (c.TypeArgumentNames.Count == 0) {
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, unnamedCtor));
-								AddClassMembers(c, typeRef, compilation, result);
+								AddClassMembers(c, typeRef, result);
 							}
 							else {
 								var stmts = new List<JsStatement> { new JsVariableDeclarationStatement(InstantiatedGenericTypeVariableName, unnamedCtor) };
-								AddClassMembers(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName), compilation, stmts);
+								AddClassMembers(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName), stmts);
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts))));
