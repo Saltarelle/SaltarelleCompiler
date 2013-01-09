@@ -1,3 +1,5 @@
+Fixed error causing type initializers to be invoked in the opposite order to what they should (#96)
+
 1.7.0
 Added heuristic to run type initializers in the correct order (#96)
 Fixed issue with the casing of some jQueryUI widgets (#107)

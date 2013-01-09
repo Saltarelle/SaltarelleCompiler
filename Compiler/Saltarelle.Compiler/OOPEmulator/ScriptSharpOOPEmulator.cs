@@ -193,25 +193,9 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return new JsVariableDeclarationStatement(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
 		}
 
-		private IList<JsClass> TopologicalSortTypesByInheritance(IList<JsClass> types) {
-			types = new List<JsClass>(types);
-			var result = new List<JsClass>();
-			int iterationsLeft = types.Count;
-			while (types.Count > 0) {
-				if (iterationsLeft <= 0)
-					throw new Exception("Circular inheritance chain involving types " + string.Join(", ", types.Select(t => t.CSharpTypeDefinition.FullName)));
-
-				for (int i = 0; i < types.Count; i++) {
-					var type = types[i];
-					if (!type.CSharpTypeDefinition.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
-						result.Add(type);
-						types.RemoveAt(i);
-						i--;
-					}
-				}
-				iterationsLeft--;
-			}
-			return result;
+		private IEnumerable<JsClass> TopologicalSortTypesByInheritance(IEnumerable<JsClass> types) {
+			var backref = types.ToDictionary(c => c.CSharpTypeDefinition);
+			return TopologicalSorter.TopologicalSort(backref.Keys, t => t.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(backref.Keys)).Select(t => backref[t]);
 		}
 
 		private JsExpression MakeNestedMemberAccess(string full) {
@@ -382,7 +366,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				v.deps.RemoveWhere(x => !dict.ContainsKey(x));
 
 			var result = new List<JsClass>();
-			foreach (var group in Tarjan.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), t => dict[t].deps)) {
+			foreach (var group in TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), t => dict[t].deps)) {
 				var backrefed = group.Select(t => dict[t].backref);
 				result.AddRange(group.Count > 1 ? GetStaticInitializationOrder(backrefed.ToList(), pass + 1) : backrefed);
 			}
