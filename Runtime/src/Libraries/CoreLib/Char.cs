@@ -37,6 +37,11 @@ namespace System {
             return 0;
         }
 
+        [InlineCode("{$System.String}.fromCharCode({ch})")]
+        public static explicit operator String(char ch) {
+            return null;
+        }
+
         /// <summary>
         /// Converts the value to its string representation.
         /// </summary>
