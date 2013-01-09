@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -10,6 +12,20 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 	[TestFixture]
 	public class StaticInitializationOrderTests : ScriptSharpOOPEmulatorTestBase {
+		 private IEnumerable<T> Shuffle<T>(IEnumerable<T> source, int seed) {
+			var rnd = new Random(seed);
+			var array = source.ToArray();
+			var n = array.Length;
+			while (n > 1) {
+				var k = rnd.Next(n);
+				n--;
+				var temp = array[n];
+				array[n] = array[k];
+				array[k] = temp;
+			}
+			return array;
+		}
+
 		private JsFunctionDefinitionExpression CreateFunction(params ITypeDefinition[] referencedTypes) {
 			return JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.ArrayLiteral(referencedTypes.Select(t => new JsTypeReferenceExpression(t)))));
 		}
@@ -27,7 +43,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			var c5 = CreateMockTypeDefinition("C5");
 			var c6 = CreateMockTypeDefinition("C6");
 
-			var lines = SplitLines(Process(
+			var lines = SplitLines(Process(Shuffle(new[] {
 				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
 					UnnamedConstructor = CreateFunction(),
 					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x1")) }
@@ -50,9 +66,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 				},
 				new JsClass(c6, JsClass.ClassTypeEnum.Class, null, null, null) {
 					StaticInitStatements = { new JsExpressionStatement(JsExpression.Add(JsExpression.Identifier("x6"), new JsTypeReferenceExpression(c5))) }
-				})).Where(l => l.StartsWith("x"));
+				}
+			}, 42))).Where(l => l.StartsWith("x"));
 
-			Assert.That(lines, Is.EqualTo(new[] { "x6 + {C5};", "x5;", "x4;", "x3;", "x2;", "x1;" }));
+			Assert.That(lines, Is.EqualTo(new[] { "x1;", "x2;", "x3;", "x4;", "x5;", "x6 + {C5};" }));
 		}
 
 		[Test]
@@ -63,7 +80,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			var c4 = CreateMockTypeDefinition("C4");
 			var c5 = CreateMockTypeDefinition("C5");
 
-			var lines = SplitLines(Process(
+			var lines = SplitLines(Process(Shuffle(new[] {
 				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
 					UnnamedConstructor = CreateFunction(),
 					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x1")) }
@@ -84,9 +101,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 				new JsClass(c5, JsClass.ClassTypeEnum.Class, null, null, null) {
 					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c3)) },
 					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x5")) }
-				})).Where(l => l.StartsWith("x"));
+				}
+			}, 24))).Where(l => l.StartsWith("x"));
 
-			Assert.That(lines, Is.EqualTo(new[] { "x5;", "x4;", "x3 + {C2};", "x2;", "x1;" }));
+			Assert.That(lines, Is.EqualTo(new[] { "x1;", "x2;", "x3 + {C2};", "x4;", "x5;" }));
 		}
 
 		[Test]
@@ -97,7 +115,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			var c4 = CreateMockTypeDefinition("C4");
 			var c5 = CreateMockTypeDefinition("C5");
 
-			var lines = SplitLines(Process(
+			var lines = SplitLines(Process(Shuffle(new[] {
 				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
 					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x1")) }
 				},
@@ -116,9 +134,10 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 				new JsClass(c5, JsClass.ClassTypeEnum.Class, null, null, null) {
 					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c3)) },
 					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x5")) }
-				})).Where(l => l.StartsWith("x"));
+				}
+			}, 17))).Where(l => l.StartsWith("x"));
 
-			Assert.That(lines, Is.EqualTo(new[] { "x5;", "x4 + {C3};", "x3 + {C2};", "x2;", "x1;" }));
+			Assert.That(lines, Is.EqualTo(new[] { "x1;", "x2;", "x3 + {C2};", "x4 + {C3};", "x5;" }));
 		}
 	}
 }

@@ -74,7 +74,7 @@
     <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
     <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
     <Compile Include="Linker\DefaultLinker.cs" />
-    <Compile Include="OOPEmulator\Tarjan.cs" />
+    <Compile Include="TopologicalSorter.cs" />
     <Compile Include="OOPEmulator\TypeReferenceFinder.cs" />
     <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />

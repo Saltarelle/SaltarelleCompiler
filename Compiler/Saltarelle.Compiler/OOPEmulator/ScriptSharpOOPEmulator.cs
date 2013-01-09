@@ -166,25 +166,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			return new JsVariableDeclarationStatement(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
 		}
 
-		private IList<JsClass> TopologicalSortTypesByInheritance(IList<JsClass> types) {
-			types = new List<JsClass>(types);
-			var result = new List<JsClass>();
-			int iterationsLeft = types.Count;
-			while (types.Count > 0) {
-				if (iterationsLeft <= 0)
-					throw new Exception("Circular inheritance chain involving types " + string.Join(", ", types.Select(t => t.CSharpTypeDefinition.FullName)));
-
-				for (int i = 0; i < types.Count; i++) {
-					var type = types[i];
-					if (!type.CSharpTypeDefinition.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(types.Select(c => c.CSharpTypeDefinition)).Any()) {
-						result.Add(type);
-						types.RemoveAt(i);
-						i--;
-					}
-				}
-				iterationsLeft--;
-			}
-			return result;
+		private IEnumerable<JsClass> TopologicalSortTypesByInheritance(IEnumerable<JsClass> types) {
+			var backref = types.ToDictionary(c => c.CSharpTypeDefinition);
+			var edges = from s in backref.Keys from t in s.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(backref.Keys) select Tuple.Create(s, t);
+			return TopologicalSorter.TopologicalSort(backref.Keys, edges).Select(t => backref[t]);
 		}
 
 		private JsExpression MakeNestedMemberAccess(string full) {
@@ -351,11 +336,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 			// We run the algorithm in 3 passes, each considering less types of references than the previous one.
 			var dict = types.ToDictionary(t => t.CSharpTypeDefinition, t => new { deps = GetDependencies(t, pass), backref = t });
-			foreach (var v in dict.Values)
-				v.deps.RemoveWhere(x => !dict.ContainsKey(x));
+			var edges = from s in dict from t in s.Value.deps where dict.ContainsKey(t) select Tuple.Create(s.Key, t);
 
 			var result = new List<JsClass>();
-			foreach (var group in Tarjan.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), t => dict[t].deps)) {
+			foreach (var group in TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), edges)) {
 				var backrefed = group.Select(t => dict[t].backref);
 				result.AddRange(group.Count > 1 ? GetStaticInitializationOrder(backrefed.ToList(), pass + 1) : backrefed);
 			}

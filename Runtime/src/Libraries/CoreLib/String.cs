@@ -445,11 +445,6 @@ namespace System {
             return false;
         }
 
-        [InlineCode("{$System.String}.fromCharCode({ch})")]
-        public static explicit operator String(char ch) {
-            return null;
-        }
-
 	    [InlineCode("{$System.Script}.compare({this}, {other})")]
 		public int CompareTo(string other) {
 		    return 0;
