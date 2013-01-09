@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.Tests {
 	[TestFixture]
 	public class TarjanTests {
 		private List<string> RunTest(int numNodes, params string[] edges) {
-			var result = TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(Enumerable.Range('a', numNodes).Select(c => ((char)c)), x => edges.Where(e => e[0] == x).Select(e => e[1]));
+			var result = TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(Enumerable.Range('a', numNodes).Select(c => ((char)c)), edges.Select(e => Tuple.Create(e[0], e[1])));
 			return result.Select(x => new string(x.ToArray())).ToList();
 		}
 

@@ -195,7 +195,8 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 		private IEnumerable<JsClass> TopologicalSortTypesByInheritance(IEnumerable<JsClass> types) {
 			var backref = types.ToDictionary(c => c.CSharpTypeDefinition);
-			return TopologicalSorter.TopologicalSort(backref.Keys, t => t.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(backref.Keys)).Select(t => backref[t]);
+			var edges = from s in backref.Keys from t in s.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(backref.Keys) select Tuple.Create(s, t);
+			return TopologicalSorter.TopologicalSort(backref.Keys, edges).Select(t => backref[t]);
 		}
 
 		private JsExpression MakeNestedMemberAccess(string full) {
@@ -362,11 +363,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 
 			// We run the algorithm in 3 passes, each considering less types of references than the previous one.
 			var dict = types.ToDictionary(t => t.CSharpTypeDefinition, t => new { deps = GetDependencies(t, pass), backref = t });
-			foreach (var v in dict.Values)
-				v.deps.RemoveWhere(x => !dict.ContainsKey(x));
+			var edges = from s in dict from t in s.Value.deps where dict.ContainsKey(t) select Tuple.Create(s.Key, t);
 
 			var result = new List<JsClass>();
-			foreach (var group in TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), t => dict[t].deps)) {
+			foreach (var group in TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), edges)) {
 				var backrefed = group.Select(t => dict[t].backref);
 				result.AddRange(group.Count > 1 ? GetStaticInitializationOrder(backrefed.ToList(), pass + 1) : backrefed);
 			}
