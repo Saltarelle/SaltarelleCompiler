@@ -210,15 +210,14 @@ namespace Saltarelle.Compiler.Driver {
 				return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
 			}
 
-			private static IEnumerable<Assembly> TopologicalSortPlugins(IEnumerable<Tuple<IAssembly, Assembly>> references) {
-#warning TODO: Implement
-				return references.Where(r => r.Item2 != null).Select(r => r.Item2).ToList();
+			private static IEnumerable<Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> references) {
+				return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
+				                        .Select(r => r.Item3)
+				                        .Where(a => a != null);
 			}
 
-			private static void RegisterPlugins(IWindsorContainer container, IEnumerable<Tuple<IAssembly, Assembly>> references) {
-				foreach (var asm in TopologicalSortPlugins(references)) {
-					container.Register(AllTypes.FromAssembly(asm).BasedOn<IJSTypeSystemRewriter>().WithServices(typeof(IJSTypeSystemRewriter)));
-				}
+			private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
+				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IJSTypeSystemRewriter>().WithServices(typeof(IJSTypeSystemRewriter)));
 			}
 
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
@@ -247,14 +246,15 @@ namespace Saltarelle.Compiler.Driver {
 					IMethod entryPoint = FindEntryPoint(options, er, compilation);
 
 					var container = new WindsorContainer();
-					RegisterPlugins(container, references.Select(r => Tuple.Create(r.Item1.Resolve(compilation.Compilation.TypeResolveContext), r.Item2)).ToList());
-					RegisterPlugins(container, new[] { Tuple.Create(default(IAssembly), Assembly.GetExecutingAssembly()) });
+					foreach (var plugin in TopologicalSortPlugins(references).Reverse())
+						RegisterPlugin(container, plugin);
+					RegisterPlugin(container, typeof(Compiler.Compiler).Assembly);
 
 					// Compile the script
 					container.Register(Component.For<IMetadataImporter, IScriptSharpMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
 					                   Component.For<INamer>().ImplementedBy<DefaultNamer>(),
 					                   Component.For<IErrorReporter>().Instance(er),
-									   Component.For<ICompilation>().Instance(compilation.Compilation),
+					                   Component.For<ICompilation>().Instance(compilation.Compilation),
 					                   Component.For<IRuntimeLibrary>().ImplementedBy<ScriptSharpRuntimeLibrary>(),
 					                   Component.For<IOOPEmulator>().ImplementedBy<ScriptSharpOOPEmulator>(),
 					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>(),
@@ -408,7 +408,11 @@ namespace Saltarelle.Compiler.Driver {
 			return null;
 		}
 
-		private static IList<Tuple<IUnresolvedAssembly, Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
+		private static IList<string> GetReferencedAssemblyNames(AssemblyDefinition asm) {
+			return asm.Modules.SelectMany(m => m.AssemblyReferences, (_, r) => r.Name).Distinct().ToList();
+		}
+
+		private static IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
 			var loader = new CecilLoader { IncludeInternalMembers = true };
 			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
 
@@ -429,7 +433,7 @@ namespace Saltarelle.Compiler.Driver {
 				return null;
 			}
 
-			return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), LoadPlugin(asm))).ToList();
+			return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), GetReferencedAssemblyNames(asm), LoadPlugin(asm))).ToList();
 		}
 	}
 }
