@@ -357,8 +357,8 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		/// <param name="options">Compile options</param>
-		/// <param name="runInSeparateAppDomain">Should be set to true for production code, but there are issues with NUnit, so tests need to set this to false.</param>
-		public bool Compile(CompilerOptions options, bool runInSeparateAppDomain) {
+		/// <param name="createAppDomain">If not null, a function that should return a new app domain which is setup correctly to perform a compilation.</param>
+		public bool Compile(CompilerOptions options, Func<AppDomain> createAppDomain) {
 			try {
 				AppDomain ad = null;
 				var actualOut = Console.Out;
@@ -368,17 +368,8 @@ namespace Saltarelle.Compiler.Driver {
 					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
 
 					Executor executor;
-					if (runInSeparateAppDomain) {
-						var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
-						ad = AppDomain.CreateDomain("SCTask", null, setup);
-						ad.AssemblyResolve += (sender, args) => {
-							var parsedName = new AssemblyName(args.Name);
-							if (!parsedName.Name.StartsWith("System.") && !parsedName.Name.StartsWith("Microsoft.")) {
-								return Assembly.GetExecutingAssembly(); // Assume we have ILMerged all assemblies that are not system assemblies.
-							}
-							Console.WriteLine("not found");
-				            return null;
-						};
+					if (createAppDomain != null) {
+						ad = createAppDomain();
 						executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
 					}
 					else {
