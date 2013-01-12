@@ -5,14 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using ICSharpCode.NRefactory.TypeSystem;
 
-namespace QUnit.Plugin {
-	public class AttributeReader {
+namespace Saltarelle.Compiler {
+	public static class AttributeReader {
 		private static object ChangeType(object source, Type type) {
 			if (type.IsArray) {
 				var arr = (Array)source;
-				var result = new object[arr.Length];
+				var elemType = type.GetElementType();
+				var result = Array.CreateInstance(elemType, arr.Length);
 				for (int i = 0; i < arr.Length; i++) {
-					result[i] = ChangeType(arr.GetValue(i), type.GetElementType());
+					result.SetValue(ChangeType(arr.GetValue(i), elemType), i);
 				}
 				return result;
 			}
@@ -40,7 +41,7 @@ namespace QUnit.Plugin {
 				}
 				else if (arg.Key is IProperty) {
 					var prop = typeof(TAttribute).GetProperty(arg.Key.Name);
-					prop.SetValue(result, value);
+					prop.SetValue(result, value, null);
 				}
 			}
 
@@ -48,8 +49,24 @@ namespace QUnit.Plugin {
 		}
 
 		public static TAttribute ReadAttribute<TAttribute>(IEntity entity) where TAttribute : Attribute {
-			var attr = entity.Attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(TAttribute).FullName);
+			return ReadAttribute<TAttribute>(entity.Attributes);
+		}
+
+		public static TAttribute ReadAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
+			var attr = attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(TAttribute).FullName);
 			return attr != null ? ReadAttribute<TAttribute>(attr) : null;
+		}
+
+		public static bool HasAttribute<TAttribute>(IAttribute attr) where TAttribute : Attribute {
+			return ReadAttribute<TAttribute>(attr) != null;
+		}
+
+		public static bool HasAttribute<TAttribute>(IEntity entity) where TAttribute : Attribute {
+			return ReadAttribute<TAttribute>(entity) != null;
+		}
+
+		public static bool HasAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
+			return ReadAttribute<TAttribute>(attributes) != null;
 		}
 	}
 }

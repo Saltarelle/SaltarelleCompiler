@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
@@ -10,43 +11,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
 	public class ScriptSharpMetadataImporter : IMetadataImporter, IScriptSharpMetadataImporter {
-		private const string ScriptSkipAttribute                    = "System.Runtime.CompilerServices.ScriptSkipAttribute";
-		private const string ScriptAliasAttribute                   = "System.Runtime.CompilerServices.ScriptAliasAttribute";
-		private const string InlineCodeAttribute                    = "System.Runtime.CompilerServices.InlineCodeAttribute";
-		private const string InstanceMethodOnFirstArgumentAttribute = "System.Runtime.CompilerServices.InstanceMethodOnFirstArgumentAttribute";
-		private const string NonScriptableAttribute                 = "System.Runtime.CompilerServices.NonScriptableAttribute";
-		private const string IgnoreGenericArgumentsAttribute        = "System.Runtime.CompilerServices.IgnoreGenericArgumentsAttribute";
-		private const string IgnoreNamespaceAttribute               = "System.Runtime.CompilerServices.IgnoreNamespaceAttribute";
-		private const string ScriptNamespaceAttribute               = "System.Runtime.CompilerServices.ScriptNamespaceAttribute";
-		private const string AlternateSignatureAttribute            = "System.Runtime.CompilerServices.AlternateSignatureAttribute";
-		private const string ScriptNameAttribute                    = "System.Runtime.CompilerServices.ScriptNameAttribute";
-		private const string PreserveNameAttribute                  = "System.Runtime.CompilerServices.PreserveNameAttribute";
-		private const string PreserveCaseAttribute                  = "System.Runtime.CompilerServices.PreserveCaseAttribute";
-		private const string PreserveMemberCaseAttribute            = "System.Runtime.CompilerServices.PreserveMemberCaseAttribute";
-		private const string IntrinsicPropertyAttribute             = "System.Runtime.CompilerServices.IntrinsicPropertyAttribute";
-		private const string GlobalMethodsAttribute                 = "System.Runtime.CompilerServices.GlobalMethodsAttribute";
-		private const string ImportedAttribute                      = "System.Runtime.CompilerServices.ImportedAttribute";
-		private const string SerializableAttribute                  = "System.SerializableAttribute";
-		private const string IntrinsicOperatorAttribute             = "System.Runtime.CompilerServices.IntrinsicOperatorAttribute";
-		private const string ExpandParamsAttribute                  = "System.Runtime.CompilerServices.ExpandParamsAttribute";
-		private const string NamedValuesAttribute                   = "System.Runtime.CompilerServices.NamedValuesAttribute";
-		private const string ResourcesAttribute                     = "System.Runtime.CompilerServices.ResourcesAttribute";
-		private const string MixinAttribute                         = "System.Runtime.CompilerServices.MixinAttribute";
-		private const string ObjectLiteralAttribute                 = "System.Runtime.CompilerServices.ObjectLiteralAttribute";
-		private const string ScriptSharpCompatibilityAttribute      = "System.Runtime.CompilerServices.ScriptSharpCompatibilityAttribute";
-		private const string BindThisToFirstParameterAttribute      = "System.Runtime.CompilerServices.BindThisToFirstParameterAttribute";
-		private const string ModuleNameAttribute                    = "System.Runtime.CompilerServices.ModuleNameAttribute";
-		private const string AsyncModuleAttribute                   = "System.Runtime.CompilerServices.AsyncModuleAttribute";
-		private const string EnumerateAsArrayAttribute              = "System.Runtime.CompilerServices.EnumerateAsArrayAttribute";
-		private const string InlineConstantAttribute                = "System.Runtime.CompilerServices.InlineConstantAttribute";
 		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
-		private const string CategoryPropertyName               = "Category";
-		private const string ExpectedAssertionCountPropertyName = "ExpectedAssertionCount";
-		private const string ObeysTypeSystemPropertyName        = "ObeysTypeSystem";
-		private const string OmitDowncastsPropertyName          = "OmitDowncasts";
-		private const string OmitNullableChecksPropertyName     = "OmitNullableChecks";
-		private const string GeneratedMethodNamePropertyName    = "GeneratedMethodName";
-		private const string NonVirtualCodePropertyName         = "NonVirtualCode";
 		private const string Function = "Function";
 		private const string Array    = "Array";
 
@@ -259,26 +224,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 		}
 
-		private IList<object> GetAttributePositionalArgs(IEnumerable<IAttribute> attributes, string attributeName) {
-			var attr = attributes.FirstOrDefault(a => a.AttributeType.FullName == attributeName);
-			return attr != null ? attr.PositionalArguments.Select(arg => arg.ConstantValue).ToList() : null;
-		}
-
-		private IList<object> GetAttributePositionalArgs(IEntity entity, string attributeName) {
-			return GetAttributePositionalArgs(entity.Attributes, attributeName);
-		}
-
-		private static T GetNamedArgument<T>(IAttribute attr, string propertyName) {
-			return attr.NamedArguments.Where(a => a.Key.Name == propertyName).Select(a => (T)a.Value.ConstantValue).FirstOrDefault();
-		}
-
 		private string DetermineNamespace(ITypeDefinition typeDefinition) {
 			while (typeDefinition.DeclaringTypeDefinition != null) {
 				typeDefinition = typeDefinition.DeclaringTypeDefinition;
 			}
 
-			var ina = GetAttributePositionalArgs(typeDefinition, IgnoreNamespaceAttribute);
-			var sna = GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute);
+			var ina = AttributeReader.ReadAttribute<IgnoreNamespaceAttribute>(typeDefinition);
+			var sna = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(typeDefinition);
 			if (ina != null) {
 				if (sna != null) {
 					Message(7001, typeDefinition);
@@ -290,17 +242,15 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else {
 				if (sna != null) {
-					string arg = (string)sna[0];
-					if (arg == null || (arg != "" && !arg.IsValidNestedJavaScriptIdentifier()))
+					if (sna.Name == null || (sna.Name != "" && !sna.Name.IsValidNestedJavaScriptIdentifier()))
 						Message(7002, typeDefinition);
-					return arg;
+					return sna.Name;
 				}
 				else {
-					var asna = typeDefinition.ParentAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptNamespaceAttribute);
+					var asna = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(typeDefinition.ParentAssembly.AssemblyAttributes);
 					if (asna != null) {
-						var arg = (string)asna.PositionalArguments[0].ConstantValue;
-						if (arg != null && (arg == "" || arg.IsValidNestedJavaScriptIdentifier()))
-							return arg;
+						if (asna.Name != null && (asna.Name == "" || asna.Name.IsValidNestedJavaScriptIdentifier()))
+							return asna.Name;
 					}
 
 					return typeDefinition.Namespace;
@@ -324,8 +274,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessDelegate(ITypeDefinition delegateDefinition) {
-			bool bindThisToFirstParameter = GetAttributePositionalArgs(delegateDefinition, BindThisToFirstParameterAttribute) != null;
-			bool expandParams = GetAttributePositionalArgs(delegateDefinition, ExpandParamsAttribute) != null;
+			bool bindThisToFirstParameter = AttributeReader.HasAttribute<BindThisToFirstParameterAttribute>(delegateDefinition);
+			bool expandParams = AttributeReader.HasAttribute<ExpandParamsAttribute>(delegateDefinition);
 
 			if (bindThisToFirstParameter && delegateDefinition.GetDelegateInvokeMethod().Parameters.Count == 0) {
 				Message(7147, delegateDefinition, delegateDefinition.FullName);
@@ -352,21 +302,21 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (typeDefinition.DeclaringType != null)
 				ProcessType(typeDefinition.DeclaringTypeDefinition);
 
-			if (GetAttributePositionalArgs(typeDefinition, NonScriptableAttribute) != null || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (AttributeReader.HasAttribute<NonScriptableAttribute>(typeDefinition) || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false, true, false, false, null);
 				return;
 			}
 
-			var scriptNameAttr = GetAttributePositionalArgs(typeDefinition, ScriptNameAttribute);
-			var importedAttr = typeDefinition.Attributes.FirstOrDefault(a => a.AttributeType.FullName == ImportedAttribute);
+			var scriptNameAttr = AttributeReader.ReadAttribute<ScriptNameAttribute>(typeDefinition);
+			var importedAttr = AttributeReader.ReadAttribute<ImportedAttribute>(typeDefinition.Attributes);
 			bool isImported = importedAttr != null;
-			bool obeysTypeSystem = importedAttr == null || GetNamedArgument<bool>(importedAttr, ObeysTypeSystemPropertyName);
-			bool preserveName = isImported || GetAttributePositionalArgs(typeDefinition, PreserveNameAttribute) != null;
+			bool obeysTypeSystem = importedAttr == null || importedAttr.ObeysTypeSystem;
+			bool preserveName = isImported || AttributeReader.HasAttribute<PreserveNameAttribute>(typeDefinition);
 
-			bool ignoreGenericArguments = GetAttributePositionalArgs(typeDefinition, IgnoreGenericArgumentsAttribute) != null || isImported;
+			bool ignoreGenericArguments = AttributeReader.HasAttribute<IgnoreGenericArgumentsAttribute>(typeDefinition) || isImported;
 			bool isResources = false;
 
-			if (GetAttributePositionalArgs(typeDefinition, ResourcesAttribute) != null) {
+			if (AttributeReader.HasAttribute<ResourcesAttribute>(typeDefinition)) {
 				if (!typeDefinition.IsStatic) {
 					Message(7003, typeDefinition);
 				}
@@ -380,8 +330,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 			string typeName, nmspace;
-			if (scriptNameAttr != null && scriptNameAttr[0] != null && ((string)scriptNameAttr[0]).IsValidJavaScriptIdentifier()) {
-				typeName = (string)scriptNameAttr[0];
+			if (scriptNameAttr != null && scriptNameAttr.Name != null && scriptNameAttr.Name.IsValidJavaScriptIdentifier()) {
+				typeName = scriptNameAttr.Name;
 				nmspace = DetermineNamespace(typeDefinition);
 			}
 			else {
@@ -400,7 +350,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				else {
 					typeName = GetDefaultTypeName(typeDefinition, ignoreGenericArguments);
 					if (typeDefinition.DeclaringTypeDefinition != null) {
-						if (GetAttributePositionalArgs(typeDefinition, IgnoreNamespaceAttribute) != null || GetAttributePositionalArgs(typeDefinition, ScriptNamespaceAttribute) != null) {
+						if (AttributeReader.HasAttribute<IgnoreNamespaceAttribute>(typeDefinition) || AttributeReader.HasAttribute<ScriptNamespaceAttribute>(typeDefinition)) {
 							Message(7007, typeDefinition);
 						}
 
@@ -418,7 +368,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 			}
 
-			bool hasSerializableAttr = GetAttributePositionalArgs(typeDefinition, SerializableAttribute) != null;
+			bool hasSerializableAttr = AttributeReader.HasAttribute<SerializableAttribute>(typeDefinition);
 			bool inheritsRecord = typeDefinition.GetAllBaseTypeDefinitions().Any(td => td.Equals(_systemRecord)) && !typeDefinition.Equals(_systemRecord);
 			
 			bool isMixin = false, isSerializable = hasSerializableAttr || inheritsRecord;
@@ -452,8 +402,8 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7008, typeDefinition, baseClass.FullName);
 				}
 
-				var globalMethodsAttr = GetAttributePositionalArgs(typeDefinition, GlobalMethodsAttribute);
-				var mixinAttr = GetAttributePositionalArgs(typeDefinition, MixinAttribute);
+				var globalMethodsAttr = AttributeReader.ReadAttribute<GlobalMethodsAttribute>(typeDefinition);
+				var mixinAttr = AttributeReader.ReadAttribute<MixinAttribute>(typeDefinition);
 				if (mixinAttr != null) {
 					if (!typeDefinition.IsStatic) {
 						Message(7012, typeDefinition);
@@ -464,11 +414,11 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					else if (typeDefinition.TypeParameterCount > 0) {
 						Message(7014, typeDefinition);
 					}
-					else if (string.IsNullOrEmpty((string)mixinAttr[0])) {
+					else if (string.IsNullOrEmpty(mixinAttr.Expression)) {
 						Message(7025, typeDefinition);
 					}
 					else {
-						var split = SplitNamespacedName((string)mixinAttr[0]);
+						var split = SplitNamespacedName(mixinAttr.Expression);
 						nmspace   = split.Item1;
 						typeName  = split.Item2;
 						isMixin   = true;
@@ -493,17 +443,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, true) : tp.Name;
 			}
 
-			var pmca = GetAttributePositionalArgs(typeDefinition, PreserveMemberCaseAttribute) ?? GetAttributePositionalArgs(typeDefinition.ParentAssembly.AssemblyAttributes, PreserveMemberCaseAttribute);
+			var pmca = AttributeReader.ReadAttribute<PreserveMemberCaseAttribute>(typeDefinition) ?? AttributeReader.ReadAttribute<PreserveMemberCaseAttribute>(typeDefinition.ParentAssembly.AssemblyAttributes);
 
-			bool preserveMemberCases = pmca != null && (pmca.Count == 0 || (bool)pmca[0]);
+			bool preserveMemberCases = pmca != null && pmca.Preserve;
 			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
 
-			var nva = GetAttributePositionalArgs(typeDefinition, NamedValuesAttribute);
-			var mna = GetAttributePositionalArgs(typeDefinition, ModuleNameAttribute);
-			if (mna != null && mna[0] == null) {
-				mna[0] = "";
-			}
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, obeysTypeSystem: obeysTypeSystem, isResources: isResources, isMixin: isMixin, moduleName: mna != null ? (string)mna[0] : null);
+			var nva = AttributeReader.ReadAttribute<NamedValuesAttribute>(typeDefinition);
+			var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(typeDefinition);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: nva != null, isImported: isImported, obeysTypeSystem: obeysTypeSystem, isResources: isResources, isMixin: isMixin, moduleName: mna != null ? (mna.ModuleName ?? "") : null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -544,9 +491,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 
 
-			var asa = GetAttributePositionalArgs(member, AlternateSignatureAttribute);
+			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(member);
 			if (asa != null) {
-				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && GetAttributePositionalArgs(m, AlternateSignatureAttribute) == null && GetAttributePositionalArgs(m, NonScriptableAttribute) == null && GetAttributePositionalArgs(m, InlineCodeAttribute) == null).ToList();
+				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && !AttributeReader.HasAttribute<AlternateSignatureAttribute>(m) && !AttributeReader.HasAttribute<NonScriptableAttribute>(m) && !AttributeReader.HasAttribute<InlineCodeAttribute>(m)).ToList();
 				if (otherMembers.Count == 1) {
 					return DeterminePreferredMemberName(otherMembers[0]);
 				}
@@ -558,9 +505,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			var typeSemantics = GetTypeSemanticsInternal(member.DeclaringTypeDefinition);
 
-			var sna = GetAttributePositionalArgs(member, ScriptNameAttribute);
+			var sna = AttributeReader.ReadAttribute<ScriptNameAttribute>(member);
 			if (sna != null) {
-				string name = (string)sna[0] ?? "";
+				string name = sna.Name;
 				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidJavaScriptIdentifier())) {
 					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
 				}
@@ -569,21 +516,19 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return Tuple.Create(name, true);
 			}
 
-			var ica = member.Attributes.FirstOrDefault(a => a.AttributeType.FullName == InlineCodeAttribute);
+			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(member);
 			if (ica != null) {
-				string name = GetNamedArgument<string>(ica, GeneratedMethodNamePropertyName);
-				if (name != null)
-					return Tuple.Create(name, true);
+				if (ica.GeneratedMethodName != null)
+					return Tuple.Create(ica.GeneratedMethodName, true);
 			}
 
 
-			var pca = GetAttributePositionalArgs(member, PreserveCaseAttribute);
-			if (pca != null)
+			if (AttributeReader.HasAttribute<PreserveCaseAttribute>(member))
 				return Tuple.Create(member.Name, true);
 
-			bool preserveName = (!isConstructor && !isAccessor && (   GetAttributePositionalArgs(member, PreserveNameAttribute) != null
-			                                                       || GetAttributePositionalArgs(member, InstanceMethodOnFirstArgumentAttribute) != null
-			                                                       || GetAttributePositionalArgs(member, IntrinsicPropertyAttribute) != null
+			bool preserveName = (!isConstructor && !isAccessor && (   AttributeReader.HasAttribute<PreserveNameAttribute>(member)
+			                                                       || AttributeReader.HasAttribute<InstanceMethodOnFirstArgumentAttribute>(member)
+			                                                       || AttributeReader.HasAttribute<IntrinsicPropertyAttribute>(member)
 			                                                       || typeSemantics.PreserveMemberNames && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
 			                                                       || (typeSemantics.IsSerializable && !member.IsStatic && (member is IProperty || member is IField)))
 			                                                       || (typeSemantics.IsNamedValues && member is IField);
@@ -682,10 +627,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 			var source = (IMethod)UnwrapValueTypeConstructor(constructor);
 
-			var nsa = GetAttributePositionalArgs(source, NonScriptableAttribute);
-			var asa = GetAttributePositionalArgs(source, AlternateSignatureAttribute);
-			var epa = GetAttributePositionalArgs(source, ExpandParamsAttribute);
-			var ola = GetAttributePositionalArgs(source, ObjectLiteralAttribute);
+			var nsa = AttributeReader.ReadAttribute<NonScriptableAttribute>(source);
+			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(source);
+			var epa = AttributeReader.ReadAttribute<ExpandParamsAttribute>(source);
+			var ola = AttributeReader.ReadAttribute<ObjectLiteralAttribute>(source);
 
 			if (nsa != null || GetTypeSemanticsInternal(source.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
@@ -704,18 +649,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool isSerializable = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsSerializable;
 			bool isImported     = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported;
 
-			var ica = GetAttributePositionalArgs(source, InlineCodeAttribute);
+			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(source);
 			if (ica != null) {
-				string code = (string)ica[0] ?? "";
-
-				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, code, t => t.Resolve(_compilation));
+				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, ica.Code, t => t.Resolve(_compilation));
 				if (errors.Count > 0) {
 					Message(7103, source, string.Join(", ", errors));
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
 
-				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(code);
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(ica.Code);
 				return;
 			}
 			else if (asa != null) {
@@ -794,7 +737,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(property, NonScriptableAttribute) != null) {
+			if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || AttributeReader.HasAttribute<NonScriptableAttribute>(property)) {
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -814,7 +757,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 
-			var saa = GetAttributePositionalArgs(property, ScriptAliasAttribute);
+			var saa = AttributeReader.ReadAttribute<ScriptAliasAttribute>(property);
 
 			if (saa != null) {
 				if (property.IsIndexer) {
@@ -824,14 +767,12 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7107, property);
 				}
 				else {
-					string alias = (string)saa[0] ?? "";
-					_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.InlineCode(alias) : null, property.CanSet ? MethodScriptSemantics.InlineCode(alias + " = {value}") : null);
+					_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.InlineCode(saa.Alias) : null, property.CanSet ? MethodScriptSemantics.InlineCode(saa.Alias + " = {value}") : null);
 					return;
 				}
 			}
 
-			var ipa = GetAttributePositionalArgs(property, IntrinsicPropertyAttribute);
-			if (ipa != null) {
+			if (AttributeReader.HasAttribute<IntrinsicPropertyAttribute>(property)) {
 				if (property.DeclaringType.Kind == TypeKind.Interface) {
 					if (property.IsIndexer)
 						Message(7108, property.Region);
@@ -912,16 +853,16 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, true) : tp.Name;
 			}
 
-			var eaa = GetAttributePositionalArgs(method, EnumerateAsArrayAttribute);
-			var ssa = GetAttributePositionalArgs(method, ScriptSkipAttribute);
-			var saa = GetAttributePositionalArgs(method, ScriptAliasAttribute);
-			var ica = method.Attributes.FirstOrDefault(a => a.AttributeType.FullName == InlineCodeAttribute);
-			var ifa = GetAttributePositionalArgs(method, InstanceMethodOnFirstArgumentAttribute);
-			var nsa = GetAttributePositionalArgs(method, NonScriptableAttribute);
-			var iga = GetAttributePositionalArgs(method, IgnoreGenericArgumentsAttribute);
-			var ioa = GetAttributePositionalArgs(method, IntrinsicOperatorAttribute);
-			var epa = GetAttributePositionalArgs(method, ExpandParamsAttribute);
-			var asa = GetAttributePositionalArgs(method, AlternateSignatureAttribute);
+			var eaa = AttributeReader.ReadAttribute<EnumerateAsArrayAttribute>(method);
+			var ssa = AttributeReader.ReadAttribute<ScriptSkipAttribute>(method);
+			var saa = AttributeReader.ReadAttribute<ScriptAliasAttribute>(method);
+			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(method);
+			var ifa = AttributeReader.ReadAttribute<InstanceMethodOnFirstArgumentAttribute>(method);
+			var nsa = AttributeReader.ReadAttribute<NonScriptableAttribute>(method);
+			var iga = AttributeReader.ReadAttribute<IgnoreGenericArgumentsAttribute>(method);
+			var ioa = AttributeReader.ReadAttribute<IntrinsicOperatorAttribute>(method);
+			var epa = AttributeReader.ReadAttribute<ExpandParamsAttribute>(method);
+			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(method);
 
 			bool isImported = GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsImported;
 
@@ -993,7 +934,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				}
 				else if (saa != null) {
 					if (method.IsStatic) {
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode((string) saa[0] + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode(saa.Alias + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
 						return;
 					}
 					else {
@@ -1003,12 +944,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					}
 				}
 				else if (ica != null) {
-					string code = ica.PositionalArguments[0].ConstantValue as string ?? "";
+					string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode ?? ica.Code ?? "";
 
-					string generatedMethodName = GetNamedArgument<string>(ica, GeneratedMethodNamePropertyName);
-					string nonVirtualCode = GetNamedArgument<string>(ica, NonVirtualCodePropertyName);
-
-					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface && generatedMethodName == null) {
+					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
 						Message(7126, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -1018,23 +956,23 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (method.IsOverridable && generatedMethodName == null) {
+					else if (method.IsOverridable && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
 						Message(7128, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else {
 						var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation));
-						if (nonVirtualCode != null)
-							errors.AddRange(InlineCodeMethodCompiler.ValidateLiteralCode(method, nonVirtualCode, t => t.Resolve(_compilation)));
+						if (!string.IsNullOrEmpty(ica.NonVirtualCode))
+							errors.AddRange(InlineCodeMethodCompiler.ValidateLiteralCode(method, ica.NonVirtualCode, t => t.Resolve(_compilation)));
 						if (errors.Count > 0) {
 							Message(7130, method, string.Join(", ", errors));
 							code = nonVirtualCode = "X";
 						}
 
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: generatedMethodName, nonVirtualInvocationLiteralCode: nonVirtualCode);
-						if (generatedMethodName != null)
-							usedNames[generatedMethodName] = true;
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: !string.IsNullOrEmpty(ica.GeneratedMethodName) ? ica.GeneratedMethodName : null, nonVirtualInvocationLiteralCode: nonVirtualCode);
+						if (!string.IsNullOrEmpty(ica.GeneratedMethodName))
+							usedNames[ica.GeneratedMethodName] = true;
 						return;
 					}
 				}
@@ -1155,10 +1093,10 @@ namespace Saltarelle.Compiler.MetadataImporter {
 							if (asa == null)
 								usedNames[name] = true;
 							if (GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsSerializable && !method.IsStatic) {
-								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: !AttributeReader.HasAttribute<AlternateSignatureAttribute>(method), ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 							else {
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: GetAttributePositionalArgs(method, AlternateSignatureAttribute) == null, ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: !AttributeReader.HasAttribute<AlternateSignatureAttribute>(method), ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 						}
 					}
@@ -1167,7 +1105,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (GetTypeSemanticsInternal(evt.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(evt, NonScriptableAttribute) != null) {
+			if (GetTypeSemanticsInternal(evt.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || AttributeReader.HasAttribute<NonScriptableAttribute>(evt)) {
 				_eventSemantics[evt] = EventScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -1206,7 +1144,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessField(IField field, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || GetAttributePositionalArgs(field, NonScriptableAttribute) != null) {
+			if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || AttributeReader.HasAttribute<NonScriptableAttribute>(field)) {
 				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();
 			}
 			else if (preferredName == "") {
@@ -1215,7 +1153,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			}
 			else {
 				string name = (nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames));
-				if (GetAttributePositionalArgs(field, InlineConstantAttribute) != null) {
+				if (AttributeReader.HasAttribute<InlineConstantAttribute>(field)) {
 					if (field.IsConst) {
 						name = null;
 					}
@@ -1230,9 +1168,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).IsNamedValues) {
 					string value = preferredName;
 					if (!nameSpecified) {	// This code handles the feature that it is possible to specify an invalid ScriptName for a member of a NamedValues enum, in which case that value has to be use as the constant value.
-						var sna = GetAttributePositionalArgs(field, ScriptNameAttribute);
+						var sna = AttributeReader.ReadAttribute<ScriptNameAttribute>(field);
 						if (sna != null)
-							value = (string)sna[0];
+							value = sna.Name;
 					}
 
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
@@ -1273,31 +1211,22 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
 			_internalTypeCountPerAssemblyAndNamespace = new Dictionary<Tuple<IAssembly, string>, int>();
 
-			var sna = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptNamespaceAttribute);
+			var sna = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == typeof(ScriptNamespaceAttribute).FullName);
 			if (sna != null) {
-				var arg = (string)sna.PositionalArguments[0].ConstantValue;
-				if (arg == null || (arg != "" && !arg.IsValidNestedJavaScriptIdentifier())) {
+				var data = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(sna);
+				if (data.Name == null || (data.Name != "" && !data.Name.IsValidNestedJavaScriptIdentifier())) {
 					Message(7002, sna.Region, "assembly");
 				}
 			}
 
-			var sca = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == ScriptSharpCompatibilityAttribute);
-			if (sca != null) {
-				var oc = sca.NamedArguments.SingleOrDefault(x => x.Key.Name == OmitDowncastsPropertyName).Value;
-				if (oc != null)
-					_omitDowncasts = (bool)oc.ConstantValue;
-				var on = sca.NamedArguments.SingleOrDefault(x => x.Key.Name == OmitNullableChecksPropertyName).Value;
-				if (on != null)
-					_omitNullableChecks = (bool)on.ConstantValue;
-			}
-			else {
-				_omitDowncasts = _omitNullableChecks = false;
-			}
+			var sca = AttributeReader.ReadAttribute<ScriptSharpCompatibilityAttribute>(mainAssembly.AssemblyAttributes);
+			_omitDowncasts      = sca != null && sca.OmitDowncasts;
+			_omitNullableChecks = sca != null && sca.OmitNullableChecks;
 
-			var mna = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, ModuleNameAttribute);
-			_mainModuleName = (mna != null && !string.IsNullOrEmpty((string)mna[0]) ? (string)mna[0] : null);
+			var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(mainAssembly.AssemblyAttributes);
+			_mainModuleName = (mna != null && !string.IsNullOrEmpty((string)mna.ModuleName) ? mna.ModuleName : null);
 
-			_isAsyncModule = GetAttributePositionalArgs(mainAssembly.AssemblyAttributes, AsyncModuleAttribute) != null;
+			_isAsyncModule = AttributeReader.HasAttribute<AsyncModuleAttribute>(mainAssembly.AssemblyAttributes);
 
 			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
 				try {
@@ -1466,9 +1395,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				if (n != null)
 					return n != "" ? n : null;
 			}
-			var asmModuleName = GetAttributePositionalArgs(t.ParentAssembly.AssemblyAttributes, ModuleNameAttribute);
-			if (asmModuleName != null && !string.IsNullOrEmpty((string)asmModuleName[0]))
-				return (string)asmModuleName[0];
+			var asmModuleName = AttributeReader.ReadAttribute<ModuleNameAttribute>(t.ParentAssembly.AssemblyAttributes);
+			if (asmModuleName != null && !string.IsNullOrEmpty(asmModuleName.ModuleName))
+				return asmModuleName.ModuleName;
 
 			return null;
 		}

@@ -52,12 +52,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Runtime\src\Libraries\CoreLib\ScriptMetadata.cs">
+      <Link>MetadataImporter\ScriptMetadata.cs</Link>
+    </Compile>
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="AttributeReader.cs" />
     <Compile Include="Compiler\DefaultNamer.cs" />
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
