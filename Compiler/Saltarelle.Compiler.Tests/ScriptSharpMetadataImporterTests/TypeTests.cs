@@ -1237,44 +1237,6 @@ public class C1 : B1, I1 {}", expectErrors: false);
 		}
 
 		[Test]
-		public void IsNamedValuesMethodWorks() {
-			Prepare(@"enum E1 {} [System.Runtime.CompilerServices.NamedValues] enum E2 {}");
-			Assert.That(Metadata.IsNamedValues(AllTypes["E1"]), Is.False);
-			Assert.That(Metadata.IsNamedValues(AllTypes["E2"]), Is.True);
-		}
-
-		[Test]
-		public void IsResourcesMethodWorks() {
-			Prepare(@"static class C1 {} [System.Runtime.CompilerServices.Resources] static class C2 {}");
-			Assert.That(Metadata.IsResources(AllTypes["C1"]), Is.False);
-			Assert.That(Metadata.IsResources(AllTypes["C2"]), Is.True);
-		}
-
-		[Test]
-		public void IsMixinWorks() {
-			Prepare(@"using System.Runtime.CompilerServices; static class C1 {} [GlobalMethods] static class C2 {} [Mixin(""$.fn"")] static class C3 {}");
-
-			Assert.That(Metadata.IsMixin(AllTypes["C1"]), Is.False);
-			Assert.That(Metadata.IsMixin(AllTypes["C2"]), Is.False);
-			Assert.That(Metadata.IsMixin(AllTypes["C3"]), Is.True);
-		}
-
-		[Test]
-		public void DoesTypeObeyTypeSystemMethodWorks() {
-			Prepare(
-@"using System.Runtime.CompilerServices;
-[Imported] class C1 {}
-[Imported(ObeysTypeSystem = false)] class C2 {}
-[Imported(ObeysTypeSystem = true)] class C3 {}
-class C4 {}
-");
-			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C1"]), Is.False);
-			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C2"]), Is.False);
-			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C3"]), Is.True);
-			Assert.That(Metadata.DoesTypeObeyTypeSystem(AllTypes["C4"]), Is.True);
-		}
-
-		[Test]
 		public void OverridingMembersFromGenericBaseTypeWorks() {
 			Prepare(
 @"using System;
@@ -1382,7 +1344,8 @@ public class B : I<object> {
 
 		[Test]
 		public void ModuleNameAttributeOnTypeWorks() {
-			Prepare(
+			Assert.Inconclusive("TODO: Test elsehwere");
+/*			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
 public class C1 {
@@ -1403,11 +1366,13 @@ public class C4 {
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C1"]));
 			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C2"]));
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));
-			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C4"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C4"]));*/
 		}
 
 		[Test]
 		public void ModuleNameAttributeIsInheritedToInnerTypesButCanBeOverridden() {
+			Assert.Inconclusive("TODO: Test elsewhere");
+/*
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -1454,11 +1419,13 @@ public class C2 {
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D1"]));
 			Assert.AreEqual("third-module", Metadata.GetModuleName(AllTypes["C2+D2"]));
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D3"]));
-			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D4"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2+D4"]));*/
 		}
 
 		[Test]
 		public void ModuleNameOnAssemblyWorks() {
+			Assert.Inconclusive("TODO: Test elsewhere");
+/*
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -1471,11 +1438,13 @@ public class C2 {
 }
 ");
 			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C1"]));
-			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C2"]));
+			Assert.AreEqual("my-module", Metadata.GetModuleName(AllTypes["C2"]));*/
 		}
 
 		[Test]
 		public void ModuleNameOnAssemblyCanBeOverriddenOnTypeWorks() {
+			Assert.Inconclusive("TODO: Test elsewhere");
+/*
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -1495,9 +1464,8 @@ public class C3 {
 ");
 			Assert.AreEqual("other-module", Metadata.GetModuleName(AllTypes["C1"]));
 			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C2"]));
-			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));
+			Assert.AreEqual(null, Metadata.GetModuleName(AllTypes["C3"]));*/
 		}
-
 
 		[Test]
 		public void CanInheritFromInnerClass() {

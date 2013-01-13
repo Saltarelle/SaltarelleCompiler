@@ -27,8 +27,8 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			return mock.Object;
 		}
 
-		protected string Process(IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null, IErrorReporter errorReporter = null, IMethod entryPoint = null) {
-			metadataImporter = metadataImporter ?? new MockScriptSharpMetadataImporter();
+		protected string Process(IEnumerable<JsType> types, IMetadataImporter metadataImporter = null, IErrorReporter errorReporter = null, IMethod entryPoint = null) {
+			metadataImporter = metadataImporter ?? new MockMetadataImporter();
 
 			IProjectContent proj = new CSharpProjectContent();
 			proj = proj.AddAssemblyReferences(new[] { Common.Mscorlib });
@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			return Process((IEnumerable<JsType>)types);
 		}
 
-		protected void AssertCorrect(string expected, IEnumerable<JsType> types, IScriptSharpMetadataImporter metadataImporter = null, IMethod entryPoint = null) {
+		protected void AssertCorrect(string expected, IEnumerable<JsType> types, IMetadataImporter metadataImporter = null, IMethod entryPoint = null) {
 			var actual = Process(types, metadataImporter: metadataImporter, entryPoint: entryPoint);
 
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
@@ -57,11 +57,11 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 			AssertCorrect(expected, (IEnumerable<JsType>)types);
 		}
 
-		protected void AssertCorrect(string expected, IScriptSharpMetadataImporter metadataImporter, params JsType[] types) {
+		protected void AssertCorrect(string expected, IMetadataImporter metadataImporter, params JsType[] types) {
 			AssertCorrect(expected, (IEnumerable<JsType>)types, metadataImporter);
 		}
 
-		protected void AssertCorrect(string expected, IScriptSharpMetadataImporter metadataImporter, IMethod entryPoint, params JsType[] types) {
+		protected void AssertCorrect(string expected, IMetadataImporter metadataImporter, IMethod entryPoint, params JsType[] types) {
 			AssertCorrect(expected, (IEnumerable<JsType>)types, metadataImporter, entryPoint);
 		}
 	}

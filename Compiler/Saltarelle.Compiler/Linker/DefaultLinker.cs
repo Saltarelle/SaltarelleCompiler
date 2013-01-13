@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.Compiler;
@@ -66,21 +67,30 @@ namespace Saltarelle.Compiler.Linker {
 		}
 
 		private class ImportVisitor : RewriterVisitorBase<object> {
-			private readonly IScriptSharpMetadataImporter _metadataImporter;
+			private readonly IMetadataImporter _metadataImporter;
 			private readonly INamer _namer;
 			private readonly IAssembly _mainAssembly;
 			private readonly HashSet<string> _usedSymbols;
+			private readonly string _mainModuleName;
 
 			private readonly Dictionary<string, string> _moduleAliases;
 
+			private readonly Dictionary<ITypeDefinition, string> _typeModuleNames = new Dictionary<ITypeDefinition, string>();
+			private string GetTypeModuleName(ITypeDefinition type) {
+				string result;
+				if (!_typeModuleNames.TryGetValue(type, out result)) {
+					_typeModuleNames[type] = result = ScriptSharpMetadataUtils.GetModuleName(type);
+				}
+				return result;
+			}
+
 			private bool IsLocalReference(ITypeDefinition type) {
-				if (_metadataImporter.IsImported(type))	// Imported types must always be referenced the hard way...
+				if (ScriptSharpMetadataUtils.IsImported(type))	// Imported types must always be referenced the hard way...
 					return false;
 				if (!type.ParentAssembly.Equals(_mainAssembly))	// ...so must types from other assemblies...
 					return false;
-				var mainModule = _metadataImporter.MainModuleName;
-				var typeModule = _metadataImporter.GetModuleName(type);
-				return string.IsNullOrEmpty(mainModule) && string.IsNullOrEmpty(typeModule) || mainModule == typeModule;	// ...and types with a [ModuleName] that differs from that of the assembly.
+				var typeModule = GetTypeModuleName(type);
+				return string.IsNullOrEmpty(_mainModuleName) && string.IsNullOrEmpty(typeModule) || _mainModuleName == typeModule;	// ...and types with a [ModuleName] that differs from that of the assembly.
 			}
 
 			private string GetModuleAlias(string moduleName) {
@@ -116,7 +126,7 @@ namespace Saltarelle.Compiler.Linker {
 					return JsExpression.Identifier(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(expression.Type).Name));
 				}
 
-				string moduleName = _metadataImporter.GetModuleName(expression.Type);
+				string moduleName = GetTypeModuleName(expression.Type);
 
 				var parts = sem.Name.Split('.');
 				JsExpression result;
@@ -138,25 +148,26 @@ namespace Saltarelle.Compiler.Linker {
 				if (expression.Target is JsTypeReferenceExpression) {
 					var type = ((JsTypeReferenceExpression)expression.Target).Type;
 					var sem = _metadataImporter.GetTypeSemantics(type);
-					if (string.IsNullOrEmpty(sem.Name) && _metadataImporter.GetModuleName(type) == null)	// Handle types marked with [GlobalMethods] that are not from modules.
+					if (string.IsNullOrEmpty(sem.Name) && GetTypeModuleName(type) == null)	// Handle types marked with [GlobalMethods] that are not from modules.
 						return JsExpression.Identifier(expression.MemberName);
 				}
 				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			private ImportVisitor(IScriptSharpMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols) {
+			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols) {
 				_metadataImporter = metadataImporter;
 				_namer            = namer;
+				_mainModuleName   = ScriptSharpMetadataUtils.GetModuleName(mainAssembly);
 				_mainAssembly     = mainAssembly;
 				_usedSymbols      = usedSymbols;
 				_moduleAliases    = new Dictionary<string, string>();
 			}
 
-			public static IList<JsStatement> Process(IScriptSharpMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, IList<JsStatement> statements) {
+			public static IList<JsStatement> Process(IMetadataImporter metadataImporter, INamer namer, ICompilation compilation, IList<JsStatement> statements) {
 				var usedSymbols = UsedSymbolsGatherer.Analyze(statements);
-				var importer = new ImportVisitor(metadataImporter, namer, mainAssembly, usedSymbols);
+				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols);
 				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
-				if (metadataImporter.IsAsyncModule) {
+				if (ScriptSharpMetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
 					body.Insert(0, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()));
 					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
 
@@ -194,16 +205,18 @@ namespace Saltarelle.Compiler.Linker {
 			}
 		}
 
-		private readonly IScriptSharpMetadataImporter _metadataImporter;
+		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
+		private readonly ICompilation _compilation;
 
-		public DefaultLinker(IScriptSharpMetadataImporter metadataImporter, INamer namer) {
+		public DefaultLinker(IMetadataImporter metadataImporter, INamer namer, ICompilation compilation) {
 			_metadataImporter = metadataImporter;
 			_namer            = namer;
+			_compilation      = compilation;
 		}
 
-		public IList<JsStatement> Process(IList<JsStatement> statements, IAssembly mainAssembly) {
-			return ImportVisitor.Process(_metadataImporter, _namer, mainAssembly, statements);
+		public IList<JsStatement> Process(IList<JsStatement> statements) {
+			return ImportVisitor.Process(_metadataImporter, _namer, _compilation, statements);
 		}
 	}
 }

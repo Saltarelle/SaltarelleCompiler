@@ -9,7 +9,8 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 	public class AssemblyPropertiesTests : ScriptSharpMetadataImporterTestBase {
 		[Test]
 		public void OmitNullableChecksWorks() {
-			Prepare("using System.Runtime.CompilerServices; class C {}");
+			Assert.Inconclusive("TODO: Test elsewhere");
+/*			Prepare("using System.Runtime.CompilerServices; class C {}");
 			Assert.That(Metadata.OmitNullableChecks, Is.False);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ScriptSharpCompatibility] class C {}");
 			Assert.That(Metadata.OmitNullableChecks, Is.False);
@@ -17,23 +18,26 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			Assert.That(Metadata.OmitNullableChecks, Is.False);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ScriptSharpCompatibility(OmitNullableChecks = true)] class C {}");
 			Assert.That(Metadata.OmitNullableChecks, Is.True);
+*/
 		}
 
 		[Test]
 		public void OmitDowncastsWorks() {
-			Prepare("using System.Runtime.CompilerServices; class C {}");
+			Assert.Inconclusive("TODO: Test elsewhere");
+/*			Prepare("using System.Runtime.CompilerServices; class C {}");
 			Assert.That(Metadata.OmitDowncasts, Is.False);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ScriptSharpCompatibility] class C {}");
 			Assert.That(Metadata.OmitDowncasts, Is.False);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ScriptSharpCompatibility(OmitDowncasts = false)] class C {}");
 			Assert.That(Metadata.OmitDowncasts, Is.False);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ScriptSharpCompatibility(OmitDowncasts = true)] class C {}");
-			Assert.That(Metadata.OmitDowncasts, Is.True);
+			Assert.That(Metadata.OmitDowncasts, Is.True);*/
 		}
 
 		[Test]
 		public void MainModuleNameWorks() {
-			Prepare("using System.Runtime.CompilerServices; class C {}");
+			Assert.Inconclusive("TODO: Test elsewhere");
+/*			Prepare("using System.Runtime.CompilerServices; class C {}");
 			Assert.That(Metadata.MainModuleName, Is.Null);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ModuleName(\"my-module\")] class C {}");
 			Assert.That(Metadata.MainModuleName, Is.EqualTo("my-module"));
@@ -41,14 +45,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			Assert.That(Metadata.MainModuleName, Is.Null);
 			Prepare("using System.Runtime.CompilerServices; [assembly: ModuleName(\"\")] class C {}");
 			Assert.That(Metadata.MainModuleName, Is.Null);
-		}
-
-		[Test]
-		public void AsyncModuleWorks() {
-			Prepare("using System.Runtime.CompilerServices; class C {}");
-			Assert.That(Metadata.IsAsyncModule, Is.False);
-			Prepare("using System.Runtime.CompilerServices; [assembly: AsyncModule] class C {}");
-			Assert.That(Metadata.IsAsyncModule, Is.True);
+*/
 		}
 	}
 }

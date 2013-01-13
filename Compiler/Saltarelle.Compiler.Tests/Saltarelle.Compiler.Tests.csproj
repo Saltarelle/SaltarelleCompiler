@@ -248,7 +248,6 @@
     <Compile Include="MockErrorReporter.cs" />
     <Compile Include="MockMetadataImporter.cs" />
     <Compile Include="MockRuntimeLibrary.cs" />
-    <Compile Include="MockScriptSharpMetadataImporter.cs" />
     <Compile Include="MockSourceFile.cs" />
     <Compile Include="OutputFormatterTests\ParenthesationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

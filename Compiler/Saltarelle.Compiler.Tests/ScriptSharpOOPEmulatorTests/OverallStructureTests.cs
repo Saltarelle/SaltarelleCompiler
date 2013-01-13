@@ -225,7 +225,7 @@ $MyClass.$main = function() {
 };
 {Type}.registerClass(global, 'MyClass', $MyClass);
 {MyClass}.$Main();
-",			new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
+",			new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
 			main.Object,
 			new JsClass(type, JsClass.ClassTypeEnum.Class, null, null, null) {
 				StaticMethods = { new JsMethod(main.Object, "$main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
@@ -250,7 +250,7 @@ $MyClass.$main = function() {
 						StaticMethods = { new JsMethod(main.Object, "$Main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
 					}
 				},
-				new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
+				new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
 				er,
 				main.Object
 			);
@@ -277,7 +277,7 @@ $MyClass.$main = function() {
 						StaticMethods = { new JsMethod(main.Object, "$Main", new string[0], JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Identifier("X")))) }
 					}
 				},
-				new MockScriptSharpMetadataImporter() { GetMethodSemantics = m => ReferenceEquals(m, main.Object) ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod("$" + m.Name) },
+				new MockMetadataImporter { GetMethodSemantics = m => ReferenceEquals(m, main.Object) ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod("$" + m.Name) },
 				er,
 				main.Object
 			);

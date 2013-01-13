@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		private MockErrorReporter errorReporter;
 
 		protected Dictionary<string, ITypeDefinition> AllTypes { get; private set; }
-		protected IScriptSharpMetadataImporter Metadata { get; private set; }
+		protected IMetadataImporter Metadata { get; private set; }
 		protected IList<string> AllErrorTexts { get; private set; }
 		protected IList<Message> AllErrors { get; private set; }
 

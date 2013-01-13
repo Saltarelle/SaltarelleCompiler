@@ -67,6 +67,7 @@
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\INamer.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
@@ -75,7 +76,7 @@
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
-    <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
+    <Compile Include="MetadataImporter\ScriptSharpMetadataUtils.cs" />
     <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
     <Compile Include="Linker\DefaultLinker.cs" />
     <Compile Include="TopologicalSorter.cs" />

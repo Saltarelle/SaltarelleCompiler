@@ -251,7 +251,7 @@ namespace Saltarelle.Compiler.Driver {
 					RegisterPlugin(container, typeof(Compiler.Compiler).Assembly);
 
 					// Compile the script
-					container.Register(Component.For<IMetadataImporter, IScriptSharpMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
+					container.Register(Component.For<IMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
 					                   Component.For<INamer>().ImplementedBy<DefaultNamer>(),
 					                   Component.For<IErrorReporter>().Instance(er),
 					                   Component.For<ICompilation>().Instance(compilation.Compilation),
@@ -268,7 +268,7 @@ namespace Saltarelle.Compiler.Driver {
 						compiledTypes = rewriter.Rewrite(compiledTypes);
 
 					var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
-					js = container.Resolve<ILinker>().Process(js, compilation.Compilation.MainAssembly);
+					js = container.Resolve<ILinker>().Process(js);
 
 					if (er.HasErrors)
 						return false;

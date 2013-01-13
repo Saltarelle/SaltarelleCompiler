@@ -52,7 +52,7 @@ namespace Saltarelle.Compiler {
         /// <summary>
         /// Returns the semantics of a field. Must not return null.
         /// </summary>
-        FieldScriptSemantics GetFieldSemantics(IField property);
+        FieldScriptSemantics GetFieldSemantics(IField field);
 
         /// <summary>
         /// Returns the semantics of an event. Must not return null.

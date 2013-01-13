@@ -11,16 +11,20 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.RuntimeLibrary {
 	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
-		private readonly IScriptSharpMetadataImporter _metadataImporter;
+		private readonly IMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
 		private readonly INamer _namer;
 		private readonly ICompilation _compilation;
+		private readonly bool _omitDowncasts;
+		private readonly bool _omitNullableChecks;
 
-		public ScriptSharpRuntimeLibrary(IScriptSharpMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer, ICompilation compilation) {
+		public ScriptSharpRuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer, ICompilation compilation) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 			_namer = namer;
 			_compilation = compilation;
+			_omitDowncasts = ScriptSharpMetadataUtils.OmitDowncasts(compilation);
+			_omitNullableChecks = ScriptSharpMetadataUtils.OmitNullableChecks(compilation);
 		}
 
 		private JsTypeReferenceExpression CreateTypeReferenceExpression(ITypeReference tr) {
@@ -56,10 +60,10 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
-				if (_metadataImporter.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
+				if (ScriptSharpMetadataUtils.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
-				else if (context != TypeContext.UseStaticMember && context != TypeContext.InlineCode && context != TypeContext.InvokeConstructor && !_metadataImporter.DoesTypeObeyTypeSystem(td)) {
+				else if (context != TypeContext.UseStaticMember && context != TypeContext.InlineCode && context != TypeContext.InvokeConstructor && !ScriptSharpMetadataUtils.DoesTypeObeyTypeSystem(td)) {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else
@@ -120,7 +124,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
-			if (_metadataImporter.OmitDowncasts)
+			if (_omitDowncasts)
 				return expression;
 
 			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
@@ -248,7 +252,7 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		}
 
 		public JsExpression FromNullable(JsExpression expression) {
-			if (_metadataImporter.OmitNullableChecks)
+			if (_omitNullableChecks)
 				return expression;
 
 			if (expression.NodeType == ExpressionNodeType.LogicalNot)

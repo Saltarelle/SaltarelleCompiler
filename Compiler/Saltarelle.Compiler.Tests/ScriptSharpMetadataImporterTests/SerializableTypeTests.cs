@@ -18,11 +18,11 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		[Test]
 		public void TypeWithSerializableAttributeCanInheritFromObjectOrRecordOrAnotherSerializableTypeButNotFromNonSerializableType() {
 			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] class C1 : Object {}", expectErrors: false);
-			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			// No error is good enough
 			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] class C1 : Record {}", expectErrors: false);
-			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			// No error is good enough
 			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class B {} [Serializable] class C1 : B {}", expectErrors: false);
-			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			// No error is good enough
 
 			Prepare(@"using System; using System.Runtime.CompilerServices; class B {} [Serializable] class C1 : B {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 		[Test]
 		public void TypeWithoutSerializableAttributeCanInheritRecordButNotOtherSerializableType() {
 			Prepare(@"using System; using System.Runtime.CompilerServices; class C1 : Record {}", expectErrors: false);
-			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
+			// No error is good enough
 
 			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class B {} class C1 : B {}", expectErrors: true);
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("B") && m.Contains("cannot inherit from the serializable type")));
@@ -310,14 +310,6 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 				Assert.That(AllErrors.Count, Is.EqualTo(1));
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("out")));
 			}, expectErrors: true);
-		}
-
-		[Test]
-		public void IsSerializableReturnsTheCorrectValue() {
-			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] sealed class C1 {} sealed class C2 : System.Record {} class C3 {}");
-			Assert.That(Metadata.IsSerializable(AllTypes["C1"]), Is.True);
-			Assert.That(Metadata.IsSerializable(AllTypes["C2"]), Is.True);
-			Assert.That(Metadata.IsSerializable(AllTypes["C3"]), Is.False);
 		}
 	}
 }
