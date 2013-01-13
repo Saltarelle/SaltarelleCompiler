@@ -49,7 +49,7 @@ public void M() {
 		public void ReadingNotUsableFieldGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableField; public void M() { int x = UnusableField; } }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableField")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableField")));
 		}
 
 		[Test]
@@ -135,7 +135,7 @@ class D : B {
 		public void ReadingNotUsablePropertyGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableProperty")));
 		}
 
 		[Test]
@@ -319,28 +319,28 @@ class D : B {
 		public void SubscribingToNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent += null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void UnsubscribingFromNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent -= null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void  RaisingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent(null, null); } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void ReadingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
@@ -380,8 +380,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
 			
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("C.F1") && m.FormattedMessage.Contains("cannot be assigned to")));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -394,8 +394,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
 			
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("C.F1") && m.FormattedMessage.Contains("cannot be assigned to")));
 		}
 
 		[Test]

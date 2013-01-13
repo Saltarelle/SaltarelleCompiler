@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 
 namespace Saltarelle.Compiler.Tests {
-	class MockSourceFile : ISourceFile {
+	public class MockSourceFile : ISourceFile {
         private readonly string _filename;
         private readonly string _content;
 

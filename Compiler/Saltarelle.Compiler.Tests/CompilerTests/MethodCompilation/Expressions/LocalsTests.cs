@@ -19,8 +19,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("myParamArray") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("myParamArray") && er.AllMessages[0].FormattedMessage.Contains("expand") && er.AllMessages[0].FormattedMessage.Contains("param array"));
 		}
 
 		[Test]
@@ -35,8 +35,8 @@ public class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("myParamArray") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("myParamArray") && er.AllMessages[0].FormattedMessage.Contains("expand") && er.AllMessages[0].FormattedMessage.Contains("param array"));
 		}
 
 		[Test]
@@ -53,8 +53,8 @@ public class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("myParamArray") && er.AllMessagesText[0].Contains("expand") && er.AllMessagesText[0].Contains("param array"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("myParamArray") && er.AllMessages[0].FormattedMessage.Contains("expand") && er.AllMessages[0].FormattedMessage.Contains("param array"));
 		}
 	}
 }

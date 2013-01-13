@@ -27,7 +27,7 @@ namespace CoreLibTests {
 			return null;
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWithoutResultFactoryWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise);
@@ -53,7 +53,7 @@ namespace CoreLibTests {
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWithResultIndexWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var tasks = new Task<int>[] {
@@ -90,7 +90,7 @@ namespace CoreLibTests {
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWithResultFactoryWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise, (int i, string s, int j) => new { i, s, j });
@@ -115,7 +115,7 @@ namespace CoreLibTests {
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWorksWhenPromiseFails() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise);
@@ -145,7 +145,7 @@ namespace CoreLibTests {
 		}
 
 #if !NO_ASYNC
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public async void CompletingPromiseCanBeAwaited() {
 			var promise = CreatePromise();
 			object[] result = null;
@@ -163,7 +163,7 @@ namespace CoreLibTests {
 			result = await promise;
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public async void FailingPromiseCanBeAwaited() {
 			var promise = CreatePromise();
 			bool continuationRun = false;

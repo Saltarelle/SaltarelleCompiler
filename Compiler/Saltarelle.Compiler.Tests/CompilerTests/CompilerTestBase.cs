@@ -43,7 +43,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			var c = PreparedCompilation.CreateCompilation(sourceFiles, references, defineConstants);
             CompiledTypes = compiler.Compile(c).AsReadOnly();
             if (defaultErrorHandling) {
-                ((MockErrorReporter)errorReporter).AllMessagesText.Should().BeEmpty("Compile should not generate errors");
+                ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
             }
         }
 

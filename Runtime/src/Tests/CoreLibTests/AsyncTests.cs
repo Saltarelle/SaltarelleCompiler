@@ -10,7 +10,7 @@ namespace CoreLibTests {
 	[TestFixture]
 	public class AsyncTests {
 #if !NO_ASYNC
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncVoid() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -38,7 +38,7 @@ namespace CoreLibTests {
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncTask() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -70,7 +70,7 @@ namespace CoreLibTests {
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncTaskBodyThrowsException() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -105,7 +105,7 @@ namespace CoreLibTests {
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AwaitTaskThatFaults() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -139,7 +139,7 @@ namespace CoreLibTests {
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncTaskThatReturnsValue() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();

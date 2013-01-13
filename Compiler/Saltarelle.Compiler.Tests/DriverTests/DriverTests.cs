@@ -308,7 +308,7 @@ public class C1 {
 				var driver = new CompilerDriver(er);
 				var result = driver.Compile(options, null);
 
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
@@ -326,7 +326,7 @@ public class C1 {
 				var driver = new CompilerDriver(er);
 				var result = driver.Compile(options, null);
 
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
@@ -344,7 +344,7 @@ public class C1 {
 				var driver = new CompilerDriver(er);
 				var result = driver.Compile(options, null);
 
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 

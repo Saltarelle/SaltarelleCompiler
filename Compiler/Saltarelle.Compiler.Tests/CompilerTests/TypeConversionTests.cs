@@ -412,14 +412,14 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "B1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class B1 {} class D1 : B1 {}" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("B1") && er.AllMessagesText[0].Contains("D1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("B1") && er.AllMessages[0].FormattedMessage.Contains("D1"));
 
 			metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "B1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			er = new MockErrorReporter(false);
 			Compile(new[] { "class B1<T> {} class D1 : B1<int> {}" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("B1") && er.AllMessagesText[0].Contains("D1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("B1") && er.AllMessages[0].FormattedMessage.Contains("D1"));
 		}
 
 		[Test]
@@ -427,8 +427,8 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "I1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "interface I1 {} class C1 : I1 {}" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("I1") && er.AllMessagesText[0].Contains("C1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("I1") && er.AllMessages[0].FormattedMessage.Contains("C1"));
 		}
 
 		[Test]
@@ -437,18 +437,18 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] { "class C1 {} class B1<T> {} class D1 : B1<C1> {}" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("D1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("D1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<C1> {}" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("D1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("D1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<I1<C1>> {}" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("inheritance list") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("D1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("D1"));
 		}
 
 

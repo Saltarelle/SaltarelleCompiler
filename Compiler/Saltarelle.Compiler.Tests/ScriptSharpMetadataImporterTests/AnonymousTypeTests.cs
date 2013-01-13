@@ -34,7 +34,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			var er = new MockErrorReporter(true);
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
 			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
-			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
+			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
 
@@ -48,7 +48,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			var er = new MockErrorReporter(true);
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
 			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
-			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
+			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
 
@@ -67,7 +67,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			var er = new MockErrorReporter(true);
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
 			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
-			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
+			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
 
@@ -86,7 +86,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpMetadataImporterTests {
 			var er = new MockErrorReporter(true);
 			var md = new MetadataImporter.ScriptSharpMetadataImporter(er);
 			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
-			Assert.That(er.AllMessagesText, Is.Empty, "Prepare should not generate errors");
+			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation, new[] { "<>Identifier" });
 

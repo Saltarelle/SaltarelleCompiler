@@ -11,10 +11,6 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.MetadataImporter {
 	public class ScriptSharpMetadataImporter : IMetadataImporter, IScriptSharpMetadataImporter {
-		private const string DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor = "System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor";
-		private const string Function = "Function";
-		private const string Array    = "Array";
-
 		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "toString", "valueOf" });
 		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString", "valueOf" });
 
@@ -463,7 +459,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		private IMember UnwrapValueTypeConstructor(IMember m) {
 			if (m is IMethod && !m.IsStatic && m.DeclaringType.Kind == TypeKind.Struct && ((IMethod)m).IsConstructor && ((IMethod)m).Parameters.Count == 0) {
-				var other = m.DeclaringType.GetConstructors().SingleOrDefault(c => c.Parameters.Count == 1 && c.Parameters[0].Type.FullName == DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor);
+				var other = m.DeclaringType.GetConstructors().SingleOrDefault(c => c.Parameters.Count == 1 && c.Parameters[0].Type.FullName == typeof(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor).FullName);
 				if (other != null)
 					return other;
 			}
@@ -620,7 +616,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 		}
 
 		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			if (constructor.Parameters.Count == 1 && constructor.Parameters[0].Type.FullName == DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor) {
+			if (constructor.Parameters.Count == 1 && constructor.Parameters[0].Type.FullName == typeof(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor).FullName) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -1249,9 +1245,9 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
 			if (typeDefinition.Kind == TypeKind.Delegate)
-				return TypeScriptSemantics.NormalType(Function);
+				return TypeScriptSemantics.NormalType("Function");
 			else if (typeDefinition.Kind == TypeKind.Array)
-				return TypeScriptSemantics.NormalType(Array);
+				return TypeScriptSemantics.NormalType("Array");
 			return GetTypeSemanticsInternal(typeDefinition).Semantics;
 		}
 

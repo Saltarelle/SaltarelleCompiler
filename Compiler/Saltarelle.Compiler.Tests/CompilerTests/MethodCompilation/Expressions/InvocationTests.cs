@@ -285,7 +285,7 @@ public void M() {
 				}
 			", errorReporter: er);
 
-			er.AllMessagesText.Where(m => m.StartsWith("Error:")).Should().NotBeEmpty();
+			er.AllMessages.Where(m => m.Severity == MessageSeverity.Error).Should().NotBeEmpty();
 		}
 
 		[Test]
@@ -519,7 +519,7 @@ public void M() {
 		public void InvokingMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
 		}
 
 		[Test]
@@ -699,8 +699,8 @@ class C {
 	}
 }" }, metadataImporter: nc, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("generic argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("F1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("generic argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("F1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -712,8 +712,8 @@ class C {
 		F1<I1<I1<C1>>>();
 	}
 }" }, metadataImporter: nc, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("generic argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("F1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("generic argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("F1"));
 		}
 
 		[Test]
@@ -767,8 +767,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1.F") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
 		}
 
 		[Test]
@@ -799,8 +799,8 @@ public void M() {
 }" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) }, errorReporter: er);
 
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1.F") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
 		}
 
 		[Test]
@@ -867,8 +867,8 @@ public void M() {
 	}
 }" }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test]
@@ -883,8 +883,8 @@ public void M() {
 	}
 }" }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test]
@@ -918,8 +918,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
 		[Test]
@@ -934,8 +934,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
 		[Test]
@@ -1015,8 +1015,8 @@ class C {
 	}
 }" }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test]
@@ -1038,8 +1038,8 @@ class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name + "$" + string.Join("$", m.Parameters.Select(p => p.Type.Name))) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("same script name")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("same script name")));
 		}
 
 		[Test]
@@ -1061,8 +1061,8 @@ class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" && m.Parameters[1].Type.Name == "String" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("not a normal method")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("not a normal method")));
 		}
 
 		[Test]
