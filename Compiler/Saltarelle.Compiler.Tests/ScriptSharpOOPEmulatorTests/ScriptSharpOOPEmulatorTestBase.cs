@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.NRefactory.CSharp;
+using ICSharpCode.NRefactory.CSharp.TypeSystem;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Moq;
 using NUnit.Framework;
@@ -11,16 +13,6 @@ using Saltarelle.Compiler.MetadataImporter;
 
 namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 	public class ScriptSharpOOPEmulatorTestBase {
-		protected ITypeDefinition CreateMockTypeDefinition(string name, Accessibility accessibility = Accessibility.Public, ITypeDefinition declaringType = null) {
-			var typeDef = Common.CreateTypeMock(name);
-			typeDef.SetupGet(_ => _.Attributes).Returns(new IAttribute[0]);
-			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
-			typeDef.SetupGet(_ => _.Accessibility).Returns(accessibility);
-			typeDef.SetupGet(_ => _.DeclaringTypeDefinition).Returns(declaringType);
-			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
-			return typeDef.Object;
-		}
-
 		protected IMethod CreateMockMethod(string name) {
 			var mock = new Mock<IMethod>();
 			mock.Setup(m => m.Name).Returns(name);

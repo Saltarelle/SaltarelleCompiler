@@ -17,6 +17,7 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 	public class OverallStructureTests : ScriptSharpOOPEmulatorTestBase {
 		[Test]
 		public void TheOverallStructureIsCorrect() {
+			var asm = Common.CreateMockAssembly();
 			AssertCorrect(
 @"////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeEnum
@@ -73,30 +74,30 @@ y = 1;
 x = 1;
 ",
 
-			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType"), JsClass.ClassTypeEnum.Class, null, null, null) {
+			new JsClass(Common.CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType", asm), JsClass.ClassTypeEnum.Class, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.This, "a"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))),
 				                    new JsMethod(CreateMockMethod("Method2"), "method2", null, JsExpression.FunctionDefinition(new[] { "x", "y" }, new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))))
 				                  },
 				StaticMethods = { new JsMethod(CreateMockMethod("StaticMethod"), "staticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 			},
-			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType2"), JsClass.ClassTypeEnum.Class, null, null, null) {
+			new JsClass(Common.CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType2", asm), JsClass.ClassTypeEnum.Class, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.This, "b"), JsExpression.Number(0)))),
 				InstanceMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))) },
 				StaticMethods = { new JsMethod(CreateMockMethod("OtherStaticMethod"), "otherStaticMethod", null, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)) },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("y"), JsExpression.Number(1))) }
 			},
-			new JsEnum(CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeEnum"), new[] {
+			new JsEnum(Common.CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeEnum", asm), new[] {
 				new JsEnumValue("Value1", 1),
 				new JsEnumValue("Value2", 2),
 				new JsEnumValue("Value3", 3),
 			}),
-			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace2.OtherType"), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("OuterNamespace.InnerNamespace.SomeType2")), null) {
+			new JsClass(Common.CreateMockTypeDefinition("OuterNamespace.InnerNamespace2.OtherType", asm), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("OuterNamespace.InnerNamespace.SomeType2", asm)), null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, JsExpression.FunctionDefinition(new[] { "x" }, new JsReturnStatement(JsExpression.Identifier("x")))), },
 				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("x"), JsExpression.Number(1))) }
 			},
-			new JsClass(CreateMockTypeDefinition("OuterNamespace.InnerNamespace2.OtherInterface"), JsClass.ClassTypeEnum.Interface, null, null, null) {
+			new JsClass(Common.CreateMockTypeDefinition("OuterNamespace.InnerNamespace2.OtherInterface", asm), JsClass.ClassTypeEnum.Interface, null, null, null) {
 				UnnamedConstructor = JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement),
 				InstanceMethods = { new JsMethod(CreateMockMethod("InterfaceMethod"), "interfaceMethod", null, null) },
 				StaticInitStatements = {}
@@ -120,7 +121,8 @@ x = 1;
 			var rnd = new Random(3);
 			var unorderedNames = names.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToArray();
 			
-			var output = Process(unorderedNames.Select(n => new JsClass(CreateMockTypeDefinition(n), JsClass.ClassTypeEnum.Class, null, null, null)));
+			var asm = Common.CreateMockAssembly();
+			var output = Process(unorderedNames.Select(n => new JsClass(Common.CreateMockTypeDefinition(n, asm), JsClass.ClassTypeEnum.Class, null, null, null)));
 
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("// ")).Select(l => l.Substring(3)).ToList();
 
@@ -135,6 +137,7 @@ public interface I1 {}
 public class C2 : C3 {}
 public class C1 : C2, I1 {}
 ");
+			var asm = Common.CreateMockAssembly();
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
 
 			AssertCorrect(
@@ -160,8 +163,8 @@ var $I1 = function() {
 {Type}.registerClass(global, 'C1', $C1, {C2}, {I1});
 ",			
 			
-				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C2")), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockType("I1")) }),
-				new JsClass(ReflectionHelper.ParseReflectionName("C2").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C3")), new JsExpression[0]),
+				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("C2", asm)), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("I1", asm)) }),
+				new JsClass(ReflectionHelper.ParseReflectionName("C2").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("C3", asm)), new JsExpression[0]),
 				new JsClass(ReflectionHelper.ParseReflectionName("C3").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
 				new JsClass(ReflectionHelper.ParseReflectionName("I1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
 		}
@@ -173,6 +176,7 @@ public class B<T> {}
 public interface I<T> {}
 public class A : B<int>, I<int> {}
 ");
+			var asm = Common.CreateMockAssembly();
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, new[] { Common.Mscorlib }, new string[0]);
 
 			AssertCorrect(
@@ -193,7 +197,7 @@ var $I = function() {
 {Type}.registerClass(global, 'A', $A, {C}, {I});
 ",			
 			
-				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockType("C")), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockType("I")) }),
+				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("C", asm)), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("I", asm)) }),
 				new JsClass(ReflectionHelper.ParseReflectionName("B`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
 				new JsClass(ReflectionHelper.ParseReflectionName("I`1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]));
 		}
@@ -209,7 +213,7 @@ var $I = function() {
 
 		[Test]
 		public void ProgramWithEntryPointWorks() {
-			var type = CreateMockTypeDefinition("MyClass");
+			var type = Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly());
 			var main = new Mock<IMethod>(MockBehavior.Strict);
 			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
 			main.SetupGet(_ => _.Name).Returns("Main");
@@ -234,7 +238,7 @@ $MyClass.$main = function() {
 
 		[Test]
 		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
-			var type = CreateMockTypeDefinition("MyClass");
+			var type = Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly());
 			var main = new Mock<IMethod>(MockBehavior.Strict);
 			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
 			main.SetupGet(_ => _.Name).Returns("Main");
@@ -261,7 +265,7 @@ $MyClass.$main = function() {
 
 		[Test]
 		public void AnErrorIsIssuedIfTheMainMethodIsNotImplementedAsANormalMethod() {
-			var type = CreateMockTypeDefinition("MyClass");
+			var type = Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly());
 			var main = new Mock<IMethod>(MockBehavior.Strict);
 			main.SetupGet(_ => _.DeclaringTypeDefinition).Returns(type);
 			main.SetupGet(_ => _.Name).Returns("Main");

@@ -36,12 +36,13 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 
 		[Test]
 		public void StaticInitStatementsAreSortedByAllReferencesInTypes() {
-			var c1 = CreateMockTypeDefinition("C1");
-			var c2 = CreateMockTypeDefinition("C2");
-			var c3 = CreateMockTypeDefinition("C3");
-			var c4 = CreateMockTypeDefinition("C4");
-			var c5 = CreateMockTypeDefinition("C5");
-			var c6 = CreateMockTypeDefinition("C6");
+			var asm = Common.CreateMockAssembly();
+			var c1 = Common.CreateMockTypeDefinition("C1", asm);
+			var c2 = Common.CreateMockTypeDefinition("C2", asm);
+			var c3 = Common.CreateMockTypeDefinition("C3", asm);
+			var c4 = Common.CreateMockTypeDefinition("C4", asm);
+			var c5 = Common.CreateMockTypeDefinition("C5", asm);
+			var c6 = Common.CreateMockTypeDefinition("C6", asm);
 
 			var lines = SplitLines(Process(Shuffle(new[] {
 				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
@@ -74,11 +75,12 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 
 		[Test]
 		public void StaticMethodsOnlyAreUsedAsTieBreakersWhenCyclicDependenciesOccur() {
-			var c1 = CreateMockTypeDefinition("C1");
-			var c2 = CreateMockTypeDefinition("C2");
-			var c3 = CreateMockTypeDefinition("C3");
-			var c4 = CreateMockTypeDefinition("C4");
-			var c5 = CreateMockTypeDefinition("C5");
+			var asm = Common.CreateMockAssembly();
+			var c1 = Common.CreateMockTypeDefinition("C1", asm);
+			var c2 = Common.CreateMockTypeDefinition("C2", asm);
+			var c3 = Common.CreateMockTypeDefinition("C3", asm);
+			var c4 = Common.CreateMockTypeDefinition("C4", asm);
+			var c5 = Common.CreateMockTypeDefinition("C5", asm);
 
 			var lines = SplitLines(Process(Shuffle(new[] {
 				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
@@ -109,11 +111,12 @@ namespace Saltarelle.Compiler.Tests.ScriptSharpOOPEmulatorTests {
 
 		[Test]
 		public void StaticInitStatementsOnlyAreUsedAsATieBreakerWhenCyclicDependenciesInStaticMethodsOccur() {
-			var c1 = CreateMockTypeDefinition("C1");
-			var c2 = CreateMockTypeDefinition("C2");
-			var c3 = CreateMockTypeDefinition("C3");
-			var c4 = CreateMockTypeDefinition("C4");
-			var c5 = CreateMockTypeDefinition("C5");
+			var asm = Common.CreateMockAssembly();
+			var c1 = Common.CreateMockTypeDefinition("C1", asm);
+			var c2 = Common.CreateMockTypeDefinition("C2", asm);
+			var c3 = Common.CreateMockTypeDefinition("C3", asm);
+			var c4 = Common.CreateMockTypeDefinition("C4", asm);
+			var c5 = Common.CreateMockTypeDefinition("C5", asm);
 
 			var lines = SplitLines(Process(Shuffle(new[] {
 				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
