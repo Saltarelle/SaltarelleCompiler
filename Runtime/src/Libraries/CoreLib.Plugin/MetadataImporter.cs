@@ -5,12 +5,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.MetadataImporter {
-	public class ScriptSharpMetadataImporter : IMetadataImporter {
+namespace CoreLib.Plugin {
+	public class MetadataImporter : IMetadataImporter {
 		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "toString", "valueOf" });
 		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString", "valueOf" });
 
@@ -128,7 +129,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 
 		private bool _minimizeNames;
 
-		public ScriptSharpMetadataImporter(IErrorReporter errorReporter) {
+		public MetadataImporter(IErrorReporter errorReporter) {
 			_errorReporter = errorReporter;
 		}
 
@@ -185,7 +186,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					i /= _encodeNumberTable.Length - 10;
 					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
 				}
-				return JSModel.Utils.IsJavaScriptReservedWord(result) ? "_" + result : result;
+				return Saltarelle.Compiler.JSModel.Utils.IsJavaScriptReservedWord(result) ? "_" + result : result;
 			}
 			else {
 				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
@@ -319,7 +320,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					Message(7006, typeDefinition);
 				}
 
-				if (_minimizeNames && !Utils.IsPublic(typeDefinition) && !preserveName) {
+				if (_minimizeNames && !typeDefinition.IsExternallyVisible() && !preserveName) {
 					nmspace = DetermineNamespace(typeDefinition);
 					var key = Tuple.Create(typeDefinition.ParentAssembly, nmspace);
 					int index;
@@ -342,13 +343,13 @@ namespace Saltarelle.Compiler.MetadataImporter {
 						nmspace = DetermineNamespace(typeDefinition);
 					}
 
-					if (!Utils.IsPublic(typeDefinition) && !preserveName && !typeName.StartsWith("$")) {
+					if (!typeDefinition.IsExternallyVisible() && !preserveName && !typeName.StartsWith("$")) {
 						typeName = "$" + typeName;
 					}
 				}
 			}
 
-			bool isSerializable = ScriptSharpMetadataUtils.IsSerializable(typeDefinition);
+			bool isSerializable = MetadataUtils.IsSerializable(typeDefinition);
 
 			if (isSerializable) {
 				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
@@ -424,7 +425,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			bool preserveMemberCases = pmca != null && pmca.Preserve;
 			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: ScriptSharpMetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -454,7 +455,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (isConstructor) {
 				defaultName = "$ctor";
 			}
-			else if (Utils.IsPublic(member)) {
+			else if (member.IsExternallyVisible()) {
 				defaultName = GetTypeSemanticsInternal(member.DeclaringTypeDefinition).PreserveMemberCases ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {
@@ -685,14 +686,14 @@ namespace Saltarelle.Compiler.MetadataImporter {
 				return;
 			}
 			else {
-				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && !Utils.IsPublic(source))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
+				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && !source.IsExternallyVisible())) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
 					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
 					usedNames["$ctor"] = true;
 					return;
 				}
 				else {
 					string name;
-					if (_minimizeNames && !Utils.IsPublic(source)) {
+					if (_minimizeNames && !source.IsExternallyVisible()) {
 						name = GetUniqueName(null, usedNames);
 					}
 					else {
@@ -797,7 +798,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (property.CanGet) {
 				var getterName = DeterminePreferredMemberName(property.Getter);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !property.IsExternallyVisible() ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames);
 				getter = GetMethodSemantics(property.Getter);
@@ -809,7 +810,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (property.CanSet) {
 				var setterName = DeterminePreferredMemberName(property.Setter);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !property.IsExternallyVisible() ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames);
 				setter = GetMethodSemantics(property.Setter);
@@ -1093,7 +1094,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (evt.CanAdd) {
 				var getterName = DeterminePreferredMemberName(evt.AddAccessor);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !evt.IsExternallyVisible() ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
 				adder = GetMethodSemantics(evt.AddAccessor);
@@ -1105,7 +1106,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 			if (evt.CanRemove) {
 				var setterName = DeterminePreferredMemberName(evt.RemoveAccessor);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !Utils.IsPublic(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !evt.IsExternallyVisible() ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
 				remover = GetMethodSemantics(evt.RemoveAccessor);
@@ -1150,7 +1151,7 @@ namespace Saltarelle.Compiler.MetadataImporter {
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
 				}
 				else if (name == null || (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames))) {
-					object value = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
+					object value = Saltarelle.Compiler.JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
 					if (value is bool)
 						_fieldSemantics[field] = FieldScriptSemantics.BooleanConstant((bool)value, name);
 					else if (value is double)

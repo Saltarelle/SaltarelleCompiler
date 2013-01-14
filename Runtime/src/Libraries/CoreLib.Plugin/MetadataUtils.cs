@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler;
 
-namespace Saltarelle.Compiler.MetadataImporter {
-	public class ScriptSharpMetadataUtils {
+namespace CoreLib.Plugin {
+	public class MetadataUtils {
 		public static bool IsSerializable(ITypeDefinition type) {
 			return AttributeReader.HasAttribute<SerializableAttribute>(type) || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
 		}

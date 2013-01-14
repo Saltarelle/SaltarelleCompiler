@@ -20,10 +20,6 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using Saltarelle.Compiler.MetadataImporter;
-using Saltarelle.Compiler.OOPEmulator;
-using Saltarelle.Compiler.Linker;
-using Saltarelle.Compiler.RuntimeLibrary;
 using ArrayType = ICSharpCode.NRefactory.TypeSystem.ArrayType;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
@@ -251,7 +247,7 @@ namespace Saltarelle.Compiler.Driver {
 					RegisterPlugin(container, typeof(Compiler.Compiler).Assembly);
 
 					// Compile the script
-					container.Register(Component.For<IMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
+/*					container.Register(Component.For<IMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
 					                   Component.For<INamer>().ImplementedBy<DefaultNamer>(),
 					                   Component.For<IErrorReporter>().Instance(er),
 					                   Component.For<ICompilation>().Instance(compilation.Compilation),
@@ -260,7 +256,7 @@ namespace Saltarelle.Compiler.Driver {
 					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>(),
 					                   Component.For<ILinker>().ImplementedBy<DefaultLinker>()
 					                  );
-
+*/
 					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions(), options.MinimizeScript, compilation.Compilation.MainAssembly);
 					var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
 

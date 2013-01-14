@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.TypeSystem;
-using Mono.Collections.Generic;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.OOPEmulator {
-	public class ScriptSharpOOPEmulator : IOOPEmulator {
+namespace CoreLib.Plugin {
+	public class OOPEmulator : IOOPEmulator {
 		private const string Prototype = "prototype";
 		private const string RegisterClass = "registerClass";
 		private const string RegisterInterface = "registerInterface";
@@ -50,7 +45,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
 
-		public ScriptSharpOOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
+		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
 			_compilation = compilation;
 			_systemType = new JsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Type).GetDefinition());
 
@@ -176,10 +171,10 @@ namespace Saltarelle.Compiler.OOPEmulator {
 		}
 
 		private JsExpression GetRoot(ITypeDefinition type, bool exportNonPublic = false) {
-			if (!exportNonPublic && !Utils.IsPublic(type))
+			if (!exportNonPublic && !type.IsExternallyVisible())
 				return JsExpression.Null;
 			else
-				return JsExpression.Identifier(string.IsNullOrEmpty(ScriptSharpMetadataUtils.GetModuleName(type)) ? "global" : "exports");
+				return JsExpression.Identifier(string.IsNullOrEmpty(MetadataUtils.GetModuleName(type)) ? "global" : "exports");
 		}
 
 		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
@@ -190,7 +185,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 				try {
 					string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
 					bool isGlobal = string.IsNullOrEmpty(name);
-					bool isMixin  = ScriptSharpMetadataUtils.IsMixin(t.CSharpTypeDefinition);
+					bool isMixin  = MetadataUtils.IsMixin(t.CSharpTypeDefinition);
 
 					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
 
@@ -203,7 +198,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 						else if (isMixin) {
 							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition))));
 						}
-						else if (ScriptSharpMetadataUtils.IsResources(c.CSharpTypeDefinition)) {
+						else if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
 							result.Add(GenerateResourcesClass(c));
 						}
 						else {
@@ -226,7 +221,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 					else if (t is JsEnum) {
 						var e = (JsEnum)t;
 						bool flags = AttributeReader.HasAttribute<FlagsAttribute>(t.CSharpTypeDefinition);
-						bool namedValues = ScriptSharpMetadataUtils.IsNamedValues(e.CSharpTypeDefinition);
+						bool namedValues = MetadataUtils.IsNamedValues(e.CSharpTypeDefinition);
 						result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)));
 						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, namedValues ? JsExpression.String(v.Name) : JsExpression.Number(v.Value)))))));
 						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterEnum), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
@@ -241,15 +236,15 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			var typesToRegister = orderedTypes.OfType<JsClass>()
 			                            .Where(c =>    c.TypeArgumentNames.Count == 0
 			                                        && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
-			                                        && (!ScriptSharpMetadataUtils.IsResources(c.CSharpTypeDefinition) || Utils.IsPublic(c.CSharpTypeDefinition))	// Resources classes are only exported if they are public.
-			                                        && !ScriptSharpMetadataUtils.IsMixin(c.CSharpTypeDefinition))
+			                                        && (!MetadataUtils.IsResources(c.CSharpTypeDefinition) || Utils.IsExternallyVisible(c.CSharpTypeDefinition))	// Resources classes are only exported if they are public.
+			                                        && !MetadataUtils.IsMixin(c.CSharpTypeDefinition))
 			                            .ToList();
 
 			result.AddRange(TopologicalSortTypesByInheritance(typesToRegister)
 			                .Select(c => {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
-			                                     if (ScriptSharpMetadataUtils.IsResources(c.CSharpTypeDefinition)) {
+			                                     if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
 			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterType), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
 			                                     }
 			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
@@ -267,7 +262,7 @@ namespace Saltarelle.Compiler.OOPEmulator {
 			                             })
 			                .Select(expr => new JsExpressionStatement(expr)));
 			result.AddRange(GetStaticInitializationOrder(orderedTypes.OfType<JsClass>(), 1)
-			                .Where(c => c.TypeArgumentNames.Count == 0 && !ScriptSharpMetadataUtils.IsResources(c.CSharpTypeDefinition))
+			                .Where(c => c.TypeArgumentNames.Count == 0 && !MetadataUtils.IsResources(c.CSharpTypeDefinition))
 			                .SelectMany(c => c.StaticInitStatements));
 
 			if (entryPoint != null) {

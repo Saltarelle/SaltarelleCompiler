@@ -72,7 +72,7 @@ namespace RuntimeLibrary.Tests
 			GeneratePage(true);
 		}
 
-		[TestCaseSource("PerformTest")]
+		//[TestCaseSource("PerformTest")]
 		public void Outcome(bool pass, string errorMessage) {
 			if (!pass)
 				Assert.Fail(errorMessage);

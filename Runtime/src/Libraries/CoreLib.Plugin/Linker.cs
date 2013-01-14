@@ -1,22 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
-using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.Linker {
+namespace CoreLib.Plugin {
 	/// <summary>
 	/// This reference importer assumes that root namespaces and types are global objects.
 	/// </summary>
-	public class DefaultLinker : ILinker {
+	public class Linker : ILinker {
 		internal class UsedSymbolsGatherer : RewriterVisitorBase<object> {
 			private readonly HashSet<string> _result = new HashSet<string>();
 
@@ -79,13 +76,13 @@ namespace Saltarelle.Compiler.Linker {
 			private string GetTypeModuleName(ITypeDefinition type) {
 				string result;
 				if (!_typeModuleNames.TryGetValue(type, out result)) {
-					_typeModuleNames[type] = result = ScriptSharpMetadataUtils.GetModuleName(type);
+					_typeModuleNames[type] = result = MetadataUtils.GetModuleName(type);
 				}
 				return result;
 			}
 
 			private bool IsLocalReference(ITypeDefinition type) {
-				if (ScriptSharpMetadataUtils.IsImported(type))	// Imported types must always be referenced the hard way...
+				if (MetadataUtils.IsImported(type))	// Imported types must always be referenced the hard way...
 					return false;
 				if (!type.ParentAssembly.Equals(_mainAssembly))	// ...so must types from other assemblies...
 					return false;
@@ -157,7 +154,7 @@ namespace Saltarelle.Compiler.Linker {
 			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols) {
 				_metadataImporter = metadataImporter;
 				_namer            = namer;
-				_mainModuleName   = ScriptSharpMetadataUtils.GetModuleName(mainAssembly);
+				_mainModuleName   = MetadataUtils.GetModuleName(mainAssembly);
 				_mainAssembly     = mainAssembly;
 				_usedSymbols      = usedSymbols;
 				_moduleAliases    = new Dictionary<string, string>();
@@ -167,7 +164,7 @@ namespace Saltarelle.Compiler.Linker {
 				var usedSymbols = UsedSymbolsGatherer.Analyze(statements);
 				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols);
 				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
-				if (ScriptSharpMetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
+				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
 					body.Insert(0, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()));
 					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
 
@@ -209,7 +206,7 @@ namespace Saltarelle.Compiler.Linker {
 		private readonly INamer _namer;
 		private readonly ICompilation _compilation;
 
-		public DefaultLinker(IMetadataImporter metadataImporter, INamer namer, ICompilation compilation) {
+		public Linker(IMetadataImporter metadataImporter, INamer namer, ICompilation compilation) {
 			_metadataImporter = metadataImporter;
 			_namer            = namer;
 			_compilation      = compilation;

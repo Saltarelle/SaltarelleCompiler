@@ -157,5 +157,12 @@
   <ItemGroup>
     <None Include="install.ps1" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib.Plugin\CoreLib.Plugin.csproj">
+      <Project>{bb807b7f-fcfc-424c-b38f-74e8147245b6}</Project>
+      <Name>CoreLib.Plugin</Name>
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />
 </Project>

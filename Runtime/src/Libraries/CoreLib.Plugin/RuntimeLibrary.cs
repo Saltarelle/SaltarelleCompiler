@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.MetadataImporter;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.RuntimeLibrary {
-	public class ScriptSharpRuntimeLibrary : IRuntimeLibrary {
+namespace CoreLib.Plugin {
+	public class RuntimeLibrary : IRuntimeLibrary {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
 		private readonly INamer _namer;
@@ -18,13 +17,13 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 		private readonly bool _omitDowncasts;
 		private readonly bool _omitNullableChecks;
 
-		public ScriptSharpRuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer, ICompilation compilation) {
+		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer, ICompilation compilation) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 			_namer = namer;
 			_compilation = compilation;
-			_omitDowncasts = ScriptSharpMetadataUtils.OmitDowncasts(compilation);
-			_omitNullableChecks = ScriptSharpMetadataUtils.OmitNullableChecks(compilation);
+			_omitDowncasts = MetadataUtils.OmitDowncasts(compilation);
+			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation);
 		}
 
 		private JsTypeReferenceExpression CreateTypeReferenceExpression(ITypeReference tr) {
@@ -60,10 +59,10 @@ namespace Saltarelle.Compiler.RuntimeLibrary {
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
-				if (ScriptSharpMetadataUtils.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
+				if (MetadataUtils.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
 					return null;
 				}
-				else if (context != TypeContext.UseStaticMember && context != TypeContext.InlineCode && context != TypeContext.InvokeConstructor && !ScriptSharpMetadataUtils.DoesTypeObeyTypeSystem(td)) {
+				else if (context != TypeContext.UseStaticMember && context != TypeContext.InlineCode && context != TypeContext.InvokeConstructor && !MetadataUtils.DoesTypeObeyTypeSystem(td)) {
 					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
 						return null;
 					else

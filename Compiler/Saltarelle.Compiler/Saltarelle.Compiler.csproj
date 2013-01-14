@@ -52,9 +52,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\Runtime\src\Libraries\CoreLib\ScriptMetadata.cs">
-      <Link>MetadataImporter\ScriptMetadata.cs</Link>
-    </Compile>
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
@@ -77,12 +74,7 @@
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
-    <Compile Include="MetadataImporter\ScriptSharpMetadataUtils.cs" />
-    <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
-    <Compile Include="Linker\DefaultLinker.cs" />
     <Compile Include="TopologicalSorter.cs" />
-    <Compile Include="OOPEmulator\TypeReferenceFinder.cs" />
-    <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />
@@ -101,13 +93,13 @@
     <Compile Include="ScriptSemantics\MethodScriptSemantics.cs" />
     <Compile Include="Compiler\NestedFunctionData.cs" />
     <Compile Include="Compiler\NestedFunctionGatherer.cs" />
-    <Compile Include="MetadataImporter\ScriptSharpMetadataImporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\Compiler.cs" />
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
+    <Compile Include="TypeReferenceFinder.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />
     <Compile Include="Compiler\VariableGatherer.cs" />

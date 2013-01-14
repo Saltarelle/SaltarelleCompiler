@@ -4,7 +4,7 @@ using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace Saltarelle.Compiler.OOPEmulator {
+namespace Saltarelle.Compiler {
 	public class TypeReferenceFinder : RewriterVisitorBase<HashSet<ITypeDefinition>> {
 		public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, HashSet<ITypeDefinition> data) {
 			data.Add(expression.Type);

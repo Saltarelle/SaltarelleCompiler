@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CoreLib.Plugin;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using QUnit.Plugin;
@@ -11,8 +12,6 @@ using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using Saltarelle.Compiler.MetadataImporter;
-using Saltarelle.Compiler.RuntimeLibrary;
 using Saltarelle.Compiler.Tests;
 
 namespace QUnitPlugin.Tests {
@@ -29,11 +28,11 @@ namespace QUnitPlugin.Tests {
 		private Tuple<JsClass, MockErrorReporter> Compile(string source, bool expectErrors = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
             var er = new MockErrorReporter(!expectErrors);
-			var md = new ScriptSharpMetadataImporter(er);
+			var md = new MetadataImporter(er);
 			var n = new DefaultNamer();
             var references = new[] { Mscorlib, QUnit };
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);
-			var rtl = new ScriptSharpRuntimeLibrary(md, er, n, compilation.Compilation);
+			var rtl = new RuntimeLibrary(md, er, n, compilation.Compilation);
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions(), false, compilation.Compilation.MainAssembly);
             var compiler = new Compiler(md, n, rtl, er);
 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-		<AlreadyCompiled>false</AlreadyCompiled>
+    <AlreadyCompiled>false</AlreadyCompiled>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
@@ -34,6 +34,12 @@
   <ItemGroup>
     <Reference Include="HtmlUnit">
       <HintPath>..\..\..\..\Compiler\packages-manual\htmlunit-2.9\HtmlUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory">
+      <HintPath>..\..\..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.CSharp">
+      <HintPath>..\..\..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\..\packages\IKVM.NET.7.0.4335.1\lib\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -128,6 +134,12 @@
     <Reference Include="nunit.framework">
       <HintPath>..\..\packages\NUnit.2.6.0.12054\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Saltarelle.Compiler">
+      <HintPath>..\..\..\..\Compiler\Saltarelle.Compiler\bin\Saltarelle.Compiler.dll</HintPath>
+    </Reference>
+    <Reference Include="Saltarelle.Compiler.Tests">
+      <HintPath>..\..\..\..\Compiler\Saltarelle.Compiler.Tests\bin\Saltarelle.Compiler.Tests.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -138,6 +150,21 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\CoreLibTests.cs" />
+    <Compile Include="Files.cs" />
+    <Compile Include="MetadataImporterTests\AnonymousTypeTests.cs" />
+    <Compile Include="MetadataImporterTests\BackingFieldTests.cs" />
+    <Compile Include="MetadataImporterTests\ConstructorTests.cs" />
+    <Compile Include="MetadataImporterTests\DelegateTests.cs" />
+    <Compile Include="MetadataImporterTests\EventTests.cs" />
+    <Compile Include="MetadataImporterTests\FieldTests.cs" />
+    <Compile Include="MetadataImporterTests\IndexerTests.cs" />
+    <Compile Include="MetadataImporterTests\MethodTests.cs" />
+    <Compile Include="MetadataImporterTests\MinimizedNamesTests.cs" />
+    <Compile Include="MetadataImporterTests\MiscTests.cs" />
+    <Compile Include="MetadataImporterTests\PropertyTests.cs" />
+    <Compile Include="MetadataImporterTests\ScriptSharpMetadataImporterTestBase.cs" />
+    <Compile Include="MetadataImporterTests\SerializableTypeTests.cs" />
+    <Compile Include="MetadataImporterTests\TypeTests.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="Linq\LinqTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -146,6 +173,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\CoreLib.Plugin\CoreLib.Plugin.csproj">
+      <Project>{bb807b7f-fcfc-424c-b38f-74e8147245b6}</Project>
+      <Name>CoreLib.Plugin</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LinqJSTests\LinqJSTests.csproj">
       <Project>{F8047019-A362-46C8-B317-D4278EFCC680}</Project>
       <Name>LinqJSTests</Name>
