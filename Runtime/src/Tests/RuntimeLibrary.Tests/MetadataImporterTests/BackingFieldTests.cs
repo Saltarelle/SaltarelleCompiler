@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class BackingFieldTests : ScriptSharpMetadataImporterTestBase {
+	public class BackingFieldTests : MetadataImporterTestBase {
 		[Test]
 		public void PropertyBackingFieldIsNamedFromHierarchyDepthAndPropertyNameWhenNotMinimizing() {
 			Prepare("class C { int Prop1 { get; set; } int Prop2 { get; set; } }", minimizeNames: false);

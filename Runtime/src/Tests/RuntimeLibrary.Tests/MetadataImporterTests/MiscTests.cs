@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class MiscTests : ScriptSharpMetadataImporterTestBase {
+	public class MiscTests : MetadataImporterTestBase {
 		[Test]
 		public void EncodeNumberWorksWhenAllowingDigitFirst() {
 			Assert.That(Enumerable.Range(0, 190).Select(i => MetadataImporter.EncodeNumber(i, false)).ToList(), Is.EqualTo(new[] {

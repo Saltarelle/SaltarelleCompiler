@@ -214,6 +214,10 @@ namespace Saltarelle.Compiler.Driver {
 
 			private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
 				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IJSTypeSystemRewriter>().WithServices(typeof(IJSTypeSystemRewriter)));
+				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IMetadataImporter>().WithServices(typeof(IMetadataImporter)));
+				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IRuntimeLibrary>().WithServices(typeof(IRuntimeLibrary)));
+				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IOOPEmulator>().WithServices(typeof(IOOPEmulator)));
+				container.Register(AllTypes.FromAssembly(plugin).BasedOn<ILinker>().WithServices(typeof(ILinker)));
 			}
 
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
@@ -247,16 +251,12 @@ namespace Saltarelle.Compiler.Driver {
 					RegisterPlugin(container, typeof(Compiler.Compiler).Assembly);
 
 					// Compile the script
-/*					container.Register(Component.For<IMetadataImporter>().ImplementedBy<ScriptSharpMetadataImporter>(),
-					                   Component.For<INamer>().ImplementedBy<DefaultNamer>(),
+					container.Register(Component.For<INamer>().ImplementedBy<DefaultNamer>(),
 					                   Component.For<IErrorReporter>().Instance(er),
 					                   Component.For<ICompilation>().Instance(compilation.Compilation),
-					                   Component.For<IRuntimeLibrary>().ImplementedBy<ScriptSharpRuntimeLibrary>(),
-					                   Component.For<IOOPEmulator>().ImplementedBy<ScriptSharpOOPEmulator>(),
-					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>(),
-					                   Component.For<ILinker>().ImplementedBy<DefaultLinker>()
+					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
 					                  );
-*/
+
 					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions(), options.MinimizeScript, compilation.Compilation.MainAssembly);
 					var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
 

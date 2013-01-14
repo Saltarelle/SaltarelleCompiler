@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class DelegateTests : ScriptSharpMetadataImporterTestBase {
+	public class DelegateTests : MetadataImporterTestBase {
 		[Test]
 		public void BindThisToFirstParameterWorks() {
 			Prepare(

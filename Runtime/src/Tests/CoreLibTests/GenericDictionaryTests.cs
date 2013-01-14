@@ -128,7 +128,7 @@ namespace CoreLibTests {
 			int count = 0;
 			foreach (var key in d.Keys) {
 				if (key != "1" && key != "2") {
-					Assert.IsTrue(false, "Unexpected key " + key);
+					Assert.Fail("Unexpected key " + key);
 				}
 				count++;
 			}
@@ -149,7 +149,7 @@ namespace CoreLibTests {
 			int count = 0;
 			foreach (var value in d.Values) {
 				if (value != "a" && value != "b") {
-					Assert.IsTrue(false, "Unexpected key " + value);
+					Assert.Fail("Unexpected key " + value);
 				}
 				count++;
 			}
@@ -231,7 +231,7 @@ namespace CoreLibTests {
 					Assert.AreEqual(kvp.Value, "b");
 				}
 				else {
-					Assert.IsTrue(false, "Invalid key " + kvp.Key);
+					Assert.Fail("Invalid key " + kvp.Key);
 				}
 				count++;
 			}

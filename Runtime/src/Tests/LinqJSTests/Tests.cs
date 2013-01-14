@@ -70,6 +70,14 @@ namespace LinqJSTests {
 
 #region Misc tests
 		[Test(Category = "Misc")]
+		public void QueryExpressionsWork() {
+			string[] data = new[] { "4", "5", "7" };
+			var result = (from a in data let b = int.Parse(a) let c = b + 1 select a + b.ToString() + c.ToString()).ToArray();
+
+			Assert.AreEqual(result, new[] { "445", "556", "778" });
+		}
+
+		[Test(Category = "Misc")]
 		public void EnumeratorIsIDisposable() {
 			var enm = Enumerable.Range(1, 5).GetEnumerator();
 			Assert.IsTrue(enm is IDisposable);
@@ -266,7 +274,7 @@ namespace LinqJSTests {
 		[Test(Category = "Generators", ExpectedAssertionCount = 0)]
 		public void EmptyWorks() {
 			foreach (var x in Enumerable.Empty<int>()) {
-				Assert.IsTrue(false, "Enumerator should be empty");
+				Assert.Fail("Enumerator should be empty");
 			}
 		}
 

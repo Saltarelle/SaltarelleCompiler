@@ -19,11 +19,9 @@ namespace System {
 		}
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const byte MinValue = 0;
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const byte MaxValue = 255;
 
         public string Format(string format) {

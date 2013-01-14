@@ -5,7 +5,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 
 	[TestFixture]
-	public class MinimizedNamesTests : ScriptSharpMetadataImporterTestBase {
+	public class MinimizedNamesTests : MetadataImporterTestBase {
 		[Test]
 		public void MinimizationOfClassesGeneratesMembersThatAreUniqueInTheHierarchyButDoesNotTouchPublicSymbols() {
 			Prepare(

@@ -7,6 +7,13 @@ namespace CoreLibTests {
 	[TestFixture]
 	public class ObjectTests {
 		[Test]
+		public void TypePropertiesAreCorrect() {
+			Assert.IsTrue(new object() is object);
+			Assert.AreEqual(typeof(object).FullName, "Object");
+			Assert.IsTrue(typeof(object).IsClass);
+		}
+
+		[Test]
 		public void CanGetHashCodeForObject() {
 			var o = new object();
 			int c = o.GetHashCode();

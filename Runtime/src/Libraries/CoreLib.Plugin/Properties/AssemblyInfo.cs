@@ -11,3 +11,5 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyDescription("Saltarelle mscorlib Plugin assembly")]
 
 [assembly: AssemblyVersion("1.0.0.0")]
+
+[assembly: InternalsVisibleTo("RuntimeLibrary.Tests")]

@@ -81,6 +81,10 @@ namespace QUnit {
         public static void IsFalse(bool condition, string message) {
         }
 
+        [InlineCode("ok(false, {message})")]
+        public static void Fail(string message) {
+        }
+
         [ScriptName("ok")]
         public static void OK(bool condition) {
         }

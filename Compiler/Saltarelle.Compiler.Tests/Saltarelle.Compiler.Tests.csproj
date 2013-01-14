@@ -227,11 +227,6 @@
     <Compile Include="MockNamer.cs" />
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
-    <Compile Include="RuntimeLibraryTests\ActivatorTests.cs" />
-    <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
-    <Compile Include="RuntimeLibraryTests\IteratorBlockTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\DelegateTests.cs" />
-    <Compile Include="ScriptSharpOOPEmulatorTests\StaticInitializationOrderTests.cs" />
     <Compile Include="TopologicalSorterTests.cs" />
     <Compile Include="StateMachineTests\AsyncTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
@@ -251,34 +246,7 @@
     <Compile Include="OutputFormatterTests\ParenthesationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CompilerTests\TypeConversionTests.cs" />
-    <Compile Include="LinkerTests\DefaultLinkerTests.cs" />
-    <Compile Include="RuntimeLibraryTests\ExceptionTests.cs" />
-    <Compile Include="RuntimeLibraryTests\NumberTests.cs" />
-    <Compile Include="RuntimeLibraryTests\MiscTests.cs" />
-    <Compile Include="RuntimeLibraryTests\DelegateTests.cs" />
-    <Compile Include="RuntimeLibraryTests\NullableTests.cs" />
-    <Compile Include="RuntimeLibraryTests\TypeSystemLanguageSupportTests.cs" />
-    <Compile Include="RuntimeLibraryTests\TypeSystemTests.cs" />
-    <Compile Include="RuntimeLibraryTests\TypeUtilityMethodsTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\AnonymousTypeTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\BackingFieldTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\ConstructorTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\EventTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\FieldTests.cs" />
     <Compile Include="DefaultNamerTests\GetVariableNameTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\IndexerTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\MinimizedNamesTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\MiscTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\PropertyTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\MethodTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\SerializableTypeTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\TypeTests.cs" />
-    <Compile Include="ScriptSharpMetadataImporterTests\ScriptSharpMetadataImporterTestBase.cs" />
-    <Compile Include="ScriptSharpOOPEmulatorTests\ClassTests.cs" />
-    <Compile Include="ScriptSharpOOPEmulatorTests\EnumTests.cs" />
-    <Compile Include="ScriptSharpOOPEmulatorTests\ScriptSharpOOPEmulatorTestBase.cs" />
-    <Compile Include="ScriptSharpOOPEmulatorTests\OverallStructureTests.cs" />
-    <Compile Include="RuntimeLibraryTests\RuntimeLibraryTestBase.cs" />
     <Compile Include="TypeReferenceFinderTests.cs" />
   </ItemGroup>
   <ItemGroup>

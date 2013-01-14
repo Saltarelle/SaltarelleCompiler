@@ -611,7 +611,6 @@ namespace System.Runtime.CompilerServices {
         public DecimalConstantAttribute(byte scale, byte sign, int hi, int mid, int low) {
         }
 
-        [CLSCompliant(false)]
         public DecimalConstantAttribute(byte scale, byte sign, uint hi, uint mid, uint low) {
         }
 

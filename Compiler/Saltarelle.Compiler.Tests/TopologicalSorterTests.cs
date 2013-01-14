@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using Saltarelle.Compiler.OOPEmulator;
 
 namespace Saltarelle.Compiler.Tests {
 	[TestFixture]
-	public class TarjanTests {
+	public class TopologicalSorterTests {
 		private List<string> RunTest(int numNodes, params string[] edges) {
 			var result = TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(Enumerable.Range('a', numNodes).Select(c => ((char)c)), edges.Select(e => Tuple.Create(e[0], e[1])));
 			return result.Select(x => new string(x.ToArray())).ToList();

@@ -6,7 +6,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class SerializableTypeTests : ScriptSharpMetadataImporterTestBase {
+	public class SerializableTypeTests : MetadataImporterTestBase {
 		private void TestBothKinds(string content, Action asserter, bool expectErrors = false) {
 			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public sealed class C1 { " + content + " }", expectErrors: expectErrors);
 			asserter();

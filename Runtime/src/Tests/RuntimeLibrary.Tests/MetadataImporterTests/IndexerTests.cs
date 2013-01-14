@@ -5,7 +5,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class IndexerTests : ScriptSharpMetadataImporterTestBase {
+	public class IndexerTests : MetadataImporterTestBase {
 		[Test]
 		public void IndexersImplementedAsGetAndSetMethodsWork() {
 			Prepare(

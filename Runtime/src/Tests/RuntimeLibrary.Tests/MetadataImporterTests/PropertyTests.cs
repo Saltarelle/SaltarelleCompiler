@@ -4,7 +4,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class PropertyTests : ScriptSharpMetadataImporterTestBase {
+	public class PropertyTests : MetadataImporterTestBase {
 		[Test]
 		public void PropertiesImplementedAsGetAndSetMethodsWork() {
 			Prepare(

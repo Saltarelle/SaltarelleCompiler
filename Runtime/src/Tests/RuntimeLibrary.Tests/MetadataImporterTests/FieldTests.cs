@@ -4,7 +4,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class FieldTests : ScriptSharpMetadataImporterTestBase {
+	public class FieldTests : MetadataImporterTestBase {
 		[Test]
 		public void FieldsWork() {
 			Prepare(

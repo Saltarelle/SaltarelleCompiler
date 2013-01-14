@@ -180,7 +180,7 @@ namespace CoreLibTests {
 
 			try {
 				await promise;
-				Assert.IsTrue(false, "Await should throw");
+				Assert.Fail("Await should throw");
 			}
 			catch (AggregateException ex) {
 				Assert.AreEqual(ex.InnerExceptions.Length, 1, "Exception should have one inner exception");
@@ -188,7 +188,7 @@ namespace CoreLibTests {
 				Assert.AreEqual(((PromiseException)ex.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 			}
 			catch (Exception ex) {
-				Assert.IsTrue(false, "Thrown exception should have been an AggregateException, was " + ex.GetType().FullName);
+				Assert.Fail("Thrown exception should have been an AggregateException, was " + ex.GetType().FullName);
 			}
 			continuationRun = true;
 		}

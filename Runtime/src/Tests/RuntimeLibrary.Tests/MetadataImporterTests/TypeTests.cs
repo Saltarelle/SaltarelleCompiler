@@ -5,7 +5,7 @@ using Saltarelle.Compiler.Tests;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class TypeTests : ScriptSharpMetadataImporterTestBase {
+	public class TypeTests : MetadataImporterTestBase {
 		[Test]
 		public void TopLevelClassWithoutAttributesWorks() {
 			Prepare(

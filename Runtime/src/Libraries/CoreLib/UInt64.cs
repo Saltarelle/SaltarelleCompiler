@@ -19,11 +19,9 @@ namespace System {
 		}
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const ulong MinValue = 0;
 
 		[Obsolete("This number is not representable in Javascript", true)]
-		[CLSCompliant(false)]
 		[NonScriptable]
 		public const ulong MaxValue = 0;
 
@@ -36,13 +34,11 @@ namespace System {
         }
 
         [ScriptAlias("parseInt")]
-		[CLSCompliant(false)]
         public static ulong Parse(string s) {
             return 0;
         }
 
         [ScriptAlias("parseInt")]
-		[CLSCompliant(false)]
         public static ulong Parse(string s, int radix) {
             return 0;
         }
@@ -57,13 +53,11 @@ namespace System {
         }
 
 	    [InlineCode("{$System.Script}.compare({this}, {other})")]
-	    [CLSCompliant(false)]
 		public int CompareTo(ulong other) {
 		    return 0;
 	    }
 
 	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
-	    [CLSCompliant(false)]
 	    public bool Equals(ulong other) {
 		    return false;
 	    }

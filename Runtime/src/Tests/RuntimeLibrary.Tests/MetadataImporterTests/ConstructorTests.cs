@@ -4,7 +4,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class ConstructorTests : ScriptSharpMetadataImporterTestBase {
+	public class ConstructorTests : MetadataImporterTestBase {
 		[Test]
 		public void SingleConstructorIsUnnamed() {
 			Prepare(@"public class C { public C() {} }");

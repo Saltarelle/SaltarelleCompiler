@@ -41,7 +41,6 @@ namespace System {
         public Decimal(int i) {
         }
 
-        [CLSCompliant(false)]
 		[InlineCode("{i}")]
         public Decimal(uint i) {
         }
@@ -54,7 +53,6 @@ namespace System {
         public Decimal(long n) {
         }
 
-        [CLSCompliant(false)]
 		[InlineCode("{n}")]
         public Decimal(ulong n) {
         }
@@ -142,7 +140,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static implicit operator decimal(sbyte value) {
             return 0;
         }
@@ -155,7 +152,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static implicit operator decimal(ushort value) {
             return 0;
         }
@@ -174,7 +170,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static implicit operator decimal(uint value) {
             return 0;
         }
@@ -187,7 +182,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static implicit operator decimal(ulong value) {
             return 0;
         }
@@ -213,7 +207,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static explicit operator sbyte(decimal value) {
           return 0;
         }
@@ -232,7 +225,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static explicit operator ushort(decimal value) {
             return 0;
         }
@@ -245,7 +237,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static explicit operator uint(decimal value) {
             return 0;
         }
@@ -258,7 +249,6 @@ namespace System {
 
         /// <internalonly />
         [ScriptSkip]
-        [CLSCompliant(false)]
         public static explicit operator ulong(decimal value) {
             return 0;
         }

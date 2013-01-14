@@ -60,6 +60,7 @@
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
+    <Compile Include="ExceptionTests.cs" />
     <Compile Include="LazyTests.cs" />
     <Compile Include="IEquatableTests.cs" />
     <Compile Include="EqualityComparerTests.cs" />
@@ -78,6 +79,9 @@
     <Compile Include="RegexTests.cs" />
     <Compile Include="StringBuilderTests.cs" />
     <Compile Include="ListTests.cs" />
+    <Compile Include="TypeSystemLanguageSupportTests.cs" />
+    <Compile Include="TypeSystemTests.cs" />
+    <Compile Include="TypeUtilityMethodsTests.cs" />
     <Compile Include="UInt16Tests.cs" />
     <Compile Include="UInt32Tests.cs" />
     <Compile Include="UInt64Tests.cs" />

@@ -38,23 +38,6 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 		}
 
 		[Test]
-		public void CanCompileMscorlib() {
-			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Libraries\CoreLib\CoreLib.csproj"));
-
-			try {
-				var er = new MockErrorReporter();
-				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, null);
-				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages, Is.Empty);
-			}
-			finally {
-				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
-				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
-			}
-		}
-
-		[Test]
 		public void CanCompileLinqJSTests() {
 			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\LinqJSTests\LinqJSTests.csproj"));
 			opts.References.Clear();

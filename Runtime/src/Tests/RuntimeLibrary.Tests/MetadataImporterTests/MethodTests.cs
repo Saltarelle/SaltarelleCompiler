@@ -6,7 +6,7 @@ using Saltarelle.Compiler.Tests;
 
 namespace RuntimeLibrary.Tests.MetadataImporterTests {
 	[TestFixture]
-	public class MethodTests : ScriptSharpMetadataImporterTestBase {
+	public class MethodTests : MetadataImporterTestBase {
 		[Test]
 		public void NonOverloadedMethodIsCamelCased() {
 			Prepare(
