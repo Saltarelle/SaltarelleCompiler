@@ -30,21 +30,21 @@ namespace Saltarelle.Compiler.Tests {
 			                    if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && c == TypeContext.TypeOf) {
 			                        // This handles open generic types ( typeof(C<,>) )
 			                        var def = t.GetDefinition();
-			                        return new JsTypeReferenceExpression(Common.CreateMockType(context + "_" + def.Name));
+			                        return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(context + "_" + def.Name, Common.CreateMockAssembly()));
 			                    }
 			                    else if (t is ArrayType) {
 			                        return JsExpression.Invocation(JsExpression.Identifier(context + "_$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument));
 			                    }
 			                    else if (t is ParameterizedType) {
 			                        var pt = (ParameterizedType)t;
-		                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockType(t.Name)) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+		                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(t.Name, Common.CreateMockAssembly())) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 			                    }
 			                    else if (t is ITypeDefinition) {
 			                        var td = (ITypeDefinition)t;
 			                        if (td.TypeParameterCount > 0)
-			                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockType(t.Name)) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
+			                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(t.Name, Common.CreateMockAssembly())) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
 			                        else {
-			                            return new JsTypeReferenceExpression(Common.CreateMockType(context + "_" + t.Name));
+			                            return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(context + "_" + t.Name, Common.CreateMockAssembly()));
 			                        }
 			                    }
 			                    else if (t is ITypeParameter) {

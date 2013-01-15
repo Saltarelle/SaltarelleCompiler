@@ -19,11 +19,9 @@ namespace System {
 		}
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const sbyte MinValue = -128;
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const sbyte MaxValue = 127;
 
         public string Format(string format) {
@@ -35,13 +33,11 @@ namespace System {
         }
 
         [ScriptAlias("parseInt")]
-		[CLSCompliant(false)]
         public static sbyte Parse(string s) {
             return 0;
         }
 
         [ScriptAlias("parseInt")]
-		[CLSCompliant(false)]
         public static sbyte Parse(string s, int radix) {
             return 0;
         }
@@ -55,13 +51,11 @@ namespace System {
         }
 
 	    [InlineCode("{$System.Script}.compare({this}, {other})")]
-	    [CLSCompliant(false)]
 		public int CompareTo(sbyte other) {
 		    return 0;
 	    }
 
 	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
-	    [CLSCompliant(false)]
 	    public bool Equals(sbyte other) {
 		    return false;
 	    }

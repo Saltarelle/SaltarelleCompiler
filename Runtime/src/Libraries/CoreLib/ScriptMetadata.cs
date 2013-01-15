@@ -7,21 +7,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace System {
-	/// <summary>
-	/// This attribute indicates that a class is a serializable type, and can be used as an alternative to inheriting from <see cref="Record"/>. Record classes must inherit directly from object, be sealed, and cannot contain any instance events.
-	/// Instance properties in serializable types are implemented as fields.
-	/// All instance fields and properties on serializable types will act as they were decorated with a [PreserveNameAttribute], unless another renaming attribute was specified.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Type, Inherited = true, AllowMultiple = false)]
-	[NonScriptable]
-	[Imported]
-	public sealed class SerializableAttribute : Attribute {
-	}
-}
-
 namespace System.Runtime.CompilerServices {
-
     /// <summary>
     /// This attribute can be placed on types in system script assemblies that should not
     /// be imported. It is only meant to be used within mscorlib.dll.
@@ -65,18 +51,11 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
     public sealed class ScriptAssemblyAttribute : Attribute {
-
-        private string _name;
-
         public ScriptAssemblyAttribute(string name) {
-            _name = name;
+            Name = name;
         }
 
-        public string Name {
-            get {
-                return _name;
-            }
-        }
+        public string Name { get; private set; }
     }
 
     /// <summary>
@@ -89,18 +68,11 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
     public sealed class ScriptQualifierAttribute : Attribute {
-
-        private string _prefix;
-
         public ScriptQualifierAttribute(string prefix) {
-            _prefix = prefix;
+            Prefix = prefix;
         }
 
-        public string Prefix {
-            get {
-                return _prefix;
-            }
-        }
+        public string Prefix { get; private set; }
     }
 
     /// <summary>
@@ -122,22 +94,15 @@ namespace System.Runtime.CompilerServices {
     /// For internal types, the ScriptQualifier attribute can be used to provide a short prefix
     /// to generate unique names.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Type, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, AllowMultiple = false)]
     [NonScriptable]
     [Imported]
     public sealed class ScriptNamespaceAttribute : Attribute {
-
-        private string _name;
-
         public ScriptNamespaceAttribute(string name) {
-            _name = name;
+            Name = name;
         }
 
-        public string Name {
-            get {
-                return _name;
-            }
-        }
+        public string Name { get; private set; }
     }
 
     /// <summary>
@@ -164,18 +129,11 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
     public sealed class MixinAttribute : Attribute {
-
-        private string _expression;
-
         public MixinAttribute(string expression) {
-            _expression = expression;
+            Expression = expression;
         }
 
-        public string Expression {
-            get {
-                return _expression;
-            }
-        }
+        public string Expression { get; private set; }
     }
 
     /// <summary>
@@ -231,18 +189,11 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
     public sealed class ScriptNameAttribute : Attribute {
-
-        private string _name;
-
         public ScriptNameAttribute(string name) {
-            _name = name;
+            Name = name;
         }
 
-        public string Name {
-            get {
-                return _name;
-            }
-        }
+        public string Name { get; private set; }
     }
 
     /// <summary>
@@ -264,8 +215,6 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
     public sealed class PreserveMemberCaseAttribute : Attribute {
-        public bool Preserve { get; private set; }
-
         public PreserveMemberCaseAttribute() {
             Preserve = true;
         }
@@ -273,6 +222,8 @@ namespace System.Runtime.CompilerServices {
         public PreserveMemberCaseAttribute(bool preserve) {
             Preserve = preserve;
         }
+
+        public bool Preserve { get; private set; }
     }
 
     /// <summary>
@@ -295,18 +246,11 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
     public sealed class ScriptAliasAttribute : Attribute {
-
-        private string _alias;
-
         public ScriptAliasAttribute(string alias) {
-            _alias = alias;
+            Alias = alias;
         }
 
-        public string Alias {
-            get {
-                return _alias;
-            }
-        }
+        public string Alias { get; private set; }
     }
 
     /// <summary>
@@ -328,16 +272,11 @@ namespace System.Runtime.CompilerServices {
     [NonScriptable]
     [Imported]
 	public sealed class InlineCodeAttribute : Attribute {
-
-		private string _code;
-
 		public InlineCodeAttribute(string code) {
-			_code = code;
+			Code = code;
 		}
 
-		public string Code {
-			get { return _code; }
-		}
+		public string Code { get; private set; }
 
 		/// <summary>
 		/// If set, a method with this name will be generated from the method source.
@@ -364,7 +303,7 @@ namespace System.Runtime.CompilerServices {
 	/// <summary>
 	/// This attribute specifies that a generic type or method should have script generated as if it was a non-generic one. Any uses of the type arguments inside the method (eg. <c>typeof(T)</c>, or calling another generic method with T as a type argument) will cause runtime errors.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Type | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
     [NonScriptable]
     [Imported]
 	public sealed class IgnoreGenericArgumentsAttribute : Attribute {
@@ -439,15 +378,15 @@ namespace System.Runtime.CompilerServices {
 	/// <summary>
 	/// Specifies that a type is defined in a module, which should be imported by a require() call.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Type | AttributeTargets.Assembly)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Assembly)]
 	[NonScriptable]
 	[Imported]
 	public sealed class ModuleNameAttribute : Attribute {	
-		public string ModuleName { get; private set; }
-
 		public ModuleNameAttribute(string moduleName) {
 			this.ModuleName = moduleName;
 		}
+
+		public string ModuleName { get; private set; }
 	}
 	
 	/// <summary>
@@ -457,8 +396,6 @@ namespace System.Runtime.CompilerServices {
 	[NonScriptable]
 	[Imported]
 	public sealed class AsyncModuleAttribute : Attribute {	
-		public AsyncModuleAttribute() {
-		}
 	}
 
 	/// <summary>
@@ -468,8 +405,6 @@ namespace System.Runtime.CompilerServices {
 	[NonScriptable]
 	[Imported]
 	public sealed class EnumerateAsArrayAttribute : Attribute {	
-		public EnumerateAsArrayAttribute() {
-		}
 	}
 
 	/// <summary>
@@ -479,7 +414,5 @@ namespace System.Runtime.CompilerServices {
 	[NonScriptable]
 	[Imported]
 	public sealed class InlineConstantAttribute : Attribute {
-		public InlineConstantAttribute() {
-		}
 	}
 }

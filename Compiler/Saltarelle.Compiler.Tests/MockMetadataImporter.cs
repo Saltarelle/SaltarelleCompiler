@@ -48,7 +48,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
 		public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
 
-		void IMetadataImporter.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
+		void IMetadataImporter.Prepare(IEnumerable<ITypeDefinition> allTypes, bool minimizeNames, IAssembly mainAssembly) {
 		}
 
 		TypeScriptSemantics IMetadataImporter.GetTypeSemantics(ITypeDefinition typeDefinition) {

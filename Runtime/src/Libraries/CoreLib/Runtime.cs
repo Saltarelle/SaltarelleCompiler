@@ -113,7 +113,6 @@ namespace System {
         Delegate = 0x1000,
         ReturnValue = 0x2000,
         GenericParameter = 0x4000,
-        Type = Class | Struct | Enum | Interface | Delegate,
         All = Assembly | Module | Class | Struct | Enum | Constructor |
               Method | Property | Field | Event | Interface | Parameter |
               Delegate | ReturnValue | GenericParameter,
@@ -612,7 +611,6 @@ namespace System.Runtime.CompilerServices {
         public DecimalConstantAttribute(byte scale, byte sign, int hi, int mid, int low) {
         }
 
-        [CLSCompliant(false)]
         public DecimalConstantAttribute(byte scale, byte sign, uint hi, uint mid, uint low) {
         }
 

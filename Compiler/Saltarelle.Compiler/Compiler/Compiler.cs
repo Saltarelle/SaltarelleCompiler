@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler.Compiler {
         private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
         private readonly IErrorReporter _errorReporter;
-		private readonly bool _allowUserDefinedStructs;
+		private bool _allowUserDefinedStructs;
         private ICompilation _compilation;
         private CSharpAstResolver _resolver;
         private Dictionary<ITypeDefinition, JsClass> _types;
@@ -48,13 +48,14 @@ namespace Saltarelle.Compiler.Compiler {
                 MethodCompiled(method, result, mc);
         }
 
-        public Compiler(IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, bool allowUserDefinedStructs) {
+        public Compiler(IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
             _metadataImporter        = metadataImporter;
 			_namer                   = namer;
             _errorReporter           = errorReporter;
         	_runtimeLibrary          = runtimeLibrary;
-			_allowUserDefinedStructs = allowUserDefinedStructs;
         }
+
+		internal bool? AllowUserDefinedStructs { get; set; }
 
         private JsClass.ClassTypeEnum ConvertClassType(TypeKind typeKind) {
             switch (typeKind) {
@@ -152,42 +153,9 @@ namespace Saltarelle.Compiler.Compiler {
             }
         }
 
-		private CSharpParser CreateParser(IEnumerable<string> defineConstants) {
-			var parser = new CSharpParser();
-			if (defineConstants != null) {
-				foreach (var c in defineConstants)
-					parser.CompilerSettings.ConditionalSymbols.Add(c);
-			}
-			return parser;
-		}
-
-		public PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references, IList<string> defineConstants) {
-            IProjectContent project = new CSharpProjectContent();
-
-            var files = sourceFiles.Select(f => { 
-                                                    using (var rdr = f.Open()) {
-                                                        var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.Filename);
-                                                        var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
-                                                        syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
-                                                        var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
-                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
-                                                    }
-                                                }).ToList();
-
-            foreach (var f in files) {
-                var tcv = new TypeSystemConvertVisitor(f.ParsedFile);
-                f.SyntaxTree.AcceptVisitor(tcv);
-                project = project.AddOrUpdateFiles(f.ParsedFile);
-            }
-            project = project.AddAssemblyReferences(references);
-
-            return new PreparedCompilation(project.CreateCompilation(), files);
-		}
-
         public IEnumerable<JsType> Compile(PreparedCompilation compilation) {
+			_allowUserDefinedStructs = AllowUserDefinedStructs ?? compilation.Compilation.ReferencedAssemblies.Count == 0;	// mscorlib only.
 			_compilation = compilation.Compilation;
-
-			_metadataImporter.Prepare(_compilation.GetAllTypeDefinitions(), _compilation.MainAssembly, _errorReporter);
 
             _types = new Dictionary<ITypeDefinition, JsClass>();
             _constructorDeclarations = new HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>>();

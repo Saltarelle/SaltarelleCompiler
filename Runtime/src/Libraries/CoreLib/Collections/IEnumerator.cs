@@ -11,28 +11,28 @@ namespace System.Collections {
 	/// Don't use this interface, use the generic one instead. When implementing, you need not supply a valid implementation of GetEnumerator.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-    [ScriptNamespace("ss")]
+	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-    public interface IEnumerator {
+	public interface IEnumerator {
 		/// <summary>
 		/// Don't call this method, use the generic version instead.
 		/// </summary>
-        [NonScriptable]
+		[NonScriptable]
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		object Current { get; }
 
 		/// <summary>
 		/// Don't call this method, use the generic version instead.
 		/// </summary>
-        [NonScriptable]
+		[NonScriptable]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        bool MoveNext();
+		bool MoveNext();
 
 		/// <summary>
 		/// Don't call this method, use the generic version instead.
 		/// </summary>
-        [NonScriptable]
+		[NonScriptable]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        void Reset();
-    }
+		void Reset();
+	}
 }

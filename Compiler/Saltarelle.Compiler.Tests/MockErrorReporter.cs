@@ -13,6 +13,7 @@ namespace Saltarelle.Compiler.Tests {
 		public DomRegion Region { get; private set; }
 		public string Format { get; private set; }
 		public object[] Args { get; private set; }
+		public string FormattedMessage { get; private set; }
 
 		public Message(MessageSeverity severity, int code, DomRegion region, string format, params object[] args) {
 			Severity = severity;
@@ -20,6 +21,7 @@ namespace Saltarelle.Compiler.Tests {
 			Region = region;
 			Format = format;
 			Args = args;
+			FormattedMessage = Args.Length > 0 ? string.Format(Format, Args) : Format;
 		}
 
 		private static bool ArgsEqual(object[] a, object[] b) {
@@ -52,19 +54,13 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		public override string ToString() {
-			return Severity.ToString() + ": " + (Args.Length > 0 ? string.Format(Format, Args) : Format);
+			return Severity.ToString() + ": " + FormattedMessage;
 		}
 	}
 
-	class MockErrorReporter : IErrorReporter {
+	public class MockErrorReporter : IErrorReporter {
 		private readonly bool _logToConsole;
 		public List<Message> AllMessages { get; set; }
-
-		public List<string> AllMessagesText {
-			get {
-				return AllMessages.Select(m => m.ToString()).ToList();
-			}
-		}
 
         public MockErrorReporter(bool logToConsole = false) {
         	_logToConsole = logToConsole;

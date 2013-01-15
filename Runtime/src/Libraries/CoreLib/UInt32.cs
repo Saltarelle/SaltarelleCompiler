@@ -19,11 +19,9 @@ namespace System {
 		}
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const uint MinValue = 0;
 
 		[InlineConstant]
-		[CLSCompliant(false)]
 		public const uint MaxValue = 0xFFFFFFFF;
 
         public string Format(string format) {
@@ -35,13 +33,11 @@ namespace System {
         }
 
         [ScriptAlias("parseInt")]
-		[CLSCompliant(false)]
         public static uint Parse(string s) {
             return 0;
         }
 
         [ScriptAlias("parseInt")]
-		[CLSCompliant(false)]
         public static uint Parse(string s, int radix) {
             return 0;
         }
@@ -56,13 +52,11 @@ namespace System {
         }
 
 	    [InlineCode("{$System.Script}.compare({this}, {other})")]
-	    [CLSCompliant(false)]
 		public int CompareTo(uint other) {
 		    return 0;
 	    }
 
 	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
-	    [CLSCompliant(false)]
 	    public bool Equals(uint other) {
 		    return false;
 	    }

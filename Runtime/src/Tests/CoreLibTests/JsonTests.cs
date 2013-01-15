@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Serialization;
-using System.Testing;
+using QUnit;
 using System.Text;
 
 namespace CoreLibTests {

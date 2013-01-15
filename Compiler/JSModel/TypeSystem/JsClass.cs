@@ -32,8 +32,6 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             set {
                 if (Frozen)
                     throw new InvalidOperationException("Object is frozen.");
-                if (_unnamedConstructor != null)
-                    throw new InvalidOperationException("Can only set the unnamed constructor once.");
                 _unnamedConstructor = value;
             }
         }
@@ -59,5 +57,16 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
             StaticMethods         = StaticMethods.AsReadOnly();
             StaticInitStatements  = StaticInitStatements.AsReadOnly();
         }
+
+		public JsClass Clone() {
+			var result = new JsClass(this.CSharpTypeDefinition, this.ClassType, this.TypeArgumentNames, this.BaseClass, this.ImplementedInterfaces) {
+				UnnamedConstructor = this.UnnamedConstructor
+			};
+			((List<JsNamedConstructor>)result.NamedConstructors).AddRange(this.NamedConstructors);
+			((List<JsMethod>)result.InstanceMethods).AddRange(this.InstanceMethods);
+			((List<JsMethod>)result.StaticMethods).AddRange(this.StaticMethods);
+			((List<JsStatement>)result.StaticInitStatements).AddRange(this.StaticInitStatements);
+			return result;
+		}
     }
 }

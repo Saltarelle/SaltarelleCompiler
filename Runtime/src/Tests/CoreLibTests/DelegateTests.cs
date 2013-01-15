@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
 
 namespace CoreLibTests {
 	[TestFixture]
 	public class DelegateTests {
+		public delegate void D1();
+		public delegate void D2();
+		[BindThisToFirstParameter]
+		public delegate int D3(int a, int b);
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(Delegate).FullName, "Function");
 			Assert.IsTrue(typeof(Delegate).IsClass);
 			Assert.AreEqual(typeof(Func<int, string>).FullName, "Function");
+			Assert.AreEqual(typeof(Func<,>).FullName, "Function");
 			Assert.IsTrue((object)(Action)(() => {}) is Delegate);
 		}
 
@@ -111,6 +117,38 @@ namespace CoreLibTests {
 			var target = new { someField = 13 };
 			var d = Delegate.ThisFix((Func<dynamic, int, int, int>)((t, a, b) => t.someField + this.testField + a + b));
 			Assert.AreEqual(Call(target, d, 3, 5), 33);
+		}
+
+		[Test]
+		public void CloningDelegateToADifferentTypeIsANoOp() {
+			D1 d1 = () => {};
+			D2 d2 = new D2(d1);
+			Assert.IsTrue((object)d1 == (object)d2);
+		}
+
+		[Test]
+		public void CloningDelegateToTheSameTypeCreatesANewClone() {
+			int x = 0;
+			D1 d1 = () => x++;
+			D1 d2 = new D1(d1);
+			d1();
+			d2();
+
+			Assert.IsFalse(d1 == d2);
+			Assert.AreEqual(x, 2);
+		}
+
+		[Test]
+		public void DelegateWithBindThisToFirstParameterWorksWhenInvokedFromScript() {
+			D3 d = (a, b) => a + b;
+			Function f = (Function)d;
+			Assert.AreEqual(f.Call(10, 20), 30);
+		}
+
+		[Test]
+		public void DelegateWithBindThisToFirstParameterWorksWhenInvokedFromCode() {
+			D3 d = (a, b) => a + b;
+			Assert.AreEqual(d(10, 20), 30);
 		}
 	}
 }

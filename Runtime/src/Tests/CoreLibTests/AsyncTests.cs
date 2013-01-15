@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Html;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,7 +10,7 @@ namespace CoreLibTests {
 	[TestFixture]
 	public class AsyncTests {
 #if !NO_ASYNC
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncVoid() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -34,11 +34,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.AreEqual(state, 2, "Async method should finish after the task is finished");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncTask() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -66,11 +66,11 @@ namespace CoreLibTests {
 				Assert.AreEqual(asyncTask.Status, TaskStatus.RanToCompletion, "asyncTask should run to completion");
 				Assert.IsTrue(asyncTask.Exception == null, "asyncTask should not throw an exception");
 				Assert.AreEqual(state, 2, "Async method should finish after the task is finished");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncTaskBodyThrowsException() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -101,11 +101,11 @@ namespace CoreLibTests {
 				Assert.IsTrue(asyncTask.Exception != null, "asyncTask should have an exception");
 				Assert.IsTrue(asyncTask.Exception.InnerExceptions[0] == ex, "asyncTask should throw the correct exception");
 				Assert.AreEqual(state, 2, "Async method should finish after the task is finished");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AwaitTaskThatFaults() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -135,11 +135,11 @@ namespace CoreLibTests {
 				Assert.IsTrue(asyncTask.Exception != null, "asyncTask should have an exception");
 				Assert.IsTrue(asyncTask.Exception.InnerExceptions[0] == ex, "asyncTask should throw the correct exception");
 				Assert.AreEqual(state, 1, "Async method should not have reach anything after the faulting await");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void AsyncTaskThatReturnsValue() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();
@@ -169,7 +169,7 @@ namespace CoreLibTests {
 				Assert.IsTrue(asyncTask.Exception == null, "asyncTask should not throw an exception");
 				Assert.AreEqual(state, 2, "Async method should finish after the task is finished");
 				Assert.AreEqual(asyncTask.Result, 42, "Result should be correct");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 #endif

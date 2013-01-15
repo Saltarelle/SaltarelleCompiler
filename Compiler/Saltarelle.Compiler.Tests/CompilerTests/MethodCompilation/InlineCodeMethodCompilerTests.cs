@@ -201,8 +201,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("invoke_{@myParameter}") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("myParameter") && m.Contains("literal string")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("myParameter") && m.FormattedMessage.Contains("literal string")));
 		}
 
 		[Test]
@@ -312,8 +312,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2} + {*p3}") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("can only be used")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("can only be used")));
 		}
 
 		[Test]
@@ -330,8 +330,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}+") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("syntax error")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("syntax error")));
 		}
 
 		[Test]
@@ -348,8 +348,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}({*p3})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F") && m.Contains("expanded")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("C.F") && m.FormattedMessage.Contains("expanded")));
 		}
 
 		[Test]

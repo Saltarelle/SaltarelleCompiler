@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Testing;
+using QUnit;
 using System.Text;
+
+#pragma warning disable 184, 219, 458
 
 namespace CoreLibTests {
 	[TestFixture]
@@ -18,6 +20,34 @@ namespace CoreLibTests {
 			Assert.IsTrue(i is int);
 			Assert.IsTrue(i is IComparable<int>);
 			Assert.IsTrue(i is IEquatable<int>);
+		}
+
+		[Test]
+		public void TypeIsWorksForInt32() {
+			Assert.IsFalse((object)null is int);
+			Assert.IsFalse((object)1.5 is int);
+			Assert.IsFalse(new object() is int);
+			Assert.IsTrue ((object)1 is int);
+		}
+
+		[Test]
+		public void TypeAsWorksForInt32() {
+			Assert.IsFalse((null as int?) != null);
+			Assert.IsFalse((new object() as int?) != null);
+			Assert.IsFalse(((object)1.5 as int?) != null);
+			Assert.IsTrue ((1 as int?) != null);
+		}
+
+		[Test]
+		public void UnboxingWorksForInt32() {
+			object _null = null;
+			object o = new object();
+			object d = 1.5;
+			object i = 1;
+			Assert.AreEqual((int?)_null, null);
+			Assert.Throws(() => { var _ = (int?)o; });
+			Assert.Throws(() => { var _ = (int?)d; });
+			Assert.AreEqual((int?)i, 1);
 		}
 
 		private T GetDefaultValue<T>() {
@@ -44,7 +74,6 @@ namespace CoreLibTests {
 			Assert.AreEqual(int.MinValue, -2147483648);
 			Assert.AreEqual(int.MaxValue, 2147483647);
 		}
-
 
 		[Test]
 		public void FormatWorks() {
@@ -117,6 +146,29 @@ namespace CoreLibTests {
 			Assert.IsTrue(((IComparable<int>)((int)0)).CompareTo((int)0) == 0);
 			Assert.IsTrue(((IComparable<int>)((int)1)).CompareTo((int)0) > 0);
 			Assert.IsTrue(((IComparable<int>)((int)0)).CompareTo((int)1) < 0);
+		}
+
+		[Test]
+		public void IntegerDivisionWorks() {
+			int a = 17, b = 4;
+			Assert.AreEqual(a / b, 4);
+			Assert.AreEqual(-a / b, -4);
+			Assert.AreEqual(a / -b, -4);
+			Assert.AreEqual(-a / -b, 4);
+		}
+
+		[Test]
+		public void DoublesAreTruncatedWhenConvertedToIntegers() {
+			double d1 = 4.5;
+			double? d2 = null;
+			double? d3 = 8.5;
+			Assert.AreEqual((int)d1, 4);
+			Assert.AreEqual((int)-d1, -4);
+			Assert.AreEqual((int?)d2, null);
+			Assert.AreEqual((int)d3, 8);
+			Assert.AreEqual((int)-d3, -8);
+			Assert.AreEqual((int?)d3, 8);
+			Assert.AreEqual((int?)-d3, -8);
 		}
 	}
 }

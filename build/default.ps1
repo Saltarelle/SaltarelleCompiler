@@ -57,9 +57,8 @@ Task Fix-AntlrLocalization {
 Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization {
 	Exec { msbuild "$baseDir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 	$exedir  = "$baseDir\Compiler\SCExe\bin"
-	$taskdir = "$baseDir\Compiler\SCTask\bin"
-	Exec { & "$buildtoolsDir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$outDir\sc.exe" "/keyfile:$baseDir\Saltarelle.snk" "$exedir\sc.exe" "$exedir\Saltarelle.Compiler.JSModel.dll" "$exedir\Saltarelle.Compiler.dll" "$exedir\ICSharpCode.NRefactory.dll" "$exedir\ICSharpCode.NRefactory.CSharp.dll" "$exedir\Mono.Cecil.dll" "$exedir\JavaScriptParser.dll" "$exedir\Antlr3.Runtime.dll" }
-	Exec { & "$buildtoolsDir\ilmerge.exe" /ndebug "/targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319" "/out:$outDir\SCTask.dll" "/keyfile:$baseDir\Saltarelle.snk" "$taskdir\SCTask.dll" "$taskdir\Saltarelle.Compiler.JSModel.dll" "$taskdir\Saltarelle.Compiler.dll" "$taskdir\ICSharpCode.NRefactory.dll" "$taskdir\ICSharpCode.NRefactory.CSharp.dll" "$taskdir\Mono.Cecil.dll" "$exedir\JavaScriptParser.dll" "$exedir\Antlr3.Runtime.dll" }
+	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\sc.exe" /a "$exedir\*.dll" "$exedir\sc.exe" }
+	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\SCTask.dll" /a "$baseDir\Compiler\SCTaskWorker\bin\*.dll" "$baseDir\Compiler\SCTask\bin\SCTask.dll" }
 	copy "$baseDir\Compiler\SCTask\Saltarelle.Compiler.targets" "$outDir"
 }
 
@@ -131,8 +130,6 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<file src="$baseDir\Runtime\bin\mscorlib.xml" target="tools\Assemblies"/>
 		<file src="$baseDir\Runtime\bin\Script\mscorlib.js" target=""/>
 		<file src="$baseDir\Runtime\bin\Script\mscorlib.min.js" target=""/>
-		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.js" target=""/>
-		<file src="$baseDir\Runtime\src\Libraries\CoreLib\qunit-1.9.0.css" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
 	</files>
@@ -211,6 +208,32 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\Web.nuspec"
+
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.QUnit</id>
+		<version>$script:QUnitVersion</version>
+		<title>Metadata required to use QUnit with the Saltarelle C# to JavaScript compiler</title>
+		<description>This package contains the required metadata to use QUnit with the Saltarelle C# to JavaScript compiler.</description>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+		<authors>Erik Källén</authors>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+		<tags>compiler c# javascript web qunit</tags>
+		<dependencies>
+			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
+			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="$baseDir\Runtime\License.txt" target=""/>
+		<file src="$baseDir\Runtime\bin\Script.QUnit.dll" target="lib"/>
+		<file src="$baseDir\Runtime\bin\Script.QUnit.xml" target="lib"/>
+		<file src="$baseDir\Runtime\src\Libraries\QUnit\qunit-*.js" target=""/>
+		<file src="$baseDir\Runtime\src\Libraries\QUnit\qunit-*.css" target=""/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$outDir\QUnit.nuspec"
 
 @"
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -318,6 +341,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Linq.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Loader.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Web.nuspec" -OutputDirectory "$outDir" }
+	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\QUnit.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.UI.nuspec" -OutputDirectory "$outDir" }
 	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Knockout.nuspec" -OutputDirectory "$outDir" }
@@ -387,6 +411,7 @@ Task Determine-Version {
 	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LinqJS","$baseDir\Runtime\src\Core\LinqJSScript"
 	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LoaderLib","$baseDir\Runtime\src\Core\LoaderScript"
 	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Web"
+	$script:QUnitVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\QUnit","$baseDir\Runtime\src\Libraries\QUnit.Plugin"
 	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core"
 	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\tools\jQueryUIGenerator"
 	$script:KnockoutVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Knockout"
@@ -397,6 +422,7 @@ Task Determine-Version {
 	"Linq version: $script:LinqVersion"
 	"Loader version: $script:LoaderVersion"
 	"Web version: $script:WebVersion"
+	"QUnit version: $script:QUnitVersion"
 	"jQuery version: $script:jQueryVersion"
 	"jQuery UI version: $script:jQueryUIVersion"
 	"Knockout version: $script:KnockoutVersion"
@@ -417,6 +443,7 @@ Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\LoaderLib\Properties\Version.cs" -Version $script:LoaderVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\LinqJS\Properties\Version.cs" -Version $script:LinqVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Web\Properties\Version.cs" -Version $script:WebVersion
+	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\QUnit\Properties\Version.cs" -Version $script:WebVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core\Properties\Version.cs" -Version $script:JQueryVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Knockout\Properties\Version.cs" -Version $script:KnockoutVersion
 	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\NodeJS\Properties\Version.cs" -Version $script:KnockoutVersion

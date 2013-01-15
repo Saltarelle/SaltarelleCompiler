@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Testing;
+using QUnit;
 using System.Text;
+
+#pragma warning disable 219
 
 namespace CoreLibTests {
 	[TestFixture]
@@ -42,10 +44,8 @@ namespace CoreLibTests {
 			int? a = 3, b = null;
 			Assert.AreEqual((int)a, 3);
 			try {
-#pragma warning disable 219
 				int x = (int)b;
-#pragma warning restore 219
-				Assert.IsTrue(false, "Unboxing null should have thrown an exception");
+				Assert.Fail("Unboxing null should have thrown an exception");
 			}
 			catch (Exception) {
 			}
@@ -56,13 +56,19 @@ namespace CoreLibTests {
 			int? a = 3, b = null;
 			Assert.AreEqual(a.Value, 3);
 			try {
-#pragma warning disable 219
 				int x = b.Value;
-#pragma warning restore 219
-				Assert.IsTrue(false, "null.Value should have thrown an exception");
+				Assert.Fail("null.Value should have thrown an exception");
 			}
 			catch (Exception) {
 			}
+		}
+
+		[Test]
+		public void UnboxingValueOfWrongTypeThrowsAnException() {
+			Assert.Throws(() => {
+				object o = "x";
+				int x = (int)o;
+			});
 		}
 
 		[Test]
@@ -265,6 +271,17 @@ namespace CoreLibTests {
 			int? a = 3, b = null;
 			Assert.AreStrictEqual(~a, -4);
 			Assert.AreStrictEqual(~b, null);
+		}
+
+		[Test]
+		public void CoalesceWorks() {
+			int? v1 = null, v2 = 1, v3 = 0, v4 = 2;
+			string s1 = null, s2 = "x";
+			Assert.AreStrictEqual(v1 ?? v1, null);
+			Assert.AreStrictEqual(v1 ?? v2, 1);
+			Assert.AreStrictEqual(v3 ?? v4, 0);
+			Assert.AreStrictEqual(s1 ?? s1, null);
+			Assert.AreStrictEqual(s1 ?? s2, "x");
 		}
 	}
 }

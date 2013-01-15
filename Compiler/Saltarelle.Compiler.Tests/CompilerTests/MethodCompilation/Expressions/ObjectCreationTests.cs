@@ -211,7 +211,7 @@ public void M() {
 		public void UsingConstructorMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { public Class() {} public void M() { var c = new Class(); } }" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("constructor")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("constructor")));
 		}
 
 		[Test]
@@ -408,8 +408,8 @@ class C {
 	}
 }" }, metadataImporter: nc, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("instance") && er.AllMessagesText[0].Contains("C1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("instance") && er.AllMessages[0].FormattedMessage.Contains("C1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -420,8 +420,8 @@ class C {
 		var x = new C2<C2<C1>>();
 	}
 }" }, metadataImporter: nc, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("type argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("C2"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("type argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("C2"));
 		}
 
 		[Test]
@@ -477,8 +477,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("constructor") && er.AllMessagesText[0].Contains("expanded form"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("constructor") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
 		}
 
 		[Test]
@@ -596,8 +596,8 @@ class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(f => f.Name == p.Name + "2"))) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("a2") && er.AllMessagesText[0].Contains("initializer") && er.AllMessagesText[0].Contains("constructor call"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("a2") && er.AllMessages[0].FormattedMessage.Contains("initializer") && er.AllMessages[0].FormattedMessage.Contains("constructor call"));
 		}
 
 		[Test]
@@ -655,8 +655,8 @@ class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: d.Name == "D1") }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(e => e.Contains("D1") && e.Contains("D2") && e.Contains("differ in whether the Javascript 'this'")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("D1") && e.FormattedMessage.Contains("D2") && e.FormattedMessage.Contains("differ in whether the Javascript 'this'")));
 		}
 
 		[Test]

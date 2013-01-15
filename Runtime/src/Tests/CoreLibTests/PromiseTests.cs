@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Html;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,7 +27,7 @@ namespace CoreLibTests {
 			return null;
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWithoutResultFactoryWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise);
@@ -49,11 +49,11 @@ namespace CoreLibTests {
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was completed.");
 				Assert.AreEqual(task.Result, new object[] { 42, "result 123", 101 }, "The result should be correct");
 
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWithResultIndexWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var tasks = new Task<int>[] {
@@ -86,11 +86,11 @@ namespace CoreLibTests {
 				Assert.AreEqual(tasks[3].Result, 10, "Task 3 result should be correct");
 				Assert.AreEqual(tasks[4].Result, 42, "Task 4 result should be correct");
 				Assert.AreEqual(tasks[5].Result, 38, "Task 5 result should be correct");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWithResultFactoryWorksWhenPromiseCompletes() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise, (int i, string s, int j) => new { i, s, j });
@@ -111,11 +111,11 @@ namespace CoreLibTests {
 				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "Task should be completed after promise");
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was completed.");
 				Assert.AreEqual(task.Result, new { i = 42, s = "result 123", j = 101 });
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskFromPromiseWorksWhenPromiseFails() {
 			var promise = CreatePromise();
 			var task = Task.FromPromise(promise);
@@ -140,12 +140,12 @@ namespace CoreLibTests {
 				Assert.IsTrue(task.Exception.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
 				Assert.AreEqual(((PromiseException)task.Exception.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
 #if !NO_ASYNC
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public async void CompletingPromiseCanBeAwaited() {
 			var promise = CreatePromise();
 			object[] result = null;
@@ -157,13 +157,13 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.AreEqual(result, new object[] { 42, "result 123", 101 }, "The result should be correct");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 
 			result = await promise;
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public async void FailingPromiseCanBeAwaited() {
 			var promise = CreatePromise();
 			bool continuationRun = false;
@@ -175,12 +175,12 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was rejected.");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 
 			try {
 				await promise;
-				Assert.IsTrue(false, "Await should throw");
+				Assert.Fail("Await should throw");
 			}
 			catch (AggregateException ex) {
 				Assert.AreEqual(ex.InnerExceptions.Length, 1, "Exception should have one inner exception");
@@ -188,7 +188,7 @@ namespace CoreLibTests {
 				Assert.AreEqual(((PromiseException)ex.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 			}
 			catch (Exception ex) {
-				Assert.IsTrue(false, "Thrown exception should have been an AggregateException, was " + ex.GetType().FullName);
+				Assert.Fail("Thrown exception should have been an AggregateException, was " + ex.GetType().FullName);
 			}
 			continuationRun = true;
 		}

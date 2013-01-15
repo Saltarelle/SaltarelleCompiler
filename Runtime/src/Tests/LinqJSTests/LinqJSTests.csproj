@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-		<AlreadyCompiled>false</AlreadyCompiled>
-		<UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
+    <AlreadyCompiled>false</AlreadyCompiled>
+    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
@@ -48,6 +48,10 @@
     <ProjectReference Include="..\..\Libraries\LinqJS\LinqJS.csproj">
       <Project>{DB343BA6-72D8-47EF-8510-5ED566489D9E}</Project>
       <Name>LinqJS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\QUnit\QUnit.csproj">
+      <Project>{278d9898-ef61-4ccd-a6ac-5f7f31a024a4}</Project>
+      <Name>QUnit</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\..\..\..\bin\Saltarelle.Compiler.targets" />

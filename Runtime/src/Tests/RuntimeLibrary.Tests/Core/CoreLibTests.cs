@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace RuntimeLibrary.Tests.Core {
 	public abstract class CoreLibTestBase : TestBase {
-        private static readonly Lazy<string> _testsScript = new Lazy<string>(() => File.ReadAllText(@"..\..\CoreLibTests\bin\CoreLibTests.js"));
+		private static readonly Lazy<string> _testsScript = new Lazy<string>(() => File.ReadAllText(@"..\..\CoreLibTests\bin\CoreLibTests.js"));
 		internal static string TestsScript { get { return _testsScript.Value; } }
 
 		protected override IEnumerable<string> ScriptSources {
@@ -55,6 +55,9 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class EnumTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class EqualityComparerTests : CoreLibTestBase {}
@@ -124,6 +127,9 @@ namespace RuntimeLibrary.Tests.Core {
 
 	[TestFixture]
 	public class TupleTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class TypeUtilityMethodsTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class UInt16Tests : CoreLibTestBase {}

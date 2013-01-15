@@ -34,15 +34,16 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
                 errorReporter = new MockErrorReporter(true);
             }
 
-        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(metadataImporter ?? new MockMetadataImporter(), namer ?? new MockNamer(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter, allowUserDefinedStructs: allowUserDefinedStructs);
+        	var compiler = new Saltarelle.Compiler.Compiler.Compiler(metadataImporter ?? new MockMetadataImporter(), namer ?? new MockNamer(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter);
+			compiler.AllowUserDefinedStructs = allowUserDefinedStructs;
         	if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 
 			var references = referenceSystemCore ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
-			var c = compiler.CreateCompilation(sourceFiles, references, defineConstants);
+			var c = PreparedCompilation.CreateCompilation(sourceFiles, references, defineConstants);
             CompiledTypes = compiler.Compile(c).AsReadOnly();
             if (defaultErrorHandling) {
-                ((MockErrorReporter)errorReporter).AllMessagesText.Should().BeEmpty("Compile should not generate errors");
+                ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
             }
         }
 

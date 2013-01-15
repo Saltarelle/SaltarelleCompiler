@@ -60,6 +60,7 @@
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
+    <Compile Include="ExceptionTests.cs" />
     <Compile Include="LazyTests.cs" />
     <Compile Include="IEquatableTests.cs" />
     <Compile Include="EqualityComparerTests.cs" />
@@ -78,6 +79,9 @@
     <Compile Include="RegexTests.cs" />
     <Compile Include="StringBuilderTests.cs" />
     <Compile Include="ListTests.cs" />
+    <Compile Include="TypeSystemLanguageSupportTests.cs" />
+    <Compile Include="TypeSystemTests.cs" />
+    <Compile Include="TypeUtilityMethodsTests.cs" />
     <Compile Include="UInt16Tests.cs" />
     <Compile Include="UInt32Tests.cs" />
     <Compile Include="UInt64Tests.cs" />
@@ -106,6 +110,10 @@
       <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
       <Name>CoreLib</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\QUnit\QUnit.csproj">
+      <Project>{278d9898-ef61-4ccd-a6ac-5f7f31a024a4}</Project>
+      <Name>QUnit</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Web\Web.csproj">
       <Project>{3681A9A8-FC40-4125-B842-7775713C8DCE}</Project>

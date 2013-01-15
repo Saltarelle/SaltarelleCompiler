@@ -13,9 +13,9 @@ namespace Saltarelle.Compiler {
 		/// Prepare to handle the specified types.
 		/// </summary>
 		/// <param name="allTypes">All types in the compilation.</param>
+		/// <param name="minimizeNames">Whether names should be minimized by default (the importer is free to use/ignore this flag however it wants).</param>
 		/// <param name="mainAssembly">Main assembly for the compilation.</param>
-		/// <param name="errorReporter">Error reporter to use to report errors.</param>
-		void Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
+		void Prepare(IEnumerable<ITypeDefinition> allTypes, bool minimizeNames, IAssembly mainAssembly);
 
 		/// <summary>
         /// Returns how a type should be implemented in script. Must not return null.
@@ -52,7 +52,7 @@ namespace Saltarelle.Compiler {
         /// <summary>
         /// Returns the semantics of a field. Must not return null.
         /// </summary>
-        FieldScriptSemantics GetFieldSemantics(IField property);
+        FieldScriptSemantics GetFieldSemantics(IField field);
 
         /// <summary>
         /// Returns the semantics of an event. Must not return null.

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Html;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,7 +37,7 @@ namespace CoreLibTests {
 			task.Dispose();	// Should not throw
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskCompletionSourceWorksWhenSettingResult() {
 			bool callbackRun = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -59,11 +59,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(callbackRun, "Callback should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskCompletionSourceWorksWhenSettingASingleException() {
 			bool callbackRun = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -88,11 +88,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(callbackRun, "Callback should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskCompletionSourceWorksWhenSettingTwoExceptions() {
 			bool callbackRun = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -120,11 +120,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(callbackRun, "Callback should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void TaskCompletionSourceWorksWhenCancelling() {
 			bool callbackRun = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -146,7 +146,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(callbackRun, "The callback should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
@@ -221,7 +221,7 @@ namespace CoreLibTests {
 			Assert.IsFalse(tcs.TrySetException(ex));
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ContinueWithForNonGenericTaskWorkWithNoResultAndNoException() {
 			bool done = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -248,11 +248,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(done, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ExceptionInTaskBodyAppearsInTheExceptionMemberForNonGenericTask() {
 			bool done = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -277,11 +277,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(done, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ContinueWithForNonGenericTaskCanReturnAValue() {
 			bool done = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -311,11 +311,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(done, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ContinueWithWithNoReturnValueForGenericTaskWorks() {
 			bool done = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -342,11 +342,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(done, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ContinueWithForGenericTaskCanReturnAValue() {
 			bool done = false;
 			var tcs = new TaskCompletionSource<int>();
@@ -376,11 +376,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(done, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void DelayWorks() {
 			bool done = false;
 
@@ -400,7 +400,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(done, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
@@ -412,7 +412,7 @@ namespace CoreLibTests {
 			Assert.AreEqual(t.Exception, null, "Exception should be null");
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void RunWithoutResultWorks() {
 			bool bodyRun = false, continuationRun = false;
 
@@ -431,11 +431,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void RunWithResultWorks() {
 			bool bodyRun = false, continuationRun = false;
 
@@ -456,11 +456,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void RunWorksWhenBodyThrows() {
 			bool bodyRun = false, continuationRun = false;
 
@@ -481,11 +481,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAllParamArrayWithResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -519,11 +519,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAllEnumerableWithResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -557,11 +557,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAllParamArrayWithoutResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -594,11 +594,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAllEnumerableWithoutResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -631,11 +631,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAllShouldHaveAnErrorIfAnyIncludedTaskFaulted() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -678,11 +678,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAllShouldBeCancelledIfNoTaskWasFaultedButSomeWasCancelled() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -715,11 +715,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 100);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAnyParamArrayWithResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -753,11 +753,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAnyEnumerableWithResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -791,11 +791,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAnyParamArrayWithoutResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -828,11 +828,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAnyEnumerableWithoutResultWorks() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -865,11 +865,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAnyFaultsIfTheFirstTaskFaulted() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -903,11 +903,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void WhenAnyIsCancelledIfTheFirstTaskWasCancelled() {
 			bool continuationRun = false;
 			var tcs1 = new TaskCompletionSource<int>();
@@ -939,11 +939,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "We should not time out");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ConstructorWithOnlyActionWorks() {
 			bool taskRun = false, continuationRun = false;
 			var task = new Task(() => {
@@ -966,11 +966,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ConstructorWithActionAndStateWorks() {
 			bool taskRun = false, continuationRun = false;
 			var state = new object();
@@ -995,11 +995,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ExceptionInManuallyCreatedTaskIsStoredOnTheTask() {
 			bool taskRun = false, continuationRun = false;
 			var ex = new Exception();
@@ -1025,11 +1025,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ConstructorWithOnlyFunctionWorks() {
 			bool taskRun = false, continuationRun = false;
 			var task = new Task<int>(() => {
@@ -1054,11 +1054,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void ConstructorWithFunctionAndStateWorks() {
 			bool taskRun = false, continuationRun = false;
 			var state = new object();
@@ -1085,7 +1085,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 200);
 		}
 
@@ -1123,11 +1123,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromDoneCallbackWithReturnValueWithoutIndexingWorks() {
 			bool continuationRun = false;
 			var task = Task.FromDoneCallback<int>(this, "methodWithDoneFunction2", "expected string", 42, 200, 15);
@@ -1145,11 +1145,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromDoneCallbackWithNonNegativeIndexingWorks() {
 			bool continuationRun = false;
 			var task = Task.FromDoneCallback(this, 3, "methodWithDoneCallback", "expected string", 42, 200);
@@ -1166,11 +1166,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromDoneCallbackWithNegativeIndexingWorks() {
 			bool continuationRun = false;
 			var task = Task.FromDoneCallback(this, -1, "methodWithDoneCallback", "expected string", 42, 200);
@@ -1187,11 +1187,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromDoneCallbackWithReturnValueWithNonNegativeIndexingWorks() {
 			bool continuationRun = false;
 			var task = Task.FromDoneCallback<int>(this, 3, "methodWithDoneFunction", "expected string", 42, 200, 15);
@@ -1209,11 +1209,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromDoneCallbackWithReturnValueWithNegativeIndexingWorks() {
 			bool continuationRun = false;
 			var task = Task.FromDoneCallback<int>(this, -2, "methodWithDoneFunction", "expected string", 42, 200, 17);
@@ -1231,7 +1231,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
@@ -1240,7 +1240,7 @@ namespace CoreLibTests {
 			Window.SetTimeout(() => ((Function)action).Apply(this, callbackArgs), timeout);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromNodeWithoutResultWorks() {
 			bool continuationRun = false;
 			var task = Task.FromNode(this, "nodeAsyncHelper", 200, new object[] { null });
@@ -1257,11 +1257,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromNodeWithoutResultFactoryWorks() {
 			bool continuationRun = false;
 			var task = Task.FromNode<int>(this, "nodeAsyncHelper", 200, new object[] { null, 42 });
@@ -1279,11 +1279,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromNodeWithResultFactoryWorks() {
 			bool continuationRun = false;
 			var task = Task.FromNode(this, (int i, string s) => new { i, s }, "nodeAsyncHelper", 200, new object[] { null, 42, "Test 123" });
@@ -1302,11 +1302,11 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 
-		[AsyncTest]
+		[Test(IsAsync = true)]
 		public void FromNodeWorksWhenTheCallbackIsInvokedWithAnError() {
 			bool continuationRun = false;
 			var err = new Error();
@@ -1327,7 +1327,7 @@ namespace CoreLibTests {
 
 			Window.SetTimeout(() => {
 				Assert.IsTrue(continuationRun, "The continuation should be run");
-				QUnit.Start();
+				Engine.Start();
 			}, 300);
 		}
 	}

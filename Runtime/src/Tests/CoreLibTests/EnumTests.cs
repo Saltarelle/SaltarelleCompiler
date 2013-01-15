@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Testing;
+using QUnit;
 using System.Text;
+
+#pragma warning disable 219
 
 namespace CoreLibTests {
 	[TestFixture]
@@ -80,6 +82,22 @@ namespace CoreLibTests {
 		public void EqualsWorks() {
 			Assert.IsTrue(TestEnum.FirstValue.Equals(TestEnum.FirstValue));
 			Assert.IsFalse(TestEnum.FirstValue.Equals(TestEnum.SecondValue));
+		}
+
+		private static bool DoesItThrow(Action a) {
+			try {
+				a();
+				return false;
+			}
+			catch {
+				return true;
+			}
+		}
+
+		[Test]
+		public void ConversionsToEnumAreTreatedAsConversionsToTheUnderlyingType() {
+			Assert.AreEqual((TestEnum)(object)0, 0);
+			Assert.Throws(() => { var _ = (TestEnum)(object)0.5; });
 		}
 	}
 }
