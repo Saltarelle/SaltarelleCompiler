@@ -33,7 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HtmlUnit">
-      <HintPath>..\..\..\..\Compiler\packages-manual\htmlunit-2.9\HtmlUnit.dll</HintPath>
+      <HintPath>..\..\packages-manual\htmlunit-2.9\HtmlUnit.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\..\..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.dll</HintPath>
