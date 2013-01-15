@@ -173,11 +173,9 @@ Type.prototype.get_fullName = function#? DEBUG Type$get_fullName##() {
 
 Type.prototype.get_name = function#? DEBUG Type$get_name##() {
     var fullName = this.__typeName;
-    var nsIndex = fullName.lastIndexOf('.');
-    if (nsIndex > 0) {
-        return fullName.substr(nsIndex + 1);
-    }
-    return fullName;
+    var bIndex = fullName.indexOf('[');
+    var nsIndex = fullName.lastIndexOf('.', bIndex >= 0 ? bIndex : fullName.length);
+    return nsIndex > 0 ? fullName.substr(nsIndex + 1) : fullName;
 };
 
 Type.prototype.getInterfaces = function#? DEBUG Type$getInterfaces##() {

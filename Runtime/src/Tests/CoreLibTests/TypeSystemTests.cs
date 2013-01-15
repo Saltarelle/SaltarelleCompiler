@@ -37,6 +37,8 @@ namespace CoreLibTests {
 		[Test]
 		public void NamePropertyRemovesTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).Name, "TypeSystemTests", "non-generic");
+			Assert.AreEqual(typeof(G<int, string>).Name, "TypeSystemTests$G$2[ss.Int32,String]", "generic");
+			Assert.AreEqual(typeof(G<BX<double>, string>).Name, "TypeSystemTests$G$2[CoreLibTests.TypeSystemTests$BX$1[Number],String]", "nested generic");
 		}
 
 		[Test]
