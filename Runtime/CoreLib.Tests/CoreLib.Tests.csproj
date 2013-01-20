@@ -32,8 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HtmlUnit">
-      <HintPath>..\packages-manual\htmlunit-2.9\HtmlUnit.dll</HintPath>
+    <Reference Include="HtmlUnit, Version=2.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NHtmlUnit.2.10.0.0\lib\HtmlUnit.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.dll</HintPath>
@@ -139,8 +140,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.0.12054\lib\nunit.framework.dll</HintPath>
+    <Reference Include="NHtmlUnit">
+      <HintPath>..\packages\NHtmlUnit.2.10.0.0\lib\NHtmlUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Saltarelle.Compiler">
       <HintPath>..\..\Compiler\Saltarelle.Compiler\bin\Saltarelle.Compiler.dll</HintPath>
@@ -208,12 +213,12 @@
       <Name>CoreLib.TestScript</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-		<ProjectReference Include="..\CoreLib.Script\CoreLib.Script.csproj">
-			<Project>{8780581F-7C26-4B64-9235-BA1C458DF36E}</Project>
-			<Name>CoreLib.Script</Name>
-			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-		</ProjectReference>
-	</ItemGroup>
+    <ProjectReference Include="..\CoreLib.Script\CoreLib.Script.csproj">
+      <Project>{8780581F-7C26-4B64-9235-BA1C458DF36E}</Project>
+      <Name>CoreLib.Script</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <Content Include="..\CoreLib.Script\bin\mscorlib.js">
       <Link>mscorlib.js</Link>
