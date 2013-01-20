@@ -56,7 +56,6 @@ Task Build-QUnit {
 	$currentBranch = git rev-parse --abbrev-ref HEAD
 	$qunitDir = "$baseDir\Runtime\QUnit"
 	cd "$qunitDir"
-	git fetch -q origin
 	git checkout -fq origin/$currentBranch
 	git clean -dxfq
 
