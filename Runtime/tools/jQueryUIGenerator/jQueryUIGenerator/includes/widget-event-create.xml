@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<event name="create">
-	<desc>
-		Triggered when the <placeholder name="name"/> is created.
-	</desc>
-	<argument name="event" type="Event"/>
-	<argument name="ui" type="Object"/>
-</event>

@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{36D4B098-A21C-4725-ACD3-400922885F38}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>System</RootNamespace>
+    <AssemblyName>mscorlib</AssemblyName>
+    <NoStdLib>True</NoStdLib>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\Saltarelle.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
+    <NoWarn>1591, 0661, 0660</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1591, 0661, 0660</NoWarn>
+    <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Activator.cs" />
+    <Compile Include="AggregateException.cs" />
+    <Compile Include="ArrayExtensions.cs" />
+    <Compile Include="Collections\Generic\EqualityComparer.cs" />
+    <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
+    <Compile Include="Collections\Generic\Dictionary.cs" />
+    <Compile Include="Collections\Generic\IDictionary.cs" />
+    <Compile Include="Collections\Generic\IEqualityComparer.cs" />
+    <Compile Include="Collections\Generic\IList.cs" />
+    <Compile Include="Collections\Generic\CompareCallback.cs" />
+    <Compile Include="Collections\Generic\JsDictionary.cs" />
+    <Compile Include="Collections\Generic\KeyValuePair.cs" />
+    <Compile Include="Collections\Generic\List.cs" />
+    <Compile Include="Collections\Generic\ICollection.cs" />
+    <Compile Include="Collections\Generic\IEnumerable.cs" />
+    <Compile Include="Collections\Generic\IEnumerator.cs" />
+    <Compile Include="Collections\Generic\IteratorBlockEnumerator.cs" />
+    <Compile Include="Collections\Generic\Queue.cs" />
+    <Compile Include="Collections\Generic\Stack.cs" />
+    <Compile Include="Collections\ICollection.cs" />
+    <Compile Include="Collections\IEqualityComparer.cs" />
+    <Compile Include="Collections\IList.cs" />
+    <Compile Include="Collections\JsDictionary.cs" />
+    <Compile Include="Callback.cs" />
+    <Compile Include="Collections\Queue.cs" />
+    <Compile Include="Collections\Stack.cs" />
+    <Compile Include="ComponentModel\IApplication.cs" />
+    <Compile Include="ComponentModel\IEventManager.cs" />
+    <Compile Include="ComponentModel\IInitializable.cs" />
+    <Compile Include="ComponentModel\IContainer.cs" />
+    <Compile Include="ArrayEnumerator.cs" />
+    <Compile Include="Converter.cs" />
+    <Compile Include="SerializableAttribute.cs" />
+    <Compile Include="Lazy.cs" />
+    <Compile Include="IComparable.cs" />
+    <Compile Include="IEquatable.cs" />
+    <Compile Include="JsErrorException.cs" />
+    <Compile Include="Error.cs" />
+    <Compile Include="JsDate.cs" />
+    <Compile Include="NotSupportedException.cs" />
+    <Compile Include="ObjectEnumerator.cs" />
+    <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
+    <Compile Include="Properties\Version.cs" />
+    <Compile Include="Text\RegexMatch.cs" />
+    <Compile Include="Threading\Tasks\PromiseException.cs" />
+    <Compile Include="Threading\Tasks\TaskAwaiter.cs" />
+    <Compile Include="Threading\Tasks\TaskCompletionSource.cs" />
+    <Compile Include="Threading\Tasks\Promise.cs" />
+    <Compile Include="Threading\Tasks\Task.cs" />
+    <Compile Include="Tuple.cs" />
+    <Compile Include="Nullable.cs" />
+    <Compile Include="Diagnostics\ConditionalAttribute.cs" />
+    <Compile Include="Diagnostics\SuppressMessageAttribute.cs" />
+    <Compile Include="Runtime.cs" />
+    <Compile Include="ScriptMetadata.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Globalization\CultureInfo.cs" />
+    <Compile Include="Globalization\DateFormatInfo.cs" />
+    <Compile Include="Globalization\NumberFormatInfo.cs" />
+    <Compile Include="Serialization\JsonStringifyCallback.cs" />
+    <Compile Include="Serialization\JsonParseCallback.cs" />
+    <Compile Include="Serialization\Json.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Array.cs" />
+    <Compile Include="Boolean.cs" />
+    <Compile Include="Byte.cs" />
+    <Compile Include="CancelEventArgs.cs" />
+    <Compile Include="Char.cs" />
+    <Compile Include="Arguments.cs" />
+    <Compile Include="Action.cs" />
+    <Compile Include="Func.cs" />
+    <Compile Include="Record.cs" />
+    <Compile Include="DateTime.cs" />
+    <Compile Include="Diagnostics\Debug.cs" />
+    <Compile Include="Decimal.cs" />
+    <Compile Include="Delegate.cs" />
+    <Compile Include="Double.cs" />
+    <Compile Include="Enum.cs" />
+    <Compile Include="EventArgs.cs" />
+    <Compile Include="EventHandler.cs" />
+    <Compile Include="Exception.cs" />
+    <Compile Include="Function.cs" />
+    <Compile Include="IDisposable.cs" />
+    <Compile Include="Collections\IEnumerable.cs" />
+    <Compile Include="Collections\IEnumerator.cs" />
+    <Compile Include="Int16.cs" />
+    <Compile Include="Int32.cs" />
+    <Compile Include="Int64.cs" />
+    <Compile Include="Math.cs" />
+    <Compile Include="Object.cs" />
+    <Compile Include="Text\Regex.cs" />
+    <Compile Include="SByte.cs" />
+    <Compile Include="Script.cs" />
+    <Compile Include="Single.cs" />
+    <Compile Include="String.cs" />
+    <Compile Include="Text\StringBuilder.cs" />
+    <Compile Include="StringReplaceCallback.cs" />
+    <Compile Include="Type.cs" />
+    <Compile Include="TypeOption.cs" />
+    <Compile Include="UInt16.cs" />
+    <Compile Include="UInt32.cs" />
+    <Compile Include="UInt64.cs" />
+    <Compile Include="Void.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="install.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib.Plugin\CoreLib.Plugin.csproj">
+      <Project>{bb807b7f-fcfc-424c-b38f-74e8147245b6}</Project>
+      <Name>CoreLib.Plugin</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\CoreLib.Plugin\bin\CoreLib.Plugin.dll">
+      <Link>CoreLib.Plugin.dll</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

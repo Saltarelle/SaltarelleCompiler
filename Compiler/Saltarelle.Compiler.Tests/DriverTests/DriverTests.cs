@@ -545,7 +545,7 @@ class Program {
 }
 ");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.MscorlibPath), new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.NodeJS.dll")) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File1.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js")

@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AlreadyCompiled>false</AlreadyCompiled>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7CC02EBA-94BA-4561-90A7-1DE1240DDB38}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CoreLib.Tests</RootNamespace>
+    <AssemblyName>CoreLib.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="HtmlUnit, Version=2.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NHtmlUnit.2.10.0.0\lib\HtmlUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory">
+      <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.CSharp">
+      <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="ikvm">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ikvm.exe</HintPath>
+    </Reference>
+    <Reference Include="IKVM.AWT.WinForms">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.AWT.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Beans">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Beans.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Charsets">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Charsets.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Corba">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Corba.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Jdbc">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Jdbc.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Management">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Management.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Media">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Media.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Misc">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Misc.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Naming">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Naming.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Remoting">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Remoting.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Security">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.SwingAWT">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.SwingAWT.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Text">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Text.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Tools">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Tools.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Util">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Util.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.API">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.API.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.Bind">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Bind.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.Crypto">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.Parse">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Parse.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.Transform">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Transform.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.WebServices">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.WebServices.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.XML.XPath">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.XPath.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Reflection">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.Reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime.JNI">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.Runtime.JNI.dll</HintPath>
+    </Reference>
+    <Reference Include="ikvmc">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ikvmc.exe</HintPath>
+    </Reference>
+    <Reference Include="ikvmstub">
+      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ikvmstub.exe</HintPath>
+    </Reference>
+    <Reference Include="JavaScriptParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Compiler\JavaScriptParser\bin\JavaScriptParser.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq, Version=4.0.10827.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
+    </Reference>
+    <Reference Include="NHtmlUnit">
+      <HintPath>..\packages\NHtmlUnit.2.10.0.0\lib\NHtmlUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Saltarelle.Compiler">
+      <HintPath>..\..\Compiler\Saltarelle.Compiler\bin\Saltarelle.Compiler.dll</HintPath>
+    </Reference>
+    <Reference Include="Saltarelle.Compiler.JSModel, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Compiler\JSModel\bin\Saltarelle.Compiler.JSModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Saltarelle.Compiler.Tests">
+      <HintPath>..\..\Compiler\Saltarelle.Compiler.Tests\bin\Saltarelle.Compiler.Tests.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Common.cs" />
+    <Compile Include="Core\CoreLibTests.cs" />
+    <Compile Include="Core\TypeSystemLanguageSupportTests.cs" />
+    <Compile Include="Core\TypeSystemTests.cs" />
+    <Compile Include="Files.cs" />
+    <Compile Include="LinkerTests\LinkerTests.cs" />
+    <Compile Include="MetadataImporterTests\AnonymousTypeTests.cs" />
+    <Compile Include="MetadataImporterTests\BackingFieldTests.cs" />
+    <Compile Include="MetadataImporterTests\ConstructorTests.cs" />
+    <Compile Include="MetadataImporterTests\DelegateTests.cs" />
+    <Compile Include="MetadataImporterTests\EventTests.cs" />
+    <Compile Include="MetadataImporterTests\FieldTests.cs" />
+    <Compile Include="MetadataImporterTests\IndexerTests.cs" />
+    <Compile Include="MetadataImporterTests\MethodTests.cs" />
+    <Compile Include="MetadataImporterTests\MinimizedNamesTests.cs" />
+    <Compile Include="MetadataImporterTests\MiscTests.cs" />
+    <Compile Include="MetadataImporterTests\PropertyTests.cs" />
+    <Compile Include="MetadataImporterTests\MetadataImporterTestBase.cs" />
+    <Compile Include="MetadataImporterTests\SerializableTypeTests.cs" />
+    <Compile Include="MetadataImporterTests\TypeTests.cs" />
+    <Compile Include="OOPEmulatorTests\ClassTests.cs" />
+    <Compile Include="OOPEmulatorTests\EnumTests.cs" />
+    <Compile Include="OOPEmulatorTests\OverallStructureTests.cs" />
+    <Compile Include="OOPEmulatorTests\OOPEmulatorTestBase.cs" />
+    <Compile Include="OOPEmulatorTests\StaticInitializationOrderTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RuntimeLibraryTests\MiscTests.cs" />
+    <Compile Include="SourceVerifier.cs" />
+    <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
+    <Compile Include="TestBase.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib.Plugin\CoreLib.Plugin.csproj">
+      <Project>{bb807b7f-fcfc-424c-b38f-74e8147245b6}</Project>
+      <Name>CoreLib.Plugin</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CoreLib.TestScript\CoreLib.TestScript.csproj">
+      <Project>{b54dd6e7-526d-4bd4-bcca-8dcb1ab12a23}</Project>
+      <Name>CoreLib.TestScript</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\CoreLib.Script\CoreLib.Script.csproj">
+      <Project>{8780581F-7C26-4B64-9235-BA1C458DF36E}</Project>
+      <Name>CoreLib.Script</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\CoreLib.Script\bin\mscorlib.js">
+      <Link>mscorlib.js</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\CoreLib.TestScript\bin\CoreLib.TestScript.js">
+      <Link>CoreLib.TestScript.js</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\CoreLib\bin\mscorlib.dll">
+      <Link>mscorlib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="qunit-1.9.0.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="qunit-1.9.0.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SimplePromise.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

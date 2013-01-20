@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
-        protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUserDefinedStructs = true, bool referenceSystemCore = false) {
+        protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUserDefinedStructs = true, IEnumerable<IAssemblyReference> references = null) {
             var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
             bool defaultErrorHandling = false;
             if (errorReporter == null) {
@@ -39,8 +39,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
         	if (methodCompiled != null)
                 compiler.MethodCompiled += methodCompiled;
 
-			var references = referenceSystemCore ? new[] { Common.Mscorlib, Common.Linq } : new[] { Common.Mscorlib };
-			var c = PreparedCompilation.CreateCompilation(sourceFiles, references, defineConstants);
+			var c = PreparedCompilation.CreateCompilation(sourceFiles, references ?? new[] { Common.Mscorlib }, defineConstants);
             CompiledTypes = compiler.Compile(c).AsReadOnly();
             if (defaultErrorHandling) {
                 ((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
