@@ -17,3 +17,4 @@ Compiler/packages-manual/antlr/Tool/Templates/messages/languages/*.stg
 Runtime/src/Libraries/Knockout/Properties/Version.cs
 Runtime/src/Libraries/NodeJS/Properties/Version.cs
 Runtime/src/Libraries/QUnit/Properties/Version.cs
+Runtime/CoreLib/Properties/Version.cs

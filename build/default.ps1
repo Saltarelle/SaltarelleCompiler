@@ -1,4 +1,4 @@
-Framework "4.0x86"
+﻿Framework "4.0x86"
 
 properties {
 	$baseDir = Resolve-Path ".."
@@ -22,24 +22,6 @@ Function Get-DependencyVersion($RawVersion) {
 
 Task default -Depends Build
 
-Task Build {
-	$script:autoVersion = $autoVersion
-	$script:noAsync = $noAsync
-	Invoke-Task Do-Build
-}
-
-Task Build-CIServerMaster {
-	$script:autoVersion = $false
-	$script:noAsync = $true
-	Invoke-Task Do-Build
-}
-
-Task Build-CIServerDevelop {
-	$script:autoVersion = $true
-	$script:noAsync = $true
-	Invoke-Task Do-Build
-}
-
 Task Clean {
 	if (Test-Path $outDir) {
 		rm -Recurse -Force "$outDir" >$null
@@ -60,33 +42,33 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization 
 	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\sc.exe" /a "$exedir\*.dll" "$exedir\sc.exe" }
 	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\SCTask.dll" /a "$baseDir\Compiler\SCTaskWorker\bin\*.dll" "$baseDir\Compiler\SCTask\bin\SCTask.dll" }
 	copy "$baseDir\Compiler\SCTask\Saltarelle.Compiler.targets" "$outDir"
+
+	md -Force "$outDir\extensibility" > $null
+	copy "$baseDir\Compiler\SCExe\bin\*.*" "$outDir\extensibility" > $null
+	del "$outDir\extensibility\sc.*" > $null
 }
 
-Task Generate-jQueryUISource -Depends Determine-Version {
-	Exec { msbuild "$baseDir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator.sln" /verbosity:minimal /p:"Configuration=$configuration" }
-	rmdir -Force -Recurse -ErrorAction SilentlyContinue "$baseDir\Runtime\src\Libraries\jQuery\jQuery.UI" | Out-Null
-	Exec { & "$baseDir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\bin\ScriptSharp.Tools.jQueryUIGenerator.exe" "$baseDir\Runtime\tools\jQueryUIGenerator\jQueryUIGenerator\entries" "$baseDir\Runtime\src\Libraries\jQuery\jQuery.UI" /p | Out-Null }
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.UI\Properties\Version.cs" -Version $script:JQueryUIVersion
-}
-
-Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler, Generate-jQueryUISource {
+Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
 	$actualConfiguration = $configuration
-	if ($script:noAsync) {
+	if ($noAsync) {
 		$actualConfiguration += "_NoAsync"
 	}
 
-	Exec { msbuild "$baseDir\Runtime\src\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
+	Exec { msbuild "$baseDir\Runtime\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
+
+	md -Force "$outDir\extensibility" > $null
+	copy "$baseDir\Runtime\CoreLib.Plugin\bin\CoreLib.Plugin.*" "$outDir\extensibility" > $null
 }
 
 Task Run-Tests -Depends Build-Compiler, Build-Runtime {
 	if (-not $skipTests) {
 		$runner = (dir "$baseDir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
 		Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
-		Exec { & "$runner" "$baseDir\Runtime\src\Tests\RuntimeLibrary.Tests\RuntimeLibrary.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
+		Exec { & "$runner" "$baseDir\Runtime\CoreLib.Tests\CoreLib.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
 	}
 }
 
-Task Build-NuGetPackages -Depends Determine-Version {
+Task Build-NuGetPackages -Depends Determine-Version, Run-Tests {
 @"
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
@@ -98,7 +80,7 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
 	</metadata>
 	<files>
-		<file src="$baseDir\Compiler\License.txt" target=""/>
+		<file src="$baseDir\License.txt" target=""/>
 		<file src="$baseDir\history.txt" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Compiler\install.ps1" target="tools"/>
@@ -108,6 +90,24 @@ Task Build-NuGetPackages -Depends Determine-Version {
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\Compiler.nuspec"
+
+@"
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Saltarelle.Compiler.ExtensibilityDevelopment</id>
+		<version>$script:CompilerVersion</version>
+		<title>Extensibility development for the Saltarelle C# to JavaScript compiler</title>
+		<description>This package contains file necessary to develop plugins for the Saltarelle C# to Javascript compiler. This package is NOT needed during normal usage.</description>
+		<authors>Erik Källén</authors>
+		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
+	</metadata>
+	<files>
+		<file src="$baseDir\License.txt" target=""/>
+		<file src="$baseDir\history.txt" target=""/>
+		<file src="$outDir\extensibility\*.*" target="lib"/>
+	</files>
+</package>
+"@ | Out-File -Encoding UTF8 "$outDir\ExtensibilityDevelopment.nuspec"
 
 @"
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -125,237 +125,32 @@ Task Build-NuGetPackages -Depends Determine-Version {
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\mscorlib.dll" target="tools\Assemblies"/>
-		<file src="$baseDir\Runtime\bin\mscorlib.xml" target="tools\Assemblies"/>
-		<file src="$baseDir\Runtime\bin\Script\mscorlib.js" target=""/>
-		<file src="$baseDir\Runtime\bin\Script\mscorlib.min.js" target=""/>
+		<file src="$baseDir\License.txt" target=""/>
+		<file src="$baseDir\Runtime\CoreLib\bin\mscorlib.dll" target="tools\Assemblies"/>
+		<file src="$baseDir\Runtime\CoreLib\bin\mscorlib.xml" target="tools\Assemblies"/>
+		<file src="$baseDir\Runtime\CoreLib.Script\bin\mscorlib.js" target=""/>
+		<file src="$baseDir\Runtime\CoreLib.Script\bin\mscorlib.min.js" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
-		<file src="$baseDir\Runtime\src\Libraries\CoreLib\install.ps1" target="tools"/>
+		<file src="$baseDir\Runtime\CoreLib\install.ps1" target="tools"/>
 	</files>
 </package>
 "@ | Out-File -Encoding UTF8 "$outDir\Runtime.nuspec"
 
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.Linq</id>
-		<version>$script:LinqVersion</version>
-		<title>Linq for the Saltarelle C# to JavaScript compiler</title>
-		<description>Import library for Linq.js (linqjs.codeplex.com) for projects compiled with Saltarelle.Compiler. Unfortunately the official version is slightly incompatible with the Saltarelle runtime so you have to use the JS files included in this package instead of the official linq.js release.</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>neue.cc, Erik Källén</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.Linq.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.Linq.xml" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script\linq.js" target=""/>
-		<file src="$baseDir\Runtime\bin\Script\linq.min.js" target=""/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\Linq.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.Loader</id>
-		<version>$script:LoaderVersion</version>
-		<title>Package of the Script# script loader for use with the Saltarelle C# to JavaScript compiler</title>
-		<description>This is a package of the script loader from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Nikhil Kothari</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\SSLoader.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\SSLoader.xml" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script\ssloader.js" target=""/>
-		<file src="$baseDir\Runtime\bin\Script\ssloader.min.js" target=""/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\Loader.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.Web</id>
-		<version>$script:WebVersion</version>
-		<title>Metadata required to create HTML5 applications using the Saltarelle C# to JavaScript compiler</title>
-		<description>This package contains the required metadata to develop web applications with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the web library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Nikhil Kothari</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.Web.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.Web.xml" target="lib"/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\Web.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.QUnit</id>
-		<version>$script:QUnitVersion</version>
-		<title>Metadata required to use QUnit with the Saltarelle C# to JavaScript compiler</title>
-		<description>This package contains the required metadata to use QUnit with the Saltarelle C# to JavaScript compiler.</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Erik Källén</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web qunit</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.QUnit.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.QUnit.xml" target="lib"/>
-		<file src="$baseDir\Runtime\src\Libraries\QUnit\qunit-*.js" target=""/>
-		<file src="$baseDir\Runtime\src\Libraries\QUnit\qunit-*.css" target=""/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\QUnit.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.jQuery</id>
-		<version>$script:JQueryVersion</version>
-		<title>Metadata required to use jQuery with the Saltarelle C# to JavaScript compiler</title>
-		<description>This package contains the required metadata to use jQuery with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the jQuery import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Nikhil Kothari, Erik Källén</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web jQuery</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.jQuery.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.jQuery.xml" target="lib"/>
-		<file src="$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core\*.js" target=""/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\jQuery.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.jQuery.UI</id>
-		<version>$script:JQueryUIVersion</version>
-		<title>Metadata required to use jQuery UI with the Saltarelle C# to JavaScript compiler</title>
-		<description>This package contains the required metadata to use jQuery UI with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the jQuery import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Ivaylo Gochkov, Erik Källén</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web jQuery jQueryUI</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
-			<dependency id="Saltarelle.jQuery" version="$(Get-DependencyVersion $script:JQueryVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.jQuery.UI.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.jQuery.UI.xml" target="lib"/>
-		<file src="$baseDir\Runtime\src\Libraries\jQuery\jquery-ui*.js" target=""/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\jQuery.UI.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.Knockout</id>
-		<version>$script:KnockoutVersion</version>
-		<title>Metadata required to use Knockout with the Saltarelle C# to JavaScript compiler</title>
-		<description>This package contains the required metadata to use Knockout JS with the Saltarelle C# to JavaScript compiler. It is a slightly modified version of the knockout import library from the Script# project by Nikhil Kothari (https://github.com/nikhilk/scriptsharp).</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Nikhil Kothari, Matthew Leibowitz</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web knockout</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-			<dependency id="Saltarelle.Web" version="$(Get-DependencyVersion $script:WebVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.Knockout.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.Knockout.xml" target="lib"/>
-		<file src="$baseDir\Runtime\src\Libraries\Knockout\knockout*.js" target=""/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\Knockout.nuspec"
-
-@"
-<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>Saltarelle.NodeJS</id>
-		<version>$script:NodeJSVersion</version>
-		<title>Metadata required to use Node.js with the Saltarelle C# to JavaScript compiler</title>
-		<description>This package contains the required metadata to use Node.JS with the Saltarelle C# to JavaScript compiler.</description>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-		<authors>Erik Källén</authors>
-		<projectUrl>http://www.saltarelle-compiler.com</projectUrl>
-		<tags>compiler c# javascript web node.js</tags>
-		<dependencies>
-			<dependency id="Saltarelle.Runtime" version="$(Get-DependencyVersion $script:RuntimeVersion)"/>
-		</dependencies>
-	</metadata>
-	<files>
-		<file src="$baseDir\Runtime\License.txt" target=""/>
-		<file src="$baseDir\Runtime\bin\Script.NodeJS.dll" target="lib"/>
-		<file src="$baseDir\Runtime\bin\Script.NodeJS.xml" target="lib"/>
-	</files>
-</package>
-"@ | Out-File -Encoding UTF8 "$outDir\NodeJS.nuspec"
-
 	"This file is safe to remove from the project, but NuGet requires the Saltarelle.Compiler package to install something." | Out-File -Encoding UTF8 "$outDir\dummy.txt"
 
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Compiler.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Runtime.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Linq.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Loader.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Web.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\QUnit.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\jQuery.UI.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Knockout.nuspec" -OutputDirectory "$outDir" }
-	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\NodeJS.nuspec" -OutputDirectory "$outDir" }
+	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Compiler.nuspec" -NoPackageAnalysis -OutputDirectory "$outDir" }
+	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\ExtensibilityDevelopment.nuspec" -NoPackageAnalysis -OutputDirectory "$outDir" }
+	Exec { & "$buildtoolsDir\nuget.exe" pack "$outDir\Runtime.nuspec" -NoPackageAnalysis -OutputDirectory "$outDir" }
 }
 
-Task Do-Build -Depends Build-Compiler, Build-Runtime, Run-Tests, Build-NuGetPackages {
+Task Build -Depends Build-NuGetPackages {
 }
 
 Task Configure -Depends Generate-VersionInfo {
 }
 
 Function Determine-PathVersion($RefCommit, $RefVersion, $Path) {
-	if ($script:autoVersion) {
+	if ($autoVersion) {
 		$RefVersion = New-Object System.Version(($RefVersion -Replace "-.*$",""))
 		if ($RefVersion.Build -lt 0) {
 			$RefVersion = New-Object System.Version($RefVersion.Major, $RefVersion.Minor, 0)
@@ -391,7 +186,7 @@ Function Determine-Ref {
 }
 
 Task Determine-Version {
-	if (-not $script:autoVersion) {
+	if (-not $autoVersion) {
 		if ((git log -1 --decorate=full --simplify-by-decoration --pretty=oneline HEAD |
 			 Select-String '\(' |
 			 % { ($_ -replace "^[^(]*\(([^)]*)\).*$","`$1" -replace " ", "").Split(',') } |
@@ -406,27 +201,10 @@ Task Determine-Version {
 
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler"
-
-	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\CoreLib","$baseDir\Runtime\src\Core\CoreScript"
-	$script:LinqVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LinqJS","$baseDir\Runtime\src\Core\LinqJSScript"
-	$script:LoaderVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\LoaderLib","$baseDir\Runtime\src\Core\LoaderScript"
-	$script:WebVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Web"
-	$script:QUnitVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\QUnit","$baseDir\Runtime\src\Libraries\QUnit.Plugin"
-	$script:JQueryVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core"
-	$script:JQueryUIVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\tools\jQueryUIGenerator"
-	$script:KnockoutVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\Knockout"
-	$script:NodeJSVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime\src\Libraries\NodeJS"
+	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
-	"Linq version: $script:LinqVersion"
-	"Loader version: $script:LoaderVersion"
-	"Web version: $script:WebVersion"
-	"QUnit version: $script:QUnitVersion"
-	"jQuery version: $script:jQueryVersion"
-	"jQuery UI version: $script:jQueryUIVersion"
-	"Knockout version: $script:KnockoutVersion"
-	"NodeJS version: $script:NodeJSVersion"
 }
 
 Function Generate-VersionFile($Path, $Version) {
@@ -439,12 +217,5 @@ Function Generate-VersionFile($Path, $Version) {
 
 Task Generate-VersionInfo -Depends Determine-Version {
 	Generate-VersionFile -Path "$baseDir\Compiler\CompilerVersion.cs" -Version $script:CompilerVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\CoreLib\Properties\Version.cs" -Version $script:RuntimeVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\LoaderLib\Properties\Version.cs" -Version $script:LoaderVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\LinqJS\Properties\Version.cs" -Version $script:LinqVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Web\Properties\Version.cs" -Version $script:WebVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\QUnit\Properties\Version.cs" -Version $script:WebVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\jQuery\jQuery.Core\Properties\Version.cs" -Version $script:JQueryVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\Knockout\Properties\Version.cs" -Version $script:KnockoutVersion
-	Generate-VersionFile -Path "$baseDir\Runtime\src\Libraries\NodeJS\Properties\Version.cs" -Version $script:KnockoutVersion
+	Generate-VersionFile -Path "$baseDir\Runtime\CoreLib\Properties\Version.cs" -Version $script:RuntimeVersion
 }

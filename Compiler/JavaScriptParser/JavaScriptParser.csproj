@@ -46,6 +46,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CompilerVersion.cs">
+      <Link>Properties\CompilerVersion.cs</Link>
+    </Compile>
     <Compile Include="Parser.cs" />
     <Compile Include="ParserImpl\ES3Lexer.Action.cs" />
     <Compile Include="ParserImpl\ES3Parser.Action.cs" />
