@@ -17,43 +17,43 @@ namespace Saltarelle.Compiler.Decorators {
 			this._prev = prev;
 		}
 
-		public void Prepare(IEnumerable<ITypeDefinition> allTypes, bool minimizeNames, IAssembly mainAssembly) {
+		public virtual void Prepare(IEnumerable<ITypeDefinition> allTypes, bool minimizeNames, IAssembly mainAssembly) {
 			_prev.Prepare(allTypes, minimizeNames, mainAssembly);
 		}
 
-		public TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
+		public virtual TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {
 			return _prev.GetTypeSemantics(typeDefinition);
 		}
 
-		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
+		public virtual MethodScriptSemantics GetMethodSemantics(IMethod method) {
 			return _prev.GetMethodSemantics(method);
 		}
 
-		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
+		public virtual ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
 			return _prev.GetConstructorSemantics(method);
 		}
 
-		public PropertyScriptSemantics GetPropertySemantics(IProperty property) {
+		public virtual PropertyScriptSemantics GetPropertySemantics(IProperty property) {
 			return _prev.GetPropertySemantics(property);
 		}
 
-		public DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType) {
+		public virtual DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType) {
 			return _prev.GetDelegateSemantics(delegateType);
 		}
 
-		public string GetAutoPropertyBackingFieldName(IProperty property) {
+		public virtual string GetAutoPropertyBackingFieldName(IProperty property) {
 			return _prev.GetAutoPropertyBackingFieldName(property);
 		}
 
-		public FieldScriptSemantics GetFieldSemantics(IField field) {
+		public virtual FieldScriptSemantics GetFieldSemantics(IField field) {
 			return _prev.GetFieldSemantics(field);
 		}
 
-		public EventScriptSemantics GetEventSemantics(IEvent evt) {
+		public virtual EventScriptSemantics GetEventSemantics(IEvent evt) {
 			return _prev.GetEventSemantics(evt);
 		}
 
-		public string GetAutoEventBackingFieldName(IEvent evt) {
+		public virtual string GetAutoEventBackingFieldName(IEvent evt) {
 			return _prev.GetAutoEventBackingFieldName(evt);
 		}
 	}
