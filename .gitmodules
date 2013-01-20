@@ -4,3 +4,6 @@
 [submodule "Compiler/cecil"]
 	path = Compiler/cecil
 	url = git://github.com/jbevain/cecil.git
+[submodule "Runtime/QUnit"]
+	path = Runtime/QUnit
+	url = git://github.com/erik-kallen/SaltarelleQUnit.git
