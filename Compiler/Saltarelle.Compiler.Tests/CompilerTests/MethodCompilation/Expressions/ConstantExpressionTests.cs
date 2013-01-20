@@ -268,18 +268,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		}
 
 		[Test]
-		public void DefaultWorksForReferenceType() {
-			AssertCorrect(
-@"public void M() {
-	// BEGIN
-	var b = default(object);
-	// END
-}",
-@"	var $b = null;
-");
-		}
-
-		[Test]
 		public void DefaultWorksForNumericType() {
 			DoForAllIntegerTypes(type =>
 				AssertCorrect(
@@ -335,18 +323,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	var $b = $Default(def_$T);
-");
-		}
-
-		[Test]
-		public void DefaultWorksForTypeParameterConstrainedToReferenceType() {
-			AssertCorrect(
-@"public void M<T>() where T : class{
-	// BEGIN
-	var b = default(T);
-	// END
-}",
-@"	var $b = null;
 ");
 		}
 

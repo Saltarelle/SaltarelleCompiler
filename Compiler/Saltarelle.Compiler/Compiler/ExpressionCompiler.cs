@@ -1304,7 +1304,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
-			if (rr.ConstantValue == null && rr.Type.IsReferenceType != true)
+			if (rr.ConstantValue == null)
 				return _runtimeLibrary.Default(rr.Type);
 			else
 				return JSModel.Utils.MakeConstantExpression(rr.ConstantValue);

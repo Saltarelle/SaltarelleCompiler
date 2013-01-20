@@ -708,10 +708,10 @@ class C {
 	object o;
 }",
 @"function() {
-	this.$i = 0;
+	this.$i = $Default({def_Int32});
 	this.$i2 = 1;
-	this.$s = null;
-	this.$o = null;
+	this.$s = $Default({def_String});
+	this.$o = $Default({def_Object});
 }", useFirstConstructor: true);
         }
 
@@ -734,8 +734,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = null;
-	this.$t2 = null;
+	this.$t1 = $Default(def_$T);
+	this.$t2 = $Default(def_$T);
 }", useFirstConstructor: true);
         }
 

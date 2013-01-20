@@ -53,7 +53,7 @@ namespace CoreLib.Tests {
 					end--;
 				actual = actual.Substring(0, end + 1);
 			}
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expectedJs.Replace("\r\n", "\n")));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expectedJs.Replace("\r\n", "\n")), "Expected:" + Environment.NewLine + expectedJs + Environment.NewLine + Environment.NewLine + "Actual:" + Environment.NewLine + actual);
 		}
 	}
 }

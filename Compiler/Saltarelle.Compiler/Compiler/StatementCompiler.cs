@@ -301,30 +301,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
 			SetRegion(region);
 			try {
-				JsExpression value;
-				if (type.IsReferenceType == true) {
-					value = JsExpression.Null;
-				}
-				else if (type.IsReferenceType == null) {
-					value = _runtimeLibrary.Default(type);
-				}
-				else {
-					var code = type.GetDefinition().KnownTypeCode;
-					switch (code) {
-						case KnownTypeCode.Boolean:
-							value = JsExpression.False;
-							break;
-						case KnownTypeCode.NullableOfT:
-							value = JsExpression.Null;
-							break;
-						default:
-							// This might not hold in the future, but it does today. Since we don't support user-defined structs, we know that the only value types we have are numbers.
-							value = JsExpression.Number(0);
-							break;
-					}
-				}
-
-				return new[] { new JsExpressionStatement(JsExpression.Assign(field, value)) };
+				return new[] { new JsExpressionStatement(JsExpression.Assign(field, _runtimeLibrary.Default(type))) };
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);

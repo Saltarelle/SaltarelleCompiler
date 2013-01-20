@@ -277,7 +277,38 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression Default(IType type) {
-			return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetDefaultValue), "getDefaultValue"));
+			if (type.IsReferenceType == true || type.Kind == TypeKind.Dynamic) {
+				return JsExpression.Null;
+			}
+			else if (type.IsReferenceType == null) {
+				return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetDefaultValue), "getDefaultValue"));
+			}
+			else {
+				switch (type.GetDefinition().KnownTypeCode) {
+					case KnownTypeCode.Boolean:
+						return JsExpression.False;
+					case KnownTypeCode.NullableOfT:
+						return JsExpression.Null;
+					case KnownTypeCode.DateTime:
+						return JsExpression.New(CreateTypeReferenceExpression(KnownTypeReference.DateTime), JsExpression.Number(0));
+					case KnownTypeCode.Byte:
+					case KnownTypeCode.SByte:
+					case KnownTypeCode.Char:
+					case KnownTypeCode.Int16:
+					case KnownTypeCode.UInt16:
+					case KnownTypeCode.Int32:
+					case KnownTypeCode.UInt32:
+					case KnownTypeCode.Int64:
+					case KnownTypeCode.UInt64:
+					case KnownTypeCode.Decimal:
+					case KnownTypeCode.Single:
+					case KnownTypeCode.Double:
+						return JsExpression.Number(0);
+					default:
+						_errorReporter.InternalError("Cannot use default value for the type " + type);
+						return JsExpression.Null;
+				}
+			}
 		}
 
 		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size) {

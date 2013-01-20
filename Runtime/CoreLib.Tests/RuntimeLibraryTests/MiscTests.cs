@@ -57,5 +57,86 @@ public class C {
 })();
 ");
 		}
+	
+		[Test]
+		public void DefaultValuesAreCorrect() {
+			SourceVerifier.AssertSourceCorrect(
+@"using System;
+
+class X {}
+interface I {}
+class C<T1, T2> where T1 : class {
+	public static bool f1;
+	public static byte f2;
+	public static sbyte f3;
+	public static char f4;
+	public static short f5;
+	public static ushort f6;
+	public static int f7;
+	public static uint f8;
+	public static long f9;
+	public static ulong f10;
+	public static decimal f11;
+	public static float f12;
+	public static double f13;
+	public static string f14;
+	public static object f15;
+	public static X f16;
+	public static C<object, int> f17;
+	public static int? f18;
+	public static T1 f19;
+	public static T2 f20;
+	public static I f21;
+	public static DateTime f22;
+}",
+@"(function() {
+	////////////////////////////////////////////////////////////////////////////////
+	// C
+	var $$C$2 = function(T1, T2) {
+		var $type = function() {
+		};
+		Type.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
+			return Object;
+		}, function() {
+			return [];
+		});
+		Type.makeGenericType($$C$2, [T1, T2]).$f1 = false;
+		Type.makeGenericType($$C$2, [T1, T2]).$f2 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f3 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f4 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f5 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f6 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f7 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f8 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f9 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f10 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f11 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f12 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f13 = 0;
+		Type.makeGenericType($$C$2, [T1, T2]).$f14 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f15 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f16 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f17 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f18 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f19 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f20 = T2.getDefaultValue();
+		Type.makeGenericType($$C$2, [T1, T2]).$f21 = null;
+		Type.makeGenericType($$C$2, [T1, T2]).$f22 = new Date(0);
+		return $type;
+	};
+	Type.registerGenericClass(null, '$C$2', $$C$2, 2);
+	////////////////////////////////////////////////////////////////////////////////
+	// I
+	var $$I = function() {
+	};
+	////////////////////////////////////////////////////////////////////////////////
+	// X
+	var $$X = function() {
+	};
+	Type.registerInterface(null, '$I', $$I, []);
+	Type.registerClass(null, '$X', $$X, Object);
+})();
+");
+		}
 	}
 }

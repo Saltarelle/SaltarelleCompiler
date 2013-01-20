@@ -71,7 +71,7 @@ namespace Saltarelle.Compiler.Tests {
 			LiftedBooleanOr                 = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
 			Bind                            = (f, t)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
 			BindFirstParameterToThis        = (f)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
-			Default                         = (t)             => JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
+			Default                         = (t)             => t.Kind == TypeKind.Dynamic ? (JsExpression)JsExpression.Identifier("$DefaultDynamic") : JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
 			CreateArray                     = (t, dim)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue) }.Concat(dim));
 			CloneDelegate                   = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
 			CallBase                        = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });

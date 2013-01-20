@@ -109,8 +109,8 @@ var $z = 2;
             var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
         	cctor.Replace("\r\n", "\n").Should().Be(
 @"sm_$InstantiateGenericType({C}, ga_$T).$x = $Default(def_$T);
-sm_$InstantiateGenericType({C}, ga_$T).$y = 0;
-sm_$InstantiateGenericType({C}, ga_$T).$z = null;
+sm_$InstantiateGenericType({C}, ga_$T).$y = $Default({def_Int32});
+sm_$InstantiateGenericType({C}, ga_$T).$z = $Default({def_String});
 ".Replace("\r\n", "\n"));
         }
     }

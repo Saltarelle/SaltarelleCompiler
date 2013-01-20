@@ -96,16 +96,16 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
         [Test]
         public void InstanceAutoPropertyBackingFieldIsCorrectlyInitialized() {
             Compile(new[] { "class C<T> { public int P1 { get; set; } public string P2 { get; set; } public T P3 { get; set; } }" });
-            FindInstanceFieldInitializer("C.$P1").Should().Be("0");
-            FindInstanceFieldInitializer("C.$P2").Should().Be("null");
+            FindInstanceFieldInitializer("C.$P1").Should().Be("$Default({def_Int32})");
+            FindInstanceFieldInitializer("C.$P2").Should().Be("$Default({def_String})");
             FindInstanceFieldInitializer("C.$P3").Should().Be("$Default(def_$T)");
         }
 
         [Test]
         public void StaticAutoPropertyBackingFieldIsCorrectlyInitialized() {
             Compile(new[] { "class C<T> { public static int P1 { get; set; } public static string P2 { get; set; } public static T P3 { get; set; } }" });
-            FindStaticFieldInitializer("C.$P1").Should().Be("0");
-            FindStaticFieldInitializer("C.$P2").Should().Be("null");
+            FindStaticFieldInitializer("C.$P1").Should().Be("$Default({def_Int32})");
+            FindStaticFieldInitializer("C.$P2").Should().Be("$Default({def_String})");
             FindStaticFieldInitializer("C.$P3").Should().Be("$Default(def_$T)");
         }
 
