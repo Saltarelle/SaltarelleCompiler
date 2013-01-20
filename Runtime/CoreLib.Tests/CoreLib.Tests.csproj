@@ -208,7 +208,12 @@
       <Name>CoreLib.TestScript</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-  </ItemGroup>
+		<ProjectReference Include="..\CoreLib.Script\CoreLib.Script.csproj">
+			<Project>{8780581F-7C26-4B64-9235-BA1C458DF36E}</Project>
+			<Name>CoreLib.Script</Name>
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+		</ProjectReference>
+	</ItemGroup>
   <ItemGroup>
     <Content Include="..\CoreLib.Script\bin\mscorlib.js">
       <Link>mscorlib.js</Link>

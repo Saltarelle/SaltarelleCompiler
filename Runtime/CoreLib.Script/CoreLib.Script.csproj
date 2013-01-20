@@ -81,4 +81,6 @@
   </Target>
   <Target Name="GetCopyToOutputDirectoryItems">
   </Target>
+	<Target Name="GetTargetPath" Returns="$(TargetPath)">
+	</Target>
 </Project>
