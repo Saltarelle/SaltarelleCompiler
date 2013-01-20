@@ -49,6 +49,10 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization 
 }
 
 Task Build-QUnit {
+	if ($skipTests) {
+		return
+	}
+
 	$currentBranch = git rev-parse --abbrev-ref HEAD
 	$qunitDir = "$baseDir\Runtime\QUnit"
 	cd "$qunitDir"
@@ -65,7 +69,7 @@ Task Build-QUnit {
 	$runtimeDir = ls "$qunitDir\packages\Saltarelle.Runtime.*" | Select-Object -First 1 -ExpandProperty FullName
 	copy "$baseDir\Runtime\CoreLib\bin\mscorlib.dll" "$runtimeDir\tools\Assemblies"
 
-	Invoke-Psake "$baseDir\Runtime\QUnit\build\default.ps1" -properties @{ skipTests=$skipTests }
+	Invoke-Psake "$baseDir\Runtime\QUnit\build\default.ps1"
 	
 	git reset --hard
 }
@@ -78,12 +82,14 @@ Task Build-RuntimeCode -Depends Clean, Generate-VersionInfo, Build-Compiler {
 }
 
 Task Build-RuntimeTests -Depends Clean, Generate-VersionInfo, Build-Compiler, Build-RuntimeCode, Build-QUnit {
-	$actualConfiguration = $configuration # The _TestsOnly configuration does (for some reason) not work because mscorlib is not build. VS gem.
-	if ($noAsync) {
-		$actualConfiguration += "_NoAsync"
+	if (-not $skipTests) {
+		$actualConfiguration = $configuration # The _TestsOnly configuration does (for some reason) not work because mscorlib is not build. VS gem.
+		if ($noAsync) {
+			$actualConfiguration += "_NoAsync"
+		}
+	
+		Exec { msbuild "$baseDir\Runtime\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
 	}
-
-	Exec { msbuild "$baseDir\Runtime\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
 }
 
 Task Run-Tests -Depends Build-Compiler, Build-RuntimeTests {
