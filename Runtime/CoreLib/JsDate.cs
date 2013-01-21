@@ -106,7 +106,7 @@ namespace System {
         /// Returns the current date and time.
         /// </summary>
         public static JsDate Now {
-			[InlineCode("{$System.DateTime}.get_now()")]
+			[InlineCode("new Date()")]
             get {
                 return null;
             }
@@ -116,7 +116,14 @@ namespace System {
         /// Returns the current date with the time part set to 00:00:00.
         /// </summary>
         public static JsDate Today {
-			[InlineCode("{$System.DateTime}.get_today()")]
+			[InlineCode("{$System.DateTime}.today()")]
+            get {
+                return null;
+            }
+        }
+
+        public static JsDate UtcNow {
+			[InlineCode("{$System.DateTime}.utcNow()")]
             get {
                 return null;
             }
@@ -349,6 +356,31 @@ namespace System {
         [InlineCode("new Date(Date.UTC({year}, {month}, {day}, {hours}, {minutes}, {seconds}, {milliseconds}))")]
         public static JsDate FromUtc(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds) {
             return null;
+        }
+
+        [ScriptAlias("Date.UTC")]
+        public static int Utc(int year, int month, int day) {
+            return 0;
+        }
+
+        [ScriptAlias("Date.UTC")]
+        public static int Utc(int year, int month, int day, int hours) {
+            return 0;
+        }
+
+        [ScriptAlias("Date.UTC")]
+        public static int Utc(int year, int month, int day, int hours, int minutes) {
+            return 0;
+        }
+
+        [ScriptAlias("Date.UTC")]
+        public static int Utc(int year, int month, int day, int hours, int minutes, int seconds) {
+            return 0;
+        }
+
+        [ScriptAlias("Date.UTC")]
+        public static int Utc(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds) {
+            return 0;
         }
 
         // NOTE: There is no + operator since in JavaScript that returns the

@@ -45,7 +45,7 @@ namespace CoreLib.TestScript {
 		public void StringConstructorWorks() {
 			var dt = new DateTime("Aug 12, 2012");
 			Assert.AreEqual(dt.GetFullYear(), 2012);
-			Assert.AreEqual(dt.GetMonth(), 7);
+			Assert.AreEqual(dt.GetMonth(), 8);
 			Assert.AreEqual(dt.GetDate(), 12);
 		}
 
@@ -118,13 +118,13 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			var dt = new DateTime(2011, 7, 12, 13);
-			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-08-12");
+			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-07-12");
 		}
 
 		[Test]
 		public void LocaleFormatWorks() {
 			var dt = new DateTime(2011, 7, 12, 13);
-			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-08-12");
+			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-07-12");
 		}
 
 		[Test]
@@ -171,26 +171,26 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void GetDayWorks() {
-			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			var dt = new DateTime(2011, 8, 12, 13, 42, 56, 345);
 			Assert.AreEqual(dt.GetDay(), 5);
 		}
 
 		[Test]
 		public void GetTimeWorks() {
-			var dt = new DateTime(DateTime.Utc(1970, 0, 2));
+			var dt = new DateTime(DateTime.Utc(1970, 1, 2));
 			Assert.AreEqual(dt.GetTime(), 1440 * 60 * 1000);
 		}
 
 		[Test]
 		public void ValueOfWorks() {
-			var dt = new DateTime(DateTime.Utc(1970, 0, 2));
+			var dt = new DateTime(DateTime.Utc(1970, 1, 2));
 			Assert.AreEqual(dt.ValueOf(), 1440 * 60 * 1000);
 		}
 
 		[Test]
 		public void GetTimezoneOffsetWorks() {
 			var dt = new DateTime(0);
-			Assert.AreEqual(dt.GetTimezoneOffset(), new DateTime(1970, 0, 1).ValueOf() / 60000);
+			Assert.AreEqual(dt.GetTimezoneOffset(), new DateTime(1970, 1, 1).ValueOf() / 60000);
 		}
 
 		[Test]
@@ -237,7 +237,7 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void GetUtcDayWorks() {
-			var dt = new DateTime(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new DateTime(DateTime.Utc(2011, 8, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcDay(), 5);
 		}
 
@@ -245,7 +245,7 @@ namespace CoreLib.TestScript {
 		public void ParseWorks() {
 			var dt = DateTime.Parse("Aug 12, 2012");
 			Assert.AreEqual(dt.GetFullYear(), 2012);
-			Assert.AreEqual(dt.GetMonth(), 7);
+			Assert.AreEqual(dt.GetMonth(), 8);
 			Assert.AreEqual(dt.GetDate(), 12);
 		}
 
@@ -254,7 +254,7 @@ namespace CoreLib.TestScript {
 			var dt = DateTime.ParseExact("2012-12-08", "yyyy-dd-MM");
 			Assert.IsTrue(dt.HasValue);
 			Assert.AreEqual(dt.Value.GetFullYear(), 2012);
-			Assert.AreEqual(dt.Value.GetMonth(), 7);
+			Assert.AreEqual(dt.Value.GetMonth(), 8);
 			Assert.AreEqual(dt.Value.GetDate(), 12);
 		}
 
@@ -269,7 +269,7 @@ namespace CoreLib.TestScript {
 			var dt = DateTime.ParseExact("2012-12-08", "yyyy-dd-MM", CultureInfo.InvariantCulture);
 			Assert.IsTrue(dt.HasValue);
 			Assert.AreEqual(dt.Value.GetFullYear(), 2012);
-			Assert.AreEqual(dt.Value.GetMonth(), 7);
+			Assert.AreEqual(dt.Value.GetMonth(), 8);
 			Assert.AreEqual(dt.Value.GetDate(), 12);
 		}
 
@@ -284,7 +284,7 @@ namespace CoreLib.TestScript {
 			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM");
 			Assert.IsTrue(dt.HasValue);
 			Assert.AreEqual(dt.Value.GetUtcFullYear(), 2012);
-			Assert.AreEqual(dt.Value.GetUtcMonth(), 7);
+			Assert.AreEqual(dt.Value.GetUtcMonth(), 8);
 			Assert.AreEqual(dt.Value.GetUtcDate(), 12);
 		}
 
@@ -299,7 +299,7 @@ namespace CoreLib.TestScript {
 			var dt = DateTime.ParseExactUtc("2012-12-08", "yyyy-dd-MM", CultureInfo.InvariantCulture);
 			Assert.IsTrue(dt.HasValue);
 			Assert.AreEqual(dt.Value.GetUtcFullYear(), 2012);
-			Assert.AreEqual(dt.Value.GetUtcMonth(), 7);
+			Assert.AreEqual(dt.Value.GetUtcMonth(), 8);
 			Assert.AreEqual(dt.Value.GetUtcDate(), 12);
 		}
 
@@ -479,7 +479,7 @@ namespace CoreLib.TestScript {
 			JsDate mdt = (JsDate)dt;
 			Assert.IsFalse((object)dt == (object)mdt);
 			Assert.AreEqual(mdt.GetFullYear(), 2011);
-			Assert.AreEqual(mdt.GetMonth(), 7);
+			Assert.AreEqual(mdt.GetMonth(), 6);
 			Assert.AreEqual(mdt.GetDate(), 12);
 		}
 
@@ -523,6 +523,14 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void StaticEqualsWorks() {
+			Assert.IsTrue( DateTime.Equals(new DateTime(0), new DateTime(0)));
+			Assert.IsFalse(DateTime.Equals(new DateTime(1), new DateTime(0)));
+			Assert.IsFalse(DateTime.Equals(new DateTime(0), new DateTime(1)));
+			Assert.IsTrue( DateTime.Equals(new DateTime(1), new DateTime(1)));
+		}
+
+		[Test]
 		public void CompareToWorks() {
 			Assert.IsTrue(new DateTime(0).CompareTo(new DateTime(0)) == 0);
 			Assert.IsTrue(new DateTime(1).CompareTo(new DateTime(0)) > 0);
@@ -530,10 +538,158 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void StaticCompareWorks() {
+			Assert.IsTrue(DateTime.Compare(new DateTime(0), new DateTime(0)) == 0);
+			Assert.IsTrue(DateTime.Compare(new DateTime(1), new DateTime(0)) > 0);
+			Assert.IsTrue(DateTime.Compare(new DateTime(0), new DateTime(1)) < 0);
+		}
+
+		[Test]
 		public void IComparableCompareToWorks() {
 			Assert.IsTrue(((IComparable<DateTime>)new DateTime(0)).CompareTo(new DateTime(0)) == 0);
 			Assert.IsTrue(((IComparable<DateTime>)new DateTime(1)).CompareTo(new DateTime(0)) > 0);
 			Assert.IsTrue(((IComparable<DateTime>)new DateTime(0)).CompareTo(new DateTime(1)) < 0);
+		}
+
+		[Test]
+		public void DatePropertyWorks() {
+			var dt = new DateTime(2012, 8, 12, 13, 14, 15, 16);
+			Assert.AreEqual(dt.Date, new DateTime(2012, 8, 12));
+		}
+
+		[Test]
+		public void DayPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Day, 12);
+		}
+
+		[Test]
+		public void DayOfWeekPropertyWorks() {
+			var dt = new DateTime(2011, 8, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.DayOfWeek, DayOfWeek.Friday);
+		}
+
+		[Test]
+		public void DayOfYearPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.DayOfYear, 193);
+		}
+
+		[Test]
+		public void HourPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Hour, 13);
+		}
+
+		[Test]
+		public void MillisecondPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Millisecond, 345);
+		}
+
+		[Test]
+		public void MinutePropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Minute, 42);
+		}
+
+		[Test]
+		public void MonthPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Month, 7);
+		}
+
+		[Test]
+		public void SecondPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Second, 56);
+		}
+
+		[Test]
+		public void YearPropertyWorks() {
+			var dt = new DateTime(2011, 7, 12, 13, 42, 56, 345);
+			Assert.AreEqual(dt.Year, 2011);
+		}
+
+		[Test]
+		public void AddDaysWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddDays(2.5);
+			Assert.AreEqual(actual, new DateTime(2011, 7, 14, 14, 42, 56, 345));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void AddHoursWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddHours(2.5);
+			Assert.AreEqual(actual, new DateTime(2011, 7, 12, 5, 12, 56, 345));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void AddMillisecondsWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddMilliseconds(250.4);
+			Assert.AreEqual(actual, new DateTime(2011, 7, 12, 2, 42, 56, 595));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void AddMinutesWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddMinutes(2.5);
+			Assert.AreEqual(actual, new DateTime(2011, 7, 12, 2, 45, 26, 345));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void AddMonthsWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddMonths(6);
+			Assert.AreEqual(actual, new DateTime(2012, 1, 12, 2, 42, 56, 345));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void AddSecondsWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddSeconds(2.5);
+			Assert.AreEqual(actual, new DateTime(2011, 7, 12, 2, 42, 58, 845));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void AddYearsWorks() {
+			var dt = new DateTime(2011, 7, 12, 2, 42, 56, 345);
+			var actual = dt.AddYears(3);
+			Assert.AreEqual(actual, new DateTime(2014, 7, 12, 2, 42, 56, 345));
+			Assert.AreEqual(dt, new DateTime(2011, 7, 12, 2, 42, 56, 345));
+		}
+
+		[Test]
+		public void DaysInMonthWorks() {
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 1), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 2), 28);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 3), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 4), 30);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 5), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 6), 30);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 7), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 8), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 9), 30);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 10), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 11), 30);
+			Assert.AreEqual(DateTime.DaysInMonth(2013, 12), 31);
+			Assert.AreEqual(DateTime.DaysInMonth(2003, 2), 28);
+			Assert.AreEqual(DateTime.DaysInMonth(2004, 2), 29);
+		}
+
+		[Test]
+		public void IsLeapYearWorks() {
+			Assert.IsTrue (DateTime.IsLeapYear(2004));
+			Assert.IsTrue (DateTime.IsLeapYear(2000));
+			Assert.IsFalse(DateTime.IsLeapYear(2003));
 		}
 	}
 }

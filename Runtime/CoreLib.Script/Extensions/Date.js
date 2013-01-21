@@ -9,14 +9,15 @@ Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultVal
 	return new Date(0);
 };
 
-Date.get_now = function#? DEBUG Date$get_now##() {
-    return new Date();
+Date.utcNow = function#? DEBUG Date$utcNow##() {
+	var d = new Date();
+	return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()));
 };
 
-Date.get_today = function#? DEBUG Date$get_today##() {
-    var d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-};
+Date.today = function#? DEBUG Date$today##() {
+	var d = new Date();
+	return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
 
 Date.areEqual = function#? DEBUG Date$areEqual##(a, b) {
     if (!ss.isValue(a))

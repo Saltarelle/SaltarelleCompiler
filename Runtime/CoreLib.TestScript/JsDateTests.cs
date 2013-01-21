@@ -170,13 +170,13 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void GetTimeWorks() {
-			var dt = new JsDate(DateTime.Utc(1970, 0, 2));
+			var dt = new JsDate(JsDate.Utc(1970, 0, 2));
 			Assert.AreEqual(dt.GetTime(), 1440 * 60 * 1000);
 		}
 
 		[Test]
 		public void ValueOfWorks() {
-			var dt = new JsDate(DateTime.Utc(1970, 0, 2));
+			var dt = new JsDate(JsDate.Utc(1970, 0, 2));
 			Assert.AreEqual(dt.ValueOf(), 1440 * 60 * 1000);
 		}
 
@@ -188,49 +188,49 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void GetUtcFullYearWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcFullYear(), 2011);
 		}
 
 		[Test]
 		public void GetUtcMonthWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcMonth(), 7);
 		}
 
 		[Test]
 		public void GetUtcDateWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcDate(), 12);
 		}
 
 		[Test]
 		public void GetUtcHoursWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcHours(), 13);
 		}
 
 		[Test]
 		public void GetUtcMinutesWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcMinutes(), 42);
 		}
 
 		[Test]
 		public void GetUtcSecondsWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcSeconds(), 56);
 		}
 
 		[Test]
 		public void GetUtcMillisecondsWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcMilliseconds(), 345);
 		}
 
 		[Test]
 		public void GetUtcDayWorks() {
-			var dt = new JsDate(DateTime.Utc(2011, 7, 12, 13, 42, 56, 345));
+			var dt = new JsDate(JsDate.Utc(2011, 7, 12, 13, 42, 56, 345));
 			Assert.AreEqual(dt.GetUtcDay(), 5);
 		}
 
@@ -470,14 +470,14 @@ namespace CoreLib.TestScript {
 
         [Test]
         public void SetUtcFullYearWithOneParameterWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcFullYear(2021);
 			Assert.AreEqual(dt.GetUtcFullYear(), 2021);
         }
 
         [Test]
         public void SetUtcFullYearWithTwoParametersWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcFullYear(2021, 7);
 			Assert.AreEqual(dt.GetUtcFullYear(), 2021);
 			Assert.AreEqual(dt.GetUtcMonth(), 7);
@@ -485,7 +485,7 @@ namespace CoreLib.TestScript {
 
         [Test]
         public void SetUtcFullYearWithThreeParametersWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcFullYear(2021, 7, 13);
 			Assert.AreEqual(dt.GetUtcFullYear(), 2021);
 			Assert.AreEqual(dt.GetUtcMonth(), 7);
@@ -494,42 +494,42 @@ namespace CoreLib.TestScript {
 
 		[Test]
         public void SetUtcMonthWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcMonth(3);
 			Assert.AreEqual(dt.GetUtcMonth(), 3);
         }
 
         [Test]
 		public void SetUtcDateWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcDate(12);
 			Assert.AreEqual(dt.GetUtcDate(), 12);
         }
 
         [Test]
         public void SetUtcHoursWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcHours(11);
 			Assert.AreEqual(dt.GetUtcHours(), 11);
         }
 
         [Test]
         public void SetUtcMinutesWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcMinutes(34);
 			Assert.AreEqual(dt.GetUtcMinutes(), 34);
         }
 
         [Test]
         public void SetUtcSecondsWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcSeconds(23);
 			Assert.AreEqual(dt.GetUtcSeconds(), 23);
         }
 
         [Test]
         public void SetUtcMillisecondsWorks() {
-			var dt = new JsDate(DateTime.Utc(2000, 0, 1));
+			var dt = new JsDate(JsDate.Utc(2000, 0, 1));
 			dt.SetUtcMilliseconds(435);
 			Assert.AreEqual(dt.GetUtcMilliseconds(), 435);
         }
