@@ -115,11 +115,10 @@
       <Name>CoreLib</Name>
       <Private>False</Private>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Saltarelle.QUnit">
-      <HintPath>..\QUnit\QUnit\bin\Saltarelle.QUnit.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\QUnit\QUnit.csproj">
+      <Project>{278d9898-ef61-4ccd-a6ac-5f7f31a024a4}</Project>
+      <Name>QUnit</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="..\..\bin\Saltarelle.Compiler.targets" />

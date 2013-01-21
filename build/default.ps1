@@ -48,50 +48,18 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization 
 	del "$outDir\extensibility\sc.*" > $null
 }
 
-Task Build-QUnit {
-	if ($skipTests) {
-		return
+Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
+	$actualConfiguration = $configuration
+	if ($noAsync) {
+		$actualConfiguration += "_NoAsync"
 	}
-
-	$currentBranch = git rev-parse --abbrev-ref HEAD
-	$qunitDir = "$baseDir\Runtime\QUnit"
-	cd "$qunitDir"
-	git checkout -fq origin/$currentBranch
-	git clean -dxfq
-
-	$extensibilityDir = ls "$qunitDir\packages\Saltarelle.Compiler.ExtensibilityDevelopment.*" | Select-Object -First 1 -ExpandProperty FullName
-	copy "$outDir\extensibility\*.*" "$extensibilityDir\lib"
-
-	$compilerDir = ls "$qunitDir\packages\Saltarelle.Compiler.[0-9]*" | Select-Object -First 1 -ExpandProperty FullName
-	copy "$outDir\SCTask.dll","$outDir\sc.exe","$outDir\Saltarelle.Compiler.targets","$baseDir\Compiler\install.ps1" "$compilerDir\tools"
-
-	$runtimeDir = ls "$qunitDir\packages\Saltarelle.Runtime.*" | Select-Object -First 1 -ExpandProperty FullName
-	copy "$baseDir\Runtime\CoreLib\bin\mscorlib.dll" "$runtimeDir\tools\Assemblies"
-
-	Invoke-Psake "$baseDir\Runtime\QUnit\build\default.ps1"
-	
-	git reset --hard
-}
-
-Task Build-RuntimeCode -Depends Clean, Generate-VersionInfo, Build-Compiler {
-	Exec { msbuild "$baseDir\Runtime\Runtime.sln" /verbosity:minimal /p:"Configuration=$($configuration)_NoTests" }
+	Exec { msbuild "$baseDir\Runtime\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
 
 	md -Force "$outDir\extensibility" > $null
 	copy "$baseDir\Runtime\CoreLib.Plugin\bin\CoreLib.Plugin.*" "$outDir\extensibility" > $null
 }
 
-Task Build-RuntimeTests -Depends Clean, Generate-VersionInfo, Build-Compiler, Build-RuntimeCode, Build-QUnit {
-	if (-not $skipTests) {
-		$actualConfiguration = $configuration # The _TestsOnly configuration does (for some reason) not work because mscorlib is not build. VS gem.
-		if ($noAsync) {
-			$actualConfiguration += "_NoAsync"
-		}
-	
-		Exec { msbuild "$baseDir\Runtime\Runtime.sln" /verbosity:minimal /p:"Configuration=$actualConfiguration" }
-	}
-}
-
-Task Run-Tests -Depends Build-Compiler, Build-RuntimeTests {
+Task Run-Tests -Depends Build-Compiler, Build-Runtime {
 	if (-not $skipTests) {
 		$runner = (dir "$baseDir\Compiler\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
 		Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
