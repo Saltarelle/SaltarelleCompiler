@@ -430,8 +430,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void SubstringWithEndIndexWorks() {
-			Assert.AreEqual("abcde".Substring(2, 4), "cd");
+		public void SubstringWithLengthWorks() {
+			Assert.AreEqual("abcde".Substring(2, 2), "cd");
+		}
+
+		[Test]
+		public void JsSubstringWithEndIndexWorks() {
+			Assert.AreEqual("abcde".JsSubstring(2, 4), "cd");
 		}
 
 		[Test]

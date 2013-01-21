@@ -384,7 +384,13 @@ namespace System {
             return null;
         }
 
-        public string Substring(int startIndex, int endIndex) {
+        [ScriptName("substr")]
+		public string Substring(int startIndex, int length) {
+            return null;
+        }
+
+        [ScriptName("substring")]
+        public string JsSubstring(int startIndex, int end) {
             return null;
         }
 

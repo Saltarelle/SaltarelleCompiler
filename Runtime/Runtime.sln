@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D09CDE45-FFC0-44CC-B693-31C4A0F37602}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\history.txt = ..\..\history.txt
+		..\history.txt = ..\history.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreLib", "CoreLib\CoreLib.csproj", "{36D4B098-A21C-4725-ACD3-400922885F38}"

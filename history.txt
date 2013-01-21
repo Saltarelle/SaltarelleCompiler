@@ -1,3 +1,4 @@
+BREAKING CHANGE: String.Substring now matches .net semantics (start/count). If you want JS semantics (start/end), use String.JsSubstring (#117).
 Replaced AsyncTestAttribute with an IsAsync property on TestAttribute.
 Moved QUnit import library into the assembly Saltarelle.QUnit. Moved all QUnit classes to the namespace QUnit.
 The compilation process is now pluggable.
