@@ -212,12 +212,10 @@ namespace Saltarelle.Compiler.Driver {
 				                        .Where(a => a != null);
 			}
 
+			private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker) };
+
 			private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
-				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IJSTypeSystemRewriter>().WithServices(typeof(IJSTypeSystemRewriter)));
-				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IMetadataImporter>().WithServices(typeof(IMetadataImporter)));
-				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IRuntimeLibrary>().WithServices(typeof(IRuntimeLibrary)));
-				container.Register(AllTypes.FromAssembly(plugin).BasedOn<IOOPEmulator>().WithServices(typeof(IOOPEmulator)));
-				container.Register(AllTypes.FromAssembly(plugin).BasedOn<ILinker>().WithServices(typeof(ILinker)));
+				container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
 			}
 
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
@@ -248,7 +246,6 @@ namespace Saltarelle.Compiler.Driver {
 					var container = new WindsorContainer();
 					foreach (var plugin in TopologicalSortPlugins(references).Reverse())
 						RegisterPlugin(container, plugin);
-					RegisterPlugin(container, typeof(Compiler.Compiler).Assembly);
 
 					// Compile the script
 					container.Register(Component.For<INamer>().ImplementedBy<DefaultNamer>(),
