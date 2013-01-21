@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// CancelEventArgs
+// EqualityComparer
 
 var ss_EqualityComparer = function#? DEBUG EqualityComparer$##() {
 };

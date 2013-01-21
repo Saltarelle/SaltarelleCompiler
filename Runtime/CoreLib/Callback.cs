@@ -6,5 +6,5 @@
 using System.Runtime.CompilerServices;
 
 namespace System {
-    public delegate void Callback(object arg);
+	public delegate void Callback(object arg);
 }

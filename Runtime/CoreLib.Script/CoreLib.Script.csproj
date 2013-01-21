@@ -54,7 +54,6 @@
     <Content Include="Extensions\Boolean.js" />
     <Content Include="Extensions\Date.js" />
     <Content Include="Extensions\Error.js" />
-    <Content Include="BCL\App.js" />
     <Content Include="BCL\Debug.js" />
     <Content Include="BCL\ArrayEnumerator.js" />
     <Content Include="BCL\CancelEventArgs.js" />
@@ -81,6 +80,6 @@
   </Target>
   <Target Name="GetCopyToOutputDirectoryItems">
   </Target>
-	<Target Name="GetTargetPath" Returns="$(TargetPath)">
-	</Target>
+  <Target Name="GetTargetPath" Returns="$(TargetPath)">
+  </Target>
 </Project>

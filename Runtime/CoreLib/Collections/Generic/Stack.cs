@@ -7,40 +7,40 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 
-    /// <summary>
-    /// The Stack data type which is mapped to the Array type in Javascript.
-    /// </summary>
-    [IgnoreNamespace]
-    [Imported(ObeysTypeSystem = true)]
-    [ScriptName("Array")]
+	/// <summary>
+	/// The Stack data type which is mapped to the Array type in Javascript.
+	/// </summary>
+	[IgnoreNamespace]
+	[Imported(ObeysTypeSystem = true)]
+	[ScriptName("Array")]
 	[IgnoreGenericArguments]
-    public sealed class Stack<T> {
+	public sealed class Stack<T> {
 
-        [IntrinsicProperty]
-        [ScriptName("length")]
-        public int Count {
-            get {
-                return 0;
-            }
-        }
+		[IntrinsicProperty]
+		[ScriptName("length")]
+		public int Count {
+			get {
+				return 0;
+			}
+		}
 
-        public void Clear() {
-        }
+		public void Clear() {
+		}
 
-        public bool Contains(T item) {
-            return false;
-        }
+		public bool Contains(T item) {
+			return false;
+		}
 
-        [ScriptName("peekBack")]
+		[ScriptName("peekBack")]
 		public T Peek() {
-            return default(T);
-        }
+			return default(T);
+		}
 
-        public T Pop() {
-            return default(T);
-        }
+		public T Pop() {
+			return default(T);
+		}
 
-        public void Push(T item) {
-        }
-    }
+		public void Push(T item) {
+		}
+	}
 }

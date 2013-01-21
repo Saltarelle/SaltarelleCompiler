@@ -7,12 +7,12 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
-    [ScriptNamespace("ss")]
-    [ScriptName("IEnumerator")]
+	[ScriptNamespace("ss")]
+	[ScriptName("IEnumerator")]
 	[Imported(ObeysTypeSystem = true)]
-    public interface IEnumerator<out T> : IDisposable, IEnumerator {
-        new T Current { get; }
-        new bool MoveNext();
-        new void Reset();
-    }
+	public interface IEnumerator<out T> : IDisposable, IEnumerator {
+		new T Current { get; }
+		new bool MoveNext();
+		new void Reset();
+	}
 }

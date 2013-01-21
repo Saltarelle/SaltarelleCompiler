@@ -7,10 +7,10 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections {
 
-    /// <summary>
-    /// The Stack data type which is mapped to the Array type in Javascript.
-    /// </summary>
+	/// <summary>
+	/// The Stack data type which is mapped to the Array type in Javascript.
+	/// </summary>
 	[Obsolete("Use Stack<object> instead, true")]
-    public sealed class Stack {
-    }
+	public sealed class Stack {
+	}
 }

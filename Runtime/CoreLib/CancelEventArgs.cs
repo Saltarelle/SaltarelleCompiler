@@ -8,23 +8,23 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    /// <summary>
-    /// The event argument associated with cancelable events.
-    /// </summary>
-    [ScriptNamespace("ss")]
-    [Imported(ObeysTypeSystem = true)]
-    public class CancelEventArgs : EventArgs {
+	/// <summary>
+	/// The event argument associated with cancelable events.
+	/// </summary>
+	[ScriptNamespace("ss")]
+	[Imported(ObeysTypeSystem = true)]
+	public class CancelEventArgs : EventArgs {
 
-        /// <summary>
-        /// Whether the event has been canceled.
-        /// </summary>
-        [IntrinsicProperty]
-        public bool Cancel {
-            get {
-                return false;
-            }
-            set {
-            }
-        }
-    }
+		/// <summary>
+		/// Whether the event has been canceled.
+		/// </summary>
+		[IntrinsicProperty]
+		public bool Cancel {
+			get {
+				return false;
+			}
+			set {
+			}
+		}
+	}
 }

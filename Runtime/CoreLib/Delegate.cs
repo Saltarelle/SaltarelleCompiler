@@ -9,29 +9,29 @@ namespace System {
 
 	[Imported(ObeysTypeSystem = true)]
 	[IgnoreNamespace]
-    [ScriptName("Function")]
-    public abstract class Delegate {
+	[ScriptName("Function")]
+	public abstract class Delegate {
 
-        public static readonly Delegate Empty = null;
+		public static readonly Delegate Empty = null;
 
-        protected Delegate(object target, string method) {
-        }
+		protected Delegate(object target, string method) {
+		}
 
-        protected Delegate(Type target, string method) {
-        }
+		protected Delegate(Type target, string method) {
+		}
 
-        public static Delegate Combine(Delegate a, Delegate b) {
-            return null;
-        }
+		public static Delegate Combine(Delegate a, Delegate b) {
+			return null;
+		}
 
 		[ScriptName("mkdel")]
-        public static Delegate Create(object instance, Function f) {
-            return null;
-        }
+		public static Delegate Create(object instance, Function f) {
+			return null;
+		}
 
-        public static Delegate Remove(Delegate source, Delegate value) {
-            return null;
-        }
+		public static Delegate Remove(Delegate source, Delegate value) {
+			return null;
+		}
 
 		public static Delegate Clone(Delegate source) {
 			return null;
@@ -174,5 +174,5 @@ namespace System {
 		public static bool operator!=(Delegate a, Delegate b) {
 			return false;
 		}
-    }
+	}
 }

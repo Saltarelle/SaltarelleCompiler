@@ -12,14 +12,14 @@ namespace System.Collections {
 	/// Don't use this interface, use the generic one instead. When implementing, you need not supply a valid implementation of GetEnumerator.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-    [ScriptNamespace("ss")]
+	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-    public interface IEnumerable {
+	public interface IEnumerable {
 		/// <summary>
 		/// Don't call this method, use the generic version instead.
 		/// </summary>
 		[NonScriptable]
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		IEnumerator GetEnumerator();
-    }
+	}
 }

@@ -7,13 +7,13 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    /// <summary>
-    /// The ulong data type which is mapped to the Number type in Javascript.
-    /// </summary>
-    [ScriptNamespace("ss")]
+	/// <summary>
+	/// The ulong data type which is mapped to the Number type in Javascript.
+	/// </summary>
+	[ScriptNamespace("ss")]
 	[ScriptName("Int32")]
-    [Imported(ObeysTypeSystem = true)]
-    public struct UInt64 : IComparable<UInt64>, IEquatable<UInt64> {
+	[Imported(ObeysTypeSystem = true)]
+	public struct UInt64 : IComparable<UInt64>, IEquatable<UInt64> {
 		[InlineCode("0")]
 		public UInt64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -25,41 +25,41 @@ namespace System {
 		[NonScriptable]
 		public const ulong MaxValue = 0;
 
-        public string Format(string format) {
-            return null;
-        }
+		public string Format(string format) {
+			return null;
+		}
 
-        public string LocaleFormat(string format) {
-            return null;
-        }
+		public string LocaleFormat(string format) {
+			return null;
+		}
 
-        [ScriptAlias("parseInt")]
-        public static ulong Parse(string s) {
-            return 0;
-        }
+		[ScriptAlias("parseInt")]
+		public static ulong Parse(string s) {
+			return 0;
+		}
 
-        [ScriptAlias("parseInt")]
-        public static ulong Parse(string s, int radix) {
-            return 0;
-        }
+		[ScriptAlias("parseInt")]
+		public static ulong Parse(string s, int radix) {
+			return 0;
+		}
 
-        /// <summary>
-        /// Converts the value to its string representation.
-        /// </summary>
-        /// <param name="radix">The radix used in the conversion (eg. 10 for decimal, 16 for hexadecimal)</param>
-        /// <returns>The string representation of the value.</returns>
-        public string ToString(int radix) {
-            return null;
-        }
+		/// <summary>
+		/// Converts the value to its string representation.
+		/// </summary>
+		/// <param name="radix">The radix used in the conversion (eg. 10 for decimal, 16 for hexadecimal)</param>
+		/// <returns>The string representation of the value.</returns>
+		public string ToString(int radix) {
+			return null;
+		}
 
-	    [InlineCode("{$System.Script}.compare({this}, {other})")]
+		[InlineCode("{$System.Script}.compare({this}, {other})")]
 		public int CompareTo(ulong other) {
-		    return 0;
-	    }
+			return 0;
+		}
 
-	    [InlineCode("{$System.Script}.equalsT({this}, {other})")]
-	    public bool Equals(ulong other) {
-		    return false;
-	    }
-    }
+		[InlineCode("{$System.Script}.equalsT({this}, {other})")]
+		public bool Equals(ulong other) {
+			return false;
+		}
+	}
 }

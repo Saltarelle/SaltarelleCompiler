@@ -10,5 +10,5 @@ Boolean.getDefaultValue = Boolean.createInstance = function#? DEBUG Boolean$getD
 };
 
 Boolean.parse = function#? DEBUG Boolean$parse##(s) {
-    return (s.toLowerCase() == 'true');
+	return (s.toLowerCase() == 'true');
 };

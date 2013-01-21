@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// IEnumerable
+// ICollection
 
 var ss_ICollection = function#? DEBUG ICollection$##() { };
 ss_ICollection.prototype = {

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
-    [ScriptNamespace("ss")]
+	[ScriptNamespace("ss")]
 	[ScriptName("IList")]
 	[Imported(ObeysTypeSystem = true)]
 	public interface IList<T> : ICollection<T> {

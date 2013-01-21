@@ -75,13 +75,13 @@ Array.prototype.getLength = function#? DEBUG Array$getLength##(dimension) {
 
 Array.prototype.extract = function#? DEBUG Array$extract##(start, count) {
    if (!ss.isValue(count)) {
-       return this.slice(start);
+	   return this.slice(start);
    }
    return this.slice(start, start + count);
 };
 
 Array.prototype.add = function#? DEBUG Array$add##(item) {
-    this[this.length] = item;
+	this[this.length] = item;
 };
 
 Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
@@ -104,21 +104,21 @@ Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
 };
 
 Array.prototype.clear = function#? DEBUG Array$clear##() {
-    this.length = 0;
+	this.length = 0;
 };
 
 Array.prototype.clone = function#? DEBUG Array$clone##() {
-    if (this.length === 1) {
-        return [this[0]];
-    }
-    else {
-        return Array.apply(null, this);
-    }
+	if (this.length === 1) {
+		return [this[0]];
+	}
+	else {
+		return Array.apply(null, this);
+	}
 };
 
 Array.prototype.contains = function#? DEBUG Array$contains##(item) {
-    var index = this.indexOf(item);
-    return (index >= 0);
+	var index = this.indexOf(item);
+	return (index >= 0);
 };
 
 Array.prototype.peekFront = function#? DEBUG Array$peekFront##(item) {
@@ -134,65 +134,65 @@ Array.prototype.peekBack = function#? DEBUG Array$peekBack##(item) {
 };
 
 if (!Array.prototype.every) {
-    Array.prototype.every = function#? DEBUG Array$every##(callback, instance) {
-        var length = this.length;
-        for (var i = 0; i < length; i++) {
-            if (i in this && !callback.call(instance, this[i], i, this)) {
-                return false;
-            }
-        }
-        return true;
-    };
+	Array.prototype.every = function#? DEBUG Array$every##(callback, instance) {
+		var length = this.length;
+		for (var i = 0; i < length; i++) {
+			if (i in this && !callback.call(instance, this[i], i, this)) {
+				return false;
+			}
+		}
+		return true;
+	};
 }
 
 if (!Array.prototype.filter) {
-    Array.prototype.filter = function#? DEBUG Array$filter##(callback, instance) {
-        var length = this.length;    
-        var filtered = [];
-        for (var i = 0; i < length; i++) {
-            if (i in this) {
-                var val = this[i];
-                if (callback.call(instance, val, i, this)) {
-                    filtered.push(val);
-                }
-            }
-        }
-        return filtered;
-    };
+	Array.prototype.filter = function#? DEBUG Array$filter##(callback, instance) {
+		var length = this.length;    
+		var filtered = [];
+		for (var i = 0; i < length; i++) {
+			if (i in this) {
+				var val = this[i];
+				if (callback.call(instance, val, i, this)) {
+					filtered.push(val);
+				}
+			}
+		}
+		return filtered;
+	};
 }
 
 if (!Array.prototype.forEach) {
-    Array.prototype.forEach = function#? DEBUG Array$forEach##(callback, instance) {
-        var length = this.length;
-        for (var i = 0; i < length; i++) {
-            if (i in this) {
-                callback.call(instance, this[i], i, this);
-            }
-        }
-    };
+	Array.prototype.forEach = function#? DEBUG Array$forEach##(callback, instance) {
+		var length = this.length;
+		for (var i = 0; i < length; i++) {
+			if (i in this) {
+				callback.call(instance, this[i], i, this);
+			}
+		}
+	};
 }
 
 Array.prototype.getEnumerator = function#? DEBUG Array$getEnumerator##() {
-    return new ss_ArrayEnumerator(this);
+	return new ss_ArrayEnumerator(this);
 };
 
 if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function#? DEBUG Array$indexOf##(item, startIndex) {
-        startIndex = startIndex || 0;
-        var length = this.length;
-        if (length) {
-            for (var index = startIndex; index < length; index++) {
-                if (this[index] === item) {
-                    return index;
-                }
-            }
-        }
-        return -1;
-    };
+	Array.prototype.indexOf = function#? DEBUG Array$indexOf##(item, startIndex) {
+		startIndex = startIndex || 0;
+		var length = this.length;
+		if (length) {
+			for (var index = startIndex; index < length; index++) {
+				if (this[index] === item) {
+					return index;
+				}
+			}
+		}
+		return -1;
+	};
 }
 
 Array.prototype.insert = function#? DEBUG Array$insert##(index, item) {
-    this.splice(index, 0, item);
+	this.splice(index, 0, item);
 };
 
 Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items) {
@@ -223,53 +223,53 @@ Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items)
 };
 
 if (!Array.prototype.map) {
-    Array.prototype.map = function#? DEBUG Array$map##(callback, instance) {
-        var length = this.length;
-        var mapped = new Array(length);
-        for (var i = 0; i < length; i++) {
-            if (i in this) {
-                mapped[i] = callback.call(instance, this[i], i, this);
-            }
-        }
-        return mapped;
-    };
+	Array.prototype.map = function#? DEBUG Array$map##(callback, instance) {
+		var length = this.length;
+		var mapped = new Array(length);
+		for (var i = 0; i < length; i++) {
+			if (i in this) {
+				mapped[i] = callback.call(instance, this[i], i, this);
+			}
+		}
+		return mapped;
+	};
 }
 
 Array.parse = function#? DEBUG Array$parse##(s) {
-    return eval('(' + s + ')');
+	return eval('(' + s + ')');
 };
 
 Array.prototype.remove = function#? DEBUG Array$remove##(item) {
-    var index = this.indexOf(item);
-    if (index >= 0) {
-        this.splice(index, 1);
-        return true;
-    }
-    return false;
+	var index = this.indexOf(item);
+	if (index >= 0) {
+		this.splice(index, 1);
+		return true;
+	}
+	return false;
 };
 
 Array.prototype.removeAt = function#? DEBUG Array$removeAt##(index) {
-    this.splice(index, 1);
+	this.splice(index, 1);
 };
 
 Array.prototype.removeRange = function#? DEBUG Array$removeRange##(index, count) {
-    this.splice(index, count);
+	this.splice(index, count);
 };
 
 if (!Array.prototype.some) {
-    Array.prototype.some = function#? DEBUG Array$some##(callback, instance) {
-        var length = this.length;
-        for (var i = 0; i < length; i++) {
-            if (i in this && callback.call(instance, this[i], i, this)) {
-                return true;
-            }
-        }
-        return false;
-    };
+	Array.prototype.some = function#? DEBUG Array$some##(callback, instance) {
+		var length = this.length;
+		for (var i = 0; i < length; i++) {
+			if (i in this && callback.call(instance, this[i], i, this)) {
+				return true;
+			}
+		}
+		return false;
+	};
 }
 
 Array.toArray = function#? DEBUG Array$toArray##(obj) {
-    return Array.prototype.slice.call(obj);
+	return Array.prototype.slice.call(obj);
 };
 
 Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {

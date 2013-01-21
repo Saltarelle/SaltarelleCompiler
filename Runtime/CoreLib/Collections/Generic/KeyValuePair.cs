@@ -9,24 +9,24 @@ namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
 	[Serializable]
 	[Imported]
-    public sealed class KeyValuePair<TKey, TValue> {
+	public sealed class KeyValuePair<TKey, TValue> {
 
-        public KeyValuePair() {
-        }
+		public KeyValuePair() {
+		}
 
 		public KeyValuePair(TKey key, TValue value) {
 		} 
 
-        public TKey Key {
-            get {
-                return default(TKey);
-            }
-        }
+		public TKey Key {
+			get {
+				return default(TKey);
+			}
+		}
 
-        public TValue Value {
-            get {
-                return default(TValue);
-            }
-        }
-    }
+		public TValue Value {
+			get {
+				return default(TValue);
+			}
+		}
+	}
 }

@@ -9,28 +9,28 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    /// <summary>
-    /// Equivalent to the Array type in Javascript.
-    /// </summary>
-    [IgnoreNamespace]
-    [Imported(ObeysTypeSystem = true)]
-    public sealed class Array : IEnumerable {
+	/// <summary>
+	/// Equivalent to the Array type in Javascript.
+	/// </summary>
+	[IgnoreNamespace]
+	[Imported(ObeysTypeSystem = true)]
+	public sealed class Array : IEnumerable {
 
-        [IntrinsicProperty]
-        public int Length {
-            get {
-                return 0;
-            }
-        }
+		[IntrinsicProperty]
+		public int Length {
+			get {
+				return 0;
+			}
+		}
 
-        [IntrinsicProperty]
-        public object this[int index] {
-            get {
-                return null;
-            }
-            set {
-            }
-        }
+		[IntrinsicProperty]
+		public object this[int index] {
+			get {
+				return null;
+			}
+			set {
+			}
+		}
 
 		IEnumerator IEnumerable.GetEnumerator() {
 			return null;
@@ -40,24 +40,24 @@ namespace System {
 			return null;
 		}
 
-        public string Join() {
-            return null;
-        }
+		public string Join() {
+			return null;
+		}
 
-        public string Join(string delimiter) {
-            return null;
-        }
+		public string Join(string delimiter) {
+			return null;
+		}
 
-        public static Array Parse(string s) {
-            return null;
-        }
+		public static Array Parse(string s) {
+			return null;
+		}
 
-        public void Reverse() {
-        }
+		public void Reverse() {
+		}
 
-        public static Array ToArray(object o) {
-            return null;
-        }
+		public static Array ToArray(object o) {
+			return null;
+		}
 
 		public object GetValue(params int[] indices) {
 			return null;
@@ -81,5 +81,5 @@ namespace System {
 		public int GetUpperBound(int dimension) {
 			return 0;
 		}
-    }
+	}
 }

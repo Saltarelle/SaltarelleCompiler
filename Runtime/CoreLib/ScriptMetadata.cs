@@ -8,25 +8,25 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Runtime.CompilerServices {
-    /// <summary>
-    /// This attribute can be placed on types in system script assemblies that should not
-    /// be imported. It is only meant to be used within mscorlib.dll.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public sealed class NonScriptableAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute can be placed on types in system script assemblies that should not
+	/// be imported. It is only meant to be used within mscorlib.dll.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public sealed class NonScriptableAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute can be placed on types that should not be emitted into generated
-    /// script, as they represent existing script or native types. All members without another naming attribute are considered to use [PreserveName].
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Struct)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ImportedAttribute : Attribute {
+	/// <summary>
+	/// This attribute can be placed on types that should not be emitted into generated
+	/// script, as they represent existing script or native types. All members without another naming attribute are considered to use [PreserveName].
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Struct)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ImportedAttribute : Attribute {
 		/// <summary>
 		/// Indicates that the type obeys the Saltarelle type system. If false (the default), the type is ignored in inheritance lists, casts to it is a no-op, and Object will be used if the type is used as a generic argument.
 		/// The default is false. Requiring this to be set should be very uncommon.
@@ -37,240 +37,240 @@ namespace System.Runtime.CompilerServices {
 		/// This flag, set by default, applies an [IgnoreGenericArgument] attribute to the type and all its methods.
 		/// </summary>
 		public bool IgnoreGenericArguments { get; set; }
-    }
+	}
 
-    /// <summary>
-    /// Marks an assembly as a script assembly that can be used with Script#.
-    /// Additionally, each script must have a unique name that can be used as
-    /// a dependency name.
-    /// This name is also used to generate unique names for internal types defined
-    /// within the assembly. The ScriptQualifier attribute can be used to provide a
-    /// shorter name if needed.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ScriptAssemblyAttribute : Attribute {
-        public ScriptAssemblyAttribute(string name) {
-            Name = name;
-        }
+	/// <summary>
+	/// Marks an assembly as a script assembly that can be used with Script#.
+	/// Additionally, each script must have a unique name that can be used as
+	/// a dependency name.
+	/// This name is also used to generate unique names for internal types defined
+	/// within the assembly. The ScriptQualifier attribute can be used to provide a
+	/// shorter name if needed.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptAssemblyAttribute : Attribute {
+		public ScriptAssemblyAttribute(string name) {
+			Name = name;
+		}
 
-        public string Name { get; private set; }
-    }
+		public string Name { get; private set; }
+	}
 
-    /// <summary>
-    /// Provides a prefix to use when generating types internal to this assembly so that
-    /// they can be unique within a given a script namespace.
-    /// The specified prefix overrides the script name provided in the ScriptAssembly
-    /// attribute.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ScriptQualifierAttribute : Attribute {
-        public ScriptQualifierAttribute(string prefix) {
-            Prefix = prefix;
-        }
+	/// <summary>
+	/// Provides a prefix to use when generating types internal to this assembly so that
+	/// they can be unique within a given a script namespace.
+	/// The specified prefix overrides the script name provided in the ScriptAssembly
+	/// attribute.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptQualifierAttribute : Attribute {
+		public ScriptQualifierAttribute(string prefix) {
+			Prefix = prefix;
+		}
 
-        public string Prefix { get; private set; }
-    }
+		public string Prefix { get; private set; }
+	}
 
-    /// <summary>
-    /// This attribute indicates that the namespace of type within a system assembly
-    /// should be ignored at script generation time. It is useful for creating namespaces
-    /// for the purpose of c# code that don't exist at runtime.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Struct, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class IgnoreNamespaceAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute indicates that the namespace of type within a system assembly
+	/// should be ignored at script generation time. It is useful for creating namespaces
+	/// for the purpose of c# code that don't exist at runtime.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Struct, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class IgnoreNamespaceAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// Specifies the namespace that should be used in generated script. The script namespace
-    /// is typically a short name, that is often shared across multiple assemblies.
-    /// The developer is responsible for ensuring that public types across assemblies that share
-    /// a script namespace are unique.
-    /// For internal types, the ScriptQualifier attribute can be used to provide a short prefix
-    /// to generate unique names.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ScriptNamespaceAttribute : Attribute {
-        public ScriptNamespaceAttribute(string name) {
-            Name = name;
-        }
+	/// <summary>
+	/// Specifies the namespace that should be used in generated script. The script namespace
+	/// is typically a short name, that is often shared across multiple assemblies.
+	/// The developer is responsible for ensuring that public types across assemblies that share
+	/// a script namespace are unique.
+	/// For internal types, the ScriptQualifier attribute can be used to provide a short prefix
+	/// to generate unique names.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptNamespaceAttribute : Attribute {
+		public ScriptNamespaceAttribute(string name) {
+			Name = name;
+		}
 
-        public string Name { get; private set; }
-    }
+		public string Name { get; private set; }
+	}
 
-    /// <summary>
-    /// This attribute can be placed on a static class that only contains static string
-    /// fields representing a set of resource strings.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ResourcesAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute can be placed on a static class that only contains static string
+	/// fields representing a set of resource strings.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ResourcesAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute turns methods on a static class as global methods in the generated
-    /// script. Note that the class must be static, and must contain only methods.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
-    [NonScriptable]
-    [Imported]
-    public sealed class GlobalMethodsAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute turns methods on a static class as global methods in the generated
+	/// script. Note that the class must be static, and must contain only methods.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+	[NonScriptable]
+	[Imported]
+	public sealed class GlobalMethodsAttribute : Attribute {
+	}
 
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class MixinAttribute : Attribute {
-        public MixinAttribute(string expression) {
-            Expression = expression;
-        }
+	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class MixinAttribute : Attribute {
+		public MixinAttribute(string expression) {
+			Expression = expression;
+		}
 
-        public string Expression { get; private set; }
-    }
+		public string Expression { get; private set; }
+	}
 
-    /// <summary>
-    /// This attribute marks an enumeration type within a system assembly as as a set of
-    /// names. Rather than the specific value, the name of the enumeration field is
-    /// used as a string.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class NamedValuesAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute marks an enumeration type within a system assembly as as a set of
+	/// names. Rather than the specific value, the name of the enumeration field is
+	/// used as a string.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class NamedValuesAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute marks an enumeration type within a system assembly as as a set of
-    /// numeric values. Rather than the enum field, the value of the enumeration field is
-    /// used as a literal.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class NumericValuesAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute marks an enumeration type within a system assembly as as a set of
+	/// numeric values. Rather than the enum field, the value of the enumeration field is
+	/// used as a literal.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class NumericValuesAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute allows defining an alternate method signature that is not generated
-    /// into script, but can be used for defining overloads to enable optional parameter semantics
-    /// for a method. It must be applied on a method defined as extern, since an alternate signature
-    /// method does not contain an actual method body.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class AlternateSignatureAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute allows defining an alternate method signature that is not generated
+	/// into script, but can be used for defining overloads to enable optional parameter semantics
+	/// for a method. It must be applied on a method defined as extern, since an alternate signature
+	/// method does not contain an actual method body.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class AlternateSignatureAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute denotes a C# property that manifests like a field in the generated
-    /// JavaScript (i.e. is not accessed via get/set methods). This is really meant only
-    /// for use when defining OM corresponding to native objects exposed to script.
-    /// If no other name is specified (and the property is not an indexer), the field is treated as if it were decorated with a [PreserveName] attribute.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class IntrinsicPropertyAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute denotes a C# property that manifests like a field in the generated
+	/// JavaScript (i.e. is not accessed via get/set methods). This is really meant only
+	/// for use when defining OM corresponding to native objects exposed to script.
+	/// If no other name is specified (and the property is not an indexer), the field is treated as if it were decorated with a [PreserveName] attribute.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class IntrinsicPropertyAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// Allows specifying the name to use for a type or member in the generated script.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Constructor, Inherited = false, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ScriptNameAttribute : Attribute {
-        public ScriptNameAttribute(string name) {
-            Name = name;
-        }
+	/// <summary>
+	/// Allows specifying the name to use for a type or member in the generated script.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Constructor, Inherited = false, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptNameAttribute : Attribute {
+		public ScriptNameAttribute(string name) {
+			Name = name;
+		}
 
-        public string Name { get; private set; }
-    }
+		public string Name { get; private set; }
+	}
 
-    /// <summary>
-    /// This attribute allows suppressing the default behavior of converting
-    /// member names to camel-cased equivalents in the generated JavaScript.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class PreserveCaseAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute allows suppressing the default behavior of converting
+	/// member names to camel-cased equivalents in the generated JavaScript.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class PreserveCaseAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute allows suppressing the default behavior of converting
-    /// member names of attached type to camel-cased equivalents in the generated JavaScript.
-    /// When applied to an assembly, all types in the assembly are considered to have this
-    /// attribute by default</summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class PreserveMemberCaseAttribute : Attribute {
-        public PreserveMemberCaseAttribute() {
-            Preserve = true;
-        }
+	/// <summary>
+	/// This attribute allows suppressing the default behavior of converting
+	/// member names of attached type to camel-cased equivalents in the generated JavaScript.
+	/// When applied to an assembly, all types in the assembly are considered to have this
+	/// attribute by default</summary>
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class PreserveMemberCaseAttribute : Attribute {
+		public PreserveMemberCaseAttribute() {
+			Preserve = true;
+		}
 
-        public PreserveMemberCaseAttribute(bool preserve) {
-            Preserve = preserve;
-        }
+		public PreserveMemberCaseAttribute(bool preserve) {
+			Preserve = preserve;
+		}
 
-        public bool Preserve { get; private set; }
-    }
+		public bool Preserve { get; private set; }
+	}
 
-    /// <summary>
-    /// This attribute allows suppressing the default behavior of minimizing
-    /// private type names and member names in the generated JavaScript.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class PreserveNameAttribute : Attribute {
-    }
+	/// <summary>
+	/// This attribute allows suppressing the default behavior of minimizing
+	/// private type names and member names in the generated JavaScript.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class PreserveNameAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// This attribute allows specifying a script name for an imported method.
-    /// The method is interpreted as a global method. As a result it this attribute
-    /// only applies to static methods.
-    /// </summary>
-    // REVIEW: Eventually do we want to support this on properties/field and instance methods as well?
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ScriptAliasAttribute : Attribute {
-        public ScriptAliasAttribute(string alias) {
-            Alias = alias;
-        }
+	/// <summary>
+	/// This attribute allows specifying a script name for an imported method.
+	/// The method is interpreted as a global method. As a result it this attribute
+	/// only applies to static methods.
+	/// </summary>
+	// REVIEW: Eventually do we want to support this on properties/field and instance methods as well?
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptAliasAttribute : Attribute {
+		public ScriptAliasAttribute(string alias) {
+			Alias = alias;
+		}
 
-        public string Alias { get; private set; }
-    }
+		public string Alias { get; private set; }
+	}
 
-    /// <summary>
-    /// This attributes causes a method to not be invoked. The method must either be a static method with one argument (in case Foo.M(x) will become x), or an instance method with no arguments (in which x.M() will become x).
-    /// </summary>
+	/// <summary>
+	/// This attributes causes a method to not be invoked. The method must either be a static method with one argument (in case Foo.M(x) will become x), or an instance method with no arguments (in which x.M() will become x).
+	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ScriptSkipAttribute : Attribute {
-    }
+	[NonScriptable]
+	[Imported]
+	public sealed class ScriptSkipAttribute : Attribute {
+	}
 
-    /// <summary>
-    /// The method is implemented as inline code, eg Debugger.Break() => debugger. Can use the parameters {this} (for instance methods), as well as all typenames and argument names in braces (eg. {arg0}, {TArg0}).
-    /// If a parameter name is preceeded by an @ sign, {@arg0}, that argument must be a literal string during invocation, and the supplied string will be inserted as an identifier into the script (eg '{this}.set_{@arg0}({arg1})' can transform the call 'c.F("MyProp", v)' to 'c.set_MyProp(v)'.
-    /// If a parameter name is preceeded by an asterisk {*arg} that parameter must be a param array, and all invocations of the method must use the expanded invocation form. The entire array supplied for the parameter will be inserted into the call. Pretend that the parameter is a normal parameter, and commas will be inserted or omitted at the correct locations.
-    /// The format string can also use identifiers starting with a dollar {$Namespace.Name} to construct type references. The name must be the fully qualified type name in this case.
-    /// </summary>
+	/// <summary>
+	/// The method is implemented as inline code, eg Debugger.Break() => debugger. Can use the parameters {this} (for instance methods), as well as all typenames and argument names in braces (eg. {arg0}, {TArg0}).
+	/// If a parameter name is preceeded by an @ sign, {@arg0}, that argument must be a literal string during invocation, and the supplied string will be inserted as an identifier into the script (eg '{this}.set_{@arg0}({arg1})' can transform the call 'c.F("MyProp", v)' to 'c.set_MyProp(v)'.
+	/// If a parameter name is preceeded by an asterisk {*arg} that parameter must be a param array, and all invocations of the method must use the expanded invocation form. The entire array supplied for the parameter will be inserted into the call. Pretend that the parameter is a normal parameter, and commas will be inserted or omitted at the correct locations.
+	/// The format string can also use identifiers starting with a dollar {$Namespace.Name} to construct type references. The name must be the fully qualified type name in this case.
+	/// </summary>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
+	[NonScriptable]
+	[Imported]
 	public sealed class InlineCodeAttribute : Attribute {
 		public InlineCodeAttribute(string code) {
 			Code = code;
@@ -295,8 +295,8 @@ namespace System.Runtime.CompilerServices {
 	/// Useful for extension methods.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
+	[NonScriptable]
+	[Imported]
 	public sealed class InstanceMethodOnFirstArgumentAttribute : Attribute {
 	}
 
@@ -304,8 +304,8 @@ namespace System.Runtime.CompilerServices {
 	/// This attribute specifies that a generic type or method should have script generated as if it was a non-generic one. Any uses of the type arguments inside the method (eg. <c>typeof(T)</c>, or calling another generic method with T as a type argument) will cause runtime errors.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
-    [NonScriptable]
-    [Imported]
+	[NonScriptable]
+	[Imported]
 	public sealed class IgnoreGenericArgumentsAttribute : Attribute {
 	}
 

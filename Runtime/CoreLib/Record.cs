@@ -10,28 +10,28 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    [Imported]
-    [ScriptNamespace("ss")]
-    public abstract class Record {
+	[Imported]
+	[ScriptNamespace("ss")]
+	public abstract class Record {
 
-        [ScriptSkip]
-        public static explicit operator JsDictionary(Record r) {
-            return null;
-        }
+		[ScriptSkip]
+		public static explicit operator JsDictionary(Record r) {
+			return null;
+		}
 
-        [ScriptSkip]
-        public static explicit operator JsDictionary<string, object>(Record r) {
-            return null;
-        }
+		[ScriptSkip]
+		public static explicit operator JsDictionary<string, object>(Record r) {
+			return null;
+		}
 
-        [ScriptSkip]
-        public static explicit operator Record(JsDictionary d) {
-            return null;
-        }
+		[ScriptSkip]
+		public static explicit operator Record(JsDictionary d) {
+			return null;
+		}
 
-        [ScriptSkip]
-        public static explicit operator Record(JsDictionary<string, object> d) {
-            return null;
-        }
-    }
+		[ScriptSkip]
+		public static explicit operator Record(JsDictionary<string, object> d) {
+			return null;
+		}
+	}
 }

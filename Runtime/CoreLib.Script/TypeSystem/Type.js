@@ -4,18 +4,18 @@
 global.Type = Function;
 
 Type.registerType = function#? DEBUG Type$registerType##(root, typeName, type) {
-    var ns = root;
-    var nameParts = typeName.split('.');
+	var ns = root;
+	var nameParts = typeName.split('.');
 
-    for (var i = 0; i < nameParts.length - 1; i++) {
-        var part = nameParts[i];
-        var nso = ns[part];
-        if (!nso) {
-            ns[part] = nso = {};
-        }
-        ns = nso;
-    }
-    ns[nameParts[nameParts.length - 1]] = type;
+	for (var i = 0; i < nameParts.length - 1; i++) {
+		var part = nameParts[i];
+		var nso = ns[part];
+		if (!nso) {
+			ns[part] = nso = {};
+		}
+		ns = nso;
+	}
+	ns[nameParts[nameParts.length - 1]] = type;
 };
 
 Type.__genericCache = {};
@@ -62,69 +62,69 @@ Type.prototype.get_genericParameterCount = function#? DEBUG Type$get_genericPara
 };
 
 Type.prototype.getGenericArguments = function#? DEBUG Type$getGenericArguments##() {
-    return this.__typeArguments || null;
+	return this.__typeArguments || null;
 };
 
 Type.registerClass = function#? DEBUG Type$registerClass##(root, name, ctor, baseType, interfaceType) {
 	if (root)
 		Type.registerType(root, name, ctor);
 
-    ctor.prototype.constructor = ctor;
-    ctor.__typeName = name;
-    ctor.__class = true;
-    ctor.__baseType = baseType || Object;
-    if (baseType) {
-        ctor.setupBase(baseType);
-    }
+	ctor.prototype.constructor = ctor;
+	ctor.__typeName = name;
+	ctor.__class = true;
+	ctor.__baseType = baseType || Object;
+	if (baseType) {
+		ctor.setupBase(baseType);
+	}
 
 	if (interfaceType instanceof Array) {
 		ctor.__interfaces = interfaceType;
 	}
 	else if (interfaceType) {
-        ctor.__interfaces = [];
-        for (var i = 4; i < arguments.length; i++) {
-            interfaceType = arguments[i];
-            ctor.__interfaces.add(interfaceType);
-        }
-    }
+		ctor.__interfaces = [];
+		for (var i = 4; i < arguments.length; i++) {
+			interfaceType = arguments[i];
+			ctor.__interfaces.add(interfaceType);
+		}
+	}
 };
 
 Type.registerGenericClass = function#? DEBUG Type$registerGenericClass##(root, name, ctor, typeArgumentCount) {
 	if (root)
 		Type.registerType(root, name, ctor);
 
-    ctor.prototype.constructor = ctor;
-    ctor.__typeName = name;
-    ctor.__class = true;
+	ctor.prototype.constructor = ctor;
+	ctor.__typeName = name;
+	ctor.__class = true;
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
-    ctor.__baseType = Object;
+	ctor.__baseType = Object;
 };
 
 Type.registerInterface = function#? DEBUG Type$createInterface##(root, name, ctor, baseInterface) {
 	if (root)
 		Type.registerType(root, name, ctor);
 
-    ctor.__typeName = name;
-    ctor.__interface = true;
+	ctor.__typeName = name;
+	ctor.__interface = true;
 	if (baseInterface instanceof Array) {
 		ctor.__interfaces = baseInterface;
 	}
 	else if (baseInterface) {
-        ctor.__interfaces = [];
-        for (var i = 3; i < arguments.length; i++) {
-            ctor.__interfaces.add(arguments[i]);
-        }
-    }
+		ctor.__interfaces = [];
+		for (var i = 3; i < arguments.length; i++) {
+			ctor.__interfaces.add(arguments[i]);
+		}
+	}
 };
 
 Type.registerGenericInterface = function#? DEBUG Type$registerGenericClass##(root, name, ctor, typeArgumentCount) {
 	if (root)
 		Type.registerType(root, name, ctor);
 
-    ctor.prototype.constructor = ctor;
-    ctor.__typeName = name;
-    ctor.__interface = true;;
+	ctor.prototype.constructor = ctor;
+	ctor.__typeName = name;
+	ctor.__interface = true;;
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
 };
@@ -133,17 +133,17 @@ Type.registerEnum = function#? DEBUG Type$createEnum##(root, name, ctor, flags) 
 	if (root)
 		Type.registerType(root, name, ctor);
 
-    for (var field in ctor.prototype) {
-        ctor[field] = ctor.prototype[field];
-    }
+	for (var field in ctor.prototype) {
+		ctor[field] = ctor.prototype[field];
+	}
 
-    ctor.__typeName = name;
-    ctor.__enum = true;
-    if (flags) {
-        ctor.__flags = true;
-    }
-    ctor.getDefaultValue = ctor.createInstance = function() { return 0; };
-    ctor.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
+	ctor.__typeName = name;
+	ctor.__enum = true;
+	if (flags) {
+		ctor.__flags = true;
+	}
+	ctor.getDefaultValue = ctor.createInstance = function() { return 0; };
+	ctor.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
 };
 
 Type.prototype.setupBase = function#? DEBUG Type$setupBase##() {
@@ -158,75 +158,75 @@ Type.prototype.setupBase = function#? DEBUG Type$setupBase##() {
 };
 
 if (!Type.prototype.resolveInheritance) {
-    // This function is not used by Script#; Visual Studio relies on it
-    // for JavaScript IntelliSense support of derived types.
-    Type.prototype.resolveInheritance = Type.prototype.setupBase;
+	// This function is not used by Script#; Visual Studio relies on it
+	// for JavaScript IntelliSense support of derived types.
+	Type.prototype.resolveInheritance = Type.prototype.setupBase;
 };
 
 Type.prototype.get_baseType = function#? DEBUG Type$get_baseType##() {
-    return this.__baseType || null;
+	return this.__baseType || null;
 };
 
 Type.prototype.get_fullName = function#? DEBUG Type$get_fullName##() {
-    return this.__typeName;
+	return this.__typeName;
 };
 
 Type.prototype.get_name = function#? DEBUG Type$get_name##() {
-    var fullName = this.__typeName;
-    var bIndex = fullName.indexOf('[');
-    var nsIndex = fullName.lastIndexOf('.', bIndex >= 0 ? bIndex : fullName.length);
-    return nsIndex > 0 ? fullName.substr(nsIndex + 1) : fullName;
+	var fullName = this.__typeName;
+	var bIndex = fullName.indexOf('[');
+	var nsIndex = fullName.lastIndexOf('.', bIndex >= 0 ? bIndex : fullName.length);
+	return nsIndex > 0 ? fullName.substr(nsIndex + 1) : fullName;
 };
 
 Type.prototype.getInterfaces = function#? DEBUG Type$getInterfaces##() {
-    return this.__interfaces;
+	return this.__interfaces;
 };
 
 Type.prototype.isInstanceOfType = function#? DEBUG Type$isInstanceOfType##(instance) {
-    if (ss.isNullOrUndefined(instance)) {
-        return false;
-    }
-    if ((this == Object) || (instance instanceof this)) {
-        return true;
-    }
+	if (ss.isNullOrUndefined(instance)) {
+		return false;
+	}
+	if ((this == Object) || (instance instanceof this)) {
+		return true;
+	}
 
-    var type = Type.getInstanceType(instance);
-    return this.isAssignableFrom(type);
+	var type = Type.getInstanceType(instance);
+	return this.isAssignableFrom(type);
 };
 
 Type.isInstanceOfType = function#? DEBUG Type$isInstanceOfTypeStatic##(instance, type) {
-    return instance instanceof type || (type !== Function && type.isInstanceOfType && type.isInstanceOfType(instance));
+	return instance instanceof type || (type !== Function && type.isInstanceOfType && type.isInstanceOfType(instance));
 };
 
 Type.prototype.isAssignableFrom = function#? DEBUG Type$isAssignableFrom##(type) {
-    if ((this == Object) || (this == type)) {
-        return true;
-    }
-    if (this.__class) {
-        var baseType = type.__baseType;
-        while (baseType) {
-            if (this == baseType) {
-                return true;
-            }
-            baseType = baseType.__baseType;
-        }
-    }
-    else if (this.__interface) {
-        var interfaces = type.__interfaces;
-        if (interfaces && interfaces.contains(this)) {
-            return true;
-        }
+	if ((this == Object) || (this == type)) {
+		return true;
+	}
+	if (this.__class) {
+		var baseType = type.__baseType;
+		while (baseType) {
+			if (this == baseType) {
+				return true;
+			}
+			baseType = baseType.__baseType;
+		}
+	}
+	else if (this.__interface) {
+		var interfaces = type.__interfaces;
+		if (interfaces && interfaces.contains(this)) {
+			return true;
+		}
 
-        var baseType = type.__baseType;
-        while (baseType) {
-            interfaces = baseType.__interfaces;
-            if (interfaces && interfaces.contains(this)) {
-                return true;
-            }
-            baseType = baseType.__baseType;
-        }
-    }
-    return false;
+		var baseType = type.__baseType;
+		while (baseType) {
+			interfaces = baseType.__interfaces;
+			if (interfaces && interfaces.contains(this)) {
+				return true;
+			}
+			baseType = baseType.__baseType;
+		}
+	}
+	return false;
 };
 
 Type.hasProperty = function#? DEBUG Type$hasProperty##(instance, name) {
@@ -234,39 +234,39 @@ Type.hasProperty = function#? DEBUG Type$hasProperty##(instance, name) {
 };
 
 Type.prototype.get_isClass = function#? DEBUG Type$get_isClass##() {
-    return (this.__class == true);
+	return (this.__class == true);
 };
 
 Type.prototype.get_isEnum = function#? DEBUG Type$get_isEnum##() {
-    return (this.__enum == true);
+	return (this.__enum == true);
 };
 
 Type.prototype.get_isFlags = function#? DEBUG Type$get_isFlags##() {
-    return ((this.__enum == true) && (this.__flags == true));
+	return ((this.__enum == true) && (this.__flags == true));
 };
 
 Type.prototype.get_isInterface = function#? DEBUG Type$get_isInterface##() {
-    return (this.__interface == true);
+	return (this.__interface == true);
 };
 
 Type.canCast = function#? DEBUG Type$canCast##(instance, type) {
-    return Type.isInstanceOfType(instance, type);
+	return Type.isInstanceOfType(instance, type);
 };
 
 Type.safeCast = function#? DEBUG Type$safeCast##(instance, type) {
-    if (Type.isInstanceOfType(instance, type)) {
-        return instance;
-    }
-    return null;
+	if (Type.isInstanceOfType(instance, type)) {
+		return instance;
+	}
+	return null;
 };
 
 Type.cast = function#? DEBUG Type$cast##(instance, type) {
 	if (instance === null)
 		return null;
-    else if (typeof(instance) === "undefined" || Type.isInstanceOfType(instance, type)) {
-        return instance;
-    }
-    throw 'Cannot cast object to type ' + type.__typeName;
+	else if (typeof(instance) === "undefined" || Type.isInstanceOfType(instance, type)) {
+		return instance;
+	}
+	throw 'Cannot cast object to type ' + type.__typeName;
 };
 
 Type.getInstanceType = function#? DEBUG Type$getInstanceType##(instance) {
@@ -275,32 +275,32 @@ Type.getInstanceType = function#? DEBUG Type$getInstanceType##(instance) {
 	if (typeof(instance) === "undefined")
 		throw 'Cannot get type of undefined';
 
-    var ctor = null;
+	var ctor = null;
 
-    // NOTE: We have to catch exceptions because the constructor
-    //       cannot be looked up on native COM objects
-    try {
-        ctor = instance.constructor;
-    }
-    catch (ex) {
-    }
-    if (!ctor || !ctor.__typeName) {
-        ctor = Object;
-    }
-    return ctor;
+	// NOTE: We have to catch exceptions because the constructor
+	//       cannot be looked up on native COM objects
+	try {
+		ctor = instance.constructor;
+	}
+	catch (ex) {
+	}
+	if (!ctor || !ctor.__typeName) {
+		ctor = Object;
+	}
+	return ctor;
 };
 
 Type.getType = function#? DEBUG Type$getType##(typeName) {
-    if (!typeName) {
-        return null;
-    }
+	if (!typeName) {
+		return null;
+	}
 
-    if (!Type.__typeCache) {
-        Type.__typeCache = {};
-    }
+	if (!Type.__typeCache) {
+		Type.__typeCache = {};
+	}
 
-    var type = Type.__typeCache[typeName];
-    if (!type) {
+	var type = Type.__typeCache[typeName];
+	if (!type) {
 		var arr = typeName.split(',');
 		var type = (arr.length > 1 ? require(arr[1].trim) : global);
 
@@ -311,9 +311,9 @@ Type.getType = function#? DEBUG Type$getType##(typeName) {
 				break;
 		}
 
-        Type.__typeCache[typeName] = type || null;
-    }
-    return type;
+		Type.__typeCache[typeName] = type || null;
+	}
+	return type;
 };
 
 Type.prototype.getDefaultValue = function#? DEBUG Type$getDefaultValue##() {
@@ -321,9 +321,9 @@ Type.prototype.getDefaultValue = function#? DEBUG Type$getDefaultValue##() {
 };
 
 Type.prototype.createInstance = function#? DEBUG Type$createInstance##() {
-    return new this();
+	return new this();
 };
 
 Type.parse = function#? DEBUG Type$parse##(typeName) {
-    return Type.getType(typeName);
+	return Type.getType(typeName);
 };

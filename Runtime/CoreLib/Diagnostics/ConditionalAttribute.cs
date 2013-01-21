@@ -9,21 +9,21 @@ using System.Runtime.CompilerServices;
 
 namespace System.Diagnostics {
 
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-    [NonScriptable]
-    [Imported]
-    public sealed class ConditionalAttribute : Attribute {
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
+	[NonScriptable]
+	[Imported]
+	public sealed class ConditionalAttribute : Attribute {
 
-        private string _conditionString;
+		private string _conditionString;
 
-        public ConditionalAttribute(string conditionString) {
-            _conditionString = conditionString;
-        }
+		public ConditionalAttribute(string conditionString) {
+			_conditionString = conditionString;
+		}
 
-        public string ConditionString {
-            get {
-                return _conditionString;
-            }
-        }
-    }
+		public string ConditionString {
+			get {
+				return _conditionString;
+			}
+		}
+	}
 }

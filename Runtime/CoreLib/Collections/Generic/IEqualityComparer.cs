@@ -8,13 +8,13 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
-    [ScriptNamespace("ss")]
-    [ScriptName("IEqualityComparer")]
+	[ScriptNamespace("ss")]
+	[ScriptName("IEqualityComparer")]
 	[Imported(ObeysTypeSystem = true)]
-    public interface IEqualityComparer<in T> : IEqualityComparer {
-        [ScriptName("areEqual")]
+	public interface IEqualityComparer<in T> : IEqualityComparer {
+		[ScriptName("areEqual")]
 		bool Equals(T x, T y);
 		[ScriptName("getObjectHashCode")]
 		int GetHashCode(T obj);
-    }
+	}
 }

@@ -3,7 +3,7 @@
 
 var ss_IEnumerable = function#? DEBUG IEnumerable$##() { };
 ss_IEnumerable.prototype = {
-    getEnumerator: null
+	getEnumerator: null
 };
 
 ss_IEnumerable.isAssignableFrom = function#? DEBUG IEnumerable$isAssignableFrom##(type) {

@@ -6,10 +6,10 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Collections {
-    /// <summary>
-    /// The Queue data type which is mapped to the Array type in Javascript.
-    /// </summary>
+	/// <summary>
+	/// The Queue data type which is mapped to the Array type in Javascript.
+	/// </summary>
 	[Obsolete("Use Queue<object> instead, true")]
-    public sealed class Queue {
-    }
+	public sealed class Queue {
+	}
 }
