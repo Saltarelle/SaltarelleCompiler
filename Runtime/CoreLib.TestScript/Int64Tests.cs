@@ -16,6 +16,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(l is long);
 			Assert.IsTrue(l is IComparable<long>);
 			Assert.IsTrue(l is IEquatable<long>);
+
+			var interfaces = typeof(long).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<long>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<long>)));
 		}
 
 		private T GetDefaultValue<T>() {

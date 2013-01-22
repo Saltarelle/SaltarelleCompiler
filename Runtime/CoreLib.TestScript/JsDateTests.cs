@@ -15,6 +15,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(o is JsDate);
 			Assert.IsTrue(o is IComparable<JsDate>);
 			Assert.IsTrue(o is IEquatable<JsDate>);
+
+			var interfaces = typeof(JsDate).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<JsDate>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<JsDate>)));
 		}
 
 		[Test]

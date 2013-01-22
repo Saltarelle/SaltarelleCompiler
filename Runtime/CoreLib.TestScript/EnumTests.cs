@@ -32,6 +32,9 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(typeof(FlagsEnum).IsEnum);
 			Assert.IsTrue(typeof(FlagsEnum).IsFlags);
 			Assert.IsTrue((object)TestEnum.FirstValue is TestEnum);
+
+			var interfaces = typeof(TestEnum).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 0);
 		}
 
 		private T GetDefaultValue<T>() {

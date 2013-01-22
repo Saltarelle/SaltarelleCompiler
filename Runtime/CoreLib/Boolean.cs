@@ -17,15 +17,6 @@ namespace System {
 		public Boolean(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		/// <summary>
-		/// Enables you to parse a string representation of a boolean value.
-		/// </summary>
-		/// <param name="s">The string to be parsed.</param>
-		/// <returns>The resulting boolean value.</returns>
-		public static bool Parse(string s) {
-			return false;
-		}
-
 		[InlineCode("{$System.Script}.compare({this}, {other})")]
 		public int CompareTo(bool other) {
 			return 0;

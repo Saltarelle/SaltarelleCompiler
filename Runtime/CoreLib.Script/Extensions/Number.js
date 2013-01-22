@@ -1,14 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Number Extensions
 
-Number.__typeName = 'Number';
-Number.__baseType = Object;
-Number.__interfaces = [ ss_IEquatable, ss_IComparable ];
-
-Number.getDefaultValue = Number.createInstance = function#? DEBUG Number$getDefaultValue##() {
-	return 0;
-};
-
 Number.parse = function#? DEBUG Number$parse##(s) {
 	if (!s || !s.length) {
 		return 0;

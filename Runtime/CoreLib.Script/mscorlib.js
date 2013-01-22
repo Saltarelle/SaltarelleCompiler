@@ -170,15 +170,11 @@ if (typeof(window) == 'object') {
 
 #include "Extensions\Object.js"
 
-#include "Extensions\Boolean.js"
-
 #include "Extensions\Number.js"
 
 #include "Extensions\String.js"
 
 #include "Extensions\Array.js"
-
-#include "Extensions\RegExp.js"
 
 #include "Extensions\Date.js"
 

@@ -21,7 +21,7 @@ ss.__genericCache = {};
 ss._makeGenericTypeName = function#? DEBUG ss$_makeGenericTypeName##(genericType, typeArguments) {
 	var result = genericType.__typeName;
 	for (var i = 0; i < typeArguments.length; i++)
-		result += (i === 0 ? '[' : ',') + typeArguments[i].__typeName;
+		result += (i === 0 ? '[' : ',') + ss.getTypeFullName(typeArguments[i]);
 	result += ']';
 	return result;
 };
@@ -156,15 +156,23 @@ ss.setupBase = function#? DEBUG Type$setupBase##(type) {
 };
 
 ss.getBaseType = function#? DEBUG ss$getBaseType##(type) {
-	return type.__baseType || null;
+	return type.__baseType || (type === Object ? null : Object);
 };
 
 ss.getTypeFullName = function#? DEBUG ss$getTypeFullName##(type) {
-	return type.__typeName;
+	if (type === Boolean) return 'Boolean';
+	if (type === Date) return 'Date';
+	if (type === Error) return 'Error';
+	if (type === Function) return 'Function';
+	if (type === Number) return 'Number';
+	if (type === Object) return 'Object';
+	if (type === RegExp) return 'RegExp';
+	if (type === String) return 'String';
+	return type.__typeName || 'Object';
 };
 
 ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
-	var fullName = type.__typeName;
+	var fullName = ss.getTypeFullName(type);
 	var bIndex = fullName.indexOf('[');
 	var nsIndex = fullName.lastIndexOf('.', bIndex >= 0 ? bIndex : fullName.length);
 	return nsIndex > 0 ? fullName.substr(nsIndex + 1) : fullName;
@@ -173,7 +181,10 @@ ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
 ss.getInterfaces = function#? DEBUG ss$getInterfaces##(type) {
 	if (type === Array)
 		return [ ss_IEnumerable, ss_ICollection, ss_IList ];
-	return type.__interfaces;
+	else if (type === Boolean || type === Date || type === Number || type === String)
+		return [ ss_IEquatable, ss_IComparable ];
+	else
+		return type.__interfaces || [];
 };
 
 ss.isInstanceOfType = function#? DEBUG ss$isInstanceOfType##(instance, type) {
@@ -226,7 +237,7 @@ ss.hasProperty = function#? DEBUG ss$hasProperty##(instance, name) {
 };
 
 ss.isClass = function#? DEBUG Type$isClass##(type) {
-	return (type.__class == true);
+	return (type.__class == true || type === Function || type === RegExp || type === String || type === Error || type === Object);
 };
 
 ss.isEnum = function#? DEBUG Type$isEnum##(type) {
@@ -251,7 +262,7 @@ ss.cast = function#? DEBUG ss$cast##(instance, type) {
 	else if (typeof(instance) === "undefined" || ss.isInstanceOfType(instance, type)) {
 		return instance;
 	}
-	throw 'Cannot cast object to type ' + type.__typeName;
+	throw 'Cannot cast object to type ' + ss.getTypeFullName(type);
 };
 
 ss.getInstanceType = function#? DEBUG ss$getInstanceType##(instance) {
@@ -269,10 +280,7 @@ ss.getInstanceType = function#? DEBUG ss$getInstanceType##(instance) {
 	}
 	catch (ex) {
 	}
-	if (!ctor || !ctor.__typeName) {
-		ctor = Object;
-	}
-	return ctor;
+	return ctor || Object;
 };
 
 ss.getType = function#? DEBUG ss$getType##(typeName) {
@@ -304,11 +312,26 @@ ss.getType = function#? DEBUG ss$getType##(typeName) {
 ss.getDefaultValue = function#? DEBUG ss$getDefaultValue##(type) {
 	if (typeof(type.getDefaultValue) === 'function')
 		return type.getDefaultValue();
+	else if (type === Boolean)
+		return false;
+	else if (type === Date)
+		return new Date(0);
+	else if (type === Number)
+		return 0;
 	return null;
 };
 
 ss.createInstance = function#? DEBUG ss$createInstance##(type) {
 	if (typeof(type.createInstance) === 'function')
 		return type.createInstance();
-	return new type();
+	else if (type === Boolean)
+		return false;
+	else if (type === Date)
+		return new Date(0);
+	else if (type === Number)
+		return 0;
+	else if (type === String)
+		return '';
+	else
+		return new type();
 };

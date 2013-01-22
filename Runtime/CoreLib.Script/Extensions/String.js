@@ -1,11 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // String Extensions
 
-String.__typeName = 'String';
-String.__baseType = Object;
-String.__class = true;
-String.__interfaces = [ ss_IEquatable, ss_IComparable ];
-
 String.empty = '';
 
 String.compare = function#? DEBUG String$compare##(s1, s2, ignoreCase) {

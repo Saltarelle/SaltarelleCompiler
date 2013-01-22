@@ -49,9 +49,7 @@
     <Content Include="Extensions\Array.js" />
     <Content Include="Extensions\Number.js" />
     <Content Include="Extensions\Object.js" />
-    <Content Include="Extensions\RegExp.js" />
     <Content Include="Extensions\String.js" />
-    <Content Include="Extensions\Boolean.js" />
     <Content Include="Extensions\Date.js" />
     <Content Include="Extensions\Error.js" />
     <Content Include="BCL\Debug.js" />

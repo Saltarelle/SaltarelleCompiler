@@ -15,6 +15,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(f is float);
 			Assert.IsTrue(f is IComparable<float>);
 			Assert.IsTrue(f is IEquatable<float>);
+
+			var interfaces = typeof(float).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<float>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<float>)));
 		}
 
 		private T GetDefaultValue<T>() {

@@ -1,10 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Function Extensions
 
-Function.__typeName = 'Function';
-Function.__baseType = Object;
-Function.__class = true;
-
 Function.empty = function () { };
 
 Function._contains = function#? DEBUG Function$_contains##(targets, object, method) {

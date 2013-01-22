@@ -1,10 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Object Extensions
 
-Object.__typeName = 'Object';
-Object.__baseType = null;
-Object.__class = true;
-
 Object.clearKeys = function#? DEBUG Object$clearKeys##(d) {
 	for (var n in d) {
 		if (d.hasOwnProperty(n))

@@ -18,6 +18,9 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(typeof(Func<int, string>).FullName, "Function");
 			Assert.AreEqual(typeof(Func<,>).FullName, "Function");
 			Assert.IsTrue((object)(Action)(() => {}) is Delegate);
+
+			var interfaces = typeof(Delegate).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 0);
 		}
 
 		[Test(ExpectedAssertionCount = 0)]

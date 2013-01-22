@@ -1,14 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Date Extensions
 
-Date.__typeName = 'Date';
-Date.__baseType = Object;
-Date.__interfaces = [ ss_IEquatable, ss_IComparable ];
-
-Date.getDefaultValue = Date.createInstance = function#? DEBUG Date$getDefaultValue##() {
-	return new Date(0);
-};
-
 Date.utcNow = function#? DEBUG Date$utcNow##() {
 	var d = new Date();
 	return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()));

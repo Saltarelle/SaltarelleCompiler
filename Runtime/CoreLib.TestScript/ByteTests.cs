@@ -16,6 +16,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(b is byte);
 			Assert.IsTrue(b is IComparable<byte>);
 			Assert.IsTrue(b is IEquatable<byte>);
+
+			var interfaces = typeof(byte).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<byte>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<byte>)));
 		}
 
 		private T GetDefaultValue<T>() {

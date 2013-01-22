@@ -18,6 +18,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(i is int);
 			Assert.IsTrue(i is IComparable<int>);
 			Assert.IsTrue(i is IEquatable<int>);
+
+			var interfaces = typeof(int).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<int>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<int>)));
 		}
 
 		[Test]

@@ -1,9 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Error Extensions
 
-Error.__typeName = 'Error';
-Error.__baseType = Object;
-
 Error.prototype.popStackFrame = function Error$popStackFrame() {
 	if (ss.isNullOrUndefined(this.stack) ||
 		ss.isNullOrUndefined(this.fileName) ||
