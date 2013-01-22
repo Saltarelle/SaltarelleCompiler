@@ -180,8 +180,6 @@ if (typeof(window) == 'object') {
 
 #include "BCL\Date.js"
 
-#include "Extensions\Error.js"
-
 #include "Extensions\Function.js"
 
 #include "BCL\Debug.js"
