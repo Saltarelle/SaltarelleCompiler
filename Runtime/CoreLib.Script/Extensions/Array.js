@@ -1,97 +1,97 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Array Extensions
 
-Array.__typeName = 'Array';
-Array.__baseType = Object;
-Array.__class = true;
-
+//TODO
 Array.prototype.get_item = function#? DEBUG Array$get_item##(index) {
 	return this[index];
 };
 
+//TODO
 Array.prototype.set_item = function#? DEBUG Array$set_item##(index, value) {
 	this[index] = value;
 };
 
+//TODO
 Array.prototype.get_count = function#? DEBUG Array$get_count##() {
 	return this.length;
 };
 
-Array.prototype.getValue = function#? DEBUG Array$getValue##(indices) {
-	if (indices.length != (this._sizes ? this._sizes.length : 1))
+ss.arrayGet2 = function#? DEBUG ss$arrayGet2##(arr, indices) {
+	if (indices.length != (arr._sizes ? arr._sizes.length : 1))
 		throw 'Invalid number of indices';
 
-	if (indices[0] < 0 || indices[0] >= (this._sizes ? this._sizes[0] : this.length))
+	if (indices[0] < 0 || indices[0] >= (arr._sizes ? arr._sizes[0] : arr.length))
 		throw 'Index 0 out of range';
 
 	var idx = indices[0];
-	if (this._sizes) {
-		for (var i = 1; i < this._sizes.length; i++) {
-			if (indices[i] < 0 || indices[i] >= this._sizes[i])
+	if (arr._sizes) {
+		for (var i = 1; i < arr._sizes.length; i++) {
+			if (indices[i] < 0 || indices[i] >= arr._sizes[i])
 				throw 'Index ' + i + ' out of range';
-			idx = idx * this._sizes[i] + indices[i];
+			idx = idx * arr._sizes[i] + indices[i];
 		}
 	}
-	var r = this[idx];
-	return typeof r !== 'undefined' ? r : this._defvalue;
+	var r = arr[idx];
+	return typeof r !== 'undefined' ? r : arr._defvalue;
 };
 
-Array.prototype.get = function#? DEBUG Array$get##() {
-	return this.getValue(arguments);
-};
+ss.arrayGet = function#? DEBUG ss$arrayGet##(arr) {
+	return ss.arrayGet2(arr, Array.prototype.slice.call(arguments, 1));
+}
 
-Array.prototype.setValue = function#? DEBUG Array$setValue##(value, indices) {
-	if (indices.length != (this._sizes ? this._sizes.length : 1))
+ss.arraySet2 = function#? DEBUG ss$arraySet2##(arr, value, indices) {
+	if (indices.length != (arr._sizes ? arr._sizes.length : 1))
 		throw 'Invalid number of indices';
 
-	if (indices[0] < 0 || indices[0] >= (this._sizes ? this._sizes[0] : this.length))
+	if (indices[0] < 0 || indices[0] >= (arr._sizes ? arr._sizes[0] : arr.length))
 		throw 'Index 0 out of range';
 
 	var idx = indices[0];
-	if (this._sizes) {
-		for (var i = 1; i < this._sizes.length; i++) {
-			if (indices[i] < 0 || indices[i] >= this._sizes[i])
+	if (arr._sizes) {
+		for (var i = 1; i < arr._sizes.length; i++) {
+			if (indices[i] < 0 || indices[i] >= arr._sizes[i])
 				throw 'Index ' + i + ' out of range';
-			idx = idx * this._sizes[i] + indices[i];
+			idx = idx * arr._sizes[i] + indices[i];
 		}
 	}
-	this[idx] = value;
+	arr[idx] = value;
 };
 
-Array.prototype.set = function#? DEBUG Array$set##() {
-	return this.setValue(arguments[arguments.length - 1], Array.prototype.slice.call(arguments, 0, arguments.length - 1));
+ss.arraySet = function#? DEBUG ss$arraySet##() {
+	return ss.arraySet2(arguments[0], arguments[arguments.length - 1], Array.prototype.slice.call(arguments, 1, arguments.length - 1));
 };
 
-Array.prototype.get_rank = function#? DEBUG Array$get_rank##() {
-	return this._sizes ? this._sizes.length : 1;
+ss.arrayRank = function#? DEBUG ss$arrayRank##(arr) {
+	return arr._sizes ? arr._sizes.length : 1;
 };
 
-Array.prototype.getLength = function#? DEBUG Array$getLength##(dimension) {
-	if (dimension >= (this._sizes ? this._sizes.length : 1))
+ss.arrayLength = function#? DEBUG ss$arrayLength##(arr, dimension) {
+	if (dimension >= (arr._sizes ? arr._sizes.length : 1))
 		throw 'Invalid dimension';
-	return this._sizes ? this._sizes[dimension] : this.length;
+	return arr._sizes ? arr._sizes[dimension] : arr.length;
 };
 
-Array.prototype.extract = function#? DEBUG Array$extract##(start, count) {
-   if (!ss.isValue(count)) {
-	   return this.slice(start);
-   }
-   return this.slice(start, start + count);
+ss.arrayExtract = function#? DEBUG ss$arrayExtract##(arr, start, count) {
+	if (!ss.isValue(count)) {
+		return arr.slice(start);
+	}
+	return arr.slice(start, start + count);
 };
 
+//TODO
 Array.prototype.add = function#? DEBUG Array$add##(item) {
 	this[this.length] = item;
 };
 
-Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
+ss.arrayAddRange = function#? DEBUG ss$arrayAddRange##(arr, items) {
 	if (items instanceof Array) {
-		this.push.apply(this, items);
+		arr.push.apply(arr, items);
 	}
 	else {
 		var e = items.getEnumerator();
 		try {
 			while (e.moveNext()) {
-				this.add(e.get_current());
+				arr.add(e.get_current());
 			}
 		}
 		finally {
@@ -102,33 +102,35 @@ Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
 	}
 };
 
+//TODO
 Array.prototype.clear = function#? DEBUG Array$clear##() {
 	this.length = 0;
 };
 
-Array.prototype.clone = function#? DEBUG Array$clone##() {
-	if (this.length === 1) {
-		return [this[0]];
+ss.arrayClone = function#? DEBUG ss$arrayClone##(arr) {
+	if (arr.length === 1) {
+		return [arr[0]];
 	}
 	else {
-		return Array.apply(null, this);
+		return Array.apply(null, arr);
 	}
 };
 
+//TODO
 Array.prototype.contains = function#? DEBUG Array$contains##(item) {
 	var index = this.indexOf(item);
 	return (index >= 0);
 };
 
-Array.prototype.peekFront = function#? DEBUG Array$peekFront##(item) {
-	if (this.length)
-		return this[0];
+ss.arrayPeekFront = function#? DEBUG ss$arrayPeekFront##(arr) {
+	if (arr.length)
+		return arr[0];
 	throw 'Array is empty';
 };
 
-Array.prototype.peekBack = function#? DEBUG Array$peekBack##(item) {
-	if (this.length)
-		return this[this.length - 1];
+ss.arrayPeekBack = function#? DEBUG ss$arrayPeekBack##(arr) {
+	if (arr.length)
+		return arr[arr.length - 1];
 	throw 'Array is empty';
 };
 
@@ -171,6 +173,7 @@ if (!Array.prototype.forEach) {
 	};
 }
 
+//TODO
 Array.prototype.getEnumerator = function#? DEBUG Array$getEnumerator##() {
 	return new ss_ArrayEnumerator(this);
 };
@@ -190,18 +193,19 @@ if (!Array.prototype.indexOf) {
 	};
 }
 
+//TODO
 Array.prototype.insert = function#? DEBUG Array$insert##(index, item) {
 	this.splice(index, 0, item);
 };
 
-Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items) {
+ss.arrayInsertRange = function#? DEBUG ss$arrayInsertRange##(arr, index, items) {
 	if (items instanceof Array) {
 		if (index === 0) {
-			this.unshift.apply(this, items);
+			arr.unshift.apply(arr, items);
 		}
 		else {
 			for (var i = 0; i < items.length; i++) {
-				this.splice(index + i, 0, items[i]);
+				arr.splice(index + i, 0, items[i]);
 			}
 		}
 	}
@@ -209,7 +213,7 @@ Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items)
 		var e = items.getEnumerator();
 		try {
 			while (e.moveNext()) {
-				this.insert(index, e.get_current());
+				arr.insert(index, e.get_current());
 				index++;
 			}
 		}
@@ -234,10 +238,7 @@ if (!Array.prototype.map) {
 	};
 }
 
-Array.parse = function#? DEBUG Array$parse##(s) {
-	return eval('(' + s + ')');
-};
-
+//TODO
 Array.prototype.remove = function#? DEBUG Array$remove##(item) {
 	var index = this.indexOf(item);
 	if (index >= 0) {
@@ -247,12 +248,13 @@ Array.prototype.remove = function#? DEBUG Array$remove##(item) {
 	return false;
 };
 
+//TODO
 Array.prototype.removeAt = function#? DEBUG Array$removeAt##(index) {
 	this.splice(index, 1);
 };
 
-Array.prototype.removeRange = function#? DEBUG Array$removeRange##(index, count) {
-	this.splice(index, count);
+ss.arrayRemoveRange = function#? DEBUG ss$arrayRemoveRange##(arr, index, count) {
+	arr.splice(index, count);
 };
 
 if (!Array.prototype.some) {
@@ -267,11 +269,7 @@ if (!Array.prototype.some) {
 	};
 }
 
-Array.toArray = function#? DEBUG Array$toArray##(obj) {
-	return Array.prototype.slice.call(obj);
-};
-
-Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {
+ss.arrayFromEnumerable = function#? DEBUG ss$arrayFromEnumerable##(enm) {
 	var e = enm.getEnumerator(), r = [];
 	try {
 		while (e.moveNext())
@@ -283,7 +281,7 @@ Array.fromEnumerable = function#? DEBUG Array$fromEnumerable##(enm) {
 	return r;
 };
 
-Array.multidim = function#? DEBUG Array$multidim##(defvalue, sizes) {
+ss.multidimArray = function#? DEBUG ss$multidimArray##(defvalue, sizes) {
 	var arr = [];
 	arr._defvalue = defvalue;
 	arr._sizes = [arguments[1]];

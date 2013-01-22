@@ -16,7 +16,7 @@ ss._mkdel = function#? DEBUG ss$_mkdel##(targets) {
 			return targets[1].apply(targets[0], arguments);
 		}
 		else {
-			var clone = targets.clone();
+			var clone = ss.arrayClone(targets);
 			for (var i = 0; i < clone.length; i += 2) {
 				if (ss._delegateContains(targets, clone[i], clone[i + 1])) {
 					clone[i + 1].apply(clone[i], arguments);
@@ -81,7 +81,7 @@ ss.delegateRemove = function#? DEBUG ss$delegateRemove##(delegate1, delegate2) {
 			if (targets.length == 2) {
 				return null;
 			}
-			var t = targets.clone();
+			var t = ss.arrayClone(targets);
 			t.splice(i, 2);
 			return ss._mkdel(t);
 		}

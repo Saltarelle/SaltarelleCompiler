@@ -160,6 +160,7 @@ ss.getBaseType = function#? DEBUG ss$getBaseType##(type) {
 };
 
 ss.getTypeFullName = function#? DEBUG ss$getTypeFullName##(type) {
+	if (type === Array) return 'Array';
 	if (type === Boolean) return 'Boolean';
 	if (type === Date) return 'Date';
 	if (type === Error) return 'Error';
@@ -237,7 +238,7 @@ ss.hasProperty = function#? DEBUG ss$hasProperty##(instance, name) {
 };
 
 ss.isClass = function#? DEBUG Type$isClass##(type) {
-	return (type.__class == true || type === Function || type === RegExp || type === String || type === Error || type === Object);
+	return (type.__class == true || type === Array || type === Function || type === RegExp || type === String || type === Error || type === Object);
 };
 
 ss.isEnum = function#? DEBUG Type$isEnum##(type) {

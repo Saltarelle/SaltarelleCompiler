@@ -31,7 +31,7 @@ namespace System.Collections.Generic {
 			return false;
 		}
 
-		[ScriptName("peekBack")]
+		[InlineCode("{$System.Script}.arrayPeekBack({this})")]
 		public T Peek() {
 			return default(T);
 		}

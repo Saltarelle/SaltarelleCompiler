@@ -6,7 +6,7 @@ var ss_AggregateException = function#? DEBUG AggregateException$##(message, inne
 		innerExceptions = message;
 		message = 'One or more errors occurred.';
 	}
-	innerExceptions = ss.isValue(innerExceptions) ? Array.fromEnumerable(innerExceptions) : null;
+	innerExceptions = ss.isValue(innerExceptions) ? ss.arrayFromEnumerable(innerExceptions) : null;
 
 	ss_Exception.call(this, message, innerExceptions && innerExceptions.length ? innerExceptions[0] : null);
 	this._innerExceptions = innerExceptions;

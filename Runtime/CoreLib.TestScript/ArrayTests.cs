@@ -218,11 +218,6 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void ParseWorks() {
-			Assert.AreEqual(Array.Parse("[1,2,3]"), new[] { 1, 2, 3 });
-		}
-
-		[Test]
 		public void ReverseWorks() {
 			var arr = new[] { 1, 3, 4, 1, 3, 2 };
 			arr.Reverse();
@@ -253,17 +248,6 @@ namespace CoreLib.TestScript {
 			var arr = new[] { 1, 6, 6, 4, 2 };
 			arr.Sort((x, y) => y - x);
 			Assert.AreEqual(arr, new[] { 6, 6, 4, 2, 1 });
-		}
-
-		[Test]
-		public void ToArrayWorks() {
-			var other = new JsDictionary();
-			other["length"] = 2;
-			other["0"] = "a";
-			other["1"] = "b";
-			var actual = Array.ToArray(other);
-			Assert.IsTrue(actual is Array);
-			Assert.AreEqual(actual, new[] { "a", "b" });
 		}
 
 		[Test]

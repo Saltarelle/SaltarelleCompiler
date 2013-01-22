@@ -35,7 +35,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("Array.toArray(arguments)")]
+		[InlineCode("{$System.Array}.prototype.slice.call(arguments)")]
 		public static Array ToArray() {
 			return null;
 		}

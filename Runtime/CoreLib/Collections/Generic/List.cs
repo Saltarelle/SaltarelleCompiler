@@ -28,15 +28,15 @@ namespace System.Collections.Generic {
 		public List(T first, params T[] rest) {
 		}
 
-		[InlineCode("{items}.clone()")]
+		[InlineCode("{$System.Script}.arrayClone({items})")]
 		public List(T[] items) {
 		}
 
-		[InlineCode("{items}.clone()")]
+		[InlineCode("{$System.Script}.arrayClone({items})")]
 		public List(List<T> items) {
 		}
 
-		[InlineCode("{$System.Collections.Generic.List`1}.fromEnumerable({items})")]
+		[InlineCode("{$System.Script}.arrayFromEnumerable({items})")]
 		public List(IEnumerable<T> items) {
 		}
 		
@@ -74,9 +74,11 @@ namespace System.Collections.Generic {
 		public void Add(T item) {
 		}
 
+		[InlineCode("{$System.Script}.arrayAddRange({this}, {items})")]
 		public void AddRange(IEnumerable<T> items) {
 		}
 
+		[InlineCode("{$System.Script}.arrayClone({this})")]
 		public List<T> Clone() {
 			return null;
 		}
@@ -100,10 +102,12 @@ namespace System.Collections.Generic {
 			return false;
 		}
 
+		[InlineCode("{$System.Script}.arrayExtract({this}, {index})")]
 		public List<T> Extract(int index) {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.arrayExtract({this}, {index}, {count})")]
 		public List<T> Extract(int index, int count) {
 			return null;
 		}
@@ -150,6 +154,7 @@ namespace System.Collections.Generic {
 		public void Insert(int index, T item) {
 		}
 
+		[InlineCode("{$System.Script}.arrayInsertRange({this}, {index}, {items})")]
 		public void InsertRange(int index, IEnumerable<T> items) {
 		}
 
@@ -171,10 +176,6 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
-		public static List<T> Parse(string s) {
-			return null;
-		}
-
 		public bool Remove(T item) {
 			return false;
 		}
@@ -182,6 +183,7 @@ namespace System.Collections.Generic {
 		public void RemoveAt(int index) {
 		}
 
+		[InlineCode("{$System.Script}.arrayRemoveRange({this}, {index}, {count})")]
 		public void RemoveRange(int index, int count) {
 		}
 
@@ -200,6 +202,11 @@ namespace System.Collections.Generic {
 		}
 
 		public void Sort(Func<T, T, int> callback) {
+		}
+
+		[InlineCode("{$System.Array}.prototype.slice.call({this})")]
+		public T[] ToArray() {
+			return null;
 		}
 	}
 }

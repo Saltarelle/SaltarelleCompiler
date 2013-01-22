@@ -10,6 +10,8 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Plugin {
 	public class RuntimeLibrary : IRuntimeLibrary {
+		private readonly ITypeReference _systemScript = ReflectionHelper.ParseReflectionName("System.Script");
+
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
 		private readonly INamer _namer;
@@ -53,7 +55,7 @@ namespace CoreLib.Plugin {
 				var def = pt.GetDefinition();
 				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				else
 					return GetScriptType(def, context);
 			}
@@ -73,7 +75,7 @@ namespace CoreLib.Plugin {
 					var jsref = CreateTypeReferenceExpression(td.ToTypeReference());
 					if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
 						// This handles the case of resolving the current type, eg. to access a static member.
-						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 					}
 					else {
 						return jsref;
@@ -112,14 +114,14 @@ namespace CoreLib.Plugin {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null);
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isInstanceOfType"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isInstanceOfType"), expression, jsTarget);
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "safeCast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "safeCast"), expression, jsTarget);
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -131,7 +133,7 @@ namespace CoreLib.Plugin {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "cast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "cast"), expression, jsTarget);
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -142,24 +144,24 @@ namespace CoreLib.Plugin {
 
 		public JsExpression ReferenceEquals(JsExpression a, JsExpression b) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isNullOrUndefined"), b);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isNullOrUndefined"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isNullOrUndefined"), a);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isNullOrUndefined"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.Same(a, b);
 			else
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "referenceEquals"), a, b);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "referenceEquals"), a, b);
 		}
 
 		public JsExpression ReferenceNotEquals(JsExpression a, JsExpression b) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isValue"), b);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isValue"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isValue"), a);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isValue"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.NotSame(a, b);
 			else
-				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "referenceEquals"), a, b));
+				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "referenceEquals"), a, b));
 		}
 
 		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
@@ -179,7 +181,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "coalesce"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "coalesce"), a, b);
 		}
 
 		public JsExpression Lift(JsExpression expression) {
@@ -269,11 +271,11 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "mkdel"), target, function);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), target, function);
 		}
 
 		public JsExpression BindFirstParameterToThis(JsExpression function) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "thisFix"), function);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "thisFix"), function);
 		}
 
 		public JsExpression Default(IType type) {
@@ -281,7 +283,7 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}
 			else if (type.IsReferenceType == null) {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "getDefaultValue"), GetScriptType(type, TypeContext.GetDefaultValue));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetDefaultValue));
 			}
 			else {
 				switch (type.GetDefinition().KnownTypeCode) {
@@ -317,14 +319,14 @@ namespace CoreLib.Plugin {
 				return JsExpression.New(CreateTypeReferenceExpression(KnownTypeReference.Array), sizeList);
 			}
 			else {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Array), "multidim"), new[] { Default(elementType) }.Concat(sizeList));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "multidimArray"), new[] { Default(elementType) }.Concat(sizeList));
 			}
 		}
 
 		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
 			if (Equals(sourceType, targetType)) {
 				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "delegateClone"), source);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "delegateClone"), source);
 			}
 			else {
 				return source;	// The clone is just to convert the delegate to a different type. The risk of anyone comparing the references is small, so just return the original as delegates are immutable anyway.
@@ -346,7 +348,7 @@ namespace CoreLib.Plugin {
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "mkdel"), @this, method);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), @this, method);
 		}
 
 		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
@@ -358,11 +360,11 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices) {
-			return JsExpression.Invocation(JsExpression.Member(array, "get"), indices);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "arrayGet"), new[] { array }.Concat(indices));
 		}
 
 		public JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value) {
-			return JsExpression.Invocation(JsExpression.Member(array, "set"), indices.Concat(new[] { value }));
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "arraySet"), new[] { array }.Concat(indices).Concat(new[] { value }));
 		}
 
 		public JsExpression CreateTaskCompletionSource(IType taskGenericArgument) {

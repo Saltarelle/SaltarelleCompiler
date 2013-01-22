@@ -227,11 +227,6 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void ParseWorks() {
-			Assert.AreEqual(List<int>.Parse("[1,2,3]"), new[] { 1, 2, 3 });
-		}
-
-		[Test]
 		public void RemoveWorks() {
 			var list = new List<string> { "a", "b", "c", "a" };
 			list.Remove("a");
@@ -357,6 +352,17 @@ namespace CoreLib.TestScript {
 			IList<string> l = new List<string> { "x", "y", "z" };
 			l.RemoveAt(1);
 			Assert.AreEqual(l, new[] { "x", "z" });
+		}
+
+		[Test]
+		public void ToArrayWorks() {
+			var l = new List<string>();
+			l.Add("a");
+			l.Add("b");
+			var actual = l.ToArray();
+			Assert.IsFalse(ReferenceEquals(l, actual));
+			Assert.IsTrue(actual is Array);
+			Assert.AreEqual(actual, new[] { "a", "b" });
 		}
 	}
 }

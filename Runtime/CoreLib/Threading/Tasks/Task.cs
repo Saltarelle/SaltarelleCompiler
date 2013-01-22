@@ -81,7 +81,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[InlineCode("{$System.Threading.Tasks.Task}.whenAll({$System.Array}.fromEnumerable({tasks}))")]
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAll({$System.Script}.arrayFromEnumerable({tasks}))")]
 		public static Task WhenAll(IEnumerable<Task> tasks) {
 			return null;
 		}
@@ -91,7 +91,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[InlineCode("{$System.Threading.Tasks.Task}.whenAll({$System.Array}.fromEnumerable({tasks}))")]
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAll({$System.Script}.arrayFromEnumerable({tasks}))")]
 		public static Task<TResult[]> WhenAll<TResult>(IEnumerable<Task<TResult>> tasks) {
 			return null;
 		}
@@ -100,7 +100,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Array}.fromEnumerable({tasks}))")]
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Script}.arrayFromEnumerable({tasks}))")]
 		public static Task<Task> WhenAny(IEnumerable<Task> tasks) {
 			return null;
 		}
@@ -111,7 +111,7 @@ namespace System.Threading.Tasks {
 		}
 
 		[IgnoreGenericArguments]
-		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Array}.fromEnumerable({tasks}))")]
+		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Script}.arrayFromEnumerable({tasks}))")]
 		public static Task<Task<TResult>> WhenAny<TResult>(IEnumerable<Task<TResult>> tasks) {
 			return null;
 		}

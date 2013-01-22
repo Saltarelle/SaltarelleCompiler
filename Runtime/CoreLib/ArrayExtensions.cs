@@ -7,7 +7,7 @@ namespace System {
 		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
 		public static bool Contains<T>(this T[] array, T item) { return false; }
 
-		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
+		[InlineCode("{$System.Script}.arrayClone({array})")]
 		public static T[] Clone<T>(this T[] array) { return null; }
 
 		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
@@ -19,10 +19,10 @@ namespace System {
 		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
 		public static bool Every<T>(this T[] array, Func<T, bool> callback) { return false; }
 
-		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
+		[InlineCode("{$System.Script}.arrayExtract({array}, {start})")]
 		public static T[] Extract<T>(this T[] array, int start) { return null; }
 
-		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
+		[InlineCode("{$System.Script}.arrayExtract({array}, {start}, {count})")]
 		public static T[] Extract<T>(this T[] array, int start, int count) { return null; }
 
 		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]

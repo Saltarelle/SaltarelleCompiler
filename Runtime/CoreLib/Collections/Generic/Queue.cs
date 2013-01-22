@@ -39,7 +39,7 @@ namespace System.Collections.Generic {
 		public void Enqueue(T item) {
 		}
 
-		[ScriptName("peekFront")]
+		[InlineCode("{$System.Script}.arrayPeekFront({this})")]
 		public T Peek() {
 			return default(T);
 		}

@@ -20,5 +20,5 @@ namespace System.Collections.Generic {
 		bool Contains(T item);
 
 		bool Remove(T item);
-    }
+	}
 }

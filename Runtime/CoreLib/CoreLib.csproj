@@ -30,7 +30,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
     <NoWarn>1591, 0661, 0660</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -39,7 +39,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>1591, 0661, 0660</NoWarn>
     <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
   </PropertyGroup>

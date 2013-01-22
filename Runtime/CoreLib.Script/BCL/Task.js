@@ -146,7 +146,7 @@ ss_Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
 							cancelled = true;
 							break;
 						case 7:
-							exceptions.addRange(t.exception.get_innerExceptions());
+							ss.arrayAddRange(exceptions, t.exception.get_innerExceptions());
 							break;
 						default:
 							throw 'Invalid task status ' + t.status;
