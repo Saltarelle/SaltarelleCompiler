@@ -29,7 +29,7 @@ namespace System.Collections.Generic {
 		}
 
 		public new ICollection<TKey> Keys {
-			[InlineCode("{$System.Script}.keys({this})")]
+			[InlineCode("{$System.Object}.keys({this})")]
 			get {
 				return null;
 			}
@@ -58,7 +58,7 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
-		[InlineCode("new {$ObjectEnumerator`2}({this})")]
+		[InlineCode("new {$System.ObjectEnumerator`2}({this})")]
 		public ObjectEnumerator<TKey, TValue> GetEnumerator() {
 			return null;
 		}

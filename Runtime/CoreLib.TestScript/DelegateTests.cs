@@ -11,6 +11,11 @@ namespace CoreLib.TestScript {
 		[BindThisToFirstParameter]
 		public delegate int D3(int a, int b);
 
+		class C {
+			public void F1() {}
+			public void F2() {}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(Delegate).FullName, "Function");
@@ -21,12 +26,6 @@ namespace CoreLib.TestScript {
 
 			var interfaces = typeof(Delegate).GetInterfaces();
 			Assert.AreEqual(interfaces.Length, 0);
-		}
-
-		[Test(ExpectedAssertionCount = 0)]
-		public void EmptyFieldCanBeInvoked() {
-			((Action)Delegate.Empty)();
-			// No exception is good enough
 		}
 
 		[PreserveName]
@@ -50,6 +49,27 @@ namespace CoreLib.TestScript {
 			Action d = (Action)Delegate.Combine((Action)(() => sb.Append("1")), (Action)(() => sb.Append("2")));
 			d();
 			Assert.AreEqual(sb.ToString(), "12");
+		}
+
+		[Test]
+		public void CombineDoesAddsDuplicateDelegates() {
+			C c1 = new C(), c2 = new C();
+			Action a = c1.F1;
+			a += c1.F2;
+			Assert.AreEqual(a.GetInvocationList().Length, 2);
+			a += c2.F1;
+			Assert.AreEqual(a.GetInvocationList().Length, 3);
+			a += c1.F1;
+			Assert.AreEqual(a.GetInvocationList().Length, 4);
+		}
+
+		[Test]
+		public void CombineDoesNotAffectOriginal() {
+			C c = new C();
+			Action a = c.F1;
+			Action a2 = a + c.F2;
+			Assert.AreEqual(a.GetInvocationList().Length, 1);
+			Assert.AreEqual(a2.GetInvocationList().Length, 2);
 		}
 
 		[Test]
@@ -77,6 +97,35 @@ namespace CoreLib.TestScript {
 			var d3 = (Action)Delegate.Remove(d, d2);
 			d3();
 			Assert.AreEqual(sb.ToString(), "13");
+		}
+
+		[Test]
+		public void RemoveDoesNotAffectOriginal() {
+			C c = new C();
+			Action a = c.F1;
+			Action a2 = a + c.F2;
+			Action a3 = a2 - a;
+			Assert.AreEqual(a.GetInvocationList().Length, 1);
+			Assert.AreEqual(a2.GetInvocationList().Length, 2);
+			Assert.AreEqual(a3.GetInvocationList().Length, 1);
+		}
+
+		[Test]
+		public void SubtractingDelegateFromItselfReturnsNull() {
+			Action a = () => {};
+			Action a2 = a - a;
+			Assert.IsTrue(a2 == null);
+		}
+
+		void A() {}
+
+		[Test]
+		public void RemoveWorksWithMethodGroupConversion() {
+			Action a = () => {};
+			Action a2 = a + A;
+			Action a3 = a2 - A;
+			Assert.IsFalse(a.Equals(a2));
+			Assert.IsTrue(a.Equals(a3));
 		}
 
 		[Test]
@@ -151,6 +200,74 @@ namespace CoreLib.TestScript {
 		public void DelegateWithBindThisToFirstParameterWorksWhenInvokedFromCode() {
 			D3 d = (a, b) => a + b;
 			Assert.AreEqual(d(10, 20), 30);
+		}
+
+		[Test]
+		public void EqualityAndInequalityOperatorsAndEqualsMethod() {
+#pragma warning disable 1718
+			C c1 = new C(), c2 = new C();
+			Action n = null;
+			Action f11 = c1.F1, f11_2 = c1.F1, f12 = c1.F2, f21 = c2.F1;
+
+			Assert.IsFalse(n == f11, "n == f11");
+			Assert.IsTrue (n != f11, "n != f11");
+			Assert.IsFalse(f11 == n, "f11 == n");
+			Assert.IsFalse(f11.Equals(n), "f11.Equals(n)");
+			Assert.IsTrue (f11 != n, "f11 != n");
+			Assert.IsTrue (n == n, "n == n");
+			Assert.IsFalse(n != n, "n != n");
+
+			Assert.IsTrue (f11 == f11, "f11 == f11");
+			Assert.IsTrue (f11.Equals(f11), "f11.Equals(f11)");
+			Assert.IsFalse(f11 != f11, "f11 != f11");
+
+			Assert.IsTrue (f11 == f11_2, "f11 == f11_2");
+			Assert.IsTrue (f11.Equals(f11_2), "f11.Equals(f11_2)");
+			Assert.IsFalse(f11 != f11_2, "f11 != f11_2");
+
+			Assert.IsFalse(f11 == f12, "f11 == f12");
+			Assert.IsFalse(f11.Equals(f12), "f11.Equals(f12)");
+			Assert.IsTrue (f11 != f12, "f11 != f12");
+
+			Assert.IsFalse(f11 == f21, "f11 == f21");
+			Assert.IsFalse(f11.Equals(f21), "f11.Equals(f21)");
+			Assert.IsTrue (f11 != f21, "f11 != f21");
+
+			Action m1 = f11 + f21, m2 = f11 + f21, m3 = f21 + f11;
+
+			Assert.IsTrue (m1 == m2, "m1 == m2");
+			Assert.IsTrue (m1.Equals(m2), "m1.Equals(m2)");
+			Assert.IsFalse(m1 != m2, "m1 != m2");
+
+			Assert.IsFalse(m1 == m3, "m1 == m3");
+			Assert.IsFalse(m1.Equals(m3), "m1.Equals(m3)");
+			Assert.IsTrue (m1 != m3, "m1 != m3");
+
+			Assert.IsFalse(m1 == f11, "m1 == f11");
+			Assert.IsFalse(m1.Equals(f11), "m1.Equals(f11)");
+			Assert.IsTrue (m1 != f11, "m1 != f11");
+#pragma warning restore 1718
+		}
+
+		[Test]
+		public void GetInvocationListWorksForImportedFunction() {
+			var f = (MulticastDelegate)new Function("");
+			var l = f.GetInvocationList();
+			Assert.AreEqual(l.Length, 1);
+			Assert.IsTrue(ReferenceEquals(f, l[0]));
+		}
+
+		[Test]
+		public void GetInvocationListWorksForMulticastDelegate() {
+			C c1 = new C(), c2 = new C();
+			Action f11 = c1.F1, f11_2 = c1.F1, f12 = c1.F2, f21 = c2.F1;
+			Action combined = f11 + f21 + f12 + f11_2;
+			var l = combined.GetInvocationList();
+			Assert.IsTrue(l.Length == 4);
+			Assert.IsTrue((Action)l[0] == f11);
+			Assert.IsTrue((Action)l[1] == f21);
+			Assert.IsTrue((Action)l[2] == f12);
+			Assert.IsTrue((Action)l[3] == f11_2);
 		}
 	}
 }

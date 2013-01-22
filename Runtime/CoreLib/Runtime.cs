@@ -56,11 +56,16 @@ namespace System {
 			: base(target, method) {
 		}
 
-		[IntrinsicOperator]
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator==(MulticastDelegate a, MulticastDelegate b) { return false; }
 
-		[IntrinsicOperator]
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator!=(MulticastDelegate a, MulticastDelegate b) { return false; }
+
+		[InlineCode("{$System.Script}.getInvocationList({this})")]
+		public Delegate[] GetInvocationList() {
+			return null;
+		}
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]

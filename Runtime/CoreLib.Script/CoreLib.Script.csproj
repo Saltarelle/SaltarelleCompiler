@@ -22,6 +22,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BCL\Function.js" />
     <Content Include="BCL\Lazy.js" />
     <Content Include="BCL\IComparable.js" />
     <Content Include="BCL\EqualityComparer.js" />
@@ -44,14 +45,12 @@
     <Content Include="BCL\ICollection.js" />
     <Content Include="BCL\Int32.js" />
     <Content Include="BCL\IteratorBlockEnumerator.js" />
-    <Content Include="Extensions\Function.js" />
     <Content Include="mscorlib.js" />
     <Content Include="Extensions\Array.js" />
     <Content Include="Extensions\Number.js" />
     <Content Include="BCL\Object.js" />
     <Content Include="Extensions\String.js" />
     <Content Include="BCL\Date.js" />
-    <Content Include="Extensions\Error.js" />
     <Content Include="BCL\Debug.js" />
     <Content Include="BCL\ArrayEnumerator.js" />
     <Content Include="BCL\CancelEventArgs.js" />

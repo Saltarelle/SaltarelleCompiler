@@ -60,7 +60,7 @@ namespace System.Collections {
 			return null;
 		}
 
-		[InlineCode("new {$ObjectEnumerator`2}({this})")]
+		[InlineCode("new {$System.ObjectEnumerator`2}({this})")]
 		public ObjectEnumerator<string, object> GetEnumerator() {
 			return null;
 		}

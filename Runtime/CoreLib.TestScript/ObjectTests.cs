@@ -1,4 +1,5 @@
-﻿using QUnit;
+﻿using System;
+using QUnit;
 
 namespace CoreLib.TestScript {
 	[TestFixture]
@@ -42,6 +43,17 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(Equals(o1, null));
 			Assert.IsTrue(Equals(o1, o1));
 			Assert.IsFalse(Equals(o1, o2));
+		}
+
+		[Test]
+		public void ReferenceEqualsWorks() {
+			object o1 = new object(), o2 = new object(), n = null;
+			Assert.IsTrue (ReferenceEquals(n, n));
+			Assert.IsTrue (ReferenceEquals(n, Script.Undefined));
+			Assert.IsFalse(ReferenceEquals(o1, o2));
+			Assert.IsFalse(ReferenceEquals(o1, n));
+			Assert.IsFalse(ReferenceEquals(o1, Script.Undefined));
+			Assert.IsTrue (ReferenceEquals(o1, o1));
 		}
 	}
 }

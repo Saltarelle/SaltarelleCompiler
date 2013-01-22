@@ -29,7 +29,7 @@ public class C {
 	}	
 }
 ",
-@"			var b = Date.areNotEqual(this.$f(), null);
+@"			var b = !ss.staticEquals(this.$f(), null);
 ");
 		}
 

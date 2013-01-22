@@ -40,6 +40,11 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.referenceEquals({a}, {b})")]
+		public static bool ReferenceEquals(object a, object b) {
+			return false;
+		}
+
 		[InlineCode("{$System.Script}.equals({this}, {o})", GeneratedMethodName = "equals", NonVirtualCode = "{this} === {o}")]
 		public virtual bool Equals(object o) {
 			return false;

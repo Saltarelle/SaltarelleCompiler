@@ -77,6 +77,8 @@ ss.equals = function(a, b) {
 		return a.equals(b);
 	if (ss.isDate(a) && ss.isDate(b))
 		return a.valueOf() === b.valueOf();
+	else if (typeof(a) === 'function' && typeof(b) === 'function')
+		return ss.delegateEquals(a, b);
 	else if (ss.isNullOrUndefined(a) && ss.isNullOrUndefined(b))
 		return true;
 	else
@@ -180,7 +182,7 @@ if (typeof(window) == 'object') {
 
 #include "BCL\Date.js"
 
-#include "Extensions\Function.js"
+#include "BCL\Function.js"
 
 #include "BCL\Debug.js"
 

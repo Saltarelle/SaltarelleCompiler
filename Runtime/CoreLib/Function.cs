@@ -75,5 +75,10 @@ namespace System {
 		public static explicit operator Function(Delegate d) {
 			return null;
 		}
+
+		[ScriptSkip]
+		public static explicit operator MulticastDelegate(Function f) {
+			return null;
+		}
 	}
 }

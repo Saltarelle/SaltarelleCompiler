@@ -269,11 +269,11 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), target, function);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "mkdel"), target, function);
 		}
 
 		public JsExpression BindFirstParameterToThis(JsExpression function) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Delegate), "thisFix"), function);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "thisFix"), function);
 		}
 
 		public JsExpression Default(IType type) {
@@ -324,7 +324,7 @@ namespace CoreLib.Plugin {
 		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
 			if (Equals(sourceType, targetType)) {
 				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Delegate), "clone"), source);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "delegateClone"), source);
 			}
 			else {
 				return source;	// The clone is just to convert the delegate to a different type. The risk of anyone comparing the references is small, so just return the original as delegates are immutable anyway.
@@ -346,7 +346,7 @@ namespace CoreLib.Plugin {
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments);
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Delegate), "mkdel"), @this, method);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "mkdel"), @this, method);
 		}
 
 		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
