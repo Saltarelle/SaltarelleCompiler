@@ -102,7 +102,7 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 				part = dtf.shortDayNames[dt.getDay()];
 				break;
 			case 'dd':
-				part = dt.getDate().toString().padLeft(2, 0x30);
+				part = ss.padLeftString(dt.getDate().toString(), 2, 0x30);
 				break;
 			case 'd':
 				part = dt.getDate();
@@ -114,7 +114,7 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 				part = dtf.shortMonthNames[dt.getMonth()];
 				break;
 			case 'MM':
-				part = (dt.getMonth() + 1).toString().padLeft(2, 0x30);
+				part = ss.padLeftString((dt.getMonth() + 1).toString(), 2, 0x30);
 				break;
 			case 'M':
 				part = (dt.getMonth() + 1);
@@ -123,7 +123,7 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 				part = dt.getFullYear();
 				break;
 			case 'yy':
-				part = (dt.getFullYear() % 100).toString().padLeft(2, 0x30);
+				part = ss.padLeftString((dt.getFullYear() % 100).toString(), 2, 0x30);
 				break;
 			case 'y':
 				part = (dt.getFullYear() % 100);
@@ -134,23 +134,23 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 					part = '12';
 				}
 				else if (fs == 'hh') {
-					part = part.toString().padLeft(2, 0x30);
+					part = ss.padLeftString(part.toString(), 2, 0x30);
 				}
 				break;
 			case 'HH':
-				part = dt.getHours().toString().padLeft(2, 0x30);
+				part = ss.padLeftString(dt.getHours().toString(), 2, 0x30);
 				break;
 			case 'H':
 				part = dt.getHours();
 				break;
 			case 'mm':
-				part = dt.getMinutes().toString().padLeft(2, 0x30);
+				part = ss.padLeftString(dt.getMinutes().toString(), 2, 0x30);
 				break;
 			case 'm':
 				part = dt.getMinutes();
 				break;
 			case 'ss':
-				part = dt.getSeconds().toString().padLeft(2, 0x30);
+				part = ss.padLeftString(dt.getSeconds().toString(), 2, 0x30);
 				break;
 			case 's':
 				part = dt.getSeconds();
@@ -162,13 +162,13 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 				}
 				break;
 			case 'fff':
-				part = dt.getMilliseconds().toString().padLeft(3, 0x30);
+				part = ss.padLeftString(dt.getMilliseconds().toString(), 3, 0x30);
 				break;
 			case 'ff':
-				part = dt.getMilliseconds().toString().padLeft(3).substr(0, 2);
+				part = ss.padLeftString(dt.getMilliseconds().toString(), 3).substr(0, 2);
 				break;
 			case 'f':
-				part = dt.getMilliseconds().toString().padLeft(3).charAt(0);
+				part = ss.padLeftString(dt.getMilliseconds().toString(), 3).charAt(0);
 				break;
 			case 'z':
 				part = dt.getTimezoneOffset() / 60;
@@ -176,9 +176,9 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 				break;
 			case 'zz': case 'zzz':
 				part = dt.getTimezoneOffset() / 60;
-				part = ((part >= 0) ? '-' : '+') + Math.floor(Math.abs(part)).toString().padLeft(2, 0x30);
+				part = ((part >= 0) ? '-' : '+') + Math.floor(ss.padLeftString(Math.abs(part)).toString(), 2, 0x30);
 				if (fs == 'zzz') {
-					part += dtf.timeSeparator + Math.abs(dt.getTimezoneOffset() % 60).toString().padLeft(2, 0x30);
+					part += dtf.timeSeparator + Math.abs(ss.padLeftString(dt.getTimezoneOffset() % 60).toString(), 2, 0x30);
 				}
 				break;
 			default:

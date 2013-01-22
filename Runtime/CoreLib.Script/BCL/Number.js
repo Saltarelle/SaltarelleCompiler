@@ -23,7 +23,7 @@ ss._commaFormatNumber = function#? DEBUG ss$_commaFormat##(number, groups, decim
 		number = number.substr(0, decimalIndex);
 	}
 
-	var negative = number.startsWith('-');
+	var negative = ss.startsWithString(number, '-');
 	if (negative) {
 		number = number.substr(1);
 	}
@@ -86,7 +86,7 @@ ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLoc
 		case 'd': case 'D':
 			s = parseInt(Math.abs(num)).toString();
 			if (precision != -1) {
-				s = s.padLeft(precision, 0x30);
+				s = ss.padLeftString(s, precision, 0x30);
 			}
 			if (num < 0) {
 				s = '-' + s;
@@ -98,7 +98,7 @@ ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLoc
 				s = s.toUpperCase();
 			}
 			if (precision != -1) {
-				s = s.padLeft(precision, 0x30);
+				s = ss.padLeftString(s, precision, 0x30);
 			}
 			break;
 		case 'e': case 'E':
@@ -137,10 +137,10 @@ ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLoc
 			}
 			s = ss._commaFormatnumber(s, nf.currencyGroupSizes, nf.currencyDecimalSeparator, nf.currencyGroupSeparator);
 			if (num < 0) {
-				s = String.format(nf.currencyNegativePattern, s);
+				s = ss.formatString(nf.currencyNegativePattern, s);
 			}
 			else {
-				s = String.format(nf.currencyPositivePattern, s);
+				s = ss.formatString(nf.currencyPositivePattern, s);
 			}
 			break;
 		case 'p': case 'P':
@@ -154,10 +154,10 @@ ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLoc
 			}
 			s = ss._commaFormatNumber(s, nf.percentGroupSizes, nf.percentDecimalSeparator, nf.percentGroupSeparator);
 			if (num < 0) {
-				s = String.format(nf.percentNegativePattern, s);
+				s = ss.formatString(nf.percentNegativePattern, s);
 			}
 			else {
-				s = String.format(nf.percentPositivePattern, s);
+				s = ss.formatString(nf.percentPositivePattern, s);
 			}
 			break;
 	}

@@ -85,16 +85,6 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(TestEnum.FirstValue.Equals(TestEnum.SecondValue));
 		}
 
-		private static bool DoesItThrow(Action a) {
-			try {
-				a();
-				return false;
-			}
-			catch {
-				return true;
-			}
-		}
-
 		[Test]
 		public void ConversionsToEnumAreTreatedAsConversionsToTheUnderlyingType() {
 			Assert.AreEqual((TestEnum)(object)0, 0);

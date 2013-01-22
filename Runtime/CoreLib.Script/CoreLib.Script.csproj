@@ -49,7 +49,7 @@
     <Content Include="Extensions\Array.js" />
     <Content Include="BCL\Number.js" />
     <Content Include="BCL\Object.js" />
-    <Content Include="Extensions\String.js" />
+    <Content Include="BCL\String.js" />
     <Content Include="BCL\Date.js" />
     <Content Include="BCL\Debug.js" />
     <Content Include="BCL\ArrayEnumerator.js" />
