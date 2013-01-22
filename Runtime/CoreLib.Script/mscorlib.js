@@ -170,7 +170,7 @@ if (typeof(window) == 'object') {
 
 #include "BCL\IEquatable.js"
 
-#include "Extensions\Object.js"
+#include "BCL\Object.js"
 
 #include "Extensions\Number.js"
 

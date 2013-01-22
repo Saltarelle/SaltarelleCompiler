@@ -48,7 +48,7 @@
     <Content Include="mscorlib.js" />
     <Content Include="Extensions\Array.js" />
     <Content Include="Extensions\Number.js" />
-    <Content Include="Extensions\Object.js" />
+    <Content Include="BCL\Object.js" />
     <Content Include="Extensions\String.js" />
     <Content Include="BCL\Date.js" />
     <Content Include="Extensions\Error.js" />

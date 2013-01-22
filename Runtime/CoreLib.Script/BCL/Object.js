@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Object Extensions
 
-Object.clearKeys = function#? DEBUG Object$clearKeys##(d) {
+ss.clearKeys = function#? DEBUG ss$clearKeys##(d) {
 	for (var n in d) {
 		if (d.hasOwnProperty(n))
 			delete d[n];
 	}
 };
 
-Object.keyExists = function#? DEBUG Object$keyExists##(d, key) {
+ss.keyExists = function#? DEBUG ss$keyExists##(d, key) {
 	return d[key] !== undefined;
 };
 
@@ -22,7 +22,7 @@ if (!Object.keys) {
 		return keys;
 	};
 
-	Object.getKeyCount = function#? DEBUG Object$getKeyCount##(d) {
+	ss.getKeyCount = function#? DEBUG ss$getKeyCount##(d) {
 		var count = 0;
 		for (var n in d) {
 			if (d.hasOwnProperty(n))
@@ -32,11 +32,7 @@ if (!Object.keys) {
 	};
 }
 else {
-	Object.getKeyCount = function#? DEBUG Object$getKeyCount##(d) {
+	ss.getKeyCount = function#? DEBUG ss$getKeyCount2##(d) {
 		return Object.keys(d).length;
 	};
 }
-
-Object.getObjectEnumerator = function#? DEBUG Object$getObjectEnumerator##(d) {
-	return new ss_ObjectEnumerator(d);
-};

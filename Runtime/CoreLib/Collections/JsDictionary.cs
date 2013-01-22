@@ -24,7 +24,7 @@ namespace System.Collections {
 		}
 
 		public int Count {
-			[InlineCode("{$System.Object}.getKeyCount({this})")]
+			[InlineCode("{$System.Script}.getKeyCount({this})")]
 			get {
 				return 0;
 			}
@@ -46,11 +46,11 @@ namespace System.Collections {
 			}
 		}
 
-		[InlineCode("{$System.Object}.clearKeys({this})")]
+		[InlineCode("{$System.Script}.clearKeys({this})")]
 		public void Clear() {
 		}
 
-		[InlineCode("{$System.Object}.keyExists({this}, {key})")]
+		[InlineCode("{$System.Script}.keyExists({this}, {key})")]
 		public bool ContainsKey(string key) {
 			return false;
 		}
@@ -60,7 +60,7 @@ namespace System.Collections {
 			return null;
 		}
 
-		[InlineCode("{$System.Object}.getObjectEnumerator({this})")]
+		[InlineCode("new {$ObjectEnumerator`2}({this})")]
 		public ObjectEnumerator<string, object> GetEnumerator() {
 			return null;
 		}
