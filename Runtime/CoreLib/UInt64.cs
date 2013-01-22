@@ -25,10 +25,12 @@ namespace System {
 		[NonScriptable]
 		public const ulong MaxValue = 0;
 
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string Format(string format) {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.localeFormatNumber({this}, {format})")]
 		public string LocaleFormat(string format) {
 			return null;
 		}

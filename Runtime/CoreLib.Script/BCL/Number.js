@@ -1,32 +1,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Number Extensions
 
-Number.parse = function#? DEBUG Number$parse##(s) {
-	if (!s || !s.length) {
-		return 0;
-	}
-	if ((s.indexOf('.') >= 0) || (s.indexOf('e') >= 0) ||
-		s.endsWith('f') || s.endsWith('F')) {
-		return parseFloat(s);
-	}
-	return parseInt(s, 10);
-};
-
-Number.prototype.format = function#? DEBUG Number$format##(format) {
+ss.formatNumber = function#? DEBUG ss$formatNumber##(num, format) {
 	if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
-		return this.toString();
+		return num.toString();
 	}
-	return this._netFormat(format, false);
+	return ss._netFormatNumber(num, format, false);
 };
 
-Number.prototype.localeFormat = function#? DEBUG Number$format##(format) {
+ss.localeFormatNumber = function#? DEBUG ss$localeFormatNumber##(num, format) {
 	if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
-		return this.toLocaleString();
+		return num.toLocaleString();
 	}
-	return this._netFormat(format, true);
+	return ss._netFormatNumber(num, format, true);
 };
 
-Number._commaFormat = function#? DEBUG Number$_commaFormat##(number, groups, decimal, comma) {
+ss._commaFormatNumber = function#? DEBUG ss$_commaFormat##(number, groups, decimal, comma) {
 	var decimalPart = null;
 	var decimalIndex = number.indexOf(decimal);
 	if (decimalIndex > 0) {
@@ -82,7 +71,7 @@ Number._commaFormat = function#? DEBUG Number$_commaFormat##(number, groups, dec
 	return decimalPart ? s + decimalPart : s;
 };
 
-Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLocale) {
+ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLocale) {
 	var nf = useLocale ? ss_CultureInfo.CurrentCulture.numberFormat : ss_CultureInfo.InvariantCulture.numberFormat;
 
 	var s = '';    
@@ -95,16 +84,16 @@ Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLo
 	var fs = format.charAt(0);
 	switch (fs) {
 		case 'd': case 'D':
-			s = parseInt(Math.abs(this)).toString();
+			s = parseInt(Math.abs(num)).toString();
 			if (precision != -1) {
 				s = s.padLeft(precision, 0x30);
 			}
-			if (this < 0) {
+			if (num < 0) {
 				s = '-' + s;
 			}
 			break;
 		case 'x': case 'X':
-			s = parseInt(Math.abs(this)).toString(16);
+			s = parseInt(Math.abs(num)).toString(16);
 			if (fs == 'X') {
 				s = s.toUpperCase();
 			}
@@ -114,10 +103,10 @@ Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLo
 			break;
 		case 'e': case 'E':
 			if (precision == -1) {
-				s = this.toExponential();
+				s = num.toExponential();
 			}
 			else {
-				s = this.toExponential(precision);
+				s = num.toExponential(precision);
 			}
 			if (fs == 'E') {
 				s = s.toUpperCase();
@@ -128,26 +117,26 @@ Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLo
 			if (precision == -1) {
 				precision = nf.numberDecimalDigits;
 			}
-			s = this.toFixed(precision).toString();
+			s = num.toFixed(precision).toString();
 			if (precision && (nf.numberDecimalSeparator != '.')) {
 				var index = s.indexOf('.');
 				s = s.substr(0, index) + nf.numberDecimalSeparator + s.substr(index + 1);
 			}
 			if ((fs == 'n') || (fs == 'N')) {
-				s = Number._commaFormat(s, nf.numberGroupSizes, nf.numberDecimalSeparator, nf.numberGroupSeparator);
+				s = ss._commaFormatNumber(s, nf.numberGroupSizes, nf.numberDecimalSeparator, nf.numberGroupSeparator);
 			}
 			break;
 		case 'c': case 'C':
 			if (precision == -1) {
 				precision = nf.currencyDecimalDigits;
 			}
-			s = Math.abs(this).toFixed(precision).toString();
+			s = Math.abs(num).toFixed(precision).toString();
 			if (precision && (nf.currencyDecimalSeparator != '.')) {
 				var index = s.indexOf('.');
 				s = s.substr(0, index) + nf.currencyDecimalSeparator + s.substr(index + 1);
 			}
-			s = Number._commaFormat(s, nf.currencyGroupSizes, nf.currencyDecimalSeparator, nf.currencyGroupSeparator);
-			if (this < 0) {
+			s = ss._commaFormatnumber(s, nf.currencyGroupSizes, nf.currencyDecimalSeparator, nf.currencyGroupSeparator);
+			if (num < 0) {
 				s = String.format(nf.currencyNegativePattern, s);
 			}
 			else {
@@ -158,13 +147,13 @@ Number.prototype._netFormat = function#? DEBUG Number$_netFormat##(format, useLo
 			if (precision == -1) {
 				precision = nf.percentDecimalDigits;
 			}
-			s = (Math.abs(this) * 100.0).toFixed(precision).toString();
+			s = (Math.abs(num) * 100.0).toFixed(precision).toString();
 			if (precision && (nf.percentDecimalSeparator != '.')) {
 				var index = s.indexOf('.');
 				s = s.substr(0, index) + nf.percentDecimalSeparator + s.substr(index + 1);
 			}
-			s = Number._commaFormat(s, nf.percentGroupSizes, nf.percentDecimalSeparator, nf.percentGroupSeparator);
-			if (this < 0) {
+			s = ss._commaFormatNumber(s, nf.percentGroupSizes, nf.percentDecimalSeparator, nf.percentGroupSeparator);
+			if (num < 0) {
 				s = String.format(nf.percentNegativePattern, s);
 			}
 			else {

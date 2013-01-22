@@ -174,7 +174,7 @@ if (typeof(window) == 'object') {
 
 #include "BCL\Object.js"
 
-#include "Extensions\Number.js"
+#include "BCL\Number.js"
 
 #include "Extensions\String.js"
 

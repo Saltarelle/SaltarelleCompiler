@@ -24,10 +24,12 @@ namespace System {
 		[InlineConstant]
 		public const ushort MaxValue = 0xFFFF;
 
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string Format(string format) {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.localeFormatNumber({this}, {format})")]
 		public string LocaleFormat(string format) {
 			return null;
 		}
