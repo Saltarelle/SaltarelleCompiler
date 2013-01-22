@@ -39,4 +39,4 @@ ss_StringBuilder.prototype = {
 	}
 };
 
-Type.registerClass(global, 'ss.StringBuilder', ss_StringBuilder);
+ss.registerClass(global, 'ss.StringBuilder', ss_StringBuilder);

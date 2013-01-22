@@ -24,7 +24,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
 $OuterNamespace_InnerNamespace_SomeEnum.prototype = { Value1: 1, Value2: 2, Value3: 3 };
-{Type}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum, false);
+{Script}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum, false);
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
 var $OuterNamespace_InnerNamespace_SomeType = function() {
@@ -66,10 +66,10 @@ $OuterNamespace_InnerNamespace2_OtherType.prototype = {
 		return x;
 	}
 };
-{Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType', $OuterNamespace_InnerNamespace_SomeType);
-{Type}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
-{Type}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface, []);
-{Type}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
+{Script}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType', $OuterNamespace_InnerNamespace_SomeType);
+{Script}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
+{Script}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface, []);
+{Script}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
 y = 1;
 x = 1;
 ",
@@ -157,10 +157,10 @@ var $C3 = function() {
 // I1
 var $I1 = function() {
 };
-{Type}.registerClass(global, 'C3', $C3);
-{Type}.registerClass(global, 'C2', $C2, {C3});
-{Type}.registerInterface(global, 'I1', $I1, []);
-{Type}.registerClass(global, 'C1', $C1, {C2}, {I1});
+{Script}.registerClass(global, 'C3', $C3);
+{Script}.registerClass(global, 'C2', $C2, {C3});
+{Script}.registerInterface(global, 'I1', $I1, []);
+{Script}.registerClass(global, 'C1', $C1, {C2}, {I1});
 ",			
 			
 				new JsClass(ReflectionHelper.ParseReflectionName("C1").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("C2", asm)), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("I1", asm)) }),
@@ -192,9 +192,9 @@ var $B = function() {
 // I
 var $I = function() {
 };
-{Type}.registerClass(global, 'B', $B);
-{Type}.registerInterface(global, 'I', $I, []);
-{Type}.registerClass(global, 'A', $A, {C}, {I});
+{Script}.registerClass(global, 'B', $B);
+{Script}.registerInterface(global, 'I', $I, []);
+{Script}.registerClass(global, 'A', $A, {C}, {I});
 ",			
 			
 				new JsClass(ReflectionHelper.ParseReflectionName("A").Resolve(compilation.Compilation).GetDefinition(), JsClass.ClassTypeEnum.Class, null, new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("C", asm)), new JsExpression[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("I", asm)) }),
@@ -227,7 +227,7 @@ var $MyClass = function() {
 $MyClass.$main = function() {
 	X;
 };
-{Type}.registerClass(global, 'MyClass', $MyClass);
+{Script}.registerClass(global, 'MyClass', $MyClass);
 {MyClass}.$Main();
 ",			new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) },
 			main.Object,

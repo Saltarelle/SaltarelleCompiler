@@ -6,4 +6,4 @@ ss_IComparable.prototype = {
 	compareTo: null
 };
 
-Type.registerInterface(global, 'ss.IComparable', ss_IComparable);
+ss.registerInterface(global, 'ss.IComparable', ss_IComparable);

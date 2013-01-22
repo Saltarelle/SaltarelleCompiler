@@ -7,7 +7,7 @@ using com.gargoylesoftware.htmlunit.html;
 
 namespace CoreLib.Tests
 {
-	public abstract class TestBase {
+	public abstract class CoreLibTestBase {
 		private static readonly Lazy<string> _mscorlibScriptLazy = new Lazy<string>(() => File.ReadAllText("mscorlib.js"));
 		internal static string MscorlibScript { get { return _mscorlibScriptLazy.Value; } }
 
@@ -17,8 +17,16 @@ namespace CoreLib.Tests
 		private static readonly Lazy<string> _qunitScript = new Lazy<string>(() => File.ReadAllText("qunit-1.9.0.js"));
 		internal static string QUnitScript { get { return _qunitScript.Value; } }
 
-		protected abstract IEnumerable<string> ScriptSources { get; }
-		protected abstract string TestClassName { get; }
+		private static readonly Lazy<string> _testsScript = new Lazy<string>(() => File.ReadAllText("CoreLib.TestScript.js"));
+		internal static string TestsScript { get { return _testsScript.Value; } }
+
+		protected virtual IEnumerable<string> ScriptSources {
+			get { return new[] { TestsScript }; }
+		}
+
+		protected virtual string TestClassName {
+			get { return "CoreLib.TestScript." + GetType().Name; }
+		}
 
 		protected HtmlPage GeneratePage(bool print = false) {
 			var client = new WebClient();

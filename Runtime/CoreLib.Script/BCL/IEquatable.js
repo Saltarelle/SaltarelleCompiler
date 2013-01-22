@@ -6,4 +6,4 @@ ss_IEquatable.prototype = {
 	equalsT: null
 };
 
-Type.registerInterface(global, 'ss.IEquatable', ss_IEquatable);
+ss.registerInterface(global, 'ss.IEquatable', ss_IEquatable);

@@ -53,7 +53,7 @@ namespace CoreLib.Plugin {
 				var def = pt.GetDefinition();
 				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 				else
 					return GetScriptType(def, context);
 			}
@@ -73,7 +73,7 @@ namespace CoreLib.Plugin {
 					var jsref = CreateTypeReferenceExpression(td.ToTypeReference());
 					if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
 						// This handles the case of resolving the current type, eg. to access a static member.
-						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Type), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
 					}
 					else {
 						return jsref;
@@ -112,14 +112,14 @@ namespace CoreLib.Plugin {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null);
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Type), "isInstanceOfType"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "isInstanceOfType"), expression, jsTarget);
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Type), "safeCast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "safeCast"), expression, jsTarget);
 		}
 
 		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -131,7 +131,7 @@ namespace CoreLib.Plugin {
 			var jsTarget = GetCastTarget(sourceType, targetType);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Type), "cast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "cast"), expression, jsTarget);
 		}
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
@@ -281,7 +281,7 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}
 			else if (type.IsReferenceType == null) {
-				return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetDefaultValue), "getDefaultValue"));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Script")), "getDefaultValue"), GetScriptType(type, TypeContext.GetDefaultValue));
 			}
 			else {
 				switch (type.GetDefinition().KnownTypeCode) {

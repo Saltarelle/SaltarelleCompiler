@@ -15,6 +15,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreLib.TestScript", "CoreLib.TestScript\CoreLib.TestScript.csproj", "{B54DD6E7-526D-4BD4-BCCA-8DCB1AB12A23}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreLib.Tests", "CoreLib.Tests\CoreLib.Tests.csproj", "{7CC02EBA-94BA-4561-90A7-1DE1240DDB38}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8780581F-7C26-4B64-9235-BA1C458DF36E} = {8780581F-7C26-4B64-9235-BA1C458DF36E}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{6E9A8403-701D-4156-A208-03B7C0F7E958}"
 	ProjectSection(SolutionItems) = preProject

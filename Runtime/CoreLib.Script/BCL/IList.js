@@ -10,11 +10,4 @@ ss_IList.prototype = {
 	removeAt: null
 };
 
-ss_IList.isAssignableFrom = function#? DEBUG IList$isAssignableFrom##(type) {
-	if (type == Array)
-		return true;
-	else
-		return Type.prototype.isAssignableFrom.call(this, type);
-};
-
-Type.registerInterface(global, 'ss.IList', ss_IList, ss_ICollection, ss_IEnumerable);
+ss.registerInterface(global, 'ss.IList', ss_IList, ss_ICollection, ss_IEnumerable);

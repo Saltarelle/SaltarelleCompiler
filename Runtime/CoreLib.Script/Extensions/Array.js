@@ -3,7 +3,6 @@
 
 Array.__typeName = 'Array';
 Array.__baseType = Object;
-Array.__interfaces = [ ss_IEnumerable, ss_ICollection, ss_IList ];
 Array.__class = true;
 
 Array.prototype.get_item = function#? DEBUG Array$get_item##(index) {
@@ -97,7 +96,7 @@ Array.prototype.addRange = function#? DEBUG Array$addRange##(items) {
 		}
 		finally {
 			if (ss_IDisposable.isInstanceOfType(e)) {
-				Type.cast(e, ss_IDisposable).dispose();
+				ss.cast(e, ss_IDisposable).dispose();
 			}
 		}
 	}
@@ -216,7 +215,7 @@ Array.prototype.insertRange = function#? DEBUG Array$insertRange##(index, items)
 		}
 		finally {
 			if (ss_IDisposable.isInstanceOfType(e)) {
-				Type.cast(e, ss_IDisposable).dispose();
+				ss.cast(e, ss_IDisposable).dispose();
 			}
 		}
 	}

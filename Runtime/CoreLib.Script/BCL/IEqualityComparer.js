@@ -7,4 +7,4 @@ ss_IEqualityComparer.prototype = {
 	getObjectHashCode: null
 };
 
-Type.registerInterface(global, 'ss.IEqualityComparer', ss_IEqualityComparer);
+ss.registerInterface(global, 'ss.IEqualityComparer', ss_IEqualityComparer);

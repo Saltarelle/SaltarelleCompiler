@@ -13,4 +13,4 @@ ss_IDictionary.prototype = {
 	tryGetValue: null
 };
 
-Type.registerInterface(global, 'ss.IDictionary', ss_IDictionary, [ss_IEnumerable]);
+ss.registerInterface(global, 'ss.IDictionary', ss_IDictionary, [ss_IEnumerable]);

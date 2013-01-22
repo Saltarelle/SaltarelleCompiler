@@ -25,8 +25,8 @@ ss_TaskCompletionSource.prototype = {
 		return this.task._complete(result);
 	},
 	trySetException: function#? DEBUG TaskCompletionSource$setException##(exception) {
-		if (!Type.canCast(exception, ss_AggregateException)) {
-			if (Type.canCast(exception, ss_Exception))
+		if (!ss.isInstanceOfType(exception, ss_AggregateException)) {
+			if (ss.isInstanceOfType(exception, ss_Exception))
 				exception = [exception];
 			exception = new ss_AggregateException(exception);
 		}
@@ -34,4 +34,4 @@ ss_TaskCompletionSource.prototype = {
 	}
 };
 
-Type.registerClass(global, 'ss.TaskCompletionSource', ss_TaskCompletionSource);
+ss.registerClass(global, 'ss.TaskCompletionSource', ss_TaskCompletionSource);

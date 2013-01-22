@@ -19,12 +19,12 @@ namespace System
 			return default(T);
 		}
 
-		[InlineCode("{type}.createInstance()")]
+		[InlineCode("{$System.Script}.createInstance({type})")]
 		public static object CreateInstance(Type type) {
 			return null;
 		}
 
-		[InlineCode("{T}.createInstance()")]
+		[InlineCode("{$System.Script}.createInstance({T})")]
 		public static T CreateInstance<T>() {
 			return default(T);
 		}

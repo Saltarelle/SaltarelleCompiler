@@ -253,11 +253,11 @@ ss_Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
 	return tcs.task;
 };
 
-Type.registerClass(global, 'ss.Task', ss_Task, null, ss_IDisposable);
+ss.registerClass(global, 'ss.Task', ss_Task, null, ss_IDisposable);
 
 ////////////////////////////////////////////////////////////////////////////////
 // TaskStatus
 var ss_TaskStatus = function() {
 };
 ss_TaskStatus.prototype = { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 };
-Type.registerEnum(global, 'ss.TaskStatus', ss_TaskStatus, false);
+ss.registerEnum(global, 'ss.TaskStatus', ss_TaskStatus, false);

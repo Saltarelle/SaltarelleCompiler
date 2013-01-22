@@ -3,7 +3,7 @@
 
 var ss_Enum = function#? DEBUG Enum$##() {
 };
-Type.registerClass(global, 'ss.Enum', ss_Enum);
+ss.registerClass(global, 'ss.Enum', ss_Enum);
 
 ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 	var values = enumType.prototype;

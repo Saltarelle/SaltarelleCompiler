@@ -4,7 +4,7 @@
 var ss_Nullable = function#? DEBUG Nullable$##() {
 };
 
-Type.registerClass(global, 'ss.Nullable', ss_Nullable);
+ss.registerClass(global, 'ss.Nullable', ss_Nullable);
 
 ss_Nullable.unbox = function#? DEBUG Nullable$unbox##(instance) {
 	if (!ss.isValue(instance))

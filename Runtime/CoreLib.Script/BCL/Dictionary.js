@@ -46,8 +46,8 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 
 		this.comparer = cmp || ss_EqualityComparer.def;
 
-		if (ss_IDictionary.isInstanceOfType(o)) {
-			var e = Type.cast(o, ss_IDictionary).getEnumerator();
+		if (ss.isInstanceOfType(o, ss_IDictionary)) {
+			var e = ss.cast(o, ss_IDictionary).getEnumerator();
 			try {
 				while (e.moveNext()) {
 					var c = e.get_current();
@@ -55,8 +55,8 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 				}
 			}
 			finally {
-				if (ss_IDisposable.isInstanceOfType(e)) {
-					Type.cast(e, ss_IDisposable).dispose();
+				if (ss.isInstanceOfType(e, ss_IDisposable)) {
+					ss.cast(e, ss_IDisposable).dispose();
 				}
 			}
 		}
@@ -195,9 +195,9 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		}
 	};
 
-	$type.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], function() { return null; }, function() { return [ ss_IDictionary, ss_IEnumerable ]; });
+	ss.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], function() { return null; }, function() { return [ ss_IDictionary, ss_IEnumerable ]; });
 	return $type;
 };
 
-Type.registerGenericClass(global, 'ss.Dictionary$2', ss_Dictionary$2, 2);
-Type.registerClass(global, 'ss.$DictionaryCollection', ss_$DictionaryCollection, null, [ss_IEnumerable, ss_ICollection]);
+ss.registerGenericClass(global, 'ss.Dictionary$2', ss_Dictionary$2, 2);
+ss.registerClass(global, 'ss.$DictionaryCollection', ss_$DictionaryCollection, null, [ss_IEnumerable, ss_ICollection]);

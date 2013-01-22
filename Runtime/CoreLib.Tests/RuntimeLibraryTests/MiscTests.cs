@@ -53,7 +53,7 @@ public class C {
 			var Щ = 'г';
 		}
 	};
-	Type.registerClass(global, 'Ф.Класс', $Ф_Класс, Object);
+	ss.registerClass(global, 'Ф.Класс', $Ф_Класс, Object);
 })();
 ");
 		}
@@ -95,36 +95,36 @@ class C<T1, T2> where T1 : class {
 	var $$C$2 = function(T1, T2) {
 		var $type = function() {
 		};
-		Type.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
+		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
 			return Object;
 		}, function() {
 			return [];
 		});
-		Type.makeGenericType($$C$2, [T1, T2]).$f1 = false;
-		Type.makeGenericType($$C$2, [T1, T2]).$f2 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f3 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f4 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f5 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f6 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f7 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f8 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f9 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f10 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f11 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f12 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f13 = 0;
-		Type.makeGenericType($$C$2, [T1, T2]).$f14 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f15 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f16 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f17 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f18 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f19 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f20 = T2.getDefaultValue();
-		Type.makeGenericType($$C$2, [T1, T2]).$f21 = null;
-		Type.makeGenericType($$C$2, [T1, T2]).$f22 = new Date(0);
+		ss.makeGenericType($$C$2, [T1, T2]).$f1 = false;
+		ss.makeGenericType($$C$2, [T1, T2]).$f2 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f3 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f4 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f5 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f6 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f7 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f8 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f9 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f10 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f11 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f12 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f13 = 0;
+		ss.makeGenericType($$C$2, [T1, T2]).$f14 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f15 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f16 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f17 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f18 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f19 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f20 = ss.getDefaultValue(T2);
+		ss.makeGenericType($$C$2, [T1, T2]).$f21 = null;
+		ss.makeGenericType($$C$2, [T1, T2]).$f22 = new Date(0);
 		return $type;
 	};
-	Type.registerGenericClass(null, '$C$2', $$C$2, 2);
+	ss.registerGenericClass(null, '$C$2', $$C$2, 2);
 	////////////////////////////////////////////////////////////////////////////////
 	// I
 	var $$I = function() {
@@ -133,8 +133,8 @@ class C<T1, T2> where T1 : class {
 	// X
 	var $$X = function() {
 	};
-	Type.registerInterface(null, '$I', $$I, []);
-	Type.registerClass(null, '$X', $$X, Object);
+	ss.registerInterface(null, '$I', $$I, []);
+	ss.registerClass(null, '$X', $$X, Object);
 })();
 ");
 		}

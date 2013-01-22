@@ -10,4 +10,4 @@ ss_JsErrorException.prototype = {
 		return this._error;
 	}
 };
-Type.registerClass(global, 'ss.JsErrorException', ss_JsErrorException, ss_Exception);
+ss.registerClass(global, 'ss.JsErrorException', ss_JsErrorException, ss_Exception);

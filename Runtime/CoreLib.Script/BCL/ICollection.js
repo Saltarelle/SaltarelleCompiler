@@ -10,11 +10,4 @@ ss_ICollection.prototype = {
 	remove: null
 };
 
-ss_ICollection.isAssignableFrom = function#? DEBUG ICollection$isAssignableFrom##(type) {
-	if (type == Array)
-		return true;
-	else
-		return Type.prototype.isAssignableFrom.call(this, type);
-};
-
-Type.registerInterface(global, 'ss.ICollection', ss_IEnumerable);
+ss.registerInterface(global, 'ss.ICollection', ss_IEnumerable);

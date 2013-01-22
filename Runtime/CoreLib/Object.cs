@@ -19,7 +19,7 @@ namespace System {
 		/// Retrieves the type associated with an object instance.
 		/// </summary>
 		/// <returns>The type of the object.</returns>
-		[InlineCode("{$System.Type}.getInstanceType({this})")]
+		[InlineCode("{$System.Script}.getInstanceType({this})")]
 		public Type GetType() {
 			return null;
 		}

@@ -15,20 +15,22 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class Type {
-
 		public Type BaseType {
+			[InlineCode("{$System.Script}.getBaseType({this})")]
 			get {
 				return null;
 			}
 		}
 
 		public string FullName {
+			[InlineCode("{$System.Script}.getTypeFullName({this})")]
 			get {
 				return null;
 			}
 		}
 
 		public string Name {
+			[InlineCode("{$System.Script}.getTypeName({this})")]
 			get {
 				return null;
 			}
@@ -67,6 +69,7 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.getInterfaces({this})")]
 		public Type[] GetInterfaces() {
 			return null;
 		}
@@ -81,6 +84,7 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.getType({typeName})")]
 		public static Type GetType(string typeName) {
 			return null;
 		}
@@ -95,6 +99,7 @@ namespace System {
 			return false;
 		}
 
+		[InlineCode("{$System.Script}.hasProperty({instance}, {name})")]
 		public static bool HasProperty(object instance, string name) {
 			return false;
 		}
@@ -105,36 +110,34 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.isAssignableFrom({this}, {type})")]
 		public bool IsAssignableFrom(Type type) {
 			return false;
 		}
 
 		public bool IsClass {
+			[InlineCode("{$System.Script}.isClass({this})")]
 			get { return false; }
 		}
 
 		public bool IsEnum {
+			[InlineCode("{$System.Script}.isEnum({this})")]
 			get { return false; }
 		}
 
 		public bool IsFlags {
+			[InlineCode("{$System.Script}.isFlags({this})")]
 			get { return false; }
 		}
 
 		public bool IsInterface {
+			[InlineCode("{$System.Script}.isInterface({this})")]
 			get { return false; }
 		}
 
-		public static bool IsNamespace(object obj) {
-			return false;
-		}
-
+		[InlineCode("{$System.Script}.isInstanceOfType({instance}, {type})")]
 		public static bool IsInstanceOfType(object instance, Type type) {
 			return false;
-		}
-
-		public static Type Parse(string s) {
-			return null;
 		}
 
 		[InlineCode("{instance}['remove_' + {name}]({handler})")]
@@ -155,22 +158,27 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.makeGenericType({genericType}, {typeArguments})")]
 		public static Type MakeGenericType(Type genericType, Type[] typeArguments) {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.getGenericTypeDefinition({this})")]
 		public Type GetGenericTypeDefinition() {
 			return null;
 		}
 
 		public bool IsGenericTypeDefinition {
+			[InlineCode("{$System.Script}.isGenericTypeDefinition({this})")]
 			get { return false; }
 		}
 
 		public int GenericParameterCount {
+			[InlineCode("{$System.Script}.getGenericParameterCount({this})")]
 			get { return 0; }
 		}
 
+		[InlineCode("{$System.Script}.getGenericArguments({this})")]
 		public Type[] GetGenericArguments() {
 			return null;
 		}

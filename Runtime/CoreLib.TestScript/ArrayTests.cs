@@ -10,6 +10,15 @@ namespace CoreLib.TestScript {
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(int[]).FullName, "Array", "FullName should be Array");
 			Assert.IsTrue(typeof(Array).IsClass, "IsClass should be true");
+			Assert.IsTrue(typeof(int[]).IsClass, "IsClass should be true");
+			Assert.AreEqual(typeof(Array).BaseType, typeof(Object), "BaseType of Array should be object");
+
+			var interfaces = typeof(int[]).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<int>)), "Interfaces should contain IEnumerable<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(ICollection<int>)), "Interfaces should contain ICollection<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(IList<int>)), "Interfaces should contain IList<int>");
+
 			object arr = new[] { 1, 2, 3 };
 			Assert.IsTrue(arr is Array, "is Array should be true");
 			Assert.IsTrue(arr is int[], "is int[] should be true");
