@@ -129,7 +129,7 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void LocaleFormatWorks() {
 			var dt = new DateTime(2011, 7, 12, 13);
-			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-07-12");
+			Assert.AreEqual(dt.LocaleFormat("yyyy-MM-dd"), "2011-07-12");
 		}
 
 		[Test]

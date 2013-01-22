@@ -116,19 +116,20 @@ namespace System {
 		/// Returns the current date with the time part set to 00:00:00.
 		/// </summary>
 		public static JsDate Today {
-			[InlineCode("{$System.DateTime}.today()")]
+			[InlineCode("{$System.Script}.today()")]
 			get {
 				return null;
 			}
 		}
 
 		public static JsDate UtcNow {
-			[InlineCode("{$System.DateTime}.utcNow()")]
+			[InlineCode("{$System.Script}.utcNow()")]
 			get {
 				return null;
 			}
 		}
 
+		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
 		public string Format(string format) {
 			return null;
 		}
@@ -213,31 +214,32 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.localeFormatDate({this}, {format})")]
 		public string LocaleFormat(string format) {
 			return null;
 		}
 
-		[InlineCode("{$System.DateTime}.parseDate({value})")]
+		[InlineCode("new Date(Date.parse({value}))")]
 		public static JsDate Parse(string value) {
 			return null;
 		}
 
-		[InlineCode("{$System.DateTime}.parseExact({value}, {format})")]
+		[InlineCode("{$System.Script}.parseExactDate({value}, {format})")]
 		public static JsDate ParseExact(string value, string format) {
 			return null;
 		}
 
-		[InlineCode("{$System.DateTime}.parseExact({value}, {format}, {culture})")]
+		[InlineCode("{$System.Script}.parseExactDate({value}, {format}, {culture})")]
 		public static JsDate ParseExact(string value, string format, CultureInfo culture) {
 			return null;
 		}
 
-		[InlineCode("{$System.DateTime}.parseExactUTC({value}, {format})")]
+		[InlineCode("{$System.Script}.parseExactDateUTC({value}, {format})")]
 		public static JsDate ParseExactUtc(string value, string format) {
 			return null;
 		}
 
-		[InlineCode("{$System.DateTime}.parseExactUTC({value}, {format}, {culture})")]
+		[InlineCode("{$System.Script}.parseExactDateUTC({value}, {format}, {culture})")]
 		public static JsDate ParseExactUtc(string value, string format, CultureInfo culture) {
 			return null;
 		}
@@ -397,7 +399,7 @@ namespace System {
 		/// <summary>
 		/// Compares two dates
 		/// </summary>
-		[InlineCode("{$System.DateTime}.areEqual({a}, {b})")]
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator ==(JsDate a, JsDate b) {
 			return false;
 		}
@@ -405,7 +407,7 @@ namespace System {
 		/// <summary>
 		/// Compares two dates
 		/// </summary>
-		[InlineCode("{$System.DateTime}.areNotEqual({a}, {b})")]
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator !=(JsDate a, JsDate b) {
 			return false;
 		}

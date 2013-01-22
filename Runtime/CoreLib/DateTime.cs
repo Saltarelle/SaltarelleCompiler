@@ -99,7 +99,7 @@ namespace System {
 		/// <summary>
 		/// Returns the current date and time according to UTC
 		/// </summary>
-		public static DateTime UtcNow { [ScriptName("utcNow")] get { return default(DateTime); } }
+		public static DateTime UtcNow { [InlineCode("{$System.Script}.utcNow()")] get { return default(DateTime); } }
 
 
 		/// <summary>
@@ -108,8 +108,9 @@ namespace System {
 		/// <returns>
 		/// An object that is set to today's date, with the time component set to 00:00:00.
 		/// </returns>
-		public static DateTime Today { [ScriptName("today")] get { return default(DateTime); } }
+		public static DateTime Today { [InlineCode("{$System.Script}.today()")] get { return default(DateTime); } }
 
+		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
 		public string Format(string format) {
 			return null;
 		}
@@ -195,29 +196,32 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.localeFormatDate({this}, {format})")]
 		public string LocaleFormat(string format) {
 			return null;
 		}
 
-		[ScriptName("parseDate")]
+		[InlineCode("new Date(Date.parse({value}))")]
 		public static DateTime Parse(string value) {
 			return default(DateTime);
 		}
 
+		[InlineCode("{$System.Script}.parseExactDate({value}, {format})")]
 		public static DateTime? ParseExact(string value, string format) {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.parseExactDate({value}, {format}, {culture})")]
 		public static DateTime? ParseExact(string value, string format, CultureInfo culture) {
 			return null;
 		}
 
-		[ScriptName("parseExactUTC")]
+		[InlineCode("{$System.Script}.parseExactDateUTC({value}, {format})")]
 		public static DateTime? ParseExactUtc(string value, string format) {
 			return null;
 		}
 
-		[ScriptName("parseExactUTC")]
+		[InlineCode("{$System.Script}.parseExactDateUTC({value}, {format}, {culture})")]
 		public static DateTime? ParseExactUtc(string value, string format, CultureInfo culture) {
 			return null;
 		}
@@ -308,50 +312,52 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool AreEqual(DateTime? a, DateTime? b) {
 			return false;
 		}
 
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool AreNotEqual(DateTime? a, DateTime? b) {
 			return false;
 		}
 
-		[ScriptName("areEqual")]
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator==(DateTime a, DateTime b) {
 			return false;
 		}
 
-		[ScriptName("areEqual")]
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator==(DateTime? a, DateTime b) {
 			return false;
 		}
 
-		[ScriptName("areEqual")]
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator==(DateTime a, DateTime? b) {
 			return false;
 		}
 
-		[ScriptName("areEqual")]
+		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator==(DateTime? a, DateTime? b) {
 			return false;
 		}
 
-		[ScriptName("areNotEqual")]
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator!=(DateTime a, DateTime b) {
 			return false;
 		}
 
-		[ScriptName("areNotEqual")]
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator!=(DateTime? a, DateTime b) {
 			return false;
 		}
 
-		[ScriptName("areNotEqual")]
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator!=(DateTime a, DateTime? b) {
 			return false;
 		}
 
-		[ScriptName("areNotEqual")]
+		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator!=(DateTime? a, DateTime? b) {
 			return false;
 		}

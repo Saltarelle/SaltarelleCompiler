@@ -77,6 +77,8 @@ ss.equals = function(a, b) {
 		return a.equals(b);
 	if (ss.isDate(a) && ss.isDate(b))
 		return a.valueOf() === b.valueOf();
+	else if (ss.isNullOrUndefined(a) && ss.isNullOrUndefined(b))
+		return true;
 	else
 		return a === b;
 };
@@ -176,7 +178,7 @@ if (typeof(window) == 'object') {
 
 #include "Extensions\Array.js"
 
-#include "Extensions\Date.js"
+#include "BCL\Date.js"
 
 #include "Extensions\Error.js"
 
