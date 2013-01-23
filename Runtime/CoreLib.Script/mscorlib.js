@@ -170,83 +170,83 @@ if (typeof(window) == 'object') {
 	};
 }
 
-#include "TypeSystem\Type.js"
+#include "TypeSystem.js"
 
-#include "BCL\IComparable.js"
+#include "IComparable.js"
 
-#include "BCL\IEquatable.js"
+#include "IEquatable.js"
 
-#include "BCL\Object.js"
+#include "Object.js"
 
-#include "BCL\Number.js"
+#include "Number.js"
 
-#include "BCL\String.js"
+#include "String.js"
 
-#include "Extensions\Array.js"
+#include "Array.js"
 
-#include "BCL\Date.js"
+#include "Date.js"
 
-#include "BCL\Function.js"
+#include "Function.js"
 
-#include "BCL\Debug.js"
+#include "Debug.js"
 
-#include "BCL\Enum.js"
+#include "Enum.js"
 
-#include "BCL\CultureInfo.js"
+#include "CultureInfo.js"
 
-#include "BCL\IEnumerator.js"
+#include "IEnumerator.js"
 
-#include "BCL\IEnumerable.js"
+#include "IEnumerable.js"
 
-#include "BCL\ICollection.js"
+#include "ICollection.js"
 
-#include "BCL\IEqualityComparer.js"
+#include "IEqualityComparer.js"
 
-#include "BCL\Nullable.js"
+#include "Nullable.js"
 
-#include "BCL\IList.js"
+#include "IList.js"
 
-#include "BCL\IDictionary.js"
+#include "IDictionary.js"
 
-#include "BCL\Int32.js"
+#include "Int32.js"
 
-#include "BCL\JsDate.js"
+#include "JsDate.js"
 
-#include "BCL\ArrayEnumerator.js"
+#include "ArrayEnumerator.js"
 
-#include "BCL\ObjectEnumerator.js"
+#include "ObjectEnumerator.js"
 
-#include "BCL\EqualityComparer.js"
+#include "EqualityComparer.js"
 
-#include "BCL\Dictionary.js"
+#include "Dictionary.js"
 
-#include "BCL\IDisposable.js"
+#include "IDisposable.js"
 
-#include "BCL\StringBuilder.js"
+#include "StringBuilder.js"
 
-#include "BCL\EventArgs.js"
+#include "EventArgs.js"
 
-#include "BCL\Exception.js"
+#include "Exception.js"
 
-#include "BCL\NotSupportedException.js"
+#include "NotSupportedException.js"
 
-#include "BCL\AggregateException.js"
+#include "AggregateException.js"
 
-#include "BCL\PromiseException.js"
+#include "PromiseException.js"
 
-#include "BCL\JsErrorException.js"
+#include "JsErrorException.js"
 
-#include "BCL\IteratorBlockEnumerable.js"
+#include "IteratorBlockEnumerable.js"
 
-#include "BCL\IteratorBlockEnumerator.js"
+#include "IteratorBlockEnumerator.js"
 
-#include "BCL\Lazy.js"
+#include "Lazy.js"
 
-#include "BCL\Task.js"
+#include "Task.js"
 
-#include "BCL\TaskCompletionSource.js"
+#include "TaskCompletionSource.js"
 
-#include "BCL\CancelEventArgs.js"
+#include "CancelEventArgs.js"
 
 if (global.ss) {
 	for (var n in ss) {
