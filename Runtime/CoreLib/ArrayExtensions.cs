@@ -4,7 +4,7 @@ using System.Text;
 
 namespace System {
 	public static class ArrayExtensions {
-		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
+		[InlineCode("{$System.Script}.contains({array}, {item})")]
 		public static bool Contains<T>(this T[] array, T item) { return false; }
 
 		[InlineCode("{$System.Script}.arrayClone({array})")]
@@ -43,10 +43,10 @@ namespace System {
 		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
 		public static void ForEach<T>(this T[] array, Action<T> callback) {}
 
-		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
+		[InlineCode("{$System.Script}.indexOf({array}, {item})")]
 		public static int IndexOf<T>(this T[] array, T item) { return 0; }
 
-		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]
+		[InlineCode("{$System.Script}.indexOfArray({array}, {item}, {startIndex})")]
 		public static int IndexOf<T>(this T[] array, T item, int startIndex) { return 0; }
 
 		[InstanceMethodOnFirstArgument, IgnoreGenericArguments]

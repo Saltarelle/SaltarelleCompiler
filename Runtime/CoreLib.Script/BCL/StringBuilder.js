@@ -8,7 +8,7 @@ var ss_StringBuilder = function#? DEBUG StringBuilder$##(s) {
 ss_StringBuilder.prototype = {
 	append: function#? DEBUG StringBuilder$append##(s) {
 		if (!ss.isNullOrUndefined(s) && s !== '') {
-			this._parts.add(s);
+			ss.add(this._parts, s);
 			this.isEmpty = false;
 		}
 		return this;

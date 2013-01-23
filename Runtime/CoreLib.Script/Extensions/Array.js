@@ -1,21 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Array Extensions
 
-//TODO
-Array.prototype.get_item = function#? DEBUG Array$get_item##(index) {
-	return this[index];
-};
-
-//TODO
-Array.prototype.set_item = function#? DEBUG Array$set_item##(index, value) {
-	this[index] = value;
-};
-
-//TODO
-Array.prototype.get_count = function#? DEBUG Array$get_count##() {
-	return this.length;
-};
-
 ss.arrayGet2 = function#? DEBUG ss$arrayGet2##(arr, indices) {
 	if (indices.length != (arr._sizes ? arr._sizes.length : 1))
 		throw 'Invalid number of indices';
@@ -78,20 +63,15 @@ ss.arrayExtract = function#? DEBUG ss$arrayExtract##(arr, start, count) {
 	return arr.slice(start, start + count);
 };
 
-//TODO
-Array.prototype.add = function#? DEBUG Array$add##(item) {
-	this[this.length] = item;
-};
-
 ss.arrayAddRange = function#? DEBUG ss$arrayAddRange##(arr, items) {
 	if (items instanceof Array) {
 		arr.push.apply(arr, items);
 	}
 	else {
-		var e = items.getEnumerator();
+		var e = ss.getEnumerator(items);
 		try {
 			while (e.moveNext()) {
-				arr.add(e.get_current());
+				ss.add(arr, e.get_current());
 			}
 		}
 		finally {
@@ -102,11 +82,6 @@ ss.arrayAddRange = function#? DEBUG ss$arrayAddRange##(arr, items) {
 	}
 };
 
-//TODO
-Array.prototype.clear = function#? DEBUG Array$clear##() {
-	this.length = 0;
-};
-
 ss.arrayClone = function#? DEBUG ss$arrayClone##(arr) {
 	if (arr.length === 1) {
 		return [arr[0]];
@@ -114,12 +89,6 @@ ss.arrayClone = function#? DEBUG ss$arrayClone##(arr) {
 	else {
 		return Array.apply(null, arr);
 	}
-};
-
-//TODO
-Array.prototype.contains = function#? DEBUG Array$contains##(item) {
-	var index = this.indexOf(item);
-	return (index >= 0);
 };
 
 ss.arrayPeekFront = function#? DEBUG ss$arrayPeekFront##(arr) {
@@ -173,30 +142,15 @@ if (!Array.prototype.forEach) {
 	};
 }
 
-//TODO
-Array.prototype.getEnumerator = function#? DEBUG Array$getEnumerator##() {
-	return new ss_ArrayEnumerator(this);
-};
-
-if (!Array.prototype.indexOf) {
-	Array.prototype.indexOf = function#? DEBUG Array$indexOf##(item, startIndex) {
-		startIndex = startIndex || 0;
-		var length = this.length;
-		if (length) {
-			for (var index = startIndex; index < length; index++) {
-				if (this[index] === item) {
-					return index;
-				}
-			}
+ss.indexOfArray = function#? DEBUG ss$indexOfArray##(arr, item, startIndex) {
+	startIndex = startIndex || 0;
+	for (var i = startIndex; i < arr.length; i++) {
+		if (ss.staticEquals(arr[i], item)) {
+			return i;
 		}
-		return -1;
-	};
+	}
+	return -1;
 }
-
-//TODO
-Array.prototype.insert = function#? DEBUG Array$insert##(index, item) {
-	this.splice(index, 0, item);
-};
 
 ss.arrayInsertRange = function#? DEBUG ss$arrayInsertRange##(arr, index, items) {
 	if (items instanceof Array) {
@@ -210,7 +164,7 @@ ss.arrayInsertRange = function#? DEBUG ss$arrayInsertRange##(arr, index, items) 
 		}
 	}
 	else {
-		var e = items.getEnumerator();
+		var e = ss.getEnumerator(items);
 		try {
 			while (e.moveNext()) {
 				arr.insert(index, e.get_current());
@@ -238,21 +192,6 @@ if (!Array.prototype.map) {
 	};
 }
 
-//TODO
-Array.prototype.remove = function#? DEBUG Array$remove##(item) {
-	var index = this.indexOf(item);
-	if (index >= 0) {
-		this.splice(index, 1);
-		return true;
-	}
-	return false;
-};
-
-//TODO
-Array.prototype.removeAt = function#? DEBUG Array$removeAt##(index) {
-	this.splice(index, 1);
-};
-
 ss.arrayRemoveRange = function#? DEBUG ss$arrayRemoveRange##(arr, index, count) {
 	arr.splice(index, count);
 };
@@ -270,7 +209,7 @@ if (!Array.prototype.some) {
 }
 
 ss.arrayFromEnumerable = function#? DEBUG ss$arrayFromEnumerable##(enm) {
-	var e = enm.getEnumerator(), r = [];
+	var e = ss.getEnumerator(enm), r = [];
 	try {
 		while (e.moveNext())
 			r.push(e.get_current());

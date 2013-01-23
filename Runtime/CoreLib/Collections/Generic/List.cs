@@ -57,6 +57,7 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		// Not used because we will either be invoked from the interface or use our own property with the same name
 		int ICollection<T>.Count {
 			get {
 				return 0;
@@ -71,6 +72,7 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		[InlineCode("{$System.Script}.add({this}, {item})")]
 		public void Add(T item) {
 		}
 
@@ -83,6 +85,7 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.clear({this})")]
 		public void Clear() {
 		}
 
@@ -90,6 +93,7 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.contains({this}, {item})")]
 		public bool Contains(T item) {
 			return false;
 		}
@@ -135,6 +139,7 @@ namespace System.Collections.Generic {
 		}
 
 		[EnumerateAsArray]
+		[InlineCode("{$System.Script}.getEnumerator({this})")]
 		public IEnumerator<T> GetEnumerator() {
 			return null;
 		}
@@ -143,14 +148,17 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.indexOf({this}, {item})")]
 		public int IndexOf(T item) {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.indexOfArray({this}, {item}, {startIndex})")]
 		public int IndexOf(T item, int startIndex) {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.insert({this}, {index}, {item})")]
 		public void Insert(int index, T item) {
 		}
 
@@ -176,10 +184,12 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.remove({this}, {item})")]
 		public bool Remove(T item) {
 			return false;
 		}
 
+		[InlineCode("{$System.Script}.removeAt({this}, {index})")]
 		public void RemoveAt(int index) {
 		}
 

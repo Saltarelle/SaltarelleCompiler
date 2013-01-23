@@ -24,9 +24,11 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		[InlineCode("{$System.Script}.clear({this})")]
 		public void Clear() {
 		}
 
+		[InlineCode("{$System.Script}.contains({this}, {item})")]
 		public bool Contains(T item) {
 			return false;
 		}

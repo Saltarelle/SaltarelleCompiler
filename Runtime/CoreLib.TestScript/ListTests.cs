@@ -5,6 +5,21 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class ListTests {
+		private class C {
+			public readonly int i;
+
+			public C(int i) {
+				this.i = i;
+			}
+
+			public override bool Equals(object o) {
+				return o is C && i == ((C)o).i;
+			}
+			public override int GetHashCode() {
+				return i;
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(List<int>).FullName, "Array", "FullName should be Array");
@@ -81,6 +96,16 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void GetEnumeratorWorks() {
+			var e = new List<string> { "x", "y" }.GetEnumerator();
+			Assert.IsTrue(e.MoveNext());
+			Assert.AreEqual(e.Current, "x");
+			Assert.IsTrue(e.MoveNext());
+			Assert.AreEqual(e.Current, "y");
+			Assert.IsFalse(e.MoveNext());
+		}
+
+		[Test]
 		public void AddWorks() {
 			var l = new List<string> { "x", "y"};
 			l.Add("a");
@@ -122,6 +147,13 @@ namespace CoreLib.TestScript {
 			var list = new List<string> { "x", "y" };
 			Assert.IsTrue(list.Contains("x"));
 			Assert.IsFalse(list.Contains("z"));
+		}
+
+		[Test]
+		public void ContainsUsesEqualsMethod() {
+			List<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			Assert.IsTrue(l.Contains(new C(2)));
+			Assert.IsFalse(l.Contains(new C(4)));
 		}
 
 		[Test]
@@ -188,8 +220,20 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void IndexOfWithoutStartIndexUsesEqualsMethod() {
+			List<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			Assert.AreEqual(l.IndexOf(new C(2)), 1);
+			Assert.AreEqual(l.IndexOf(new C(4)), -1);
+		}
+
+		[Test]
 		public void IndexOfWithStartIndexWorks() {
 			Assert.AreEqual(new List<string> { "a", "b", "c", "b" }.IndexOf("b", 2), 3);
+		}
+
+		[Test]
+		public void IndexOfWithStartIndexUsesEqualsMethod() {
+			Assert.AreEqual(new List<C> { new C(1), new C(2), new C(3), new C(2) }.IndexOf(new C(2), 2), 3);
 		}
 
 		[Test]
@@ -229,8 +273,31 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void RemoveWorks() {
 			var list = new List<string> { "a", "b", "c", "a" };
-			list.Remove("a");
+			Assert.IsTrue(list.Remove("a"));
 			Assert.AreEqual(list, new[] { "b", "c", "a" });
+		}
+
+		[Test]
+		public void RemoveReturnsFalseIfTheElementWasNotFound() {
+			var list = new List<string> { "a", "b", "c", "a" };
+			Assert.IsFalse(list.Remove("d"));
+			Assert.AreEqual(list, new[] { "a", "b", "c", "a" });
+		}
+
+		[Test]
+		public void RemoveCanRemoveNullItem() {
+			var list = new List<string> { "a", null, "c", null };
+			Assert.IsTrue(list.Remove(null));
+			Assert.AreEqual(list, new[] { "a", "c", null });
+		}
+
+		[Test]
+		public void RemoveUsesEqualsMethod() {
+			var list = new List<C> { new C(1), new C(2), new C(3) };
+			list.Remove(new C(2));
+			Assert.AreEqual(list.Count, 2);
+			Assert.AreEqual(list[0].i, 1);
+			Assert.AreEqual(list[1].i, 3);
 		}
 
 		[Test]
@@ -281,13 +348,24 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void ForeachWhenCastToIListWorks() {
-			IList<string> list = new List<string> { "x", "y" };
+		public void ForeachWhenCastToIEnumerableWorks() {
+			IEnumerable<string> list = new List<string> { "x", "y" };
 			string result = "";
 			foreach (var s in list) {
 				result += s;
 			}
 			Assert.AreEqual(result, "xy");
+		}
+
+		[Test]
+		public void IEnumerableGetEnumeratorWorks() {
+			var l = (IEnumerable<string>)new List<string> { "x", "y" };
+			var e = l.GetEnumerator();
+			Assert.IsTrue(e.MoveNext());
+			Assert.AreEqual(e.Current, "x");
+			Assert.IsTrue(e.MoveNext());
+			Assert.AreEqual(e.Current, "y");
+			Assert.IsFalse(e.MoveNext());
 		}
 
 		[Test]
@@ -318,11 +396,34 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ICollectionContainsUsesEqualsMethod() {
+			IList<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			Assert.IsTrue(l.Contains(new C(2)));
+			Assert.IsFalse(l.Contains(new C(4)));
+		}
+
+		[Test]
 		public void ICollectionRemoveWorks() {
-			IList<string> l = new List<string> { "x", "y", "z" };
+			ICollection<string> l = new List<string> { "x", "y", "z" };
 			Assert.IsTrue(l.Remove("y"));
 			Assert.IsFalse(l.Remove("a"));
 			Assert.AreEqual(l, new[] { "x", "z" });
+		}
+
+		[Test]
+		public void ICollectionRemoveCanRemoveNullItem() {
+			IList<string> list = new List<string> { "a", null, "c", null };
+			Assert.IsTrue(list.Remove(null));
+			Assert.AreEqual(list, new[] { "a", "c", null });
+		}
+
+		[Test]
+		public void ICollectionRemoveUsesEqualsMethod() {
+			IList<C> list = new List<C> { new C(1), new C(2), new C(3) };
+			list.Remove(new C(2));
+			Assert.AreEqual(list.Count, 2);
+			Assert.AreEqual(list[0].i, 1);
+			Assert.AreEqual(list[1].i, 3);
 		}
 
 		[Test]
@@ -338,6 +439,13 @@ namespace CoreLib.TestScript {
 			IList<string> l = new List<string> { "x", "y", "z" };
 			Assert.AreEqual(l.IndexOf("y"), 1);
 			Assert.AreEqual(l.IndexOf("a"), -1);
+		}
+
+		[Test]
+		public void IListIndexOfUsesEqualsMethod() {
+			IList<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			Assert.AreEqual(l.IndexOf(new C(2)), 1);
+			Assert.AreEqual(l.IndexOf(new C(4)), -1);
 		}
 
 		[Test]

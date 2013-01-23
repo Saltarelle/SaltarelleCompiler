@@ -36,6 +36,7 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("new {$System.ArrayEnumerator}({this})")]
 		public ArrayEnumerator GetEnumerator() {
 			return null;
 		}

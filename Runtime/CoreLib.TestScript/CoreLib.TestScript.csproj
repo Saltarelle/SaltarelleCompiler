@@ -63,6 +63,9 @@
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
+    <Compile Include="IListTests.cs" />
+    <Compile Include="ICollectionTests.cs" />
+    <Compile Include="IEnumerableTests.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="ExceptionTests.cs" />
     <Compile Include="LazyTests.cs" />

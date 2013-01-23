@@ -82,7 +82,7 @@ ss.registerClass = function#? DEBUG ss$registerClass##(root, name, ctor, baseTyp
 		ctor.__interfaces = [];
 		for (var i = 4; i < arguments.length; i++) {
 			interfaceType = arguments[i];
-			ctor.__interfaces.add(interfaceType);
+			ss.add(ctor.__interfaces, interfaceType);
 		}
 	}
 };
@@ -111,7 +111,7 @@ ss.registerInterface = function#? DEBUG ss$createInterface##(root, name, ctor, b
 	else if (baseInterface) {
 		ctor.__interfaces = [];
 		for (var i = 3; i < arguments.length; i++) {
-			ctor.__interfaces.add(arguments[i]);
+			ss.add(ctor.__interfaces, arguments[i]);
 		}
 	}
 };
@@ -217,14 +217,14 @@ ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 	}
 	else if (target.__interface) {
 		var interfaces = ss.getInterfaces(type);
-		if (interfaces && interfaces.contains(target)) {
+		if (interfaces && ss.contains(interfaces, target)) {
 			return true;
 		}
 
 		var baseType = ss.getBaseType(type);
 		while (baseType) {
 			interfaces = ss.getInterfaces(baseType);
-			if (interfaces && interfaces.contains(target)) {
+			if (interfaces && ss.contains(interfaces, target)) {
 				return true;
 			}
 			baseType = ss.getBaseType(baseType);

@@ -4,6 +4,21 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class QueueTests {
+		private class C {
+			public readonly int i;
+
+			public C(int i) {
+				this.i = i;
+			}
+
+			public override bool Equals(object o) {
+				return o is C && i == ((C)o).i;
+			}
+			public override int GetHashCode() {
+				return i;
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(Queue<int>).FullName, "Array", "FullName should be Array");
@@ -53,6 +68,16 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(q.Contains(10));
 			Assert.IsTrue(q.Contains(2));
 			Assert.IsFalse(q.Contains(11));
+		}
+
+		[Test]
+		public void ContainsUsesEqualsMethod() {
+			var q = new Queue<C>();
+			q.Enqueue(new C(1));
+			q.Enqueue(new C(2));
+			q.Enqueue(new C(3));
+			Assert.IsTrue(q.Contains(new C(2)));
+			Assert.IsFalse(q.Contains(new C(4)));
 		}
 
 		[Test]

@@ -50,7 +50,13 @@ namespace CoreLib.Tests.Core {
 	public class EqualityComparerTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class ICollectionTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class IComparableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IEnumerableTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class IEquatableTests : CoreLibTestBase {}

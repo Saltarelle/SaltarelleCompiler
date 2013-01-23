@@ -47,7 +47,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		this.comparer = cmp || ss_EqualityComparer.def;
 
 		if (ss.isInstanceOfType(o, ss_IDictionary)) {
-			var e = ss.cast(o, ss_IDictionary).getEnumerator();
+			var e = ss.getEnumerator(o);
 			try {
 				while (e.moveNext()) {
 					var c = e.get_current();

@@ -7,3 +7,7 @@ ss_IEnumerable.prototype = {
 };
 
 ss.registerInterface(global, 'ss.IEnumerable', ss_IEnumerable);
+
+ss.getEnumerator = function#? DEBUG ss$getEnumerator##(obj) {
+	return ss.isArray(obj) ? new ss_ArrayEnumerator(obj) : obj.getEnumerator();
+};

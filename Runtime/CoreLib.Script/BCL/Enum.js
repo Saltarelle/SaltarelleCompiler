@@ -57,7 +57,7 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 		var parts = [];
 		for (var i in values) {
 			if (values[i] & value) {
-				parts.add(i);
+				ss.add(parts, i);
 			}
 		}
 		if (!parts.length) {

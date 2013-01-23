@@ -43,6 +43,10 @@ ss.isDate = function(obj) {
 	return Object.prototype.toString.call(obj) === '[object Date]';
 };
 
+ss.isArray = function(obj) {
+	return Object.prototype.toString.call(obj) === '[object Array]';
+};
+
 ss.getHashCode = function(obj) {
 	if (!ss.isValue(obj))
 		throw 'Cannot get hash code of null';

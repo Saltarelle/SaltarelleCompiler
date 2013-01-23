@@ -11,6 +11,7 @@ namespace System.Collections.Generic {
 	[ScriptName("IEnumerable")]
 	[Imported(ObeysTypeSystem = true)]
 	public interface IEnumerable<out T> : IEnumerable {
+		[InlineCode("{$System.Script}.getEnumerator({this})", GeneratedMethodName = "getEnumerator")]
 		new IEnumerator<T> GetEnumerator();
 	}
 }

@@ -6,6 +6,21 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class ArrayTests {
+		private class C {
+			public readonly int i;
+
+			public C(int i) {
+				this.i = i;
+			}
+
+			public override bool Equals(object o) {
+				return o is C && i == ((C)o).i;
+			}
+			public override int GetHashCode() {
+				return i;
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(int[]).FullName, "Array", "FullName should be Array");
@@ -130,6 +145,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ContainsUsesEqualsMethod() {
+			C[] arr = new[] { new C(1), new C(2), new C(3) };
+			Assert.IsTrue(arr.Contains(new C(2)));
+			Assert.IsFalse(arr.Contains(new C(4)));
+		}
+
+		[Test]
 		public void EveryWithArrayItemFilterCallbackWorks() {
 			Assert.IsTrue(new[] { 1, 2, 3 }.Every(x => x > 0));
 			Assert.IsFalse(new[] { 1, 2, 3 }.Every(x => x > 1));
@@ -193,8 +215,20 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void IndexOfWithoutStartIndexUsesEqualsMethod() {
+			var arr = new[] { new C(1), new C(2), new C(3) };
+			Assert.AreEqual(arr.IndexOf(new C(2)), 1);
+			Assert.AreEqual(arr.IndexOf(new C(4)), -1);
+		}
+
+		[Test]
 		public void IndexOfWithStartIndexWorks() {
 			Assert.AreEqual(new[] { "a", "b", "c", "b" }.IndexOf("b", 2), 3);
+		}
+
+		[Test]
+		public void IndexOfWithStartIndexUsesEqualsMethod() {
+			Assert.AreEqual(new[] { new C(1), new C(2), new C(3), new C(2) }.IndexOf(new C(2), 2), 3);
 		}
 
 		[Test]
@@ -288,6 +322,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ICollectionContainsUsesEqualsMethod() {
+			List<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			Assert.IsTrue(l.Contains(new C(2)));
+			Assert.IsFalse(l.Contains(new C(4)));
+		}
+
+		[Test]
 		public void ICollectionRemoveWorks() {
 			IList<string> l = new[] { "x", "y", "z" };
 			Assert.IsTrue(l.Remove("y"));
@@ -308,6 +349,13 @@ namespace CoreLib.TestScript {
 			IList<string> l = new[] { "x", "y", "z" };
 			Assert.AreEqual(l.IndexOf("y"), 1);
 			Assert.AreEqual(l.IndexOf("a"), -1);
+		}
+
+		[Test]
+		public void IListIndexOfUsesEqualsMethod() {
+			var arr = new[] { new C(1), new C(2), new C(3) };
+			Assert.AreEqual(arr.IndexOf(new C(2)), 1);
+			Assert.AreEqual(arr.IndexOf(new C(4)), -1);
 		}
 
 		[Test]
