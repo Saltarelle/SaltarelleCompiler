@@ -7,10 +7,11 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[IgnoreGenericArguments]
-    [ScriptNamespace("ss")]
-    [ScriptName("IEnumerable")]
+	[ScriptNamespace("ss")]
+	[ScriptName("IEnumerable")]
 	[Imported(ObeysTypeSystem = true)]
-    public interface IEnumerable<out T> : IEnumerable {
-        new IEnumerator<T> GetEnumerator();
-    }
+	public interface IEnumerable<out T> : IEnumerable {
+		[InlineCode("{$System.Script}.getEnumerator({this})", GeneratedMethodName = "getEnumerator")]
+		new IEnumerator<T> GetEnumerator();
+	}
 }

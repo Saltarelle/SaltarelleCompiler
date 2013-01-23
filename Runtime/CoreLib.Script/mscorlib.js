@@ -2,45 +2,49 @@
 //! More information at http://projects.nikhilk.net/ScriptSharp
 //!
 if (typeof(global) === "undefined")
-  global = window;
+	global = window;
 
 var ss = {};
 
 ss.isUndefined = function (o) {
-  return (o === undefined);
+	return (o === undefined);
 };
 
 ss.isNull = function (o) {
-  return (o === null);
+	return (o === null);
 };
 
 ss.isNullOrUndefined = function (o) {
-  return (o === null) || (o === undefined);
+	return (o === null) || (o === undefined);
 };
 
 ss.isValue = function (o) {
-  return (o !== null) && (o !== undefined);
+	return (o !== null) && (o !== undefined);
 };
 
 ss.referenceEquals = function (a, b) {
-  return ss.isValue(a) ? a === b : !ss.isValue(b);
+	return ss.isValue(a) ? a === b : !ss.isValue(b);
 };
 
 ss.mkdict = function (a) {
-  a = (arguments.length != 1 ? arguments : arguments[0]);
-  var r = {};
-  for (var i = 0; i < a.length; i += 2) {
-    r[a[i]] = a[i + 1];
-  }
-  return r;
+	a = (arguments.length != 1 ? arguments : arguments[0]);
+	var r = {};
+	for (var i = 0; i < a.length; i += 2) {
+		r[a[i]] = a[i + 1];
+	}
+	return r;
 };
 
 ss.coalesce = function (a, b) {
-  return ss.isValue(a) ? a : b;
+	return ss.isValue(a) ? a : b;
 };
 
 ss.isDate = function(obj) {
 	return Object.prototype.toString.call(obj) === '[object Date]';
+};
+
+ss.isArray = function(obj) {
+	return Object.prototype.toString.call(obj) === '[object Array]';
 };
 
 ss.getHashCode = function(obj) {
@@ -77,6 +81,10 @@ ss.equals = function(a, b) {
 		return a.equals(b);
 	if (ss.isDate(a) && ss.isDate(b))
 		return a.valueOf() === b.valueOf();
+	else if (typeof(a) === 'function' && typeof(b) === 'function')
+		return ss.delegateEquals(a, b);
+	else if (ss.isNullOrUndefined(a) && ss.isNullOrUndefined(b))
+		return true;
 	else
 		return a === b;
 };
@@ -111,151 +119,141 @@ ss.staticEquals = function(a, b) {
 };
 
 if (typeof(window) == 'object') {
-  // Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
-  if (!window.Element) {
-    // IE does not have an Element constructor. This implementation should make casting to elements work.
-    window.Element = function() {
-    };
-    window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
-  }
-  window.Element.__typeName = 'Element';
-  window.Element.__baseType = Object;
+	// Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
+	if (!window.Element) {
+		// IE does not have an Element constructor. This implementation should make casting to elements work.
+		window.Element = function() {};
+		window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
+	}
+	window.Element.__typeName = 'Element';
+	window.Element.__baseType = Object;
+	
+	if (!window.XMLHttpRequest) {
+		window.XMLHttpRequest = function() {
+			var progIDs = [ 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP' ];
+	
+			for (var i = 0; i < progIDs.length; i++) {
+				try {
+					var xmlHttp = new ActiveXObject(progIDs[i]);
+					return xmlHttp;
+				}
+				catch (ex) {
+				}
+			}
+	
+			return null;
+		};
+	}
 
-  if (!window.XMLHttpRequest) {
-    window.XMLHttpRequest = function() {
-      var progIDs = [ 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP' ];
-  
-      for (var i = 0; i < progIDs.length; i++) {
-        try {
-          var xmlHttp = new ActiveXObject(progIDs[i]);
-          return xmlHttp;
-        }
-        catch (ex) {
-        }
-      }
-  
-      return null;
-    };
-  }
+	ss.parseXml = function(markup) {
+		try {
+			if (DOMParser) {
+				var domParser = new DOMParser();
+				return domParser.parseFromString(markup, 'text/xml');
+			}
+			else {
+				var progIDs = [ 'Msxml2.DOMDocument.3.0', 'Msxml2.DOMDocument' ];
 
-  ss.parseXml = function(markup) {
-    try {
-      if (DOMParser) {
-        var domParser = new DOMParser();
-        return domParser.parseFromString(markup, 'text/xml');
-      }
-      else {
-        var progIDs = [ 'Msxml2.DOMDocument.3.0', 'Msxml2.DOMDocument' ];
-          
-        for (var i = 0; i < progIDs.length; i++) {
-          var xmlDOM = new ActiveXObject(progIDs[i]);
-          xmlDOM.async = false;
-          xmlDOM.loadXML(markup);
-          xmlDOM.setProperty('SelectionLanguage', 'XPath');
-                  
-          return xmlDOM;
-        }
-      }
-    }
-    catch (ex) {
-    }
-  
-    return null;
-  };
+				for (var i = 0; i < progIDs.length; i++) {
+					var xmlDOM = new ActiveXObject(progIDs[i]);
+					xmlDOM.async = false;
+					xmlDOM.loadXML(markup);
+					xmlDOM.setProperty('SelectionLanguage', 'XPath');
+					return xmlDOM;
+				}
+			}
+		}
+		catch (ex) {
+		}
+
+		return null;
+	};
 }
 
-#include "TypeSystem\Type.js"
+#include "TypeSystem.js"
 
-#include "BCL\IComparable.js"
+#include "IComparable.js"
 
-#include "BCL\IEquatable.js"
+#include "IEquatable.js"
 
-#include "Extensions\Object.js"
+#include "Object.js"
 
-#include "Extensions\Boolean.js"
+#include "Number.js"
 
-#include "Extensions\Number.js"
+#include "String.js"
 
-#include "Extensions\String.js"
+#include "Array.js"
 
-#include "Extensions\Array.js"
+#include "Date.js"
 
-#include "Extensions\RegExp.js"
+#include "Function.js"
 
-#include "Extensions\Date.js"
+#include "Debug.js"
 
-#include "Extensions\Error.js"
+#include "Enum.js"
 
-#include "Extensions\Function.js"
+#include "CultureInfo.js"
 
-#include "BCL\Debug.js"
+#include "IEnumerator.js"
 
-#include "BCL\Enum.js"
+#include "IEnumerable.js"
 
-#include "BCL\CultureInfo.js"
+#include "ICollection.js"
 
-#include "BCL\IEnumerator.js"
+#include "IEqualityComparer.js"
 
-#include "BCL\IEnumerable.js"
+#include "Nullable.js"
 
-#include "BCL\ICollection.js"
+#include "IList.js"
 
-#include "BCL\IEqualityComparer.js"
+#include "IDictionary.js"
 
-#include "BCL\Nullable.js"
+#include "Int32.js"
 
-#include "BCL\IList.js"
+#include "JsDate.js"
 
-#include "BCL\IDictionary.js"
+#include "ArrayEnumerator.js"
 
-#include "BCL\Int32.js"
+#include "ObjectEnumerator.js"
 
-#include "BCL\JsDate.js"
+#include "EqualityComparer.js"
 
-#include "BCL\ArrayEnumerator.js"
+#include "Dictionary.js"
 
-#include "BCL\ObjectEnumerator.js"
+#include "IDisposable.js"
 
-#include "BCL\EqualityComparer.js"
+#include "StringBuilder.js"
 
-#include "BCL\Dictionary.js"
+#include "EventArgs.js"
 
-#include "BCL\IDisposable.js"
+#include "Exception.js"
 
-#include "BCL\StringBuilder.js"
+#include "NotSupportedException.js"
 
-#include "BCL\EventArgs.js"
+#include "AggregateException.js"
 
-#include "BCL\Exception.js"
+#include "PromiseException.js"
 
-#include "BCL\NotSupportedException.js"
+#include "JsErrorException.js"
 
-#include "BCL\AggregateException.js"
+#include "IteratorBlockEnumerable.js"
 
-#include "BCL\PromiseException.js"
+#include "IteratorBlockEnumerator.js"
 
-#include "BCL\JsErrorException.js"
+#include "Lazy.js"
 
-#include "BCL\IteratorBlockEnumerable.js"
+#include "Task.js"
 
-#include "BCL\IteratorBlockEnumerator.js"
+#include "TaskCompletionSource.js"
 
-#include "BCL\Lazy.js"
-
-#include "BCL\Task.js"
-
-#include "BCL\TaskCompletionSource.js"
-
-#include "BCL\CancelEventArgs.js"
-
-#include "BCL\App.js"
+#include "CancelEventArgs.js"
 
 if (global.ss) {
-  for (var n in ss) {
-    if (ss.hasOwnProperty(n))
-      global.ss[n] = ss[n];
-  }
+	for (var n in ss) {
+		if (ss.hasOwnProperty(n))
+			global.ss[n] = ss[n];
+	}
 }
 else {
-  global.ss = ss;
+	global.ss = ss;
 }

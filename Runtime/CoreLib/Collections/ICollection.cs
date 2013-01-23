@@ -7,10 +7,10 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Collections {
-    [ScriptNamespace("ss")]
-    [ScriptName("ICollection")]
+	[ScriptNamespace("ss")]
+	[ScriptName("ICollection")]
 	[Obsolete("Don't use this interface, use ICollection<object> instead", true)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
-    public interface ICollection : IEnumerable {
-    }
+	public interface ICollection : IEnumerable {
+	}
 }

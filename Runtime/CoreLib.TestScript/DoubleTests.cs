@@ -12,9 +12,14 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(typeof(IComparable<double>).IsAssignableFrom(typeof(double)));
 			Assert.IsTrue(typeof(IEquatable<double>).IsAssignableFrom(typeof(double)));
 			object d = (double)0;
-			Assert.IsTrue(d is double);
-			Assert.IsTrue(d is IComparable<double>);
-			Assert.IsTrue(d is IEquatable<double>);
+			Assert.IsTrue((object)d is double);
+			Assert.IsTrue((object)d is IComparable<double>);
+			Assert.IsTrue((object)d is IEquatable<double>);
+
+			var interfaces = typeof(double).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<double>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<double>)));
 		}
 
 		private T GetDefaultValue<T>() {

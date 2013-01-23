@@ -4,6 +4,21 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class StackTests {
+		private class C {
+			public readonly int i;
+
+			public C(int i) {
+				this.i = i;
+			}
+
+			public override bool Equals(object o) {
+				return o is C && i == ((C)o).i;
+			}
+			public override int GetHashCode() {
+				return i;
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(Stack<int>).FullName, "Array", "FullName should be Array");
@@ -53,6 +68,16 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(s.Contains(10));
 			Assert.IsTrue(s.Contains(2));
 			Assert.IsFalse(s.Contains(11));
+		}
+
+		[Test]
+		public void ContainsUsesEqualsMethod() {
+			var s = new Stack<C>();
+			s.Push(new C(1));
+			s.Push(new C(2));
+			s.Push(new C(3));
+			Assert.IsTrue(s.Contains(new C(2)));
+			Assert.IsFalse(s.Contains(new C(4)));
 		}
 
 		[Test]

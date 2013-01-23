@@ -20,7 +20,7 @@ public class C {
 	}
 }",
 @"			d = i;
-			i = ss.Nullable.unbox(Type.cast(d, ss.Int32));
+			i = ss.Nullable.unbox(ss.cast(d, ss.Int32));
 			d = o;
 			o = d;
 ");

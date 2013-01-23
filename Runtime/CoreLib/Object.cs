@@ -8,37 +8,42 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    /// <summary>
-    /// Equivalent to the Object type in Javascript.
-    /// </summary>
-    [IgnoreNamespace]
-    [Imported(ObeysTypeSystem = true)]
-    public class Object {
+	/// <summary>
+	/// Equivalent to the Object type in Javascript.
+	/// </summary>
+	[IgnoreNamespace]
+	[Imported(ObeysTypeSystem = true)]
+	public class Object {
 
-        /// <summary>
-        /// Retrieves the type associated with an object instance.
-        /// </summary>
-        /// <returns>The type of the object.</returns>
-        [InlineCode("{$System.Type}.getInstanceType({this})")]
-        public Type GetType() {
-            return null;
-        }
+		/// <summary>
+		/// Retrieves the type associated with an object instance.
+		/// </summary>
+		/// <returns>The type of the object.</returns>
+		[InlineCode("{$System.Script}.getInstanceType({this})")]
+		public Type GetType() {
+			return null;
+		}
 
-        /// <summary>
-        /// Converts an object to its string representation.
-        /// </summary>
-        /// <returns>The string representation of the object.</returns>
-        public virtual string ToString() {
-            return null;
-        }
+		/// <summary>
+		/// Converts an object to its string representation.
+		/// </summary>
+		/// <returns>The string representation of the object.</returns>
+		public virtual string ToString() {
+			return null;
+		}
 
-        /// <summary>
-        /// Converts an object to its culture-sensitive string representation.
-        /// </summary>
-        /// <returns>The culture-sensitive string representation of the object.</returns>
-        public virtual string ToLocaleString() {
-            return null;
-        }
+		/// <summary>
+		/// Converts an object to its culture-sensitive string representation.
+		/// </summary>
+		/// <returns>The culture-sensitive string representation of the object.</returns>
+		public virtual string ToLocaleString() {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.referenceEquals({a}, {b})")]
+		public static bool ReferenceEquals(object a, object b) {
+			return false;
+		}
 
 		[InlineCode("{$System.Script}.equals({this}, {o})", GeneratedMethodName = "equals", NonVirtualCode = "{this} === {o}")]
 		public virtual bool Equals(object o) {
@@ -70,5 +75,5 @@ namespace System {
 		public static string[] GetOwnPropertyNames(object obj) {
 			return null;
 		}
-    }
+	}
 }

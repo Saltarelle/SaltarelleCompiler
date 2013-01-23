@@ -8,28 +8,28 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace System {
-    [ScriptNamespace("ss")]
-    [Imported(ObeysTypeSystem = true)]
-    public sealed class ArrayEnumerator : IEnumerator<object> {
-    	public object Current { get { return null; } }
+	[ScriptNamespace("ss")]
+	[Imported(ObeysTypeSystem = true)]
+	public sealed class ArrayEnumerator : IEnumerator<object> {
+		public object Current { get { return null; } }
 
-    	public bool MoveNext() { return false; }
+		public bool MoveNext() { return false; }
 
-    	public void Reset() {}
-    	public void Dispose() {}
-    }
+		public void Reset() {}
+		public void Dispose() {}
+	}
 
-    [ScriptNamespace("ss")]
-    [Imported(ObeysTypeSystem = true)]
+	[ScriptNamespace("ss")]
+	[Imported(ObeysTypeSystem = true)]
 	[IgnoreGenericArguments]
-    public sealed class ArrayEnumerator<T> : IEnumerator<T> {
+	public sealed class ArrayEnumerator<T> : IEnumerator<T> {
 		object IEnumerator.Current { get { return default(T); } }
 
-    	public T Current { get { return default(T); } }
+		public T Current { get { return default(T); } }
 
-    	public bool MoveNext() { return false; }
+		public bool MoveNext() { return false; }
 
-    	public void Reset() {}
-    	public void Dispose() {}
-    }
+		public void Reset() {}
+		public void Dispose() {}
+	}
 }

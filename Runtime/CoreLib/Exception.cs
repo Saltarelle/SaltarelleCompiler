@@ -7,15 +7,15 @@ using System.Collections;
 using System.Runtime.CompilerServices;
 
 namespace System {
-    [Imported(ObeysTypeSystem = true)]
-    [ScriptNamespace("ss")]
-    public class Exception {
+	[Imported(ObeysTypeSystem = true)]
+	[ScriptNamespace("ss")]
+	public class Exception {
 		[ScriptName("")]
-        public Exception() {
+		public Exception() {
 		}
 
 		[ScriptName("")]
-        public Exception(string message) {
+		public Exception(string message) {
 		}
 
 		[ScriptName("")]
@@ -29,5 +29,5 @@ namespace System {
 		public virtual Exception InnerException {
 			get { return null; }
 		}
-    }
+	}
 }

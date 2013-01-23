@@ -39,7 +39,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private readonly ICompilation _compilation;
-		private readonly JsTypeReferenceExpression _systemType;
+		private readonly JsTypeReferenceExpression _systemScript;
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly INamer _namer;
@@ -47,7 +47,7 @@ namespace CoreLib.Plugin {
 
 		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
 			_compilation = compilation;
-			_systemType = new JsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Type).GetDefinition());
+			_systemScript = new JsTypeReferenceExpression(compilation.FindType(new FullTypeName("System.Script")).GetDefinition());
 
 			_metadataImporter = metadataImporter;
 			_runtimeLibrary = runtimeLibrary;
@@ -67,7 +67,7 @@ namespace CoreLib.Plugin {
 				args.Add(JsExpression.Null);
 			if (interfaces.Count > 0)
 				args.AddRange(interfaces);
-			return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterClass), args);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterClass), args);
 		}
 
 		private JsExpression CreateDefaultConstructorInvocation(IMethod defaultConstructor, JsExpression typeRef) {
@@ -127,14 +127,14 @@ namespace CoreLib.Plugin {
 
 			if (c.TypeArgumentNames.Count > 0) {
 				if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterGenericInterfaceInstance),
+					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterGenericInterfaceInstance),
 					                                                            typeRef,
 					                                                            new JsTypeReferenceExpression(c.CSharpTypeDefinition),
 					                                                            JsExpression.ArrayLiteral(c.TypeArgumentNames.Select(JsExpression.Identifier)),
 																				JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.ArrayLiteral(c.ImplementedInterfaces))))));
 				}
 				else {
-					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterGenericClassInstance),
+					stmts.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterGenericClassInstance),
 					                                                            typeRef,
 					                                                            new JsTypeReferenceExpression(c.CSharpTypeDefinition),
 					                                                            JsExpression.ArrayLiteral(c.TypeArgumentNames.Select(JsExpression.Identifier)),
@@ -214,7 +214,7 @@ namespace CoreLib.Plugin {
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(c.TypeArgumentNames, new JsBlockStatement(stmts))));
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.TypeArgumentNames.Count))));
+								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, c.ClassType == JsClass.ClassTypeEnum.Interface ? RegisterGenericInterface : RegisterGenericClass), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.TypeArgumentNames.Count))));
 							}
 						}
 					}
@@ -224,7 +224,7 @@ namespace CoreLib.Plugin {
 						bool namedValues = MetadataUtils.IsNamedValues(e.CSharpTypeDefinition);
 						result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)));
 						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(e.Values.Select(v => new JsObjectLiteralProperty(v.Name, namedValues ? JsExpression.String(v.Name) : JsExpression.Number(v.Value)))))));
-						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemType, RegisterEnum), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
+						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterEnum), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
 					}
 				}
 				catch (Exception ex) {
@@ -245,10 +245,10 @@ namespace CoreLib.Plugin {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
 			                                     if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterType), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
+			                                         return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterType), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
 			                                     }
 			                                     if (c.ClassType == JsClass.ClassTypeEnum.Interface) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemType, RegisterInterface), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
+			                                         return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterInterface), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)), JsExpression.ArrayLiteral(c.ImplementedInterfaces));
 			                                     }
 			                                     else {
 			                                         return CreateRegisterClassCall(GetRoot(c.CSharpTypeDefinition), name, JsExpression.Identifier(_namer.GetTypeVariableName(name)), c.BaseClass, c.ImplementedInterfaces);

@@ -9,27 +9,27 @@ using System.Runtime.CompilerServices;
 namespace System {
 
 	[IgnoreGenericArguments]
-    [ScriptNamespace("ss")]
+	[ScriptNamespace("ss")]
 	[ScriptName("Nullable")]
-    [Imported(ObeysTypeSystem = true)]
-    public struct Nullable<T> where T : struct {
+	[Imported(ObeysTypeSystem = true)]
+	public struct Nullable<T> where T : struct {
 		[InlineCode("{value}")]
-        public Nullable(T value) {
-        }
+		public Nullable(T value) {
+		}
 
-        public bool HasValue {
+		public bool HasValue {
 			[InlineCode("{$System.Script}.isValue({this})")]
-            get {
-                return false;
-            }
-        }
+			get {
+				return false;
+			}
+		}
 
 		public T Value {
 			[InlineCode("{$System.Nullable`1}.unbox({this})")]
-            get {
-                return default(T);
-            }
-        }
+			get {
+				return default(T);
+			}
+		}
 
 		[NonScriptable]
 		public T GetValueOrDefault() {
@@ -41,14 +41,14 @@ namespace System {
 			return default(T);
 		}
 
-        [ScriptSkip]
+		[ScriptSkip]
 		public static implicit operator T?(T value) {
-            return null;
-        }
+			return null;
+		}
 
 		[InlineCode("{$System.Nullable`1}.unbox({value})")]
-        public static explicit operator T(T? value) {
-            return default(T);
-        }
-    }
+		public static explicit operator T(T? value) {
+			return default(T);
+		}
+	}
 }

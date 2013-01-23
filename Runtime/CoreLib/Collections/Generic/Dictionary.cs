@@ -1,13 +1,12 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
 	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue> {
-		[InlineCode("new ({$System.Type}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))()")]
+		[InlineCode("new ({$System.Script}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))()")]
 		public Dictionary(int capacity) {}
 
-		[InlineCode("new ({$System.Type}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))({{}}, {comparer})")]
+		[InlineCode("new ({$System.Script}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))({{}}, {comparer})")]
 		public Dictionary(int capacity, IEqualityComparer<TKey> comparer) {}
 
 		[AlternateSignature]
@@ -22,7 +21,7 @@ namespace System.Collections.Generic {
 		[AlternateSignature]
 		public Dictionary(IDictionary<TKey, TValue> dictionary) {}
 
-		[InlineCode("new ({$System.Type}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))({{}}, {comparer})")]
+		[InlineCode("new ({$System.Script}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))({{}}, {comparer})")]
 		public Dictionary(IEqualityComparer<TKey> comparer) {}
 
 		public Dictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) {}

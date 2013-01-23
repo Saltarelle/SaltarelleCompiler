@@ -5,19 +5,6 @@ using System.Linq;
 using NUnit.Framework;
 
 namespace CoreLib.Tests.Core {
-	public abstract class CoreLibTestBase : TestBase {
-		private static readonly Lazy<string> _testsScript = new Lazy<string>(() => File.ReadAllText("CoreLib.TestScript.js"));
-		internal static string TestsScript { get { return _testsScript.Value; } }
-
-		protected override IEnumerable<string> ScriptSources {
-			get { return new[] { TestsScript }; }
-		}
-
-		protected override string TestClassName {
-			get { return "CoreLib.TestScript." + GetType().Name; }
-		}
-	}
-
 	// System
 
 	[TestFixture]
@@ -63,7 +50,13 @@ namespace CoreLib.Tests.Core {
 	public class EqualityComparerTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class ICollectionTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class IComparableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IEnumerableTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class IEquatableTests : CoreLibTestBase {}
@@ -100,7 +93,7 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class PromiseTests : CoreLibTestBase {
-        private static readonly Lazy<string> _simplePromiseScript = new Lazy<string>(() => File.ReadAllText(@"SimplePromise.js"));
+		private static readonly Lazy<string> _simplePromiseScript = new Lazy<string>(() => File.ReadAllText(@"SimplePromise.js"));
 		internal static string SimplePromiseScript { get { return _simplePromiseScript.Value; } }
 
 		protected override IEnumerable<string> ScriptSources {

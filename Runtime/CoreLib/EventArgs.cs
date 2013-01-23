@@ -7,18 +7,18 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    /// <summary>
-    /// Used by event sources to pass event argument information.
-    /// </summary>
-    [ScriptNamespace("ss")]
+	/// <summary>
+	/// Used by event sources to pass event argument information.
+	/// </summary>
+	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-    public class EventArgs {
+	public class EventArgs {
 
-        /// <summary>
-        /// A static object of type <see cref="EventArgs"/> that is used as a convenient way to
-        /// specify an empty EventArgs instance.
-        /// </summary>
-        [PreserveCase]
-        public static readonly EventArgs Empty = null;
-    }
+		/// <summary>
+		/// A static object of type <see cref="EventArgs"/> that is used as a convenient way to
+		/// specify an empty EventArgs instance.
+		/// </summary>
+		[PreserveCase]
+		public static readonly EventArgs Empty = null;
+	}
 }

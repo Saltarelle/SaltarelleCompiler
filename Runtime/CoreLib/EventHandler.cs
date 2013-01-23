@@ -7,12 +7,12 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    /// <summary>
-    /// Delegate for handling generic events.
-    /// </summary>
-    /// <param name="sender">The object that raised the event.</param>
-    /// <param name="e">The <see cref="EventArgs"/> object that contains the event data.</param>
-    public delegate void EventHandler(object sender, EventArgs e);
+	/// <summary>
+	/// Delegate for handling generic events.
+	/// </summary>
+	/// <param name="sender">The object that raised the event.</param>
+	/// <param name="e">The <see cref="EventArgs"/> object that contains the event data.</param>
+	public delegate void EventHandler(object sender, EventArgs e);
 
-    public delegate void EventHandler<TArgument>(object sender, TArgument e) where TArgument : EventArgs;
+	public delegate void EventHandler<TArgument>(object sender, TArgument e) where TArgument : EventArgs;
 }

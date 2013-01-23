@@ -30,7 +30,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
     <NoWarn>1591, 0661, 0660</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -39,7 +39,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>1591, 0661, 0660</NoWarn>
     <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
   </PropertyGroup>
@@ -73,10 +73,6 @@
     <Compile Include="Callback.cs" />
     <Compile Include="Collections\Queue.cs" />
     <Compile Include="Collections\Stack.cs" />
-    <Compile Include="ComponentModel\IApplication.cs" />
-    <Compile Include="ComponentModel\IEventManager.cs" />
-    <Compile Include="ComponentModel\IInitializable.cs" />
-    <Compile Include="ComponentModel\IContainer.cs" />
     <Compile Include="ArrayEnumerator.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="DayOfWeek.cs" />

@@ -6,10 +6,34 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class ArrayTests {
+		private class C {
+			public readonly int i;
+
+			public C(int i) {
+				this.i = i;
+			}
+
+			public override bool Equals(object o) {
+				return o is C && i == ((C)o).i;
+			}
+			public override int GetHashCode() {
+				return i;
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(int[]).FullName, "Array", "FullName should be Array");
 			Assert.IsTrue(typeof(Array).IsClass, "IsClass should be true");
+			Assert.IsTrue(typeof(int[]).IsClass, "IsClass should be true");
+			Assert.AreEqual(typeof(Array).BaseType, typeof(Object), "BaseType of Array should be object");
+
+			var interfaces = typeof(int[]).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<int>)), "Interfaces should contain IEnumerable<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(ICollection<int>)), "Interfaces should contain ICollection<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(IList<int>)), "Interfaces should contain IList<int>");
+
 			object arr = new[] { 1, 2, 3 };
 			Assert.IsTrue(arr is Array, "is Array should be true");
 			Assert.IsTrue(arr is int[], "is int[] should be true");
@@ -121,6 +145,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ContainsUsesEqualsMethod() {
+			C[] arr = new[] { new C(1), new C(2), new C(3) };
+			Assert.IsTrue(arr.Contains(new C(2)));
+			Assert.IsFalse(arr.Contains(new C(4)));
+		}
+
+		[Test]
 		public void EveryWithArrayItemFilterCallbackWorks() {
 			Assert.IsTrue(new[] { 1, 2, 3 }.Every(x => x > 0));
 			Assert.IsFalse(new[] { 1, 2, 3 }.Every(x => x > 1));
@@ -184,8 +215,20 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void IndexOfWithoutStartIndexUsesEqualsMethod() {
+			var arr = new[] { new C(1), new C(2), new C(3) };
+			Assert.AreEqual(arr.IndexOf(new C(2)), 1);
+			Assert.AreEqual(arr.IndexOf(new C(4)), -1);
+		}
+
+		[Test]
 		public void IndexOfWithStartIndexWorks() {
 			Assert.AreEqual(new[] { "a", "b", "c", "b" }.IndexOf("b", 2), 3);
+		}
+
+		[Test]
+		public void IndexOfWithStartIndexUsesEqualsMethod() {
+			Assert.AreEqual(new[] { new C(1), new C(2), new C(3), new C(2) }.IndexOf(new C(2), 2), 3);
 		}
 
 		[Test]
@@ -206,11 +249,6 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void MapWithArrayMapCallbackWorks() {
 			Assert.AreEqual(new[] { "a", "b", "c", "b" }.Map((s, i, a) => s + i), new[] { "a0", "b1", "c2", "b3" });
-		}
-
-		[Test]
-		public void ParseWorks() {
-			Assert.AreEqual(Array.Parse("[1,2,3]"), new[] { 1, 2, 3 });
 		}
 
 		[Test]
@@ -244,17 +282,6 @@ namespace CoreLib.TestScript {
 			var arr = new[] { 1, 6, 6, 4, 2 };
 			arr.Sort((x, y) => y - x);
 			Assert.AreEqual(arr, new[] { 6, 6, 4, 2, 1 });
-		}
-
-		[Test]
-		public void ToArrayWorks() {
-			var other = new JsDictionary();
-			other["length"] = 2;
-			other["0"] = "a";
-			other["1"] = "b";
-			var actual = Array.ToArray(other);
-			Assert.IsTrue(actual is Array);
-			Assert.AreEqual(actual, new[] { "a", "b" });
 		}
 
 		[Test]
@@ -295,6 +322,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ICollectionContainsUsesEqualsMethod() {
+			List<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			Assert.IsTrue(l.Contains(new C(2)));
+			Assert.IsFalse(l.Contains(new C(4)));
+		}
+
+		[Test]
 		public void ICollectionRemoveWorks() {
 			IList<string> l = new[] { "x", "y", "z" };
 			Assert.IsTrue(l.Remove("y"));
@@ -315,6 +349,13 @@ namespace CoreLib.TestScript {
 			IList<string> l = new[] { "x", "y", "z" };
 			Assert.AreEqual(l.IndexOf("y"), 1);
 			Assert.AreEqual(l.IndexOf("a"), -1);
+		}
+
+		[Test]
+		public void IListIndexOfUsesEqualsMethod() {
+			var arr = new[] { new C(1), new C(2), new C(3) };
+			Assert.AreEqual(arr.IndexOf(new C(2)), 1);
+			Assert.AreEqual(arr.IndexOf(new C(4)), -1);
 		}
 
 		[Test]

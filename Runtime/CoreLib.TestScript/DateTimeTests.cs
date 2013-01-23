@@ -15,6 +15,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(d is DateTime);
 			Assert.IsTrue(d is IComparable<DateTime>);
 			Assert.IsTrue(d is IEquatable<DateTime>);
+
+			var interfaces = typeof(DateTime).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<DateTime>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<DateTime>)));
 		}
 
 		[Test]
@@ -124,7 +129,7 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void LocaleFormatWorks() {
 			var dt = new DateTime(2011, 7, 12, 13);
-			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-07-12");
+			Assert.AreEqual(dt.LocaleFormat("yyyy-MM-dd"), "2011-07-12");
 		}
 
 		[Test]

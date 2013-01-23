@@ -15,6 +15,11 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(d is decimal);
 			Assert.IsTrue(d is IComparable<decimal>);
 			Assert.IsTrue(d is IEquatable<decimal>);
+
+			var interfaces = typeof(decimal).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<decimal>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<decimal>)));
 		}
 
 		private T GetDefaultValue<T>() {

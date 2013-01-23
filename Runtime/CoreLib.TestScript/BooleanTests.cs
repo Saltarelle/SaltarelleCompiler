@@ -8,18 +8,18 @@ namespace CoreLib.TestScript {
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue((object)true is bool);
 			Assert.AreEqual(typeof(bool).FullName, "Boolean");
+			Assert.AreEqual(typeof(bool).BaseType, typeof(object));
 			Assert.IsFalse(typeof(bool).IsClass);
 			Assert.IsTrue(typeof(IComparable<bool>).IsAssignableFrom(typeof(bool)));
 			Assert.IsTrue(typeof(IEquatable<bool>).IsAssignableFrom(typeof(bool)));
 			object b = false;
 			Assert.IsTrue(b is IComparable<bool>);
 			Assert.IsTrue(b is IEquatable<bool>);
-		}
 
-		[Test]
-		public void ParseWorks() {
-			Assert.AreEqual(bool.Parse("true"), true);
-			Assert.AreEqual(bool.Parse("false"), false);
+			var interfaces = typeof(bool).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<bool>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<bool>)));
 		}
 
 		private T GetDefaultValue<T>() {

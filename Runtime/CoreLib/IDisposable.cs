@@ -7,10 +7,10 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 
-    // Script Equivalent: IDisposable
-    [ScriptNamespace("ss")]
-    [Imported(ObeysTypeSystem = true)]
-    public interface IDisposable {
-        void Dispose();
-    }
+	// Script Equivalent: IDisposable
+	[ScriptNamespace("ss")]
+	[Imported(ObeysTypeSystem = true)]
+	public interface IDisposable {
+		void Dispose();
+	}
 }

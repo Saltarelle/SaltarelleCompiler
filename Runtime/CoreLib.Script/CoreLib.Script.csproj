@@ -22,52 +22,48 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="BCL\Lazy.js" />
-    <Content Include="BCL\IComparable.js" />
-    <Content Include="BCL\EqualityComparer.js" />
-    <Content Include="BCL\IEquatable.js" />
-    <Content Include="BCL\JsErrorException.js" />
-    <Content Include="BCL\PromiseException.js" />
-    <Content Include="BCL\NotSupportedException.js" />
-    <Content Include="BCL\TaskCompletionSource.js" />
-    <Content Include="BCL\Task.js" />
-    <Content Include="BCL\JsDate.js" />
-    <Content Include="BCL\IteratorBlockEnumerable.js" />
-    <Content Include="BCL\Enum.js" />
-    <Content Include="BCL\IEqualityComparer.js" />
-    <Content Include="BCL\Exception.js" />
-    <Content Include="BCL\IDictionary.js" />
-    <Content Include="BCL\Dictionary.js" />
-    <Content Include="BCL\Nullable.js" />
-    <Content Include="BCL\ObjectEnumerator.js" />
-    <Content Include="BCL\IList.js" />
-    <Content Include="BCL\ICollection.js" />
-    <Content Include="BCL\Int32.js" />
-    <Content Include="BCL\IteratorBlockEnumerator.js" />
-    <Content Include="Extensions\Function.js" />
+    <Content Include="Function.js" />
+    <Content Include="Lazy.js" />
+    <Content Include="IComparable.js" />
+    <Content Include="EqualityComparer.js" />
+    <Content Include="IEquatable.js" />
+    <Content Include="JsErrorException.js" />
+    <Content Include="PromiseException.js" />
+    <Content Include="NotSupportedException.js" />
+    <Content Include="TaskCompletionSource.js" />
+    <Content Include="Task.js" />
+    <Content Include="JsDate.js" />
+    <Content Include="IteratorBlockEnumerable.js" />
+    <Content Include="Enum.js" />
+    <Content Include="IEqualityComparer.js" />
+    <Content Include="Exception.js" />
+    <Content Include="IDictionary.js" />
+    <Content Include="Dictionary.js" />
+    <Content Include="Nullable.js" />
+    <Content Include="ObjectEnumerator.js" />
+    <Content Include="IList.js" />
+    <Content Include="ICollection.js" />
+    <Content Include="Int32.js" />
+    <Content Include="IteratorBlockEnumerator.js" />
     <Content Include="mscorlib.js" />
-    <Content Include="Extensions\Array.js" />
-    <Content Include="Extensions\Number.js" />
-    <Content Include="Extensions\Object.js" />
-    <Content Include="Extensions\RegExp.js" />
-    <Content Include="Extensions\String.js" />
-    <Content Include="Extensions\Boolean.js" />
-    <Content Include="Extensions\Date.js" />
-    <Content Include="Extensions\Error.js" />
-    <Content Include="BCL\App.js" />
-    <Content Include="BCL\Debug.js" />
-    <Content Include="BCL\ArrayEnumerator.js" />
-    <Content Include="BCL\CancelEventArgs.js" />
-    <Content Include="BCL\CultureInfo.js" />
-    <Content Include="BCL\EventArgs.js" />
-    <Content Include="BCL\IDisposable.js" />
-    <Content Include="BCL\IEnumerable.js" />
-    <Content Include="BCL\IEnumerator.js" />
-    <Content Include="BCL\StringBuilder.js" />
-    <Content Include="TypeSystem\Type.js" />
+    <Content Include="Array.js" />
+    <Content Include="Number.js" />
+    <Content Include="Object.js" />
+    <Content Include="String.js" />
+    <Content Include="Date.js" />
+    <Content Include="Debug.js" />
+    <Content Include="ArrayEnumerator.js" />
+    <Content Include="CancelEventArgs.js" />
+    <Content Include="CultureInfo.js" />
+    <Content Include="EventArgs.js" />
+    <Content Include="IDisposable.js" />
+    <Content Include="IEnumerable.js" />
+    <Content Include="IEnumerator.js" />
+    <Content Include="StringBuilder.js" />
+    <Content Include="TypeSystem.js" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BCL\AggregateException.js" />
+    <Content Include="AggregateException.js" />
   </ItemGroup>
   <Target Name="Build">
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.js" />
@@ -81,6 +77,6 @@
   </Target>
   <Target Name="GetCopyToOutputDirectoryItems">
   </Target>
-	<Target Name="GetTargetPath" Returns="$(TargetPath)">
-	</Target>
+  <Target Name="GetTargetPath" Returns="$(TargetPath)">
+  </Target>
 </Project>

@@ -6,42 +6,44 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
-    /// <summary>
-    /// The Queue data type which is mapped to the Array type in Javascript.
-    /// </summary>
-    [IgnoreNamespace]
-    [Imported(ObeysTypeSystem = true)]
-    [ScriptName("Array")]
+	/// <summary>
+	/// The Queue data type which is mapped to the Array type in Javascript.
+	/// </summary>
+	[IgnoreNamespace]
+	[Imported(ObeysTypeSystem = true)]
+	[ScriptName("Array")]
 	[IgnoreGenericArguments]
-    public sealed class Queue<T> {
+	public sealed class Queue<T> {
 
-        [IntrinsicProperty]
-        [ScriptName("length")]
-        public int Count {
-            get {
-                return 0;
-            }
-        }
+		[IntrinsicProperty]
+		[ScriptName("length")]
+		public int Count {
+			get {
+				return 0;
+			}
+		}
 
-        public void Clear() {
-        }
+		[InlineCode("{$System.Script}.clear({this})")]
+		public void Clear() {
+		}
 
-        public bool Contains(T item) {
-            return false;
-        }
+		[InlineCode("{$System.Script}.contains({this}, {item})")]
+		public bool Contains(T item) {
+			return false;
+		}
 
-        [ScriptName("shift")]
+		[ScriptName("shift")]
 		public T Dequeue() {
-            return default(T);
-        }
+			return default(T);
+		}
 
-        [ScriptName("push")]
+		[ScriptName("push")]
 		public void Enqueue(T item) {
-        }
+		}
 
-        [ScriptName("peekFront")]
+		[InlineCode("{$System.Script}.arrayPeekFront({this})")]
 		public T Peek() {
-            return default(T);
-        }
-    }
+			return default(T);
+		}
+	}
 }

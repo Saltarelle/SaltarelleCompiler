@@ -198,7 +198,7 @@
     <Compile Include="RuntimeLibraryTests\MiscTests.cs" />
     <Compile Include="SourceVerifier.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
-    <Compile Include="TestBase.cs" />
+    <Compile Include="CoreLibTestBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -211,11 +211,6 @@
     <ProjectReference Include="..\CoreLib.TestScript\CoreLib.TestScript.csproj">
       <Project>{b54dd6e7-526d-4bd4-bcca-8dcb1ab12a23}</Project>
       <Name>CoreLib.TestScript</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\CoreLib.Script\CoreLib.Script.csproj">
-      <Project>{8780581F-7C26-4B64-9235-BA1C458DF36E}</Project>
-      <Name>CoreLib.Script</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

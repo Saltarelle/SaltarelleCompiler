@@ -54,8 +54,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void CharFormatWorks() {
+		public void FormatWorks() {
 			Assert.AreEqual('\x23'.Format("x4"), "0023");
+		}
+
+		[Test]
+		public void LocaleFormatWorks() {
+			Assert.AreEqual('\x23'.LocaleFormat("x4"), "0023");
 		}
 
 		[Test]

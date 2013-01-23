@@ -9,24 +9,24 @@ namespace System
 	[Imported]
 	public static class Activator
 	{
-        [InlineCode("new {type}({*arguments})")]
+		[InlineCode("new {type}({*arguments})")]
 		public static object CreateInstance(Type type, params object[] arguments) {
-            return null;
-        }
+			return null;
+		}
 
-        [InlineCode("new {T}({*arguments})")]
+		[InlineCode("new {T}({*arguments})")]
 		public static T CreateInstance<T>(params object[] arguments) {
-            return default(T);
-        }
+			return default(T);
+		}
 
-        [InlineCode("{type}.createInstance()")]
+		[InlineCode("{$System.Script}.createInstance({type})")]
 		public static object CreateInstance(Type type) {
-            return null;
-        }
+			return null;
+		}
 
-        [InlineCode("{T}.createInstance()")]
+		[InlineCode("{$System.Script}.createInstance({T})")]
 		public static T CreateInstance<T>() {
-            return default(T);
-        }
+			return default(T);
+		}
 	}
 }
