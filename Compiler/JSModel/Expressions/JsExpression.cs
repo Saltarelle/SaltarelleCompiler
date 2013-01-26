@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
@@ -95,12 +96,16 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
         UnaryLast = BitwiseNot
     }
 
-    [Serializable]
+    [Serializable, DebuggerDisplay("{DebugToString()}")]
     public abstract class JsExpression {
         [System.Diagnostics.DebuggerStepThrough]
         public abstract TReturn Accept<TReturn, TData>(IExpressionVisitor<TReturn, TData> visitor, TData data);
 
         public ExpressionNodeType NodeType { get; private set; }
+
+		private string DebugToString() {
+			return OutputFormatter.Format(this, allowIntermediates: true);
+		}
 
         protected JsExpression(ExpressionNodeType nodeType) {
             NodeType = nodeType;

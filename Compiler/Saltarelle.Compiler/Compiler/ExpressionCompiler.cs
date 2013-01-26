@@ -967,6 +967,37 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
+		private int FindIndexInTokens(IList<InlineCodeToken> tokens, int parameterIndex) {
+			for (int i = 0; i < tokens.Count; i++) {
+				if (parameterIndex == -1) {
+					if (tokens[i].Type == InlineCodeToken.TokenType.This)
+						return i;
+				}
+				else {
+					if ((tokens[i].Type == InlineCodeToken.TokenType.Parameter || tokens[i].Type == InlineCodeToken.TokenType.ExpandedParamArrayParameter) && tokens[i].Index == parameterIndex)
+						return i;
+				}
+			}
+			return -1;
+		}
+
+		private IList<int> CreateInlineCodeExpressionToOrderMap(IList<InlineCodeToken> tokens, int argumentCount, IList<int> argumentToParameterMap) {
+			var dict = Enumerable.Range(-1, argumentCount + 1).OrderBy(x => FindIndexInTokens(tokens, x)).Select((i, n) => new { i, n }).ToDictionary(x => x.i, x => x.n);
+			var ordered = new[] { -1 }.Concat(argumentToParameterMap).Select(x => dict[x]).ToList();
+			return ordered;
+		}
+
+		private void CreateTemporariesForExpressionsAndAllRequiredExpressionsLeftOfIt(List<JsExpression> expressions, int index) {
+			for (int i = 0; i < index; i++) {
+				if (ExpressionOrderer.DoesOrderMatter(expressions[i], expressions[index])) {
+					CreateTemporariesForExpressionsAndAllRequiredExpressionsLeftOfIt(expressions, i);
+				}
+			}
+			var temp = _createTemporaryVariable(SpecialType.UnknownType);
+			_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, expressions[index]));
+			expressions[index] = JsExpression.Identifier(_variables[temp].Name);
+		}
+
 		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool expandParams) {
 			IList<InlineCodeToken> tokens = null;
 			var expressions = new List<JsExpression>() { target };
@@ -994,6 +1025,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			argumentToParameterMap = argumentToParameterMap ?? CreateIdentityArgumentToParameterMap(argumentsForCall.Count);
 
+			// Compile the arguments left to right
 			foreach (var i in argumentToParameterMap) {
 				var a = argumentsForCall[i];
 				if (a is ByReferenceResolveResult) {
@@ -1028,32 +1060,20 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			if ((argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.
-				// We have to perform argument rearrangement. The easiest way would be for us to just use the argumentsForCall directly, but if we did, we wouldn't evaluate all expressions in left-to-right order.
+			var expressionToOrderMap = tokens == null ? new[] { 0 }.Concat(argumentToParameterMap.Select(x => x + 1)).ToList() : CreateInlineCodeExpressionToOrderMap(tokens, argumentsForCall.Count, argumentToParameterMap);
+			for (int i = 0; i < expressions.Count; i++) {
+				var haveToBeEvaluatedBefore = Enumerable.Range(i + 1, expressions.Count - i - 1).Where(x => expressionToOrderMap[x] < expressionToOrderMap[i]);
+				if (haveToBeEvaluatedBefore.Any(other => ExpressionOrderer.DoesOrderMatter(expressions[i], expressions[other]))) {
+					CreateTemporariesForExpressionsAndAllRequiredExpressionsLeftOfIt(expressions, i);
+				}
+			}
+
+			// Rearrange the arguments so they appear in the order the method expects them to.
+			if ((argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.			// Ensure that expressions are evaluated left-to-right in case arguments are reordered
 				var newExpressions = new List<JsExpression>() { expressions[0] };
 				for (int i = 0; i < argumentsForCall.Count; i++) {
-					int specifiedIndex = -1;
-					for (int j = 0; j < argumentToParameterMap.Count; j++) {
-						if (argumentToParameterMap[j] == i) {
-							specifiedIndex = j;
-							break;
-						}
-					}
-					if (specifiedIndex == -1) {
-						// The argument was not specified - use the value in the argumentsForCall, which has to be constant.
-						newExpressions.Add(VisitResolveResult(argumentsForCall[i], true));
-					}
-					else {
-						// Ensure that all arguments are evaluated in the correct order (doesn't have to be done for ref and out arguments.
-						for (int j = 0; j < specifiedIndex; j++) {
-							if (argumentToParameterMap[j] > i && ExpressionOrderer.DoesOrderMatter(expressions[specifiedIndex + 1], expressions[j + 1])) {	// This expression used to be evaluated before us, but will now be evaluated after us, so we need to create a temporary.
-								var temp = _createTemporaryVariable(argumentsForCall[argumentToParameterMap[j]].Type);
-								_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, expressions[j + 1]));
-								expressions[j + 1] = JsExpression.Identifier(_variables[temp].Name);
-							}
-						}
-						newExpressions.Add(expressions[specifiedIndex + 1]);
-					}
+					int specifiedIndex = argumentToParameterMap.IndexOf(i);
+					newExpressions.Add(specifiedIndex != -1 ? expressions[specifiedIndex + 1] : VisitResolveResult(argumentsForCall[i], true));	// If the argument was not specified, use the value in argumentsForCall, which has to be constant.
 				}
 				expressions = newExpressions;
 			}
