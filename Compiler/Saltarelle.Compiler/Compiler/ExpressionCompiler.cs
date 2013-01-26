@@ -193,7 +193,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.Message(7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(_runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.InvokeConstructor), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.InvokeConstructor), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 
@@ -427,7 +427,7 @@ namespace Saltarelle.Compiler.Compiler {
 								List<JsExpression> thisAndArguments;
 								if (property.IsIndexer) {
 									var invocation = (CSharpInvocationResolveResult)target;
-									thisAndArguments = CompileThisAndArgumentListForMethodCall(InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
 								}
 								else {
 									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.GetScriptType(mrr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
@@ -967,10 +967,33 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool expandParams) {
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool expandParams) {
+			IList<InlineCodeToken> tokens = null;
+			var expressions = new List<JsExpression>() { target };
+			if (literalCode != null) {
+				bool hasError = false;
+				tokens = InlineCodeMethodCompiler.Tokenize((IMethod)member, literalCode, s => hasError = true);
+				if (hasError)
+					tokens = null;
+			}
+
+			if (tokens != null && target != null && !member.IsStatic && member.EntityType != EntityType.Constructor) {
+				int thisUseCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
+				if (thisUseCount > 1 && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(target)) {
+					// Create a temporary for {this}, if required.
+					var temp = _createTemporaryVariable(member.DeclaringType);
+					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, expressions[0]));
+					expressions[0] = JsExpression.Identifier(_variables[temp].Name);
+				}
+				else if (thisUseCount == 0 && DoesJsExpressionHaveSideEffects.Process(target)) {
+					// Ensure that 'this' is evaluated if required, even if not used by the inline code.
+					_additionalStatements.Add(new JsExpressionStatement(target));
+					expressions[0] = JsExpression.Null;
+				}
+			}
+
 			argumentToParameterMap = argumentToParameterMap ?? CreateIdentityArgumentToParameterMap(argumentsForCall.Count);
 
-			var expressions = new List<JsExpression>() { target };
 			foreach (var i in argumentToParameterMap) {
 				var a = argumentsForCall[i];
 				if (a is ByReferenceResolveResult) {
@@ -983,8 +1006,26 @@ namespace Saltarelle.Compiler.Compiler {
 						expressions.Add(JsExpression.Null);
 					}
 				}
-				else
-					expressions.Add(InnerCompile(a, argumentsUsedMultipleTimes, expressions));
+				else {
+					int useCount = (tokens != null ? tokens.Count(t => (t.Type == InlineCodeToken.TokenType.Parameter || t.Type == InlineCodeToken.TokenType.ExpandedParamArrayParameter) && t.Index == i) : 1);
+					bool usedMultipleTimes = argumentsUsedMultipleTimes || useCount > 1;
+					if (useCount >= 1) {
+						expressions.Add(InnerCompile(a, usedMultipleTimes, expressions));
+					}
+					else if (tokens != null && tokens.Count( t => t.Type == InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier && t.Index == i) > 0) {
+						var result = CloneAndCompile(a, false);
+						expressions.Add(result.Expression);	// Will later give an error if the result is not a literal string.
+					}
+					else {
+						var result = CloneAndCompile(a, false);
+						if (result.AdditionalStatements.Count > 0 || DoesJsExpressionHaveSideEffects.Process(result.Expression)) {
+							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, result);
+							_additionalStatements.AddRange(result.AdditionalStatements);
+							_additionalStatements.Add(new JsExpressionStatement(result.Expression));
+						}
+						expressions.Add(JsExpression.Null);	// Will be ignored later, anyway
+					}
+				}
 			}
 
 			if ((argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.
@@ -1030,8 +1071,9 @@ namespace Saltarelle.Compiler.Compiler {
 			if (impl != null && impl.ExpandParams && !isExpandedForm) {
 				_errorReporter.Message(7514, method.DeclaringType.FullName + "." + method.Name);
 			}
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method.IsStatic ? _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && method.TypeParameters.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
-			return CompileMethodInvocation(impl, method, thisAndArguments, method.IsOverridable && !isVirtualCall, isExpandedForm);
+			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && method.TypeParameters.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
+			return CompileMethodInvocation(impl, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod, isExpandedForm);
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, bool isNonVirtualInvocationOfVirtualMethod, bool isExpandedForm) {
@@ -1077,7 +1119,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				case MethodScriptSemantics.ImplType.InlineCode:
-					return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isExpandedForm, s => _errorReporter.Message(7525, s));
+					return CompileInlineCodeMethodInvocation(method, isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList(), isExpandedForm);
 
 				case MethodScriptSemantics.ImplType.NativeIndexer:
 					return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
@@ -1087,6 +1129,13 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Null;
 				}
 			}
+		}
+
+		private JsExpression CompileInlineCodeMethodInvocation(IMethod method, string code, JsExpression @this, IList<JsExpression> arguments, bool isParamArrayExpanded) {
+			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(7525, s));
+			if (tokens == null)
+				return JsExpression.Null;
+			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isParamArrayExpanded, s => _errorReporter.Message(7525, s));
 		}
 
 		private string GetMemberNameForJsonConstructor(IMember member) {
@@ -1209,7 +1258,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (impl.ExpandParams && !isExpandedForm) {
 					_errorReporter.Message(7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(_runtimeLibrary.GetScriptType(method.DeclaringType, impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor ? TypeContext.InvokeConstructor : TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, _runtimeLibrary.GetScriptType(method.DeclaringType, impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor ? TypeContext.InvokeConstructor : TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 
 				JsExpression constructorCall;
 
@@ -1227,7 +1276,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						constructorCall = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isExpandedForm, s => _errorReporter.Message(7525, s));
+						constructorCall = CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList(), isExpandedForm);
 						break;
 
 					default:
@@ -1251,7 +1300,7 @@ namespace Saltarelle.Compiler.Compiler {
 					if (sem.ExpandParams && !isExpandedForm) {
 						_errorReporter.Message(7534, member.DeclaringType.FullName);
 					}
-					var thisAndArguments = CompileThisAndArgumentListForMethodCall(InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap, sem.ExpandParams && isExpandedForm);
+					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap, sem.ExpandParams && isExpandedForm);
 
 					if (sem.BindThisToFirstParameter)
 						return JsExpression.Invocation(JsExpression.Member(thisAndArguments[0], "call"), thisAndArguments.Skip(1));

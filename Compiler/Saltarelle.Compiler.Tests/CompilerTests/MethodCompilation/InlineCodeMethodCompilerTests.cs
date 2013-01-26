@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -17,75 +19,114 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void TheTokenizerWorks() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("X{ab}{{y}z}}Y{{{c}}}T", new[] { "ab", "c" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
+			Compile("class C { public static void F(int ab, int c) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "X{ab}{{y}z}}Y{{{c}}}T", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] {
-			                new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Text, "X"),
-			                new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Parameter, index: 0),
-			                new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Text, "{y}z}Y{"),
-			                new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Parameter, index: 1),
-			                new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Text, "}T"),
+			                new InlineCodeToken(InlineCodeToken.TokenType.Text, "X"),
+			                new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0),
+			                new InlineCodeToken(InlineCodeToken.TokenType.Text, "{y}z}Y{"),
+			                new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 1),
+			                new InlineCodeToken(InlineCodeToken.TokenType.Text, "}T"),
 			            }));
 
 			string msg = null;
-			InlineCodeMethodCompiler.Tokenize("Something {abcd", new string[0], new string[0], s => msg = s);
+			InlineCodeMethodCompiler.Tokenize(method, "Something {abcd", s => msg = s);
 			Assert.That(msg, Is.StringContaining("'}'"));
 
-			Assert.That(InlineCodeMethodCompiler.Tokenize("X{}Y", new string[0], new string[0], s => Assert.Fail("Unexpected error " + s)), Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Text, "X{}Y") }));
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "X{}Y", s => Assert.Fail("Unexpected error " + s)), Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Text, "X{}Y") }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectTypeReferences() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{$System.Type}", new string[0], new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.TypeRef, "System.Type") }));
+			Compile("class C { public static void F() {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{$System.Type}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeRef, "System.Type") }));
 		}
 
 		[Test]
 		public void InvalidTypeNameIsReportedAsAnError() {
+			Compile("class C { public static void F() {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
 			string msg = null;
-			InlineCodeMethodCompiler.Tokenize("{$Some[]-bad|type}", new string[0], new string[0], s => msg = s);
+			InlineCodeMethodCompiler.Tokenize(method, "{$Some[]-bad|type}", s => msg = s);
 			Assert.That(msg, Is.StringContaining("Some[]-bad|type"));
 		}
 
 		[Test]
 		public void TokenizerCanDetectThis() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{this}", new string[0], new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.This) }));
+			Compile("class C { public static void F() {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{this}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.This) }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectParameterNames() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{p1}{p2}", new[] { "p1", "p2" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Parameter, index: 0), new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Parameter, index: 1) }));
+			Compile("class C { public static void F(int p1, int p2) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{p1}{p2}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0), new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 1) }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectParameterNamePreceededByAtSign() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{p1}", new[] { "@p1" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.Parameter, index: 0) }));
+			Compile("class C { public static void F(int @p1) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{p1}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0) }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectLiteralStringParameterToUseAsIdentifier() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{@p1}{@p2}", new[] { "p1", "p2" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: 0), new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: 1) }));
+			Compile("class C { public static void F(string p1, string p2) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{@p1}{@p2}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: 0), new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: 1) }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectExpandedParamArrayParameter() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{*p1}{*p2}", new[] { "p1", "p2" }, new string[0], s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: 0), new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: 1) }));
+			Compile("class C { public static void F(params string[] p1) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{*p1}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: 0) }));
 		}
 
 		[Test]
-		public void TokenizerCanDetectTypeParameterNames() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{T1}{T2}", new string[0], new[] { "T1", "T2" }, s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.TypeParameter, index: 0), new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.TypeParameter, index: 1) }));
+		public void TokenizerCanDetectTypeTypeParameters() {
+			Compile("class C<T1, T2> { public static void F(params string[] p1) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: EntityType.TypeDefinition) }));
+		}
+
+		[Test]
+		public void TokenizerCanDetectMethodTypeParameters() {
+			Compile("class C { public static void F<T1, T2>(params string[] p1) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.Method), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: EntityType.Method) }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectTypeParameterNamePreceededByAtSign() {
-			Assert.That(InlineCodeMethodCompiler.Tokenize("{T1}", new string[0], new[] { "@T1" }, s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeMethodCompiler.InlineCodeToken(InlineCodeMethodCompiler.InlineCodeToken.TokenType.TypeParameter, index: 0) }));
+			Compile("class C<@T1> { public static void F<@T2>(params string[] p1) {} }");
+			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+
+			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.Method) }));
 		}
 
 		[Test]

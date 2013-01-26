@@ -87,7 +87,10 @@ namespace CoreLib.Plugin {
 					var prevRegion = _errorReporter.Region;
 					try {
 						_errorReporter.Region = defaultConstructor.Region;
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor, sem.LiteralCode, null, EmptyList<JsExpression>.Instance, r => r.Resolve(_compilation), _runtimeLibrary.GetScriptType, false, s => _errorReporter.Message(7525, s));
+						var tokens = InlineCodeMethodCompiler.Tokenize(defaultConstructor, sem.LiteralCode, s => _errorReporter.Message(7525, s));
+						if (tokens == null)
+							return JsExpression.Null;
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor, tokens, null, EmptyList<JsExpression>.Instance, r => r.Resolve(_compilation), _runtimeLibrary.GetScriptType, false, s => _errorReporter.Message(7525, s));
 					}
 					finally {
 						_errorReporter.Region = prevRegion;

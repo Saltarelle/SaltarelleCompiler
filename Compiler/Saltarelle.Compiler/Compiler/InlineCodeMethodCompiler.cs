@@ -11,78 +11,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.Compiler {
 	public static class InlineCodeMethodCompiler {
-		public class InlineCodeToken {
-			public enum TokenType {
-				Text,
-				This,
-				Parameter,
-				TypeParameter,
-				TypeRef,
-				LiteralStringParameterToUseAsIdentifier,
-				ExpandedParamArrayParameter,
-			}
-
-			public TokenType Type { get; private set; }
-			private string _text;
-
-			public string Text {
-				get {
-					if (Type != TokenType.Text && Type != TokenType.TypeRef)
-						throw new InvalidOperationException();
-					return _text;
-				}
-			}
-
-			private int _index;
-			public int Index {
-				get {
-					if (Type != TokenType.Parameter && Type != TokenType.TypeParameter && Type != TokenType.LiteralStringParameterToUseAsIdentifier && Type != TokenType.ExpandedParamArrayParameter)
-						throw new InvalidOperationException();
-					return _index;
-				}
-			}
-
-			public InlineCodeToken(TokenType type, string text = null, int index = -1) {
-				Type   = type;
-				_text  = text;
-				_index = index;
-			}
-
-			public bool Equals(InlineCodeToken other) {
-				if (ReferenceEquals(null, other)) return false;
-				if (ReferenceEquals(this, other)) return true;
-				return Equals(other._text, _text) && other._index == _index && Equals(other.Type, Type);
-			}
-
-			public override bool Equals(object obj) {
-				if (ReferenceEquals(null, obj)) return false;
-				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != typeof (InlineCodeToken)) return false;
-				return Equals((InlineCodeToken) obj);
-			}
-
-			public override int GetHashCode() {
-				unchecked {
-					int result = (_text != null ? _text.GetHashCode() : 0);
-					result = (result*397) ^ _index;
-					result = (result*397) ^ Type.GetHashCode();
-					return result;
-				}
-			}
-
-			public override string ToString() {
-				return string.Format("Text: {0}, Index: {1}, Type: {2}", _text, _index, Type);
-			}
-		}
-
-		private static int FindParameter(string name, IList<string> allParameters) {
-			int i = allParameters.IndexOf(name);
-			if (i >= 0)
-				return i;
-			return allParameters.IndexOf("@" + name);
-		}
-
-		private static InlineCodeToken ParsePlaceholder(string text, IList<string> parameterNames, IList<string> typeParameterNames, Action<string> errorReporter) {
+		private static InlineCodeToken ParsePlaceholder(IMethod method, string text, Action<string> errorReporter) {
 			if (text[0] == '$') {
 				try {
 					var s = text.Substring(1).Trim();
@@ -99,29 +28,34 @@ namespace Saltarelle.Compiler.Compiler {
 
 			string argName = text.TrimStart('@', '*');
 
-			if (parameterNames != null) {
-				int i = FindParameter(argName, parameterNames);
-				if (i >= 0) {
-					if (text[0] == '@')
-						return new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: i);
-					else if (text[0] == '*')
-						return new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: i);
-					else
-						return new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: i);
+			for (int i = 0; i < method.Parameters.Count; i++) {
+				if (method.Parameters[i].Name == argName) {
+					if (i >= 0) {
+						if (text[0] == '@')
+							return new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: i);
+						else if (text[0] == '*')
+							return new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: i);
+						else
+							return new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: i);
+					}
 				}
 			}
 
-			if (typeParameterNames != null) {
-				int i = FindParameter(text, typeParameterNames);
-				if (i >= 0)
-					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i);
+			for (int i = 0; i < method.DeclaringTypeDefinition.TypeParameterCount; i++) {
+				if (method.DeclaringTypeDefinition.TypeParameters[i].Name == text)
+					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: EntityType.TypeDefinition);
+			}
+
+			for (int i = 0; i < method.TypeParameters.Count; i++) {
+				if (method.TypeParameters[i].Name == text)
+					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: EntityType.Method);
 			}
 
 			errorReporter("Unknown placeholder '{" + text + "}'");
 			return null;
 		}
 
-		public static IList<InlineCodeToken> Tokenize(string code, IList<string> parameterNames, IList<string> typeParameterNames, Action<string> errorReporter) {
+		public static IList<InlineCodeToken> Tokenize(IMethod method, string code, Action<string> errorReporter) {
 			var currentChunk = new StringBuilder();
 			var result = new List<InlineCodeToken>();
 
@@ -147,7 +81,7 @@ namespace Saltarelle.Compiler.Compiler {
 							i++;
 						}
 						if (i < code.Length) {
-							var ph = ParsePlaceholder(currentChunk.ToString(), parameterNames, typeParameterNames, errorReporter);
+							var ph = ParsePlaceholder(method, currentChunk.ToString(), errorReporter);
 							if (ph == null)
 								return null;
 							result.Add(ph);
@@ -173,39 +107,9 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private static string CreatePlaceholder(int index) {
-			return "{" + index.ToString(CultureInfo.InvariantCulture) + "}";
-		}
-
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, string literalCode, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, IType> resolveType, Func<IType, TypeContext, JsExpression> getJsType, bool isParamArrayExpanded, Action<string> errorReporter) {
-			List<string> typeParameterNames = new List<string>();
-			List<IType>  typeArguments      = new List<IType>();
-
-			if (method.DeclaringTypeDefinition.TypeParameterCount > 0) {
-				var parameterizedType = method.DeclaringType as ParameterizedType;
-				typeParameterNames.AddRange(method.DeclaringTypeDefinition.TypeParameters.Select(p => p.Name));
-				if (parameterizedType != null) {
-					typeArguments.AddRange(parameterizedType.TypeArguments);
-				}
-				else {
-					typeArguments.AddRange(Enumerable.Repeat(resolveType(ReflectionHelper.ParseReflectionName("System.Object")), method.DeclaringType.TypeParameterCount));
-				}
-			}
-
-			if (method.TypeParameters.Count > 0) {
-				typeParameterNames.AddRange(method.TypeParameters.Select(p => p.Name).ToList());
-				var specializedMethod = method as SpecializedMethod;
-				if (specializedMethod != null) {
-					typeArguments.AddRange(specializedMethod.TypeArguments);
-				}
-				else {
-					typeArguments.AddRange(Enumerable.Repeat(resolveType(ReflectionHelper.ParseReflectionName("System.Object")), method.TypeParameters.Count));
-				}
-			}
-
-			var tokens = Tokenize(literalCode, method.Parameters.Select(p => p.Name).ToList(), typeParameterNames, s => errorReporter("Error in literal code pattern: " + s));
-			if (tokens == null)
-				return JsExpression.Number(0);
+		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, IType> resolveType, Func<IType, TypeContext, JsExpression> getJsType, bool isParamArrayExpanded, Action<string> errorReporter) {
+			IList<IType> typeTypeArguments = method.DeclaringType is ParameterizedType ? ((ParameterizedType)method.DeclaringType).TypeArguments : null;
+			IList<IType> methodTypeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : null;
 
 			var text = new StringBuilder();
 			var substitutions = new Dictionary<string, Tuple<JsExpression, bool>>();
@@ -242,7 +146,8 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						substitutions[s] = Tuple.Create(getJsType(typeArguments[token.Index], TypeContext.InlineCode), false);
+						var l = token.OwnerType == EntityType.TypeDefinition ? typeTypeArguments : methodTypeArguments;
+						substitutions[s] = Tuple.Create(l != null ? getJsType(l[token.Index], TypeContext.InlineCode) : JsExpression.Null, false);
 						break;
 					}
 
@@ -380,8 +285,13 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, IType> resolveType) {
 			var errors = new List<string>();
+
+			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
+			if (tokens == null)
+				return errors;
+
 			CompileInlineCodeMethodInvocation(method,
-			                                  literalCode,
+			                                  tokens,
 			                                  method.IsStatic ? null : JsExpression.Null,
 			                                  method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
 			                                  resolveType,

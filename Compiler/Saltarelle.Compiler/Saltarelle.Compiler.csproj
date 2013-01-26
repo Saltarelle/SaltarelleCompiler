@@ -63,6 +63,7 @@
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\INamer.cs" />
+    <Compile Include="Compiler\InlineCodeToken.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
     <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />

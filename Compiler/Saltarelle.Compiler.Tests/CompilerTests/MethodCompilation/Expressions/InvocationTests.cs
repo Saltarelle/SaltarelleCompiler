@@ -246,6 +246,35 @@ public void M() {
 		}
 
 		[Test]
+		public void NormalMethodInvocationWorksForReorderedAndDefaultArgumentsWithAdditionalStatements() {
+			AssertCorrect(
+@"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+int F5(int x) { return 0; }
+int F6(int x) { return 0; }
+int P1 { get; set; }
+int P2 { get; set; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F5(P1 = F2()), f: F6(P2 = F3()), b: F4());
+	// END
+}
+",
+@"	var $tmp2 = this.$F1();
+	var $tmp1 = this.$F2();
+	this.set_$P1($tmp1);
+	var $tmp4 = this.$F5($tmp1);
+	var $tmp3 = this.$F3();
+	this.set_$P2($tmp3);
+	var $tmp5 = this.$F6($tmp3);
+	this.$F(1, this.$F4(), 3, $tmp2, 5, $tmp5, $tmp4);
+");
+		}
+
+		[Test]
 		public void PassingRefAndOutParametersToNormalMethodWorks() {
 			AssertCorrect(
 @"void F(ref int x, out int y, int z) { y = 0; }
@@ -496,6 +525,147 @@ class D : B<int> {
 
 		[Test]
 		public void InvokingMethodImplementedAsInlineCodeWorksWithReorderedAndDefaultArguments() {
+			AssertCorrect(
+@"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	_(1)._(this.$F4())._(3)._($tmp1)._(5)._($tmp3)._($tmp2);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})._({e})._({f})._({g})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForParametersUsedTwice() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d, int e) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+class X { public int x; }
+public void M() {
+	int a = 0;
+	X x;
+	// BEGIN
+	F(F1(), a, F2(), x.x, F3());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	_($tmp1)._($a)._($tmp2)._($x.$x)._($tmp2)._($x.$x)._(this.$F3());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})._({c})._({d})._({e})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForParametersUsedTwiceWhenArgumentsReordered() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d, int e) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+class X { public int x; }
+public void M() {
+	int a = 0;
+	X x;
+	// BEGIN
+	F(F1(), c: F2(), b: a, d: x.x, e: F3());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	_($tmp1)._($a)._($tmp2)._($x.$x)._($tmp2)._($x.$x)._(this.$F3());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})._({c})._({d})._({e})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForThisIfRequired1() {
+			AssertCorrect(
+@"void F(int a) {}
+int F1() { return 0; }
+C X() { return null; }
+public void M() {
+	// BEGIN
+	X().F(F1());
+	// END
+}
+",
+@"	var $tmp1 = this.$X();
+	var $tmp2 = this.$F1();
+	_($tmp1)._($tmp2)._($tmp2);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForThisIfRequired2() {
+			AssertCorrect(
+@"void F(int a, int b) {}
+int F1() { return 0; }
+int F2() { return 0; }
+C X() { return null; }
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	X().F(F1(), a);
+	// END
+}
+",
+@"	var $tmp1 = this.$X();
+	_($tmp1)._($tmp1)._(this.$F1())._($a);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({this})._({a})._({b}))") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesThisIfNotUsedInTheInlineCode() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+class X { public int x; }
+public void M() {
+	int a = 0;
+	// BEGIN
+	F(F1(), F2(), F3(), a);
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	this.$F2();
+	_($tmp1)._(this.$F3())._($a);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({c})._({d})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesArgumentNotUsedInTheInlineCode() {
+			AssertCorrect(
+@"void F(int a) {}
+int F1() { return 0; }
+C X() { return null; }
+public void M() {
+	// BEGIN
+	X().F(F1());
+	// END
+}
+",
+@"	this.$X();
+	_(this.$F1());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test, Ignore("TODO")]
+		public void InvokingMethodImplementedAsInlineCodeWorksWithReorderedAndDefaultArgumentsWorksWhenTheInlineCodeMethodAlsoReordersArguments() {
+			Assert.Fail("TODO, also check what happens together with prev. method");
 			AssertCorrect(
 @"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
 int F1() { return 0; }
