@@ -5,11 +5,12 @@ using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
+using Utils = Saltarelle.Compiler.JSModel.Utils;
 
 namespace CoreLib.Plugin {
 	public static class MetadataUtils {
 		public static string MakeCamelCase(string s) {
-			if (string.IsNullOrEmpty(s))
+			if (String.IsNullOrEmpty(s))
 				return s;
 			if (s.Equals("ID", StringComparison.Ordinal))
 				return "id";
@@ -17,7 +18,7 @@ namespace CoreLib.Plugin {
 			bool hasNonUppercase = false;
 			int numUppercaseChars = 0;
 			for (int index = 0; index < s.Length; index++) {
-				if (char.IsUpper(s, index)) {
+				if (Char.IsUpper(s, index)) {
 					numUppercaseChars++;
 				}
 				else {
@@ -33,7 +34,7 @@ namespace CoreLib.Plugin {
 			else if (s.Length == 1)
 				return s.ToLower(CultureInfo.InvariantCulture);
 			else
-				return char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
+				return Char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
 		public static bool IsSerializable(ITypeDefinition type) {
@@ -90,14 +91,14 @@ namespace CoreLib.Plugin {
 
 		public static string GetModuleName(IAssembly assembly) {
 			var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(assembly.AssemblyAttributes);
-			return (mna != null && !string.IsNullOrEmpty((string)mna.ModuleName) ? mna.ModuleName : null);
+			return (mna != null && !String.IsNullOrEmpty((string)mna.ModuleName) ? mna.ModuleName : null);
 		}
 
 		public static string GetModuleName(ITypeDefinition type) {
 			for (var current = type; current != null; current = current.DeclaringTypeDefinition) {
 				var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(type);
 				if (mna != null)
-					return !string.IsNullOrEmpty(mna.ModuleName) ? mna.ModuleName : null;
+					return !String.IsNullOrEmpty(mna.ModuleName) ? mna.ModuleName : null;
 			}
 			return GetModuleName(type.ParentAssembly);
 		}
@@ -209,7 +210,7 @@ namespace CoreLib.Plugin {
 			bool preserveName = (!isConstructor && !isAccessor && (   AttributeReader.HasAttribute<PreserveNameAttribute>(member)
 			                                                       || AttributeReader.HasAttribute<InstanceMethodOnFirstArgumentAttribute>(member)
 			                                                       || AttributeReader.HasAttribute<IntrinsicPropertyAttribute>(member)
-			                                                       || MetadataUtils.IsPreserveMemberNames(member.DeclaringTypeDefinition) && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
+			                                                       || IsPreserveMemberNames(member.DeclaringTypeDefinition) && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
 			                                                       || (IsSerializable(member.DeclaringTypeDefinition) && !member.IsStatic && (member is IProperty || member is IField)))
 			                                                       || (IsNamedValues(member.DeclaringTypeDefinition) && member is IField);
 
@@ -217,6 +218,37 @@ namespace CoreLib.Plugin {
 				return Tuple.Create(isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name), true);
 
 			return Tuple.Create(defaultName, false);
+		}
+
+		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+		public static string EncodeNumber(int i, bool ensureValidIdentifier) {
+			if (ensureValidIdentifier) {
+				string result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1);
+				while (i >= _encodeNumberTable.Length - 10) {
+					i /= _encodeNumberTable.Length - 10;
+					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
+				}
+				return Utils.IsJavaScriptReservedWord(result) ? "_" + result : result;
+			}
+			else {
+				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
+				while (i >= _encodeNumberTable.Length) {
+					i /= _encodeNumberTable.Length;
+					result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
+				}
+				return result;
+			}
+		}
+
+		public static string GetUniqueName(string preferredName, Func<string, bool> isNameAvailable) {
+			string name = preferredName;
+			int i = (name == null ? 0 : 1);
+			while (name == null || !isNameAvailable(name)) {
+				name = preferredName + "$" + MetadataUtils.EncodeNumber(i, false);
+				i++;
+			}
+			return name;
 		}
 	}
 }

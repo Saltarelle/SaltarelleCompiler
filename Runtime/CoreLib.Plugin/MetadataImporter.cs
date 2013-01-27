@@ -182,27 +182,6 @@ namespace CoreLib.Plugin {
 			_errorReporter.Message(message, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
 		}
 
-		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-		public static string EncodeNumber(int i, bool ensureValidIdentifier) {
-			if (ensureValidIdentifier) {
-				string result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1);
-				while (i >= _encodeNumberTable.Length - 10) {
-					i /= _encodeNumberTable.Length - 10;
-					result = _encodeNumberTable.Substring(i % (_encodeNumberTable.Length - 10) + 10, 1) + result;
-				}
-				return Saltarelle.Compiler.JSModel.Utils.IsJavaScriptReservedWord(result) ? "_" + result : result;
-			}
-			else {
-				string result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1);
-				while (i >= _encodeNumberTable.Length) {
-					i /= _encodeNumberTable.Length;
-					result = _encodeNumberTable.Substring(i % _encodeNumberTable.Length, 1) + result;
-				}
-				return result;
-			}
-		}
-
 		private string GetDefaultTypeName(ITypeDefinition def, bool ignoreGenericArguments) {
 			if (ignoreGenericArguments) {
 				return def.Name;
@@ -420,7 +399,7 @@ namespace CoreLib.Plugin {
 
 			for (int i = 0; i < typeDefinition.TypeParameterCount; i++) {
 				var tp = typeDefinition.TypeParameters[i];
-				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, true) : tp.Name;
+				_typeParameterNames[tp] = _minimizeNames ? MetadataUtils.EncodeNumber(i, true) : tp.Name;
 			}
 
 			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: !isImported), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
@@ -517,14 +496,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private string GetUniqueName(string preferredName, Dictionary<string, bool> usedNames) {
-			// The name was not explicitly specified, so ensure that we have a unique name.
-			string name = preferredName;
-			int i = (name == null ? 0 : 1);
-			while (name == null || usedNames.ContainsKey(name)) {
-				name = preferredName + "$" + EncodeNumber(i, false);
-				i++;
-			}
-			return name;
+			return MetadataUtils.GetUniqueName(preferredName, n => !usedNames.ContainsKey(n));
 		}
 
 		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
@@ -632,7 +604,7 @@ namespace CoreLib.Plugin {
 					else {
 						int i = 1;
 						do {
-							name = "$ctor" + EncodeNumber(i, false);
+							name = "$ctor" + MetadataUtils.EncodeNumber(i, false);
 							i++;
 						} while (usedNames.ContainsKey(name));
 					}
@@ -758,7 +730,7 @@ namespace CoreLib.Plugin {
 		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
 			for (int i = 0; i < method.TypeParameters.Count; i++) {
 				var tp = method.TypeParameters[i];
-				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(method.DeclaringType.TypeParameterCount + i, true) : tp.Name;
+				_typeParameterNames[tp] = _minimizeNames ? MetadataUtils.EncodeNumber(method.DeclaringType.TypeParameterCount + i, true) : tp.Name;
 			}
 
 			var eaa = AttributeReader.ReadAttribute<EnumerateAsArrayAttribute>(method);
