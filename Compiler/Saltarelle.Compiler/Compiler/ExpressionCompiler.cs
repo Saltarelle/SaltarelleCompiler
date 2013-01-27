@@ -37,100 +37,6 @@ namespace Saltarelle.Compiler.Compiler {
 	}
 
 	public class ExpressionCompiler : ResolveResultVisitor<JsExpression, bool> {
-		internal class IsJsExpressionComplexEnoughToGetATemporaryVariable : RewriterVisitorBase<object> {
-			private bool _result;
-
-			public static bool Process(JsExpression expression) {
-				var v = new IsJsExpressionComplexEnoughToGetATemporaryVariable();
-				expression.Accept(v, null);
-				return v._result;
-			}
-
-			public override JsExpression VisitArrayLiteralExpression(JsArrayLiteralExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitBinaryExpression(JsBinaryExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitCommaExpression(JsCommaExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitObjectLiteralExpression(JsObjectLiteralExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitUnaryExpression(JsUnaryExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-		}
-
-		internal class DoesJsExpressionHaveSideEffects : RewriterVisitorBase<object> {
-			private bool _result;
-
-			public static bool Process(JsExpression expression) {
-				var v = new DoesJsExpressionHaveSideEffects();
-				expression.Accept(v, null);
-				return v._result;
-			}
-
-			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {
-				_result = true;
-				return expression;
-			}
-
-			public override JsExpression VisitBinaryExpression(JsBinaryExpression expression, object data) {
-				if (expression.NodeType >= ExpressionNodeType.AssignFirst && expression.NodeType <= ExpressionNodeType.AssignLast) {
-					_result = true;
-					return expression;
-				}
-				else {
-					return base.VisitBinaryExpression(expression, data);
-				}
-			}
-
-			public override JsExpression VisitUnaryExpression(JsUnaryExpression expression, object data) {
-				switch (expression.NodeType) {
-					case ExpressionNodeType.PrefixPlusPlus:
-					case ExpressionNodeType.PrefixMinusMinus:
-					case ExpressionNodeType.PostfixPlusPlus:
-					case ExpressionNodeType.PostfixMinusMinus:
-					case ExpressionNodeType.Delete:
-						_result = true;
-						return expression;
-					default:
-						return base.VisitUnaryExpression(expression, data);
-				}
-			}
-		}
-
 		private readonly ICompilation _compilation;
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
@@ -250,7 +156,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
 			var result = CloneAndCompile(rr, true);
 
-			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(result.Expression);
+			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(result.Expression);
 			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
 				CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression, result);
 			}
@@ -316,19 +222,19 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private bool IsAssignmentOperator(ExpressionType operatorType) {
 			return operatorType == ExpressionType.AddAssign
-                || operatorType == ExpressionType.AndAssign
-                || operatorType == ExpressionType.DivideAssign
-                || operatorType == ExpressionType.ExclusiveOrAssign
-                || operatorType == ExpressionType.LeftShiftAssign
-                || operatorType == ExpressionType.ModuloAssign
-                || operatorType == ExpressionType.MultiplyAssign
-                || operatorType == ExpressionType.OrAssign
-                || operatorType == ExpressionType.PowerAssign
-                || operatorType == ExpressionType.RightShiftAssign
-                || operatorType == ExpressionType.SubtractAssign
-                || operatorType == ExpressionType.AddAssignChecked
-                || operatorType == ExpressionType.MultiplyAssignChecked
-                || operatorType == ExpressionType.SubtractAssignChecked;
+			    || operatorType == ExpressionType.AndAssign
+			    || operatorType == ExpressionType.DivideAssign
+			    || operatorType == ExpressionType.ExclusiveOrAssign
+			    || operatorType == ExpressionType.LeftShiftAssign
+			    || operatorType == ExpressionType.ModuloAssign
+			    || operatorType == ExpressionType.MultiplyAssign
+			    || operatorType == ExpressionType.OrAssign
+			    || operatorType == ExpressionType.PowerAssign
+			    || operatorType == ExpressionType.RightShiftAssign
+			    || operatorType == ExpressionType.SubtractAssign
+			    || operatorType == ExpressionType.AddAssignChecked
+			    || operatorType == ExpressionType.MultiplyAssignChecked
+			    || operatorType == ExpressionType.SubtractAssignChecked;
 		}
 
 
@@ -447,7 +353,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 								if (returnValueIsImportant) {
 									var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
-									if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(valueToReturn)) {
+									if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(valueToReturn)) {
 										// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
 										CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(thisAndArguments, valueToReturn);
 										var temp = _createTemporaryVariable(target.Type);
@@ -527,7 +433,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 					if (returnValueIsImportant) {
 						var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
-						if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(valueToReturn)) {
+						if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(valueToReturn)) {
 							// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
 							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, valueToReturn);
 							var temp = _createTemporaryVariable(target.Type);
@@ -983,8 +889,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private IList<int> CreateInlineCodeExpressionToOrderMap(IList<InlineCodeToken> tokens, int argumentCount, IList<int> argumentToParameterMap) {
 			var dict = Enumerable.Range(-1, argumentCount + 1).OrderBy(x => FindIndexInTokens(tokens, x)).Select((i, n) => new { i, n }).ToDictionary(x => x.i, x => x.n);
-			var ordered = new[] { -1 }.Concat(argumentToParameterMap).Select(x => dict[x]).ToList();
-			return ordered;
+			return new[] { -1 }.Concat(argumentToParameterMap).Select(x => dict[x]).ToList();
 		}
 
 		private void CreateTemporariesForExpressionsAndAllRequiredExpressionsLeftOfIt(List<JsExpression> expressions, int index) {
@@ -1010,13 +915,13 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (tokens != null && target != null && !member.IsStatic && member.EntityType != EntityType.Constructor) {
 				int thisUseCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
-				if (thisUseCount > 1 && IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(target)) {
+				if (thisUseCount > 1 && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(target)) {
 					// Create a temporary for {this}, if required.
 					var temp = _createTemporaryVariable(member.DeclaringType);
 					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, expressions[0]));
 					expressions[0] = JsExpression.Identifier(_variables[temp].Name);
 				}
-				else if (thisUseCount == 0 && DoesJsExpressionHaveSideEffects.Process(target)) {
+				else if (thisUseCount == 0 && DoesJsExpressionHaveSideEffects.Analyze(target)) {
 					// Ensure that 'this' is evaluated if required, even if not used by the inline code.
 					_additionalStatements.Add(new JsExpressionStatement(target));
 					expressions[0] = JsExpression.Null;
@@ -1050,7 +955,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 					else {
 						var result = CloneAndCompile(a, false);
-						if (result.AdditionalStatements.Count > 0 || DoesJsExpressionHaveSideEffects.Process(result.Expression)) {
+						if (result.AdditionalStatements.Count > 0 || DoesJsExpressionHaveSideEffects.Analyze(result.Expression)) {
 							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, result);
 							_additionalStatements.AddRange(result.AdditionalStatements);
 							_additionalStatements.Add(new JsExpressionStatement(result.Expression));
@@ -1060,6 +965,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
+			// Ensure that expressions are evaluated left-to-right in the resulting script.
 			var expressionToOrderMap = tokens == null ? new[] { 0 }.Concat(argumentToParameterMap.Select(x => x + 1)).ToList() : CreateInlineCodeExpressionToOrderMap(tokens, argumentsForCall.Count, argumentToParameterMap);
 			for (int i = 0; i < expressions.Count; i++) {
 				var haveToBeEvaluatedBefore = Enumerable.Range(i + 1, expressions.Count - i - 1).Where(x => expressionToOrderMap[x] < expressionToOrderMap[i]);

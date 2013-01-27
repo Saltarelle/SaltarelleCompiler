@@ -116,7 +116,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var usedLoopLabels = new HashSet<string>();
 			var body = StateMachineRewriter.RewriteNormalMethod(function.Body,
-			                                                    ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+			                                                    IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze,
 			                                                    () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                    () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                    () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; });
@@ -132,7 +132,7 @@ namespace Saltarelle.Compiler.Compiler {
 			string yieldResultVariable = _namer.GetVariableName(_namer.YieldResultVariableDesiredName, _usedVariableNames);
 			_usedVariableNames.Add(yieldResultVariable);
 			var body = StateMachineRewriter.RewriteIteratorBlock(function.Body,
-			                                                     ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+			                                                     IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze,
 			                                                     () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                     () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                     () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
@@ -162,7 +162,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			var body = StateMachineRewriter.RewriteAsyncMethod(function.Body,
-			                                                   ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process,
+			                                                   IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze,
 			                                                   () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                   () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                   () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
@@ -623,7 +623,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var arrayResult = CompileExpression(foreachStatement.InExpression, true);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;
-				if (ExpressionCompiler.IsJsExpressionComplexEnoughToGetATemporaryVariable.Process(array)) {
+				if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(array)) {
 					var tmpArray = CreateTemporaryVariable(ferr.CollectionType, foreachStatement.GetRegion());
 					_result.Add(new JsVariableDeclarationStatement(_variables[tmpArray].Name, array));
 					array = JsExpression.Identifier(_variables[tmpArray].Name);
