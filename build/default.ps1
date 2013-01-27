@@ -94,7 +94,7 @@ Task Build-NuGetPackages -Depends Determine-Version, Run-Tests {
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>Saltarelle.Compiler.ExtensibilityDevelopment</id>
-		<version>$script:CompilerVersion</version>
+		<version>$script:ExtensibilityVersion</version>
 		<title>Extensibility development for the Saltarelle C# to JavaScript compiler</title>
 		<description>This package contains file necessary to develop plugins for the Saltarelle C# to Javascript compiler. This package is NOT needed during normal usage.</description>
 		<authors>Erik Källén</authors>
@@ -201,9 +201,11 @@ Task Determine-Version {
 	$refs = Determine-Ref
 	$script:CompilerVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler"
 	$script:RuntimeVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Runtime"
+	$script:ExtensibilityVersion = Determine-PathVersion -RefCommit $refs[0] -RefVersion $refs[1] -Path "$baseDir\Compiler","$baseDir\Runtime"
 
 	"Compiler version: $script:CompilerVersion"
 	"Runtime version: $script:RuntimeVersion"
+	"Extensibility version: $script:ExtensibilityVersion"
 }
 
 Function Generate-VersionFile($Path, $Version) {
