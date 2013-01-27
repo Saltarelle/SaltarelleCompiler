@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
@@ -18,7 +19,6 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			var impl = FindMethod("C.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod"));
-			Assert.That(impl.IgnoreGenericArguments, Is.False);
 			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 		}
 
@@ -40,25 +40,21 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
-			Assert.That(m1.IgnoreGenericArguments, Is.False);
 			Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
 			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("someMethod$1"));
-			Assert.That(m2.IgnoreGenericArguments, Is.False);
 			Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
 			var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("someMethod$2"));
-			Assert.That(m3.IgnoreGenericArguments, Is.False);
 			Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
 			var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("someMethod$3"));
-			Assert.That(m4.IgnoreGenericArguments, Is.False);
 			Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
 		}
 
@@ -123,19 +119,16 @@ public class C : B {
 			var impl = FindMethod("A.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod"));
-			Assert.That(impl.IgnoreGenericArguments, Is.False);
 			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 
 			impl = FindMethod("B.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod$1"));
-			Assert.That(impl.IgnoreGenericArguments, Is.False);
 			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 
 			impl = FindMethod("C.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(impl.Name, Is.EqualTo("someMethod$2"));
-			Assert.That(impl.IgnoreGenericArguments, Is.False);
 			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
 		}
 
@@ -288,6 +281,7 @@ interface I {
 	void SomeMethod();
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	[ScriptName(""RenamedMethod2"")]
 	void SomeMethod2();
@@ -318,6 +312,7 @@ interface I {
 	void SomeMethod();
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	[ScriptName(""RenamedMethod2"")]
 	void SomeMethod2();
@@ -398,6 +393,7 @@ interface I {
 	void SomeMethod(int i);
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	[ScriptName(""RenamedMethod2"")]
 	void SomeMethod(T i);
@@ -959,7 +955,9 @@ class C1 {
 		public void InlineCodeAttributeWorks() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
+[IncludeGenericArguments(true)]
 class C1<T1> {
+	[IncludeGenericArguments(true)]
 	class C2<T2> {
 		[InlineCode(""_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"")]
 		public void SomeMethod<T3, T4>(int x, string y) {}
@@ -1401,22 +1399,174 @@ class C1 : B {
 		}
 
 		[Test]
-		public void IgnoreGenericArgumentsAttributeWorks() {
-			Prepare(
-@"using System.Runtime.CompilerServices;
-class C1 {
-	[IgnoreGenericArguments]
-	public void SomeMethod<T>() {
-	}
+		public void GenericArgumentsAreIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class C1 {
+	public void M1<T1, T2>() {}
+	[IncludeGenericArguments] public void M2<T1, T2>() {}
+	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
+	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
 }");
 
-			var impl = FindMethod("C1.SomeMethod");
-			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(impl.IgnoreGenericArguments, Is.True);
+			var m1 = FindMethod("C1.M1");
+			Assert.That(m1.Name, Is.EqualTo("m1"));
+			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			var m2 = FindMethod("C1.M2");
+			Assert.That(m2.Name, Is.EqualTo("m2"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			var m3 = FindMethod("C1.M3");
+			Assert.That(m3.Name, Is.EqualTo("m3"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			var m4 = FindMethod("C1.M4");
+			Assert.That(m4.Name, Is.EqualTo("m4"));
+			Assert.That(m4.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]
-		public void IgnoreGenericArgumentsCannotBeSpecifiedOnOverridingMethod() {
+		public void GenericArgumentDefaultIgnoreCausesGenericArgumentsToBeIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.Ignore)]
+public class C1 {
+	public void M1<T1, T2>() {}
+	[IncludeGenericArguments] public void M2<T1, T2>() {}
+	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
+	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
+}");
+
+			var m1 = FindMethod("C1.M1");
+			Assert.That(m1.Name, Is.EqualTo("m1"));
+			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			var m2 = FindMethod("C1.M2");
+			Assert.That(m2.Name, Is.EqualTo("m2"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			var m3 = FindMethod("C1.M3");
+			Assert.That(m3.Name, Is.EqualTo("m3"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			var m4 = FindMethod("C1.M4");
+			Assert.That(m4.Name, Is.EqualTo("m4"));
+			Assert.That(m4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultWithNoTypeDefaultCausesGenericArgumentsToBeIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault()]
+public class C1 {
+	public void M1<T1, T2>() {}
+	[IncludeGenericArguments] public void M2<T1, T2>() {}
+	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
+	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
+}");
+
+			var m1 = FindMethod("C1.M1");
+			Assert.That(m1.Name, Is.EqualTo("m1"));
+			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			var m2 = FindMethod("C1.M2");
+			Assert.That(m2.Name, Is.EqualTo("m2"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			var m3 = FindMethod("C1.M3");
+			Assert.That(m3.Name, Is.EqualTo("m3"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			var m4 = FindMethod("C1.M4");
+			Assert.That(m4.Name, Is.EqualTo("m4"));
+			Assert.That(m4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultIncludeExceptImportedCausesGenericArgumentsToBeIncludedByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.IncludeExceptImported)]
+public class C1 {
+	public void M1<T1, T2>() {}
+	[IncludeGenericArguments] public void M2<T1, T2>() {}
+	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
+	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
+}");
+
+			var m1 = FindMethod("C1.M1");
+			Assert.That(m1.Name, Is.EqualTo("m1"));
+			Assert.That(m1.IgnoreGenericArguments, Is.False);
+			var m2 = FindMethod("C1.M2");
+			Assert.That(m2.Name, Is.EqualTo("m2"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			var m3 = FindMethod("C1.M3");
+			Assert.That(m3.Name, Is.EqualTo("m3"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			var m4 = FindMethod("C1.M4");
+			Assert.That(m4.Name, Is.EqualTo("m4"));
+			Assert.That(m4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultIncludeExceptImportedCausesGenericArgumentsToBeIgnoredByDefaultForImportedTypesButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.Ignore)]
+[Imported]
+public class C1 {
+	public void M1<T1, T2>() {}
+	[IncludeGenericArguments] public void M2<T1, T2>() {}
+	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
+	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
+}");
+
+			var m1 = FindMethod("C1.M1");
+			Assert.That(m1.Name, Is.EqualTo("m1"));
+			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			var m2 = FindMethod("C1.M2");
+			Assert.That(m2.Name, Is.EqualTo("m2"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			var m3 = FindMethod("C1.M3");
+			Assert.That(m3.Name, Is.EqualTo("m3"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			var m4 = FindMethod("C1.M4");
+			Assert.That(m4.Name, Is.EqualTo("m4"));
+			Assert.That(m4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultRequireExplicitSpecificationCausesAnErrorIfIncludeGenericArgumentsIsNotSpecifiedForNonImportedTypes() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.RequireExplicitSpecification)]
+public class C1 { public void M1<T1, T2>() {} }", expectErrors: true);
+			Assert.AreEqual(AllErrors.Count, 1);
+			Assert.IsTrue(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7027 && m.FormattedMessage.Contains("IncludeGenericArgumentsAttribute") && m.FormattedMessage.Contains("C1.M1")));
+		}
+
+		[Test]
+		public void GenericArgumentDefaultRequireExplicitSpecificationCausesGenericArgumentsToBeIgnoredForImportedTypesButCanBeOverridden() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.RequireExplicitSpecification)]
+[Imported]
+public class C1 {
+	public void M1<T1, T2>() {}
+	[IncludeGenericArguments] public void M2<T1, T2>() {}
+	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
+	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
+}");
+
+			var m1 = FindMethod("C1.M1");
+			Assert.That(m1.Name, Is.EqualTo("m1"));
+			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			var m2 = FindMethod("C1.M2");
+			Assert.That(m2.Name, Is.EqualTo("m2"));
+			Assert.That(m2.IgnoreGenericArguments, Is.False);
+			var m3 = FindMethod("C1.M3");
+			Assert.That(m3.Name, Is.EqualTo("m3"));
+			Assert.That(m3.IgnoreGenericArguments, Is.False);
+			var m4 = FindMethod("C1.M4");
+			Assert.That(m4.Name, Is.EqualTo("m4"));
+			Assert.That(m4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void IncludeGenericArgumentsCannotBeSpecifiedOnOverridingMethod() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
@@ -1425,12 +1575,12 @@ class B {
 }
 
 class D : B {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments]
 	public sealed override void SomeMethod<T>(T t) {}
 }", expectErrors: true);
 
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("IgnoreGenericArgumentsAttribute") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("overrides"));
+			Assert.That(AllErrorTexts[0].Contains("IncludeGenericArguments") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("overrides"));
 		}
 
 		[Test]
@@ -1531,14 +1681,15 @@ class C1 {
 		}
 
 		[Test]
-		public void MethodInGlobalMethodsClassHonorsIgnoreGenericArgumentsAttribute() {
+		public void MethodInGlobalMethodsClassHonorsIncludeGenericArgumentsAttribute() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 [GlobalMethods]
 static class C {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	public static void M1<T>(T t) {}
 
+	[IncludeGenericArguments(true)]
 	public static void M2<T>(T t) {}
 }");
 			Assert.That(FindMethod("C.M1").IgnoreGenericArguments, Is.True);
@@ -1636,7 +1787,7 @@ class C1 {
 @"using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 class C1 {
-	[EnumerateAsArray]
+	[EnumerateAsArray, IncludeGenericArguments(true)]
 	public IEnumerator<int> GetEnumerator<T>() { return null; }
 }", expectErrors: true);
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));

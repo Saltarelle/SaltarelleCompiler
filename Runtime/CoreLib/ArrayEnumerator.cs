@@ -21,7 +21,7 @@ namespace System {
 
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	public sealed class ArrayEnumerator<T> : IEnumerator<T> {
 		object IEnumerator.Current { get { return default(T); } }
 

@@ -26,7 +26,7 @@ namespace System.Serialization {
 		/// </summary>
 		/// <param name="json">The JSON text to be parsed.</param>
 		/// <returns>The deserialized object.</returns>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static TData Parse<TData>(string json) {
 			return default(TData);
 		}
@@ -47,7 +47,7 @@ namespace System.Serialization {
 		/// <param name="json">The JSON text to be parsed.</param>
 		/// <param name="parseCallback">A callback to invoke on each value that is deserialized.</param>
 		/// <returns>The deserialized object.</returns>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static TData Parse<TData>(string json, JsonParseCallback parseCallback) {
 			return default(TData);
 		}

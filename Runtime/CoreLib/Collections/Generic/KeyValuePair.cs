@@ -6,7 +6,7 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[Serializable]
 	[Imported]
 	public sealed class KeyValuePair<TKey, TValue> {

@@ -63,6 +63,7 @@ namespace CoreLib.TestScript {
 			}
 		}
 
+		[IncludeGenericArguments]
 		public class C8<T> {
 			public int I;
 			[ScriptName("named")]
@@ -120,6 +121,7 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(c.j, 8);
 		}
 
+		[IncludeGenericArguments]
 		private T Instantiate<T>() where T : new() {
 			return new T();
 		}

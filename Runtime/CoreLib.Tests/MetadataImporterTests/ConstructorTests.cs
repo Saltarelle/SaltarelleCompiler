@@ -156,7 +156,9 @@ class C {
 		public void InlineCodeCanUseArgumentsAndTypeArguments() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
+[IncludeGenericArguments(true)]
 class C1<T1> {
+	[IncludeGenericArguments(true)]
 	class C2<T2> {
 		[InlineCode(""_({T1})._({T2})._({x})._({y})"")]
 		public C(int x, string y) {}

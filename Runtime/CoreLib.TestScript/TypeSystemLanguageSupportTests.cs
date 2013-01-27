@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using QUnit;
 
 #pragma warning disable 184, 458, 1720
@@ -7,13 +8,17 @@ namespace CoreLib.TestScript {
 	[TestFixture]
 	public class TypeSystemLanguageSupportTests {
 		public class C1 {}
+		[IncludeGenericArguments]
 		public class C2<T> {}
 		public interface I1 {}
+		[IncludeGenericArguments]
 		public interface I2<T1> {}
 		public interface I3 : I1 {}
 		public interface I4 {}
+		[IncludeGenericArguments]
 		public interface I5<T1> : I2<T1> {}
 		public class D1 : C1, I1 {}
+		[IncludeGenericArguments]
 		public class D2<T> : C2<T>, I2<T>, I1 {
 		}
 		public class D3 : C2<int>, I2<string> {
@@ -27,6 +32,7 @@ namespace CoreLib.TestScript {
 		public enum E1 {}
 		public enum E2 {}
 
+		[IncludeGenericArguments]
 		private static bool CanConvert<T>(object arg) {
 			try {
 				#pragma warning disable 219	// The variable `x' is assigned but its value is never used

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
 	public interface IDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {

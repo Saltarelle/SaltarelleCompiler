@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using QUnit;
 
 namespace CoreLib.TestScript {
@@ -23,6 +24,7 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<short>)));
 		}
 
+		[IncludeGenericArguments]
 		private T GetDefaultValue<T>() {
 			return default(T);
 		}

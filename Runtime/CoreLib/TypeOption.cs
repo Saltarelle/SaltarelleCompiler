@@ -10,7 +10,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2>(T2 t) { return null; }
@@ -22,7 +22,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2, T3> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3>(T2 t) { return null; }
@@ -36,7 +36,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2, T3, T4> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4>(T2 t) { return null; }
@@ -52,7 +52,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2, T3, T4, T5> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5>(T2 t) { return null; }
@@ -70,7 +70,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2, T3, T4, T5, T6> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5, T6>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5, T6>(T2 t) { return null; }
@@ -90,7 +90,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2, T3, T4, T5, T6, T7> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5, T6, T7>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5, T6, T7>(T2 t) { return null; }
@@ -112,7 +112,7 @@ namespace System
 	/// <summary>
 	/// Use this type when interacting with external libraries that accept arguments that can be of different types.
 	/// </summary>
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class TypeOption<T1, T2, T3, T4, T5, T6, T7, T8> {
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5, T6, T7, T8>(T1 t) { return null; }
 		[ScriptSkip] public static implicit operator TypeOption<T1, T2, T3, T4, T5, T6, T7, T8>(T2 t) { return null; }

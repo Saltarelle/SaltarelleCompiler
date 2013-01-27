@@ -2,6 +2,7 @@
 
 namespace System.Collections.Generic {
 	[ScriptNamespace("ss")]
+	[IncludeGenericArguments(true)]
 	public class Dictionary<TKey, TValue> : IDictionary<TKey, TValue> {
 		[InlineCode("new ({$System.Script}.makeGenericType({$System.Collections.Generic.Dictionary`2}, [{TKey}, {TValue}]))()")]
 		public Dictionary(int capacity) {}

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace System {
 	[ScriptNamespace("ss")]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	public interface IEquatable<in T> {
 		[InlineCode("{$System.Script}.equalsT({this}, {other})", GeneratedMethodName = "equalsT")]
 		bool Equals(T other);

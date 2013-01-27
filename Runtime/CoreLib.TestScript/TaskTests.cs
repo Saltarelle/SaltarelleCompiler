@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class TaskTests {
+		[IncludeGenericArguments]
 		private IEnumerable<T> MakeEnumerable<T>(params T[] args) {
 			foreach (var a in args)
 				yield return a;

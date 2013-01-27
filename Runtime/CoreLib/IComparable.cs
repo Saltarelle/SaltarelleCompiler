@@ -5,7 +5,7 @@ using System.Text;
 
 namespace System {
 	[ScriptNamespace("ss")]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	public interface IComparable<in T> {
 		/// <summary>
 		/// Compares the current object with another object of the same type.

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using QUnit;
 
 namespace CoreLib.TestScript {
@@ -12,6 +13,7 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(typeof(IEquatable<char>).IsAssignableFrom(typeof(char)));
 		}
 
+		[IncludeGenericArguments]
 		private T GetDefaultValue<T>() {
 			return default(T);
 		}

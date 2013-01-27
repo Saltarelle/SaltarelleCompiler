@@ -58,5 +58,45 @@ namespace CoreLib.Plugin {
 			}
 			return GetModuleName(type.ParentAssembly);
 		}
+
+		public static bool? ShouldGenericArgumentsBeIncluded(ITypeDefinition type) {
+			var iga = AttributeReader.ReadAttribute<IncludeGenericArgumentsAttribute>(type);
+			if (iga != null)
+				return iga.Include;
+			var imp = AttributeReader.ReadAttribute<ImportedAttribute>(type);
+			if (imp != null)
+				return false;
+			var def = AttributeReader.ReadAttribute<IncludeGenericArgumentsDefaultAttribute>(type.ParentAssembly.AssemblyAttributes);
+			switch (def != null ? def.TypeDefault : GenericArgumentsDefault.Ignore) {
+				case GenericArgumentsDefault.Ignore:
+					return false;
+				case GenericArgumentsDefault.IncludeExceptImported:
+					return true;
+				case GenericArgumentsDefault.RequireExplicitSpecification:
+					return null;
+				default:
+					throw new ArgumentException("Invalid generic arguments default " + def.TypeDefault);
+			}
+		}
+
+		public static bool? ShouldGenericArgumentsBeIncluded(IMethod method) {
+			var iga = AttributeReader.ReadAttribute<IncludeGenericArgumentsAttribute>(method);
+			if (iga != null)
+				return iga.Include;
+			var imp = AttributeReader.ReadAttribute<ImportedAttribute>(method.DeclaringTypeDefinition);
+			if (imp != null)
+				return false;
+			var def = AttributeReader.ReadAttribute<IncludeGenericArgumentsDefaultAttribute>(method.ParentAssembly.AssemblyAttributes);
+			switch (def != null ? def.MethodDefault : GenericArgumentsDefault.Ignore) {
+				case GenericArgumentsDefault.Ignore:
+					return false;
+				case GenericArgumentsDefault.IncludeExceptImported:
+					return true;
+				case GenericArgumentsDefault.RequireExplicitSpecification:
+					return null;
+				default:
+					throw new ArgumentException("Invalid generic arguments default " + def.TypeDefault);
+			}
+		}
 	}
 }

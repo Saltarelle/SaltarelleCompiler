@@ -86,7 +86,7 @@ namespace System {
 		/// <summary>
 		/// Returns the first argument if it is not null or undefined, otherwise the second.
 		/// </summary>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static T Coalesce<T>(T a, T b) {
 			return default(T);
 		}

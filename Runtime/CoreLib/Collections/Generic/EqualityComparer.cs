@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	public abstract class EqualityComparer<T> : IEqualityComparer<T> {
 		[IntrinsicProperty]

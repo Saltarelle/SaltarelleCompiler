@@ -43,7 +43,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public Task<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction) {
 			return null;
 		}
@@ -63,7 +63,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromResult<TResult>(TResult result) {
 			return null;
 		}
@@ -72,7 +72,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> Run<TResult>(Func<TResult> function) {
 			return null;
 		}
@@ -86,7 +86,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult[]> WhenAll<TResult>(params Task<TResult>[] tasks) {
 			return null;
 		}
@@ -105,12 +105,11 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<Task<TResult>> WhenAny<TResult>(params Task<TResult>[] tasks) {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
 		[InlineCode("{$System.Threading.Tasks.Task}.whenAny({$System.Script}.arrayFromEnumerable({tasks}))")]
 		public static Task<Task<TResult>> WhenAny<TResult>(IEnumerable<Task<TResult>> tasks) {
 			return null;
@@ -146,7 +145,7 @@ namespace System.Threading.Tasks {
 		/// <param name="target">Target to invoke the method on.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromDoneCallback<TResult>(object target, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -159,7 +158,7 @@ namespace System.Threading.Tasks {
 		/// <param name="callbackIndex">Index of the callback parameter in the actual method invocation.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted at the position indicated by the <paramref name="callbackIndex"/> parameter).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromDoneCallback<TResult>(object target, int callbackIndex, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -176,7 +175,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultArgIndex">Index of the argument in the onCompleted callback of the promise that will become the result of the task. negative values count from the back, positive values count from the front.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<TResult>(IPromise promise, int resultArgIndex) {
 			return null;
 		}
@@ -186,7 +185,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<TResult>(IPromise promise, Func<TResult> resultFactory) {
 			return null;
 		}
@@ -196,7 +195,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, TResult>(IPromise promise, Func<T1, TResult> resultFactory) {
 			return null;
 		}
@@ -206,7 +205,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, TResult>(IPromise promise, Func<T1, T2, TResult> resultFactory) {
 			return null;
 		}
@@ -216,7 +215,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, T3, TResult>(IPromise promise, Func<T1, T2, T3, TResult> resultFactory) {
 			return null;
 		}
@@ -226,7 +225,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, T3, T4, TResult>(IPromise promise, Func<T1, T2, T3, T4, TResult> resultFactory) {
 			return null;
 		}
@@ -236,7 +235,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, TResult> resultFactory) {
 			return null;
 		}
@@ -246,7 +245,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, T6, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, T6, TResult> resultFactory) {
 			return null;
 		}
@@ -256,7 +255,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, T6, T7, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultFactory) {
 			return null;
 		}
@@ -266,7 +265,7 @@ namespace System.Threading.Tasks {
 		/// </summary>
 		/// <param name="promise">The promise to create a task from.</param>
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the onCompleted callback.</param>
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public static Task<TResult> FromPromise<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(IPromise promise, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultFactory) {
 			return null;
 		}
@@ -278,7 +277,7 @@ namespace System.Threading.Tasks {
 		/// <param name="target">Target to invoke the method on.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task FromNode(object target, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -290,7 +289,7 @@ namespace System.Threading.Tasks {
 		/// <param name="target">Target to invoke the method on.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<TResult>(object target, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -303,7 +302,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, TResult>(object target, Func<T1, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -316,7 +315,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, TResult>(object target, Func<T1, T2, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -329,7 +328,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, T3, TResult>(object target, Func<T1, T2, T3, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -342,7 +341,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, T3, T4, TResult>(object target, Func<T1, T2, T3, T4, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -355,7 +354,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, TResult>(object target, Func<T1, T2, T3, T4, T5, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -368,7 +367,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, T6, TResult>(object target, Func<T1, T2, T3, T4, T5, T6, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -381,7 +380,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, T6, T7, TResult>(object target, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -394,7 +393,7 @@ namespace System.Threading.Tasks {
 		/// <param name="resultFactory">Factory method to create the result of the task from the arguments to the callback.</param>
 		/// <param name="method">Name of the method to invoke on the target.</param>
 		/// <param name="otherArguments">Arguments to the method, not including the callback (which will be inserted as the last argument to the actual call).</param>
-		[ExpandParams, IgnoreGenericArguments]
+		[ExpandParams, IncludeGenericArguments(false)]
 		public static Task<TResult> FromNode<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(object target, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultFactory, string method, params object[] otherArguments) {
 			return null;
 		}
@@ -402,7 +401,7 @@ namespace System.Threading.Tasks {
 
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	public class Task<TResult> : Task {
 		[AlternateSignature]
 		public Task(Func<TResult> function) : base(() => {}) {
@@ -422,7 +421,7 @@ namespace System.Threading.Tasks {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public Task<TNewResult> ContinueWith<TNewResult>(Func<Task<TResult>, TNewResult> continuationFunction) {
 			return null;
 		}

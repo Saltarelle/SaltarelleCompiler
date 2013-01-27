@@ -6,7 +6,7 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	[ScriptName("ICollection")]
 	[Imported(ObeysTypeSystem = true)]

@@ -17,9 +17,27 @@ namespace Saltarelle.Compiler {
 				}
 				return result;
 			}
+			else if (type.IsEnum) {
+				return Enum.ToObject(type, source);
+			}
 			else {
 				return Convert.ChangeType(source, type);
 			}
+		}
+
+		private static Dictionary<string, Type> _typeCache = new Dictionary<string, Type>();
+
+		private static Type FindType(string typeName) {
+			Type result;
+			if (_typeCache.TryGetValue(typeName, out result))
+				return result;
+
+			result = Type.GetType(typeName);	// First search mscorlib
+			if (result == null) {
+				result = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(typeName)).SingleOrDefault(t => t != null);
+			}
+			_typeCache[typeName] = result;
+			return result;
 		}
 
 		public static TAttribute ReadAttribute<TAttribute>(IAttribute attr) where TAttribute : Attribute {
@@ -34,7 +52,7 @@ namespace Saltarelle.Compiler {
 			var result = (TAttribute)ctor.Invoke(ctorArgs);
 
 			foreach (var arg in attr.NamedArguments) {
-				var value = ChangeType(arg.Value.ConstantValue, Type.GetType(arg.Value.Type.FullName));
+				var value = ChangeType(arg.Value.ConstantValue, FindType(arg.Value.Type.FullName));
 				if (arg.Key is IField) {
 					var fld = typeof(TAttribute).GetField(arg.Key.Name);
 					fld.SetValue(result, value);

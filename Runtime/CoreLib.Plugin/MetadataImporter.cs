@@ -296,7 +296,12 @@ namespace CoreLib.Plugin {
 			bool isImported = importedAttr != null;
 			bool preserveName = isImported || AttributeReader.HasAttribute<PreserveNameAttribute>(typeDefinition);
 
-			bool ignoreGenericArguments = AttributeReader.HasAttribute<IgnoreGenericArgumentsAttribute>(typeDefinition) || isImported;
+			bool? includeGenericArguments = typeDefinition.TypeParameterCount > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(typeDefinition) : false;
+			if (includeGenericArguments == null) {
+				_errorReporter.Region = typeDefinition.Region;
+				Message(7026, typeDefinition);
+				includeGenericArguments = true;
+			}
 
 			if (AttributeReader.HasAttribute<ResourcesAttribute>(typeDefinition)) {
 				if (!typeDefinition.IsStatic) {
@@ -329,7 +334,7 @@ namespace CoreLib.Plugin {
 					typeName = "$" + index.ToString(CultureInfo.InvariantCulture);
 				}
 				else {
-					typeName = GetDefaultTypeName(typeDefinition, ignoreGenericArguments);
+					typeName = GetDefaultTypeName(typeDefinition, !includeGenericArguments.Value);
 					if (typeDefinition.DeclaringTypeDefinition != null) {
 						if (AttributeReader.HasAttribute<IgnoreNamespaceAttribute>(typeDefinition) || AttributeReader.HasAttribute<ScriptNamespaceAttribute>(typeDefinition)) {
 							Message(7007, typeDefinition);
@@ -425,7 +430,7 @@ namespace CoreLib.Plugin {
 			bool preserveMemberCases = pmca != null && pmca.Preserve;
 			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: ignoreGenericArguments, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -834,12 +839,11 @@ namespace CoreLib.Plugin {
 			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(method);
 			var ifa = AttributeReader.ReadAttribute<InstanceMethodOnFirstArgumentAttribute>(method);
 			var nsa = AttributeReader.ReadAttribute<NonScriptableAttribute>(method);
-			var iga = AttributeReader.ReadAttribute<IgnoreGenericArgumentsAttribute>(method);
 			var ioa = AttributeReader.ReadAttribute<IntrinsicOperatorAttribute>(method);
 			var epa = AttributeReader.ReadAttribute<ExpandParamsAttribute>(method);
 			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(method);
 
-			bool isImported = GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsImported;
+			bool? includeGenericArguments = method.TypeParameters.Count > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(method) : false;
 
 			if (eaa != null && (method.Name != "GetEnumerator" || method.IsStatic || method.TypeParameters.Count > 0 || method.Parameters.Count > 0)) {
 				Message(7151, method);
@@ -991,7 +995,7 @@ namespace CoreLib.Plugin {
 						if (nameSpecified) {
 							Message(7132, method);
 						}
-						if (iga != null) {
+						if (AttributeReader.HasAttribute<IncludeGenericArgumentsAttribute>(method)) {
 							Message(7133, method);
 						}
 
@@ -1035,6 +1039,12 @@ namespace CoreLib.Plugin {
 						return;
 					}
 					else {
+						if (includeGenericArguments == null) {
+							_errorReporter.Region = method.Region;
+							Message(7027, method);
+							includeGenericArguments = true;
+						}
+
 						if (epa != null) {
 							if (!method.Parameters.Any(p => p.IsParams)) {
 								Message(7137, method);
@@ -1068,10 +1078,10 @@ namespace CoreLib.Plugin {
 							if (asa == null)
 								usedNames[name] = true;
 							if (GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsSerializable && !method.IsStatic) {
-								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: !AttributeReader.HasAttribute<AlternateSignatureAttribute>(method), ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: !AttributeReader.HasAttribute<AlternateSignatureAttribute>(method), ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 							else {
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: !AttributeReader.HasAttribute<AlternateSignatureAttribute>(method), ignoreGenericArguments: iga != null || isImported, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: !AttributeReader.HasAttribute<AlternateSignatureAttribute>(method), ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 						}
 					}

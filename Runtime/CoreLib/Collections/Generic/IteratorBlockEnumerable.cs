@@ -6,7 +6,7 @@ using System.Text;
 namespace System.Collections.Generic
 {
 	[Imported(ObeysTypeSystem = true)]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	internal class IteratorBlockEnumerable<T> : IEnumerable<T> {
 		public IEnumerator<T> GetEnumerator() { return null; }

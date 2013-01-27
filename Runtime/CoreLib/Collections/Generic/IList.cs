@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic {
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	[ScriptName("IList")]
 	[Imported(ObeysTypeSystem = true)]

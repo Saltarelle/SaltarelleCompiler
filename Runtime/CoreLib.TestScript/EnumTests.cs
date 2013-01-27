@@ -37,6 +37,7 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(interfaces.Length, 0);
 		}
 
+		[IncludeGenericArguments]
 		private T GetDefaultValue<T>() {
 			return default(T);
 		}

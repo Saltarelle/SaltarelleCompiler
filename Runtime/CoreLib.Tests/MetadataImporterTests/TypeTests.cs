@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
@@ -172,6 +173,7 @@ public class SomeType {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
+[IncludeGenericArguments(true)]
 public class SomeType<T1, T2> {
 }
 ");
@@ -187,7 +189,7 @@ public class SomeType<T1, T2> {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
-[ScriptName(""Renamed"")]
+[ScriptName(""Renamed""), IncludeGenericArguments(true)]
 public class SomeType<T1, T2> {
 }
 ");
@@ -204,8 +206,11 @@ public class SomeType<T1, T2> {
 @"using System.Runtime.CompilerServices;
 
 namespace TestNamespace {
+	[IncludeGenericArguments(true)]
 	public class Outer<T1,T2> {
+		[IncludeGenericArguments(true)]
 		public class Inner<T3> {
+			[IncludeGenericArguments(true)]
 			public class SomeType<T4,T5> {
 			}
 		}
@@ -924,24 +929,6 @@ class C1 {
 		}
 
 		[Test]
-		public void ImportedAttributeOnTypeActivatesIgnoreGenericArgumentsForTheTypeAndAllMethodsInIt() {
-			Prepare(
-@"using System.Runtime.CompilerServices;
-[Imported]
-class C1<T> {
-	public void M<T2>() {
-	}
-}");
-			var t = FindType("C1`1");
-			Assert.That(t.Name, Is.EqualTo("C1"));
-			Assert.That(t.IgnoreGenericArguments, Is.True);
-
-			var m = FindMethod("C1`1.M");
-			Assert.That(m.Name, Is.EqualTo("m"));
-			Assert.That(m.IgnoreGenericArguments, Is.True);
-		}
-		
-		[Test]
 		public void NonScriptableOnATypeCausesTheTypeAndAnyNestedTypesAndAllMembersToBeNotUsableFromScript() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -982,11 +969,159 @@ class C1 {
 		}
 
 		[Test]
-		public void IgnoreGenericArgumentsAttributeOnTypeCausesGenericArgumentsToBeIgnored() {
-			Prepare(@"using System.Runtime.CompilerServices; [IgnoreGenericArguments] public class C1<T1, T2> {}");
-			var t = FindType("C1`2");
-			Assert.That(t.Name, Is.EqualTo("C1"));
-			Assert.That(t.IgnoreGenericArguments, Is.True);
+		public void GenericArgumentsAreIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class C1<T1, T2> {}
+[IncludeGenericArguments] public class C2<T1, T2> {}
+[IncludeGenericArguments(true)]
+public class C3<T1, T2> {}
+[IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+
+			var t1 = FindType("C1`2");
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			var t2 = FindType("C2`2");
+			Assert.That(t2.Name, Is.EqualTo("C2$2"));
+			Assert.That(t2.IgnoreGenericArguments, Is.False);
+			var t3 = FindType("C3`2");
+			Assert.That(t3.Name, Is.EqualTo("C3$2"));
+			Assert.That(t3.IgnoreGenericArguments, Is.False);
+			var t4 = FindType("C4`2");
+			Assert.That(t4.Name, Is.EqualTo("C4"));
+			Assert.That(t4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultIgnoreCausesGenericArgumentsToBeIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(TypeDefault = GenericArgumentsDefault.Ignore)]
+public class C1<T1, T2> {}
+[IncludeGenericArguments] public class C2<T1, T2> {}
+[IncludeGenericArguments(true)]
+public class C3<T1, T2> {}
+[IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+
+			var t1 = FindType("C1`2");
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			var t2 = FindType("C2`2");
+			Assert.That(t2.Name, Is.EqualTo("C2$2"));
+			Assert.That(t2.IgnoreGenericArguments, Is.False);
+			var t3 = FindType("C3`2");
+			Assert.That(t3.Name, Is.EqualTo("C3$2"));
+			Assert.That(t3.IgnoreGenericArguments, Is.False);
+			var t4 = FindType("C4`2");
+			Assert.That(t4.Name, Is.EqualTo("C4"));
+			Assert.That(t4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultWithNoTypeDefaultCausesGenericArgumentsToBeIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault()]
+public class C1<T1, T2> {}
+[IncludeGenericArguments] public class C2<T1, T2> {}
+[IncludeGenericArguments(true)]
+public class C3<T1, T2> {}
+[IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+
+			var t1 = FindType("C1`2");
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			var t2 = FindType("C2`2");
+			Assert.That(t2.Name, Is.EqualTo("C2$2"));
+			Assert.That(t2.IgnoreGenericArguments, Is.False);
+			var t3 = FindType("C3`2");
+			Assert.That(t3.Name, Is.EqualTo("C3$2"));
+			Assert.That(t3.IgnoreGenericArguments, Is.False);
+			var t4 = FindType("C4`2");
+			Assert.That(t4.Name, Is.EqualTo("C4"));
+			Assert.That(t4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultIncludeExceptImportedCausesGenericArgumentsToBeIncludedByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(TypeDefault = GenericArgumentsDefault.IncludeExceptImported)]
+public class C1<T1, T2> {}
+[IncludeGenericArguments] public class C2<T1, T2> {}
+[IncludeGenericArguments(true)] public class C3<T1, T2> {}
+[IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+
+			var t1 = FindType("C1`2");
+			Assert.That(t1.Name, Is.EqualTo("C1$2"));
+			Assert.That(t1.IgnoreGenericArguments, Is.False);
+			var t2 = FindType("C2`2");
+			Assert.That(t2.Name, Is.EqualTo("C2$2"));
+			Assert.That(t2.IgnoreGenericArguments, Is.False);
+			var t3 = FindType("C3`2");
+			Assert.That(t3.Name, Is.EqualTo("C3$2"));
+			Assert.That(t3.IgnoreGenericArguments, Is.False);
+			var t4 = FindType("C4`2");
+			Assert.That(t4.Name, Is.EqualTo("C4"));
+			Assert.That(t4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultIncludeExceptImportedCausesGenericArgumentsToBeIgnoredByDefaultForImportedTypesButCanBeOverriddenByIncludeGenericArguments() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(TypeDefault = GenericArgumentsDefault.IncludeExceptImported)]
+[Imported] public class C1<T1, T2> {}
+[Imported, IncludeGenericArguments] public class C2<T1, T2> {}
+[Imported, IncludeGenericArguments(true)] public class C3<T1, T2> {}
+[Imported, IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+
+			var t1 = FindType("C1`2");
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			var t2 = FindType("C2`2");
+			Assert.That(t2.Name, Is.EqualTo("C2$2"));
+			Assert.That(t2.IgnoreGenericArguments, Is.False);
+			var t3 = FindType("C3`2");
+			Assert.That(t3.Name, Is.EqualTo("C3$2"));
+			Assert.That(t3.IgnoreGenericArguments, Is.False);
+			var t4 = FindType("C4`2");
+			Assert.That(t4.Name, Is.EqualTo("C4"));
+			Assert.That(t4.IgnoreGenericArguments, Is.True);
+		}
+
+		[Test]
+		public void GenericArgumentDefaultRequireExplicitSpecificationCausesAnErrorIfIncludeGenericArgumentsIsNotSpecifiedForNonImportedTypes() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(TypeDefault = GenericArgumentsDefault.RequireExplicitSpecification)]
+public class C1<T1, T2> {}", expectErrors: true);
+			Assert.AreEqual(AllErrors.Count, 1);
+			Assert.IsTrue(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7026 && m.FormattedMessage.Contains("IncludeGenericArgumentsAttribute") && m.FormattedMessage.Contains("C1")));
+		}
+
+		[Test]
+		public void GenericArgumentDefaultRequireExplicitSpecificationCausesGenericArgumentsToBeIgnoredForImportedTypesButCanBeOverridden() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+[assembly: IncludeGenericArgumentsDefault(TypeDefault = GenericArgumentsDefault.RequireExplicitSpecification)]
+[Imported] public class C1<T1, T2> {}
+[Imported, IncludeGenericArguments] public class C2<T1, T2> {}
+[Imported, IncludeGenericArguments(true)] public class C3<T1, T2> {}
+[Imported, IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+
+			var t1 = FindType("C1`2");
+			Assert.That(t1.Name, Is.EqualTo("C1"));
+			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			var t2 = FindType("C2`2");
+			Assert.That(t2.Name, Is.EqualTo("C2$2"));
+			Assert.That(t2.IgnoreGenericArguments, Is.False);
+			var t3 = FindType("C3`2");
+			Assert.That(t3.Name, Is.EqualTo("C3$2"));
+			Assert.That(t3.IgnoreGenericArguments, Is.False);
+			var t4 = FindType("C4`2");
+			Assert.That(t4.Name, Is.EqualTo("C4"));
+			Assert.That(t4.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]
@@ -1062,7 +1197,7 @@ public static class C {
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
-[Resources]
+[Resources, IncludeGenericArguments(true)]
 public static class C<T> {
 	public const string F1 = ""X"";
 }", expectErrors: true);
@@ -1162,7 +1297,7 @@ public static class C {
 
 			Prepare(
 @"using System.Runtime.CompilerServices;
-[Mixin(""$.fn"")]
+[Mixin(""$.fn""), IncludeGenericArguments(true)]
 public static class C<T> {
 	public void M() {}
 }", expectErrors: true);
@@ -1242,6 +1377,7 @@ public class C1 : B1, I1 {}", expectErrors: false);
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
+[IncludeGenericArguments(true)]
 public class A<T> {
 	[ScriptName(""renamedCtor"")]
 	public A() {}
@@ -1302,6 +1438,7 @@ public class B : A<object> {
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
+[IncludeGenericArguments(true)]
 public interface I<T> {
 	[ScriptName(""renamedMethod"")]
     void M();

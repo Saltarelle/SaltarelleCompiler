@@ -7,7 +7,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System {
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1> {
 		[InlineCode("{{ item1: {item1} }}")]
 		public Tuple(T1 item1) {}
@@ -15,7 +15,7 @@ namespace System {
 		[IntrinsicProperty] public T1 Item1 { get { return default(T1); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2> {
 		[InlineCode("{{ item1: {item1}, item2: {item2} }}")]
 		public Tuple(T1 item1, T2 item2) {}
@@ -24,7 +24,7 @@ namespace System {
 		[IntrinsicProperty] public T2 Item2 { get { return default(T2); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2, T3> {
 		[InlineCode("{{ item1: {item1}, item2: {item2}, item3: {item3} }}")]
 		public Tuple(T1 item1, T2 item2, T3 item3) {}
@@ -34,7 +34,7 @@ namespace System {
 		[IntrinsicProperty] public T3 Item3 { get { return default(T3); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2, T3, T4> {
 		[InlineCode("{{ item1: {item1}, item2: {item2}, item3: {item3}, item4: {item4} }}")]
 		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4) {}
@@ -45,7 +45,7 @@ namespace System {
 		[IntrinsicProperty] public T4 Item4 { get { return default(T4); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2, T3, T4, T5> {
 		[InlineCode("{{ item1: {item1}, item2: {item2}, item3: {item3}, item4: {item4}, item5: {item5} }}")]
 		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) {}
@@ -57,7 +57,7 @@ namespace System {
 		[IntrinsicProperty] public T5 Item5 { get { return default(T5); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2, T3, T4, T5, T6> {
 		[InlineCode("{{ item1: {item1}, item2: {item2}, item3: {item3}, item4: {item4}, item5: {item5}, item6: {item6} }}")]
 		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6) {}
@@ -70,7 +70,7 @@ namespace System {
 		[IntrinsicProperty] public T6 Item6 { get { return default(T6); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2, T3, T4, T5, T6, T7> {
 		[InlineCode("{{ item1: {item1}, item2: {item2}, item3: {item3}, item4: {item4}, item5: {item5}, item6: {item6}, item7: {item7} }}")]
 		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7) {}
@@ -84,7 +84,7 @@ namespace System {
 		[IntrinsicProperty] public T7 Item7 { get { return default(T7); } }
 	}
 
-	[Imported, IgnoreNamespace, ScriptName("Object"), IgnoreGenericArguments]
+	[Imported, IgnoreNamespace, ScriptName("Object"), IncludeGenericArguments(false)]
 	public sealed class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> {
 		[InlineCode("{{ item1: {item1}, item2: {item2}, item3: {item3}, item4: {item4}, item5: {item5}, item6: {item6}, item7: {item7}, rest: {rest} }}")]
 		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, TRest rest) {}

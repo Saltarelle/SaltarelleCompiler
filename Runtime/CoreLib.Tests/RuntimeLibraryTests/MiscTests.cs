@@ -62,9 +62,11 @@ public class C {
 		public void DefaultValuesAreCorrect() {
 			SourceVerifier.AssertSourceCorrect(
 @"using System;
+using System.Runtime.CompilerServices;
 
 class X {}
 interface I {}
+[IncludeGenericArguments(true)]
 class C<T1, T2> where T1 : class {
 	public static bool f1;
 	public static byte f2;

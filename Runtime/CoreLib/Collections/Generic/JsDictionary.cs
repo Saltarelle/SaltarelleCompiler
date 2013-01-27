@@ -11,7 +11,7 @@ namespace System.Collections.Generic {
 	/// </summary>
 	[Imported]
 	[IgnoreNamespace]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptName("Object")]
 	public sealed class JsDictionary<TKey, TValue> {
 		[InlineCode("{{}}")]

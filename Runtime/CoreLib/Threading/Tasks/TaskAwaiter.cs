@@ -20,7 +20,7 @@ namespace System.Threading.Tasks {
 	}
 
 	[Imported]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	[ScriptName("Task")]
 	public class TaskAwaiter<TResult> : INotifyCompletion {

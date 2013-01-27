@@ -12,7 +12,7 @@ namespace System.Collections.Generic {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Array")]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	public sealed class Queue<T> {
 
 		[IntrinsicProperty]

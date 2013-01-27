@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 	[ScriptNamespace("ss")]
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class ObjectEnumerator<TKey, TValue> : IEnumerator<KeyValuePair<TKey, TValue>> {
 		public KeyValuePair<TKey, TValue> Current { get { return null; } }

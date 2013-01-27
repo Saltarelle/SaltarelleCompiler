@@ -12,8 +12,11 @@ namespace CoreLib.TestScript {
 		public class B : I2 {}
 		public class C : B, I4 {}
 
+		[IncludeGenericArguments]
 		public interface IG<T> {}
+		[IncludeGenericArguments]
 		public class BX<T> {}
+		[IncludeGenericArguments]
 		public class G<T1, T2> : BX<G<T1,C>>, IG<G<T2,string>> {
 			public static string field;
 			static G() {
@@ -149,13 +152,17 @@ namespace CoreLib.TestScript {
 
 		class IsAssignableFromTypes {
 			public class C1 {}
+			[IncludeGenericArguments]
 			public class C2<T> {}
 			public interface I1 {}
+			[IncludeGenericArguments]
 			public interface I2<T1> {}
 			public interface I3 : I1 {}
 			public interface I4 {}
+			[IncludeGenericArguments]
 			public interface I5<T1> : I2<T1> {}
 			public class D1 : C1, I1 {}
+			[IncludeGenericArguments]
 			public class D2<T> : C2<T>, I2<T>, I1 {
 			}
 			public class D3 : C2<int>, I2<string> {
@@ -398,6 +405,7 @@ namespace CoreLib.TestScript {
 		public class BaseMethodInvocationTypes {
 			public class B {
 				public virtual int F(int x, int y) { return x - y; }
+				[IncludeGenericArguments]
 				public virtual int G<T>(int x, int y) { return x - y; }
 			}
 			
@@ -430,6 +438,7 @@ namespace CoreLib.TestScript {
 				private int m;
 			
 				public int F(int x, int y) { return x + y + m; }
+				[IncludeGenericArguments]
 				public string G<T>(int x, int y) { return x + y + m + typeof(T).Name; }
 
 				public C(int m) {
@@ -449,6 +458,7 @@ namespace CoreLib.TestScript {
 				public int m;
 
 				public virtual int F(int x, int y) { return x + y + m; }
+				[IncludeGenericArguments]
 				public virtual string G<T>(int x, int y) { return x + y + m + typeof(T).Name; }
 
 				public B(int m) {

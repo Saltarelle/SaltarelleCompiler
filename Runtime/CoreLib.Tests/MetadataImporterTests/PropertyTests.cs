@@ -283,6 +283,7 @@ interface I {
 	int P1 { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	T P2 { [ScriptName(""RenamedMethod3"")] get; [ScriptName(""RenamedMethod4"")] set; }
 }
@@ -316,6 +317,7 @@ interface I {
 	int P1 { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	T P2 { [ScriptName(""RenamedMethod3"")] get; [ScriptName(""RenamedMethod4"")] set; }
 }

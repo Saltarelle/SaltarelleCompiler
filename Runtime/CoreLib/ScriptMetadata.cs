@@ -32,11 +32,6 @@ namespace System.Runtime.CompilerServices {
 		/// The default is false. Requiring this to be set should be very uncommon.
 		/// </summary>
 		public bool ObeysTypeSystem { get; set; }
-
-		/// <summary>
-		/// This flag, set by default, applies an [IgnoreGenericArgument] attribute to the type and all its methods.
-		/// </summary>
-		public bool IgnoreGenericArguments { get; set; }
 	}
 
 	/// <summary>
@@ -306,7 +301,47 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
 	[Imported]
-	public sealed class IgnoreGenericArgumentsAttribute : Attribute {
+	public sealed class IncludeGenericArgumentsAttribute : Attribute {
+		public IncludeGenericArgumentsAttribute() {
+			Include = true;
+		}
+
+		public IncludeGenericArgumentsAttribute(bool include) {
+			Include = include;
+		}
+
+		public bool Include { get; private set; }
+	}
+
+	/// <summary>
+	/// This enum defines the possibilities for default values for generic argument handling in an assembly. 
+	/// </summary>
+	[NonScriptable]
+	[Imported]
+	public enum GenericArgumentsDefault {
+		/// <summary>
+		/// Ignore generic arguments by default (this is the default)
+		/// </summary>
+		Ignore,
+		/// <summary>
+		/// Include generic arguments for all types that are not [Imported]
+		/// </summary>
+		IncludeExceptImported,
+		/// <summary>
+		/// Require an <see cref="IncludeGenericArgumentsAttribute"/> for all generic types/methods, excepts those that are imported, which will default to ignore their generic arguments.
+		/// </summary>
+		RequireExplicitSpecification,
+	}
+
+	/// <summary>
+	/// This attribute indicates whether generic arguments for types and methods are included, but can always be overridden by specifying an <see cref="IncludeGenericArgumentsAttribute"/> on types or methods.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[NonScriptable]
+	[Imported]
+	public sealed class IncludeGenericArgumentsDefaultAttribute : Attribute {
+		public GenericArgumentsDefault TypeDefault { get; set; }
+		public GenericArgumentsDefault MethodDefault { get; set; }
 	}
 
 	/// <summary>

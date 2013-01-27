@@ -56,6 +56,7 @@ namespace System {
 		}
 
 		[Obsolete("Use Activator.CreateInstance<T>() instead", true)]
+		[IncludeGenericArguments]
 		public static T CreateInstance<T>(params object[] arguments) where T : class {
 			return null;
 		}

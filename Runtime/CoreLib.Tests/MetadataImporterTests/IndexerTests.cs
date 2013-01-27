@@ -207,6 +207,7 @@ interface I {
 	int this[int x] { [ScriptName(""RenamedMethod1"")] get { return 0; } [ScriptName(""RenamedMethod2"")] set {} }
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	T this[int x, int y] { [ScriptName(""RenamedMethod3"")] get { return default(T); } [ScriptName(""RenamedMethod4"")] set {} }
 }
@@ -240,6 +241,7 @@ interface I {
 	int this[int x] { [ScriptName(""RenamedMethod1"")] get { return 0; } [ScriptName(""RenamedMethod2"")] set {} }
 }
 
+[IncludeGenericArguments(true)]
 interface I2<T> {
 	T this[int x] { [ScriptName(""RenamedMethod3"")] get { return default(T); } [ScriptName(""RenamedMethod4"")] set {} }
 }

@@ -7,8 +7,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System {
-
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
 	[ScriptName("Nullable")]
 	[Imported(ObeysTypeSystem = true)]

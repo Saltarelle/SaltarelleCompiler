@@ -27,6 +27,8 @@ namespace Saltarelle.Compiler {
 			{ 7023, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.") },
 			{ 7024, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot override the member {1}.") },
 			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must not be null or empty.") },
+			{ 7026, Tuple.Create(MessageSeverity.Error, "The type {0} must have an [IncludeGenericArgumentsAttribute]") },
+			{ 7027, Tuple.Create(MessageSeverity.Error, "The method {0} must have an [IncludeGenericArgumentsAttribute]") },
 
 			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
 			{ 7102, Tuple.Create(MessageSeverity.Error, "The constructor {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
@@ -59,7 +61,7 @@ namespace Saltarelle.Compiler {
 			{ 7130, Tuple.Create(MessageSeverity.Error, "The inline code for the method {0} contained errors: {1}.") },
 			{ 7131, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it is not static.") },
 			{ 7132, Tuple.Create(MessageSeverity.Error, "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method {0} because it overrides a base member. Specify the attribute on the base member instead.") },
-			{ 7133, Tuple.Create(MessageSeverity.Error, "The [IgnoreGenericArgumentsAttribute] attribute cannot be specified on the method {0} because it overrides a base member. Specify the attribute on the base member instead.") },
+			{ 7133, Tuple.Create(MessageSeverity.Error, "The [IncludeGenericArguments] attribute cannot be specified on the method {0} because it overrides a base member. Specify the attribute on the base member instead.") },
 			{ 7134, Tuple.Create(MessageSeverity.Error, "The overriding member {0} cannot implement the interface method {1} because it has a different script name. Consider using explicit interface implementation.") },
 			{ 7135, Tuple.Create(MessageSeverity.Error, "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on the method {0} because it implements an interface member. Specify the attribute on the interface member instead, or consider using explicit interface implementation.") },
 			{ 7136, Tuple.Create(MessageSeverity.Error, "The member {0} cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.") },
@@ -115,7 +117,7 @@ namespace Saltarelle.Compiler {
 			{ 7533, Tuple.Create(MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.") },
 			{ 7534, Tuple.Create(MessageSeverity.Error, "Delegates of type {0} must be invoked in expanded form for its its param array.") },
 			{ 7535, Tuple.Create(MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.") },
-			{ 7536, Tuple.Create(MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2}.") },
+			{ 7536, Tuple.Create(MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.") },
 
 			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
 

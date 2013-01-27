@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using QUnit;
 
 #pragma warning disable 184, 219, 458
@@ -53,6 +54,7 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual((int?)i, 1);
 		}
 
+		[IncludeGenericArguments]
 		private T GetDefaultValue<T>() {
 			return default(T);
 		}

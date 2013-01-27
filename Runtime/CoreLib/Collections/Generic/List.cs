@@ -10,7 +10,7 @@ namespace System.Collections.Generic {
 	/// <summary>
 	/// Equivalent to the Array type in Javascript.
 	/// </summary>
-	[IgnoreGenericArguments]
+	[IncludeGenericArguments(false)]
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Array")]
@@ -174,12 +174,12 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public List<TTarget> Map<TTarget>(Func<T, int, List<T>, TTarget> callback) {
 			return null;
 		}
 
-		[IgnoreGenericArguments]
+		[IncludeGenericArguments(false)]
 		public List<TTarget> Map<TTarget>(Func<T, TTarget> callback) {
 			return null;
 		}
