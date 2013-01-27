@@ -485,7 +485,7 @@ public class C<T3> {
 		// END
 	}
 }",
-@"	ic_$T3._(ic_$T4);
+@"	$T3._($T4);
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{T1}._({T2})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 	}

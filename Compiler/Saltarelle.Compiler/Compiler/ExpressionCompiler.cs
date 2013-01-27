@@ -47,9 +47,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<IType, IVariable> _createTemporaryVariable;
 		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
-		private NestedFunctionContext _nestedFunctionContext;
+		private readonly NestedFunctionContext _nestedFunctionContext;
+		private readonly IMethod _methodBeingCompiled;
+		private readonly ITypeDefinition _typeBeingCompiled;
 		private IVariable _objectBeingInitialized;
-		private IMethod _methodBeingCompiled;
 
 		public class Result {
 			public JsExpression Expression { get; set; }
@@ -61,7 +62,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled) {
+		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled, ITypeDefinition typeBeingCompiled) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -77,6 +78,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_nestedFunctionContext = nestedFunctionContext;
 			_objectBeingInitialized = objectBeingInitialized;
 			_methodBeingCompiled = methodBeingCompiled;
+			_typeBeingCompiled = typeBeingCompiled;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -99,7 +101,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.Message(7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.InvokeConstructor), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, TypeContext.InvokeConstructor), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 
@@ -136,7 +138,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled).Compile(expression, returnValueIsImportant);
+			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
@@ -151,6 +153,30 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, JsExpression newExpression) {
 			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, new Result(newExpression, new JsStatement[0]));
+		}
+
+		private JsExpression ResolveTypeParameter(ITypeParameter tp) {
+			bool unusable = false;
+			switch (tp.OwnerType) {
+				case EntityType.TypeDefinition:
+					unusable = _metadataImporter.GetTypeSemantics(_typeBeingCompiled).IgnoreGenericArguments;
+					break;
+				case EntityType.Method:
+					unusable = _metadataImporter.GetMethodSemantics(_methodBeingCompiled).IgnoreGenericArguments;
+					break;
+				default:
+					_errorReporter.InternalError("Invalid owner " + tp.OwnerType + " for type parameter " + tp);
+					return JsExpression.Null;
+			}
+			if (unusable) {
+				_errorReporter.Message(7536, tp.Name, tp.OwnerType == EntityType.TypeDefinition ? "type" : "method", tp.OwnerType == EntityType.TypeDefinition ? _methodBeingCompiled.DeclaringTypeDefinition.FullName : _methodBeingCompiled.FullName);
+				return JsExpression.Null;
+			}
+			return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
+		}
+
+		private JsExpression GetScriptType(IType type, TypeContext context) {
+			return _runtimeLibrary.GetScriptType(type, context, ResolveTypeParameter);
 		}
 
 		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
@@ -239,7 +265,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.GetScriptType(target.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(target.TargetResult, compoundFactory == null);
+			var jsTarget = target.Member.IsStatic ? GetScriptType(target.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(target.TargetResult, compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.Member(jsTarget, fieldName);
 			if (compoundFactory != null) {
@@ -336,7 +362,7 @@ namespace Saltarelle.Compiler.Compiler {
 									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
 								}
 								else {
-									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.GetScriptType(mrr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
+									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? GetScriptType(mrr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
 								}
 
 								JsExpression oldValue, jsOtherOperand;
@@ -561,7 +587,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					switch (rr.Operands.Count) {
 						case 1: {
-							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, TypeContext.UseStaticMember), a }, false, false);
+							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, TypeContext.UseStaticMember), a }, false, false);
 							switch (rr.OperatorType) {
 								case ExpressionType.PreIncrementAssign:
 									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
@@ -572,12 +598,12 @@ namespace Saltarelle.Compiler.Compiler {
 								case ExpressionType.PostDecrementAssign:
 									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
 								default:
-									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, TypeContext.UseStaticMember), a }, false, false), rr.IsLiftedOperator);
+									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, TypeContext.UseStaticMember), a }, false, false), rr.IsLiftedOperator);
 							}
 						}
 
 						case 2: {
-							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, TypeContext.UseStaticMember), a, b }, false, false);
+							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { GetScriptType(rr.UserDefinedOperatorMethod.DeclaringType, TypeContext.UseStaticMember), a, b }, false, false);
 							if (IsAssignmentOperator(rr.OperatorType))
 								return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
 							else
@@ -604,7 +630,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _metadataImporter.GetMethodSemantics(combine);
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), returnValueIsImportant, false);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, combine, new[] { GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), returnValueIsImportant, false);
 					}
 					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.AddAssign, JsExpression.Add, returnValueIsImportant, rr.IsLiftedOperator);
@@ -656,7 +682,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _metadataImporter.GetMethodSemantics(remove);
-						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), returnValueIsImportant, false);
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => CompileMethodInvocation(impl, remove, new[] { GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), returnValueIsImportant, false);
 					}
 					else {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.SubtractAssign, JsExpression.Subtract, returnValueIsImportant, rr.IsLiftedOperator);
@@ -682,7 +708,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _metadataImporter.GetMethodSemantics(combine);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
@@ -757,7 +783,7 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _metadataImporter.GetMethodSemantics(remove);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { GetScriptType(del, TypeContext.UseStaticMember), a, b }, false, false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
@@ -796,7 +822,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 			var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 			var impl = _metadataImporter.GetMethodSemantics(combine);
-			var thisAndArguments = (combine.IsStatic ? new[] { _runtimeLibrary.GetScriptType(del, TypeContext.UseStaticMember), a, b } : new[] { a, b });
+			var thisAndArguments = (combine.IsStatic ? new[] { GetScriptType(del, TypeContext.UseStaticMember), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, combine, thisAndArguments, false, false);
 		}
 
@@ -804,7 +830,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 			var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 			var impl = _metadataImporter.GetMethodSemantics(remove);
-			var thisAndArguments = (remove.IsStatic ? new[] { _runtimeLibrary.GetScriptType(del, TypeContext.UseStaticMember), a, b } : new[] { a, b });
+			var thisAndArguments = (remove.IsStatic ? new[] { GetScriptType(del, TypeContext.UseStaticMember), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, remove, thisAndArguments, false, false);
 		}
 
@@ -827,7 +853,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileMethodInvocation(impl.GetMethod, getter, rr.TargetResult, new ResolveResult[0], new int[0], rr.IsVirtualCall, false);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyScriptSemantics.ImplType.Field: {
-						return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.FieldName);
+						return JsExpression.Member(rr.Member.IsStatic ? GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.FieldName);
 					}
 					default: {
 						_errorReporter.Message(7512, rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
@@ -839,7 +865,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetFieldSemantics((IField)rr.Member);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.Name);
+						return JsExpression.Member(rr.Member.IsStatic ? GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
@@ -855,7 +881,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var fname = _metadataImporter.GetAutoEventBackingFieldName((IEvent)rr.Member);
-				return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : VisitResolveResult(rr.TargetResult, true), fname);
+				return JsExpression.Member(rr.Member.IsStatic ? GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : VisitResolveResult(rr.TargetResult, true), fname);
 			}
 			else {
 				_errorReporter.InternalError("Invalid member " + rr.Member.ToString());
@@ -998,7 +1024,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.Message(7514, method.DeclaringType.FullName + "." + method.Name);
 			}
 			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? _runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && method.TypeParameters.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && method.TypeParameters.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
 			return CompileMethodInvocation(impl, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod, isExpandedForm);
 		}
 
@@ -1016,13 +1042,13 @@ namespace Saltarelle.Compiler.Compiler {
 			switch (impl.Type) {
 				case MethodScriptSemantics.ImplType.NormalMethod: {
 					if (isNonVirtualInvocationOfVirtualMethod) {
-						return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments);
+						return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments, ResolveTypeParameter);
 					}
 					else {
 						var jsMethod = (JsExpression)JsExpression.Member(thisAndArguments[0], impl.Name);
 
 						if (typeArguments.Count > 0) {
-							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
+							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
 							if (method.IsStatic)
 								thisAndArguments[0] = JsExpression.Null;
 							return JsExpression.Invocation(JsExpression.Member(genMethod, "call"), thisAndArguments);
@@ -1034,9 +1060,9 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-					var jsMethod = (JsExpression)JsExpression.Member(_runtimeLibrary.GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), impl.Name);
+					var jsMethod = (JsExpression)JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), impl.Name);
 					if (typeArguments.Count > 0) {
-						var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
+						var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
 						return JsExpression.Invocation(JsExpression.Member(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
 					}
 					else {
@@ -1061,7 +1087,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(7525, s));
 			if (tokens == null)
 				return JsExpression.Null;
-			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, r => r.Resolve(_compilation), (t, c) => _runtimeLibrary.GetScriptType(t, c), isParamArrayExpanded, s => _errorReporter.Message(7525, s));
+			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, r => r.Resolve(_compilation), (t, c) => GetScriptType(t, c), isParamArrayExpanded, s => _errorReporter.Message(7525, s));
 		}
 
 		private string GetMemberNameForJsonConstructor(IMember member) {
@@ -1184,7 +1210,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (impl.ExpandParams && !isExpandedForm) {
 					_errorReporter.Message(7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, _runtimeLibrary.GetScriptType(method.DeclaringType, impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor ? TypeContext.InvokeConstructor : TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor ? TypeContext.InvokeConstructor : TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 
 				JsExpression constructorCall;
 
@@ -1243,7 +1269,7 @@ namespace Saltarelle.Compiler.Compiler {
 							var activator = ReflectionHelper.ParseReflectionName("System.Activator").Resolve(_compilation);
 							var createInstance = activator.GetMethods(m => m.Name == "CreateInstance" && m.IsStatic && m.TypeParameters.Count == 1 && m.Parameters.Count == 0).Single();
 							var createInstanceSpec = new SpecializedMethod(createInstance, new TypeParameterSubstitution(EmptyList<IType>.Instance, new[] { method.DeclaringType }));
-							var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new JsExpression[] { _runtimeLibrary.GetScriptType(activator, TypeContext.UseStaticMember) }, false, false);
+							var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new JsExpression[] { GetScriptType(activator, TypeContext.UseStaticMember) }, false, false);
 							return CompileInitializerStatements(createdObject, method.DeclaringType, initializerStatements);
 						}
 						else {
@@ -1280,7 +1306,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
 			if (rr.ConstantValue == null)
-				return _runtimeLibrary.Default(rr.Type);
+				return _runtimeLibrary.Default(rr.Type, ResolveTypeParameter);
 			else
 				return JSModel.Utils.MakeConstantExpression(rr.ConstantValue);
 		}
@@ -1395,7 +1421,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Null;
 			}
 			else
-				return _runtimeLibrary.GetScriptType(rr.ReferencedType, TypeContext.TypeOf);
+				return GetScriptType(rr.ReferencedType, TypeContext.TypeOf);
 		}
 
 		public override JsExpression VisitTypeResolveResult(TypeResolveResult rr, bool returnValueIsImportant) {
@@ -1430,14 +1456,14 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.ArrayLiteral();
 				}
 				else {
-					return _runtimeLibrary.CreateArray(at.ElementType, new[] { InnerCompile(rr.SizeArguments[0], false) });
+					return _runtimeLibrary.CreateArray(at.ElementType, new[] { InnerCompile(rr.SizeArguments[0], false) }, ResolveTypeParameter);
 				}
 			}
 			else {
 				var sizes = new List<JsExpression>();
 				foreach (var a in rr.SizeArguments)
 					sizes.Add(InnerCompile(a, false, sizes));
-				var result = _runtimeLibrary.CreateArray(at.ElementType, sizes);
+				var result = _runtimeLibrary.CreateArray(at.ElementType, sizes, ResolveTypeParameter);
 
 				if (rr.InitializerElements != null && rr.InitializerElements.Count > 0) {
 					var temp = _createTemporaryVariable(rr.Type);
@@ -1467,7 +1493,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
 			var targetType = UnpackNullable(rr.TargetType);
-			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), rr.Input.Type, targetType);
+			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), rr.Input.Type, targetType, ResolveTypeParameter);
 		}
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
@@ -1487,7 +1513,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return input;
 			}
 			else if (c.IsTryCast) {
-				return _runtimeLibrary.TryDowncast(input, fromType, UnpackNullable(toType));
+				return _runtimeLibrary.TryDowncast(input, fromType, UnpackNullable(toType), ResolveTypeParameter);
 			}
 			else if (c.IsReferenceConversion) {
 				if (toType is ArrayType && fromType is ArrayType)	// Array covariance / contravariance.
@@ -1497,9 +1523,9 @@ namespace Saltarelle.Compiler.Compiler {
 				else if (toType.Kind == TypeKind.Delegate && fromType.Kind == TypeKind.Delegate && !toType.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)) && !fromType.Equals(_compilation.FindType(KnownTypeCode.MulticastDelegate)))
 					return input;	// Conversion between compatible delegate types.
 				else if (c.IsImplicit)
-					return _runtimeLibrary.Upcast(input, fromType, toType);
+					return _runtimeLibrary.Upcast(input, fromType, toType, ResolveTypeParameter);
 				else
-					return _runtimeLibrary.Downcast(input, fromType, toType);
+					return _runtimeLibrary.Downcast(input, fromType, toType, ResolveTypeParameter);
 			}
 			else if (c.IsNumericConversion) {
 				var result = input;
@@ -1518,15 +1544,15 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (c.IsDynamicConversion) {
 				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType));
+					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), ResolveTypeParameter);
 				}
 				else if (toType.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType));
+					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType, ResolveTypeParameter));
 				}
 				else {
 					// Converting to a boring reference type.
-					return _runtimeLibrary.Downcast(input, fromType, toType);
+					return _runtimeLibrary.Downcast(input, fromType, toType, ResolveTypeParameter);
 				}
 			}
 			else if (c.IsNullableConversion || c.IsEnumerationConversion) {
@@ -1537,19 +1563,19 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (c.IsBoxingConversion) {
 				if (toType.Kind != TypeKind.Dynamic) {
 					if (fromType.GetAllBaseTypes().Contains(toType))	// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-						return _runtimeLibrary.Upcast(input, fromType, toType);
+						return _runtimeLibrary.Upcast(input, fromType, toType, ResolveTypeParameter);
 					else
-						return _runtimeLibrary.Downcast(input, fromType, toType);
+						return _runtimeLibrary.Downcast(input, fromType, toType, ResolveTypeParameter);
 						
 				}
 				return input;
 			}
 			else if (c.IsUnboxingConversion) {
 				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
-					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType));
+					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), ResolveTypeParameter);
 				}
 				else {
-					var result = _runtimeLibrary.Downcast(input, fromType, toType);
+					var result = _runtimeLibrary.Downcast(input, fromType, toType, ResolveTypeParameter);
 					if (toType.Kind == TypeKind.Struct)
 						result = _runtimeLibrary.FromNullable(result);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
 					return result;
@@ -1562,7 +1588,7 @@ namespace Saltarelle.Compiler.Compiler {
 					input = PerformConversion(input, preConv, fromType, c.Method.Parameters[0].Type);
 
 				var impl = _metadataImporter.GetMethodSemantics(c.Method);
-				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.GetScriptType(c.Method.DeclaringType, TypeContext.UseStaticMember), input }, false, false);
+				var result = CompileMethodInvocation(impl, c.Method, new[] { GetScriptType(c.Method.DeclaringType, TypeContext.UseStaticMember), input }, false, false);
 
 				var postConv = conversions.ExplicitConversion(c.Method.ReturnType, toType);
 				if (!postConv.IsIdentityConversion)
@@ -1595,7 +1621,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
-					return _runtimeLibrary.CloneDelegate(InnerCompile(mgrr.TargetResult, false), rr.Conversion.Method.DeclaringType, rr.Type);	// new D2(d1)
+					return _runtimeLibrary.CloneDelegate(InnerCompile(mgrr.TargetResult, false), rr.Conversion.Method.DeclaringType, rr.Type, ResolveTypeParameter);	// new D2(d1)
 				}
 
 				var methodSemantics = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);
@@ -1615,14 +1641,14 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup) {
 					// base.Method
 					var jsTarget = InnerCompile(mgrr.TargetResult, true);
-					result = _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, methodSemantics.Name, typeArguments, jsTarget);
+					result = _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, methodSemantics.Name, typeArguments, jsTarget, ResolveTypeParameter);
 				}
 				else {
 					JsExpression jsTarget, jsMethod;
 
 					if (rr.Conversion.Method.IsStatic) {
 						jsTarget = null;
-						jsMethod = JsExpression.Member(_runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember), methodSemantics.Name);
+						jsMethod = JsExpression.Member(GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember), methodSemantics.Name);
 					}
 					else {
 						jsTarget = InnerCompile(mgrr.TargetResult, true);
@@ -1630,7 +1656,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 
 					if (typeArguments.Count > 0) {
-						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments);
+						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
 					}
 
 					result = jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
@@ -1700,7 +1726,7 @@ namespace Saltarelle.Compiler.Compiler {
 						_errorReporter.Message(7529);
 						return JsExpression.Null;
 					}
-					var target = mgrr.TargetResult is TypeResolveResult ? _runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember) : InnerCompile(mgrr.TargetResult, false);
+					var target = mgrr.TargetResult is TypeResolveResult ? _runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember, ResolveTypeParameter) : InnerCompile(mgrr.TargetResult, false);
 					expressions.Add(JsExpression.Member(target, impl[0].Name));
 				}
 				else {

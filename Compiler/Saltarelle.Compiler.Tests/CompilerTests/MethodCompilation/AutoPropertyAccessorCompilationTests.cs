@@ -83,17 +83,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(getter.Definition,
 @"function() {
-	return sm_$InstantiateGenericType({C}, ga_$T).$MyProperty;
+	return sm_$InstantiateGenericType({C}, $T).$MyProperty;
 }");
 
 			AssertCorrect(setter.Definition,
 @"function($value) {
-	sm_$InstantiateGenericType({C}, ga_$T).$MyProperty = $value;
+	sm_$InstantiateGenericType({C}, $T).$MyProperty = $value;
 }");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, ga_$T).$MyProperty = $Default({def_Int32});" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, $T).$MyProperty = $Default({def_Int32});" + Environment.NewLine));
 		}
 	}
 }

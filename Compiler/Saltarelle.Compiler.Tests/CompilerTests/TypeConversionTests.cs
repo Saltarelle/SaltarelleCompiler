@@ -149,7 +149,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		[Test]
 		public void ClassCanImplementGenericInterfaceConstructedWithTypeParameter() {
 			Compile("interface IMyInterface<T> {} class Test<T> : IMyInterface<T> {}");
-			Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("inh_$InstantiateGenericType({IMyInterface}, ga_$T)");
+			Stringify(FindClass("Test").ImplementedInterfaces[0]).Should().Be("inh_$InstantiateGenericType({IMyInterface}, $T)");
 		}
 
 		[Test]
@@ -161,7 +161,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		[Test]
 		public void ClassCanUseOwnTypeParameterInBaseClass() {
 			Compile("class Base<T> {} class Test<U> : Base<U> {}");
-			Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, ga_$U)");
+			Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, $U)");
 		}
 
 		[Test]
@@ -173,7 +173,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		[Test]
 		public void GenericClassCanUseSelfAsTypeParameterToBaseClass() {
 			Compile("class Base<T> {} class Test<T> : Base<Test<T>> {}");
-			Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, ga_$InstantiateGenericType({Test}, ga_$T))");
+			Stringify(FindClass("Test").BaseClass).Should().Be("inh_$InstantiateGenericType({Base}, ga_$InstantiateGenericType({Test}, $T))");
 		}
 
 		[Test]
@@ -269,7 +269,7 @@ class ArrayList : IList, ICloneable {}",
 			          class Test : ITest3<int, string> {}
 			          interface ITest<T> : ITest3<T, T> {}");
 			FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({ITest1}, {ga_Int32})", "inh_$InstantiateGenericType({ITest2}, {ga_String})", "inh_$InstantiateGenericType({ITest3}, {ga_Int32}, {ga_String})" });
-			FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({ITest1}, ga_$T)", "inh_$InstantiateGenericType({ITest2}, ga_$T)", "inh_$InstantiateGenericType({ITest3}, ga_$T, ga_$T)" });
+			FindClass("ITest").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({ITest1}, $T)", "inh_$InstantiateGenericType({ITest2}, $T)", "inh_$InstantiateGenericType({ITest3}, $T, $T)" });
 		}
 
 		[Test]
@@ -286,9 +286,9 @@ interface IDeserializationCallback {}
 interface ISerializable {}
 class Dictionary<T1, T2> : IDictionary<T1, T2>, IDeserializationCallback, ISerializable {}
 class Test<T> : Dictionary<T, int> {}");
-			FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, ga_$T, {ga_Int32})",
-			                                                                                          "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
-			                                                                                          "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
+			FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, $T, {ga_Int32})",
+			                                                                                          "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, $T, {ga_Int32}))",
+			                                                                                          "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, $T, {ga_Int32}))",
 			                                                                                          "{inh_IDictionary}",
 			                                                                                          "{inh_ICollection}",
 			                                                                                          "{inh_IEnumerable}",
@@ -305,9 +305,9 @@ interface IEnumerable<T> : IEnumerable {}
 interface ICollection<T> : IEnumerable<T> {}
 interface IDictionary<T1, T2> : ICollection<KeyValuePair<T1, T2>> {}
 class Test<T> : IDictionary<T, int> {}");
-			FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, ga_$T, {ga_Int32})",
-			                                                                                          "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
-			                                                                                          "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, ga_$T, {ga_Int32}))",
+			FindClass("Test").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IDictionary}, $T, {ga_Int32})",
+			                                                                                          "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({KeyValuePair}, $T, {ga_Int32}))",
+			                                                                                          "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({KeyValuePair}, $T, {ga_Int32}))",
 			                                                                                          "{inh_IEnumerable}" });
 		}
 
@@ -342,10 +342,10 @@ class List<T> : IList<T> {}
 class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
 			var cls = FindClass("Test");
-			Stringify(cls.BaseClass).Should().Be("inh_$InstantiateGenericType({List}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))");
-			cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IList}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))",
-			                                                                            "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))",
-			                                                                            "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({Dictionary}, ga_$T1, ga_$T2))",
+			Stringify(cls.BaseClass).Should().Be("inh_$InstantiateGenericType({List}, ga_$InstantiateGenericType({Dictionary}, $T1, $T2))");
+			cls.ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new[] { "inh_$InstantiateGenericType({IList}, ga_$InstantiateGenericType({Dictionary}, $T1, $T2))",
+			                                                                            "inh_$InstantiateGenericType({ICollection}, ga_$InstantiateGenericType({Dictionary}, $T1, $T2))",
+			                                                                            "inh_$InstantiateGenericType({IEnumerable}, ga_$InstantiateGenericType({Dictionary}, $T1, $T2))",
 			                                                                            "{inh_IList}",
 			                                                                            "{inh_ICollection}",
 			                                                                            "{inh_IEnumerable}" });
@@ -467,14 +467,14 @@ class Test<T1, T2> : List<Dictionary<T1, T2>> {}");
 
 		[Test]
 		public void InterfaceForWhichGetScriptTypeReturnsNullDoesNotAppearInTheInheritanceList() {
-			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c, _) => c == TypeContext.Inheritance && (t.Name == "I1" || t.Name == "I3") ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
 			Compile(new[] { "interface I1 {} interface I2 {} interface I3<T> {} class C1 : I1, I2, I3<int> {}" }, runtimeLibrary: rtl);
 			FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I2}" });
 		}
 
 		[Test]
 		public void BaseTypeForWhichGetScriptTypeReturnsNullIsNotConsideredInheritedFrom() {
-			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
+			var rtl = new MockRuntimeLibrary { GetScriptType = (t, c, _) => c == TypeContext.Inheritance && t.Name == "B" ? null : new JsTypeReferenceExpression(t.GetDefinition()) };
 			Compile(new[] { "interface I1 {} class B {} class C1 : B, I1 {}" }, runtimeLibrary: rtl);
 			FindClass("C1").ImplementedInterfaces.Select(Stringify).Should().BeEquivalentTo(new object[] { "{I1}" });
 		}

@@ -865,7 +865,7 @@ public void M<TMyType>() where TMyType : new() {
 	var c = new TMyType();
 	// END
 }",
-@"	var $c = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, ga_$TMyType).call(null);
+@"	var $c = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, $TMyType).call(null);
 ");
 		}
 
@@ -944,7 +944,7 @@ public void M<T>(string a) where T : X, new() {
 	var x = new T { A = a };
 	// END
 }",
-@"	var $tmp1 = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, ga_$T).call(null);
+@"	var $tmp1 = $InstantiateGenericMethod({sm_Activator}.$CreateInstance, $T).call(null);
 	$tmp1.$A = $a;
 	var $x = $tmp1;
 ");

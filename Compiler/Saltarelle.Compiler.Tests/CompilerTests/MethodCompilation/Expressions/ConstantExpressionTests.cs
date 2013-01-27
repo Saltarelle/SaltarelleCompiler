@@ -322,7 +322,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	var b = default(T);
 	// END
 }",
-@"	var $b = $Default(def_$T);
+@"	var $b = $Default($T);
 ");
 		}
 
@@ -334,7 +334,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	var b = default(T);
 	// END
 }",
-@"	var $b = $Default(def_$T);
+@"	var $b = $Default($T);
 ");
 		}
 	}

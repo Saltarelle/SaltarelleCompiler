@@ -83,17 +83,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(adder.Definition,
 @"function($value) {
-	sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = {sm_Delegate}.Combine(sm_$InstantiateGenericType({C}, ga_$T).$MyEvent, $value);
+	sm_$InstantiateGenericType({C}, $T).$MyEvent = {sm_Delegate}.Combine(sm_$InstantiateGenericType({C}, $T).$MyEvent, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($value) {
-	sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = {sm_Delegate}.Remove(sm_$InstantiateGenericType({C}, ga_$T).$MyEvent, $value);
+	sm_$InstantiateGenericType({C}, $T).$MyEvent = {sm_Delegate}.Remove(sm_$InstantiateGenericType({C}, $T).$MyEvent, $value);
 }");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = $Default({def_EventHandler});" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, $T).$MyEvent = $Default({def_EventHandler});" + Environment.NewLine));
 		}
 	}
 }

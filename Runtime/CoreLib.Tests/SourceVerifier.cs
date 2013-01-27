@@ -16,7 +16,7 @@ namespace CoreLib.Tests {
 			var n = new DefaultNamer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);;
-			var rtl = new CoreLib.Plugin.RuntimeLibrary(md, er, n, compilation.Compilation);
+			var rtl = new CoreLib.Plugin.RuntimeLibrary(md, er, compilation.Compilation);
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions(), false, compilation.Compilation.MainAssembly);
 			var compiler = new Saltarelle.Compiler.Compiler.Compiler(md, n, rtl, er);
 

@@ -722,8 +722,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = $Default(def_$T);
-	this.$t2 = $Default(def_$T);
+	this.$t1 = $Default($T);
+	this.$t2 = $Default($T);
 }", useFirstConstructor: true);
 		}
 
@@ -734,8 +734,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = $Default(def_$T);
-	this.$t2 = $Default(def_$T);
+	this.$t1 = $Default($T);
+	this.$t2 = $Default($T);
 }", useFirstConstructor: true);
 		}
 

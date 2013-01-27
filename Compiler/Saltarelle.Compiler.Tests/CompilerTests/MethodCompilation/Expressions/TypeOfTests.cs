@@ -72,7 +72,7 @@ public void M() {
 	}
 }
 ",
-@"	var $x = to_$T1;
+@"	var $x = $T1;
 ");
 		}
 
@@ -85,7 +85,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = to_$T1;
+@"	var $x = $T1;
 ");
 		}
 
@@ -103,7 +103,7 @@ public void M() {
 	}
 }
 ",
-@"	var $x = to_$T1;
+@"	var $x = $T1;
 ");
 		}
 

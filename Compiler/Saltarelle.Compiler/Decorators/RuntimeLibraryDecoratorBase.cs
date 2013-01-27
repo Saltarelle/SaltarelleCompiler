@@ -13,24 +13,24 @@ namespace Saltarelle.Compiler.Decorators {
 			_prev = prev;
 		}
 
-		public virtual JsExpression GetScriptType(IType type, TypeContext context) {
-			return _prev.GetScriptType(type, context);
+		public virtual JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.GetScriptType(type, context, resolveTypeParameter);
 		}
 
-		public virtual JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType) {
-			return _prev.TypeIs(expression, sourceType, targetType);
+		public virtual JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.TypeIs(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
-		public virtual JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
-			return _prev.TryDowncast(expression, sourceType, targetType);
+		public virtual JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.TryDowncast(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
-		public virtual JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
-			return _prev.Downcast(expression, sourceType, targetType);
+		public virtual JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.Downcast(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
-		public virtual JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
-			return _prev.Upcast(expression, sourceType, targetType);
+		public virtual JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.Upcast(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
 		public virtual JsExpression ReferenceEquals(JsExpression a, JsExpression b) {
@@ -41,8 +41,8 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.ReferenceNotEquals(a, b);
 		}
 
-		public virtual JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
-			return _prev.InstantiateGenericMethod(method, typeArguments);
+		public virtual JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);
 		}
 
 		public virtual JsExpression MakeException(JsExpression operand) {
@@ -85,32 +85,32 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.BindFirstParameterToThis(function);
 		}
 
-		public virtual JsExpression Default(IType type) {
-			return _prev.Default(type);
+		public virtual JsExpression Default(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.Default(type, resolveTypeParameter);
 		}
 
-		public virtual JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> sizes) {
-			return _prev.CreateArray(elementType, sizes);
+		public virtual JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> sizes, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.CreateArray(elementType, sizes, resolveTypeParameter);
 		}
 
-		public virtual JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
-			return _prev.CloneDelegate(source, sourceType, targetType);
+		public virtual JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.CloneDelegate(source, sourceType, targetType, resolveTypeParameter);
 		}
 
-		public virtual JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
-			return _prev.CallBase(baseType, methodName, typeArguments, thisAndArguments);
+		public virtual JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.CallBase(baseType, methodName, typeArguments, thisAndArguments, resolveTypeParameter);
 		}
 
-		public virtual JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
-			return _prev.BindBaseCall(baseType, methodName, typeArguments, @this);
+		public virtual JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.BindBaseCall(baseType, methodName, typeArguments, @this, resolveTypeParameter);
 		}
 
-		public virtual JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
-			return _prev.MakeEnumerator(yieldType, moveNext, getCurrent, dispose);
+		public virtual JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.MakeEnumerator(yieldType, moveNext, getCurrent, dispose, resolveTypeParameter);
 		}
 
-		public virtual JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator) {
-			return _prev.MakeEnumerable(yieldType, getEnumerator);
+		public virtual JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.MakeEnumerable(yieldType, getEnumerator, resolveTypeParameter);
 		}
 
 		public virtual JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices) {
@@ -121,8 +121,8 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.SetMultiDimensionalArrayValue(array, indices, value);
 		}
 
-		public virtual JsExpression CreateTaskCompletionSource(IType taskGenericArgument) {
-			return _prev.CreateTaskCompletionSource(taskGenericArgument);
+		public virtual JsExpression CreateTaskCompletionSource(IType taskGenericArgument, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.CreateTaskCompletionSource(taskGenericArgument, resolveTypeParameter);
 		}
 
 		public virtual JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value) {

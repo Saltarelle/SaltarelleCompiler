@@ -14,15 +14,13 @@ namespace CoreLib.Plugin {
 
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
-		private readonly INamer _namer;
 		private readonly ICompilation _compilation;
 		private readonly bool _omitDowncasts;
 		private readonly bool _omitNullableChecks;
 
-		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer, ICompilation compilation) {
+		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, ICompilation compilation) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
-			_namer = namer;
 			_compilation = compilation;
 			_omitDowncasts = MetadataUtils.OmitDowncasts(compilation);
 			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation);
@@ -32,7 +30,7 @@ namespace CoreLib.Plugin {
 			return new JsTypeReferenceExpression(tr.Resolve(_compilation).GetDefinition());
 		}
 
-		public JsExpression GetScriptType(IType type, TypeContext context) {
+		public JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (type.Kind == TypeKind.Delegate) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
@@ -48,16 +46,16 @@ namespace CoreLib.Plugin {
 				return CreateTypeReferenceExpression(KnownTypeReference.Array);
 			}
 			else if (type is ITypeParameter) {
-				return JsExpression.Identifier(_namer.GetTypeParameterName((ITypeParameter)type));
+				return resolveTypeParameter((ITypeParameter)type);
 			}
 			else if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;
 				var def = pt.GetDefinition();
 				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
 				else
-					return GetScriptType(def, context);
+					return GetScriptType(def, context, resolveTypeParameter);
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
@@ -75,7 +73,7 @@ namespace CoreLib.Plugin {
 					var jsref = CreateTypeReferenceExpression(td.ToTypeReference());
 					if (td.TypeParameterCount > 0 && !sem.IgnoreGenericArguments) {
 						// This handles the case of resolving the current type, eg. to access a static member.
-						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition().ToTypeReference()), JsExpression.ArrayLiteral(td.TypeParameters.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
 					}
 					else {
 						return jsref;
@@ -94,9 +92,9 @@ namespace CoreLib.Plugin {
 			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Type.IsKnownType(KnownTypeCode.Object);
 		}
 
-		private JsExpression GetCastTarget(IType sourceType, IType targetType) {
-			var ss = GetScriptType(sourceType, TypeContext.CastTarget);
-			var st = GetScriptType(targetType, TypeContext.CastTarget);
+		private JsExpression GetCastTarget(IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			var ss = GetScriptType(sourceType, TypeContext.CastTarget, resolveTypeParameter);
+			var st = GetScriptType(targetType, TypeContext.CastTarget, resolveTypeParameter);
 			if (ss == null || st == null) {
 				return null;	// Either the source or the target is not a real type.
 			}
@@ -110,33 +108,33 @@ namespace CoreLib.Plugin {
 			return st;
 		}
 
-		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType) {
-			var jsTarget = GetCastTarget(sourceType, targetType);
+		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			var jsTarget = GetCastTarget(sourceType, targetType, resolveTypeParameter);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null);
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isInstanceOfType"), expression, jsTarget);
 		}
 
-		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
-			var jsTarget = GetCastTarget(sourceType, targetType);
+		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			var jsTarget = GetCastTarget(sourceType, targetType, resolveTypeParameter);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "safeCast"), expression, jsTarget);
 		}
 
-		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType) {
+		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (_omitDowncasts)
 				return expression;
 
 			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
-			var jsTarget = GetCastTarget(sourceType, targetType);
+			var jsTarget = GetCastTarget(sourceType, targetType, resolveTypeParameter);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "cast"), expression, jsTarget);
 		}
 
-		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType) {
+		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (sourceType.IsKnownType(KnownTypeCode.Char))
 				_errorReporter.Message(7700);
 			return expression;
@@ -164,8 +162,8 @@ namespace CoreLib.Plugin {
 				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "referenceEquals"), a, b));
 		}
 
-		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments) {
-			return JsExpression.Invocation(method, typeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument)));
+		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return JsExpression.Invocation(method, typeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter)));
 		}
 
 		public JsExpression MakeException(JsExpression operand) {
@@ -278,12 +276,12 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "thisFix"), function);
 		}
 
-		public JsExpression Default(IType type) {
+		public JsExpression Default(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (type.IsReferenceType == true || type.Kind == TypeKind.Dynamic) {
 				return JsExpression.Null;
 			}
 			else if (type.IsReferenceType == null) {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetDefaultValue));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetDefaultValue, resolveTypeParameter));
 			}
 			else {
 				switch (type.GetDefinition().KnownTypeCode) {
@@ -313,17 +311,17 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size) {
+		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			var sizeList = (size is IList<JsExpression>) ? (IList<JsExpression>)size : size.ToList();
 			if (sizeList.Count == 1) {
 				return JsExpression.New(CreateTypeReferenceExpression(KnownTypeReference.Array), sizeList);
 			}
 			else {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "multidimArray"), new[] { Default(elementType) }.Concat(sizeList));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "multidimArray"), new[] { Default(elementType, resolveTypeParameter) }.Concat(sizeList));
 			}
 		}
 
-		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
+		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (Equals(sourceType, targetType)) {
 				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
 				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "delegateClone"), source);
@@ -333,29 +331,29 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
-			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.BindBaseCall), "prototype"), methodName);
+		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.BindBaseCall, resolveTypeParameter), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
-				method = InstantiateGenericMethod(method, typeArguments);
+				method = InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);
 
 			return JsExpression.Invocation(JsExpression.Member(method, "call"), thisAndArguments);
 		}
 
-		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
-			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.BindBaseCall), "prototype"), methodName);
+		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.BindBaseCall, resolveTypeParameter), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
-				method = InstantiateGenericMethod(method, typeArguments);
+				method = InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);
 
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), @this, method);
 		}
 
-		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
+		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			return JsExpression.New(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Collections.Generic.IteratorBlockEnumerator`1")), moveNext, getCurrent, dispose ?? (JsExpression)JsExpression.Null, JsExpression.This);
 		}
 
-		public JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator) {
+		public JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			return JsExpression.New(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Collections.Generic.IteratorBlockEnumerable`1")), getEnumerator, JsExpression.This);
 		}
 
@@ -367,7 +365,7 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "arraySet"), new[] { array }.Concat(indices).Concat(new[] { value }));
 		}
 
-		public JsExpression CreateTaskCompletionSource(IType taskGenericArgument) {
+		public JsExpression CreateTaskCompletionSource(IType taskGenericArgument, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			return JsExpression.New(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Threading.Tasks.TaskCompletionSource`1")));
 		}
 

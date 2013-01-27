@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 class C {
 	" + csharp + @"
-}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.DeclaringTypeDefinition.FullName == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2) => e });
+}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.DeclaringTypeDefinition.FullName == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
 
 		}
 

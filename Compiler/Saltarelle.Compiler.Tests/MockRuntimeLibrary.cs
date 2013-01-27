@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		public MockRuntimeLibrary() {
-			GetScriptType = (t, c) => {
+			GetScriptType = (t, c, rtp) => {
 			                    string context = GetTypeContextShortName(c);
 			                    if (t.TypeParameterCount > 0 && !(t is ParameterizedType) && c == TypeContext.TypeOf) {
 			                        // This handles open generic types ( typeof(C<,>) )
@@ -33,65 +33,65 @@ namespace Saltarelle.Compiler.Tests {
 			                        return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(context + "_" + def.Name, Common.CreateMockAssembly()));
 			                    }
 			                    else if (t is ArrayType) {
-			                        return JsExpression.Invocation(JsExpression.Identifier(context + "_$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument));
+			                        return JsExpression.Invocation(JsExpression.Identifier(context + "_$Array"), GetScriptType(((ArrayType)t).ElementType, TypeContext.GenericArgument, rtp));
 			                    }
 			                    else if (t is ParameterizedType) {
 			                        var pt = (ParameterizedType)t;
-		                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(t.Name, Common.CreateMockAssembly())) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument))));
+		                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(t.Name, Common.CreateMockAssembly())) }.Concat(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, rtp))));
 			                    }
 			                    else if (t is ITypeDefinition) {
 			                        var td = (ITypeDefinition)t;
 			                        if (td.TypeParameterCount > 0)
-			                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(t.Name, Common.CreateMockAssembly())) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument))));
+			                            return JsExpression.Invocation(JsExpression.Identifier(context + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(t.Name, Common.CreateMockAssembly())) }.Concat(td.TypeParameters.Select(p => GetScriptType(p, TypeContext.GenericArgument, rtp))));
 			                        else {
 			                            return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(context + "_" + t.Name, Common.CreateMockAssembly()));
 			                        }
 			                    }
 			                    else if (t is ITypeParameter) {
-			                        return JsExpression.Identifier(context + "_$" + ((ITypeParameter)t).Name);
+			                        return rtp((ITypeParameter)t);
 			                    }
 			                    else {
 			                        throw new ArgumentException("Unsupported type + " + t.ToString());
 			                    }
 			                };
-			TypeIs                          = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, TypeContext.CastTarget));
-			TryDowncast                     = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget));
-			Downcast                        = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, TypeContext.CastTarget));
-			Upcast                          = (e, s, d)       => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, TypeContext.CastTarget));
-			ReferenceEquals                 = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
-			ReferenceNotEquals              = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
-			InstantiateGenericMethod        = (m, a)          => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument))));
-			MakeException                   = (e)             => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
-			IntegerDivision                 = (n, d)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-			FloatToInt                      = (e)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
-			Coalesce                        = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-			Lift                            = (e)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
-			FromNullable                    = (e)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
-			LiftedBooleanAnd                = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
-			LiftedBooleanOr                 = (a, b)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
-			Bind                            = (f, t)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
-			BindFirstParameterToThis        = (f)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
-			Default                         = (t)             => t.Kind == TypeKind.Dynamic ? (JsExpression)JsExpression.Identifier("$DefaultDynamic") : JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue));
-			CreateArray                     = (t, dim)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue) }.Concat(dim));
-			CloneDelegate                   = (e, s, t)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
-			CallBase                        = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), JsExpression.ArrayLiteral(a) });
-			BindBaseCall                    = (t, n, ta, a)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.BindBaseCall), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument))), a });
-			MakeEnumerator                  = (yt, mn, gc, d) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument), mn, gc, d ?? (JsExpression)JsExpression.Null });
-			MakeEnumerable                  = (yt, ge)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument), ge });
-			GetMultiDimensionalArrayValue   = (a, i)          => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
-			SetMultiDimensionalArrayValue   = (a, i, v)       => JsExpression.Invocation(JsExpression.Identifier("$MultidimArraySet"), new[] { a }.Concat(i).Concat(new[] { v }));
-			CreateTaskCompletionSource      = (t)             => JsExpression.Invocation(JsExpression.Identifier("$CreateTaskCompletionSource"), t != null ? GetScriptType(t, TypeContext.GenericArgument) : JsExpression.String("non-generic"));
-			SetAsyncResult                  = (t, v)          => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncResult"), t, v ?? JsExpression.String("<<null>>"));
-			SetAsyncException               = (t, e)          => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncException"), t, e);
-			GetTaskFromTaskCompletionSource = (t)             => JsExpression.Invocation(JsExpression.Identifier("$GetTask"), t);
+			TypeIs                          = (e, s, t, rtp)       => JsExpression.Invocation(JsExpression.Identifier("$TypeIs"), e, GetScriptType(t, TypeContext.CastTarget, rtp));
+			TryDowncast                     = (e, s, d, rtp)       => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget, rtp));
+			Downcast                        = (e, s, d, rtp)       => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, TypeContext.CastTarget, rtp));
+			Upcast                          = (e, s, d, rtp)       => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, TypeContext.CastTarget, rtp));
+			ReferenceEquals                 = (a, b)               => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
+			ReferenceNotEquals              = (a, b)               => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
+			InstantiateGenericMethod        = (m, a, rtp)          => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp))));
+			MakeException                   = (e)                  => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+			IntegerDivision                 = (n, d)               => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+			FloatToInt                      = (e)                  => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
+			Coalesce                        = (a, b)               => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+			Lift                            = (e)                  => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+			FromNullable                    = (e)                  => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
+			LiftedBooleanAnd                = (a, b)               => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
+			LiftedBooleanOr                 = (a, b)               => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
+			Bind                            = (f, t)               => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+			BindFirstParameterToThis        = (f)                  => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
+			Default                         = (t, rtp)             => t.Kind == TypeKind.Dynamic ? (JsExpression)JsExpression.Identifier("$DefaultDynamic") : JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue, rtp));
+			CreateArray                     = (t, dim, rtp)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue, rtp) }.Concat(dim));
+			CloneDelegate                   = (e, s, t, rtp)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
+			CallBase                        = (t, n, ta, a, rtp)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall, rtp), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp))), JsExpression.ArrayLiteral(a) });
+			BindBaseCall                    = (t, n, ta, a, rtp)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.BindBaseCall, rtp), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp))), a });
+			MakeEnumerator                  = (yt, mn, gc, d, rtp) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument, rtp), mn, gc, d ?? (JsExpression)JsExpression.Null });
+			MakeEnumerable                  = (yt, ge, rtp)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument, rtp), ge });
+			GetMultiDimensionalArrayValue   = (a, i)               => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
+			SetMultiDimensionalArrayValue   = (a, i, v)            => JsExpression.Invocation(JsExpression.Identifier("$MultidimArraySet"), new[] { a }.Concat(i).Concat(new[] { v }));
+			CreateTaskCompletionSource      = (t, rtp)             => JsExpression.Invocation(JsExpression.Identifier("$CreateTaskCompletionSource"), t != null ? GetScriptType(t, TypeContext.GenericArgument, rtp) : JsExpression.String("non-generic"));
+			SetAsyncResult                  = (t, v)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncResult"), t, v ?? JsExpression.String("<<null>>"));
+			SetAsyncException               = (t, e)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncException"), t, e);
+			GetTaskFromTaskCompletionSource = (t)                  => JsExpression.Invocation(JsExpression.Identifier("$GetTask"), t);
 		}
 
-		public Func<IType, TypeContext, JsExpression> GetScriptType { get; set; }
-		public Func<JsExpression, IType, IType, JsExpression> TypeIs { get; set; }
-		public Func<JsExpression, IType, IType, JsExpression> TryDowncast { get; set; }
-		public Func<JsExpression, IType, IType, JsExpression> Downcast { get; set; }
-		public Func<JsExpression, IType, IType, JsExpression> Upcast { get; set; }
-		public Func<JsExpression, IEnumerable<IType>, JsExpression> InstantiateGenericMethod { get; set; }
+		public Func<IType, TypeContext, Func<ITypeParameter, JsExpression>, JsExpression> GetScriptType { get; set; }
+		public Func<JsExpression, IType, IType, Func<ITypeParameter, JsExpression>, JsExpression> TypeIs { get; set; }
+		public Func<JsExpression, IType, IType, Func<ITypeParameter, JsExpression>, JsExpression> TryDowncast { get; set; }
+		public Func<JsExpression, IType, IType, Func<ITypeParameter, JsExpression>, JsExpression> Downcast { get; set; }
+		public Func<JsExpression, IType, IType, Func<ITypeParameter, JsExpression>, JsExpression> Upcast { get; set; }
+		public Func<JsExpression, IEnumerable<IType>, Func<ITypeParameter, JsExpression>, JsExpression> InstantiateGenericMethod { get; set; }
 		new public Func<JsExpression, JsExpression, JsExpression> ReferenceEquals { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> ReferenceNotEquals { get; set; }
 		public Func<JsExpression, JsExpression> MakeException { get; set; }
@@ -104,38 +104,38 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> LiftedBooleanOr { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> Bind { get; set; }
 		public Func<JsExpression, JsExpression> BindFirstParameterToThis { get; set; }
-		public Func<IType, JsExpression> Default { get; set; }
-		public Func<IType, IEnumerable<JsExpression>, JsExpression> CreateArray { get; set; }
-		public Func<JsExpression, IType, IType, JsExpression> CloneDelegate { get; set; }
-		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, JsExpression> CallBase { get; set; }
-		public Func<IType, string, IList<IType>, JsExpression, JsExpression> BindBaseCall { get; set; }
-		public Func<IType, JsExpression, JsExpression, JsExpression, JsExpression> MakeEnumerator { get; set; }
-		public Func<IType, JsExpression, JsExpression> MakeEnumerable { get; set; }
+		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> Default { get; set; }
+		public Func<IType, IEnumerable<JsExpression>, Func<ITypeParameter, JsExpression>, JsExpression> CreateArray { get; set; }
+		public Func<JsExpression, IType, IType, Func<ITypeParameter, JsExpression>, JsExpression> CloneDelegate { get; set; }
+		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, Func<ITypeParameter, JsExpression>, JsExpression> CallBase { get; set; }
+		public Func<IType, string, IList<IType>, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> BindBaseCall { get; set; }
+		public Func<IType, JsExpression, JsExpression, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> MakeEnumerator { get; set; }
+		public Func<IType, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> MakeEnumerable { get; set; }
 		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> GetMultiDimensionalArrayValue;
 		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression, JsExpression> SetMultiDimensionalArrayValue;
-		public Func<IType, JsExpression> CreateTaskCompletionSource;
+		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> CreateTaskCompletionSource;
 		public Func<JsExpression, JsExpression, JsExpression> SetAsyncResult;
 		public Func<JsExpression, JsExpression, JsExpression> SetAsyncException;
 		public Func<JsExpression, JsExpression> GetTaskFromTaskCompletionSource;
 		
-		JsExpression IRuntimeLibrary.GetScriptType(IType type, TypeContext context) {
-			return GetScriptType(type, context);
+		JsExpression IRuntimeLibrary.GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return GetScriptType(type, context, resolveTypeParameter);
 		}
 			
-		JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, IType sourceType, IType targetType) {
-			return TypeIs(expression, sourceType, targetType);
+		JsExpression IRuntimeLibrary.TypeIs(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return TypeIs(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.TryDowncast(JsExpression expression, IType sourceType, IType targetType) {
-			return TryDowncast(expression, sourceType, targetType);
+		JsExpression IRuntimeLibrary.TryDowncast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return TryDowncast(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.Downcast(JsExpression expression, IType sourceType, IType targetType) {
-			return Downcast(expression, sourceType, targetType);
+		JsExpression IRuntimeLibrary.Downcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return Downcast(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.Upcast(JsExpression expression, IType sourceType, IType targetType) {
-			return Upcast(expression, sourceType, targetType);
+		JsExpression IRuntimeLibrary.Upcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return Upcast(expression, sourceType, targetType, resolveTypeParameter);
 		}
 
 		JsExpression IRuntimeLibrary.ReferenceEquals(JsExpression a, JsExpression b) {
@@ -146,8 +146,8 @@ namespace Saltarelle.Compiler.Tests {
 			return ReferenceNotEquals(a, b);
 		}
 
-		JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<IType> typeArguments) {
-			return InstantiateGenericMethod(type, typeArguments);
+		JsExpression IRuntimeLibrary.InstantiateGenericMethod(JsExpression type, IEnumerable<IType> typeArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return InstantiateGenericMethod(type, typeArguments, resolveTypeParameter);
 		}
 
 		JsExpression IRuntimeLibrary.MakeException(JsExpression operand) {
@@ -190,32 +190,32 @@ namespace Saltarelle.Compiler.Tests {
 			return BindFirstParameterToThis(function);
 		}
 
-		JsExpression IRuntimeLibrary.Default(IType type) {
-			return Default(type);
+		JsExpression IRuntimeLibrary.Default(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return Default(type, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.CreateArray(IType elementType, IEnumerable<JsExpression> size) {
-			return CreateArray(elementType, size);
+		JsExpression IRuntimeLibrary.CreateArray(IType elementType, IEnumerable<JsExpression> size, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return CreateArray(elementType, size, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.CloneDelegate(JsExpression source, IType sourceType, IType targetType) {
-			return CloneDelegate(source, sourceType, targetType);
+		JsExpression IRuntimeLibrary.CloneDelegate(JsExpression source, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return CloneDelegate(source, sourceType, targetType, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments) {
-			return CallBase(baseType, methodName, typeArguments, thisAndArguments);
+		JsExpression IRuntimeLibrary.CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return CallBase(baseType, methodName, typeArguments, thisAndArguments, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this) {
-			return BindBaseCall(baseType, methodName, typeArguments, @this);
+		JsExpression IRuntimeLibrary.BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return BindBaseCall(baseType, methodName, typeArguments, @this, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose) {
-			return MakeEnumerator(yieldType, moveNext, getCurrent, dispose);
+		JsExpression IRuntimeLibrary.MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return MakeEnumerator(yieldType, moveNext, getCurrent, dispose, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.MakeEnumerable(IType yieldType, JsExpression getEnumerator) {
-			return MakeEnumerable(yieldType, getEnumerator);
+		JsExpression IRuntimeLibrary.MakeEnumerable(IType yieldType, JsExpression getEnumerator, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return MakeEnumerable(yieldType, getEnumerator, resolveTypeParameter);
 		}
 
 		JsExpression IRuntimeLibrary.GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices) {
@@ -226,8 +226,8 @@ namespace Saltarelle.Compiler.Tests {
 			return SetMultiDimensionalArrayValue(array, indices, value);
 		}
 
-		JsExpression IRuntimeLibrary.CreateTaskCompletionSource(IType taskGenericArgument) {
-			return CreateTaskCompletionSource(taskGenericArgument);
+		JsExpression IRuntimeLibrary.CreateTaskCompletionSource(IType taskGenericArgument, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return CreateTaskCompletionSource(taskGenericArgument, resolveTypeParameter);
 		}
 
 		JsExpression IRuntimeLibrary.SetAsyncResult(JsExpression taskCompletionSource, JsExpression value) {

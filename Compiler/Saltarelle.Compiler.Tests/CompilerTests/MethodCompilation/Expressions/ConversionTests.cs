@@ -1284,8 +1284,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, ct_$U);
-	var $u2 = $Upcast($t, ct_$U);
+@"	var $u1 = $Upcast($t, $U);
+	var $u2 = $Upcast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1296,8 +1296,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, ct_$U);
-	var $u2 = $Upcast($t, ct_$U);
+@"	var $u1 = $Upcast($t, $U);
+	var $u2 = $Upcast($t, $U);
 ");
 		}
 
@@ -1316,9 +1316,9 @@ public void M<T>() where T : D {
 	T t3 = (T)d;
 	// END
 }",
-@"	var $t1 = $Cast($o, ct_$T);
-	var $t2 = $Cast($b, ct_$T);
-	var $t3 = $Cast($d, ct_$T);
+@"	var $t1 = $Cast($o, $T);
+	var $t2 = $Cast($b, $T);
+	var $t3 = $Cast($d, $T);
 ");
 
 			AssertCorrect(
@@ -1334,9 +1334,9 @@ public void M<T>() where T : class, D {
 	T t3 = (T)d;
 	// END
 }",
-@"	var $t1 = $Cast($o, ct_$T);
-	var $t2 = $Cast($b, ct_$T);
-	var $t3 = $Cast($d, ct_$T);
+@"	var $t1 = $Cast($o, $T);
+	var $t2 = $Cast($b, $T);
+	var $t3 = $Cast($d, $T);
 ");
 		}
 
@@ -1350,7 +1350,7 @@ public void M<T>() {
 	T t = (T)i;
 	// END
 }",
-@"	var $t = $Cast($i, ct_$T);
+@"	var $t = $Cast($i, $T);
 ");
 
 			AssertCorrect(
@@ -1361,7 +1361,7 @@ public void M<T>() where T : class {
 	T t = (T)i;
 	// END
 }",
-@"	var $t = $Cast($i, ct_$T);
+@"	var $t = $Cast($i, $T);
 ");
 		}
 
@@ -1399,7 +1399,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, ct_$U);
+@"	var $u = $Cast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1409,7 +1409,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, ct_$U);
+@"	var $u = $Cast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1419,7 +1419,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, ct_$U);
+@"	var $u = $Cast($t, $U);
 ");
 		}
 

@@ -896,7 +896,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [], [this, $c, $d]);
+	$CallBase(bind_$InstantiateGenericType({B}, $T2), '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -940,7 +940,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	$InstantiateGenericMethod(this.$F, {ga_Int32}).call(this, $a, $b);
-	$CallBase(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [{ga_Int32}], [this, $c, $d]);
+	$CallBase(bind_$InstantiateGenericType({B}, $T2), '$F', [{ga_Int32}], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -1415,6 +1415,220 @@ public void M() {
 }",
 @"	$f.call($a, $b);
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsANormalMethodWithAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1<T> {
+	public void M(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsANormalMethodWithAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1 {
+	public void M<T>(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsANormalMethodWithIgnoredGenericArgumentsIsNotAnErrorIfTheMethodAlsoIgnoresGenericArguments() {
+			AssertCorrect(
+@"class X {
+	public void F<T1, T2>(T1 t1, T2 t2) {}
+}
+class C<T1> {
+	public void M<T2>(T1 t1, T2 t2) {
+		// BEGIN
+		new X().F(t1, t2);
+		// END
+	}
+}",
+@"	(new {inst_X}()).$F($t1, $t2);
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1<T> {
+	public void M(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1 {
+	public void M<T>(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithATypeThatNeedsAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X<T> {
+	public void F(X<T> t) {}
+}
+class C1<T> {
+	public void M(X<T> x) {
+		x.F(x);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: t.Name == "C1"), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithATypeThatNeedsAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X<T> {
+	public void F(X<T> t) {}
+}
+class C1 {
+	public void M<T>(X<T> x) {
+		x.F(x);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsAStaticMethodWithThisAsFirstArgumentWithIgnoredGenericArgumentsIsNotAnErrorIfTheMethodAlsoIgnoresGenericArguments() {
+			AssertCorrect(
+@"class X {
+	public void F<T1, T2>(T1 t1, T2 t2) {}
+}
+class C<T1> {
+	public void M<T2>(T1 t1, T2 t2) {
+		// BEGIN
+		new X().F(t1, t2);
+		// END
+	}
+}",
+@"	{sm_X}.$F(new {inst_X}(), $t1, $t2);
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", ignoreGenericArguments: true) : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+		}
+
+		[Test]
+		public void InvokingAGenericInlineCodeMethodWithAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public static void F<T>(T t) {}
+}
+class C1<T> {
+	public void M(T t) {
+		X.F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T})._({t})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void InvokingAGenericInlineCodeMethodWithAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public static void F<T>(T t) {}
+}
+class C1 {
+	public void M<T>(T t) {
+		X.F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingMethodInlineCodeMethodWithIgnoredGenericArgumentsIsNotAnErrorIfTheMethodDoesNotUseTheGenericArgument() {
+			AssertCorrect(
+@"class X {
+	public static void F<T1, T2>(T1 t1, T2 t2) {}
+}
+class C<T1> {
+	public void M<T2>(T1 t1, T2 t2) {
+		// BEGIN
+		X.F(t1, t2);
+		// END
+	}
+}",
+@"	_($t1)._($t2);
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({t1})._({t2})") : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) });
+		}
+
+		[Test]
+		public void InvokingAMethodOfAGenericMethodWithAnUnavailableTypeParameterIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X<T> {
+	public static void F() {}
+}
+class C1 {
+	public void M<T>() {
+		X<T>.F();
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
 	}
 }

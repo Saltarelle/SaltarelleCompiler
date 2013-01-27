@@ -222,7 +222,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	$a = $Bind(this.$F, this);
-	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [], this);
+	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, $T2), '$F', [], this);
 ", addSkeleton: false);
 		}
 
@@ -266,7 +266,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	$a = $Bind($InstantiateGenericMethod(this.$F, {ga_Int32}), this);
-	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [{ga_Int32}], this);
+	$a = $BindBaseCall(bind_$InstantiateGenericType({B}, $T2), '$F', [{ga_Int32}], this);
 ", addSkeleton: false);
 		}
 
