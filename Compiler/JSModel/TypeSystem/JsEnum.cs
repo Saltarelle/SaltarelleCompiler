@@ -7,17 +7,17 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
-    public class JsEnum : JsType {
-        private IList<JsEnumValue> _values;
-        public IList<JsEnumValue> Values { get { return _values; } }
+	public class JsEnum : JsType {
+		private IList<JsEnumValue> _values;
+		public IList<JsEnumValue> Values { get { return _values; } }
 
-        public JsEnum(ITypeDefinition csharpTypeDefinition, IEnumerable<JsEnumValue> values) : base(csharpTypeDefinition) {
-            _values = values.AsReadOnly();
-        }
+		public JsEnum(ITypeDefinition csharpTypeDefinition, IEnumerable<JsEnumValue> values) : base(csharpTypeDefinition) {
+			_values = values.AsReadOnly();
+		}
 
-        public override void Freeze() {
-            base.Freeze();
-            _values = _values.AsReadOnly();
-        }
-    }
+		public override void Freeze() {
+			base.Freeze();
+			_values = _values.AsReadOnly();
+		}
+	}
 }

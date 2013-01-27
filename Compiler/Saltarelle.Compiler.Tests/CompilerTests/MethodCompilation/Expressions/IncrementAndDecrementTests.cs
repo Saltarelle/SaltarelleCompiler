@@ -1348,16 +1348,16 @@ class D : B {
 		public void PrefixWorksForDynamicPropertyOfNonDynamicObject() {
 			AssertCorrectForBoth(@"
 public class SomeClass {
-    public dynamic Value { get; set; }
+	public dynamic Value { get; set; }
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        ++c.Value;
+		++c.Value;
 		// END
-    }
+	}
 }",
 @"	$c.set_$Value($c.get_$Value() + 1);
 ", addSkeleton: false);
@@ -1367,16 +1367,16 @@ class C {
 		public void PostfixWorksForDynamicPropertyOfNonDynamicObject() {
 			AssertCorrectForBoth(@"
 public class SomeClass {
-    public dynamic Value { get; set; }
+	public dynamic Value { get; set; }
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        c.Value++;
+		c.Value++;
 		// END
-    }
+	}
 }",
 @"	$c.set_$Value($c.get_$Value() + 1);
 ", addSkeleton: false);
@@ -1386,16 +1386,16 @@ class C {
 		public void PrefixWorksForDynamicFieldOfNonDynamicObject() {
 			AssertCorrectForBoth(@"
 public class SomeClass {
-    public dynamic Value;
+	public dynamic Value;
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        ++$c.Value;
+		++$c.Value;
 		// END
-    }
+	}
 }",
 @"	++$c.$Value;
 ", addSkeleton: false);
@@ -1405,16 +1405,16 @@ class C {
 		public void PostfixWorksForDynamicFieldOfNonDynamicObject() {
 			AssertCorrectForBoth(@"
 public class SomeClass {
-    public dynamic Value;
+	public dynamic Value;
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        $c.Value++;
+		$c.Value++;
 		// END
-    }
+	}
 }",
 @"	$c.$Value++;
 ", addSkeleton: false);

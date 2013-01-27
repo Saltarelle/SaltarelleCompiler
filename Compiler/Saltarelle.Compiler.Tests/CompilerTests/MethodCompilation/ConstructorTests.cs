@@ -10,21 +10,21 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class ConstructorTests : CompilerTestBase {
-        protected IMethod Constructor { get; private set; }
-        protected MethodCompiler MethodCompiler { get; private set; }
-        protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
+		protected IMethod Constructor { get; private set; }
+		protected MethodCompiler MethodCompiler { get; private set; }
+		protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
 
-        protected void Compile(string source, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
-            Compile(new[] { source }, metadataImporter: metadataImporter, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
+		protected void Compile(string source, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
+			Compile(new[] { source }, metadataImporter: metadataImporter, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
 				if (m.IsConstructor && (m.Attributes.Any() || useFirstConstructor)) {
 					Constructor = m;
 					MethodCompiler = mc;
 					CompiledConstructor = res;
 				}
-            });
+			});
 
 			Assert.That(Constructor, Is.Not.Null, "No constructors with attributes were compiled.");
-        }
+		}
 
 		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, bool useFirstConstructor = false) {
 			Compile(csharp, metadataImporter, useFirstConstructor: useFirstConstructor);
@@ -698,8 +698,8 @@ class C {
 }", useFirstConstructor: true);
 		}
 
-        [Test]
-        public void InstanceFieldWithoutInitializerIsInitializedToDefault() {
+		[Test]
+		public void InstanceFieldWithoutInitializerIsInitializedToDefault() {
 			AssertCorrect(
 @"class C {
 	int i;
@@ -713,10 +713,10 @@ class C {
 	this.$s = $Default({def_String});
 	this.$o = $Default({def_Object});
 }", useFirstConstructor: true);
-        }
+		}
 
-        [Test]
-        public void InstanceFieldInitializedToDefaultValueForTypeParamWorks() {
+		[Test]
+		public void InstanceFieldInitializedToDefaultValueForTypeParamWorks() {
 			AssertCorrect(
 @"class C<T> {
 	T t1, t2 = default(T);
@@ -725,10 +725,10 @@ class C {
 	this.$t1 = $Default(def_$T);
 	this.$t2 = $Default(def_$T);
 }", useFirstConstructor: true);
-        }
+		}
 
-        [Test]
-        public void InstanceFieldInitializedToDefaultValueForReferenceTypeParamWorks() {
+		[Test]
+		public void InstanceFieldInitializedToDefaultValueForReferenceTypeParamWorks() {
 			AssertCorrect(
 @"class C<T> where T : class {
 	T t1, t2 = default(T);
@@ -737,10 +737,10 @@ class C {
 	this.$t1 = $Default(def_$T);
 	this.$t2 = $Default(def_$T);
 }", useFirstConstructor: true);
-        }
+		}
 
-        [Test]
-        public void InitializingAnInstanceFieldToALambdaWorks() {
+		[Test]
+		public void InitializingAnInstanceFieldToALambdaWorks() {
 			AssertCorrect(
 @"class C {
 	System.Func<int, string> f1 = x => ""A"";
@@ -758,7 +758,7 @@ class C {
 		return 'C';
 	};
 }", useFirstConstructor: true);
-        }
+		}
 
 		[Test]
 		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {

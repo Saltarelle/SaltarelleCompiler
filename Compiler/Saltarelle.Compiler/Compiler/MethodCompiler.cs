@@ -14,7 +14,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.Compiler {
-    public class MethodCompiler {
+	public class MethodCompiler {
 		private class ThisReplacer : RewriterVisitorBase<object> {
 			private readonly JsExpression _replaceWith;
 
@@ -83,39 +83,39 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-        private readonly IMetadataImporter _metadataImporter;
+		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
-        private readonly IErrorReporter _errorReporter;
-        private readonly ICompilation _compilation;
-        private readonly CSharpAstResolver _resolver;
-    	private readonly IRuntimeLibrary _runtimeLibrary;
+		private readonly IErrorReporter _errorReporter;
+		private readonly ICompilation _compilation;
+		private readonly CSharpAstResolver _resolver;
+		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly ISet<string> _definedSymbols;
 
-    	internal IDictionary<IVariable, VariableData> variables;
-        internal NestedFunctionData nestedFunctionsRoot;
+		internal IDictionary<IVariable, VariableData> variables;
+		internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 		private ISet<string> _usedNames;
 		private string _thisAlias;
 
-        public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
-            _metadataImporter = metadataImporter;
+		public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
+			_metadataImporter = metadataImporter;
 			_namer            = namer;
-            _errorReporter    = errorReporter;
-            _compilation      = compilation;
-            _resolver         = resolver;
-        	_runtimeLibrary   = runtimeLibrary;
+			_errorReporter    = errorReporter;
+			_compilation      = compilation;
+			_resolver         = resolver;
+			_runtimeLibrary   = runtimeLibrary;
 			_definedSymbols   = definedSymbols;
-        }
+		}
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, string thisAlias) {
 			_thisAlias = thisAlias;
-            _usedNames = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
+			_usedNames = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
 			if (entity != null) {
 				var x = new VariableGatherer(_resolver, _namer, _errorReporter).GatherVariables(entity, method, _usedNames);
 				variables  = x.Item1;
 				_usedNames = x.Item2;
 			}
-            nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
+			nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
 			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, _definedSymbols);
@@ -139,7 +139,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument, smt, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
 		}
 
-        public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
+		public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
 			var region = _errorReporter.Region = ctor != null ? ctor.GetRegion() : constructor.DeclaringTypeDefinition.Region;
 			try {
 				CreateCompilationContext(ctor, constructor, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
@@ -195,35 +195,35 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.InternalError(ex);
 				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 			}
-        }
+		}
 
-        public JsFunctionDefinitionExpression CompileDefaultConstructor(IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
-            return CompileConstructor(null, constructor, instanceInitStatements, impl);
-        }
+		public JsFunctionDefinitionExpression CompileDefaultConstructor(IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
+			return CompileConstructor(null, constructor, instanceInitStatements, impl);
+		}
 
-        public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
+		public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
 			_errorReporter.Region = region;
 			try {
-	            CreateCompilationContext(expression, null, null);
-		        return _statementCompiler.CompileFieldInitializer(region, field, expression);
+				CreateCompilationContext(expression, null, null);
+				return _statementCompiler.CompileFieldInitializer(region, field, expression);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
-        }
+		}
 
-        public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
+		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
 			_errorReporter.Region = region;
 			try {
-	            CreateCompilationContext(null, null, null);
-		        return _statementCompiler.CompileDefaultFieldInitializer(region, field, type);
+				CreateCompilationContext(null, null, null);
+				return _statementCompiler.CompileDefaultFieldInitializer(region, field, type);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
-        }
+		}
 
 		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, PropertyScriptSemantics impl, string backingFieldName) {
 			try {
@@ -343,5 +343,5 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			return result ?? new List<JsStatement>();
 		}
-    }
+	}
 }

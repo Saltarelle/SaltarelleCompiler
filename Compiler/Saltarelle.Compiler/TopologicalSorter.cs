@@ -62,7 +62,7 @@ namespace Saltarelle.Compiler {
 					_result.Add(scc);
 				}
 			}
-        }
+		}
 
 		public static IList<IList<T>> FindAndTopologicallySortStronglyConnectedComponents<T>(IEnumerable<T> source, IEnumerable<Tuple<T, T>> edges, IEqualityComparer<T> comparer = null) {
 			var result = new Algorithm<T>(edges.ToLookup(e => e.Item1, e => e.Item2), comparer).MainLoop(source);

@@ -264,17 +264,17 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-        public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
+		public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
 			SetRegion(region);
 			try {
-	            var result = _expressionCompiler.Compile(ResolveWithConversion(expression), true);
-		        return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
+				var result = _expressionCompiler.Compile(ResolveWithConversion(expression), true);
+				return result.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(field, result.Expression)) }).ToList();
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
 				return new JsStatement[0];
 			}
-        }
+		}
 
 		public JsExpression CompileDelegateCombineCall(DomRegion region, JsExpression a, JsExpression b) {
 			SetRegion(region);

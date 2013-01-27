@@ -46,5 +46,5 @@ namespace Saltarelle.Compiler {
 			FindUsedUnusableTypes(types, metadataImporter, s);
 			return s;
 		}
-    }
+	}
 }

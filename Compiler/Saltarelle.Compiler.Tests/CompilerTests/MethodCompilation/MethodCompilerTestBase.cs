@@ -10,22 +10,22 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 {
-    public class MethodCompilerTestBase : CompilerTestBase {
-        protected IMethod Method { get; private set; }
-        protected MethodCompiler MethodCompiler { get; private set; }
-        protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
+	public class MethodCompilerTestBase : CompilerTestBase {
+		protected IMethod Method { get; private set; }
+		protected MethodCompiler MethodCompiler { get; private set; }
+		protected JsFunctionDefinitionExpression CompiledMethod { get; private set; }
 
-        protected void CompileMethod(string source, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, IEnumerable<IAssemblyReference> references = null, bool allowUserDefinedStructs = false) {
-            Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, metadataImporter: metadataImporter, namer: namer, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
+		protected void CompileMethod(string source, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, string methodName = "M", bool addSkeleton = true, IEnumerable<IAssemblyReference> references = null, bool allowUserDefinedStructs = false) {
+			Compile(new[] { addSkeleton ? "using System; class C { " + source + "}" : source }, metadataImporter: metadataImporter, namer: namer, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
 				if (m.Name == methodName) {
 					Method = m;
 					MethodCompiler = mc;
 					CompiledMethod = res;
 				}
-            }, references: references, allowUserDefinedStructs: allowUserDefinedStructs);
+			}, references: references, allowUserDefinedStructs: allowUserDefinedStructs);
 
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
-        }
+		}
 
 		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<IAssemblyReference> references = null, string methodName = "M", bool allowUserDefinedStructs = false) {
 			CompileMethod(csharp, metadataImporter: metadataImporter ?? new MockMetadataImporter {
@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
 						return PropertyScriptSemantics.Field("$" + p.Name);
 					else
-				        return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + p.Name), MethodScriptSemantics.NormalMethod("set_$" + p.Name));
+						return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + p.Name), MethodScriptSemantics.NormalMethod("set_$" + p.Name));
 				},
 				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
 				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
@@ -87,5 +87,5 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 			MethodCompiler = null;
 			CompiledMethod = null;
 		}
-    }
+	}
 }

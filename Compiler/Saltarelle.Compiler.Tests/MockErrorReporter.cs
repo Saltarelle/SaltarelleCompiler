@@ -62,10 +62,10 @@ namespace Saltarelle.Compiler.Tests {
 		private readonly bool _logToConsole;
 		public List<Message> AllMessages { get; set; }
 
-        public MockErrorReporter(bool logToConsole = false) {
-        	_logToConsole = logToConsole;
-        	AllMessages   = new List<Message>();
-        }
+		public MockErrorReporter(bool logToConsole = false) {
+			_logToConsole = logToConsole;
+			AllMessages   = new List<Message>();
+		}
 
 		public DomRegion Region { get; set; }
 

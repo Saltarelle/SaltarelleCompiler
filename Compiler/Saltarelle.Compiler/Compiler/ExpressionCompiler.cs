@@ -1465,10 +1465,10 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-        public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
+		public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, bool returnValueIsImportant) {
 			var targetType = UnpackNullable(rr.TargetType);
 			return _runtimeLibrary.TypeIs(VisitResolveResult(rr.Input, returnValueIsImportant), rr.Input.Type, targetType);
-        }
+		}
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
 			_errorReporter.InternalError("Resolve result " + rr.ToString() + " should have been handled in method call.");

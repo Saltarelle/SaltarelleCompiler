@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class AutoPropertyAccessorCompilationTests : CompilerTestBase {
 		[Test]
 		public void InstanceAutoPropertyAccessorsImplementedAsInstanceMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" });
+			Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" });
 
 			var getter = FindInstanceMethod("C.get_MyProperty");
 			var setter = FindInstanceMethod("C.set_MyProperty");
@@ -31,7 +31,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void InstanceAutoPropertyAccessorsImplementedAsStaticMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name)) });
+			Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name)) });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
@@ -54,7 +54,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void StaticAutoPropertyAccessorsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public static int MyProperty { get; set; } }" });
+			Compile(new[] { "using System; class C { public static int MyProperty { get; set; } }" });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void StaticAutoPropertyAccessorsAreCorrectlyCompiledForGenericClasses() {
-            Compile(new[] { "using System; class C<T> { public static int MyProperty { get; set; } }" });
+			Compile(new[] { "using System; class C<T> { public static int MyProperty { get; set; } }" });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");

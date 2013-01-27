@@ -533,16 +533,16 @@ class D : B {
 		public void AssignmentToDynamicPropertyOfNonDynamicObject() {
 			AssertCorrect(@"
 public class SomeClass {
-    public dynamic Value { get; set; }
+	public dynamic Value { get; set; }
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        c.Value = 1;
+		c.Value = 1;
 		// END
-    }
+	}
 }",
 @"	$c.set_$Value(1);
 ", addSkeleton: false);
@@ -552,16 +552,16 @@ class C {
 		public void AssignmentToDynamicFieldOfNonDynamicObject() {
 			AssertCorrect(@"
 public class SomeClass {
-    public dynamic Value;
+	public dynamic Value;
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        $c.Value = 1;
+		$c.Value = 1;
 		// END
-    }
+	}
 }",
 @"	$c.$Value = 1;
 ", addSkeleton: false);

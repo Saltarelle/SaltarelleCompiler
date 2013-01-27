@@ -8,12 +8,12 @@ namespace Saltarelle.Compiler {
 		Warning
 	}
 
-    public interface IErrorReporter {
+	public interface IErrorReporter {
 		DomRegion Region { get; set; }
 		void Message(MessageSeverity severity, int code, string message, params object[] args);
 		void InternalError(string text);
 		void InternalError(Exception ex, string additionalText = null);
-    }
+	}
 
 	public static class ErrorReporterExtensions {
 		public static void Message(this IErrorReporter reporter, int code, params object[] args) {

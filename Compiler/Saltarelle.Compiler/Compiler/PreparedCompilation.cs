@@ -39,26 +39,26 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public static PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references, IList<string> defineConstants) {
-            IProjectContent project = new CSharpProjectContent();
+			IProjectContent project = new CSharpProjectContent();
 
-            var files = sourceFiles.Select(f => { 
-                                                    using (var rdr = f.Open()) {
-                                                        var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.Filename);
-                                                        var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
-                                                        syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
-                                                        var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
-                                                        return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
-                                                    }
-                                                }).ToList();
+			var files = sourceFiles.Select(f => { 
+			                                        using (var rdr = f.Open()) {
+			                                            var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.Filename);
+			                                            var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
+			                                            syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
+			                                            var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
+			                                            return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
+			                                        }
+			                                    }).ToList();
 
-            foreach (var f in files) {
-                var tcv = new TypeSystemConvertVisitor(f.ParsedFile);
-                f.SyntaxTree.AcceptVisitor(tcv);
-                project = project.AddOrUpdateFiles(f.ParsedFile);
-            }
-            project = project.AddAssemblyReferences(references);
+			foreach (var f in files) {
+				var tcv = new TypeSystemConvertVisitor(f.ParsedFile);
+				f.SyntaxTree.AcceptVisitor(tcv);
+				project = project.AddOrUpdateFiles(f.ParsedFile);
+			}
+			project = project.AddAssemblyReferences(references);
 
-            return new PreparedCompilation(project.CreateCompilation(), files);
+			return new PreparedCompilation(project.CreateCompilation(), files);
 		}
 	}
 }

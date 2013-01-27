@@ -5,19 +5,19 @@ using Saltarelle.Compiler.JSModel.Expressions;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	[TestFixture]
 	public class ParametersUsingByRefSemanticsTests : MethodCompilerTestBase {
-        protected void AssertCorrectConstructor(string source, string expected, string className) {
+		protected void AssertCorrectConstructor(string source, string expected, string className) {
 			JsExpression compiledConstructor = null;
-            Compile(new[] { source }, methodCompiled: (m, res, mc) => {
+			Compile(new[] { source }, methodCompiled: (m, res, mc) => {
 				if (m.IsConstructor && m.DeclaringType.FullName == className) {
 					compiledConstructor = res;
 				}
-            });
+			});
 
 			Assert.That(compiledConstructor, Is.Not.Null, "No constructor was compiled.");
 
 			string actual = OutputFormatter.Format(compiledConstructor, allowIntermediates: true);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
-        }
+		}
 
 		[Test]
 		public void ParametersUsingByRefSemanticsAreConvertedAtTheTopOfMethods() {

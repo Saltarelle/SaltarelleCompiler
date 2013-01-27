@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class AutoEventAccessorCompilationTests : CompilerTestBase {
 		[Test]
 		public void InstanceAutoEventAccessorsImplementedAsInstanceMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" });
+			Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" });
 
 			var adder   = FindInstanceMethod("C.add_MyEvent");
 			var remover = FindInstanceMethod("C.remove_MyEvent");
@@ -31,7 +31,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void InstanceAutoEventAccessorsImplementedAsStaticMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("add_" + e.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("remove_" + e.Name)) });
+			Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("add_" + e.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("remove_" + e.Name)) });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
@@ -54,7 +54,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void StaticAutoEventAccessorsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public static event System.EventHandler MyEvent; }" });
+			Compile(new[] { "using System; class C { public static event System.EventHandler MyEvent; }" });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
@@ -76,7 +76,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void StaticAutoEventAccessorsAreCorrectlyCompiledForGenericClasses() {
-            Compile(new[] { "using System; class C<T> { public static event System.EventHandler MyEvent; }" });
+			Compile(new[] { "using System; class C<T> { public static event System.EventHandler MyEvent; }" });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");

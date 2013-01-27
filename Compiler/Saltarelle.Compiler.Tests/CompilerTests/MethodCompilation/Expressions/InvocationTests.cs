@@ -109,15 +109,15 @@ public void M() {
 		public void InvokingBaseStaticMemberFromDerivedClassWorks() {
 			AssertCorrect(@"
 public class Class1 {
-    public static void Test1() {}
+	public static void Test1() {}
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1();
+		Test1();
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1();
 ", addSkeleton: false);
@@ -127,18 +127,18 @@ public class Class2 : Class1 {
 		public void InvokingBaseStaticMemberThroughDerivedClassWorks() {
 			AssertCorrect(@"
 public class Class1 {
-    public static void Test1() {}
+	public static void Test1() {}
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1();
+		Class2.Test1();
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1();
 ", addSkeleton: false);

@@ -937,7 +937,7 @@ public void M() {
 		public void ObjectInitializersWithTypeParameters() {
 			AssertCorrect(
 @"public class X {
-    public string A;
+	public string A;
 }
 public void M<T>(string a) where T : X, new() {
 	// BEGIN

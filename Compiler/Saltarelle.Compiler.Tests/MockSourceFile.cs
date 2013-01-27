@@ -6,20 +6,20 @@ using System.Text;
 
 namespace Saltarelle.Compiler.Tests {
 	public class MockSourceFile : ISourceFile {
-        private readonly string _filename;
-        private readonly string _content;
+		private readonly string _filename;
+		private readonly string _content;
 
-        public MockSourceFile(string filename, string content) {
-            _filename = filename;
-            _content  = content;
-        }
+		public MockSourceFile(string filename, string content) {
+			_filename = filename;
+			_content  = content;
+		}
 
-        public string Filename {
-            get { return _filename; }
-        }
+		public string Filename {
+			get { return _filename; }
+		}
 
-        public TextReader Open() {
-            return new StringReader(_content);
-        }
+		public TextReader Open() {
+			return new StringReader(_content);
+		}
 	}
 }
