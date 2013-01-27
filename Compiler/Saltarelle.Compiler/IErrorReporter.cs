@@ -16,11 +16,8 @@ namespace Saltarelle.Compiler {
 	}
 
 	public static class ErrorReporterExtensions {
-		public static void Message(this IErrorReporter reporter, int code, params object[] args) {
-			var msg = Messages.Get(code);
-			if (msg == null)
-				reporter.InternalError("Message " + code + " does not exist" + (args.Length > 0 ? " (arguments were " + string.Join(", ", args) + ")" : "") + ".");
-			reporter.Message(msg.Item1, code, msg.Item2, args);
+		public static void Message(this IErrorReporter reporter, Tuple<int, MessageSeverity, string> message, params object[] args) {
+			reporter.Message(message.Item2, message.Item1, message.Item3, args);
 		}
 
 		public static void InternalError(this IErrorReporter reporter, Exception ex, string additionalText = null) {

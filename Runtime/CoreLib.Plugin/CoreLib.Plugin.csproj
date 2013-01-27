@@ -57,6 +57,7 @@
       <Link>ScriptMetadata.cs</Link>
     </Compile>
     <Compile Include="Linker.cs" />
+    <Compile Include="Messages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MetadataImporter.cs" />
     <Compile Include="MetadataUtils.cs" />

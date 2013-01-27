@@ -136,7 +136,7 @@ namespace CoreLib.Plugin {
 
 		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (sourceType.IsKnownType(KnownTypeCode.Char))
-				_errorReporter.Message(7700);
+				_errorReporter.Message(Messages._7700);
 			return expression;
 		}
 

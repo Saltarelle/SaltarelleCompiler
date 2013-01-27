@@ -242,7 +242,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				var rr = _resolver.Resolve(initializer);
 				if (rr is DynamicInvocationResolveResult) {
-					_errorReporter.Message(7998, initializer.ConstructorInitializerType == ConstructorInitializerType.Base ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
+					_errorReporter.Message(Messages._7998, initializer.ConstructorInitializerType == ConstructorInitializerType.Base ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
 					return new JsStatement[0];
 				}
 				else {

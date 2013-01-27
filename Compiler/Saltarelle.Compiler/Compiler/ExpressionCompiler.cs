@@ -98,7 +98,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				if (impl.ExpandParams && !isExpandedForm) {
-					_errorReporter.Message(7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
+					_errorReporter.Message(Messages._7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 
 				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, TypeContext.InvokeConstructor), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
@@ -115,19 +115,19 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						_errorReporter.Message(7503);
+						_errorReporter.Message(Messages._7503);
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						_errorReporter.Message(7504);
+						_errorReporter.Message(Messages._7504);
 						break;
 
 					case ConstructorScriptSemantics.ImplType.Json:
-						_errorReporter.Message(7532);
+						_errorReporter.Message(Messages._7532);
 						break;
 
 					default:
-						_errorReporter.Message(7505);
+						_errorReporter.Message(Messages._7505);
 						break;
 				}
 			}
@@ -169,7 +169,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Null;
 			}
 			if (unusable) {
-				_errorReporter.Message(7536, tp.Name, tp.OwnerType == EntityType.TypeDefinition ? "type" : "method", tp.OwnerType == EntityType.TypeDefinition ? _methodBeingCompiled.DeclaringTypeDefinition.FullName : _methodBeingCompiled.FullName);
+				_errorReporter.Message(Messages._7536, tp.Name, tp.OwnerType == EntityType.TypeDefinition ? "type" : "method", tp.OwnerType == EntityType.TypeDefinition ? _methodBeingCompiled.DeclaringTypeDefinition.FullName : _methodBeingCompiled.FullName);
 				return JsExpression.Null;
 			}
 			return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
@@ -350,7 +350,7 @@ namespace Saltarelle.Compiler.Compiler {
 						case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
 							if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.NativeIndexer) {
 								if (!property.IsIndexer || property.Getter.Parameters.Count != 1) {
-									_errorReporter.Message(7506);
+									_errorReporter.Message(Messages._7506);
 									return JsExpression.Null;
 								}
 								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
@@ -405,7 +405,7 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 
 						default: {
-							_errorReporter.Message(7507, property.DeclaringType.FullName + "." + property.Name);
+							_errorReporter.Message(Messages._7507, property.DeclaringType.FullName + "." + property.Name);
 							return JsExpression.Null;
 						}
 					}
@@ -417,10 +417,10 @@ namespace Saltarelle.Compiler.Compiler {
 						case FieldScriptSemantics.ImplType.Field:
 							return CompileCompoundFieldAssignment(mrr, otherOperand, impl.Name, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 						case FieldScriptSemantics.ImplType.Constant:
-							_errorReporter.Message(7508, field.DeclaringType.FullName + "." + field.Name);
+							_errorReporter.Message(Messages._7508, field.DeclaringType.FullName + "." + field.Name);
 							return JsExpression.Null;
 						default:
-							_errorReporter.Message(7509, field.DeclaringType.FullName + "." + field.Name);
+							_errorReporter.Message(Messages._7509, field.DeclaringType.FullName + "." + field.Name);
 							return JsExpression.Null;
 					}
 				}
@@ -542,7 +542,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, target.TargetResult, new[] { value }, new[] { 0 }, target.IsVirtualCall, false);
 				}
 				default:
-					_errorReporter.Message(7511, evt.DeclaringType.FullName + "." + evt.Name);
+					_errorReporter.Message(Messages._7511, evt.DeclaringType.FullName + "." + evt.Name);
 					return JsExpression.Null;
 			}
 		}
@@ -856,7 +856,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Member(rr.Member.IsStatic ? GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(rr.TargetResult, false), impl.FieldName);
 					}
 					default: {
-						_errorReporter.Message(7512, rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
+						_errorReporter.Message(Messages._7512, rr.Member.DeclaringType.FullName + "." + rr.Member.Name);
 						return JsExpression.Null;
 					}
 				}
@@ -869,14 +869,14 @@ namespace Saltarelle.Compiler.Compiler {
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
-						_errorReporter.Message(7509, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
+						_errorReporter.Message(Messages._7509, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
 						return JsExpression.Null;
 				}
 			}
 			else if (rr.Member is IEvent) {
 				var eimpl = _metadataImporter.GetEventSemantics((IEvent)rr.Member);
 				if (eimpl.Type == EventScriptSemantics.ImplType.NotUsableFromScript) {
-					_errorReporter.Message(7511, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
+					_errorReporter.Message(Messages._7511, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
 					return JsExpression.Null;
 				}
 
@@ -965,7 +965,7 @@ namespace Saltarelle.Compiler.Compiler {
 						expressions.Add(CompileLocal(((LocalResolveResult)r.ElementResult).Variable, true));
 					}
 					else {
-						_errorReporter.Message(7513);
+						_errorReporter.Message(Messages._7513);
 						expressions.Add(JsExpression.Null);
 					}
 				}
@@ -1021,7 +1021,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall, bool isExpandedForm) {
 			if (impl != null && impl.ExpandParams && !isExpandedForm) {
-				_errorReporter.Message(7514, method.DeclaringType.FullName + "." + method.Name);
+				_errorReporter.Message(Messages._7514, method.DeclaringType.FullName + "." + method.Name);
 			}
 			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? GetScriptType(method.DeclaringType, TypeContext.UseStaticMember) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && method.TypeParameters.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
@@ -1033,7 +1033,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var unusableTypes = Utils.FindUsedUnusableTypes(typeArguments, _metadataImporter).ToList();
 			if (unusableTypes.Count > 0) {
 				foreach (var ut in unusableTypes)
-					_errorReporter.Message(7515, ut.FullName, method.DeclaringType.FullName + "." + method.Name);
+					_errorReporter.Message(Messages._7515, ut.FullName, method.DeclaringType.FullName + "." + method.Name);
 				return JsExpression.Null;
 			}
 
@@ -1077,17 +1077,17 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
 
 				default: {
-					_errorReporter.Message(7516, method.DeclaringType.FullName + "." + method.Name);
+					_errorReporter.Message(Messages._7516, method.DeclaringType.FullName + "." + method.Name);
 					return JsExpression.Null;
 				}
 			}
 		}
 
 		private JsExpression CompileInlineCodeMethodInvocation(IMethod method, string code, JsExpression @this, IList<JsExpression> arguments, bool isParamArrayExpanded) {
-			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(7525, s));
+			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(Messages._7525, s));
 			if (tokens == null)
 				return JsExpression.Null;
-			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, r => r.Resolve(_compilation), (t, c) => GetScriptType(t, c), isParamArrayExpanded, s => _errorReporter.Message(7525, s));
+			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, r => r.Resolve(_compilation), (t, c) => GetScriptType(t, c), isParamArrayExpanded, s => _errorReporter.Message(Messages._7525, s));
 		}
 
 		private string GetMemberNameForJsonConstructor(IMember member) {
@@ -1097,7 +1097,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return currentImpl.FieldName;
 				}
 				else {
-					_errorReporter.Message(7517, member.DeclaringType.FullName + "." + member.Name);
+					_errorReporter.Message(Messages._7517, member.DeclaringType.FullName + "." + member.Name);
 					return null;
 				}
 			}
@@ -1107,7 +1107,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return currentImpl.Name;
 				}
 				else {
-					_errorReporter.Message(7518, member.DeclaringType.FullName + "." + member.Name);
+					_errorReporter.Message(Messages._7518, member.DeclaringType.FullName + "." + member.Name);
 					return null;
 				}
 			}
@@ -1139,7 +1139,7 @@ namespace Saltarelle.Compiler.Compiler {
 					string name = GetMemberNameForJsonConstructor(member);
 					if (name != null) {
 						if (jsPropertyNames.Contains(name)) {
-							_errorReporter.Message(7527, member.Name);
+							_errorReporter.Message(Messages._7527, member.Name);
 						}
 						else {
 							jsPropertyNames.Add(name);
@@ -1191,14 +1191,14 @@ namespace Saltarelle.Compiler.Compiler {
 			var typeToConstruct = method.DeclaringType;
 			var typeToConstructDef = typeToConstruct.GetDefinition();
 			if (typeToConstructDef != null && _metadataImporter.GetTypeSemantics(typeToConstructDef).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_errorReporter.Message(7519, typeToConstruct.FullName);
+				_errorReporter.Message(Messages._7519, typeToConstruct.FullName);
 				return JsExpression.Null;
 			}
 			if (typeToConstruct is ParameterizedType) {
 				var unusableTypes = Utils.FindUsedUnusableTypes(((ParameterizedType)typeToConstruct).TypeArguments, _metadataImporter).ToList();
 				if (unusableTypes.Count > 0) {
 					foreach (var ut in unusableTypes)
-						_errorReporter.Message(7520, ut.FullName, typeToConstructDef.FullName);
+						_errorReporter.Message(Messages._7520, ut.FullName, typeToConstructDef.FullName);
 					return JsExpression.Null;
 				}
 			}
@@ -1208,7 +1208,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				if (impl.ExpandParams && !isExpandedForm) {
-					_errorReporter.Message(7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
+					_errorReporter.Message(Messages._7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor ? TypeContext.InvokeConstructor : TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 
@@ -1232,7 +1232,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					default:
-						_errorReporter.Message(7505);
+						_errorReporter.Message(Messages._7505);
 						return JsExpression.Null;
 				}
 
@@ -1250,7 +1250,7 @@ namespace Saltarelle.Compiler.Compiler {
 					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringTypeDefinition);
 
 					if (sem.ExpandParams && !isExpandedForm) {
-						_errorReporter.Message(7534, member.DeclaringType.FullName);
+						_errorReporter.Message(Messages._7534, member.DeclaringType.FullName);
 					}
 					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap, sem.ExpandParams && isExpandedForm);
 
@@ -1399,13 +1399,13 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
 			if (_nestedFunctionContext != null && _nestedFunctionContext.ExpandParamsVariables.Contains(rr.Variable)) {
-				_errorReporter.Message(7521, rr.Variable.Name);
+				_errorReporter.Message(Messages._7521, rr.Variable.Name);
 			}
 			else if (rr.Variable is IParameter && ((IParameter)rr.Variable).IsParams) {
 				if (_methodBeingCompiled != null) {
 				    var impl = _metadataImporter.GetMethodSemantics(_methodBeingCompiled);
 				    if (impl.ExpandParams) {
-				        _errorReporter.Message(7521, rr.Variable.Name);
+				        _errorReporter.Message(Messages._7521, rr.Variable.Name);
 				    }
 				}
 			}
@@ -1417,7 +1417,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var unusableTypes = Utils.FindUsedUnusableTypes(new[] { rr.ReferencedType }, _metadataImporter).ToList();
 			if (unusableTypes.Count > 0) {
 				foreach (var ut in unusableTypes)
-					_errorReporter.Message(7522, ut.FullName);
+					_errorReporter.Message(Messages._7522, ut.FullName);
 				return JsExpression.Null;
 			}
 			else
@@ -1617,7 +1617,7 @@ namespace Saltarelle.Compiler.Compiler {
 					var sem1 = _metadataImporter.GetDelegateSemantics(mgrr.TargetResult.Type.GetDefinition());
 					var sem2 = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 					if (sem1.BindThisToFirstParameter != sem2.BindThisToFirstParameter) {
-						_errorReporter.Message(7533, mgrr.TargetType.FullName, rr.Type.FullName);
+						_errorReporter.Message(Messages._7533, mgrr.TargetType.FullName, rr.Type.FullName);
 						return JsExpression.Null;
 					}
 
@@ -1626,11 +1626,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var methodSemantics = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);
 				if (methodSemantics.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-					_errorReporter.Message(7523, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
+					_errorReporter.Message(Messages._7523, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
 					return JsExpression.Null;
 				}
 				else if (methodSemantics.ExpandParams  != delegateSemantics.ExpandParams) {
-					_errorReporter.Message(7524, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name, rr.Type.FullName);
+					_errorReporter.Message(Messages._7524, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name, rr.Type.FullName);
 					return JsExpression.Null;
 				}
 
@@ -1679,14 +1679,14 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitDynamicInvocationResolveResult(DynamicInvocationResolveResult rr, bool data) {
 			if (rr.InvocationType == DynamicInvocationType.ObjectCreation) {
 				if (rr.Arguments.Any(arg => arg is NamedArgumentResolveResult)) {
-					_errorReporter.Message(7526);
+					_errorReporter.Message(Messages._7526);
 					return JsExpression.Null;
 				}
 				var methods = ((MethodGroupResolveResult)rr.Target).Methods.ToList();
 				var semantics = methods.Select(_metadataImporter.GetConstructorSemantics).ToList();
 
 				if (semantics.Select(s => s.Type).Distinct().Count() > 1) {
-					_errorReporter.Message(7531);
+					_errorReporter.Message(Messages._7531);
 					return JsExpression.Null;
 				}
 				switch (semantics[0].Type) {
@@ -1696,13 +1696,13 @@ namespace Saltarelle.Compiler.Compiler {
 					case ConstructorScriptSemantics.ImplType.NamedConstructor:
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
 						if (semantics.Select(s => s.Name).Distinct().Count() > 1) {
-							_errorReporter.Message(7531);
+							_errorReporter.Message(Messages._7531);
 							return JsExpression.Null;
 						}
 						break;
 
 					default:
-						_errorReporter.Message(7531);
+						_errorReporter.Message(Messages._7531);
 						return JsExpression.Null;
 				}
 
@@ -1710,7 +1710,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				if (rr.InvocationType == DynamicInvocationType.Indexing && rr.Arguments.Count != 1) {
-					_errorReporter.Message(7528);
+					_errorReporter.Message(Messages._7528);
 					return JsExpression.Null;
 				}
 
@@ -1719,11 +1719,11 @@ namespace Saltarelle.Compiler.Compiler {
 					var mgrr = (MethodGroupResolveResult)rr.Target;
 					var impl = mgrr.Methods.Select(_metadataImporter.GetMethodSemantics).ToList();
 					if (impl.Any(x => x.Type != MethodScriptSemantics.ImplType.NormalMethod)) {
-						_errorReporter.Message(7530);
+						_errorReporter.Message(Messages._7530);
 						return JsExpression.Null;
 					}
 					if (impl.Any(x => x.Name != impl[0].Name)) {
-						_errorReporter.Message(7529);
+						_errorReporter.Message(Messages._7529);
 						return JsExpression.Null;
 					}
 					var target = mgrr.TargetResult is TypeResolveResult ? _runtimeLibrary.GetScriptType(mgrr.TargetResult.Type, TypeContext.UseStaticMember, ResolveTypeParameter) : InnerCompile(mgrr.TargetResult, false);
@@ -1735,7 +1735,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				foreach (var arg in rr.Arguments) {
 					if (arg is NamedArgumentResolveResult) {
-						_errorReporter.Message(7526);
+						_errorReporter.Message(Messages._7526);
 						return JsExpression.Null;
 					}
 					expressions.Add(InnerCompile(arg, false, expressions));
@@ -1778,7 +1778,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(rr.OnCompletedMethod);
 	
 				if (onCompletedMethodImpl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-					_errorReporter.Message(7535);
+					_errorReporter.Message(Messages._7535);
 					return JsExpression.Null;
 				}
 	

@@ -133,20 +133,20 @@ namespace CoreLib.Plugin {
 			_errorReporter = errorReporter;
 		}
 
-		private void Message(int code, DomRegion r, params object[] additionalArgs) {
+		private void Message(Tuple<int, MessageSeverity, string> message, DomRegion r, params object[] additionalArgs) {
 			_errorReporter.Region = r;
-			_errorReporter.Message(code, additionalArgs);
+			_errorReporter.Message(message, additionalArgs);
 		}
 
-		private void Message(int code, ITypeDefinition t, params object[] additionalArgs) {
+		private void Message(Tuple<int, MessageSeverity, string> message, ITypeDefinition t, params object[] additionalArgs) {
 			_errorReporter.Region = t.Region;
-			_errorReporter.Message(code, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
+			_errorReporter.Message(message, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
 		}
 
-		private void Message(int code, IMember m, params object[] additionalArgs) {
+		private void Message(Tuple<int, MessageSeverity, string> message, IMember m, params object[] additionalArgs) {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
 			_errorReporter.Region = m.Region;
-			_errorReporter.Message(code, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
+			_errorReporter.Message(message, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
 		}
 
 		private string MakeCamelCase(string s) {
@@ -217,7 +217,7 @@ namespace CoreLib.Plugin {
 			var sna = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(typeDefinition);
 			if (ina != null) {
 				if (sna != null) {
-					Message(7001, typeDefinition);
+					Message(Messages._7001, typeDefinition);
 					return typeDefinition.FullName;
 				}
 				else {
@@ -227,7 +227,7 @@ namespace CoreLib.Plugin {
 			else {
 				if (sna != null) {
 					if (sna.Name == null || (sna.Name != "" && !sna.Name.IsValidNestedJavaScriptIdentifier()))
-						Message(7002, typeDefinition);
+						Message(Messages._7002, typeDefinition);
 					return sna.Name;
 				}
 				else {
@@ -262,11 +262,11 @@ namespace CoreLib.Plugin {
 			bool expandParams = AttributeReader.HasAttribute<ExpandParamsAttribute>(delegateDefinition);
 
 			if (bindThisToFirstParameter && delegateDefinition.GetDelegateInvokeMethod().Parameters.Count == 0) {
-				Message(7147, delegateDefinition, delegateDefinition.FullName);
+				Message(Messages._7147, delegateDefinition, delegateDefinition.FullName);
 				bindThisToFirstParameter = false;
 			}
 			if (expandParams && !delegateDefinition.GetDelegateInvokeMethod().Parameters.Any(p => p.IsParams)) {
-				Message(7148, delegateDefinition, delegateDefinition.FullName);
+				Message(Messages._7148, delegateDefinition, delegateDefinition.FullName);
 				expandParams = false;
 			}
 
@@ -299,19 +299,19 @@ namespace CoreLib.Plugin {
 			bool? includeGenericArguments = typeDefinition.TypeParameterCount > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(typeDefinition) : false;
 			if (includeGenericArguments == null) {
 				_errorReporter.Region = typeDefinition.Region;
-				Message(7026, typeDefinition);
+				Message(Messages._7026, typeDefinition);
 				includeGenericArguments = true;
 			}
 
 			if (AttributeReader.HasAttribute<ResourcesAttribute>(typeDefinition)) {
 				if (!typeDefinition.IsStatic) {
-					Message(7003, typeDefinition);
+					Message(Messages._7003, typeDefinition);
 				}
 				else if (typeDefinition.TypeParameterCount > 0) {
-					Message(7004, typeDefinition);
+					Message(Messages._7004, typeDefinition);
 				}
 				else if (typeDefinition.Members.Any(m => !(m is IField && ((IField)m).IsConst))) {
-					Message(7005, typeDefinition);
+					Message(Messages._7005, typeDefinition);
 				}
 			}
 
@@ -322,7 +322,7 @@ namespace CoreLib.Plugin {
 			}
 			else {
 				if (scriptNameAttr != null) {
-					Message(7006, typeDefinition);
+					Message(Messages._7006, typeDefinition);
 				}
 
 				if (_minimizeNames && !typeDefinition.IsExternallyVisible() && !preserveName) {
@@ -337,7 +337,7 @@ namespace CoreLib.Plugin {
 					typeName = GetDefaultTypeName(typeDefinition, !includeGenericArguments.Value);
 					if (typeDefinition.DeclaringTypeDefinition != null) {
 						if (AttributeReader.HasAttribute<IgnoreNamespaceAttribute>(typeDefinition) || AttributeReader.HasAttribute<ScriptNamespaceAttribute>(typeDefinition)) {
-							Message(7007, typeDefinition);
+							Message(Messages._7007, typeDefinition);
 						}
 
 						var declaringName = SplitNamespacedName(GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Name);
@@ -359,46 +359,46 @@ namespace CoreLib.Plugin {
 			if (isSerializable) {
 				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
 				if (!baseClass.Equals(_systemObject) && baseClass.FullName != "System.Record" && !GetTypeSemanticsInternal(baseClass).IsSerializable) {
-					Message(7009, typeDefinition);
+					Message(Messages._7009, typeDefinition);
 					isSerializable = false;
 				}
 				if (typeDefinition.DirectBaseTypes.Any(b => b.Kind == TypeKind.Interface)) {
-					Message(7010, typeDefinition);
+					Message(Messages._7010, typeDefinition);
 					isSerializable = false;
 				}
 				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
-					Message(7011, typeDefinition);
+					Message(Messages._7011, typeDefinition);
 					isSerializable = false;
 				}
 				foreach (var m in typeDefinition.Members.Where(m => m.IsVirtual)) {
-					Message(7023, typeDefinition, m.Name);
+					Message(Messages._7023, typeDefinition, m.Name);
 					isSerializable = false;
 				}
 				foreach (var m in typeDefinition.Members.Where(m => m.IsOverride)) {
-					Message(7024, typeDefinition, m.Name);
+					Message(Messages._7024, typeDefinition, m.Name);
 					isSerializable = false;
 				}
 			}
 			else {
 				var baseClass = typeDefinition.DirectBaseTypes.SingleOrDefault(c => c.Kind == TypeKind.Class);
 				if (baseClass != null && GetTypeSemanticsInternal(baseClass.GetDefinition()).IsSerializable) {
-					Message(7008, typeDefinition, baseClass.FullName);
+					Message(Messages._7008, typeDefinition, baseClass.FullName);
 				}
 
 				var globalMethodsAttr = AttributeReader.ReadAttribute<GlobalMethodsAttribute>(typeDefinition);
 				var mixinAttr = AttributeReader.ReadAttribute<MixinAttribute>(typeDefinition);
 				if (mixinAttr != null) {
 					if (!typeDefinition.IsStatic) {
-						Message(7012, typeDefinition);
+						Message(Messages._7012, typeDefinition);
 					}
 					else if (typeDefinition.Members.Any(m => !(m is IMethod) || ((IMethod)m).IsConstructor)) {
-						Message(7013, typeDefinition);
+						Message(Messages._7013, typeDefinition);
 					}
 					else if (typeDefinition.TypeParameterCount > 0) {
-						Message(7014, typeDefinition);
+						Message(Messages._7014, typeDefinition);
 					}
 					else if (string.IsNullOrEmpty(mixinAttr.Expression)) {
-						Message(7025, typeDefinition);
+						Message(Messages._7025, typeDefinition);
 					}
 					else {
 						var split = SplitNamespacedName(mixinAttr.Expression);
@@ -408,10 +408,10 @@ namespace CoreLib.Plugin {
 				}
 				else if (globalMethodsAttr != null) {
 					if (!typeDefinition.IsStatic) {
-						Message(7015, typeDefinition);
+						Message(Messages._7015, typeDefinition);
 					}
 					else if (typeDefinition.TypeParameterCount > 0) {
-						Message(7017, typeDefinition);
+						Message(Messages._7017, typeDefinition);
 					}
 					else {
 						nmspace  = "";
@@ -478,7 +478,7 @@ namespace CoreLib.Plugin {
 					return DeterminePreferredMemberName(otherMembers[0]);
 				}
 				else {
-					Message(7100, member);
+					Message(Messages._7100, member);
 					return Tuple.Create(member.Name, false);
 				}
 			}
@@ -534,7 +534,7 @@ namespace CoreLib.Plugin {
 					var b2 = baseMembersByType[j];
 					if (!b.Type.GetAllBaseTypeDefinitions().Contains(b2.Type) && !b2.Type.GetAllBaseTypeDefinitions().Contains(b.Type)) {
 						foreach (var dup in b.MemberNames.Where(x => b2.MemberNames.Contains(x))) {
-							Message(7018, typeDefinition, b.Type.FullName, b2.Type.FullName, dup);
+							Message(Messages._7018, typeDefinition, b.Type.FullName, b2.Type.FullName, dup);
 						}
 					}
 				}
@@ -623,7 +623,7 @@ namespace CoreLib.Plugin {
 			}
 
 			if (epa != null && !source.Parameters.Any(p => p.IsParams)) {
-				Message(7102, constructor);
+				Message(Messages._7102, constructor);
 			}
 
 			bool isSerializable = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsSerializable;
@@ -633,7 +633,7 @@ namespace CoreLib.Plugin {
 			if (ica != null) {
 				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, ica.Code, t => t.Resolve(_compilation));
 				if (errors.Count > 0) {
-					Message(7103, source, string.Join(", ", errors));
+					Message(Messages._7103, source, string.Join(", ", errors));
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
@@ -653,7 +653,7 @@ namespace CoreLib.Plugin {
 					foreach (var p in source.Parameters) {
 						IMember member;
 						if (p.IsOut || p.IsRef) {
-							Message(7145, p.Region, p.Name);
+							Message(Messages._7145, p.Region, p.Name);
 							hasError = true;
 						}
 						else if (members.TryGetValue(p.Name.ToLowerInvariant(), out member)) {
@@ -661,19 +661,19 @@ namespace CoreLib.Plugin {
 								parameterToMemberMap.Add(member);
 							}
 							else {
-								Message(7144, p.Region, p.Name, p.Type.FullName, member.ReturnType.FullName);
+								Message(Messages._7144, p.Region, p.Name, p.Type.FullName, member.ReturnType.FullName);
 								hasError = true;
 							}
 						}
 						else {
-							Message(7143, p.Region, source.DeclaringTypeDefinition.FullName, p.Name);
+							Message(Messages._7143, p.Region, source.DeclaringTypeDefinition.FullName, p.Name);
 							hasError = true;
 						}
 					}
 					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap);
 				}
 				else {
-					Message(7146, constructor.Region, source.DeclaringTypeDefinition.FullName);
+					Message(Messages._7146, constructor.Region, source.DeclaringTypeDefinition.FullName);
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 				}
 				return;
@@ -723,10 +723,10 @@ namespace CoreLib.Plugin {
 			}
 			else if (preferredName == "") {
 				if (property.IsIndexer) {
-					Message(7104, property);
+					Message(Messages._7104, property);
 				}
 				else {
-					Message(7105, property);
+					Message(Messages._7105, property);
 				}
 				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
@@ -741,10 +741,10 @@ namespace CoreLib.Plugin {
 
 			if (saa != null) {
 				if (property.IsIndexer) {
-					Message(7106, property.Region);
+					Message(Messages._7106, property.Region);
 				}
 				else if (!property.IsStatic) {
-					Message(7107, property);
+					Message(Messages._7107, property);
 				}
 				else {
 					_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.InlineCode(saa.Alias) : null, property.CanSet ? MethodScriptSemantics.InlineCode(saa.Alias + " = {value}") : null);
@@ -755,27 +755,27 @@ namespace CoreLib.Plugin {
 			if (AttributeReader.HasAttribute<IntrinsicPropertyAttribute>(property)) {
 				if (property.DeclaringType.Kind == TypeKind.Interface) {
 					if (property.IsIndexer)
-						Message(7108, property.Region);
+						Message(Messages._7108, property.Region);
 					else
-						Message(7109, property);
+						Message(Messages._7109, property);
 				}
 				else if (property.IsOverride && GetPropertySemantics((IProperty)InheritanceHelper.GetBaseMember(property).MemberDefinition).Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 					if (property.IsIndexer)
-						Message(7110, property.Region);
+						Message(Messages._7110, property.Region);
 					else
-						Message(7111, property);
+						Message(Messages._7111, property);
 				}
 				else if (property.IsOverridable) {
 					if (property.IsIndexer)
-						Message(7112, property.Region);
+						Message(Messages._7112, property.Region);
 					else
-						Message(7113, property);
+						Message(Messages._7113, property);
 				}
 				else if (property.IsExplicitInterfaceImplementation || property.ImplementedInterfaceMembers.Any(m => GetPropertySemantics((IProperty)m.MemberDefinition).Type != PropertyScriptSemantics.ImplType.NotUsableFromScript)) {
 					if (property.IsIndexer)
-						Message(7114, property.Region);
+						Message(Messages._7114, property.Region);
 					else
-						Message(7115, property);
+						Message(Messages._7115, property);
 				}
 				else if (property.IsIndexer) {
 					if (property.Parameters.Count == 1) {
@@ -783,7 +783,7 @@ namespace CoreLib.Plugin {
 						return;
 					}
 					else {
-						Message(7116, property.Region);
+						Message(Messages._7116, property.Region);
 					}
 				}
 				else {
@@ -846,7 +846,7 @@ namespace CoreLib.Plugin {
 			bool? includeGenericArguments = method.TypeParameters.Count > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(method) : false;
 
 			if (eaa != null && (method.Name != "GetEnumerator" || method.IsStatic || method.TypeParameters.Count > 0 || method.Parameters.Count > 0)) {
-				Message(7151, method);
+				Message(Messages._7151, method);
 				eaa = null;
 			}
 
@@ -856,11 +856,11 @@ namespace CoreLib.Plugin {
 			}
 			if (ioa != null) {
 				if (!method.IsOperator) {
-					Message(7117, method);
+					Message(Messages._7117, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 				}
 				if (method.Name == "op_Implicit" || method.Name == "op_Explicit") {
-					Message(7118, method);
+					Message(Messages._7118, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 				}
 				else {
@@ -874,29 +874,29 @@ namespace CoreLib.Plugin {
 				if (ssa != null) {
 					// [ScriptSkip] - Skip invocation of the method entirely.
 					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-						Message(7119, method);
+						Message(Messages._7119, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
-						Message(7120, method);
+						Message(Messages._7120, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else if (method.IsOverridable) {
-						Message(7121, method);
+						Message(Messages._7121, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else if (interfaceImplementations.Count > 0) {
-						Message(7122, method);
+						Message(Messages._7122, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else {
 						if (method.IsStatic) {
 							if (method.Parameters.Count != 1) {
-								Message(7123, method);
+								Message(Messages._7123, method);
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 								return;
 							}
@@ -905,7 +905,7 @@ namespace CoreLib.Plugin {
 						}
 						else {
 							if (method.Parameters.Count != 0)
-								Message(7124, method);
+								Message(Messages._7124, method);
 							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}", enumerateAsArray: eaa != null);
 							return;
 						}
@@ -917,7 +917,7 @@ namespace CoreLib.Plugin {
 						return;
 					}
 					else {
-						Message(7125, method);
+						Message(Messages._7125, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
@@ -926,17 +926,17 @@ namespace CoreLib.Plugin {
 					string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode ?? ica.Code ?? "";
 
 					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
-						Message(7126, method);
+						Message(Messages._7126, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
-						Message(7127, method);
+						Message(Messages._7127, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
 					else if (method.IsOverridable && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
-						Message(7128, method);
+						Message(Messages._7128, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
@@ -945,7 +945,7 @@ namespace CoreLib.Plugin {
 						if (!string.IsNullOrEmpty(ica.NonVirtualCode))
 							errors.AddRange(InlineCodeMethodCompiler.ValidateLiteralCode(method, ica.NonVirtualCode, t => t.Resolve(_compilation)));
 						if (errors.Count > 0) {
-							Message(7130, method, string.Join(", ", errors));
+							Message(Messages._7130, method, string.Join(", ", errors));
 							code = nonVirtualCode = "X";
 						}
 
@@ -958,15 +958,15 @@ namespace CoreLib.Plugin {
 				else if (ifa != null) {
 					if (method.IsStatic) {
 						if (epa != null && !method.Parameters.Any(p => p.IsParams)) {
-							Message(7137, method);
+							Message(Messages._7137, method);
 						}
 						if (method.Parameters.Count == 0) {
-							Message(7149, method);
+							Message(Messages._7149, method);
 							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 							return;
 						}
 						else if (method.Parameters[0].IsParams) {
-							Message(7150, method);
+							Message(Messages._7150, method);
 							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 							return;
 						}
@@ -985,7 +985,7 @@ namespace CoreLib.Plugin {
 						}
 					}
 					else {
-						Message(7131, method);
+						Message(Messages._7131, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
@@ -993,10 +993,10 @@ namespace CoreLib.Plugin {
 				else {
 					if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						if (nameSpecified) {
-							Message(7132, method);
+							Message(Messages._7132, method);
 						}
 						if (AttributeReader.HasAttribute<IncludeGenericArgumentsAttribute>(method)) {
-							Message(7133, method);
+							Message(Messages._7133, method);
 						}
 
 						var semantics = GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition);
@@ -1007,7 +1007,7 @@ namespace CoreLib.Plugin {
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
 							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
 							if (errorMethod != null) {
-								Message(7134, method, GetQualifiedMemberName(errorMethod));
+								Message(Messages._7134, method, GetQualifiedMemberName(errorMethod));
 							}
 						}
 
@@ -1016,7 +1016,7 @@ namespace CoreLib.Plugin {
 					}
 					else if (interfaceImplementations.Count > 0) {
 						if (nameSpecified) {
-							Message(7135, method);
+							Message(Messages._7135, method);
 						}
 
 						var candidateNames = method.ImplementedInterfaceMembers
@@ -1026,7 +1026,7 @@ namespace CoreLib.Plugin {
 						                           .Distinct();
 
 						if (candidateNames.Count() > 1) {
-							Message(7136, method);
+							Message(Messages._7136, method);
 						}
 
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
@@ -1041,30 +1041,30 @@ namespace CoreLib.Plugin {
 					else {
 						if (includeGenericArguments == null) {
 							_errorReporter.Region = method.Region;
-							Message(7027, method);
+							Message(Messages._7027, method);
 							includeGenericArguments = true;
 						}
 
 						if (epa != null) {
 							if (!method.Parameters.Any(p => p.IsParams)) {
-								Message(7137, method);
+								Message(Messages._7137, method);
 							}
 						}
 
 						if (preferredName == "") {
 							// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
 							if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface) {
-								Message(7138, method);
+								Message(Messages._7138, method);
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 								return;
 							}
 							else if (method.IsOverridable) {
-								Message(7139, method);
+								Message(Messages._7139, method);
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 								return;
 							}
 							else if (method.IsStatic) {
-								Message(7140, method);
+								Message(Messages._7140, method);
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 								return;
 							}
@@ -1095,7 +1095,7 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else if (preferredName == "") {
-				Message(7141, evt);
+				Message(Messages._7141, evt);
 				_eventSemantics[evt] = EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add"), MethodScriptSemantics.NormalMethod("remove"));
 				return;
 			}
@@ -1133,7 +1133,7 @@ namespace CoreLib.Plugin {
 				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();
 			}
 			else if (preferredName == "") {
-				Message(7142, field);
+				Message(Messages._7142, field);
 				_fieldSemantics[field] = FieldScriptSemantics.Field("X");
 			}
 			else {
@@ -1143,7 +1143,7 @@ namespace CoreLib.Plugin {
 						name = null;
 					}
 					else {
-						Message(7152, field);
+						Message(Messages._7152, field);
 					}
 				}
 				else {
@@ -1199,7 +1199,7 @@ namespace CoreLib.Plugin {
 			if (sna != null) {
 				var data = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(sna);
 				if (data.Name == null || (data.Name != "" && !data.Name.IsValidNestedJavaScriptIdentifier())) {
-					Message(7002, sna.Region, "assembly");
+					Message(Messages._7002, sna.Region, "assembly");
 				}
 			}
 

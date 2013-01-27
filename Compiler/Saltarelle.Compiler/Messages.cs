@@ -5,139 +5,53 @@ using System.Text;
 using ICSharpCode.NRefactory;
 
 namespace Saltarelle.Compiler {
-	internal static class Messages {
-		private static Dictionary<int, Tuple<MessageSeverity, string>> _allMessages = new Dictionary<int, Tuple<MessageSeverity, string>> {
-			{ 7001, Tuple.Create(MessageSeverity.Error, "The type {0} has both [IgnoreNamespace] and [ScriptNamespace] specified. At most one of these attributes can be specified for a type.") },
-			{ 7002, Tuple.Create(MessageSeverity.Error, "{0}: The argument for [ScriptNamespace] must be a valid JavaScript qualified identifier, or be blank.") },
-			{ 7003, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it is not static.") },
-			{ 7004, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it is generic.") },
-			{ 7005, Tuple.Create(MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it contains members that are not const fields.") },
-			{ 7006, Tuple.Create(MessageSeverity.Error, "{0}: The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.") },
-			{ 7007, Tuple.Create(MessageSeverity.Error, "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type {0}.") },
-			{ 7008, Tuple.Create(MessageSeverity.Error, "The non-serializable type {0} cannot inherit from the serializable type {1}.") },
-			{ 7009, Tuple.Create(MessageSeverity.Error, "The serializable type {0} must inherit from another serializable type, System.Object or System.Record.") },
-			{ 7010, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot implement interfaces.") },
-			{ 7011, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare instance events.") },
-			{ 7012, Tuple.Create(MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [MixinAttribute]") },
-			{ 7013, Tuple.Create(MessageSeverity.Error, "The type {0} can contain only methods order to be decorated with a [MixinAttribute]") },
-			{ 7014, Tuple.Create(MessageSeverity.Error, "[MixinAttribute] cannot be applied to the generic type {0}.") },
-			{ 7015, Tuple.Create(MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [GlobalMethodsAttribute]") },
-			{ 7017, Tuple.Create(MessageSeverity.Error, "[GlobalMethodsAttribute] cannot be applied to the generic type {0}.") },
-			{ 7018, Tuple.Create(MessageSeverity.Error, "The type {0} cannot inherit from both {1} and {2} because both those types have a member with the script name {3}. You have to rename the member on one of the base types, or refactor your code.") },
-			{ 7023, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.") },
-			{ 7024, Tuple.Create(MessageSeverity.Error, "The serializable type {0} cannot override the member {1}.") },
-			{ 7025, Tuple.Create(MessageSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must not be null or empty.") },
-			{ 7026, Tuple.Create(MessageSeverity.Error, "The type {0} must have an [IncludeGenericArgumentsAttribute]") },
-			{ 7027, Tuple.Create(MessageSeverity.Error, "The method {0} must have an [IncludeGenericArgumentsAttribute]") },
+	using Message = Tuple<int, MessageSeverity, string>;
+	public static class Messages {
+		internal static readonly Message _7500 = Tuple.Create(7500, MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.");
+		internal static readonly Message _7501 = Tuple.Create(7501, MessageSeverity.Error, "More than one unnamed constructor for the type {0}.");
+		internal static readonly Message _7502 = Tuple.Create(7502, MessageSeverity.Error, "The constructor {0} must be invoked in expanded form for its its param array.");
+		internal static readonly Message _7503 = Tuple.Create(7503, MessageSeverity.Error, "Chaining from a normal constructor to a static method constructor is not supported.");
+		internal static readonly Message _7504 = Tuple.Create(7504, MessageSeverity.Error, "Chaining from a normal constructor to a constructor implemented as inline code is not supported.");
+		internal static readonly Message _7505 = Tuple.Create(7505, MessageSeverity.Error, "This constructor cannot be used from script.");
+		internal static readonly Message _7506 = Tuple.Create(7506, MessageSeverity.Error, "Property {0}, declared as being a native indexer, is not an indexer with exactly one argument.");
+		internal static readonly Message _7507 = Tuple.Create(7507, MessageSeverity.Error, "Cannot use the property {0} from script.");
+		internal static readonly Message _7508 = Tuple.Create(7508, MessageSeverity.Error, "The field {0} is constant in script and cannot be assigned to.");
+		internal static readonly Message _7509 = Tuple.Create(7509, MessageSeverity.Error, "The field {0} is not usable from script.");
+		internal static readonly Message _7511 = Tuple.Create(7511, MessageSeverity.Error, "The event {0} is not usable from script.");
+		internal static readonly Message _7512 = Tuple.Create(7512, MessageSeverity.Error, "The property {0} is not usable from script.");
+		internal static readonly Message _7513 = Tuple.Create(7513, MessageSeverity.Error, "Only locals can be passed by reference.");
+		internal static readonly Message _7514 = Tuple.Create(7514, MessageSeverity.Error, "The method {0} must be invoked in expanded form for its its param array.");
+		internal static readonly Message _7515 = Tuple.Create(7515, MessageSeverity.Error, "Cannot use the type {0} in as a generic argument to the method {1} because it is marked as not usable from script.");
+		internal static readonly Message _7516 = Tuple.Create(7516, MessageSeverity.Error, "The method {0} cannot be used from script.");
+		internal static readonly Message _7517 = Tuple.Create(7517, MessageSeverity.Error, "Cannot use the the property {0} in an anonymous object initializer.");
+		internal static readonly Message _7518 = Tuple.Create(7518, MessageSeverity.Error, "Cannot use the field {0} in an anonymous object initializer.");
+		internal static readonly Message _7519 = Tuple.Create(7519, MessageSeverity.Error, "Cannot create an instance of the type {0} because it is marked as not usable from script.");
+		internal static readonly Message _7520 = Tuple.Create(7520, MessageSeverity.Error, "Cannot use the type {0} in as a type argument for the class {1} because it is marked as not usable from script.");
+		internal static readonly Message _7521 = Tuple.Create(7521, MessageSeverity.Error, "Cannot use the variable {0} because it is an expanded param array.");
+		internal static readonly Message _7522 = Tuple.Create(7522, MessageSeverity.Error, "Cannot use the type {0} in a typeof expression because it is marked as not usable from script.");
+		internal static readonly Message _7523 = Tuple.Create(7523, MessageSeverity.Error, "Cannot perform method group conversion on {0} because it is not a normal method.");
+		internal static readonly Message _7524 = Tuple.Create(7524, MessageSeverity.Error, "Cannot convert the method '{0}' to the delegate type '{1}' because the method and delegate type differ in whether they expand their param array.");
+		internal static readonly Message _7525 = Tuple.Create(7525, MessageSeverity.Error, "Error in inline code compilation: {0}.");
+		internal static readonly Message _7526 = Tuple.Create(7526, MessageSeverity.Error, "Dynamic invocations cannot use named arguments.");
+		internal static readonly Message _7527 = Tuple.Create(7527, MessageSeverity.Error, "The member {0} cannot be initialized in an initializer statement because it was also initialized by the constructor call.");
+		internal static readonly Message _7528 = Tuple.Create(7528, MessageSeverity.Error, "Dynamic indexing must have exactly one argument.");
+		internal static readonly Message _7529 = Tuple.Create(7529, MessageSeverity.Error, "Cannot compile this dynamic invocation because all the applicable methods do not have the same script name. If you want to call the method with this exact name, cast the invocation target to dynamic.");
+		internal static readonly Message _7530 = Tuple.Create(7530, MessageSeverity.Error, "Cannot compile this dynamic invocation because at least one of the applicable methods is not a normal method. If you want to call the method with this exact name, cast the invocation target to dynamic.");
+		internal static readonly Message _7531 = Tuple.Create(7531, MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.");
+		internal static readonly Message _7532 = Tuple.Create(7532, MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.");
+		internal static readonly Message _7533 = Tuple.Create(7533, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.");
+		internal static readonly Message _7534 = Tuple.Create(7534, MessageSeverity.Error, "Delegates of type {0} must be invoked in expanded form for its its param array.");
+		internal static readonly Message _7535 = Tuple.Create(7535, MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.");
+		internal static readonly Message _7536 = Tuple.Create(7536, MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.");
 
-			{ 7100, Tuple.Create(MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.") },
-			{ 7102, Tuple.Create(MessageSeverity.Error, "The constructor {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
-			{ 7103, Tuple.Create(MessageSeverity.Error, "The inline code for the constructor {0} contained errors: {1}.") },
-			{ 7104, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the indexer of type {0} cannot be empty.") },
-			{ 7105, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the property {0} cannot be empty.") },
-			{ 7106, Tuple.Create(MessageSeverity.Error, "Indexers cannot be decorated with [ScriptAliasAttribute].") },
-			{ 7107, Tuple.Create(MessageSeverity.Error, "The property {0} cannot have a [ScriptAliasAttribute] because it is an instance member.") },
-			{ 7108, Tuple.Create(MessageSeverity.Error, "The indexer cannot be decorated with [IntrinsicPropertyAttribute] because it is an interface member.") },
-			{ 7109, Tuple.Create(MessageSeverity.Error, "The property {0} cannot have an [IntrinsicPropertyAttribute] because it is an interface member.") },
-			{ 7110, Tuple.Create(MessageSeverity.Error, "The indexer be decorated with an [IntrinsicPropertyAttribute] because it overrides a base member.") },
-			{ 7111, Tuple.Create(MessageSeverity.Error, "The property {0} cannot have an [IntrinsicPropertyAttribute] because it overrides a base member.") },
-			{ 7112, Tuple.Create(MessageSeverity.Error, "The indexer cannot be decorated with an [IntrinsicPropertyAttribute] because it is overridable.") },
-			{ 7113, Tuple.Create(MessageSeverity.Error, "The property {0} cannot have an [IntrinsicPropertyAttribute] because it is overridable.") },
-			{ 7114, Tuple.Create(MessageSeverity.Error, "The indexer cannot be decorated with an [IntrinsicPropertyAttribute] because it implements an interface member.") },
-			{ 7115, Tuple.Create(MessageSeverity.Error, "The property {0} cannot have an [IntrinsicPropertyAttribute] because it implements an interface member.") },
-			{ 7116, Tuple.Create(MessageSeverity.Error, "The indexer must have exactly one parameter in order to have an [IntrinsicPropertyAttribute].") },
-			{ 7117, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [IntrinsicOperatorAttribute] because it is not an operator method.") },
-			{ 7118, Tuple.Create(MessageSeverity.Error, "The [IntrinsicOperatorAttribute] cannot be applied to the operator {0} because it is a conversion operator.") },
-			{ 7119, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have a [ScriptSkipAttribute] because it is an interface method.") },
-			{ 7120, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [ScriptSkipAttribute] because it overrides a base member.") },
-			{ 7121, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [ScriptSkipAttribute] because it is overridable.") },
-			{ 7122, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have a [ScriptSkipAttribute] because it implements an interface member.") },
-			{ 7123, Tuple.Create(MessageSeverity.Error, "The static method {0} must have exactly one parameter in order to have a [ScriptSkipAttribute].") },
-			{ 7124, Tuple.Create(MessageSeverity.Error, "The instance method {0} must have no parameters in order to have a [ScriptSkipAttribute].") },
-			{ 7125, Tuple.Create(MessageSeverity.Error, "The method {0} must be static in order to have a [ScriptAliasAttribute].") },
-			{ 7126, Tuple.Create(MessageSeverity.Error, "The member {0} needs a GeneratedMethodName property for its [InlineCodeAttribute] because it is an interface method.") },
-			{ 7127, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an [InlineCodeAttribute] because it overrides a base member.") },
-			{ 7128, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an [InlineCodeAttribute] because it is overridable.") },
-			{ 7130, Tuple.Create(MessageSeverity.Error, "The inline code for the method {0} contained errors: {1}.") },
-			{ 7131, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it is not static.") },
-			{ 7132, Tuple.Create(MessageSeverity.Error, "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on method the method {0} because it overrides a base member. Specify the attribute on the base member instead.") },
-			{ 7133, Tuple.Create(MessageSeverity.Error, "The [IncludeGenericArguments] attribute cannot be specified on the method {0} because it overrides a base member. Specify the attribute on the base member instead.") },
-			{ 7134, Tuple.Create(MessageSeverity.Error, "The overriding member {0} cannot implement the interface method {1} because it has a different script name. Consider using explicit interface implementation.") },
-			{ 7135, Tuple.Create(MessageSeverity.Error, "The [ScriptName], [PreserveName] and [PreserveCase] attributes cannot be specified on the method {0} because it implements an interface member. Specify the attribute on the interface member instead, or consider using explicit interface implementation.") },
-			{ 7136, Tuple.Create(MessageSeverity.Error, "The member {0} cannot implement multiple interface methods with differing script names. Consider using explicit interface implementation.") },
-			{ 7137, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
-			{ 7138, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is an interface method.") },
-			{ 7139, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is overridable.") },
-			{ 7140, Tuple.Create(MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is static.") },
-			{ 7141, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the event {0} cannot be empty.") },
-			{ 7142, Tuple.Create(MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the field {0} cannot be empty.") },
-			{ 7143, Tuple.Create(MessageSeverity.Error, "The type {0} doesn't contain a matching property or field for the constructor parameter {1}.") },
-			{ 7144, Tuple.Create(MessageSeverity.Error, "The parameter {0} has the type {1} but the matching member has type {2}. The types must be the same.") },
-			{ 7145, Tuple.Create(MessageSeverity.Error, "The parameter {0} cannot be declared as ref or out.") },
-			{ 7146, Tuple.Create(MessageSeverity.Error, "The constructor cannot have an [ObjectLiteralAttribute] because the type {0} is not a serializable type.") },
-			{ 7147, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have a [BindThisToFirstParameterAttribute] because it does not have any parameters.") },
-			{ 7148, Tuple.Create(MessageSeverity.Error, "The delegate type {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.") },
-			{ 7149, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because it has no parameters.") },
-			{ 7150, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because its only parameter is a 'params' array.") },
-			{ 7151, Tuple.Create(MessageSeverity.Error, "The method {0} cannot have an [EnumerateAsArrayAttribute] because it is not a GetEnumerator() method for the iterator pattern.") },
-			{ 7152, Tuple.Create(MessageSeverity.Error, "The field {0} cannot have an [InlineConstantAttribute] because it is not constant.") },
+		internal static readonly Message _7950 = Tuple.Create(7950, MessageSeverity.Error, "Error writing assembly: {0}.");
+		internal static readonly Message _7951 = Tuple.Create(7951, MessageSeverity.Error, "Error writing script: {0}.");
+		internal static readonly Message _7952 = Tuple.Create(7952, MessageSeverity.Error, "Error writing documentation file: {0}.");
 
-			{ 7500, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.") },
-			{ 7501, Tuple.Create(MessageSeverity.Error, "More than one unnamed constructor for the type {0}.") },
-			{ 7502, Tuple.Create(MessageSeverity.Error, "The constructor {0} must be invoked in expanded form for its its param array.") },
-			{ 7503, Tuple.Create(MessageSeverity.Error, "Chaining from a normal constructor to a static method constructor is not supported.") },
-			{ 7504, Tuple.Create(MessageSeverity.Error, "Chaining from a normal constructor to a constructor implemented as inline code is not supported.") },
-			{ 7505, Tuple.Create(MessageSeverity.Error, "This constructor cannot be used from script.") },
-			{ 7506, Tuple.Create(MessageSeverity.Error, "Property {0}, declared as being a native indexer, is not an indexer with exactly one argument.") },
-			{ 7507, Tuple.Create(MessageSeverity.Error, "Cannot use the property {0} from script.") },
-			{ 7508, Tuple.Create(MessageSeverity.Error, "The field {0} is constant in script and cannot be assigned to.") },
-			{ 7509, Tuple.Create(MessageSeverity.Error, "The field {0} is not usable from script.") },
-			{ 7511, Tuple.Create(MessageSeverity.Error, "The event {0} is not usable from script.") },
-			{ 7512, Tuple.Create(MessageSeverity.Error, "The property {0} is not usable from script.") },
-			{ 7513, Tuple.Create(MessageSeverity.Error, "Only locals can be passed by reference.") },
-			{ 7514, Tuple.Create(MessageSeverity.Error, "The method {0} must be invoked in expanded form for its its param array.") },
-			{ 7515, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in as a generic argument to the method {1} because it is marked as not usable from script.") },
-			{ 7516, Tuple.Create(MessageSeverity.Error, "The method {0} cannot be used from script.") },
-			{ 7517, Tuple.Create(MessageSeverity.Error, "Cannot use the the property {0} in an anonymous object initializer.") },
-			{ 7518, Tuple.Create(MessageSeverity.Error, "Cannot use the field {0} in an anonymous object initializer.") },
-			{ 7519, Tuple.Create(MessageSeverity.Error, "Cannot create an instance of the type {0} because it is marked as not usable from script.") },
-			{ 7520, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in as a type argument for the class {1} because it is marked as not usable from script.") },
-			{ 7521, Tuple.Create(MessageSeverity.Error, "Cannot use the variable {0} because it is an expanded param array.") },
-			{ 7522, Tuple.Create(MessageSeverity.Error, "Cannot use the type {0} in a typeof expression because it is marked as not usable from script.") },
-			{ 7523, Tuple.Create(MessageSeverity.Error, "Cannot perform method group conversion on {0} because it is not a normal method.") },
-			{ 7524, Tuple.Create(MessageSeverity.Error, "Cannot convert the method '{0}' to the delegate type '{1}' because the method and delegate type differ in whether they expand their param array.") },
-			{ 7525, Tuple.Create(MessageSeverity.Error, "Error in inline code compilation: {0}.") },
-			{ 7526, Tuple.Create(MessageSeverity.Error, "Dynamic invocations cannot use named arguments.") },
-			{ 7527, Tuple.Create(MessageSeverity.Error, "The member {0} cannot be initialized in an initializer statement because it was also initialized by the constructor call.") },
-			{ 7528, Tuple.Create(MessageSeverity.Error, "Dynamic indexing must have exactly one argument.") },
-			{ 7529, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because all the applicable methods do not have the same script name. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
-			{ 7530, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because at least one of the applicable methods is not a normal method. If you want to call the method with this exact name, cast the invocation target to dynamic.") },
-			{ 7531, Tuple.Create(MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.") },
-			{ 7532, Tuple.Create(MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.") },
-			{ 7533, Tuple.Create(MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.") },
-			{ 7534, Tuple.Create(MessageSeverity.Error, "Delegates of type {0} must be invoked in expanded form for its its param array.") },
-			{ 7535, Tuple.Create(MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.") },
-			{ 7536, Tuple.Create(MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.") },
+		internal static readonly Message _7996 = Tuple.Create(7996, MessageSeverity.Error, "Indirectly referenced assembly {0} must be referenced.");
+		internal static readonly Message _7997 = Tuple.Create(7997, MessageSeverity.Error, "Unable to resolve the assembly reference {0}.");
+		internal static readonly Message _7998 = Tuple.Create(7998, MessageSeverity.Error, "Use of unsupported feature {0}.");
 
-			{ 7700, Tuple.Create(MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.") },
-
-			{ 7800, Tuple.Create(MessageSeverity.Error, "The program entry point {0} may not have any parameters.") },
-			{ 7801, Tuple.Create(MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.") },
-
-			{ 7950, Tuple.Create(MessageSeverity.Error, "Error writing assembly: {0}.") },
-			{ 7951, Tuple.Create(MessageSeverity.Error, "Error writing script: {0}.") },
-			{ 7952, Tuple.Create(MessageSeverity.Error, "Error writing documentation file: {0}.") },
-
-			{ 7996, Tuple.Create(MessageSeverity.Error, "Indirectly referenced assembly {0} must be referenced.") },
-			{ 7997, Tuple.Create(MessageSeverity.Error, "Unable to resolve the assembly reference {0}.") },
-			{ 7998, Tuple.Create(MessageSeverity.Error, "Use of unsupported feature {0}.") },
-			{ 7999, Tuple.Create(MessageSeverity.Error, "INTERNAL ERROR: {0}. Please report this as an issue on https://github.com/erik-kallen/SaltarelleCompiler/") },
-		};
-
-		internal static Tuple<MessageSeverity, string> Get(int code) {
-			Tuple<MessageSeverity, string> result;
-			_allMessages.TryGetValue(code, out result);
-			return result;
-		}
+		public static readonly Message InternalError = Tuple.Create(7999, MessageSeverity.Error, "INTERNAL ERROR: {0}. Please report this as an issue on https://github.com/erik-kallen/SaltarelleCompiler/");
 	}
 }

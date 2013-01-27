@@ -57,7 +57,7 @@ namespace Saltarelle.Compiler.Driver {
 				return Path.GetFullPath(file);
 			}
 			er.Region = DomRegion.Empty;
-			er.Message(7997, filename);
+			er.Message(Messages._7997, filename);
 			return null;
 		}
 
@@ -101,7 +101,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
 				er.Region = DomRegion.Empty;
-				er.Message(7998, "aliased reference");
+				er.Message(Messages._7998, "aliased reference");
 			}
 
 			return result;
@@ -273,7 +273,7 @@ namespace Saltarelle.Compiler.Driver {
 						}
 						catch (IOException ex) {
 							er.Region = DomRegion.Empty;
-							er.Message(7950, ex.Message);
+							er.Message(Messages._7950, ex.Message);
 							return false;
 						}
 						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
@@ -282,7 +282,7 @@ namespace Saltarelle.Compiler.Driver {
 							}
 							catch (IOException ex) {
 								er.Region = DomRegion.Empty;
-								er.Message(7952, ex.Message);
+								er.Message(Messages._7952, ex.Message);
 								return false;
 							}
 						}
@@ -298,7 +298,7 @@ namespace Saltarelle.Compiler.Driver {
 					}
 					catch (IOException ex) {
 						er.Region = DomRegion.Empty;
-						er.Message(7951, ex.Message);
+						er.Message(Messages._7951, ex.Message);
 						return false;
 					}
 					return true;
@@ -323,7 +323,7 @@ namespace Saltarelle.Compiler.Driver {
 						var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
 						if (t == null) {
 							er.Region = DomRegion.Empty;
-							er.Message(7950, "Could not find the entry point class " + options.EntryPointClass + ".");
+							er.Message(Messages._7950, "Could not find the entry point class " + options.EntryPointClass + ".");
 							return null;
 						}
 						candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
@@ -337,7 +337,7 @@ namespace Saltarelle.Compiler.Driver {
 					}
 					if (candidates.Count != 1) {
 						er.Region = DomRegion.Empty;
-						er.Message(7950, "Could not find a unique entry point.");
+						er.Message(Messages._7950, "Could not find a unique entry point.");
 						return null;
 					}
 					return candidates[0];
@@ -420,7 +420,7 @@ namespace Saltarelle.Compiler.Driver {
 			if (missingReferences.Count > 0) {
 				er.Region = DomRegion.Empty;
 				foreach (var r in missingReferences)
-					er.Message(7996, r);
+					er.Message(Messages._7996, r);
 				return null;
 			}
 

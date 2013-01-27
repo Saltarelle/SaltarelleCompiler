@@ -87,10 +87,10 @@ namespace CoreLib.Plugin {
 					var prevRegion = _errorReporter.Region;
 					try {
 						_errorReporter.Region = defaultConstructor.Region;
-						var tokens = InlineCodeMethodCompiler.Tokenize(defaultConstructor, sem.LiteralCode, s => _errorReporter.Message(7525, s));
+						var tokens = InlineCodeMethodCompiler.Tokenize(defaultConstructor, sem.LiteralCode, s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 						if (tokens == null)
 							return JsExpression.Null;
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor, tokens, null, EmptyList<JsExpression>.Instance, r => r.Resolve(_compilation), (t, tc) => _runtimeLibrary.GetScriptType(t, tc, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), false, s => _errorReporter.Message(7525, s));
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor, tokens, null, EmptyList<JsExpression>.Instance, r => r.Resolve(_compilation), (t, tc) => _runtimeLibrary.GetScriptType(t, tc, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), false, s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 					}
 					finally {
 						_errorReporter.Region = prevRegion;
@@ -271,13 +271,13 @@ namespace CoreLib.Plugin {
 			if (entryPoint != null) {
 				if (entryPoint.Parameters.Count > 0) {
 					_errorReporter.Region = entryPoint.Region;
-					_errorReporter.Message(7800, entryPoint.FullName);
+					_errorReporter.Message(Messages._7800, entryPoint.FullName);
 				}
 				else {
 					var sem = _metadataImporter.GetMethodSemantics(entryPoint);
 					if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
 						_errorReporter.Region = entryPoint.Region;
-						_errorReporter.Message(7801, entryPoint.FullName);
+						_errorReporter.Message(Messages._7801, entryPoint.FullName);
 					}
 					else {
 						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.DeclaringTypeDefinition), sem.Name))));

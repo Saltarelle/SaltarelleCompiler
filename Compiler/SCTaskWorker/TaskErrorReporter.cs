@@ -23,11 +23,11 @@ namespace Saltarelle.Compiler.SCTask {
 		}
 
 		public void InternalError(string text) {
-			this.Message(7999, text);
+			this.Message(Messages.InternalError, text);
 		}
 
 		public void InternalError(Exception ex, string additionalText = null) {
-			this.Message(7999, (additionalText != null ? additionalText + ": " : "") + ex.ToString());
+			this.Message(Messages.InternalError, (additionalText != null ? additionalText + ": " : "") + ex.ToString());
 		}
 	}
 }

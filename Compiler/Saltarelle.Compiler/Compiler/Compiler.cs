@@ -72,7 +72,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (typeDefinition.Kind == TypeKind.Struct && !_allowUserDefinedStructs) {
 					var oldRegion = _errorReporter.Region;
 					_errorReporter.Region = typeDefinition.Region;
-					_errorReporter.Message(7998, "user-defined value type (struct)");
+					_errorReporter.Message(Messages._7998, "user-defined value type (struct)");
 					_errorReporter.Region = oldRegion;
 				}
 
@@ -83,7 +83,7 @@ namespace Saltarelle.Compiler.Compiler {
 						foreach (var ut in unusableTypes) {
 							var oldRegion = _errorReporter.Region;
 							_errorReporter.Region = typeDefinition.Region;
-							_errorReporter.Message(7500, ut.FullName, typeDefinition.FullName);
+							_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
 							_errorReporter.Region = oldRegion;
 						}
 
@@ -246,7 +246,7 @@ namespace Saltarelle.Compiler.Compiler {
 				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
 					if (jsClass.UnnamedConstructor != null) {
 						_errorReporter.Region = constructor.Region;
-						_errorReporter.Message(7501, constructor.DeclaringType.FullName);
+						_errorReporter.Message(Messages._7501, constructor.DeclaringType.FullName);
 					}
 					else {
 						jsClass.UnnamedConstructor = jsConstructor;
