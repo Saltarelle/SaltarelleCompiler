@@ -82,7 +82,7 @@ ss.registerClass = function#? DEBUG ss$registerClass##(root, name, ctor, baseTyp
 		ctor.__interfaces = [];
 		for (var i = 4; i < arguments.length; i++) {
 			interfaceType = arguments[i];
-			ss.add(ctor.__interfaces, interfaceType);
+			ctor.__interfaces.push(interfaceType);
 		}
 	}
 };
@@ -111,7 +111,7 @@ ss.registerInterface = function#? DEBUG ss$createInterface##(root, name, ctor, b
 	else if (baseInterface) {
 		ctor.__interfaces = [];
 		for (var i = 3; i < arguments.length; i++) {
-			ss.add(ctor.__interfaces, arguments[i]);
+			ctor.__interfaces.push(arguments[i]);
 		}
 	}
 };
