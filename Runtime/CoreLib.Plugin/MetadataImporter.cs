@@ -40,7 +40,16 @@ namespace CoreLib.Plugin {
 				if (presult != 0)
 					return presult;
 
-				return string.CompareOrdinal(x.ReturnType.FullName, y.ReturnType.FullName);
+				var rresult = string.CompareOrdinal(x.ReturnType.FullName, y.ReturnType.FullName);
+				if (rresult != 0)
+					return rresult;
+
+				if (x.TypeParameters.Count > y.TypeParameters.Count)
+					return 1;
+				else if (x.TypeParameters.Count < y.TypeParameters.Count)
+					return -1;
+				
+				return 0;
 			}
 
 			public int Compare(IMember x, IMember y) {
