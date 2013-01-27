@@ -103,16 +103,12 @@ namespace CoreLib.Plugin {
 
 		private class TypeSemantics {
 			public TypeScriptSemantics Semantics { get; private set; }
-			public bool PreserveMemberNames { get; private set; }
-			public bool PreserveMemberCases { get; private set; }
 			public bool IsSerializable { get; private set; }
 			public bool IsNamedValues { get; private set; }
 			public bool IsImported { get; private set; }
 
-			public TypeSemantics(TypeScriptSemantics semantics, bool preserveMemberNames, bool preserveMemberCases, bool isSerializable, bool isNamedValues, bool isImported) {
+			public TypeSemantics(TypeScriptSemantics semantics, bool isSerializable, bool isNamedValues, bool isImported) {
 				Semantics           = semantics;
-				PreserveMemberNames = preserveMemberNames;
-				PreserveMemberCases = preserveMemberCases;
 				IsSerializable      = isSerializable;
 				IsNamedValues       = isNamedValues;
 				IsImported          = isImported;
@@ -184,34 +180,6 @@ namespace CoreLib.Plugin {
 			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
 			_errorReporter.Region = m.Region;
 			_errorReporter.Message(message, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
-		}
-
-		private string MakeCamelCase(string s) {
-			if (string.IsNullOrEmpty(s))
-				return s;
-			if (s.Equals("ID", StringComparison.Ordinal))
-				return "id";
-
-			bool hasNonUppercase = false;
-			int numUppercaseChars = 0;
-			for (int index = 0; index < s.Length; index++) {
-				if (char.IsUpper(s, index)) {
-					numUppercaseChars++;
-				}
-				else {
-					hasNonUppercase = true;
-					break;
-				}
-			}
-
-			if ((!hasNonUppercase && s.Length != 1) || numUppercaseChars == 0)
-				return s;
-			else if (numUppercaseChars > 1)
-				return s.Substring(0, numUppercaseChars - 1).ToLower(CultureInfo.InvariantCulture) + s.Substring(numUppercaseChars - 1);
-			else if (s.Length == 1)
-				return s.ToLower(CultureInfo.InvariantCulture);
-			else
-				return char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
 		private static readonly string _encodeNumberTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -317,7 +285,7 @@ namespace CoreLib.Plugin {
 			}
 
 			if (AttributeReader.HasAttribute<NonScriptableAttribute>(typeDefinition) || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false);
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false);
 				return;
 			}
 
@@ -455,12 +423,7 @@ namespace CoreLib.Plugin {
 				_typeParameterNames[tp] = _minimizeNames ? EncodeNumber(i, true) : tp.Name;
 			}
 
-			var pmca = AttributeReader.ReadAttribute<PreserveMemberCaseAttribute>(typeDefinition) ?? AttributeReader.ReadAttribute<PreserveMemberCaseAttribute>(typeDefinition.ParentAssembly.AssemblyAttributes);
-
-			bool preserveMemberCases = pmca != null && pmca.Preserve;
-			bool preserveMemberNames = isImported || typeName == ""; // [Imported] and global methods
-
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: !isImported), preserveMemberNames: preserveMemberNames, preserveMemberCases: preserveMemberCases, isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: !isImported), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -470,82 +433,16 @@ namespace CoreLib.Plugin {
 			return result;
 		}
 
-		private IMember UnwrapValueTypeConstructor(IMember m) {
-			if (m is IMethod && !m.IsStatic && m.DeclaringType.Kind == TypeKind.Struct && ((IMethod)m).IsConstructor && ((IMethod)m).Parameters.Count == 0) {
-				var other = m.DeclaringType.GetConstructors().SingleOrDefault(c => c.Parameters.Count == 1 && c.Parameters[0].Type.FullName == typeof(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor).FullName);
-				if (other != null)
-					return other;
-			}
-			return m;
-		}
-
 		private Tuple<string, bool> DeterminePreferredMemberName(IMember member) {
-			member = UnwrapValueTypeConstructor(member);
-
-			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
-			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
-
-			string defaultName;
-			if (isConstructor) {
-				defaultName = "$ctor";
-			}
-			else if (member.IsExternallyVisible()) {
-				defaultName = GetTypeSemanticsInternal(member.DeclaringTypeDefinition).PreserveMemberCases ? member.Name : MakeCamelCase(member.Name);
-			}
-			else {
-				if (_minimizeNames && member.DeclaringType.Kind != TypeKind.Interface)
-					defaultName = null;
-				else
-					defaultName = "$" + (GetTypeSemanticsInternal(member.DeclaringTypeDefinition).PreserveMemberCases ? member.Name : MakeCamelCase(member.Name));
-			}
-
-
 			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(member);
 			if (asa != null) {
 				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && !AttributeReader.HasAttribute<AlternateSignatureAttribute>(m) && !AttributeReader.HasAttribute<NonScriptableAttribute>(m) && !AttributeReader.HasAttribute<InlineCodeAttribute>(m)).ToList();
-				if (otherMembers.Count == 1) {
-					return DeterminePreferredMemberName(otherMembers[0]);
-				}
-				else {
+				if (otherMembers.Count != 1) {
 					Message(Messages._7100, member);
 					return Tuple.Create(member.Name, false);
 				}
 			}
-
-			var typeSemantics = GetTypeSemanticsInternal(member.DeclaringTypeDefinition);
-
-			var sna = AttributeReader.ReadAttribute<ScriptNameAttribute>(member);
-			if (sna != null) {
-				string name = sna.Name;
-				if (typeSemantics.IsNamedValues && (name == "" || !name.IsValidJavaScriptIdentifier())) {
-					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
-				}
-				if (name == "" && isConstructor)
-					name = "$ctor";
-				return Tuple.Create(name, true);
-			}
-
-			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(member);
-			if (ica != null) {
-				if (ica.GeneratedMethodName != null)
-					return Tuple.Create(ica.GeneratedMethodName, true);
-			}
-
-
-			if (AttributeReader.HasAttribute<PreserveCaseAttribute>(member))
-				return Tuple.Create(member.Name, true);
-
-			bool preserveName = (!isConstructor && !isAccessor && (   AttributeReader.HasAttribute<PreserveNameAttribute>(member)
-			                                                       || AttributeReader.HasAttribute<InstanceMethodOnFirstArgumentAttribute>(member)
-			                                                       || AttributeReader.HasAttribute<IntrinsicPropertyAttribute>(member)
-			                                                       || typeSemantics.PreserveMemberNames && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
-			                                                       || (typeSemantics.IsSerializable && !member.IsStatic && (member is IProperty || member is IField)))
-			                                                       || (typeSemantics.IsNamedValues && member is IField);
-
-			if (preserveName)
-				return Tuple.Create(typeSemantics.PreserveMemberCases ? member.Name : MakeCamelCase(member.Name), true);
-
-			return Tuple.Create(defaultName, false);
+			return MetadataUtils.DeterminePreferredMemberName(member, _minimizeNames);
 		}
 
 		private void ProcessTypeMembers(ITypeDefinition typeDefinition) {
@@ -636,7 +533,7 @@ namespace CoreLib.Plugin {
 				return;
 			}
 
-			var source = (IMethod)UnwrapValueTypeConstructor(constructor);
+			var source = (IMethod)MetadataUtils.UnwrapValueTypeConstructor(constructor);
 
 			var nsa = AttributeReader.ReadAttribute<NonScriptableAttribute>(source);
 			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(source);
