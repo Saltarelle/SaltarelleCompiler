@@ -1764,5 +1764,14 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitNamedArgumentResolveResult(NamedArgumentResolveResult rr, bool data) {
 			return VisitResolveResult(rr.Argument, data);	// Argument names are ignored.
 		}
+
+		public override JsExpression VisitSizeOfResolveResult(SizeOfResolveResult rr, bool data) {
+			if (rr.ConstantValue == null) {
+				// This is an internal error because AFAIK, using sizeof() with anything that doesn't return a compile-time constant (with our enum extensions) can only be done in an unsafe context.
+				_errorReporter.InternalError("Cannot take the size of type " + rr.ReferencedType.FullName);
+				return JsExpression.Null;
+			}
+			return JSModel.Utils.MakeConstantExpression(rr.ConstantValue);
+		}
 	}
 }

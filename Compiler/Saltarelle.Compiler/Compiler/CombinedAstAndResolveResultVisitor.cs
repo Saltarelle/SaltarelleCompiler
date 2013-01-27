@@ -277,5 +277,10 @@ namespace Saltarelle.Compiler.Compiler {
 			VisitChildResolveResults(rr, data);
 			return null;
 		}
+
+		public object VisitSizeOfResolveResult(SizeOfResolveResult rr, object data) {
+			VisitChildResolveResults(rr, data);
+			return null;
+		}
 	}
 }

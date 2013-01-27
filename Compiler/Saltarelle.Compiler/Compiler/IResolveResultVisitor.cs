@@ -26,6 +26,7 @@ namespace Saltarelle.Compiler.Compiler {
 		TResult VisitDynamicMemberResolveResult(DynamicMemberResolveResult rr, TData data);
 		TResult VisitNamedArgumentResolveResult(NamedArgumentResolveResult rr, TData data);
 		TResult VisitAwaitResolveResult(AwaitResolveResult rr, TData data);
+		TResult VisitSizeOfResolveResult(SizeOfResolveResult rr, TData data);
 	}
 
 	public static class ResolveResultVisitorExtensions {
@@ -92,6 +93,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr is AwaitResolveResult) {
 				return visitor.VisitAwaitResolveResult((AwaitResolveResult)rr, data);
+			}
+			else if (rr is SizeOfResolveResult) {
+				return visitor.VisitSizeOfResolveResult((SizeOfResolveResult)rr, data);
 			}
 			else {
 				return visitor.VisitDefaultResolveResult(rr, data);
