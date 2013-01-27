@@ -59,6 +59,7 @@
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
     <Compile Include="AttributeReader.cs" />
+    <Compile Include="CompilerOptions.cs" />
     <Compile Include="Compiler\DefaultNamer.cs" />
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\DoesJsExpressionHaveSideEffects.cs" />
@@ -72,7 +73,6 @@
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
-    <Compile Include="Driver\CompilerOptions.cs" />
     <Compile Include="IJSTypeSystemRewriter.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />

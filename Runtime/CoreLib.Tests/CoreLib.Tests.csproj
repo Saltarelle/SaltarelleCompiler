@@ -177,6 +177,7 @@
     <Compile Include="LinkerTests\LinkerTests.cs" />
     <Compile Include="MetadataImporterTests\AnonymousTypeTests.cs" />
     <Compile Include="MetadataImporterTests\BackingFieldTests.cs" />
+    <Compile Include="MetadataImporterTests\ChainingTests.cs" />
     <Compile Include="MetadataImporterTests\ConstructorTests.cs" />
     <Compile Include="MetadataImporterTests\DelegateTests.cs" />
     <Compile Include="MetadataImporterTests\EventTests.cs" />

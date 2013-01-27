@@ -1,28 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 
-namespace Saltarelle.Compiler.Driver {
-	[Serializable]
-	public class Reference {
-		/// <summary>
-		/// Alias for the reference (for use with "extern alias"). Null if no alias.
-		/// </summary>
-		public string Alias { get; private set; }
-
-		/// <summary>
-		/// Name of the file to reference.
-		/// </summary>
-		public string Filename { get; private set; }
-
-		public Reference(string filename, string alias = null) {
-			Filename = filename;
-			Alias    = alias;
-		}
-	}
-
+namespace Saltarelle.Compiler {
 	[Serializable]
 	public class CompilerOptions {
 		public List<string> AdditionalLibPaths  { get; private set; }
@@ -54,6 +33,24 @@ namespace Saltarelle.Compiler.Driver {
 			WarningsNotAsErrors = new List<int>();
 
 			WarningLevel = 4;
+		}
+	}
+
+	[Serializable]
+	public class Reference {
+		/// <summary>
+		/// Alias for the reference (for use with "extern alias"). Null if no alias.
+		/// </summary>
+		public string Alias { get; private set; }
+
+		/// <summary>
+		/// Name of the file to reference.
+		/// </summary>
+		public string Filename { get; private set; }
+
+		public Reference(string filename, string alias = null) {
+			Filename = filename;
+			Alias    = alias;
 		}
 	}
 }

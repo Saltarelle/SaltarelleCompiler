@@ -10,12 +10,51 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler {
 	public interface IMetadataImporter {
 		/// <summary>
-		/// Prepare to handle the specified types.
+		/// This method will be called for all types in an assembly. The compiler will ensure that the method is called for a type after it has been called for all the type's base types and outer types.
 		/// </summary>
-		/// <param name="allTypes">All types in the compilation.</param>
-		/// <param name="minimizeNames">Whether names should be minimized by default (the importer is free to use/ignore this flag however it wants).</param>
-		/// <param name="mainAssembly">Main assembly for the compilation.</param>
-		void Prepare(IEnumerable<ITypeDefinition> allTypes, bool minimizeNames, IAssembly mainAssembly);
+		/// <param name="type">All types in the compilation.</param>
+		void Prepare(ITypeDefinition type);
+
+		/// <summary>
+		/// Reserve a name in a type. This means that the name will afterwards be reported as not available by the <see cref="IsMemberNameAvailable"/> method
+		/// </summary>
+		/// <param name="type">Type in which to register the member.</param>
+		/// <param name="name">Name of the member to register.</param>
+		/// <param name="isStatic">Whether to register a static (true) or instance (false) member.</param>
+		void ReserveMemberName(ITypeDefinition type, string name, bool isStatic);
+
+		/// <summary>
+		/// Determines whether a member name is available for a type. For instance members, a member name is not considered available if it is used by any base type.
+		/// </summary>
+		/// <param name="type">Type to check.</param>
+		/// <param name="name">Name to check.</param>
+		/// <param name="isStatic">Whether to check a static (true) or instance (false) member.</param>
+		bool IsMemberNameAvailable(ITypeDefinition type, string name, bool isStatic);
+
+		/// <summary>
+		/// Sets the semantics for a method. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetMethodSemantics(IMethod method, MethodScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for a constructor. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for a property. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for a field. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetFieldSemantics(IField field, FieldScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for an event. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetEventSemantics(IEvent evt,EventScriptSemantics semantics);
 
 		/// <summary>
 		/// Returns how a type should be implemented in script. Must not return null.
@@ -63,5 +102,20 @@ namespace Saltarelle.Compiler {
 		/// Returns the name of the backing field for the specified event. Must not return null.
 		/// </summary>
 		string GetAutoEventBackingFieldName(IEvent evt);
+	}
+
+	public static class MetadataImporterExtensions {
+		private static IEnumerable<ITypeDefinition> GetBaseAndOuterTypeDefinitions(ITypeDefinition t) {
+			foreach (var b in t.DirectBaseTypes)
+				yield return b.GetDefinition();
+			if (t.DeclaringTypeDefinition != null)
+				yield return t.DeclaringTypeDefinition;
+		}
+
+		public static void Prepare(this IMetadataImporter md, IEnumerable<ITypeDefinition> types) {
+			var l = types.ToList();
+			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, (t, b) => Tuple.Create(t, b))))
+				md.Prepare(t);
+		}
 	}
 }

@@ -248,11 +248,13 @@ namespace Saltarelle.Compiler.Driver {
 					// Compile the script
 					container.Register(Component.For<INamer>().ImplementedBy<DefaultNamer>(),
 					                   Component.For<IErrorReporter>().Instance(er),
+					                   Component.For<CompilerOptions>().Instance(options),
 					                   Component.For<ICompilation>().Instance(compilation.Compilation),
 					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
 					                  );
 
-					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions(), options.MinimizeScript, compilation.Compilation.MainAssembly);
+					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());
+
 					var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
 
 					foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())

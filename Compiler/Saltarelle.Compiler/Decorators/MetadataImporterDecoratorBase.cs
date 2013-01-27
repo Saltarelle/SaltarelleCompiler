@@ -17,8 +17,36 @@ namespace Saltarelle.Compiler.Decorators {
 			this._prev = prev;
 		}
 
-		public virtual void Prepare(IEnumerable<ITypeDefinition> allTypes, bool minimizeNames, IAssembly mainAssembly) {
-			_prev.Prepare(allTypes, minimizeNames, mainAssembly);
+		public virtual void Prepare(ITypeDefinition type) {
+			_prev.Prepare(type);
+		}
+
+		public virtual void ReserveMemberName(ITypeDefinition type, string name, bool isStatic) {
+			_prev.ReserveMemberName(type, name, isStatic);
+		}
+
+		public virtual bool IsMemberNameAvailable(ITypeDefinition type, string name, bool isStatic) {
+			return _prev.IsMemberNameAvailable(type, name, isStatic);
+		}
+
+		public virtual void SetMethodSemantics(IMethod method, MethodScriptSemantics semantics) {
+			_prev.SetMethodSemantics(method, semantics);
+		}
+
+		public virtual void SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics) {
+			_prev.SetConstructorSemantics(method, semantics);
+		}
+
+		public virtual void SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics) {
+			_prev.SetPropertySemantics(property, semantics);
+		}
+
+		public virtual void SetFieldSemantics(IField field, FieldScriptSemantics semantics) {
+			_prev.SetFieldSemantics(field, semantics);
+		}
+
+		public virtual void SetEventSemantics(IEvent evt,EventScriptSemantics semantics) {
+			_prev.SetEventSemantics(evt, semantics);
 		}
 
 		public virtual TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition) {

@@ -12,8 +12,8 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Plugin {
 	public class MetadataImporter : IMetadataImporter {
-		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "toString", "valueOf" });
-		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>() { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString", "valueOf" });
+		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>(new[] { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "valueOf" }.Concat(Saltarelle.Compiler.JSModel.Utils.AllKeywords)));
+		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>(new[] { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "valueOf" }.Concat(Saltarelle.Compiler.JSModel.Utils.AllKeywords)));
 
 		/// <summary>
 		/// Used to deterministically order members. It is assumed that all members belong to the same type.
@@ -122,6 +122,7 @@ namespace CoreLib.Plugin {
 		private Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
 		private Dictionary<ITypeDefinition, DelegateScriptSemantics> _delegateSemantics;
 		private Dictionary<ITypeDefinition, HashSet<string>> _instanceMemberNamesByType;
+		private Dictionary<ITypeDefinition, HashSet<string>> _staticMemberNamesByType;
 		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
 		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
 		private Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
@@ -132,14 +133,41 @@ namespace CoreLib.Plugin {
 		private Dictionary<IEvent, string> _eventBackingFieldNames;
 		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
 		private Dictionary<Tuple<IAssembly, string>, int> _internalTypeCountPerAssemblyAndNamespace;
+		private HashSet<IMember> _ignoredMembers;
 		private IErrorReporter _errorReporter;
 		private IType _systemObject;
 		private ICompilation _compilation;
 
 		private bool _minimizeNames;
 
-		public MetadataImporter(IErrorReporter errorReporter) {
+		public MetadataImporter(IErrorReporter errorReporter, ICompilation compilation, CompilerOptions options) {
 			_errorReporter = errorReporter;
+			_compilation = compilation;
+			_minimizeNames = options.MinimizeScript;
+			_systemObject = compilation.MainAssembly.Compilation.FindType(KnownTypeCode.Object);
+			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
+			_delegateSemantics = new Dictionary<ITypeDefinition, DelegateScriptSemantics>();
+			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
+			_staticMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
+			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
+			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
+			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
+			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
+			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
+			_typeParameterNames = new Dictionary<ITypeParameter, string>();
+			_propertyBackingFieldNames = new Dictionary<IProperty, string>();
+			_eventBackingFieldNames = new Dictionary<IEvent, string>();
+			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
+			_internalTypeCountPerAssemblyAndNamespace = new Dictionary<Tuple<IAssembly, string>, int>();
+			_ignoredMembers = new HashSet<IMember>();
+
+			var sna = compilation.MainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == typeof(ScriptNamespaceAttribute).FullName);
+			if (sna != null) {
+				var data = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(sna);
+				if (data.Name == null || (data.Name != "" && !data.Name.IsValidNestedJavaScriptIdentifier())) {
+					Message(Messages._7002, sna.Region, "assembly");
+				}
+			}
 		}
 
 		private void Message(Tuple<int, MessageSeverity, string> message, DomRegion r, params object[] additionalArgs) {
@@ -287,13 +315,6 @@ namespace CoreLib.Plugin {
 				ProcessDelegate(typeDefinition);
 				return;
 			}
-
-			if (_typeSemantics.ContainsKey(typeDefinition))
-				return;
-			foreach (var b in typeDefinition.DirectBaseTypes)
-				ProcessType(b.GetDefinition());
-			if (typeDefinition.DeclaringType != null)
-				ProcessType(typeDefinition.DeclaringTypeDefinition);
 
 			if (AttributeReader.HasAttribute<NonScriptableAttribute>(typeDefinition) || typeDefinition.DeclaringTypeDefinition != null && GetTypeSemantics(typeDefinition.DeclaringTypeDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false, false, false);
@@ -443,11 +464,10 @@ namespace CoreLib.Plugin {
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
-			ProcessType(typeDefinition);
 			HashSet<string> result;
 			if (!_instanceMemberNamesByType.TryGetValue(typeDefinition, out result))
-				ProcessTypeMembers(typeDefinition);
-			return _instanceMemberNamesByType[typeDefinition];
+				throw new ArgumentException("Error getting instance member names: type " + typeDefinition.FullName + " has not yet been processed.");
+			return result;
 		}
 
 		private IMember UnwrapValueTypeConstructor(IMember m) {
@@ -528,10 +548,6 @@ namespace CoreLib.Plugin {
 			return Tuple.Create(defaultName, false);
 		}
 
-		public string GetQualifiedMemberName(IMember member) {
-			return member.DeclaringType.FullName + "." + member.Name;
-		}
-
 		private void ProcessTypeMembers(ITypeDefinition typeDefinition) {
 			if (typeDefinition.Kind == TypeKind.Delegate)
 				return;
@@ -550,10 +566,16 @@ namespace CoreLib.Plugin {
 			}
 
 			var instanceMembers = baseMembersByType.SelectMany(m => m.MemberNames).Distinct().ToDictionary(m => m, m => false);
-			var staticMembers = _unusableStaticFieldNames.ToDictionary(n => n, n => false);
+			if (_instanceMemberNamesByType.ContainsKey(typeDefinition))
+				_instanceMemberNamesByType[typeDefinition].ForEach(s => instanceMembers[s] = true);
 			_unusableInstanceFieldNames.ForEach(n => instanceMembers[n] = false);
 
+			var staticMembers = _unusableStaticFieldNames.ToDictionary(n => n, n => false);
+			if (_staticMemberNamesByType.ContainsKey(typeDefinition))
+				_staticMemberNamesByType[typeDefinition].ForEach(s => staticMembers[s] = true);
+
 			var membersByName =   from m in typeDefinition.GetMembers(options: GetMemberOptions.IgnoreInheritedMembers)
+			                     where !_ignoredMembers.Contains(m)
 			                       let name = DeterminePreferredMemberName(m)
 			                     group new { m, name } by name.Item1 into g
 			                    select new { Name = g.Key, Members = g.Select(x => new { Member = x.m, NameSpecified = x.name.Item2 }).ToList() };
@@ -593,8 +615,8 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			_unusableInstanceFieldNames.ForEach(n => instanceMembers.Remove(n));
 			_instanceMemberNamesByType[typeDefinition] = new HashSet<string>(instanceMembers.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
+			_staticMemberNamesByType[typeDefinition] = new HashSet<string>(staticMembers.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
 		}
 
 		private string GetUniqueName(string preferredName, Dictionary<string, bool> usedNames) {
@@ -1016,7 +1038,7 @@ namespace CoreLib.Plugin {
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
 							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
 							if (errorMethod != null) {
-								Message(Messages._7134, method, GetQualifiedMemberName(errorMethod));
+								Message(Messages._7134, method, errorMethod.FullName);
 							}
 						}
 
@@ -1186,42 +1208,74 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public void Prepare(IEnumerable<ITypeDefinition> types, bool minimizeNames, IAssembly mainAssembly) {
-			_minimizeNames = minimizeNames;
-			_systemObject = mainAssembly.Compilation.FindType(KnownTypeCode.Object);
-			_compilation = mainAssembly.Compilation;
-			_typeSemantics = new Dictionary<ITypeDefinition, TypeSemantics>();
-			_delegateSemantics = new Dictionary<ITypeDefinition, DelegateScriptSemantics>();
-			_instanceMemberNamesByType = new Dictionary<ITypeDefinition, HashSet<string>>();
-			_methodSemantics = new Dictionary<IMethod, MethodScriptSemantics>();
-			_propertySemantics = new Dictionary<IProperty, PropertyScriptSemantics>();
-			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
-			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
-			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
-			_typeParameterNames = new Dictionary<ITypeParameter, string>();
-			_propertyBackingFieldNames = new Dictionary<IProperty, string>();
-			_eventBackingFieldNames = new Dictionary<IEvent, string>();
-			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
-			_internalTypeCountPerAssemblyAndNamespace = new Dictionary<Tuple<IAssembly, string>, int>();
-
-			var sna = mainAssembly.AssemblyAttributes.SingleOrDefault(a => a.AttributeType.FullName == typeof(ScriptNamespaceAttribute).FullName);
-			if (sna != null) {
-				var data = AttributeReader.ReadAttribute<ScriptNamespaceAttribute>(sna);
-				if (data.Name == null || (data.Name != "" && !data.Name.IsValidNestedJavaScriptIdentifier())) {
-					Message(Messages._7002, sna.Region, "assembly");
-				}
+		public void Prepare(ITypeDefinition type) {
+			try {
+				ProcessType(type);
+				ProcessTypeMembers(type);
 			}
-
-			foreach (var t in types.OrderBy(x => x.ParentAssembly.AssemblyName).ThenBy(x => x.ReflectionName)) {
-				try {
-					ProcessType(t);
-					ProcessTypeMembers(t);
-				}
-				catch (Exception ex) {
-					_errorReporter.Region = t.Region;
-					_errorReporter.InternalError(ex, "Error importing type " + t.FullName);
-				}
+			catch (Exception ex) {
+				_errorReporter.Region = type.Region;
+				_errorReporter.InternalError(ex, "Error importing type " + type.FullName);
 			}
+		}
+
+		public void ReserveMemberName(ITypeDefinition type, string name, bool isStatic) {
+			HashSet<string> names;
+			if (!isStatic) {
+				if (!_instanceMemberNamesByType.TryGetValue(type, out names))
+					_instanceMemberNamesByType[type] = names = new HashSet<string>();
+			}
+			else {
+				if (!_staticMemberNamesByType.TryGetValue(type, out names))
+					_staticMemberNamesByType[type] = names = new HashSet<string>();
+			}
+			names.Add(name);
+		}
+
+		public bool IsMemberNameAvailable(ITypeDefinition type, string name, bool isStatic) {
+			if (isStatic) {
+				if (_unusableStaticFieldNames.Contains(name))
+					return false;
+				HashSet<string> names;
+				if (!_staticMemberNamesByType.TryGetValue(type, out names))
+					return true;
+				return !names.Contains(name);
+			}
+			else {
+				if (_unusableInstanceFieldNames.Contains(name))
+					return false;
+				if (type.DirectBaseTypes.Select(d => d.GetDefinition()).Any(t => !IsMemberNameAvailable(t, name, false)))
+					return false;
+				HashSet<string> names;
+				if (!_instanceMemberNamesByType.TryGetValue(type, out names))
+					return true;
+				return !names.Contains(name);
+			}
+		}
+
+		public virtual void SetMethodSemantics(IMethod method, MethodScriptSemantics semantics) {
+			_methodSemantics[method] = semantics;
+			_ignoredMembers.Add(method);
+		}
+
+		public virtual void SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics) {
+			_constructorSemantics[method] = semantics;
+			_ignoredMembers.Add(method);
+		}
+
+		public virtual void SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics) {
+			_propertySemantics[property] = semantics;
+			_ignoredMembers.Add(property);
+		}
+
+		public virtual void SetFieldSemantics(IField field, FieldScriptSemantics semantics) {
+			_fieldSemantics[field] = semantics;
+			_ignoredMembers.Add(field);
+		}
+
+		public virtual void SetEventSemantics(IEvent evt,EventScriptSemantics semantics) {
+			_eventSemantics[evt] = semantics;
+			_ignoredMembers.Add(evt);
 		}
 
 		private TypeSemantics GetTypeSemanticsInternal(ITypeDefinition typeDefinition) {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CoreLib.Plugin;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -38,9 +39,9 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			var compilation = project.CreateCompilation();
 
 			_errorReporter = new MockErrorReporter(!expectErrors);
-			Metadata = new CoreLib.Plugin.MetadataImporter(_errorReporter);
+			Metadata = new MetadataImporter(_errorReporter, compilation, new CompilerOptions { MinimizeScript = minimizeNames });
 
-			Metadata.Prepare(compilation.GetAllTypeDefinitions(), minimizeNames, compilation.MainAssembly);
+			Metadata.Prepare(compilation.GetAllTypeDefinitions());
 
 			AllErrors = _errorReporter.AllMessages.ToList().AsReadOnly();
 			AllErrorTexts = _errorReporter.AllMessages.Select(m => m.FormattedMessage).ToList().AsReadOnly();
@@ -63,7 +64,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		protected IEnumerable<IMember> FindMembers(string name) {
-            var lastDot = name.LastIndexOf('.');
+			var lastDot = name.LastIndexOf('.');
 			return AllTypes[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));
 		}
 

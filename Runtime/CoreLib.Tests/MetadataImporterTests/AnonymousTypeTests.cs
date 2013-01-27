@@ -4,6 +4,7 @@ using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using NUnit.Framework;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
@@ -34,8 +35,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void ConstructorsAreReportedAsJsonConstructors() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var md = new MetadataImporter(er);
-			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
+			var md = new MetadataImporter(er, compilation, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
@@ -48,8 +48,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void PropertiesAreImplementedAsFieldsWithTheSameName() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var md = new MetadataImporter(er);
-			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
+			var md = new MetadataImporter(er, compilation, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
@@ -67,8 +66,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void AnonymousTypePropertyNamesAreNotMinimized() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var md = new MetadataImporter(er);
-			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
+			var md = new MetadataImporter(er, compilation, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation);
@@ -86,8 +84,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void TransparentIdentiferIsValidJavascriptIdentifierStartingWithDollar() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var md = new MetadataImporter(er);
-			md.Prepare(new ITypeDefinition[0], false, compilation.MainAssembly);
+			var md = new MetadataImporter(er, compilation, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
 			var t = CreateType(compilation, new[] { "<>Identifier" });
