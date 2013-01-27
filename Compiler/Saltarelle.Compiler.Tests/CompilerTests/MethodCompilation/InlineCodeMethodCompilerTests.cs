@@ -99,7 +99,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{*p1}", s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: 0) }));
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0, isExpandedParamArray: true) }));
 		}
 
 		[Test]

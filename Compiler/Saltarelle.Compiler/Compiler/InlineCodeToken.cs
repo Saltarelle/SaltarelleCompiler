@@ -10,7 +10,6 @@ namespace Saltarelle.Compiler.Compiler {
 			TypeParameter,
 			TypeRef,
 			LiteralStringParameterToUseAsIdentifier,
-			ExpandedParamArrayParameter,
 		}
 
 		public TokenType Type { get; private set; }
@@ -27,9 +26,18 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly int _index;
 		public int Index {
 			get {
-				if (Type != TokenType.Parameter && Type != TokenType.TypeParameter && Type != TokenType.LiteralStringParameterToUseAsIdentifier && Type != TokenType.ExpandedParamArrayParameter)
+				if (Type != TokenType.Parameter && Type != TokenType.TypeParameter && Type != TokenType.LiteralStringParameterToUseAsIdentifier)
 					throw new InvalidOperationException();
 				return _index;
+			}
+		}
+
+		private readonly bool _isExpandedParamArray;
+		public bool IsExpandedParamArray {
+			get {
+				if (Type != TokenType.Parameter)
+					throw new InvalidOperationException();
+				return _isExpandedParamArray;
 			}
 		}
 
@@ -42,17 +50,18 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public InlineCodeToken(TokenType type, string text = null, int index = -1, EntityType ownerType = default(EntityType)) {
+		public InlineCodeToken(TokenType type, string text = null, int index = -1, EntityType ownerType = default(EntityType), bool isExpandedParamArray = false) {
 			Type   = type;
 			_text  = text;
 			_index = index;
 			_ownerType = ownerType;
+			_isExpandedParamArray = isExpandedParamArray;
 		}
 
 		public bool Equals(InlineCodeToken other) {
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return Equals(other._text, _text) && other._index == _index && Equals(other.Type, Type) && _ownerType == other._ownerType;
+			return Equals(other._text, _text) && other._index == _index && Equals(other.Type, Type) && _ownerType == other._ownerType && _isExpandedParamArray == other._isExpandedParamArray;
 		}
 
 		public override bool Equals(object obj) {
@@ -68,12 +77,13 @@ namespace Saltarelle.Compiler.Compiler {
 				result = (result*397) ^ _index;
 				result = (result*397) ^ Type.GetHashCode();
 				result = (result*397) ^ _ownerType.GetHashCode();
+				result = (result*397) ^ _isExpandedParamArray.GetHashCode();
 				return result;
 			}
 		}
 
 		public override string ToString() {
-			return string.Format("Text: {0}, Index: {1}, Type: {2}, OwnerType: {3}", _text, _index, Type, _ownerType);
+			return string.Format("Text: {0}, Index: {1}, Type: {2}, OwnerType: {3}, IsExpandedParamArray: {4}", _text, _index, Type, _ownerType, _isExpandedParamArray);
 		}
 	}
 }

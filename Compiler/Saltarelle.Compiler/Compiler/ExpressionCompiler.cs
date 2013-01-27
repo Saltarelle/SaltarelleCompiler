@@ -906,7 +906,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return i;
 				}
 				else {
-					if ((tokens[i].Type == InlineCodeToken.TokenType.Parameter || tokens[i].Type == InlineCodeToken.TokenType.ExpandedParamArrayParameter) && tokens[i].Index == parameterIndex)
+					if ((tokens[i].Type == InlineCodeToken.TokenType.Parameter) && tokens[i].Index == parameterIndex)
 						return i;
 				}
 			}
@@ -970,7 +970,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 				}
 				else {
-					int useCount = (tokens != null ? tokens.Count(t => (t.Type == InlineCodeToken.TokenType.Parameter || t.Type == InlineCodeToken.TokenType.ExpandedParamArrayParameter) && t.Index == i) : 1);
+					int useCount = (tokens != null ? tokens.Count(t => t.Type == InlineCodeToken.TokenType.Parameter && t.Index == i) : 1);
 					bool usedMultipleTimes = argumentsUsedMultipleTimes || useCount > 1;
 					if (useCount >= 1) {
 						expressions.Add(InnerCompile(a, usedMultipleTimes, expressions));

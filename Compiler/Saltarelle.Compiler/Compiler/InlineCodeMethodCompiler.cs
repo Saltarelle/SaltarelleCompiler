@@ -34,7 +34,7 @@ namespace Saltarelle.Compiler.Compiler {
 						if (text[0] == '@')
 							return new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: i);
 						else if (text[0] == '*')
-							return new InlineCodeToken(InlineCodeToken.TokenType.ExpandedParamArrayParameter, index: i);
+							return new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: i, isExpandedParamArray: true);
 						else
 							return new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: i);
 					}
@@ -139,7 +139,20 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.Parameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						substitutions[s] = Tuple.Create(arguments[token.Index], false);
+						substitutions[s] = Tuple.Create(arguments[token.Index], token.IsExpandedParamArray);
+
+						if (token.IsExpandedParamArray) {
+							if (!method.Parameters[token.Index].IsParams) {
+								hasErrors = true;
+								errorReporter("The parameter " + method.Parameters[token.Index].Name + " must be a param array in order to use it with the * modifier.");
+								substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
+							}
+							else if (!isParamArrayExpanded) {
+								hasErrors = true;
+								errorReporter("The method " + method.DeclaringType.FullName + "." + method.Name + " can only be invoked with its params parameter expanded");
+								substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
+							}
+						}
 						break;
 					}
 
@@ -187,25 +200,6 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 					}
 
-					case InlineCodeToken.TokenType.ExpandedParamArrayParameter: {
-						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
-						text.Append(s);
-
-						if (!method.Parameters[token.Index].IsParams) {
-							hasErrors = true;
-							errorReporter("The parameter " + method.Parameters[token.Index].Name + " must be a param array in order to use it with the * modifier.");
-							substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
-						}
-						else if (!isParamArrayExpanded) {
-							hasErrors = true;
-							errorReporter("The method " + method.DeclaringType.FullName + "." + method.Name + " can only be invoked with its params parameter expanded");
-							substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
-						}
-						else {
-							substitutions[s] = Tuple.Create(arguments[token.Index], true);
-						}
-						break;
-					}
 					default:
 						throw new ArgumentException("Unknown token type " + token.Type);
 				}
