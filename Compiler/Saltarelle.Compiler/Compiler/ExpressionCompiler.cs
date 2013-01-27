@@ -849,10 +849,10 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Member is IEvent) {
 				var eimpl = _metadataImporter.GetEventSemantics((IEvent)rr.Member);
-                if (eimpl.Type == EventScriptSemantics.ImplType.NotUsableFromScript) {
+				if (eimpl.Type == EventScriptSemantics.ImplType.NotUsableFromScript) {
 					_errorReporter.Message(7511, rr.Member.DeclaringType.Name + "." + rr.Member.Name);
 					return JsExpression.Null;
-                }
+				}
 
 				var fname = _metadataImporter.GetAutoEventBackingFieldName((IEvent)rr.Member);
 				return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.GetScriptType(rr.Member.DeclaringType, TypeContext.UseStaticMember) : VisitResolveResult(rr.TargetResult, true), fname);
