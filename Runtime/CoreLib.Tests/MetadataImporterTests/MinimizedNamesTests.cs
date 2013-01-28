@@ -267,7 +267,7 @@ public class A {
 	public virtual event System.EventHandler Evt2;
 }");
 
-			Assert.That(FindType("A").Name, Is.EqualTo("$0"));
+			Assert.That(FindType("A").Name, Is.EqualTo("A"));
 			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 0).Item2.Name, Is.EqualTo("$0"));
 			Assert.That(FindMethod("A.SomeMethod2").Name, Is.EqualTo("$2"));
 			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 1).Item2.Name, Is.EqualTo("$1"));

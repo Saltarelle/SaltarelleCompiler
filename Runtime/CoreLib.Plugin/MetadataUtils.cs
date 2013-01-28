@@ -153,7 +153,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public static bool CanBeMinimized(ITypeDefinition typeDefinition) {
-			return !typeDefinition.IsExternallyVisible() || AttributeReader.HasAttribute<MinimizePublicNamesAttribute>(typeDefinition.ParentAssembly.AssemblyAttributes);
+			return !typeDefinition.IsExternallyVisible();
 		}
 
 		public static bool CanBeMinimized(IMember member) {
