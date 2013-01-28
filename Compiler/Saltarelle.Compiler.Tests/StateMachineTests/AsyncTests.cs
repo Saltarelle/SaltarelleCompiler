@@ -311,6 +311,45 @@ lbl: z;
 		}
 
 		[Test]
+		public void AwaitInsideIf() {
+			AssertCorrect(@"
+{
+	if (a) {
+		await x:onCompleted1;
+	}
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					if (a) {
+						$state1 = 1;
+						x.onCompleted1($sm);
+						return;
+					}
+					$state1 = -1;
+					break $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
 		public void AsyncMethodWithTryFinally() {
 			AssertCorrect(@"
 {
