@@ -152,6 +152,14 @@ namespace CoreLib.Plugin {
 			return m;
 		}
 
+		public static bool CanBeMinimized(ITypeDefinition typeDefinition) {
+			return !typeDefinition.IsExternallyVisible() || AttributeReader.HasAttribute<MinimizePublicNamesAttribute>(typeDefinition.ParentAssembly.AssemblyAttributes);
+		}
+
+		public static bool CanBeMinimized(IMember member) {
+			return !member.IsExternallyVisible() || AttributeReader.HasAttribute<MinimizePublicNamesAttribute>(member.ParentAssembly.AssemblyAttributes);
+		}
+
 		/// <summary>
 		/// Determines the preferred name for a member. The first item is the name, the second item is true if the name was explicitly specified.
 		/// </summary>
@@ -166,7 +174,7 @@ namespace CoreLib.Plugin {
 			if (isConstructor) {
 				defaultName = "$ctor";
 			}
-			else if (member.IsExternallyVisible()) {
+			else if (!CanBeMinimized(member)) {
 				defaultName = isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {

@@ -302,7 +302,7 @@ namespace CoreLib.Plugin {
 					Message(Messages._7006, typeDefinition);
 				}
 
-				if (_minimizeNames && !typeDefinition.IsExternallyVisible() && !preserveName) {
+				if (_minimizeNames && MetadataUtils.CanBeMinimized(typeDefinition) && !preserveName) {
 					nmspace = DetermineNamespace(typeDefinition);
 					var key = Tuple.Create(typeDefinition.ParentAssembly, nmspace);
 					int index;
@@ -325,7 +325,7 @@ namespace CoreLib.Plugin {
 						nmspace = DetermineNamespace(typeDefinition);
 					}
 
-					if (!typeDefinition.IsExternallyVisible() && !preserveName && !typeName.StartsWith("$")) {
+					if (MetadataUtils.CanBeMinimized(typeDefinition) && !preserveName && !typeName.StartsWith("$")) {
 						typeName = "$" + typeName;
 					}
 				}
@@ -591,14 +591,14 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else {
-				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && !source.IsExternallyVisible())) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
+				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && MetadataUtils.CanBeMinimized(source))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
 					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
 					usedNames["$ctor"] = true;
 					return;
 				}
 				else {
 					string name;
-					if (_minimizeNames && !source.IsExternallyVisible()) {
+					if (_minimizeNames && MetadataUtils.CanBeMinimized(source)) {
 						name = GetUniqueName(null, usedNames);
 					}
 					else {
@@ -703,7 +703,7 @@ namespace CoreLib.Plugin {
 			if (property.CanGet) {
 				var getterName = DeterminePreferredMemberName(property.Getter);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !property.IsExternallyVisible() ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames);
 				getter = GetMethodSemantics(property.Getter);
@@ -715,7 +715,7 @@ namespace CoreLib.Plugin {
 			if (property.CanSet) {
 				var setterName = DeterminePreferredMemberName(property.Setter);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && !property.IsExternallyVisible() ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames);
 				setter = GetMethodSemantics(property.Setter);
@@ -1004,7 +1004,7 @@ namespace CoreLib.Plugin {
 			if (evt.CanAdd) {
 				var getterName = DeterminePreferredMemberName(evt.AddAccessor);
 				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !evt.IsExternallyVisible() ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
 				adder = GetMethodSemantics(evt.AddAccessor);
@@ -1016,7 +1016,7 @@ namespace CoreLib.Plugin {
 			if (evt.CanRemove) {
 				var setterName = DeterminePreferredMemberName(evt.RemoveAccessor);
 				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && !evt.IsExternallyVisible() ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
 				remover = GetMethodSemantics(evt.RemoveAccessor);

@@ -232,6 +232,15 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
+	/// This attribute allows public symbols inside an assembly to be minimized, in addition to non-public ones, when generating release scripts.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+	[NonScriptable]
+	[Imported]
+	public sealed class MinimizePublicNamesAttribute : Attribute {
+	}
+
+	/// <summary>
 	/// This attribute allows specifying a script name for an imported method.
 	/// The method is interpreted as a global method. As a result it this attribute
 	/// only applies to static methods.

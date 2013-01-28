@@ -239,5 +239,51 @@ public interface I3 {
 			Assert.That(FindEvent("I3.Evt1").AddMethod.Name, Is.EqualTo("add_evt1"));
 			Assert.That(FindEvent("I3.Evt1").RemoveMethod.Name, Is.EqualTo("remove_evt1"));
 		}
+
+		[Test]
+		public void PublicNamesInClassesAreMinimizedIfTheAssemblyHasAMinimizePublicNamesAttribute() {
+			Prepare(
+@"[assembly: System.Runtime.CompilerServices.MinimizePublicNames]
+public class A {
+	public void SomeMethod() {}
+	public static void SomeStaticMethod() {}
+	public void SomeMethod2() {}
+	public void SomeMethod(int x) {}
+	public virtual void VirtualMethod() {}
+
+	public virtual int Prop1 { get; set; }
+	public int Prop2 { get; set; }
+
+	public int this[int x] { get { return 0; } set {} }
+
+	public int Field1;
+	public int Field2;
+
+	public A() {}
+	public A(int i) {}
+	public A(int i, int j) {}
+
+	public event System.EventHandler Evt1;
+	public virtual event System.EventHandler Evt2;
+}");
+
+			Assert.That(FindType("A").Name, Is.EqualTo("$0"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 0).Item2.Name, Is.EqualTo("$0"));
+			Assert.That(FindMethod("A.SomeMethod2").Name, Is.EqualTo("$2"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 1).Item2.Name, Is.EqualTo("$1"));
+			Assert.That(FindMethod("A.VirtualMethod").Name, Is.EqualTo("$3"));
+			Assert.That(FindIndexer("A", 1).GetMethod.Name, Is.EqualTo("$4"));
+			Assert.That(FindIndexer("A", 1).SetMethod.Name, Is.EqualTo("$5"));
+			Assert.That(FindProperty("A.Prop1").GetMethod.Name, Is.EqualTo("$6"));
+			Assert.That(FindProperty("A.Prop1").SetMethod.Name, Is.EqualTo("$7"));
+			Assert.That(FindProperty("A.Prop2").GetMethod.Name, Is.EqualTo("$8"));
+			Assert.That(FindProperty("A.Prop2").SetMethod.Name, Is.EqualTo("$9"));
+			Assert.That(FindField("A.Field1").Name, Is.EqualTo("$a"));
+			Assert.That(FindField("A.Field2").Name, Is.EqualTo("$b"));
+			Assert.That(FindEvent("A.Evt1").AddMethod.Name, Is.EqualTo("$c"));
+			Assert.That(FindEvent("A.Evt1").RemoveMethod.Name, Is.EqualTo("$d"));
+			Assert.That(FindEvent("A.Evt2").AddMethod.Name, Is.EqualTo("$e"));
+			Assert.That(FindEvent("A.Evt2").RemoveMethod.Name, Is.EqualTo("$f"));
+		}
 	}
 }
