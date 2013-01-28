@@ -1399,7 +1399,7 @@ class C1 : B {
 		}
 
 		[Test]
-		public void GenericArgumentsAreIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+		public void GenericArgumentsAreIncludedForNonImportedTypesByDefaultButCanBeOverridden() {
 			Prepare(@"
 using System.Runtime.CompilerServices;
 public class C1 {
@@ -1407,11 +1407,15 @@ public class C1 {
 	[IncludeGenericArguments] public void M2<T1, T2>() {}
 	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
 	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
-}");
-
+}
+[Imported]
+public class C2 {
+	public void M5<T1, T2>() {}
+}
+");
 			var m1 = FindMethod("C1.M1");
 			Assert.That(m1.Name, Is.EqualTo("m1"));
-			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			Assert.That(m1.IgnoreGenericArguments, Is.False);
 			var m2 = FindMethod("C1.M2");
 			Assert.That(m2.Name, Is.EqualTo("m2"));
 			Assert.That(m2.IgnoreGenericArguments, Is.False);
@@ -1421,6 +1425,9 @@ public class C1 {
 			var m4 = FindMethod("C1.M4");
 			Assert.That(m4.Name, Is.EqualTo("m4"));
 			Assert.That(m4.IgnoreGenericArguments, Is.True);
+			var m5 = FindMethod("C2.M5");
+			Assert.That(m5.Name, Is.EqualTo("m5"));
+			Assert.That(m5.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]
@@ -1450,7 +1457,7 @@ public class C1 {
 		}
 
 		[Test]
-		public void GenericArgumentDefaultWithNoTypeDefaultCausesGenericArgumentsToBeIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+		public void GenericArgumentDefaultWithNoTypeDefaultCausesGenericArgumentsToBeIncludedForNonImportedTypesButCanBeOverridden() {
 			Prepare(@"
 using System.Runtime.CompilerServices;
 [assembly: IncludeGenericArgumentsDefault()]
@@ -1459,11 +1466,16 @@ public class C1 {
 	[IncludeGenericArguments] public void M2<T1, T2>() {}
 	[IncludeGenericArguments(true)] public void M3<T1, T2>() {}
 	[IncludeGenericArguments(false)] public void M4<T1, T2>() {}
-}");
+}
+[Imported]
+public class C2 {
+	public void M5<T1, T2>() {}
+}
+");
 
 			var m1 = FindMethod("C1.M1");
 			Assert.That(m1.Name, Is.EqualTo("m1"));
-			Assert.That(m1.IgnoreGenericArguments, Is.True);
+			Assert.That(m1.IgnoreGenericArguments, Is.False);
 			var m2 = FindMethod("C1.M2");
 			Assert.That(m2.Name, Is.EqualTo("m2"));
 			Assert.That(m2.IgnoreGenericArguments, Is.False);
@@ -1473,6 +1485,9 @@ public class C1 {
 			var m4 = FindMethod("C1.M4");
 			Assert.That(m4.Name, Is.EqualTo("m4"));
 			Assert.That(m4.IgnoreGenericArguments, Is.True);
+			var m5 = FindMethod("C2.M5");
+			Assert.That(m5.Name, Is.EqualTo("m5"));
+			Assert.That(m5.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]
@@ -1502,7 +1517,7 @@ public class C1 {
 		}
 
 		[Test]
-		public void GenericArgumentDefaultIncludeExceptImportedCausesGenericArgumentsToBeIgnoredByDefaultForImportedTypesButCanBeOverriddenByIncludeGenericArguments() {
+		public void GenericArgumentDefaultIgnoreCausesGenericArgumentsToBeIgnoredByDefaultForImportedTypesButCanBeOverriddenByIncludeGenericArguments() {
 			Prepare(@"
 using System.Runtime.CompilerServices;
 [assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.Ignore)]

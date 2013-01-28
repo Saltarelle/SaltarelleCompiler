@@ -111,11 +111,11 @@ namespace CoreLib.Plugin {
 			if (imp != null)
 				return false;
 			var def = AttributeReader.ReadAttribute<IncludeGenericArgumentsDefaultAttribute>(type.ParentAssembly.AssemblyAttributes);
-			switch (def != null ? def.TypeDefault : GenericArgumentsDefault.Ignore) {
-				case GenericArgumentsDefault.Ignore:
-					return false;
+			switch (def != null ? def.TypeDefault : GenericArgumentsDefault.IncludeExceptImported) {
 				case GenericArgumentsDefault.IncludeExceptImported:
 					return true;
+				case GenericArgumentsDefault.Ignore:
+					return false;
 				case GenericArgumentsDefault.RequireExplicitSpecification:
 					return null;
 				default:
@@ -131,11 +131,11 @@ namespace CoreLib.Plugin {
 			if (imp != null)
 				return false;
 			var def = AttributeReader.ReadAttribute<IncludeGenericArgumentsDefaultAttribute>(method.ParentAssembly.AssemblyAttributes);
-			switch (def != null ? def.MethodDefault : GenericArgumentsDefault.Ignore) {
-				case GenericArgumentsDefault.Ignore:
-					return false;
+			switch (def != null ? def.MethodDefault : GenericArgumentsDefault.IncludeExceptImported) {
 				case GenericArgumentsDefault.IncludeExceptImported:
 					return true;
+				case GenericArgumentsDefault.Ignore:
+					return false;
 				case GenericArgumentsDefault.RequireExplicitSpecification:
 					return null;
 				default:

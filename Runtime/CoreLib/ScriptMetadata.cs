@@ -329,13 +329,13 @@ namespace System.Runtime.CompilerServices {
 	[Imported]
 	public enum GenericArgumentsDefault {
 		/// <summary>
-		/// Ignore generic arguments by default (this is the default)
-		/// </summary>
-		Ignore,
-		/// <summary>
 		/// Include generic arguments for all types that are not [Imported]
 		/// </summary>
 		IncludeExceptImported,
+		/// <summary>
+		/// Ignore generic arguments by default (this is the default)
+		/// </summary>
+		Ignore,
 		/// <summary>
 		/// Require an <see cref="IncludeGenericArgumentsAttribute"/> for all generic types/methods, excepts those that are imported, which will default to ignore their generic arguments.
 		/// </summary>

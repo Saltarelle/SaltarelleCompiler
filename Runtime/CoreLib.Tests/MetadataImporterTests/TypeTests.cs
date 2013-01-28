@@ -969,18 +969,19 @@ class C1 {
 		}
 
 		[Test]
-		public void GenericArgumentsAreIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+		public void GenericArgumentsAreIncludedForNonImportedTypesByDefaultButCanBeOverridden() {
 			Prepare(@"
 using System.Runtime.CompilerServices;
 public class C1<T1, T2> {}
 [IncludeGenericArguments] public class C2<T1, T2> {}
 [IncludeGenericArguments(true)]
 public class C3<T1, T2> {}
-[IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+[IncludeGenericArguments(false)] public class C4<T1, T2> {}
+[Imported] public class C5<T1, T2> {}");
 
 			var t1 = FindType("C1`2");
-			Assert.That(t1.Name, Is.EqualTo("C1"));
-			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			Assert.That(t1.Name, Is.EqualTo("C1$2"));
+			Assert.That(t1.IgnoreGenericArguments, Is.False);
 			var t2 = FindType("C2`2");
 			Assert.That(t2.Name, Is.EqualTo("C2$2"));
 			Assert.That(t2.IgnoreGenericArguments, Is.False);
@@ -990,6 +991,9 @@ public class C3<T1, T2> {}
 			var t4 = FindType("C4`2");
 			Assert.That(t4.Name, Is.EqualTo("C4"));
 			Assert.That(t4.IgnoreGenericArguments, Is.True);
+			var t5 = FindType("C5`2");
+			Assert.That(t5.Name, Is.EqualTo("C5"));
+			Assert.That(t5.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]
@@ -1018,7 +1022,7 @@ public class C3<T1, T2> {}
 		}
 
 		[Test]
-		public void GenericArgumentDefaultWithNoTypeDefaultCausesGenericArgumentsToBeIgnoredByDefaultButCanBeOverriddenByIncludeGenericArguments() {
+		public void GenericArgumentDefaultWithNoTypeDefaultCausesGenericArgumentsToBeIncludedForNonImportedTypesButCanBeOverridden() {
 			Prepare(@"
 using System.Runtime.CompilerServices;
 [assembly: IncludeGenericArgumentsDefault()]
@@ -1026,11 +1030,12 @@ public class C1<T1, T2> {}
 [IncludeGenericArguments] public class C2<T1, T2> {}
 [IncludeGenericArguments(true)]
 public class C3<T1, T2> {}
-[IncludeGenericArguments(false)] public class C4<T1, T2> {}");
+[IncludeGenericArguments(false)] public class C4<T1, T2> {}
+[Imported] public class C5<T1, T2> {}");
 
 			var t1 = FindType("C1`2");
-			Assert.That(t1.Name, Is.EqualTo("C1"));
-			Assert.That(t1.IgnoreGenericArguments, Is.True);
+			Assert.That(t1.Name, Is.EqualTo("C1$2"));
+			Assert.That(t1.IgnoreGenericArguments, Is.False);
 			var t2 = FindType("C2`2");
 			Assert.That(t2.Name, Is.EqualTo("C2$2"));
 			Assert.That(t2.IgnoreGenericArguments, Is.False);
@@ -1040,6 +1045,9 @@ public class C3<T1, T2> {}
 			var t4 = FindType("C4`2");
 			Assert.That(t4.Name, Is.EqualTo("C4"));
 			Assert.That(t4.IgnoreGenericArguments, Is.True);
+			var t5 = FindType("C5`2");
+			Assert.That(t5.Name, Is.EqualTo("C5"));
+			Assert.That(t5.IgnoreGenericArguments, Is.True);
 		}
 
 		[Test]

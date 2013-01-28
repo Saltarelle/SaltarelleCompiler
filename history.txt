@@ -1,8 +1,7 @@
 Created a MinimizePublicNamesAttribute that can be used to specify that public members are minified in addition to non-public ones (#84).
 Fixed issue causing internal errors when compiling async methods with certain constructs.
-BREAKING CHANGE: IgnoreGenericArguments attribute removed. The new way to achieve the same effect is with a combination of the IncludeGenericArguments and IncludeGenericArgumentsDefault attributes.
-    To get behavior identical to the previous version, add [assembly: IncludeGenericArgumentsDefault(TypeDefault = GenericArgumentsDefault.IncludeExceptImported, MethodDefault = GenericArgumentsDefault.IncludeExceptImported)]
-    and do a global search/replace of IgnoreGenericArguments with IncludeGenericArguments(false)
+Added IncludeGenericArgumentsDefaultAttribute to specify default values for IncludeGenericArguments in an assembly.
+Added IncludeGenericArgumentsAttribute and removed IgnoreGenericArgumentsAttribute. For the IgnoreGenericArguments effect, use IncludeGenericArguments(false).
 Use Object.Equals() in ICollection methods Contains, IndexOf, Remove of collections and arrays.
 mscorlib.js no longer extends any built-in object. The only global pollution is a single global object called 'ss'.
     This is a breaking change for manually written Javascript that depends on mscorlib, but should not affect compiled code.
