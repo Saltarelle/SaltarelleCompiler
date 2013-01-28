@@ -1,3 +1,5 @@
+Fixed issue causing internal errors when compiling async methods with certain constructs.
+
 1.7.1
 No longer allows "string s = (string)65"
 Fixed error causing type initializers to be invoked in the opposite order to what they should (#96)
