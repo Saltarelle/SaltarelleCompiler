@@ -686,6 +686,32 @@ public void M() {
 		}
 
 		[Test]
+		public void ToNullableAndTruncatingAtTheSameTime() {
+			AssertCorrect(
+@"public void M() {
+	double d = 1;
+	// BEGIN
+	var i = (int?)d;
+	// END
+}",
+@"	var $i = $Truncate($d);
+");
+		}
+
+		[Test]
+		public void FromNullableAndTruncatingAtTheSameTime() {
+			AssertCorrect(
+@"public void M() {
+	double? d = 1;
+	// BEGIN
+	var i = (int)d;
+	// END
+}",
+@"	var $i = $Truncate($FromNullable($d));
+");
+		}
+
+		[Test]
 		public void NullLiteralToNullable() {
 			AssertCorrect(
 @"public void M() {
