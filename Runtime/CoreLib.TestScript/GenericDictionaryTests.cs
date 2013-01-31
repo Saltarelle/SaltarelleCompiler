@@ -247,13 +247,25 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void TryGetValueWorks() {
+		public void TryGetValueWithIntKeysWorks() {
 			var d = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
 			int i;
+
 			Assert.IsTrue(d.TryGetValue("a", out i));
 			Assert.AreEqual(i, 1);
 			Assert.IsFalse(d.TryGetValue("c", out i));
 			Assert.AreEqual(i, 0);
+		}
+
+		[Test]
+		public void TryGetValueWithObjectKeysWorks() {
+			var d = new Dictionary<string, object> { { "a", 1 }, { "b", "X" } };
+			object o;
+
+			Assert.IsTrue(d.TryGetValue("a", out o));
+			Assert.AreEqual(o, 1);
+			Assert.IsFalse(d.TryGetValue("c", out o));
+			Assert.AreStrictEqual(o, null);
 		}
 
 		[Test]

@@ -124,7 +124,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 				return true;
 			}
 			else {
-				value.$ = TValue.getDefaultValue();
+				value.$ = ss.getDefaultValue(TValue);
 				return false;
 			}
 		},
