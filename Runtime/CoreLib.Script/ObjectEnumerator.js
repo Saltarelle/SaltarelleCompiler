@@ -14,7 +14,7 @@ ss_ObjectEnumerator.prototype = {
 	reset: function#? DEBUG ObjectEnumerator$reset##() {
 		this._index = -1;
 	},
-	get_current: function#? DEBUG ObjectEnumerator$get_current##() {
+	current: function#? DEBUG ObjectEnumerator$current##() {
 		if (this._index < 0 || this._index >= this._keys.length)
 			throw 'Invalid operation';
 		var k = this._keys[this._index];

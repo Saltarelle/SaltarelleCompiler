@@ -13,7 +13,7 @@ ss_ArrayEnumerator.prototype = {
 	reset: function#? DEBUG ArrayEnumerator$reset##() {
 		this._index = -1;
 	},
-	get_current: function#? DEBUG ArrayEnumerator$get_current##() {
+	current: function#? DEBUG ArrayEnumerator$current##() {
 		if (this._index < 0 || this._index >= this._array.length)
 			throw 'Invalid operation';
 		return this._array[this._index];

@@ -71,7 +71,7 @@ ss.arrayAddRange = function#? DEBUG ss$arrayAddRange##(arr, items) {
 		var e = ss.getEnumerator(items);
 		try {
 			while (e.moveNext()) {
-				ss.add(arr, e.get_current());
+				ss.add(arr, e.current());
 			}
 		}
 		finally {
@@ -167,7 +167,7 @@ ss.arrayInsertRange = function#? DEBUG ss$arrayInsertRange##(arr, index, items) 
 		var e = ss.getEnumerator(items);
 		try {
 			while (e.moveNext()) {
-				arr.insert(index, e.get_current());
+				arr.insert(index, e.current());
 				index++;
 			}
 		}
@@ -212,7 +212,7 @@ ss.arrayFromEnumerable = function#? DEBUG ss$arrayFromEnumerable##(enm) {
 	var e = ss.getEnumerator(enm), r = [];
 	try {
 		while (e.moveNext())
-			r.push(e.get_current());
+			r.push(e.current());
 	}
 	finally {
 		e.dispose();

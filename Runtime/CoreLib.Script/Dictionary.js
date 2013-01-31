@@ -50,7 +50,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			var e = ss.getEnumerator(o);
 			try {
 				while (e.moveNext()) {
-					var c = e.get_current();
+					var c = e.current();
 					this.add(c.key, c.value);
 				}
 			}

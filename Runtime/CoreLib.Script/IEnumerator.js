@@ -3,7 +3,7 @@
 
 var ss_IEnumerator = function#? DEBUG IEnumerator$##() { };
 ss_IEnumerator.prototype = {
-	get_current: null,
+	current: null,
 	moveNext: null,
 	reset: null
 };

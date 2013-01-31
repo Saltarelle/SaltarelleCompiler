@@ -19,7 +19,7 @@ ss_IteratorBlockEnumerator.prototype = {
 			throw ex;
 		}
 	},
-	get_current: function#? DEBUG IteratorBlockEnumerator$get_current##() {
+	current: function#? DEBUG IteratorBlockEnumerator$current##() {
 		return this._getCurrent.call(this._this);
 	},
 	reset: function#? DEBUG IteratorBlockEnumerator$reset##() {

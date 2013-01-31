@@ -11,7 +11,7 @@ namespace System.Collections.Generic {
 	[ScriptName("IEnumerator")]
 	[Imported(ObeysTypeSystem = true)]
 	public interface IEnumerator<out T> : IDisposable, IEnumerator {
-		new T Current { get; }
+		new T Current { [ScriptName("current")] get; }
 		new bool MoveNext();
 		new void Reset();
 	}
