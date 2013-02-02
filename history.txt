@@ -1,3 +1,4 @@
+Fixed issue with labels in switch section bodies (#128)
 Fixed issue causing internal errors when compiling async methods with certain constructs.
 
 1.7.1

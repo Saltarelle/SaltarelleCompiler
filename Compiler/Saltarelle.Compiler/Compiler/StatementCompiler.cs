@@ -365,14 +365,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 		protected override void VisitChildren(AstNode node) {
 			for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-				// Store next to allow the loop to continue
-				// if the visitor removes/replaces child.
-
 				if (child is LabelStatement) {
 					string name = ((LabelStatement)child).Label;
 					do {
 						child = child.NextSibling;
-					} while (child.Role != BlockStatement.StatementRole);
+					} while (child.Role != BlockStatement.StatementRole && child.Role != Roles.EmbeddedStatement);
 					int index = _result.Count;
 					child.AcceptVisitor(this);
 					_result[index] = new JsLabelledStatement(name, _result[index]);
@@ -996,7 +993,15 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 				}
 
-				var statements = section.Statements.SelectMany(stmt => CreateInnerCompiler().Compile(stmt).Statements).ToList();
+				var ic = CreateInnerCompiler();
+				IList<JsStatement> statements;
+				if (section.Statements.Count == 1 && section.Statements.First() is BlockStatement) {
+					statements = ic.Compile(section.Statements.First()).Statements;
+				}
+				else {
+					ic.VisitChildren(section);
+					statements = ic._result;
+				}
 
 				if (gotoCaseData.Item1.ContainsKey(section))
 					statements = new[] { new JsLabelledStatement(gotoCaseData.Item1[section], statements[0]) }.Concat(statements.Skip(1)).ToList();
