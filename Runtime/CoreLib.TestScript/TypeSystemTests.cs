@@ -508,8 +508,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void ImportedInterfaceAppearsAsObjectWhenUsedWithTypeOfAndAsGenericArgument() {
-			Assert.AreStrictEqual(typeof(IImported), typeof(object));
+		public void ImportedInterfaceAppearsAsObjectWhenUsedAsGenericArgument() {
 			Assert.AreStrictEqual(typeof(BX<IImported>), typeof(BX<object>));
 		}
 

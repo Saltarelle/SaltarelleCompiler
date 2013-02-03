@@ -55,11 +55,9 @@ namespace CoreLib.Plugin {
 
 		private JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (type.Kind == TypeKind.Delegate) {
-				// OK
 				return CreateTypeReferenceExpression(KnownTypeReference.Delegate);
 			}
 			else if (type is ParameterizedType) {
-				// OK
 				var pt = (ParameterizedType)type;
 				var def = pt.GetDefinition();
 				if (MetadataUtils.IsSerializable(def) && context == TypeContext.CastTarget)
@@ -71,21 +69,16 @@ namespace CoreLib.Plugin {
 					return GetTypeDefinitionScriptType(type.GetDefinition(), context);
 			}
 			else if (type.TypeParameterCount > 0) {
-				// OK
 				// This handles open generic types ( typeof(C<,>) )
 				return CreateTypeReferenceExpression(type.GetDefinition());
 			}
 			else if (type.Kind == TypeKind.Enum && context == TypeContext.CastTarget) {
-				// OK
-				var def = type.GetDefinition();
-				return CreateTypeReferenceExpression(def.EnumUnderlyingType.GetDefinition());
+				return CreateTypeReferenceExpression(type.GetDefinition().EnumUnderlyingType.GetDefinition());
 			}
 			else if (type.Kind == TypeKind.Array) {
-				// OK
 				return CreateTypeReferenceExpression(KnownTypeReference.Array);
 			}
 			else if (type is ITypeParameter) {
-				// OK
 				return resolveTypeParameter((ITypeParameter)type);
 			}
 			else if (type is ITypeDefinition) {
@@ -307,7 +300,6 @@ namespace CoreLib.Plugin {
 				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetScriptType, resolveTypeParameter));
 			}
 			else if (type.Kind == TypeKind.Enum) {
-#warning TODO: null for [NamedValues]
 				return JsExpression.Number(0);
 			}
 			else {

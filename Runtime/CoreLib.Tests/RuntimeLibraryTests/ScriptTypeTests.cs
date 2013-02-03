@@ -25,6 +25,23 @@ class C {
 		}
 
 		[Test]
+		public void DelegateTypeAppearsAsFunctionAsTypeArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<Func<int, string>>();
+		// END
+	}
+}
+",
+@"			var x = Function;
+");
+		}
+
+		[Test]
 		public void TypeOfDelegateTypeReturnsFunction() {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
@@ -71,6 +88,23 @@ class C {
 }
 ",
 @"			var f = new (ss.makeGenericType($$G$1, [Array]))();
+");
+		}
+
+		[Test]
+		public void ArrayTypeAppearsAsArrayAsTypeArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<int[]>();
+		// END
+	}
+}
+",
+@"			var x = Array;
 ");
 		}
 
@@ -142,6 +176,24 @@ class C {
 		}
 
 		[Test]
+		public void EnumAsTypeArgumentInInlineCodeWorks() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+public enum E {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<E>();
+		// END
+	}
+}
+",
+@"			var x = $E;
+");
+		}
+
+		[Test]
 		public void CastToEnumIsCastToInt() {
 			SourceVerifier.AssertSourceCorrect(@"
 public enum E {}
@@ -193,6 +245,24 @@ class C {
 		}
 
 		[Test]
+		public void ImportedEnumIsObjectAsTypeArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+[System.Runtime.CompilerServices.Imported] public enum E {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<E>();
+		// END
+	}
+}
+",
+@"			var x = Object;
+");
+		}
+
+		[Test]
 		public void ImportedEnumThatObeysTypeSystemIsItselfAsTypeArgument() {
 			SourceVerifier.AssertSourceCorrect(@"
 [System.Runtime.CompilerServices.Imported(ObeysTypeSystem = true)] public enum E {}
@@ -226,6 +296,24 @@ class C {
 		}
 
 		[Test]
+		public void ParameterizedTypeAppearsAsItselfWhenUsedAsInlineCodeGenericArgument() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+public class G<T1> {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<G<int>>();
+		// END
+	}
+}
+",
+@"			var x = ss.makeGenericType($G$1, [ss.Int32]);
+");
+		}
+
+		[Test]
 		public void ParameterizedTypeWorksWhenUsedWithTypeOf() {
 			SourceVerifier.AssertSourceCorrect(@"
 public class G<T1, T2> {}
@@ -241,10 +329,10 @@ class C {
 ");
 		}
 
-		[Test, Ignore("TODO: Fix")]
+		[Test]
 		public void CanUseStaticMemberOfParameterizedType() {
 			SourceVerifier.AssertSourceCorrect(@"
-public class G<T1, T2> { public void M() {} }
+public class G<T1, T2> { public static void M() {} }
 class C {
 	public void M() {
 		// BEGIN
@@ -253,7 +341,7 @@ class C {
 	}
 }
 ",
-@"			var t = ss.makeGenericType($G$1, [Object, String]);
+@"			ss.makeGenericType($G$2, [Object, String]).m();
 ");
 		}
 
@@ -292,6 +380,24 @@ class C {
 		}
 
 		[Test]
+		public void ParameterizedTypeWithIgnoreGenericArgumentsAppearsAsItselfWhenUsedAsInlineCodeGenericArgument() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+[System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1> {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<G<int>>();
+		// END
+	}
+}
+",
+@"			var x = $G;
+");
+		}
+
+		[Test]
 		public void ParameterizedTypeWithIgnoreGenericArgumentsWorksWhenUsedWithTypeOf() {
 			SourceVerifier.AssertSourceCorrect(@"
 [System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1, T2> {}
@@ -307,10 +413,10 @@ class C {
 ");
 		}
 
-		[Test, Ignore("TODO: Fix")]
+		[Test]
 		public void CanUseStaticMemberOfParameterizedTypeWithIgnoreGenericArguments() {
 			SourceVerifier.AssertSourceCorrect(@"
-[System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1, T2> { public void M() {} }
+[System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1, T2> { public static void M() {} }
 class C {
 	public void M() {
 		// BEGIN
@@ -319,7 +425,7 @@ class C {
 	}
 }
 ",
-@"			var t = ss.makeGenericType($G$1, [Object, String]);
+@"			$G.m();
 ");
 		}
 
@@ -358,6 +464,24 @@ class C {
 		}
 
 		[Test]
+		public void ImportedParameterizedTypeAppearsAsObjectWhenUsedAsAsInlineCodeGenericArgument() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+[System.Runtime.CompilerServices.Imported] public class G<T1> {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<G<int>>();
+		// END
+	}
+}
+",
+@"			var x = Object;
+");
+		}
+
+		[Test]
 		public void ImportedParameterizedTypeWorksWhenUsedWithTypeOf() {
 			SourceVerifier.AssertSourceCorrect(@"
 [System.Runtime.CompilerServices.Imported] public class G<T1, T2> {}
@@ -373,10 +497,10 @@ class C {
 ");
 		}
 
-		[Test, Ignore("TODO: Fix")]
+		[Test]
 		public void CanUseStaticMemberOfImportedParameterizedType() {
 			SourceVerifier.AssertSourceCorrect(@"
-[System.Runtime.CompilerServices.Imported] public class G<T1, T2> { public void M() {} }
+[System.Runtime.CompilerServices.Imported] public class G<T1, T2> { public static void M() {} }
 class C {
 	public void M() {
 		// BEGIN
@@ -385,7 +509,7 @@ class C {
 	}
 }
 ",
-@"			var t = ss.makeGenericType($G$1, [Object, String]);
+@"			G.m();
 ");
 		}
 
@@ -406,11 +530,6 @@ class C {
 ");
 		}
 
-
-
-
-
-
 		[Test]
 		public void SerializableParameterizedTypeAppearsAsItselfWhenUsedAsGenericArgument() {
 			SourceVerifier.AssertSourceCorrect(@"
@@ -425,6 +544,23 @@ class C {
 }
 ",
 @"			var f = new (ss.makeGenericType($G$1, [ss.makeGenericType($G2$1, [ss.Int32])]))();
+");
+		}
+
+		[Test]
+		public void SerializableParameterizedTypeAppearsAsItselfWhenUsedAsGenericArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+[System.Serializable] public class G<T1> {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<G<int>>();
+		// END
+	}
+}
+",
+@"			var x = ss.makeGenericType($G$1, [ss.Int32]);
 ");
 		}
 
@@ -444,11 +580,10 @@ class C {
 ");
 		}
 
-		[Test, Ignore("TODO: Fix")]
+		[Test]
 		public void CanUseStaticMemberOfSerializableParameterizedType() {
-			Assert.Fail("TODO");
 			SourceVerifier.AssertSourceCorrect(@"
-[System.Serializable] public class G<T1, T2> { public void M() {} }
+[System.Serializable] public class G<T1, T2> { public static void M() {} }
 class C {
 	public void M() {
 		// BEGIN
@@ -457,7 +592,7 @@ class C {
 	}
 }
 ",
-@"			var t = ss.makeGenericType($G$1, [Object, String]);
+@"			ss.makeGenericType($G$2, [Object, String]).m();
 ");
 		}
 
@@ -496,6 +631,23 @@ class C {
 		}
 
 		[Test]
+		public void SerializableParameterizedTypeWithIgnoreGenericArgumentsAppearsAsItselfWhenUsedAsInlineCodeGenericArgument() {
+			SourceVerifier.AssertSourceCorrect(@"
+[System.Serializable, System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G2<T1> {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<G2<int>>();
+		// END
+	}
+}
+",
+@"			var x = $G2;
+");
+		}
+
+		[Test]
 		public void SerializableParameterizedTypeWithIgnoreGenericArgumentsWorksWhenUsedWithTypeOf() {
 			SourceVerifier.AssertSourceCorrect(@"
 [System.Serializable, System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1, T2> {}
@@ -511,10 +663,10 @@ class C {
 ");
 		}
 
-		[Test, Ignore("TODO: Fix")]
+		[Test]
 		public void CanUseStaticMemberOfSerializableParameterizedTypeWithIgnoreGenericArguments() {
 			SourceVerifier.AssertSourceCorrect(@"
-[System.Serializable, System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1, T2> { public void M() {} }
+[System.Serializable, System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1, T2> { public static void M() {} }
 class C {
 	public void M() {
 		// BEGIN
@@ -523,7 +675,7 @@ class C {
 	}
 }
 ",
-@"			var t = $G;
+@"			$G.m();
 ");
 		}
 
@@ -563,6 +715,24 @@ class C {
 		}
 
 		[Test]
+		public void TypeDefinitionAppearsAsItselfWhenUsedAsGenericArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+public class X {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<X>();
+		// END
+	}
+}
+",
+@"			var x = $X;
+");
+		}
+
+		[Test]
 		public void ImportedTypeDefinitionAppearsAsObjectWhenUsedAsGenericArgument() {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
@@ -577,6 +747,24 @@ class C {
 }
 ",
 @"			var f = new (ss.makeGenericType($G$1, [Object]))();
+");
+		}
+
+		[Test]
+		public void ImportedTypeDefinitionAppearsAsObjectWhenUsedAsGenericArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+[System.Runtime.CompilerServices.Imported] public class X {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var f = F<X>();
+		// END
+	}
+}
+",
+@"			var f = Object;
 ");
 		}
 
@@ -599,6 +787,25 @@ class C {
 		}
 
 		[Test]
+		public void ImportedTypeDefinitionThatObeysTheTypeSystemAppearsAsItselfWhenUsedAsGenericArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+public class G<T> {}
+[System.Runtime.CompilerServices.Imported(ObeysTypeSystem=true)] public class X {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<X>();
+		// END
+	}
+}
+",
+@"			var x = X;
+");
+		}
+
+		[Test]
 		public void SerializableTypeDefinitionAppearsAsItselfWhenUsedAsGenericArgument() {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
@@ -616,6 +823,23 @@ class C {
 ");
 		}
 
+		[Test]
+		public void SerializableTypeDefinitionAppearsAsItselfWhenUsedAsGenericArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+[System.Serializable] public class X {}
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var f = F<X>();
+		// END
+	}
+}
+",
+@"			var f = $X;
+");
+		}
 
 		[Test]
 		public void TypeOfTypeDefinitionWorks() {
@@ -878,6 +1102,110 @@ class C {
 }
 ",
 @"			var i2 = ss.cast(i, $IDisposable);
+");
+		}
+
+		[Test]
+		public void DynamicAppearsAsObjectAsGenericArgument() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class G<T> {}
+class C {
+	public void M() {
+		// BEGIN
+		var f = new G<dynamic>();
+		// END
+	}
+}
+",
+@"			var f = new (ss.makeGenericType($$G$1, [Object]))();
+");
+		}
+
+		[Test]
+		public void DynamicAppearsAsObjectAsTypeArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	public void M() {
+		// BEGIN
+		var x = F<dynamic>();
+		// END
+	}
+}
+",
+@"			var x = Object;
+");
+		}
+
+		[Test]
+		public void TypeOfDynamicReturnsObject() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class C {
+	public void M() {
+		// BEGIN
+		var t = typeof(dynamic);
+		// END
+	}
+}
+",
+@"			var t = Object;
+");
+		}
+
+		[Test]
+		public void CastingToDynamicIsANoOp() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class C {
+	public void M() {
+		object o = null;
+		// BEGIN
+		var t = (dynamic)o;
+		// END
+	}
+}
+",
+@"			var t = o;
+");
+		}
+
+		[Test]
+		public void AnonymousTypeAppearsAsObjectAsGenericArgument() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class G<T> {}
+public class C {
+	public void G<T>(T x) {}
+	public void M() {
+		var o = new { Item = 1 };
+		// BEGIN
+		G(o);
+		// END
+	}
+}
+",
+@"			this.g(Object).call(this, o);
+");
+		}
+
+		[Test]
+		public void AnonymousTypeAppearsAsObjectAsGenericArgumentInInlineCode() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+class C {
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>(T x) {}
+	public void M() {
+		var o = new { Item = 1 };
+		// BEGIN
+		var x = F(o);
+		// END
+	}
+}
+",
+@"			var x = Object;
 ");
 		}
 	}

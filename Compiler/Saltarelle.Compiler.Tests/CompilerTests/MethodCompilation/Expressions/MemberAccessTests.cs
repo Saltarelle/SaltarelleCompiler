@@ -667,5 +667,37 @@ public class C<T> {
 	sm_$InstantiateGenericType({C}, $T).set_$P(sm_$InstantiateGenericType({C}, $T).get_$P() + 1);
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void CanUseStaticMembersOfGenericTypes() {
+			AssertCorrect(@"
+class X<T> {
+	public static int F;
+	public static event System.EventHandler E;
+	public static int P { get; set; }
+	public static void M() {}
+}
+public void M() {
+	System.EventHandler h1 = null, h2 = null;
+	// BEGIN
+	X<int>.F = 10;
+	int f = X<int>.F;
+	X<int>.E += h1;
+	X<int>.E -= h2;
+	X<int>.P = 10;
+	int p = X<int>.P;
+	X<int>.M();
+	// END
+}
+",
+@"	sm_$InstantiateGenericType({X}, {ga_Int32}).$F = 10;
+	var $f = sm_$InstantiateGenericType({X}, {ga_Int32}).$F;
+	sm_$InstantiateGenericType({X}, {ga_Int32}).add_$E($h1);
+	sm_$InstantiateGenericType({X}, {ga_Int32}).remove_$E($h2);
+	sm_$InstantiateGenericType({X}, {ga_Int32}).set_$P(10);
+	var $p = sm_$InstantiateGenericType({X}, {ga_Int32}).get_$P();
+	sm_$InstantiateGenericType({X}, {ga_Int32}).$M();
+");
+		}
 	}
 }
