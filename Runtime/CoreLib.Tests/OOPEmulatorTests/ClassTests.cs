@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
@@ -19,395 +21,602 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 		[Test]
 		public void NonGenericClassWithAllDataWorks() {
 			AssertCorrect(
+@"public class TheBaseClass {}
+public interface Interface1 {}
+public interface Interface2 {}
+public interface Interface3 {}
+public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
+	public MyClass() { int a = 0; }
+	public MyClass(int b) { b = 0; }
+	public MyClass(string c) { c = null; }
+	public void M1(int d) { d = 0; }
+	public void M2(int e) { e = 0; }
+	public static void S1(int f) { f = 0; }
+	public static void S2(int g) { g = 0; }
+	static MyClass() {
+		int h = 0;
+		int i = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-var $SomeNamespace_InnerNamespace_MyClass = function(x) {
-	X;
+// MyClass
+var $MyClass = function() {
+	{TheBaseClass}.call(this);
+	var a = 0;
 };
-$SomeNamespace_InnerNamespace_MyClass.prototype = {
-	m1: function(a) {
-		A;
+$MyClass.prototype = {
+	m1: function(d) {
+		d = 0;
 	},
-	m2: function(b) {
-		B;
+	m2: function(e) {
+		e = 0;
 	}
 };
-$SomeNamespace_InnerNamespace_MyClass.ctor1 = function(y) {
-	Y;
+$MyClass.$ctor1 = function(b) {
+	{TheBaseClass}.call(this);
+	b = 0;
 };
-$SomeNamespace_InnerNamespace_MyClass.ctor2 = function(z) {
-	Z;
+$MyClass.$ctor2 = function(c) {
+	{TheBaseClass}.call(this);
+	c = null;
 };
-$SomeNamespace_InnerNamespace_MyClass.ctor1.prototype = $SomeNamespace_InnerNamespace_MyClass.ctor2.prototype = $SomeNamespace_InnerNamespace_MyClass.prototype;
-$SomeNamespace_InnerNamespace_MyClass.s1 = function(s) {
-	S;
+$MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
+$MyClass.s1 = function(f) {
+	f = 0;
 };
-$SomeNamespace_InnerNamespace_MyClass.s2 = function(t) {
-	T;
+$MyClass.s2 = function(g) {
+	g = 0;
 };
-{Script}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, TheBaseClass, Interface1, Interface2, Interface3);
-Q;
-R;
-",			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				UnnamedConstructor = CreateFunction("x"),
-				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
-				                      new JsNamedConstructor("ctor2", CreateFunction("z")),
-				                    },
-				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, CreateFunction("a")),
-				                    new JsMethod(CreateMockMethod("M2"), "m2", null, CreateFunction("b")),
-				                  },
-				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
-				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
-				                },
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
-				                         new JsExpressionStatement(JsExpression.Identifier("R")),
-				                       }
-			});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+var h = 0;
+var i = 0;
+", new[] { "MyClass" });
+		}
+
+		[Test]
+		public void GenericClassWithIgnoreGenericArgumentsIsRegisteredLikeNonGenericClass() {
+			AssertCorrect(
+@"public class TheBaseClass {}
+public interface Interface1 {}
+public interface Interface2 {}
+public interface Interface3 {}
+[System.Runtime.CompilerServices.IncludeGenericArguments(false)]
+public class MyClass<T> : TheBaseClass, Interface1, Interface2, Interface3 {
+	public MyClass() { int a = 0; }
+	public MyClass(int b) { b = 0; }
+	public MyClass(string c) { c = null; }
+	public void M1(int d) { d = 0; }
+	public void M2(int e) { e = 0; }
+	public static void S1(int f) { f = 0; }
+	public static void S2(int g) { g = 0; }
+	static MyClass() {
+		int h = 0;
+		int i = 0;
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+	{TheBaseClass}.call(this);
+	var a = 0;
+};
+$MyClass.prototype = {
+	m1: function(d) {
+		d = 0;
+	},
+	m2: function(e) {
+		e = 0;
+	}
+};
+$MyClass.$ctor1 = function(b) {
+	{TheBaseClass}.call(this);
+	b = 0;
+};
+$MyClass.$ctor2 = function(c) {
+	{TheBaseClass}.call(this);
+	c = null;
+};
+$MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
+$MyClass.s1 = function(f) {
+	f = 0;
+};
+$MyClass.s2 = function(g) {
+	g = 0;
+};
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+var h = 0;
+var i = 0;
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void ClassWithoutInstanceMethodsOmitsAssignmentOfPrototype() {
 			AssertCorrect(
+@"public class TheBaseClass {}
+public interface Interface1 {}
+public interface Interface2 {}
+public interface Interface3 {}
+public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
+	public MyClass() { int a = 0; }
+	public MyClass(int b) { b = 0; }
+	public MyClass(string c) { c = null; }
+	public static void S1(int f) { f = 0; }
+	public static void S2(int g) { g = 0; }
+	static MyClass() {
+		int h = 0;
+		int i = 0;
+	}
+
+}",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-var $SomeNamespace_InnerNamespace_MyClass = function(x) {
-	X;
+// MyClass
+var $MyClass = function() {
+	{TheBaseClass}.call(this);
+	var a = 0;
 };
-$SomeNamespace_InnerNamespace_MyClass.ctor1 = function(y) {
-	Y;
+$MyClass.$ctor1 = function(b) {
+	{TheBaseClass}.call(this);
+	b = 0;
 };
-$SomeNamespace_InnerNamespace_MyClass.ctor2 = function(z) {
-	Z;
+$MyClass.$ctor2 = function(c) {
+	{TheBaseClass}.call(this);
+	c = null;
 };
-$SomeNamespace_InnerNamespace_MyClass.ctor1.prototype = $SomeNamespace_InnerNamespace_MyClass.ctor2.prototype = $SomeNamespace_InnerNamespace_MyClass.prototype;
-$SomeNamespace_InnerNamespace_MyClass.s1 = function(s) {
-	S;
+$MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
+$MyClass.s1 = function(f) {
+	f = 0;
 };
-$SomeNamespace_InnerNamespace_MyClass.s2 = function(t) {
-	T;
+$MyClass.s2 = function(g) {
+	g = 0;
 };
-{Script}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, TheBaseClass, Interface1, Interface2, Interface3);
-Q;
-R;
-",			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				UnnamedConstructor = CreateFunction("x"),
-				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
-				                      new JsNamedConstructor("ctor2", CreateFunction("z")),
-				                    },
-				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
-				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
-				                },
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
-				                         new JsExpressionStatement(JsExpression.Identifier("R")),
-				                       }
-			});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+var h = 0;
+var i = 0;
+", new[] { "MyClass" });
 		}
 
 		[Test]
-		public void ClassWithoutNamespaceWorks() {
+		public void InheritingBothBaseTypeAndInterfacesWorks() {
 			AssertCorrect(
+@"public class TheBaseClass {}
+public interface Interface1 {}
+public interface Interface2 {}
+public interface Interface3 {}
+public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
+	public MyClass(int x) {
+		x = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
-	X;
+	{TheBaseClass}.call(this);
+	x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, TheBaseClass, Interface1, Interface2, Interface3);
-",			new JsClass(Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				UnnamedConstructor = CreateFunction("x"),
-			});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+", new[] { "MyClass" });
 		}
 
 		[Test]
-		public void ClassWithoutBaseClassButWithInterfacesPassesNullForTheBaseTypeInRegisterClass() {
+		public void InheritingOnlyInterfacesPassesNullForTheBaseClassInRegisterClass() {
 			AssertCorrect(
+@"public interface Interface1 {}
+public interface Interface2 {}
+public interface Interface3 {}
+public class MyClass : Interface1, Interface2, Interface3 {
+	public MyClass(int x) {
+		x = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-var $SomeNamespace_InnerNamespace_MyClass = function(x) {
-	X;
+// MyClass
+var $MyClass = function(x) {
+	x = 0;
 };
-{Script}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, null, Interface1, Interface2, Interface3);
-",			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				UnnamedConstructor = CreateFunction("x"),
-			});
+{Script}.registerClass(global, 'MyClass', $MyClass, null, {Interface1}, {Interface2}, {Interface3});
+", new[] { "MyClass" });
 		}
 
 		[Test]
-		public void ClassWithoutInterfacesWorks() {
+		public void InheritingOnlyBaseClassWorks() {
 			AssertCorrect(
+@"public class TheBaseClass {}
+public class MyClass : TheBaseClass {
+	public MyClass(int x) {
+		x = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-var $SomeNamespace_InnerNamespace_MyClass = function(x) {
-	X;
+// MyClass
+var $MyClass = function(x) {
+	{TheBaseClass}.call(this);
+	x = 0;
 };
-{Script}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, TheBaseClass);
-",			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, JsExpression.Identifier("TheBaseClass"), new JsExpression[0]) {
-				UnnamedConstructor = CreateFunction("x"),
-			});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass});
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void ClassWithoutBothBaseClassAndInterfacesOnlyPassTheNameToRegisterClass() {
 			AssertCorrect(
+@"public class MyClass {
+	public MyClass(int x) { x = 0; }
+}",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function(x) {
+	x = 0;
+};
+{Script}.registerClass(global, 'MyClass', $MyClass);
+", new[] { "MyClass" });
+		}
+
+		[Test]
+		public void ClassWithNamespaceWorks() {
+			AssertCorrect(
+@"namespace SomeNamespace.InnerNamespace {
+	public class MyClass {
+		public MyClass(int x) { x = 0; }
+	}
+}",
 @"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
 var $SomeNamespace_InnerNamespace_MyClass = function(x) {
-	X;
+	x = 0;
 };
 {Script}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass);
-",			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				UnnamedConstructor = CreateFunction("x"),
-			});
+");
 		}
 
 		[Test]
 		public void InterfaceWorks() {
 			AssertCorrect(
+@"public interface Interface1 {}
+public interface Interface2 {}
+public interface Interface3 {}
+public interface IMyInterface : Interface1, Interface2, Interface3 {
+	public void M1();
+	public void M2();
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface = function() {
 };
 $IMyInterface.prototype = { m1: null, m2: null };
-{Script}.registerInterface(global, 'IMyInterface', $IMyInterface, [Interface1, Interface2, Interface3]);
-",			new JsClass(Common.CreateMockTypeDefinition("IMyInterface", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Interface, null, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, null),
-				                    new JsMethod(CreateMockMethod("M2"), "m2", null, null),
-				                  },
-			});
+{Script}.registerInterface(global, 'IMyInterface', $IMyInterface, [{Interface1}, {Interface2}, {Interface3}]);
+", new[] { "IMyInterface" });
 		}
 
 		[Test]
 		public void ClassWithoutUnnamedConstructorWorks() {
 			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+public class MyClass {
+	[ScriptName(""someName"")] public MyClass(int x) {}
+	public void M1() {}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
+$MyClass.prototype = {
+	m1: function() {
+	}
+};
+$MyClass.someName = function(x) {
+};
+$MyClass.someName.prototype = $MyClass.prototype;
 {Script}.registerClass(global, 'MyClass', $MyClass);
-",			new JsClass(Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]));
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void GenericClassWorks() {
 			AssertCorrect(
+@"public class TheBaseClass<T> {}
+public interface Interface1 {}
+public interface Interface2<T1, T2> {}
+public interface Interface3 {}
+[System.Runtime.CompilerServices.IncludeGenericArguments(true)]
+public class MyClass<T1, T2> : TheBaseClass<T1>, Interface1, Interface2<T2, int>, Interface3 {
+	public MyClass() { int a = 0; }
+	public MyClass(int b) { b = 0; }
+	public MyClass(string c) { c = null; }
+	public void M1(int d) { d = 0; }
+	public void M2(int e) { e = 0; }
+	public static void S1(int f) { f = 0; }
+	public static void S2(int g) { g = 0; }
+	static MyClass() {
+		int h = 0;
+		int i = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-var $SomeNamespace_InnerNamespace_MyClass = function(T1, T2) {
-	var $type = function(x) {
-		X;
+// MyClass
+var $MyClass$2 = function(T1, T2) {
+	var $type = function() {
+		{Script}.makeGenericType({TheBaseClass}, [T1]).call(this);
+		var a = 0;
 	};
 	$type.prototype = {
-		m1: function(a) {
-			A;
+		m1: function(d) {
+			d = 0;
 		},
-		m2: function(b) {
-			B;
+		m2: function(e) {
+			e = 0;
 		}
 	};
-	$type.ctor1 = function(y) {
-		Y;
+	$type.$ctor1 = function(b) {
+		{Script}.makeGenericType({TheBaseClass}, [T1]).call(this);
+		b = 0;
 	};
-	$type.ctor2 = function(z) {
-		Z;
+	$type.$ctor2 = function(c) {
+		{Script}.makeGenericType({TheBaseClass}, [T1]).call(this);
+		c = null;
 	};
-	$type.ctor1.prototype = $type.ctor2.prototype = $type.prototype;
-	$type.s1 = function(s) {
-		S;
+	$type.$ctor1.prototype = $type.$ctor2.prototype = $type.prototype;
+	$type.s1 = function(f) {
+		f = 0;
 	};
-	$type.s2 = function(t) {
-		T;
+	$type.s2 = function(g) {
+		g = 0;
 	};
 	{Script}.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
-		return $InstantiateGenericType(TheBaseClass, T1);
+		return {Script}.makeGenericType({TheBaseClass}, [T1]);
 	}, function() {
-		return [Interface1, $InstantiateGenericType(Interface2, T2, Int32), Interface3];
+		return [{Interface1}, {Script}.makeGenericType({Interface2}, [T2, {Int32}]), {Interface3}];
 	});
-	Q;
-	R;
+	var h = 0;
+	var i = 0;
 	return $type;
 };
-{Script}.registerGenericClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass, 2);
-",			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, new[] { "T1", "T2" }, JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), JsExpression.Identifier("TheBaseClass"), JsExpression.Identifier("T1")), new JsExpression[] { JsExpression.Identifier("Interface1"), JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericType"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("T2"), JsExpression.Identifier("Int32")), JsExpression.Identifier("Interface3") }) {
-				UnnamedConstructor = CreateFunction("x"),
-				NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction("y")),
-				                      new JsNamedConstructor("ctor2", CreateFunction("z")),
-				                    },
-				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, CreateFunction("a")),
-				                    new JsMethod(CreateMockMethod("M2"), "m2", null, CreateFunction("b")),
-				                  },
-				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
-				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
-				                },
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
-				                         new JsExpressionStatement(JsExpression.Identifier("R")),
-				                       }
-			});
+{Script}.registerGenericClass(global, 'MyClass$2', $MyClass$2, 2);
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void GenericInterfaceWorks() {
 			AssertCorrect(
+@"public interface Interface1 {}
+public interface Interface2<T1, T2> {}
+public interface Interface3 {}
+public interface IMyInterface<T1, T2> : Interface1, Interface2<T2, int>, Interface3 {
+	void M1(int x);
+	void M2(int y);
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
-var $IMyInterface = function(T1, T2) {
+var $IMyInterface$2 = function(T1, T2) {
 	var $type = function() {
 	};
 	$type.prototype = { m1: null, m2: null };
 	{Script}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2], function() {
-		return [Interface1, Interface2, Interface3];
+		return [{Interface1}, {Script}.makeGenericType({Interface2}, [T2, {Int32}]), {Interface3}];
 	});
 	return $type;
 };
-{Script}.registerGenericInterface(global, 'IMyInterface', $IMyInterface, 2);
-",			new JsClass(Common.CreateMockTypeDefinition("IMyInterface", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Interface, new[] { "T1", "T2" }, null, new[] { JsExpression.Identifier("Interface1"), JsExpression.Identifier("Interface2"), JsExpression.Identifier("Interface3") }) {
-				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, null),
-				                    new JsMethod(CreateMockMethod("M2"), "m2", null, null),
-				                  },
-			});
+{Script}.registerGenericInterface(global, 'IMyInterface$2', $IMyInterface$2, 2);
+", new[] { "IMyInterface" });
 		}
 
 		[Test]
 		public void GenericInstanceMethodWorks() {
 			AssertCorrect(
+@"public class MyClass {
+	public void M1<T1, T2>(T1 a) {
+		int x = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
 $MyClass.prototype = {
 	m1: function(T1, T2) {
-		return function(x) {
-			X;
+		return function(a) {
+			var x = 0;
 		};
 	}
 };
 {Script}.registerClass(global, 'MyClass', $MyClass);
-",			new JsClass(Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", new[] { "T1", "T2" }, CreateFunction("x")) }
-			});
+", new[] { "MyClass" });
+		}
+
+		[Test]
+		public void GenericInstanceMethodWithIgnoreGenericArgumentsIsTreatedLikeNonGenericMethod() {
+			AssertCorrect(
+@"public class MyClass {
+	[System.Runtime.CompilerServices.IncludeGenericArguments(false)]
+	public void M1<T1, T2>(T1 a) {
+		int x = 0;
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+};
+$MyClass.prototype = {
+	m1: function(a) {
+		var x = 0;
+	}
+};
+{Script}.registerClass(global, 'MyClass', $MyClass);
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void GenericStaticMethodWorks() {
 			AssertCorrect(
+@"public class MyClass {
+	public static void M1<T1, T2>(T1 a) {
+		int x = 0;
+	}
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
 $MyClass.m1 = function(T1, T2) {
-	return function(x) {
-		X;
+	return function(a) {
+		var x = 0;
 	};
 };
 {Script}.registerClass(global, 'MyClass', $MyClass);
-",			new JsClass(Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod(CreateMockMethod("M1"), "m1", new[] { "T1", "T2" }, CreateFunction("x")) }
-			});
+", new[] { "MyClass" });
+		}
+
+		[Test]
+		public void GenericStaticMethodWithIgnoreGenericArgumentsIsTreatedLikeNonGenericMethod() {
+			AssertCorrect(
+@"public class MyClass {
+	[System.Runtime.CompilerServices.IncludeGenericArguments(false)]
+	public static void M1<T1, T2>(T1 a) {
+		int x = 0;
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+};
+$MyClass.m1 = function(a) {
+	var x = 0;
+};
+{Script}.registerClass(global, 'MyClass', $MyClass);
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void GlobalMethodsAttributeCausesGlobalMethodsToBeGenerated() {
 			AssertCorrect(
+@"[System.Runtime.CompilerServices.GlobalMethods]
+public static class MyClass {
+	public static void S1(int a) { a = 0; }
+	public static void S2(int b) { b = 0; }
+	static MyClass() {
+		int c = 0;
+		int d = 0;
+	}
+}",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-global.s1 = function(s) {
-	S;
+// MyClass
+global.s1 = function(a) {
+	a = 0;
 };
-global.s2 = function(t) {
-	T;
+global.s2 = function(b) {
+	b = 0;
 };
-Q;
-R;
-", new MockMetadataImporter() { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name == "MyClass" ? "" : t.FullName) },
-			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly()), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
-				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
-				                },
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
-				                         new JsExpressionStatement(JsExpression.Identifier("R")),
-				                       }
-			});
+var c = 0;
+var d = 0;
+", new[] { "MyClass" });
 		}
 
 		[Test]
-		public void GlobalMethodsAttributeWithModuleNameCausesModuleGlobalMethodsToBeGenerated() {
+		public void GlobalMethodsAttributeWithModuleNameCausesModuleGlobalMethodsToBeGeneratedOnTheExportsObject() {
 			AssertCorrect(
+@"[System.Runtime.CompilerServices.GlobalMethods]
+[System.Runtime.CompilerServices.ModuleName(""mymodule"")]
+public static class MyClass {
+	public static void S1(int a) { a = 0; }
+	public static void S2(int b) { b = 0; }
+	static MyClass() {
+		int c = 0;
+		int d = 0;
+	}
+}",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-exports.s1 = function(s) {
-	S;
+// MyClass
+exports.s1 = function(a) {
+	a = 0;
 };
-exports.s2 = function(t) {
-	T;
+exports.s2 = function(b) {
+	b = 0;
 };
-Q;
-R;
-", new MockMetadataImporter() { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name == "MyClass" ? "" : t.FullName) },
-			new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", Common.CreateMockAssembly(), attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module"), () => new GlobalMethodsAttribute() }), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod(CreateMockMethod("S1"), "s1", null, CreateFunction("s")),
-				                  new JsMethod(CreateMockMethod("S2"), "s2", null, CreateFunction("t"))
-				                },
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("Q")),
-				                         new JsExpressionStatement(JsExpression.Identifier("R")),
-				                       }
-			});
+var c = 0;
+var d = 0;
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void ResourcesAttributeCausesAResourcesClassToBeGenerated() {
-			var asm = Common.CreateMockAssembly();
 			AssertCorrect(
+@"[System.Runtime.CompilerServices.Resources]
+public static class MyClass {
+	public const string Field1 = ""the value"";
+	public const int Field2 = 42;
+	public const object Field3 = null;
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyClass
-var $SomeNamespace_InnerNamespace_MyClass = { Field1: 'the value', Field2: 123, Field3: null };
-{Script}.registerType(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass);
-",				new JsClass(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm, attributes: new Expression<Func<Attribute>>[] { () => new ResourcesAttribute() }), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm)), "Field1"), JsExpression.String("the value"))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm)), "Field2"), JsExpression.Number(123))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm)), "Field3"), JsExpression.Null)),
-				                       }
-			});
+// MyClass
+var $MyClass = { field1: 'the value', field2: 42, field3: null };
+{Script}.registerType(global, 'MyClass', $MyClass);
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void MixinAttributeWorks() {
 			AssertCorrect(
+@"[System.Runtime.CompilerServices.Mixin(""$.fn"")]
+public static class MyClass {
+	public static int Method1(int x) { x = 0; }
+	public static int Method2(int y) { y = 0; }
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 $.fn.method1 = function(x) {
-	X;
+	x = 0;
 };
 $.fn.method2 = function(y) {
-	Y;
+	y = 0;
 };
-",          new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.FullName == "MyClass" ? "$.fn" : t.FullName) },
-			new JsClass(Common.CreateMockTypeDefinition("MyClass", Common.CreateMockAssembly(), attributes: new Expression<Func<Attribute>>[] { () => new MixinAttribute("NotUsed") }), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticMethods = { new JsMethod(CreateMockMethod("Method1"), "method1", null, CreateFunction("x")),
-				                  new JsMethod(CreateMockMethod("Method2"), "method2", null, CreateFunction("y")) }
-			});
+", new[] { "MyClass" });
 		}
 
 		[Test]
 		public void InternalTypesAreNotExported() {
-			var asm = Common.CreateMockAssembly();
-			var outerType = Common.CreateMockTypeDefinition("Outer", asm, Accessibility.Internal);
-			var innerType = Common.CreateMockTypeDefinition("Inner", asm, Accessibility.Public, outerType);
-
 			AssertCorrect(
+@"internal class Outer {
+	public class Inner {
+	}
+}
+internal class GenericClass<T1> {}
+internal interface Interface {}
+internal interface GenericInterface<T1> {}
+[System.Runtime.CompilerServices.Resources] internal static class ResourceClass {
+	public const string Field1 = ""the value"";
+	public const int Field2 = 42;
+	public const object Field3 = null;
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // GenericClass
-var $GenericClass = function(T1) {
+var $$GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
-		return;
+		return {Object};
 	}, function() {
 		return [];
 	});
 	return $type;
 };
-{Script}.registerGenericClass(null, 'GenericClass', $GenericClass, 1);
+{Script}.registerGenericClass(null, '$GenericClass$1', $$GenericClass$1, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
-var $GenericInterface = function(T1) {
+var $$GenericInterface$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], function() {
@@ -415,58 +624,58 @@ var $GenericInterface = function(T1) {
 	});
 	return $type;
 };
-{Script}.registerGenericInterface(null, 'GenericInterface', $GenericInterface, 1);
+{Script}.registerGenericInterface(null, '$GenericInterface$1', $$GenericInterface$1, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
-var $Interface = function() {
+var $$Interface = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // Outer
-var $Outer = function() {
+var $$Outer = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
-// Inner
-var $Outer$Inner = function() {
+// Outer.Inner
+var $$Outer$Inner = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
-var $ResourceClass = { Field1: 'the value', Field2: 123, Field3: null };
-{Script}.registerInterface(null, 'Interface', $Interface, []);
-{Script}.registerClass(null, 'Outer', $Outer);
-{Script}.registerClass(null, 'Outer$Inner', $Outer$Inner);
-",			new JsClass(outerType, JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
-			new JsClass(innerType, JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("GenericClass", asm, Accessibility.Internal), JsClass.ClassTypeEnum.Class, new[] { "T1" }, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("Interface", asm, Accessibility.Internal), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("GenericInterface", asm, Accessibility.Internal), JsClass.ClassTypeEnum.Interface, new[] { "T1" }, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("ResourceClass", asm, Accessibility.Internal, attributes: new Expression<Func<Attribute>>[] { () => new ResourcesAttribute() }), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm)), "Field1"), JsExpression.String("the value"))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm)), "Field2"), JsExpression.Number(123))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass", asm)), "Field3"), JsExpression.Null)),
-				                       }
-			});
+var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
+{Script}.registerInterface(null, '$Interface', $$Interface, []);
+{Script}.registerClass(null, '$Outer', $$Outer);
+{Script}.registerClass(null, '$Outer$Inner', $$Outer$Inner);
+");
 		}
 
 		[Test]
 		public void ClassesWithModuleNamesGetExportedToTheExportsObject() {
-			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("mymodule") });
 			AssertCorrect(
+@"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]
+public class GenericClass<T1> {}
+public class NormalClass {}
+public interface Interface {}
+public interface GenericInterface<T1> {}
+[System.Runtime.CompilerServices.Resources] public static class ResourceClass {
+	public const string Field1 = ""the value"";
+	public const int Field2 = 42;
+	public const object Field3 = null;
+}
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // GenericClass
-var $GenericClass = function(T1) {
+var $GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
-		return;
+		return {Object};
 	}, function() {
 		return [];
 	});
 	return $type;
 };
-{Script}.registerGenericClass(exports, 'GenericClass', $GenericClass, 1);
+{Script}.registerGenericClass(exports, 'GenericClass$1', $GenericClass$1, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
-var $GenericInterface = function(T1) {
+var $GenericInterface$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], function() {
@@ -474,7 +683,7 @@ var $GenericInterface = function(T1) {
 	});
 	return $type;
 };
-{Script}.registerGenericInterface(exports, 'GenericInterface', $GenericInterface, 1);
+{Script}.registerGenericInterface(exports, 'GenericInterface$1', $GenericInterface$1, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
 var $Interface = function() {
@@ -485,20 +694,168 @@ var $NormalClass = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
-var $ResourceClass = { Field1: 'the value', Field2: 123, Field3: null };
+var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
 {Script}.registerInterface(exports, 'Interface', $Interface, []);
 {Script}.registerClass(exports, 'NormalClass', $NormalClass);
 {Script}.registerType(exports, 'ResourceClass', $ResourceClass);
-",			new JsClass(Common.CreateMockTypeDefinition("NormalClass", asm), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("GenericClass", asm), JsClass.ClassTypeEnum.Class, new[] { "T1" }, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("Interface", asm), JsClass.ClassTypeEnum.Interface, null, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("GenericInterface", asm), JsClass.ClassTypeEnum.Interface, new[] { "T1" }, null, new JsExpression[0]),
-			new JsClass(Common.CreateMockTypeDefinition("ResourceClass", asm, attributes: new Expression<Func<Attribute>>[] { () => new ResourcesAttribute() }), JsClass.ClassTypeEnum.Class, null, null, new JsExpression[0]) {
-				StaticInitStatements = { new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass1", asm)), "Field1"), JsExpression.String("the value"))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass2", asm)), "Field2"), JsExpression.Number(123))),
-				                         new JsExpressionStatement(JsExpression.Assign(JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyClass3", asm)), "Field3"), JsExpression.Null)),
-				                       }
-			});
+");
+		}
+
+		[Test]
+		public void SerializableClassAppearsAsBaseClass() {
+			AssertCorrect(@"
+using System;
+[Serializable] public class B {}
+[Serializable] public class D : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+};
+$D.createInstance = function() {
+	return $D.$ctor();
+};
+$D.$ctor = function() {
+	var $this = {B}.$ctor();
+	return $this;
+};
+{Script}.registerClass(global, 'D', $D, {B});
+", new[] { "D" });
+		}
+
+		[Test, Ignore("Defining serializable interfaces is not yet possible")]
+		public void SerializableInterfaceAppearsInInheritanceList() {
+			AssertCorrect(@"
+using System;
+[Serializable] public interface I1 {}
+[Serializable] public interface I2 : I1 {}
+[Serializable] public class C : I1 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// I1
+var $I1 = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// C
+var $C = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// I2
+var $I2 = function() {
+};
+{Script}.registerInterface(global, 'I1', $I1, []);
+{Script}.registerClass(global, 'C', $C, Object, $I1);
+{Script}.registerInterface(global, 'I2', $I2, [$I1]);
+");
+		}
+
+		[Test]
+		public void ImportedTypeThatDoesNotObeyTheTypeSystemDoesNotAppearAsBaseClass() {
+			AssertCorrect(@"
+using System.Runtime.CompilerServices;
+[Imported] public interface I1 {}
+public interface I2 {}
+public interface I3 : I1, I2 {}
+[Imported] public class B {}
+public class D : B, I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+	{B}.call(this);
+};
+////////////////////////////////////////////////////////////////////////////////
+// I3
+var $I3 = function() {
+};
+{Script}.registerClass(global, 'D', $D, null, {I2});
+{Script}.registerInterface(global, 'I3', $I3, [{I2}]);
+", new [] { "D", "I3" });
+		}
+
+		[Test]
+		public void InheritingImportedTypeThatDoesObeyTheTypeSystemIsTheSameAsInheritingNonImportedType() {
+			AssertCorrect(@"
+using System.Runtime.CompilerServices;
+[Imported(ObeysTypeSystem = true)] public interface I1 {}
+public interface I2 {}
+public interface I3 : I1, I2 {}
+[Imported(ObeysTypeSystem = true)] public class B {}
+public class D : B, I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+	{B}.call(this);
+};
+////////////////////////////////////////////////////////////////////////////////
+// I3
+var $I3 = function() {
+};
+{Script}.registerClass(global, 'D', $D, {B}, {I1}, {I2});
+{Script}.registerInterface(global, 'I3', $I3, [{I1}, {I2}]);
+", new[] { "D", "I3" });
+		}
+
+		[Test]
+		public void ImportedTypeThatDoesNotObeyTheTypeSystemIsReplacedWithObjectForGenericArgumentsInInheritanceList() {
+			AssertCorrect(@"
+using System.Runtime.CompilerServices;
+[Imported] public class C {}
+public interface I<T1, T2> {}
+public class B<T1, T2> {}
+public class D : B<C, int>, I<string, C> {}
+public interface I2 : I<C, int> {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+	{Script}.makeGenericType({B}, [{Object}, {Int32}]).call(this);
+};
+////////////////////////////////////////////////////////////////////////////////
+// I2
+var $I2 = function() {
+};
+{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), {Script}.makeGenericType({I}, [{String}, {Object}]));
+{Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
+", new[] { "D", "I2" });
+		}
+
+		[Test]
+		public void ImportedTypeThatDoesObeyTheTypeSystemIsUsedInInheritanceList() {
+			AssertCorrect(@"
+using System.Runtime.CompilerServices;
+[Imported(ObeysTypeSystem=true)] public class C {}
+public interface I<T1, T2> {}
+public class B<T1, T2> {}
+public class D : B<C, int>, I<string, C> {}
+public interface I2 : I<C, int> {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+	{Script}.makeGenericType({B}, [{C}, {Int32}]).call(this);
+};
+////////////////////////////////////////////////////////////////////////////////
+// I2
+var $I2 = function() {
+};
+{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{C}, {Int32}]), {Script}.makeGenericType({I}, [{String}, {C}]));
+{Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
+", new[] { "D", "I2" });
+		}
+
+		[Test]
+		public void UsingUnavailableTypeArgumentInInheritanceListIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+using System.Runtime.CompilerServices;
+public interface I<T> {}
+[IncludeGenericArguments(false)]
+public class D1<T> : I<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
 		}
 	}
 }

@@ -70,7 +70,6 @@
     <Compile Include="CompilerTests\PreprocessorTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\InlineCodeMethodCompilerTests.cs" />
     <Compile Include="CompilerTests\MemberConversion\ConstructorConversionTests.cs" />
-    <Compile Include="CompilerTests\MemberConversion\EnumValuesConversionTests.cs" />
     <Compile Include="CompilerTests\MemberConversion\EventConversionTests.cs" />
     <Compile Include="CompilerTests\MemberConversion\FieldConversionTests.cs" />
     <Compile Include="CompilerTests\MemberConversion\IndexerConversionTests.cs" />

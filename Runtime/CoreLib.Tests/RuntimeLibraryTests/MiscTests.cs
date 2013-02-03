@@ -53,7 +53,7 @@ public class C {
 			var Щ = 'г';
 		}
 	};
-	ss.registerClass(global, 'Ф.Класс', $Ф_Класс, Object);
+	ss.registerClass(global, 'Ф.Класс', $Ф_Класс);
 })();
 ");
 		}
@@ -136,7 +136,7 @@ class C<T1, T2> where T1 : class {
 	var $$X = function() {
 	};
 	ss.registerInterface(null, '$I', $$I, []);
-	ss.registerClass(null, '$X', $$X, Object);
+	ss.registerClass(null, '$X', $$X);
 })();
 ");
 		}

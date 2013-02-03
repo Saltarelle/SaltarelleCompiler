@@ -59,11 +59,11 @@ namespace CoreLib.Plugin {
 			}
 			else if (type is ITypeDefinition) {
 				var td = (ITypeDefinition)type;
-				if (MetadataUtils.IsSerializable(td) && (context == TypeContext.CastTarget || context == TypeContext.Inheritance)) {
+				if (MetadataUtils.IsSerializable(td) && (context == TypeContext.CastTarget)) {
 					return null;
 				}
 				else if (context != TypeContext.UseStaticMember && context != TypeContext.InlineCode && context != TypeContext.InvokeConstructor && !MetadataUtils.DoesTypeObeyTypeSystem(td)) {
-					if (context == TypeContext.CastTarget || context == TypeContext.Inheritance)
+					if (context == TypeContext.CastTarget)
 						return null;
 					else
 						return CreateTypeReferenceExpression(KnownTypeReference.Object);

@@ -116,7 +116,6 @@
     <Compile Include="TypeSystem\JsNamedConstructor.cs" />
     <Compile Include="TypeSystem\JsClass.cs" />
     <Compile Include="TypeSystem\JsEnum.cs" />
-    <Compile Include="TypeSystem\JsEnumValue.cs" />
     <Compile Include="TypeSystem\JsMethod.cs" />
     <Compile Include="TypeSystem\JsType.cs" />
     <Compile Include="Utils.cs" />

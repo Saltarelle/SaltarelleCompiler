@@ -11,63 +11,72 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 		[Test]
 		public void EnumWorks() {
 			AssertCorrect(
-@"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyEnum
-var $SomeNamespace_InnerNamespace_MyEnum = function() {
-};
-$SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 1, value2: 2, value3: 3 };
-{Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum, false);
-",			new JsEnum(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyEnum", Common.CreateMockAssembly()), new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
-		}
-
-		[Test]
-		public void EnumWithoutNamespaceWorks() {
-			AssertCorrect(
+@"public enum MyEnum { Value1, Value2, Value3 }
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyEnum
 var $MyEnum = function() {
 };
-$MyEnum.prototype = { value1: 1, value2: 2, value3: 3 };
+$MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 {Script}.registerEnum(global, 'MyEnum', $MyEnum, false);
-",			new JsEnum(Common.CreateMockTypeDefinition("MyEnum", Common.CreateMockAssembly()), new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
+");
 		}
 
 		[Test]
-		public void FlagsAttributeWorks() {
-			var typeDef = Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyEnum", Common.CreateMockAssembly(), attributes: new Expression<Func<Attribute>>[] { () => new FlagsAttribute() });
-
+		public void EnumWithNamespaceWorks() {
 			AssertCorrect(
+@"namespace SomeNamespace.InnerNamespace {
+	public enum MyEnum { Value1, Value2, Value3 }
+}",
 @"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyEnum
 var $SomeNamespace_InnerNamespace_MyEnum = function() {
 };
-$SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 1, value2: 2, value3: 3 };
-{Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum, true);
-",			new JsEnum(typeDef, new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
+$SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
+{Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum, false);
+");
+		}
+
+		[Test]
+		public void FlagsAttributeWorks() {
+			AssertCorrect(
+@"[System.Flags] public enum MyEnum { Value1, Value2, Value3 }
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyEnum
+var $MyEnum = function() {
+};
+$MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
+{Script}.registerEnum(global, 'MyEnum', $MyEnum, true);
+");
 		}
 
 		[Test]
 		public void NamedValuesAttributeWorks() {
 			AssertCorrect(
+@"[System.Runtime.CompilerServices.NamedValues] public enum MyEnum { Value1, Value2, Value3 }
+",
 @"////////////////////////////////////////////////////////////////////////////////
-// SomeNamespace.InnerNamespace.MyEnum
-var $SomeNamespace_InnerNamespace_MyEnum = function() {
+// MyEnum
+var $MyEnum = function() {
 };
-$SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
-{Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum, false);
-",			new JsEnum(Common.CreateMockTypeDefinition("SomeNamespace.InnerNamespace.MyEnum", Common.CreateMockAssembly(), attributes: new Expression<Func<Attribute>>[] { () => new NamedValuesAttribute() }), new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
+$MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
+{Script}.registerEnum(global, 'MyEnum', $MyEnum, false);
+");
 		}
 
 		[Test]
 		public void InternalEnumIsNotExported() {
 			AssertCorrect(
+@"internal enum MyEnum { Value1, Value2, Value3 }
+",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyEnum
-var $MyEnum = function() {
+var $$MyEnum = function() {
 };
-$MyEnum.prototype = { value1: 1, value2: 2, value3: 3 };
-{Script}.registerEnum(null, 'MyEnum', $MyEnum, false);
-",			new JsEnum(Common.CreateMockTypeDefinition("MyEnum", Common.CreateMockAssembly(), Accessibility.Internal), new[] { new JsEnumValue("value1", 1), new JsEnumValue("value2", 2), new JsEnumValue("value3", 3) }));
+$$MyEnum.prototype = { $value1: 0, $value2: 1, $value3: 2 };
+{Script}.registerEnum(null, '$MyEnum', $$MyEnum, false);
+");
 		}
 	}
 }

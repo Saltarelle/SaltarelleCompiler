@@ -14,7 +14,6 @@ namespace Saltarelle.Compiler.Tests {
 				case TypeContext.InvokeConstructor: return "inst";
 				case TypeContext.GenericArgument:   return "ga";
 				case TypeContext.TypeOf:            return "to";
-				case TypeContext.Inheritance:       return "inh";
 				case TypeContext.CastTarget:        return "ct";
 				case TypeContext.GetDefaultValue:   return "def";
 				case TypeContext.UseStaticMember:   return "sm";

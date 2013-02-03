@@ -57,15 +57,6 @@ namespace Saltarelle.Compiler.Compiler {
 
 		internal bool? AllowUserDefinedStructs { get; set; }
 
-		private JsClass.ClassTypeEnum ConvertClassType(TypeKind typeKind) {
-			switch (typeKind) {
-				case TypeKind.Class:     return JsClass.ClassTypeEnum.Class;
-				case TypeKind.Interface: return JsClass.ClassTypeEnum.Interface;
-				case TypeKind.Struct:    return JsClass.ClassTypeEnum.Struct;
-				default: throw new ArgumentException("classType");
-			}
-		}
-
 		private JsClass GetJsClass(ITypeDefinition typeDefinition) {
 			JsClass result;
 			if (!_types.TryGetValue(typeDefinition, out result)) {
@@ -86,16 +77,8 @@ namespace Saltarelle.Compiler.Compiler {
 							_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
 							_errorReporter.Region = oldRegion;
 						}
-
-						result = new JsClass(typeDefinition, ConvertClassType(typeDefinition.Kind), new string[0], null, null);
 					}
-					else {
-						var baseTypes    = typeDefinition.GetAllBaseTypes().Where(t => _runtimeLibrary.GetScriptType(t, TypeContext.GenericArgument, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))) != null).ToList();
-						var baseClass    = typeDefinition.Kind != TypeKind.Interface ? _runtimeLibrary.GetScriptType(baseTypes.Last(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Class), TypeContext.Inheritance, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))) : null;    // NRefactory bug/feature: Interfaces are reported as having System.Object as their base type.
-						var interfaces   = baseTypes.Where(t => !t.GetDefinition().Equals(typeDefinition) && t.Kind == TypeKind.Interface).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.Inheritance, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))).Where(t => t != null).ToList();
-						var typeArgNames = semantics.IgnoreGenericArguments ? null : typeDefinition.TypeParameters.Select(a => _namer.GetTypeParameterName(a)).ToList();
-						result = new JsClass(typeDefinition, ConvertClassType(typeDefinition.Kind), typeArgNames, baseClass, interfaces);
-					}
+					result = new JsClass(typeDefinition);
 				}
 				else {
 					result = null;
@@ -125,24 +108,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (!semantics.GenerateCode)
 				return null;
 
-			var values = new List<JsEnumValue>();
-			foreach (var f in type.Fields) {
-				if (f.ConstantValue != null) {
-					var sem = _metadataImporter.GetFieldSemantics(f);
-					if (sem.Type == FieldScriptSemantics.ImplType.Field) {
-						values.Add(new JsEnumValue(sem.Name, Convert.ToInt64(f.ConstantValue)));
-					}
-					else if (sem.Type == FieldScriptSemantics.ImplType.Constant && sem.Name != null && sem.Value is double) {
-						values.Add(new JsEnumValue(sem.Name, Convert.ToInt64(sem.Value)));
-					}
-				}
-				else {
-					_errorReporter.Region = f.Region;
-					_errorReporter.InternalError("Enum field " + type.FullName + "." + f.Name + " is not a DefaultResolvedField");
-				}
-			}
-
-			return new JsEnum(type, values);
+			return new JsEnum(type);
 		}
 
 		private IEnumerable<IType> SelfAndNested(IType type) {

@@ -34,111 +34,42 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 
 		[Test]
 		public void StaticInitStatementsAreSortedByAllReferencesInTypes() {
-			var asm = Common.CreateMockAssembly();
-			var c1 = Common.CreateMockTypeDefinition("C1", asm);
-			var c2 = Common.CreateMockTypeDefinition("C2", asm);
-			var c3 = Common.CreateMockTypeDefinition("C3", asm);
-			var c4 = Common.CreateMockTypeDefinition("C4", asm);
-			var c5 = Common.CreateMockTypeDefinition("C5", asm);
-			var c6 = Common.CreateMockTypeDefinition("C6", asm);
+			var lines = SplitLines(Process(@"
+public class C6 { static C6() { var x6 = typeof(C5); } }
+public class C1 { static C1() { int x1 = 0; } }
+public class C4 { public static void M() { var t = typeof(C3); } static C4() { int x4 = 0; } }
+public class C2 { public C2() { var t = typeof(C1); } static C2() { int x2 = 0; } }
+public class C5 { public void M() { var t = typeof(C4); } static C5() { int x5 = 0; } }
+public class C3 { [System.Runtime.CompilerServices.ScriptName(""someName"")] public C3(int x) { var t = typeof(C2); } static C3() { int x3 = 0; } } }
+")).Where(l => l.StartsWith("var x"));
 
-			var lines = SplitLines(Process(Shuffle(new[] {
-				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
-					UnnamedConstructor = CreateFunction(),
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x1")) }
-				},
-				new JsClass(c2, JsClass.ClassTypeEnum.Class, null, null, null) {
-					UnnamedConstructor = CreateFunction(c1),
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x2")) }
-				},
-				new JsClass(c3, JsClass.ClassTypeEnum.Class, null, null, null) {
-					NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction(c2)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x3")) }
-				},
-				new JsClass(c4, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c3)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x4")) }
-				},
-				new JsClass(c5, JsClass.ClassTypeEnum.Class, null, null, null) {
-					InstanceMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c4)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x5")) }
-				},
-				new JsClass(c6, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Add(JsExpression.Identifier("x6"), new JsTypeReferenceExpression(c5))) }
-				}
-			}, 42))).Where(l => l.StartsWith("x"));
-
-			Assert.That(lines, Is.EqualTo(new[] { "x1;", "x2;", "x3;", "x4;", "x5;", "x6 + {C5};" }));
+			Assert.That(lines, Is.EqualTo(new[] { "var x1 = 0;", "var x2 = 0;", "var x3 = 0;", "var x4 = 0;", "var x5 = 0;", "var x6 = {C5};" }));
 		}
 
 		[Test]
 		public void StaticMethodsOnlyAreUsedAsTieBreakersWhenCyclicDependenciesOccur() {
-			var asm = Common.CreateMockAssembly();
-			var c1 = Common.CreateMockTypeDefinition("C1", asm);
-			var c2 = Common.CreateMockTypeDefinition("C2", asm);
-			var c3 = Common.CreateMockTypeDefinition("C3", asm);
-			var c4 = Common.CreateMockTypeDefinition("C4", asm);
-			var c5 = Common.CreateMockTypeDefinition("C5", asm);
+			var lines = SplitLines(Process(@"
+public class C5 { public void M() { var t = typeof(C3); } static C5() { int x5 = 0; } }
+public class C3 { [System.Runtime.CompilerServices.ScriptName(""someName"")] public C3(int x) { var t = typeof(C2); } static C3() { var x3 = typeof(C2); } }
+public class C2 { public C2() { var t = typeof(C4); } static C2() { int x2 = 0; } }
+public class C4 { public void M1() { var t = typeof(C3); } public static void M2() { var t = typeof(C3); } static C4() { int x4 = 0; } }
+public class C1 { static C1() { int x1 = 0; } }
+")).Where(l => l.StartsWith("var x"));
 
-			var lines = SplitLines(Process(Shuffle(new[] {
-				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
-					UnnamedConstructor = CreateFunction(),
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x1")) }
-				},
-				new JsClass(c2, JsClass.ClassTypeEnum.Class, null, null, null) {
-					UnnamedConstructor = CreateFunction(c4),
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x2")) }
-				},
-				new JsClass(c3, JsClass.ClassTypeEnum.Class, null, null, null) {
-					NamedConstructors = { new JsNamedConstructor("ctor1", CreateFunction(c2)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Add(JsExpression.Identifier("x3"), new JsTypeReferenceExpression(c2))) }
-				},
-				new JsClass(c4, JsClass.ClassTypeEnum.Class, null, null, null) {
-					InstanceMethods = { new JsMethod(CreateMockMethod("M1"), "m1", null, CreateFunction(c3)) },
-					StaticMethods = { new JsMethod(CreateMockMethod("M2"), "m2", null, CreateFunction(c3)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x4")) }
-				},
-				new JsClass(c5, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c3)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x5")) }
-				}
-			}, 24))).Where(l => l.StartsWith("x"));
-
-			Assert.That(lines, Is.EqualTo(new[] { "x1;", "x2;", "x3 + {C2};", "x4;", "x5;" }));
+			Assert.That(lines, Is.EqualTo(new[] { "var x1 = 0;", "var x2 = 0;", "var x3 = {C2};", "var x4 = 0;", "var x5 = 0;" }));
 		}
 
 		[Test]
 		public void StaticInitStatementsOnlyAreUsedAsATieBreakerWhenCyclicDependenciesInStaticMethodsOccur() {
-			var asm = Common.CreateMockAssembly();
-			var c1 = Common.CreateMockTypeDefinition("C1", asm);
-			var c2 = Common.CreateMockTypeDefinition("C2", asm);
-			var c3 = Common.CreateMockTypeDefinition("C3", asm);
-			var c4 = Common.CreateMockTypeDefinition("C4", asm);
-			var c5 = Common.CreateMockTypeDefinition("C5", asm);
+			var lines = SplitLines(Process(@"
+public class C5 { static void M() { var t = typeof(C3); } static C5() { int x5 = 0; } }
+public class C3 { static void M() { var t = typeof(C2); } static C3() { var x3 = typeof(C2); } }
+public class C2 { static void M() { var t = typeof(C4); } static C2() { int x2 = 0; } }
+public class C4 { static void M() { var t = typeof(C3); } static C4() { var x4 = typeof(C3); } }
+public class C1 { static C1() { int x1 = 0; } }
+")).Where(l => l.StartsWith("var x"));
 
-			var lines = SplitLines(Process(Shuffle(new[] {
-				new JsClass(c1, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x1")) }
-				},
-				new JsClass(c2, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c4)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x2")) }
-				},
-				new JsClass(c3, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c2)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Add(JsExpression.Identifier("x3"), new JsTypeReferenceExpression(c2))) }
-				},
-				new JsClass(c4, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c3)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Add(JsExpression.Identifier("x4"), new JsTypeReferenceExpression(c3))) }
-				},
-				new JsClass(c5, JsClass.ClassTypeEnum.Class, null, null, null) {
-					StaticMethods = { new JsMethod(CreateMockMethod("M"), "m", null, CreateFunction(c3)) },
-					StaticInitStatements = { new JsExpressionStatement(JsExpression.Identifier("x5")) }
-				}
-			}, 17))).Where(l => l.StartsWith("x"));
-
-			Assert.That(lines, Is.EqualTo(new[] { "x1;", "x2;", "x3 + {C2};", "x4 + {C3};", "x5;" }));
+			Assert.That(lines, Is.EqualTo(new[] { "var x1 = 0;", "var x2 = 0;", "var x3 = {C2};", "var x4 = {C3};", "var x5 = 0;" }));
 		}
 	}
 }

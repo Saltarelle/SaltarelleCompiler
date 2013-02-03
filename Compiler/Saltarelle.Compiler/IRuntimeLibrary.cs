@@ -24,11 +24,6 @@ namespace Saltarelle.Compiler {
 		TypeOf,
 
 		/// <summary>
-		/// The type is being inherited from. A null result means that the type should not appear in the inheritance list.
-		/// </summary>
-		Inheritance,
-
-		/// <summary>
 		/// The type is being cast to. A null result means that the cast should be replaced with a regular assignment.
 		/// </summary>
 		CastTarget,

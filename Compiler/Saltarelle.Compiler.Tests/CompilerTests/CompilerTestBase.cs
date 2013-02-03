@@ -113,11 +113,5 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			var cls = FindClass(name.Substring(0, lastDot));
 			return cls.NamedConstructors.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
 		}
-
-		protected JsEnumValue FindEnumValue(string name) {
-			var lastDot = name.LastIndexOf('.');
-			var cls = FindEnum(name.Substring(0, lastDot));
-			return cls.Values.SingleOrDefault(f => f.Name == name.Substring(lastDot + 1));
-		}
 	}
 }
