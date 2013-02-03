@@ -5,18 +5,12 @@ using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	[TestFixture]
 	public class InlineCodeMethodCompilerTests : MethodCompilerTestBase {
-		private class DummyType : AbstractType {
-			public override string Name { get { return "dummy"; } }
-			public override bool? IsReferenceType { get { return true; } }
-			public override TypeKind Kind { get { return TypeKind.Class; } }
-			public override ITypeReference ToTypeReference() { throw new System.NotImplementedException(); }
-		}
-
 		[Test]
 		public void TheTokenizerWorks() {
 			Compile("class C { public static void F(int ab, int c) {} }");
@@ -178,7 +172,7 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{ item1: {sm_Int32}, item2: {sm_String} };
+@"	{ item1: {ga_Int32}, item2: {ga_String} };
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -198,7 +192,7 @@ public void M() {
 	c.F();
 	// END
 }",
-@"	{ item1: {sm_Int32}, item2: {sm_String} };
+@"	{ item1: {ga_Int32}, item2: {ga_String} };
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -398,7 +392,7 @@ public void M() {
 			Compile("class C<T1> { public void F<T2>(string s, int a, params string[] p) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			Assert.That(InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$System.Object}({T1}, {T2}, {@s}, {this}, {a}, {*p})", t => new DummyType()), Is.Empty);
+			Assert.That(InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$System.Object}({T1}, {T2}, {@s}, {this}, {a}, {*p})", n => JsExpression.Null, t => JsExpression.Null), Is.Empty);
 		}
 
 		[Test]
@@ -406,7 +400,7 @@ public void M() {
 			Compile("class C { public void F() {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{abc", t => new DummyType());
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{abc", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.Any(e => e.Contains("expected '}'")));
 		}
@@ -416,19 +410,9 @@ public void M() {
 			Compile("class C { public static void F() {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{this}", t => new DummyType());
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{this}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.Any(e => e.Contains("{this}") && e.Contains("static")));
-		}
-
-		[Test]
-		public void ValidateReturnsAnErrorWhenAReferencedTypeCannotBeFound() {
-			Compile("class C { public static void F() {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
-
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{$NonExisting.Type}()", t => SpecialType.UnknownType);
-			Assert.That(result.Count, Is.EqualTo(1));
-			Assert.That(result.Any(e => e.Contains("NonExisting.Type")));
 		}
 
 		[Test]
@@ -436,7 +420,7 @@ public void M() {
 			Compile("class C { public static void F(int myArg) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{@myArg}", t => new DummyType());
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{@myArg}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.Any(e => e.Contains("'@'") && e.Contains("myArg")));
 		}
@@ -446,7 +430,7 @@ public void M() {
 			Compile("class C { public static void F(string[] myArg) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{*myArg}", t => new DummyType());
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{*myArg}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.Any(e => e.Contains("*") && e.Contains("myArg") && e.Contains("param array")));
 		}
@@ -456,7 +440,7 @@ public void M() {
 			Compile("class C { public static void F(string x, int y) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{x} + ", t => new DummyType());
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{x} + ", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.Any(e => e.Contains("syntax error")));
 		}
@@ -466,7 +450,7 @@ public void M() {
 			Compile("class C { public static void F(string p1, int p2, params string[] p3) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
-			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{p1}*{p2} + {*p3}", t => new DummyType());
+			var result = InlineCodeMethodCompiler.ValidateLiteralCode(method, "{p1}*{p2} + {*p3}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.Any(e => e.Contains("can only be used")));
 		}

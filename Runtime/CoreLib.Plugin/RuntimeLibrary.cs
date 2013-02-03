@@ -10,7 +10,12 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Plugin {
 	public class RuntimeLibrary : IRuntimeLibrary {
-		private const TypeContext TypeContextCastTarget = (TypeContext)(-1);
+		private enum TypeContext {
+			TypeOf,
+			GetScriptType,
+			CastTarget,
+			GenericArgument,
+		}
 
 		private readonly ITypeReference _systemScript = ReflectionHelper.ParseReflectionName("System.Script");
 
@@ -37,21 +42,18 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetTypeDefinitionScriptType(ITypeDefinition type, TypeContext context) {
-			if (MetadataUtils.IsSerializable(type) && (context == TypeContextCastTarget)) {
+			if (MetadataUtils.IsSerializable(type) && (context == TypeContext.CastTarget)) {
 				return null;
 			}
-			else if (context != TypeContext.UseStaticMember && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
-				if (context == TypeContextCastTarget)
-					return null;
-				else
-					return CreateTypeReferenceExpression(KnownTypeReference.Object);
+			else if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
+				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {
 				return CreateTypeReferenceExpression(type);
 			}
 		}
 
-		public JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+		private JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			if (type.Kind == TypeKind.Delegate) {
 				// OK
 				return CreateTypeReferenceExpression(KnownTypeReference.Delegate);
@@ -60,7 +62,7 @@ namespace CoreLib.Plugin {
 				// OK
 				var pt = (ParameterizedType)type;
 				var def = pt.GetDefinition();
-				if (MetadataUtils.IsSerializable(def) && context == TypeContextCastTarget)
+				if (MetadataUtils.IsSerializable(def) && context == TypeContext.CastTarget)
 					return null;
 				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
@@ -73,7 +75,7 @@ namespace CoreLib.Plugin {
 				// This handles open generic types ( typeof(C<,>) )
 				return CreateTypeReferenceExpression(type.GetDefinition());
 			}
-			else if (type.Kind == TypeKind.Enum && context == TypeContextCastTarget) {
+			else if (type.Kind == TypeKind.Enum && context == TypeContext.CastTarget) {
 				// OK
 				var def = type.GetDefinition();
 				return CreateTypeReferenceExpression(def.EnumUnderlyingType.GetDefinition());
@@ -102,8 +104,8 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetCastTarget(IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			var ss = GetScriptType(sourceType, TypeContextCastTarget, resolveTypeParameter);
-			var st = GetScriptType(targetType, TypeContextCastTarget, resolveTypeParameter);
+			var ss = GetScriptType(sourceType, TypeContext.CastTarget, resolveTypeParameter);
+			var st = GetScriptType(targetType, TypeContext.CastTarget, resolveTypeParameter);
 			if (st == null) {
 				return null;	// Either the target is not a real type.
 			}
@@ -115,6 +117,18 @@ namespace CoreLib.Plugin {
 			}
 
 			return st;
+		}
+
+		public JsExpression TypeOf(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return GetScriptType(type, TypeContext.TypeOf, resolveTypeParameter);
+		}
+
+		public JsExpression InstantiateType(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return GetScriptType(type, TypeContext.GetScriptType, resolveTypeParameter);
+		}
+
+		public JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return GetScriptType(type, TypeContext.GenericArgument, resolveTypeParameter);
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
@@ -290,7 +304,7 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}
 			else if (type is ITypeParameter) {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.UseStaticMember, resolveTypeParameter));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetScriptType, resolveTypeParameter));
 			}
 			else if (type.Kind == TypeKind.Enum) {
 #warning TODO: null for [NamedValues]
@@ -345,7 +359,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.UseStaticMember, resolveTypeParameter), "prototype"), methodName);
+			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.GetScriptType, resolveTypeParameter), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);
@@ -354,7 +368,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.UseStaticMember, resolveTypeParameter), "prototype"), methodName);
+			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.GetScriptType, resolveTypeParameter), "prototype"), methodName);
 			
 			if (typeArguments != null && typeArguments.Count > 0)
 				method = InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);

@@ -7,31 +7,27 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler {
-	public enum TypeContext {
-		/// <summary>
-		/// The type is being used as a generic argument.
-		/// </summary>
-		GenericArgument,
-
-		/// <summary>
-		/// The type is a target of a typeof expression.
-		/// </summary>
-		TypeOf,
-
-		/// <summary>
-		/// The type is being used to invoke one of its static methods or a constructor.
-		/// </summary>
-		UseStaticMember,
-	}
-
 	public interface IRuntimeLibrary {
+		/// <summary>
+		/// Returns the JS expression that "typeof(type)" should be compiled to.
+		/// </summary>
+		/// <param name="type">Type to return an expression for.</param>
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
+		JsExpression TypeOf(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter);
+
 		/// <summary>
 		/// Returns an expression that references a type. This might mean a simple name, a generic instantiation, or something else.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
-		/// <param name="context">The context for which the type is desired.</param>
 		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
-		JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter);
+		JsExpression InstantiateType(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter);
+
+		/// <summary>
+		/// Returns an expression that creates a type reference as it is supposed to be when a type is being used as a type argument for an InlineCode method.
+		/// </summary>
+		/// <param name="type">Type to return an expression for.</param>
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
+		JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").

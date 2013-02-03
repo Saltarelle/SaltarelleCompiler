@@ -13,8 +13,16 @@ namespace Saltarelle.Compiler.Decorators {
 			_prev = prev;
 		}
 
-		public virtual JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			return _prev.GetScriptType(type, context, resolveTypeParameter);
+		public virtual JsExpression TypeOf(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.TypeOf(type, resolveTypeParameter);
+		}
+
+		public virtual JsExpression InstantiateType(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.InstantiateType(type, resolveTypeParameter);
+		}
+
+		public virtual JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.InstantiateTypeForUseAsTypeArgumentInInlineCode(type, resolveTypeParameter);
 		}
 
 		public virtual JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {

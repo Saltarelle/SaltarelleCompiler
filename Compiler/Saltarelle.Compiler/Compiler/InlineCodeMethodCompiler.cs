@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<ITypeReference, IType> resolveType, Func<IType, TypeContext, JsExpression> getJsType, bool isParamArrayExpanded, Action<string> errorReporter) {
+		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, bool isParamArrayExpanded, Action<string> errorReporter) {
 			IList<IType> typeTypeArguments = method.DeclaringType is ParameterizedType ? ((ParameterizedType)method.DeclaringType).TypeArguments : null;
 			IList<IType> methodTypeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : null;
 
@@ -160,7 +160,7 @@ namespace Saltarelle.Compiler.Compiler {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
 						var l = token.OwnerType == EntityType.TypeDefinition ? typeTypeArguments : methodTypeArguments;
-						substitutions[s] = Tuple.Create(l != null ? getJsType(l[token.Index], TypeContext.UseStaticMember) : JsExpression.Null, false);
+						substitutions[s] = Tuple.Create(l != null ? resolveTypeArgument(l[token.Index]) : JsExpression.Null, false);
 						break;
 					}
 
@@ -168,15 +168,7 @@ namespace Saltarelle.Compiler.Compiler {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
 
-						var type = resolveType(ReflectionHelper.ParseReflectionName(token.Text));
-						if (type.Kind == TypeKind.Unknown) {
-							hasErrors = true;
-							errorReporter("Unknown type '" + token.Text + "' specified in inline implementation");
-							substitutions[s] = Tuple.Create((JsExpression)JsExpression.Null, false);
-						}
-						else {
-							substitutions[s] = Tuple.Create(getJsType(type, TypeContext.UseStaticMember), false);
-						}
+						substitutions[s] = Tuple.Create(resolveType(token.Text), false);
 						break;
 					}
 
@@ -277,7 +269,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<ITypeReference, IType> resolveType) {
+		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument) {
 			var errors = new List<string>();
 
 			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
@@ -289,7 +281,7 @@ namespace Saltarelle.Compiler.Compiler {
 			                                  method.IsStatic ? null : JsExpression.Null,
 			                                  method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
 			                                  resolveType,
-			                                  (t, c) => JsExpression.Null,
+			                                  resolveTypeArgument,
 			                                  true,
 			                                  errors.Add);
 			return errors;

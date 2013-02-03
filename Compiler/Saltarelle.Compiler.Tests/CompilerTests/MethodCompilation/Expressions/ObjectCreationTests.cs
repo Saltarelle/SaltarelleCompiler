@@ -203,7 +203,7 @@ public void M() {
 	var x = new X<string, int>(13, 42);
 	// END
 }",
-@"	var $x = __CreateX_({sm_String})._({sm_Int32})._(13)._(42);
+@"	var $x = __CreateX_({ga_String})._({ga_Int32})._(13)._(42);
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("__CreateX_({T1})._({T2})._({a})._({b})"), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 

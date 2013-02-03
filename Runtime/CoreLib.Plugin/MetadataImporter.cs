@@ -7,6 +7,7 @@ using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -499,6 +500,22 @@ namespace CoreLib.Plugin {
 			return MetadataUtils.GetUniqueName(preferredName, n => !usedNames.ContainsKey(n));
 		}
 
+		private bool ValidateInlineCode(IMethod method, string code, Tuple<int, MessageSeverity, string> errorTemplate) {
+			var typeErrors = new List<string>();
+			var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, n => {
+				var type = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation);
+				if (type.Kind == TypeKind.Unknown) {
+					typeErrors.Add("Unknown type '" + n + "' specified in inline implementation");
+				}
+				return JsExpression.Null;
+			}, t => JsExpression.Null);
+			if (errors.Count > 0 || typeErrors.Count > 0) {
+				Message(errorTemplate, method, string.Join(", ", errors.Concat(typeErrors)));
+				return false;
+			}
+			return true;
+		}
+
 		private void ProcessConstructor(IMethod constructor, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
 			if (constructor.Parameters.Count == 1 && constructor.Parameters[0].Type.FullName == typeof(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor).FullName) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
@@ -531,9 +548,7 @@ namespace CoreLib.Plugin {
 
 			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(source);
 			if (ica != null) {
-				var errors = InlineCodeMethodCompiler.ValidateLiteralCode(source, ica.Code, t => t.Resolve(_compilation));
-				if (errors.Count > 0) {
-					Message(Messages._7103, source, string.Join(", ", errors));
+				if (!ValidateInlineCode(source, ica.Code, Messages._7103)) {
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
@@ -841,14 +856,12 @@ namespace CoreLib.Plugin {
 						return;
 					}
 					else {
-						var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, t => t.Resolve(_compilation));
-						if (!string.IsNullOrEmpty(ica.NonVirtualCode))
-							errors.AddRange(InlineCodeMethodCompiler.ValidateLiteralCode(method, ica.NonVirtualCode, t => t.Resolve(_compilation)));
-						if (errors.Count > 0) {
-							Message(Messages._7130, method, string.Join(", ", errors));
+						if (!ValidateInlineCode(method, code, Messages._7130)) {
 							code = nonVirtualCode = "X";
 						}
-
+						if (!string.IsNullOrEmpty(ica.NonVirtualCode) && !ValidateInlineCode(method, ica.NonVirtualCode, Messages._7130)) {
+							code = nonVirtualCode = "X";
+						}
 						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: !string.IsNullOrEmpty(ica.GeneratedMethodName) ? ica.GeneratedMethodName : null, nonVirtualInvocationLiteralCode: nonVirtualCode);
 						if (!string.IsNullOrEmpty(ica.GeneratedMethodName))
 							usedNames[ica.GeneratedMethodName] = true;

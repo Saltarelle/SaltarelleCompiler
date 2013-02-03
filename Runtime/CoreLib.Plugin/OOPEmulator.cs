@@ -110,7 +110,14 @@ namespace CoreLib.Plugin {
 						var tokens = InlineCodeMethodCompiler.Tokenize(defaultConstructor, sem.LiteralCode, s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 						if (tokens == null)
 							return JsExpression.Null;
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor, tokens, null, EmptyList<JsExpression>.Instance, r => r.Resolve(_compilation), (t, tc) => _runtimeLibrary.GetScriptType(t, tc, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), false, s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor,
+						                                                                  tokens,
+						                                                                  null,
+						                                                                  EmptyList<JsExpression>.Instance,
+						                                                                  n => _runtimeLibrary.InstantiateType(ReflectionHelper.ParseReflectionName(n).Resolve(_compilation), t => ResolveTypeParameter(t, defaultConstructor.DeclaringTypeDefinition)),
+						                                                                  t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => ResolveTypeParameter(tp, defaultConstructor.DeclaringTypeDefinition)),
+						                                                                  false,
+						                                                                  s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 					}
 					finally {
 						_errorReporter.Region = prevRegion;
@@ -125,12 +132,12 @@ namespace CoreLib.Plugin {
 		}
 
 		private IEnumerable<JsExpression> GetImplementedInterfaces(ITypeDefinition type) {
-			return type.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem(t.GetDefinition())).Select(t => _runtimeLibrary.GetScriptType(t, TypeContext.UseStaticMember, tp => ResolveTypeParameter(tp, type)));
+			return type.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem(t.GetDefinition())).Select(t => _runtimeLibrary.InstantiateType(t, tp => ResolveTypeParameter(tp, type)));
 		}
 
 		private JsExpression GetBaseClass(ITypeDefinition type) {
 			var csBase = type.DirectBaseTypes.SingleOrDefault(b => b.Kind == TypeKind.Class);
-			return csBase != null && MetadataUtils.DoesTypeObeyTypeSystem(csBase.GetDefinition()) ? _runtimeLibrary.GetScriptType(csBase, TypeContext.UseStaticMember, tp => ResolveTypeParameter(tp, type)) : JsExpression.Null;
+			return csBase != null && MetadataUtils.DoesTypeObeyTypeSystem(csBase.GetDefinition()) ? _runtimeLibrary.InstantiateType(csBase, tp => ResolveTypeParameter(tp, type)) : JsExpression.Null;
 		}
 
 		private void AddClassMembers(JsClass c, JsExpression typeRef, List<JsStatement> stmts) {
