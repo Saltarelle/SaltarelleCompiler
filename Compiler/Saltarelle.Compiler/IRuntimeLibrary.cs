@@ -9,11 +9,6 @@ using Saltarelle.Compiler.JSModel.Expressions;
 namespace Saltarelle.Compiler {
 	public enum TypeContext {
 		/// <summary>
-		/// A constructor for the type is being invoked, either through an instantiation or through constructor chaining. Note that for static method constructor, <see cref="UseStaticMember"/> is used instead.
-		/// </summary>
-		InvokeConstructor,
-
-		/// <summary>
 		/// The type is being used as a generic argument.
 		/// </summary>
 		GenericArgument,
@@ -24,29 +19,9 @@ namespace Saltarelle.Compiler {
 		TypeOf,
 
 		/// <summary>
-		/// The type is being cast to. A null result means that the cast should be replaced with a regular assignment.
-		/// </summary>
-		CastTarget,
-
-		/// <summary>
-		/// The type is being used in a default(T) expression.
-		/// </summary>
-		GetDefaultValue,
-
-		/// <summary>
-		/// The type is being used to invoke one of its static methods.
+		/// The type is being used to invoke one of its static methods or a constructor.
 		/// </summary>
 		UseStaticMember,
-
-		/// <summary>
-		/// The type is being used to invoke one of its static methods. Should be handled like <see cref="UseStaticMember2"/>, except that open generic type should be returned
-		/// </summary>
-		InlineCode,
-
-		/// <summary>
-		/// The type is being used because a derived class uses the 'base' keyword.
-		/// </summary>
-		BindBaseCall,
 	}
 
 	public interface IRuntimeLibrary {

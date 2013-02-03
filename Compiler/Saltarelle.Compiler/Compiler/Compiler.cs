@@ -256,29 +256,29 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IProperty property, PropertyScriptSemantics options, string backingFieldName) {
 			if (options.GetMethod != null && options.GetMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName, property.DeclaringTypeDefinition);
+				var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName);
 				AddCompiledMethodToType(jsClass, property.Getter, options.GetMethod, new JsMethod(property.Getter, options.GetMethod.GeneratedMethodName, new string[0], compiled));
 			}
 			if (options.SetMethod != null && options.SetMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName, property.DeclaringTypeDefinition);
+				var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName);
 				AddCompiledMethodToType(jsClass, property.Setter, options.SetMethod, new JsMethod(property.Setter, options.SetMethod.GeneratedMethodName, new string[0], compiled));
 			}
 		}
 
 		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, EventDeclaration node, IEvent evt, EventScriptSemantics options, string backingFieldName) {
 			if (options.AddMethod != null && options.AddMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName, evt.DeclaringTypeDefinition);
+				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
 				AddCompiledMethodToType(jsClass, evt.AddAccessor, options.AddMethod, new JsMethod(evt.AddAccessor, options.AddMethod.GeneratedMethodName, new string[0], compiled));
 			}
 			if (options.RemoveMethod != null && options.RemoveMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName, evt.DeclaringTypeDefinition);
+				var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName);
 				AddCompiledMethodToType(jsClass, evt.RemoveAccessor, options.RemoveMethod, new JsMethod(evt.RemoveAccessor, options.RemoveMethod.GeneratedMethodName, new string[0], compiled));
 			}
 		}
 
 		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), fieldName), fieldType, member.DeclaringTypeDefinition));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(_runtimeLibrary.GetScriptType(Utils.SelfParameterize(owningType), TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), fieldName), fieldType, member.DeclaringTypeDefinition));
 			}
 			else {
 				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(JsExpression.This, fieldName), fieldType, member.DeclaringTypeDefinition));
@@ -287,7 +287,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(_runtimeLibrary.GetScriptType(owningType, TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), fieldName), initializer, owningType));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(_runtimeLibrary.GetScriptType(Utils.SelfParameterize(owningType), TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), fieldName), initializer, owningType));
 			}
 			else {
 				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(JsExpression.This, fieldName), initializer, owningType));

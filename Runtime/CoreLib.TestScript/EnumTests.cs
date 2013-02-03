@@ -63,6 +63,11 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void DefaultExpressionWithEnumReturnsZero() {
+			Assert.AreStrictEqual(default(TestEnum), 0);
+		}
+
+		[Test]
 		public void ParseWorks() {
 			Assert.AreEqual((TestEnum)Enum.Parse(typeof(TestEnum), "FirstValue"), TestEnum.FirstValue);
 			Assert.AreEqual((TestEnum)Enum.Parse(typeof(FlagsEnum), "FirstValue | ThirdValue"), FlagsEnum.FirstValue | FlagsEnum.ThirdValue);

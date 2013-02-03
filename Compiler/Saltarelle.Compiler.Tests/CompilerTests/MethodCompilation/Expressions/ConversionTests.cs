@@ -1627,7 +1627,7 @@ void M() {
 	var c = (int)new MyConvertible();
 	// END
 }",
-@"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {inst_MyConvertible}()));
+@"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()));
 ");
 		}
 	}

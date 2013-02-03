@@ -97,7 +97,7 @@ var $z = 2;
 		}
 
 		[Test]
-		public void StaticFieldsWithoutInitializersAreInitializedToDefault() {
+		public void StaticFieldsWithoutInitializersInGenericTypeAreInitializedToDefault() {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
 			Compile(new[] {
 @"class C<T> {
@@ -111,6 +111,24 @@ var $z = 2;
 @"sm_$InstantiateGenericType({C}, $T).$x = $Default($T);
 sm_$InstantiateGenericType({C}, $T).$y = $Default({def_Int32});
 sm_$InstantiateGenericType({C}, $T).$z = $Default({def_String});
+".Replace("\r\n", "\n"));
+		}
+
+		[Test]
+		public void StaticFieldsWithInitializersInGenericTypeAreInitialized() {
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => { if (ctor.IsStatic) throw new InvalidOperationException(); else return ConstructorScriptSemantics.Unnamed(); } };
+			Compile(new[] {
+@"class C<T> {
+	static T x = default(T);
+	static int y = 42;
+	static string z = ""X"";
+}" }, metadataImporter: metadataImporter);
+
+			var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
+			cctor.Replace("\r\n", "\n").Should().Be(
+@"sm_$InstantiateGenericType({C}, $T).$x = $Default($T);
+sm_$InstantiateGenericType({C}, $T).$y = 42;
+sm_$InstantiateGenericType({C}, $T).$z = 'X';
 ".Replace("\r\n", "\n"));
 		}
 	}

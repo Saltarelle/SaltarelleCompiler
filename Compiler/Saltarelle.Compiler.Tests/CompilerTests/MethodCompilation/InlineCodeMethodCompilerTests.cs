@@ -178,7 +178,7 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{ item1: {ic_Int32}, item2: {ic_String} };
+@"	{ item1: {sm_Int32}, item2: {sm_String} };
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -198,7 +198,7 @@ public void M() {
 	c.F();
 	// END
 }",
-@"	{ item1: {ic_Int32}, item2: {ic_String} };
+@"	{ item1: {sm_Int32}, item2: {sm_String} };
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -211,7 +211,7 @@ public void M() {
 	F();
 	// END
 }",
-@"	[{ic_String}, {ic_Int32}];
+@"	[{sm_String}, {sm_Int32}];
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("[ {$System.String}, {$System.Int32} ]") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 

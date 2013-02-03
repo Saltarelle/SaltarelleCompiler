@@ -25,7 +25,7 @@ namespace foo {
 	public class Foo {
 	}
 }",
-@"	var $fm = new {inst_Foo}();
+@"	var $fm = new {sm_Foo}();
 ", addSkeleton: false);
 		}
 	}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -45,6 +46,13 @@ namespace Saltarelle.Compiler {
 			var s = new HashSet<ITypeDefinition>();
 			FindUsedUnusableTypes(types, metadataImporter, s);
 			return s;
+		}
+
+		/// <summary>
+		/// For generic types, returns a ParameterizedType with each type argument being a TypeParameter with the name of the type parameter in the type definition. Returns the TypeDefinition itself for non-generic types.
+		/// </summary>
+		public static IType SelfParameterize(ITypeDefinition type) {
+			return type.TypeParameterCount == 0 ? (IType)type : new ParameterizedType(type, type.TypeParameters.Select(tp => new DefaultTypeParameter(type, tp.Index, tp.Name)));
 		}
 	}
 }

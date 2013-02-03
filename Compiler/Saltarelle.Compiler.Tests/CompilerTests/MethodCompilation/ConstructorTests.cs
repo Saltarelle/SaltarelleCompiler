@@ -150,7 +150,7 @@ class D : B {
 	}
 }",
 @"function($x) {
-	{inst_C}.call(this);
+	{sm_C}.call(this);
 	this.M();
 }");
 		}
@@ -178,7 +178,7 @@ class D : B {
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
-	{inst_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	{sm_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
 		}
@@ -198,7 +198,7 @@ class D : B {
 	}
 }",
 @"function() {
-	{inst_C}.ctor$Int32.call(this, 0);
+	{sm_C}.ctor$Int32.call(this, 0);
 	this.M();
 }");
 		}
@@ -382,7 +382,7 @@ class D : B {
 	}
 }",
 @"function() {
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
 		}
@@ -436,7 +436,7 @@ class D : B {
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
-	var $this = new {inst_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $this = new {sm_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
@@ -456,7 +456,7 @@ class D : B {
 	}
 }",
 @"function() {
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
 		}
@@ -508,7 +508,7 @@ class D : B {
 	var $tmp1 = {sm_D}.F1();
 	var $tmp2 = {sm_D}.F2();
 	var $tmp3 = {sm_D}.F3();
-	{inst_B}.call(this, 1, {sm_D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	{sm_B}.call(this, 1, {sm_D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed() });
 		}
@@ -558,7 +558,7 @@ class D : B {
 	}
 }",
 @"function($x) {
-	{inst_C}.call(this);
+	{sm_C}.call(this);
 	this.M();
 }");
 		}
@@ -621,7 +621,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
 		}
@@ -642,7 +642,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
 		}
@@ -655,7 +655,7 @@ class D : B {
 class D : B {
 }",
 @"function() {
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -678,7 +678,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -692,7 +692,7 @@ class C {
 	X x = new X { P = 10 };
 }",
 @"function() {
-	var $tmp1 = new {inst_X}();
+	var $tmp1 = new {sm_X}();
 	$tmp1.set_P(10);
 	this.$x = $tmp1;
 }", useFirstConstructor: true);
@@ -770,7 +770,7 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
-	{inst_C1}.x.call(this, 4, 8, [59, 12, 4]);
+	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
@@ -784,7 +784,7 @@ class C {
 	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
 }",
 @"function() {
-	{inst_C1}.x.call(this, 4, 8, [59, 12, 4]);
+	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
@@ -798,7 +798,7 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
-	{inst_C1}.x.call(this, 4, 8, 59, 12, 4);
+	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 		}
 

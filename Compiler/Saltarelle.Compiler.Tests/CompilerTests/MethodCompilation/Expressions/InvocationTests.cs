@@ -558,7 +558,7 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_({ic_Int32})._({ic_Byte})._({ic_String})._($o)._($a)._($b)._($c);
+@"	_({sm_Int32})._({sm_Byte})._({sm_String})._($o)._($a)._($b)._($c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
@@ -575,7 +575,7 @@ class D : B<int> {
 		// END
 	}
 }",
-@"	_({ic_Int32})._({ic_String})._(this)._(1)._('X');
+@"	_({sm_Int32})._({sm_String})._(this)._(1)._('X');
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("X", nonVirtualInvocationLiteralCode: "_({T1})._({T2})._({this})._({x})._({y})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSkeleton: false);
 		}
 
@@ -1466,7 +1466,7 @@ class C<T1> {
 		// END
 	}
 }",
-@"	(new {inst_X}()).$F($t1, $t2);
+@"	(new {sm_X}()).$F($t1, $t2);
 ", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
 		}
 
@@ -1556,7 +1556,7 @@ class C<T1> {
 		// END
 	}
 }",
-@"	{sm_X}.$F(new {inst_X}(), $t1, $t2);
+@"	{sm_X}.$F(new {sm_X}(), $t1, $t2);
 ", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", ignoreGenericArguments: true) : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
 		}
 

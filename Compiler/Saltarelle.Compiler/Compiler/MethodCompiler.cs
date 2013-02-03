@@ -6,6 +6,7 @@ using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
@@ -225,11 +226,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, PropertyScriptSemantics impl, string backingFieldName, ITypeDefinition declaringTypeDefinition) {
+		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IProperty property, PropertyScriptSemantics impl, string backingFieldName) {
 			try {
+				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 				if (property.IsStatic) {
-					CreateCompilationContext(null, null, declaringTypeDefinition, null);
-					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var jsType = _runtimeLibrary.GetScriptType(Utils.SelfParameterize(property.DeclaringTypeDefinition), TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
 					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -246,13 +247,13 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoPropertySetter(IProperty property, PropertyScriptSemantics impl, string backingFieldName, ITypeDefinition declaringTypeDefinition) {
+		public JsFunctionDefinitionExpression CompileAutoPropertySetter(IProperty property, PropertyScriptSemantics impl, string backingFieldName) {
 			try {
 				string valueName = _namer.GetVariableName(property.Setter.Parameters[0].Name, new HashSet<string>(property.DeclaringTypeDefinition.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
+				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 
 				if (property.IsStatic) {
-					CreateCompilationContext(null, null, declaringTypeDefinition, null);
-					var jsType = _runtimeLibrary.GetScriptType(property.DeclaringType, TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var jsType = _runtimeLibrary.GetScriptType(Utils.SelfParameterize(property.DeclaringTypeDefinition), TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
 					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -269,15 +270,15 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEvent @event, EventScriptSemantics impl, string backingFieldName, ITypeDefinition declaringTypeDefinition) {
+		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEvent @event, EventScriptSemantics impl, string backingFieldName) {
 			try {
 				string valueName = _namer.GetVariableName(@event.AddAccessor.Parameters[0].Name, new HashSet<string>(@event.DeclaringTypeDefinition.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
-				CreateCompilationContext(null, null, declaringTypeDefinition, null);
+				CreateCompilationContext(null, null, @event.DeclaringTypeDefinition, null);
 
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.GetScriptType(@event.DeclaringType, TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					target = _runtimeLibrary.GetScriptType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
 					args = new[] { valueName };
 				}
 				else if (impl.AddMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -300,17 +301,15 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoEventRemover(IEvent @event, EventScriptSemantics impl, string backingFieldName, ITypeDefinition declaringTypeDefinition) {
+		public JsFunctionDefinitionExpression CompileAutoEventRemover(IEvent @event, EventScriptSemantics impl, string backingFieldName) {
 			try {
-				CreateCompilationContext(null, null, declaringTypeDefinition, null);
 				string valueName = _namer.GetVariableName(@event.RemoveAccessor.Parameters[0].Name, new HashSet<string>(@event.DeclaringTypeDefinition.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
-
-				CreateCompilationContext(null, null, declaringTypeDefinition, null);
+				CreateCompilationContext(null, null, @event.DeclaringTypeDefinition, null);
 
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.GetScriptType(@event.DeclaringType, TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					target = _runtimeLibrary.GetScriptType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), TypeContext.UseStaticMember, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
 					args = new[] { valueName };
 				}
 				else if (impl.RemoveMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {

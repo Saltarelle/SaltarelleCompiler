@@ -641,5 +641,31 @@ public class C {
 	{sm_Class1}.remove_$Test1($b);
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void UsingStaticMembersInGenericClassWorks() {
+			AssertCorrect(@"
+using System;
+public class C<T> {
+	static int F;
+	static void A() {}
+	static event System.EventHandler E;
+	static int P { get; set; }
+	
+	static void M() {
+		// BEGIN
+		F = 0;
+		A();
+		E += null;
+		P += 1;
+		// END
+	}
+}",
+@"	sm_$InstantiateGenericType({C}, $T).$F = 0;
+	sm_$InstantiateGenericType({C}, $T).$A();
+	sm_$InstantiateGenericType({C}, $T).add_$E(null);
+	sm_$InstantiateGenericType({C}, $T).set_$P(sm_$InstantiateGenericType({C}, $T).get_$P() + 1);
+", addSkeleton: false);
+		}
 	}
 }

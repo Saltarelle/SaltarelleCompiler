@@ -647,6 +647,20 @@ var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
 		}
 
 		[Test]
+		public void AbstractMethodsWork() {
+			AssertCorrect(
+@"public class C { abstract void M(); }
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// C
+var $C = function() {
+};
+$C.prototype = { $m: null };
+{Script}.registerClass(global, 'C', $C);
+");
+		}
+
+		[Test]
 		public void ClassesWithModuleNamesGetExportedToTheExportsObject() {
 			AssertCorrect(
 @"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]

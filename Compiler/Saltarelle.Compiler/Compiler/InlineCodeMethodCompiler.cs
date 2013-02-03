@@ -160,7 +160,7 @@ namespace Saltarelle.Compiler.Compiler {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
 						var l = token.OwnerType == EntityType.TypeDefinition ? typeTypeArguments : methodTypeArguments;
-						substitutions[s] = Tuple.Create(l != null ? getJsType(l[token.Index], TypeContext.InlineCode) : JsExpression.Null, false);
+						substitutions[s] = Tuple.Create(l != null ? getJsType(l[token.Index], TypeContext.UseStaticMember) : JsExpression.Null, false);
 						break;
 					}
 
@@ -175,7 +175,7 @@ namespace Saltarelle.Compiler.Compiler {
 							substitutions[s] = Tuple.Create((JsExpression)JsExpression.Null, false);
 						}
 						else {
-							substitutions[s] = Tuple.Create(getJsType(type, TypeContext.InlineCode), false);
+							substitutions[s] = Tuple.Create(getJsType(type, TypeContext.UseStaticMember), false);
 						}
 						break;
 					}

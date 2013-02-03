@@ -101,7 +101,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.Message(Messages._7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
 
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, TypeContext.InvokeConstructor), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 
@@ -1210,7 +1210,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (impl.ExpandParams && !isExpandedForm) {
 					_errorReporter.Message(Messages._7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
 				}
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor ? TypeContext.InvokeConstructor : TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, GetScriptType(method.DeclaringType, TypeContext.UseStaticMember), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
 
 				JsExpression constructorCall;
 

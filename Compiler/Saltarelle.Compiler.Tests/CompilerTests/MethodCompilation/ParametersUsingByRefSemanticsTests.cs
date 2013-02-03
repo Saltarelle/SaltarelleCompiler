@@ -128,7 +128,7 @@ class C : B {
 @"function($a, $b, $c, $d, $e) {
 	$a = { $: $a };
 	$d = { $: $d };
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	$c.$ = 0;
 	{sm_C}.F($a);
 	{sm_C}.F($b);
