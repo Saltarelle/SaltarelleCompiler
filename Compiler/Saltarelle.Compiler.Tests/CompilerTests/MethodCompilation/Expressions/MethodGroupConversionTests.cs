@@ -365,5 +365,235 @@ public void M() {
 @"	var $f = $BindFirstParameterToThis($Bind(this.F, this));
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
 		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodWithReturnValue() {
+			AssertCorrect(
+@"private int i;
+public int F<T>(int a, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Func<int, int, int> f = F<string>;
+	// END
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		return _($tmp1)._($tmp2)._({ga_String});
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodWithoutReturnValue() {
+			AssertCorrect(
+@"private int i;
+public void F<T>(int a, int b) {}
+public void M() {
+	// BEGIN
+	Action<int, int> f = F<string>;
+	// END
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		_($tmp1)._($tmp2)._({ga_String});
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodThatUsesThis() {
+			AssertCorrect(
+@"private int i;
+public int F<T>(int a, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Func<int, int, int> f = F<string>;
+	// END
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		return _(this)._($tmp1)._($tmp2)._({ga_String});
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void MethodGroupConversionOnInlineCodeMethodOnAnotherTargetWorks() {
+			AssertCorrect(
+@"private int i;
+public int F<T>(int a, int b) { return 0; }
+public void M() {
+	C c = null;
+	// BEGIN
+	Func<int, int, int> f = c.F<string>;
+	// END
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		return _(this)._($tmp1)._($tmp2)._({ga_String});
+	}, $c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodUsingNonVirtualCall() {
+			AssertCorrect(
+@"class B {
+	public virtual int F<T>(int a, int b) { return 0; }
+}
+class C : B {
+public void M() {
+	// BEGIN
+	System.Func<int, int, int> f = base.F<string>;
+	// END
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		return _(this)._($tmp1)._($tmp2)._({ga_String});
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("X", nonVirtualInvocationLiteralCode: "_({this})._({a})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) }, addSkeleton: false);
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodWhenDelegateTypeUsesBindThisToFirstParameter() {
+			AssertCorrect(
+@"public int F<T>(int _this, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Func<int, int, int> f = F<string>;
+	// END
+}
+",
+@"	var $f = $BindFirstParameterToThis($Bind(function($tmp1, $tmp2) {
+		return _(this)._($tmp1)._($tmp2)._({ga_String});
+	}, this));
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({_this})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test, Ignore("TODO")]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodWhenDelegateTypeExpandsParamArray() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void CannotPerformMethodGroupConversionOnInlineCodeMethodThatIncludesAnExpandedParameter() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {
+	public int F1(params object[] a) { return 0; }
+	public void M() {
+		System.Func<object[], int> f = F1;
+	}
+}
+" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*a})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("expanded param array")));
+		}
+
+		[Test]
+		public void CannotPerformMethodGroupConversionOnInlineCodeMethodThatIncludesAParameterAsLiteralText() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {
+	public int F1(string a) { return 0; }
+	public void M() {
+		System.Func<string, int> f = F1;
+	}
+}
+" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({@a})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("literal string as code")));
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWithReturnValue() {
+			AssertCorrect(
+@"private int i;
+public int F(int a, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Func<int, int, int> f = F;
+	// END
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		return {sm_C}.$F(this, $tmp1, $tmp2);
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWithoutReturnValue() {
+			AssertCorrect(
+@"public void F(int a, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Action<int, int> f = F;
+	// END
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		{sm_C}.$F(this, $tmp1, $tmp2);
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentInGenericType() {
+			AssertCorrect(
+@"class C<T1, T2> {
+	public int F(int a, int b) { return 0; }
+	public void M() {
+		// BEGIN
+		System.Func<int, int, int> f = F;
+		// END
+	}
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		return sm_$InstantiateGenericType({C}, $T1, $T2).$F(this, $tmp1, $tmp2);
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod(m.Name) }, addSkeleton: false);
+		}
+		
+		[Test]
+		public void MethodGroupConversionOnStaticMethodWithThisAsFirstArgumentOnAnotherTargetWorks() {
+			AssertCorrect(
+@"public void F(int a, int b) { return 0; }
+public void M() {
+	C c;
+	// BEGIN
+	Action<int, int> f = c.F;
+	// END
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		{sm_C}.$F(this, $tmp1, $tmp2);
+	}, $c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWhenDelegateTypeUsesBindThisToFirstParameter() {
+			AssertCorrect(
+@"public void F(int a, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Action<int, int> f = F;
+	// END
+}
+",
+@"	var $f = $BindFirstParameterToThis($Bind(function($tmp1, $tmp2) {
+		{sm_C}.$F(this, $tmp1, $tmp2);
+	}, this));
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test, Ignore("TODO")]
+		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWhenDelegateTypeExpandsParamArray() {
+			Assert.Fail("TODO");
+		}
 	}
 }

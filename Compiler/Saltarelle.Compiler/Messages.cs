@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7520 = Tuple.Create(7520, MessageSeverity.Error, "Cannot use the type {0} in as a type argument for the class {1} because it is marked as not usable from script.");
 		public static readonly Message _7521 = Tuple.Create(7521, MessageSeverity.Error, "Cannot use the variable {0} because it is an expanded param array.");
 		public static readonly Message _7522 = Tuple.Create(7522, MessageSeverity.Error, "Cannot use the type {0} in a typeof expression because it is marked as not usable from script.");
-		public static readonly Message _7523 = Tuple.Create(7523, MessageSeverity.Error, "Cannot perform method group conversion on {0} because it is not a normal method.");
+		public static readonly Message _7523 = Tuple.Create(7523, MessageSeverity.Error, "Cannot perform method group conversion on {0} because {1}.");
 		public static readonly Message _7524 = Tuple.Create(7524, MessageSeverity.Error, "Cannot convert the method '{0}' to the delegate type '{1}' because the method and delegate type differ in whether they expand their param array.");
 		public static readonly Message _7525 = Tuple.Create(7525, MessageSeverity.Error, "Error in inline code compilation: {0}.");
 		public static readonly Message _7526 = Tuple.Create(7526, MessageSeverity.Error, "Dynamic invocations cannot use named arguments.");

@@ -2,7 +2,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
-	internal class UsesThisVisitor : RewriterVisitorBase<object> {
+	public class UsesThisVisitor : RewriterVisitorBase<object> {
 		bool _result;
 
 		private UsesThisVisitor() {
@@ -25,6 +25,12 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 		public static bool Analyze(JsStatement statement) {
 			var obj = new UsesThisVisitor();
 			obj.VisitStatement(statement, null);
+			return obj._result;
+		}
+
+		public static bool Analyze(JsExpression expression) {
+			var obj = new UsesThisVisitor();
+			obj.VisitExpression(expression, null);
 			return obj._result;
 		}
 	}

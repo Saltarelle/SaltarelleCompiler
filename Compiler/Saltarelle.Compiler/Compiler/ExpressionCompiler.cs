@@ -13,6 +13,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
+using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -1614,6 +1615,89 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.Null;
 		}
 
+		private JsExpression PerformMethodGroupConversionOnNormalMethod(IMethod method, IType delegateType, bool isBaseCall, ResolveResult target, MethodScriptSemantics methodSemantics, DelegateScriptSemantics delegateSemantics) {
+			if (methodSemantics.ExpandParams != delegateSemantics.ExpandParams) {
+				_errorReporter.Message(Messages._7524, method.DeclaringType + "." + method.Name, delegateType.FullName);
+				return JsExpression.Null;
+			}
+
+			var typeArguments = (method is SpecializedMethod && !methodSemantics.IgnoreGenericArguments) ? ((SpecializedMethod)method).TypeArguments : new List<IType>();
+
+			JsExpression result;
+
+			if (isBaseCall) {
+				// base.Method
+				var jsTarget = InnerCompile(target, true);
+				result = _runtimeLibrary.BindBaseCall(method.DeclaringType, methodSemantics.Name, typeArguments, jsTarget, ResolveTypeParameter);
+			}
+			else {
+				JsExpression jsTarget, jsMethod;
+
+				if (method.IsStatic) {
+					jsTarget = null;
+					jsMethod = JsExpression.Member(InstantiateType(method.DeclaringType), methodSemantics.Name);
+				}
+				else {
+					jsTarget = InnerCompile(target, true);
+					jsMethod = JsExpression.Member(jsTarget, methodSemantics.Name);
+				}
+
+				if (typeArguments.Count > 0) {
+					jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
+				}
+
+				result = jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
+			}
+
+			if (delegateSemantics.BindThisToFirstParameter)
+				result = _runtimeLibrary.BindFirstParameterToThis(result);
+
+			return result;
+		}
+
+		private JsExpression PerformMethodGroupConversionOnInlineCodeMethod(IMethod method, IType delegateType, bool isBaseCall, ResolveResult target, MethodScriptSemantics methodSemantics, DelegateScriptSemantics delegateSemantics) {
+			string code = isBaseCall ? methodSemantics.NonVirtualInvocationLiteralCode : methodSemantics.LiteralCode;
+			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(Messages._7525, s));
+			if (tokens == null) {
+				return JsExpression.Null;
+			}
+			else if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier)) {
+				_errorReporter.Message(Messages._7523, method.FullName, "it uses a literal string as code ({@arg})");
+				return JsExpression.Null;
+			}
+			else if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.Parameter && t.IsExpandedParamArray)) {
+				_errorReporter.Message(Messages._7523, method.FullName, "it has an expanded param array parameter ({*arg})");
+				return JsExpression.Null;
+			}
+				
+			var parameters = new string[method.Parameters.Count];
+			for (int i = 0; i < method.Parameters.Count; i++)
+				parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
+
+			var body = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, method.IsStatic ? null : JsExpression.This, parameters.Select(p => (JsExpression)JsExpression.Identifier(p)).ToList(), ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, ResolveTypeParameter), false, s => _errorReporter.Message(Messages._7525, s));
+			var result = (JsExpression)JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+
+			if (!method.IsStatic && UsesThisVisitor.Analyze(body))
+				result = _runtimeLibrary.Bind(result, InnerCompile(target, false));
+			if (delegateSemantics.BindThisToFirstParameter)
+				result = _runtimeLibrary.BindFirstParameterToThis(result);
+			return result;
+		}
+
+		private JsExpression PerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgument(IMethod method, IType delegateType, bool isBaseCall, ResolveResult target, MethodScriptSemantics methodSemantics, DelegateScriptSemantics delegateSemantics) {
+			var parameters = new string[method.Parameters.Count];
+			for (int i = 0; i < method.Parameters.Count; i++)
+				parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
+
+			var body = JsExpression.Invocation(JsExpression.Member(InstantiateType(method.DeclaringType), methodSemantics.Name), new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
+			var result = (JsExpression)JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+
+			result = _runtimeLibrary.Bind(result, InnerCompile(target, false));
+			if (delegateSemantics.BindThisToFirstParameter)
+				result = _runtimeLibrary.BindFirstParameterToThis(result);
+			return result;
+		}
+
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Conversion.IsAnonymousFunctionConversion) {
 				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
@@ -1621,8 +1705,6 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;
-
-				var delegateSemantics = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 
 				if (mgrr.TargetResult.Type.Kind == TypeKind.Delegate && Equals(rr.Conversion.Method, mgrr.TargetResult.Type.GetDelegateInvokeMethod())) {
 					var sem1 = _metadataImporter.GetDelegateSemantics(mgrr.TargetResult.Type.GetDefinition());
@@ -1636,47 +1718,18 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var methodSemantics = _metadataImporter.GetMethodSemantics(rr.Conversion.Method);
-				if (methodSemantics.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-					_errorReporter.Message(Messages._7523, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name);
-					return JsExpression.Null;
+				var delegateSemantics = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
+				switch (methodSemantics.Type) {
+					case MethodScriptSemantics.ImplType.NormalMethod:
+						return PerformMethodGroupConversionOnNormalMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, mgrr.TargetResult, methodSemantics, delegateSemantics);
+					case MethodScriptSemantics.ImplType.InlineCode:
+						return PerformMethodGroupConversionOnInlineCodeMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, mgrr.TargetResult, methodSemantics, delegateSemantics);
+					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument:
+						return PerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgument(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, mgrr.TargetResult, methodSemantics, delegateSemantics);
+					default:
+						_errorReporter.Message(Messages._7523, rr.Conversion.Method.FullName, "it is not a normal method");
+						return JsExpression.Null;
 				}
-				else if (methodSemantics.ExpandParams  != delegateSemantics.ExpandParams) {
-					_errorReporter.Message(Messages._7524, rr.Conversion.Method.DeclaringType + "." + rr.Conversion.Method.Name, rr.Type.FullName);
-					return JsExpression.Null;
-				}
-
-				var typeArguments = (rr.Conversion.Method is SpecializedMethod && !methodSemantics.IgnoreGenericArguments) ? ((SpecializedMethod)rr.Conversion.Method).TypeArguments : new List<IType>();
-
-				JsExpression result;
-
-				if (rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup) {
-					// base.Method
-					var jsTarget = InnerCompile(mgrr.TargetResult, true);
-					result = _runtimeLibrary.BindBaseCall(rr.Conversion.Method.DeclaringType, methodSemantics.Name, typeArguments, jsTarget, ResolveTypeParameter);
-				}
-				else {
-					JsExpression jsTarget, jsMethod;
-
-					if (rr.Conversion.Method.IsStatic) {
-						jsTarget = null;
-						jsMethod = JsExpression.Member(InstantiateType(mgrr.TargetResult.Type), methodSemantics.Name);
-					}
-					else {
-						jsTarget = InnerCompile(mgrr.TargetResult, true);
-						jsMethod = JsExpression.Member(jsTarget, methodSemantics.Name);
-					}
-
-					if (typeArguments.Count > 0) {
-						jsMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
-					}
-
-					result = jsTarget != null ? _runtimeLibrary.Bind(jsMethod, jsTarget) : jsMethod;
-				}
-
-				if (delegateSemantics.BindThisToFirstParameter)
-					result = _runtimeLibrary.BindFirstParameterToThis(result);
-
-				return result;
 			}
 			else {
 				return PerformConversion(VisitResolveResult(rr.Input, true), rr.Conversion, rr.Input.Type, rr.Type);
@@ -1754,7 +1807,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				switch (rr.InvocationType) {
 					case DynamicInvocationType.Indexing:
-						return (JsExpression)JsExpression.Index(expressions[0], expressions[1]);
+						return JsExpression.Index(expressions[0], expressions[1]);
 
 					case DynamicInvocationType.Invocation:
 						return JsExpression.Invocation(expressions[0], expressions.Skip(1));
