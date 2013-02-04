@@ -247,7 +247,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				else {
 					var csirr = (CSharpInvocationResolveResult)rr;
-					return _expressionCompiler.CompileConstructorInitializer((IMethod)csirr.Member, csirr.GetArgumentsForCall(), csirr.GetArgumentToParameterMap(), csirr.InitializerStatements, currentIsStaticMethod, csirr.IsExpandedForm);
+					return _expressionCompiler.CompileConstructorInitializer((IMethod)csirr.Member, csirr.GetArgumentsForCall(), csirr.GetArgumentToParameterMap(), csirr.InitializerStatements, currentIsStaticMethod);
 				}
 			}
 			catch (Exception ex) {
@@ -260,7 +260,7 @@ namespace Saltarelle.Compiler.Compiler {
 			SetRegion(type.Region);
 			try {
 				var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
-				return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod, false);
+				return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);

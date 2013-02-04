@@ -116,7 +116,6 @@ namespace CoreLib.Plugin {
 						                                                                  EmptyList<JsExpression>.Instance,
 						                                                                  n => _runtimeLibrary.InstantiateType(ReflectionHelper.ParseReflectionName(n).Resolve(_compilation), t => ResolveTypeParameter(t, defaultConstructor.DeclaringTypeDefinition)),
 						                                                                  t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => ResolveTypeParameter(tp, defaultConstructor.DeclaringTypeDefinition)),
-						                                                                  false,
 						                                                                  s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 					}
 					finally {

@@ -378,7 +378,7 @@ public void M() {
 	public void M() {
 		string[] args = null;
 		// BEGIN
-		F(""x"", 1, new[] { ""y"", ""z"" });
+		F(""x"", 1, args);
 		// END
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}({*p3})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);

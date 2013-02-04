@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, bool isParamArrayExpanded, Action<string> errorReporter) {
+		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
 			IList<IType> typeTypeArguments = method.DeclaringType is ParameterizedType ? ((ParameterizedType)method.DeclaringType).TypeArguments : null;
 			IList<IType> methodTypeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : null;
 
@@ -147,7 +147,7 @@ namespace Saltarelle.Compiler.Compiler {
 								errorReporter("The parameter " + method.Parameters[token.Index].Name + " must be a param array in order to use it with the * modifier.");
 								substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
 							}
-							else if (!isParamArrayExpanded) {
+							else if (arguments[arguments.Count - 1].NodeType != ExpressionNodeType.ArrayLiteral) {
 								hasErrors = true;
 								errorReporter("The method " + method.DeclaringType.FullName + "." + method.Name + " can only be invoked with its params parameter expanded");
 								substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
@@ -282,7 +282,6 @@ namespace Saltarelle.Compiler.Compiler {
 			                                  method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
 			                                  resolveType,
 			                                  resolveTypeArgument,
-			                                  true,
 			                                  errors.Add);
 			return errors;
 		}
