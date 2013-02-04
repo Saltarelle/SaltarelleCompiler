@@ -62,10 +62,9 @@
     <Compile Include="CompilerTests\MethodCompilation\Bugs.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\AwaitTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\SizeOfTests.cs" />
-    <Compile Include="CompilerTests\MethodCompilation\Expressions\LocalsTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\MethodCompilationTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\QueryExpressionTests.cs" />
-    <Compile Include="CompilerTests\MethodCompilation\ParametersUsingByRefSemanticsTests.cs" />
+    <Compile Include="CompilerTests\MethodCompilation\ParameterFixupTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\StateMachineRewriteTests.cs" />
     <Compile Include="CompilerTests\PreprocessorTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\InlineCodeMethodCompilerTests.cs" />

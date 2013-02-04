@@ -1,17 +1,18 @@
 ﻿using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	[TestFixture]
-	public class ParametersUsingByRefSemanticsTests : MethodCompilerTestBase {
-		protected void AssertCorrectConstructor(string source, string expected, string className) {
+	public class ParameterFixupTests : MethodCompilerTestBase {
+		protected void AssertCorrectConstructor(string source, string expected, string className, IMetadataImporter metadataImporter = null) {
 			JsExpression compiledConstructor = null;
 			Compile(new[] { source }, methodCompiled: (m, res, mc) => {
 				if (m.IsConstructor && m.DeclaringType.FullName == className) {
 					compiledConstructor = res;
 				}
-			});
+			}, metadataImporter: metadataImporter);
 
 			Assert.That(compiledConstructor, Is.Not.Null, "No constructor was compiled.");
 
@@ -69,7 +70,7 @@ void M() {
 		}
 
 		[Test]
-		public void ParametersUsingByRefSemanticsAreConvertedAtTheTopOfMultiExpressionLambda() {
+		public void ParametersUsingByRefSemanticsAreConvertedAtTheTopOfStatementLambda() {
 			AssertCorrect(
 @"static void F(ref int x) {}
 delegate void D(int a, ref int b, out int c, int d, int e);
@@ -135,6 +136,74 @@ class C : B {
 	{sm_C}.F($c);
 	{sm_C}.F($d);
 }", "C");
+		}
+
+		[Test]
+		public void ExpandedParamArrayIsFixedAtTheTopOfMethods() {
+			AssertCorrect(
+@"void M(int a, int b, params int[] c) {}",
+@"function($a, $b, $c) {
+	$c = Array.prototype.slice.call(arguments, 2);
+}", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) });
+		}
+
+		[Test]
+		public void ExpandedParamArrayIsFixedAtTheTopOfAnonymousDelegateExpressions() {
+			AssertCorrect(
+@"delegate void D(int a, int b, string c, params object[] d);
+void M() {
+	D x = delegate(int a, int b, string c, object[] d) {};
+}",
+@"function() {
+	var $x = function($a, $b, $c, $d) {
+		$d = Array.prototype.slice.call(arguments, 3);
+	};
+}", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = m => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void ExpandedParamArrayIsFixedAtTheTopOfStatementLambda() {
+			AssertCorrect(
+@"delegate void D(int a, params object[] b);
+void M() {
+	D x = (int a, object[] b) => {};
+}",
+@"function() {
+	var $x = function($a, $b) {
+		$b = Array.prototype.slice.call(arguments, 1);
+	};
+}", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = m => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void ExpandedParamArrayIsFixedAtTheTopOfExpressionLambda() {
+			AssertCorrect(
+@"delegate int D(params object[] b);
+void M() {
+	D x = (object[] b) => 0;
+}",
+@"function() {
+	var $x = function($b) {
+		$b = Array.prototype.slice.call(arguments, 0);
+		return 0;
+	};
+}", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = m => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void ExpandedParamArrayIsFixedAtTheTopOfConstructors() {
+			AssertCorrectConstructor(
+@"class B {}
+class C : B {
+	C(int a, string b, params object[] c) {
+		int x = 0;
+	}
+}",
+@"function($a, $b, $c) {
+	$c = Array.prototype.slice.call(arguments, 2);
+	{sm_B}.call(this);
+	var $x = 0;
+}", "C", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: c.DeclaringType.Name == "C") });
 		}
 	}
 }

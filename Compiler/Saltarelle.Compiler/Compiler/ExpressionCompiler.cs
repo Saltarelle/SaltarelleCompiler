@@ -21,19 +21,13 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Compiler {
 	public class NestedFunctionContext {
 		public ReadOnlySet<IVariable> CapturedByRefVariables { get; private set; }
-		public ReadOnlySet<IVariable> ExpandParamsVariables { get; private set; }
 
-		public NestedFunctionContext(IEnumerable<IVariable> capturedByRefVariables, IEnumerable<IVariable> expandParamsVariables) {
+		public NestedFunctionContext(IEnumerable<IVariable> capturedByRefVariables) {
 			var crv = new HashSet<IVariable>();
 			foreach (var v in capturedByRefVariables)
 				crv.Add(v);
 
-			var epv = new HashSet<IVariable>();
-			foreach (var v in expandParamsVariables)
-				epv.Add(v);
-
 			CapturedByRefVariables = new ReadOnlySet<IVariable>(crv);
-			ExpandParamsVariables  = new ReadOnlySet<IVariable>(epv);
 		}
 	}
 
@@ -1349,13 +1343,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			bool captureThis = (_thisAlias == null && f.DirectlyOrIndirectlyUsesThis);
-			IEnumerable<IVariable> expandParamsVariables = _nestedFunctionContext != null ? _nestedFunctionContext.ExpandParamsVariables : null;
-			if (semantics.ExpandParams) {
-				expandParamsVariables = expandParamsVariables != null ? new List<IVariable>(expandParamsVariables) : new List<IVariable>();
-				((List<IVariable>)expandParamsVariables).Add(rr.Parameters[rr.Parameters.Count - 1]);
-			}
-
-			var newContext = new NestedFunctionContext(capturedByRefVariables, expandParamsVariables ?? new IVariable[0]);
+			var newContext = new NestedFunctionContext(capturedByRefVariables);
 
 			JsFunctionDefinitionExpression def;
 			if (f.BodyNode is Statement) {
@@ -1366,12 +1354,12 @@ namespace Saltarelle.Compiler.Compiler {
 					taskGenericArgument = returnType is ParameterizedType ? ((ParameterizedType)returnType).TypeArguments[0] : null;
 				}
 
-				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false, smt, taskGenericArgument);
+				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false, semantics.ExpandParams, smt, taskGenericArgument);
 			}
 			else {
 				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
 				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body.Expression) : (JsStatement)new JsReturnStatement(body.Expression);
-				var jsBody = new JsBlockStatement(MethodCompiler.FixByRefParameters(rr.Parameters, _variables).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
+				var jsBody = new JsBlockStatement(MethodCompiler.PrepareParameters(rr.Parameters, _variables, semantics.ExpandParams).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
 			}
 
@@ -1410,18 +1398,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, bool returnValueIsImportant) {
-			if (_nestedFunctionContext != null && _nestedFunctionContext.ExpandParamsVariables.Contains(rr.Variable)) {
-				_errorReporter.Message(Messages._7521, rr.Variable.Name);
-			}
-			else if (rr.Variable is IParameter && ((IParameter)rr.Variable).IsParams) {
-				if (_methodBeingCompiled != null) {
-				    var impl = _metadataImporter.GetMethodSemantics(_methodBeingCompiled);
-				    if (impl.ExpandParams) {
-				        _errorReporter.Message(Messages._7521, rr.Variable.Name);
-				    }
-				}
-			}
-
 			return CompileLocal(rr.Variable, false);
 		}
 

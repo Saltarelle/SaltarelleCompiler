@@ -137,7 +137,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			CreateCompilationContext(entity, method, method.DeclaringTypeDefinition, (impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? _namer.ThisAlias : null));
-			return _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument, smt, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
+			return _statementCompiler.CompileMethod(method.Parameters, variables, body, impl.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument, impl.ExpandParams, smt, iteratorBlockYieldTypeOrAsyncTaskGenericArgument);
 		}
 
 		public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclaration ctor, IMethod constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
@@ -145,7 +145,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(ctor, constructor, constructor.DeclaringTypeDefinition, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
 				IList<JsStatement> body = new List<JsStatement>();
-				body.AddRange(FixByRefParameters(constructor.Parameters, variables));
+				body.AddRange(PrepareParameters(constructor.Parameters, variables, impl.ExpandParams));
 
 				var systemObject = _compilation.FindType(KnownTypeCode.Object);
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
@@ -332,8 +332,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static List<JsStatement> FixByRefParameters(IEnumerable<IParameter> parameters, IDictionary<IVariable, VariableData> variables) {
+		public static List<JsStatement> PrepareParameters(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, bool expandParams) {
 			List<JsStatement> result = null;
+			if (expandParams && parameters.Count > 0) {
+				result = result ?? new List<JsStatement>();
+				result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(variables[parameters[parameters.Count - 1]].Name), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1)))));
+			}
 			foreach (var p in parameters) {
 				if (!p.IsOut && !p.IsRef && variables[p].UseByRefSemantics) {
 					result = result ?? new List<JsStatement>();
