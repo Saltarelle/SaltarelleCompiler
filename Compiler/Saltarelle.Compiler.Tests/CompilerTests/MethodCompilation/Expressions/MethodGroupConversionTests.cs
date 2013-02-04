@@ -322,7 +322,7 @@ class D2 : D {
 		}
 
 		[Test]
-		public void CannotPerformMethodGroupConversionOnMethodThatExpandsParamsToDelegateThatDoesNot() {
+		public void CannotPerformMethodGroupConversionOnNormalMethodThatExpandsParamsToDelegateThatDoesNot() {
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] {
@@ -442,10 +442,12 @@ public void M() {
 	public virtual int F<T>(int a, int b) { return 0; }
 }
 class C : B {
-public void M() {
-	// BEGIN
-	System.Func<int, int, int> f = base.F<string>;
-	// END
+	public override int F<T>(int a, int b) { return 0; }
+	public void M() {
+		// BEGIN
+		System.Func<int, int, int> f = base.F<string>;
+		// END
+	}
 }
 ",
 @"	var $f = $Bind(function($tmp1, $tmp2) {
@@ -470,9 +472,20 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({_this})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void CanPerformMethodGroupConversionOnInlineCodeMethodWhenDelegateTypeExpandsParamArray() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"public delegate void D(int x, int y, params object[] z);
+public void F<T>(int a, int b, object[] c) {}
+public void M() {
+	// BEGIN
+	D f = F<string>;
+	// END
+}",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		_(this)._($tmp1)._($tmp2)._(Array.prototype.slice.call(arguments, 2));
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({b})._({c})_({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -591,9 +604,36 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
-		[Test, Ignore("TODO")]
-		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWhenDelegateTypeExpandsParamArray() {
-			Assert.Fail("TODO");
+		[Test]
+		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWhenBothTheMethodAndTheDelegateTypeExpandsParamArray() {
+			AssertCorrect(
+@"public void F(int a, int b) { return 0; }
+public void M() {
+	// BEGIN
+	Action<int, int> f = F;
+	// END
+}
+",
+@"	var $f = $Bind(function() {
+		{sm_C}.$F.apply(null, [this].concat(Array.prototype.slice.call(arguments)));
+	}, this);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", expandParams: true) : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void CannotPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentThatExpandsParamsToDelegateThatDoesNot() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void F(int x, int y, params int[] args) {}
+	public void M() {
+		System.Action<int, int, int[]> a = F;
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", expandParams: true) : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1.F") && er.AllMessages[0].FormattedMessage.Contains("System.Action") && er.AllMessages[0].FormattedMessage.Contains("expand") && er.AllMessages[0].FormattedMessage.Contains("param array"));
 		}
 	}
 }

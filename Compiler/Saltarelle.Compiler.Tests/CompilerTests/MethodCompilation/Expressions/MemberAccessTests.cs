@@ -126,8 +126,8 @@ class D : B {
 }",
 @"	this.set_$P(1);
 	var $i1 = this.get_$P();
-	$CallBase({bind_B}, 'set_$P', [], [this, 2]);
-	var $i2 = $CallBase({bind_B}, 'get_$P', [], [this]);
+	$CallBase({bind_B}, '$set_P', [], [this, 2]);
+	var $i2 = $CallBase({bind_B}, '$get_P', [], [this]);
 ", addSkeleton: false);
 		}
 
@@ -256,8 +256,8 @@ class D : B {
 }",
 @"	this.add_$MyEvent($h);
 	this.remove_$MyEvent($h);
-	$CallBase({bind_B}, 'add_$MyEvent', [], [this, $h]);
-	$CallBase({bind_B}, 'remove_$MyEvent', [], [this, $h]);
+	$CallBase({bind_B}, '$add_MyEvent', [], [this, $h]);
+	$CallBase({bind_B}, '$remove_MyEvent', [], [this, $h]);
 ", addSkeleton: false);
 		}
 
@@ -310,8 +310,8 @@ class D : B {
 }",
 @"	this.set_$Item(0, 1);
 	var $i1 = this.get_$Item(2);
-	$CallBase({bind_B}, 'set_$Item', [], [this, 3, 4]);
-	var $i2 = $CallBase({bind_B}, 'get_$Item', [], [this, 5]);
+	$CallBase({bind_B}, '$set_Item', [], [this, 3, 4]);
+	var $i2 = $CallBase({bind_B}, '$get_Item', [], [this, 5]);
 ", addSkeleton: false);
 		}
 

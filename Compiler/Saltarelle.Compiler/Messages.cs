@@ -9,7 +9,6 @@ namespace Saltarelle.Compiler {
 	public static class Messages {
 		public static readonly Message _7500 = Tuple.Create(7500, MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.");
 		public static readonly Message _7501 = Tuple.Create(7501, MessageSeverity.Error, "More than one unnamed constructor for the type {0}.");
-		public static readonly Message _7502 = Tuple.Create(7502, MessageSeverity.Error, "The constructor {0} must be invoked in expanded form for its its param array.");
 		public static readonly Message _7503 = Tuple.Create(7503, MessageSeverity.Error, "Chaining from a normal constructor to a static method constructor is not supported.");
 		public static readonly Message _7504 = Tuple.Create(7504, MessageSeverity.Error, "Chaining from a normal constructor to a constructor implemented as inline code is not supported.");
 		public static readonly Message _7505 = Tuple.Create(7505, MessageSeverity.Error, "This constructor cannot be used from script.");
@@ -20,7 +19,6 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7511 = Tuple.Create(7511, MessageSeverity.Error, "The event {0} is not usable from script.");
 		public static readonly Message _7512 = Tuple.Create(7512, MessageSeverity.Error, "The property {0} is not usable from script.");
 		public static readonly Message _7513 = Tuple.Create(7513, MessageSeverity.Error, "Only locals can be passed by reference.");
-		public static readonly Message _7514 = Tuple.Create(7514, MessageSeverity.Error, "The method {0} must be invoked in expanded form for its its param array.");
 		public static readonly Message _7515 = Tuple.Create(7515, MessageSeverity.Error, "Cannot use the type {0} in as a generic argument to the method {1} because it is marked as not usable from script.");
 		public static readonly Message _7516 = Tuple.Create(7516, MessageSeverity.Error, "The method {0} cannot be used from script.");
 		public static readonly Message _7517 = Tuple.Create(7517, MessageSeverity.Error, "Cannot use the the property {0} in an anonymous object initializer.");
@@ -39,9 +37,9 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7531 = Tuple.Create(7531, MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.");
 		public static readonly Message _7532 = Tuple.Create(7532, MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.");
 		public static readonly Message _7533 = Tuple.Create(7533, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.");
-		public static readonly Message _7534 = Tuple.Create(7534, MessageSeverity.Error, "Delegates of type {0} must be invoked in expanded form for its its param array.");
 		public static readonly Message _7535 = Tuple.Create(7535, MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.");
 		public static readonly Message _7536 = Tuple.Create(7536, MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.");
+		public static readonly Message _7537 = Tuple.Create(7533, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the param array is expanded.");
 
 		public static readonly Message _7950 = Tuple.Create(7950, MessageSeverity.Error, "Error writing assembly: {0}.");
 		public static readonly Message _7951 = Tuple.Create(7951, MessageSeverity.Error, "Error writing script: {0}.");

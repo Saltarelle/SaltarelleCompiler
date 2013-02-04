@@ -425,7 +425,7 @@ class C {
 		}
 
 		[Test]
-		public void InvokingParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+		public void InvokingUnnamedParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 { public C1(int x, int y, params int[] args) {} }
 public void M() {
@@ -438,7 +438,7 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+		public void InvokingUnnamedParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 { public C1(int x, int y, params int[] args) {} }
 public void M() {
@@ -451,7 +451,7 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+		public void InvokingUnnamedParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 { public C1(int x, int y, params int[] args) {} }
 public void M() {
@@ -464,21 +464,195 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayConstructorThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
+		public void InvokingUnnamedParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public C(int x, int y, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c1 = new C(4, 8, args);
+	var c2 = new C(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $c1 = $ApplyConstructor({sm_C}, [4, 8].concat($args));
+	var $c2 = new {sm_C}(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
 
-			Compile(new[] {
-@"class C1 {
-	public C1(int x, int y, params int[] args) {}
-	public void M() {
+			AssertCorrect(
+@"public C(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c = new C(4, args);
+	// END
+}",
+@"	var $c = $ApplyConstructor({sm_C}, [4].concat($args));
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
+
+			AssertCorrect(
+@"public C(params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c = new C(args);
+	// END
+}",
+@"	var $c = $ApplyConstructor({sm_C}, $args);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) });
+		}
+
+		[Test]
+		public void InvokingNamedParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, 59, 12, 4);
+	// END
+}",
+@"	var $c = new {sm_C1}.X(4, 8, [59, 12, 4]);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X") });
+		}
+
+		[Test]
+		public void InvokingNamedParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int x, int y, params int[] args) {} }
+public void M() {
 	// BEGIN
 	var c = new C1(4, 8, new[] { 59, 12, 4 });
 	// END
-	}
-}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: true) }, errorReporter: er);
+}",
+@"	var $c = new {sm_C1}.X(4, 8, [59, 12, 4]);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X") });
+		}
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("constructor") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
+		[Test]
+		public void InvokingNamedParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, 59, 12, 4);
+	// END
+}",
+@"	var $c = new {sm_C1}.X(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", expandParams: true) });
+		}
+
+		[Test]
+		public void InvokingNamedParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public C(int x, int y, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c1 = new C(4, 8, args);
+	var c2 = new C(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $c1 = $ApplyConstructor({sm_C}.X, [4, 8].concat($args));
+	var $c2 = new {sm_C}.X(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", expandParams: true) });
+
+			AssertCorrect(
+@"public C(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c = new C(4, args);
+	// END
+}",
+@"	var $c = $ApplyConstructor({sm_C}.X, [4].concat($args));
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", expandParams: true) });
+
+			AssertCorrect(
+@"public C(params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c = new C(args);
+	// END
+}",
+@"	var $c = $ApplyConstructor({sm_C}.X, $args);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", expandParams: true) });
+		}
+
+		[Test]
+		public void InvokingStaticMethodParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, 59, 12, 4);
+	// END
+}",
+@"	var $c = {sm_C1}.X(4, 8, [59, 12, 4]);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X") });
+		}
+
+		[Test]
+		public void InvokingStaticMethodParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $c = {sm_C1}.X(4, 8, [59, 12, 4]);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X") });
+		}
+
+		[Test]
+		public void InvokingStaticMethodParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 { public C1(int x, int y, params int[] args) {} }
+public void M() {
+	// BEGIN
+	var c = new C1(4, 8, 59, 12, 4);
+	// END
+}",
+@"	var $c = {sm_C1}.X(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", expandParams: true) });
+		}
+
+		[Test]
+		public void InvokingStaticMethodParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public C(int x, int y, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c1 = new C(4, 8, args);
+	var c2 = new C(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $c1 = {sm_C}.X.apply(null, [4, 8].concat($args));
+	var $c2 = {sm_C}.X(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", expandParams: true) });
+
+			AssertCorrect(
+@"public C(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c = new C(4, args);
+	// END
+}",
+@"	var $c = {sm_C}.X.apply(null, [4].concat($args));
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", expandParams: true) });
+
+			AssertCorrect(
+@"public C(params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	var c = new C(args);
+	// END
+}",
+@"	var $c = {sm_C}.X.apply(null, $args);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", expandParams: true) });
 		}
 
 		[Test]
@@ -657,6 +831,25 @@ class C {
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("D1") && e.FormattedMessage.Contains("D2") && e.FormattedMessage.Contains("differ in whether the Javascript 'this'")));
+		}
+
+		[Test]
+		public void CannotCreateADelegateThatExpandsParamsFromOneThatDoesNot() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"delegate void D1(int i, int j);
+delegate void D2(int a, int b);
+
+class C {
+	public void M() {
+		D1 d1 = null;
+		D2 d2 = new D2(d1);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: d.Name == "D1") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("D1") && e.FormattedMessage.Contains("D2") && e.FormattedMessage.Contains("differ in whether the param array")));
 		}
 
 		[Test]

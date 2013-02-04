@@ -1066,19 +1066,136 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
-
-			Compile(new[] {
-@"class C1 {
-	public void F(int x, int y, params int[] args) {}
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C {
+	public void F1(int x, int y, params int[] args) {}
+	public void F2(int x, params int[] args) {}
+	public void F3(params int[] args) {}
 	public void M() {
-		F(4, 8, new[] { 59, 12, 4 });
+		C c = null;
+		var args = new[] { 59, 12, 4 };
+		// BEGIN
+		F1(4, 8, args);
+		c.F2(42, args);
+		F3(args);
+		F1(4, 8, new[] { 59, 12, 4 });
+		// END
 	}
-}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+}",
+@"	this.$F1.apply(this, [4, 8].concat($args));
+	$c.$F2.apply($c, [42].concat($args));
+	this.$F3.apply(this, $args);
+	this.$F1(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) });
+		}
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1.F") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormDoesNotEvaluateTargetTwice() {
+			AssertCorrect(
+@"public C X() { return null; }
+public void F(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	X().F(4, args);
+	X().F(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $tmp1 = this.$X();
+	$tmp1.$F.apply($tmp1, [4].concat($args));
+	this.$X().$F(4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForStaticMethod() {
+			AssertCorrect(
+@"public static void F(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F(4, args);
+	F(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	{sm_C}.$F.apply(null, [4].concat($args));
+	{sm_C}.$F(4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForGenericMethod() {
+			AssertCorrect(
+@"public void F1<T>(int x, params int[] args) {}
+public static void F2<T>(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F1<int>(4, args);
+	F2<int>(4, args);
+	F1<int>(4, new[] { 59, 12, 4 });
+	F2<int>(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$InstantiateGenericMethod(this.$F1, {ga_Int32}).apply(this, [4].concat($args));
+	$InstantiateGenericMethod({sm_C}.$F2, {ga_Int32}).apply(null, [4].concat($args));
+	$InstantiateGenericMethod(this.$F1, {ga_Int32}).call(this, 4, 59, 12, 4);
+	$InstantiateGenericMethod({sm_C}.$F2, {ga_Int32}).call(null, 4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForBaseCall() {
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, params int[] args) {}
+}
+class C : B{
+	public override void F(int x, params int[] args) {}
+	public void M() {
+		var args = new[] { 59, 12, 4 };
+		// BEGIN
+		base.F(4, args);
+		base.F(4, new[] { 59, 12, 4 });
+		// END
+	}
+}",
+@"	$CallBase({bind_B}, '$F', [], [this, 4, $args]);
+	$CallBase({bind_B}, '$F', [], [this, 4, [59, 12, 4]]);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) }, addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForNonGenericStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"public void F(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F(4, args);
+	F(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	{sm_C}.$F.apply(null, [this, 4].concat($args));
+	{sm_C}.$F(this, 4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", expandParams: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForGenericStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"public void F<T>(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F<int>(4, args);
+	F<int>(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$InstantiateGenericMethod({sm_C}.$F, {ga_Int32}).apply(null, [this, 4].concat($args));
+	$InstantiateGenericMethod({sm_C}.$F, {ga_Int32}).call(null, this, 4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", expandParams: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -1096,21 +1213,37 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayDelegateThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
+		public void InvokingParamArrayDelegateThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public delegate void F(int x, int y, params int[] args);
+public void M() {
+	F f = null;
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	f(4, 8, args);
+	f(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$f.apply(null, [4, 8].concat($args));
+	$f(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) });
+		}
 
-			Compile(new[] {
-@"class C1 {
-	public delegate void F(int x, int y, params int[] args);
-	public void M() {
-		F delegateVar = null;
-		delegateVar(4, 8, new[] { 59, 12, 4 });
-	}
-}" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) }, errorReporter: er);
-
-
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1.F") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
+		[Test]
+		public void InvokingParamArrayDelegateWithBindThisToFirstParameterThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public delegate void F(int x, int y, params int[] args);
+public void M() {
+	F f = null;
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	f(4, 8, args);
+	f(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$f.apply(4, [8].concat($args));
+	$f.call(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true, expandParams: true) });
 		}
 
 		[Test]

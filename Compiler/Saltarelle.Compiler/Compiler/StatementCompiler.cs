@@ -192,7 +192,7 @@ namespace Saltarelle.Compiler.Compiler {
 				else
 					jsbody = new JsBlockStatement(_result);
 
-				var result = JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Select(p => variables[p].Name)), jsbody);
+				var result = JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Where((p, i) => i != parameters.Count - 1 || !expandParams).Select(p => variables[p].Name)), jsbody);
 
 				switch (stateMachineType) {
 					case StateMachineType.NormalMethod:

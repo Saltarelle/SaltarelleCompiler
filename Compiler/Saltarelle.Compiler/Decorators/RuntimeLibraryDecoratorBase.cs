@@ -105,12 +105,12 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.CloneDelegate(source, sourceType, targetType, resolveTypeParameter);
 		}
 
-		public virtual JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			return _prev.CallBase(baseType, methodName, typeArguments, thisAndArguments, resolveTypeParameter);
+		public virtual JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.CallBase(method, thisAndArguments, resolveTypeParameter);
 		}
 
-		public virtual JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			return _prev.BindBaseCall(baseType, methodName, typeArguments, @this, resolveTypeParameter);
+		public virtual JsExpression BindBaseCall(IMethod method, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return _prev.BindBaseCall(method, @this, resolveTypeParameter);
 		}
 
 		public virtual JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
@@ -143,6 +143,10 @@ namespace Saltarelle.Compiler.Decorators {
 
 		public virtual JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource) {
 			return _prev.GetTaskFromTaskCompletionSource(taskCompletionSource);
+		}
+
+		public virtual JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray) {
+			return _prev.ApplyConstructor(constructor, argumentsArray);
 		}
 	}
 }

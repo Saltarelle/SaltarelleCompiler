@@ -54,8 +54,8 @@ namespace Saltarelle.Compiler.Tests {
 			Default                                         = (t, rtp)             => t.Kind == TypeKind.Dynamic ? (JsExpression)JsExpression.Identifier("$DefaultDynamic") : JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue, rtp));
 			CreateArray                                     = (t, dim, rtp)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue, rtp) }.Concat(dim));
 			CloneDelegate                                   = (e, s, t, rtp)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
-			CallBase                                        = (t, n, ta, a, rtp)   => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(t, TypeContext.BindBaseCall, rtp), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp))), JsExpression.ArrayLiteral(a) });
-			BindBaseCall                                    = (t, n, ta, a, rtp)   => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(t, TypeContext.BindBaseCall, rtp), JsExpression.String(n), JsExpression.ArrayLiteral(ta.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp))), a });
+			CallBase                                        = (m, a, rtp)          => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(m.DeclaringType, TypeContext.BindBaseCall, rtp), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m is SpecializedMethod ? ((SpecializedMethod)m).TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp)) : new JsExpression[0]), JsExpression.ArrayLiteral(a) });
+			BindBaseCall                                    = (m, a, rtp)          => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(m.DeclaringType, TypeContext.BindBaseCall, rtp), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m is SpecializedMethod ? ((SpecializedMethod)m).TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, rtp)) : new JsExpression[0]), a });
 			MakeEnumerator                                  = (yt, mn, gc, d, rtp) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument, rtp), mn, gc, d ?? (JsExpression)JsExpression.Null });
 			MakeEnumerable                                  = (yt, ge, rtp)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument, rtp), ge });
 			GetMultiDimensionalArrayValue                   = (a, i)               => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
@@ -64,6 +64,7 @@ namespace Saltarelle.Compiler.Tests {
 			SetAsyncResult                                  = (t, v)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncResult"), t, v ?? JsExpression.String("<<null>>"));
 			SetAsyncException                               = (t, e)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncException"), t, e);
 			GetTaskFromTaskCompletionSource                 = (t)                  => JsExpression.Invocation(JsExpression.Identifier("$GetTask"), t);
+			ApplyConstructor                                = (c, a)               => JsExpression.Invocation(JsExpression.Identifier("$ApplyConstructor"), c, a);
 		}
 
 		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> GetTypeOf { get; set; }
@@ -89,16 +90,17 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> Default { get; set; }
 		public Func<IType, IEnumerable<JsExpression>, Func<ITypeParameter, JsExpression>, JsExpression> CreateArray { get; set; }
 		public Func<JsExpression, IType, IType, Func<ITypeParameter, JsExpression>, JsExpression> CloneDelegate { get; set; }
-		public Func<IType, string, IEnumerable<IType>, IEnumerable<JsExpression>, Func<ITypeParameter, JsExpression>, JsExpression> CallBase { get; set; }
-		public Func<IType, string, IList<IType>, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> BindBaseCall { get; set; }
+		public Func<IMethod, IEnumerable<JsExpression>, Func<ITypeParameter, JsExpression>, JsExpression> CallBase { get; set; }
+		public Func<IMethod, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> BindBaseCall { get; set; }
 		public Func<IType, JsExpression, JsExpression, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> MakeEnumerator { get; set; }
 		public Func<IType, JsExpression, Func<ITypeParameter, JsExpression>, JsExpression> MakeEnumerable { get; set; }
-		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> GetMultiDimensionalArrayValue;
-		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression, JsExpression> SetMultiDimensionalArrayValue;
-		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> CreateTaskCompletionSource;
-		public Func<JsExpression, JsExpression, JsExpression> SetAsyncResult;
-		public Func<JsExpression, JsExpression, JsExpression> SetAsyncException;
-		public Func<JsExpression, JsExpression> GetTaskFromTaskCompletionSource;
+		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression> GetMultiDimensionalArrayValue { get; set; }
+		public Func<JsExpression, IEnumerable<JsExpression>, JsExpression, JsExpression> SetMultiDimensionalArrayValue { get; set; }
+		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> CreateTaskCompletionSource { get; set; }
+		public Func<JsExpression, JsExpression, JsExpression> SetAsyncResult { get; set; }
+		public Func<JsExpression, JsExpression, JsExpression> SetAsyncException { get; set; }
+		public Func<JsExpression, JsExpression> GetTaskFromTaskCompletionSource { get; set; }
+		public Func<JsExpression, JsExpression, JsExpression> ApplyConstructor { get; set; }
 
 		private JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			string contextName = GetTypeContextShortName(context);
@@ -216,12 +218,12 @@ namespace Saltarelle.Compiler.Tests {
 			return CloneDelegate(source, sourceType, targetType, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			return CallBase(baseType, methodName, typeArguments, thisAndArguments, resolveTypeParameter);
+		JsExpression IRuntimeLibrary.CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return CallBase(method, thisAndArguments, resolveTypeParameter);
 		}
 
-		JsExpression IRuntimeLibrary.BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			return BindBaseCall(baseType, methodName, typeArguments, @this, resolveTypeParameter);
+		JsExpression IRuntimeLibrary.BindBaseCall(IMethod method, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			return BindBaseCall(method, @this, resolveTypeParameter);
 		}
 
 		JsExpression IRuntimeLibrary.MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
@@ -254,6 +256,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource) {
 			return GetTaskFromTaskCompletionSource(taskCompletionSource);
+		}
+
+		JsExpression IRuntimeLibrary.ApplyConstructor(JsExpression constructor, JsExpression argumentsArray) {
+			return ApplyConstructor(constructor, argumentsArray);
 		}
 	}
 }

@@ -761,7 +761,75 @@ class C {
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+		public void ChainingToUnnamedParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
+		}
+
+		[Test]
+		public void ChainingToUnnamedParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
+		}
+
+		[Test]
+		public void ChainingToUnnamedParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	{sm_C1}.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToUnnamedParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	static int[] args = new[] { 59, 12, 4 };
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, args) {}
+}",
+@"function() {
+	{sm_C1}.apply(this, [4, 8].concat({sm_C1}.$args));
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	{sm_C1}.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToNamedParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
@@ -775,7 +843,7 @@ class C {
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+		public void ChainingToNamedParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
@@ -789,7 +857,7 @@ class C {
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+		public void ChainingToNamedParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
@@ -803,19 +871,102 @@ class C {
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
+		public void ChainingToNamedParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	static int[] args = new[] { 59, 12, 4 };
+	public C1(int x, int y, params int[] args) {}
 
-			Compile(new[] {
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, args) {}
+}",
+@"function() {
+	{sm_C1}.x.apply(this, [4, 8].concat({sm_C1}.$args));
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+
+			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
 	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
-}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) }, errorReporter: er);
+}",
+@"function() {
+	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+		}
 
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("constructor") && er.AllMessages[0].FormattedMessage.Contains("expanded form"));
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	static int[] args = new[] { 59, 12, 4 };
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, args) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3.apply(null, [4, 8].concat({sm_C1}.$args));
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 		}
 	}
 }

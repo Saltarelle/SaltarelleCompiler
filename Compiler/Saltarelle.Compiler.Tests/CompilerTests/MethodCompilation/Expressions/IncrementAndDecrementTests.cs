@@ -1318,8 +1318,8 @@ class D : B {
 		// END
 	}
 }",
-@"	var $tmp1 = $CallBase({bind_B}, 'get_$P', [], [this]) + 1;
-	$CallBase({bind_B}, 'set_$P', [], [this, $tmp1]);
+@"	var $tmp1 = $CallBase({bind_B}, '$get_P', [], [this]) + 1;
+	$CallBase({bind_B}, '$set_P', [], [this, $tmp1]);
 	var $i = $tmp1;
 ", addSkeleton: false);
 		}
@@ -1338,8 +1338,8 @@ class D : B {
 		// END
 	}
 }",
-@"	var $tmp1 = $CallBase({bind_B}, 'get_$P', [], [this]);
-	$CallBase({bind_B}, 'set_$P', [], [this, $tmp1 + 1]);
+@"	var $tmp1 = $CallBase({bind_B}, '$get_P', [], [this]);
+	$CallBase({bind_B}, '$set_P', [], [this, $tmp1 + 1]);
 	var $i = $tmp1;
 ", addSkeleton: false);
 		}

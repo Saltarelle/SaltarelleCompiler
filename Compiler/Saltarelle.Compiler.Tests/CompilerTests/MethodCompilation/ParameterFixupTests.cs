@@ -142,8 +142,8 @@ class C : B {
 		public void ExpandedParamArrayIsFixedAtTheTopOfMethods() {
 			AssertCorrect(
 @"void M(int a, int b, params int[] c) {}",
-@"function($a, $b, $c) {
-	$c = Array.prototype.slice.call(arguments, 2);
+@"function($a, $b) {
+	var $c = Array.prototype.slice.call(arguments, 2);
 }", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) });
 		}
 
@@ -155,8 +155,8 @@ void M() {
 	D x = delegate(int a, int b, string c, object[] d) {};
 }",
 @"function() {
-	var $x = function($a, $b, $c, $d) {
-		$d = Array.prototype.slice.call(arguments, 3);
+	var $x = function($a, $b, $c) {
+		var $d = Array.prototype.slice.call(arguments, 3);
 	};
 }", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = m => new DelegateScriptSemantics(expandParams: true) });
 		}
@@ -169,8 +169,8 @@ void M() {
 	D x = (int a, object[] b) => {};
 }",
 @"function() {
-	var $x = function($a, $b) {
-		$b = Array.prototype.slice.call(arguments, 1);
+	var $x = function($a) {
+		var $b = Array.prototype.slice.call(arguments, 1);
 	};
 }", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = m => new DelegateScriptSemantics(expandParams: true) });
 		}
@@ -183,8 +183,8 @@ void M() {
 	D x = (object[] b) => 0;
 }",
 @"function() {
-	var $x = function($b) {
-		$b = Array.prototype.slice.call(arguments, 0);
+	var $x = function() {
+		var $b = Array.prototype.slice.call(arguments, 0);
 		return 0;
 	};
 }", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = m => new DelegateScriptSemantics(expandParams: true) });
@@ -199,8 +199,8 @@ class C : B {
 		int x = 0;
 	}
 }",
-@"function($a, $b, $c) {
-	$c = Array.prototype.slice.call(arguments, 2);
+@"function($a, $b) {
+	var $c = Array.prototype.slice.call(arguments, 2);
 	{sm_B}.call(this);
 	var $x = 0;
 }", "C", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: c.DeclaringType.Name == "C") });

@@ -135,22 +135,20 @@ namespace Saltarelle.Compiler {
 		JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
-		/// Generates an expression to call a base implementation of an overridden method
+		/// Generates an expression to call a base implementation of an overridden method. Note that implementations must handle semantics such as ExpandParams.
 		/// </summary>
-		/// <param name="baseType">Type whose implementation of the method to invoke.</param>
-		/// <param name="methodName">Name of the method to invoke.</param>
-		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
+		/// <param name="method">The method that is being invoked (a SpecializedMethod in case of generic methods).</param>
 		/// <param name="thisAndArguments">Arguments to the method, including "this" as the first element.</param>
-		JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter);
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
+		JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
 		/// Generates an expression to bind a base implementation of an overridden method. Used when converting a method group to a delegate.
 		/// </summary>
-		/// <param name="baseType">Type whose implementation of the method to bind.</param>
-		/// <param name="methodName">Name of the method to bind.</param>
-		/// <param name="typeArguments">Type arguments for the method, or an empty enumerable.</param>
+		/// <param name="method">The method that is being invoked (a SpecializedMethod in case of generic methods).</param>
 		/// <param name="@this">Expression to use for "this" (target of the method call).</param>
-		JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter);
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
+		JsExpression BindBaseCall(IMethod method, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
 		/// Generates an object that implements the <see cref="IEnumerator{T}"/> interface using the supplied methods.
@@ -159,6 +157,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="moveNext">Function to invoke when <see cref="IEnumerator.MoveNext"/> is invoked on the enumerator.</param>
 		/// <param name="getCurrent">Function that returns the current value of the enumerator.</param>
 		/// <param name="dispose">Function to invoke when <see cref="IDisposable.Dispose"/> is invoked on the enumerator, or null if no dispose is required.</param>
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
 		JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
@@ -166,6 +165,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="yieldType">The yield type of the enumerable. <see cref="object"/> if the enumerable is non-generic.</param>
 		/// <param name="getEnumerator">Function to invoke when <see cref="IEnumerable.GetEnumerator"/> is invoked on the enumerator.</param>
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
 		JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
@@ -182,6 +182,7 @@ namespace Saltarelle.Compiler {
 		/// Generates an expression that creates a TaskCompletionSource.
 		/// </summary>
 		/// <param name="taskGenericArgument">If the method being built returns a <c>Task&lt;T&gt;</c>, this parameter will contain <c>T</c>. If the method returns a non-generic task, this parameter will be null.</param>
+		/// <param name="resolveTypeParameter">Function to invoke to get the implementation of a type parameter.</param>
 		JsExpression CreateTaskCompletionSource(IType taskGenericArgument, Func<ITypeParameter, JsExpression> resolveTypeParameter);
 
 		/// <summary>
@@ -203,5 +204,12 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
 		JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource);
+
+		/// <summary>
+		/// Generates an expression that invokes a constructor via apply rather than a normal call.
+		/// </summary>
+		/// <param name="constructor">The constructor to apply.</param>
+		/// <param name="argumentsArray">Arguments for the call (should evaluate to an array).</param>
+		JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray);
 	}
 }

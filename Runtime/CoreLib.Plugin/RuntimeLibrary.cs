@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -350,22 +351,37 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public JsExpression CallBase(IType baseType, string methodName, IList<IType> typeArguments, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.GetScriptType, resolveTypeParameter), "prototype"), methodName);
-			
-			if (typeArguments != null && typeArguments.Count > 0)
-				method = InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);
+		public JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			var impl = _metadataImporter.GetMethodSemantics(method);
 
-			return JsExpression.Invocation(JsExpression.Member(method, "call"), thisAndArguments);
+			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, resolveTypeParameter), "prototype"), impl.Name);
+			
+			if (method is SpecializedMethod && !impl.IgnoreGenericArguments)
+				jsMethod = InstantiateGenericMethod(jsMethod, ((SpecializedMethod)method).TypeArguments, resolveTypeParameter);
+
+			if (impl.ExpandParams) {
+				var args = thisAndArguments.ToList();
+				if (args[args.Count - 1] is JsArrayLiteralExpression) {
+					return JsExpression.Invocation(JsExpression.Member(jsMethod, "call"), args.Take(args.Count - 1).Concat(((JsArrayLiteralExpression)args[args.Count - 1]).Elements));
+				}
+				else {
+					return JsExpression.Invocation(JsExpression.Member(jsMethod, "apply"), args[0], args.Count == 2 ? args[1] : JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(args.Skip(1).Take(args.Count - 2)), "concat"), args[args.Count - 1]));
+				}
+			}
+			else {
+				return JsExpression.Invocation(JsExpression.Member(jsMethod, "call"), thisAndArguments);
+			}
 		}
 
-		public JsExpression BindBaseCall(IType baseType, string methodName, IList<IType> typeArguments, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			JsExpression method = JsExpression.Member(JsExpression.Member(GetScriptType(baseType, TypeContext.GetScriptType, resolveTypeParameter), "prototype"), methodName);
-			
-			if (typeArguments != null && typeArguments.Count > 0)
-				method = InstantiateGenericMethod(method, typeArguments, resolveTypeParameter);
+		public JsExpression BindBaseCall(IMethod method, JsExpression @this, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			var impl = _metadataImporter.GetMethodSemantics(method);
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), @this, method);
+			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, resolveTypeParameter), "prototype"), impl.Name);
+			
+			if (method is SpecializedMethod && !impl.IgnoreGenericArguments)
+				jsMethod = InstantiateGenericMethod(jsMethod, ((SpecializedMethod)method).TypeArguments, resolveTypeParameter);
+
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), @this, jsMethod);
 		}
 
 		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
@@ -398,6 +414,10 @@ namespace CoreLib.Plugin {
 
 		public JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource) {
 			return JsExpression.Member(taskCompletionSource, "task");
+		}
+
+		public JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray) {
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "applyConstructor"), constructor, argumentsArray);
 		}
 	}
 }

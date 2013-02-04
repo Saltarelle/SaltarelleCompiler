@@ -188,7 +188,7 @@ namespace Saltarelle.Compiler.Compiler {
 					body = StaticMethodConstructorReturnPatcher.Process(body, _namer.ThisAlias).AsReadOnly();
 				}
 
-				var compiled = JsExpression.FunctionDefinition(constructor.Parameters.Select(p => variables[p].Name), new JsBlockStatement(body));
+				var compiled = JsExpression.FunctionDefinition(constructor.Parameters.Where((p, i) => i != constructor.Parameters.Count - 1 || !impl.ExpandParams).Select(p => variables[p].Name), new JsBlockStatement(body));
 				return _statementCompiler.StateMachineRewriteNormalMethod(compiled);
 			}
 			catch (Exception ex) {
@@ -336,7 +336,7 @@ namespace Saltarelle.Compiler.Compiler {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
 				result = result ?? new List<JsStatement>();
-				result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(variables[parameters[parameters.Count - 1]].Name), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1)))));
+				result.Add(new JsVariableDeclarationStatement(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1))));
 			}
 			foreach (var p in parameters) {
 				if (!p.IsOut && !p.IsRef && variables[p].UseByRefSemantics) {

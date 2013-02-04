@@ -196,6 +196,7 @@
     <Compile Include="OOPEmulatorTests\OOPEmulatorTestBase.cs" />
     <Compile Include="OOPEmulatorTests\StaticInitializationOrderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RuntimeLibraryTests\CallBaseTests.cs" />
     <Compile Include="RuntimeLibraryTests\MiscTests.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptTypeTests.cs" />
     <Compile Include="SourceVerifier.cs" />

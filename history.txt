@@ -1,4 +1,4 @@
-Support using the params parameter in [ExpandParams] methods.
+Support using the params parameter in [ExpandParams] methods and allow [ExpandParams] methods to be called in non-expanded form.
 Created a MinimizePublicNamesAttribute that can be used to specify that public members are minified in addition to non-public ones (#84).
 Fixed issue causing internal errors when compiling async methods with certain constructs.
 Added IncludeGenericArgumentsDefaultAttribute to specify default values for IncludeGenericArguments in an assembly.

@@ -1000,7 +1000,7 @@ class D : B {
 		// END
 	}
 }",
-@"	$CallBase({bind_B}, 'set_$P', [], [this, $CallBase({bind_B}, 'get_$P', [], [this]) + 10]);
+@"	$CallBase({bind_B}, '$set_P', [], [this, $CallBase({bind_B}, '$get_P', [], [this]) + 10]);
 ", addSkeleton: false);
 		}
 

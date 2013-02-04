@@ -92,21 +92,17 @@ namespace Saltarelle.Compiler.Compiler {
 				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, method, argumentsForCall, argumentToParameterMap, initializerStatements, isExpandedForm)));
 			}
 			else {
-				if (impl.ExpandParams && !isExpandedForm) {
-					_errorReporter.Message(Messages._7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
-				}
-
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, InstantiateType(method.DeclaringType), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, InstantiateType(method.DeclaringType), false, argumentsForCall, argumentToParameterMap);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 
 				switch (impl.Type) {
 					case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
-						_additionalStatements.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(jsType, "call"), thisAndArguments)));
+						_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, jsType, impl.ExpandParams, true)));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.NamedConstructor:
-						_additionalStatements.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(JsExpression.Member(jsType, impl.Name), "call"), thisAndArguments)));
+						_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, JsExpression.Member(jsType, impl.Name), impl.ExpandParams, true)));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
@@ -354,7 +350,7 @@ namespace Saltarelle.Compiler.Compiler {
 								List<JsExpression> thisAndArguments;
 								if (property.IsIndexer) {
 									var invocation = (CSharpInvocationResolveResult)target;
-									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap(), false);
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 								}
 								else {
 									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? InstantiateType(mrr.Member.DeclaringType) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
@@ -924,7 +920,7 @@ namespace Saltarelle.Compiler.Compiler {
 			expressions[index] = JsExpression.Identifier(_variables[temp].Name);
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool expandParams) {
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
 			IList<InlineCodeToken> tokens = null;
 			var expressions = new List<JsExpression>() { target };
 			if (literalCode != null) {
@@ -1005,22 +1001,44 @@ namespace Saltarelle.Compiler.Compiler {
 				expressions = newExpressions;
 			}
 
-			if (expandParams && expressions[expressions.Count - 1] is JsArrayLiteralExpression) {
-				var arr = (JsArrayLiteralExpression)expressions[expressions.Count - 1];
-				expressions.RemoveAt(expressions.Count - 1);
-				expressions.AddRange(arr.Elements);
-			}
-
 			return expressions;
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall, bool isExpandedForm) {
-			if (impl != null && impl.ExpandParams && !isExpandedForm) {
-				_errorReporter.Message(Messages._7514, method.DeclaringType.FullName + "." + method.Name);
-			}
 			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? InstantiateType(method.DeclaringType) : InnerCompile(targetResult, impl != null && !impl.IgnoreGenericArguments && method.TypeParameters.Count > 0), false, argumentsForCall, argumentToParameterMap, impl != null && impl.ExpandParams && isExpandedForm);
+			bool targetUsedMultipleTimes = impl != null && ((!impl.IgnoreGenericArguments && method.TypeParameters.Count > 0) || (impl.ExpandParams && !(argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult)));
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? InstantiateType(method.DeclaringType) : InnerCompile(targetResult, targetUsedMultipleTimes), false, argumentsForCall, argumentToParameterMap);
 			return CompileMethodInvocation(impl, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod, isExpandedForm);
+		}
+
+		private JsExpression CompileConstructorInvocationWithPotentialExpandParams(IList<JsExpression> arguments, JsExpression constructor, bool expandParams) {
+			if (expandParams) {
+				if (arguments[arguments.Count - 1] is JsArrayLiteralExpression) {
+					var args = arguments.Take(arguments.Count - 1).Concat(((JsArrayLiteralExpression)arguments[arguments.Count - 1]).Elements);
+					return JsExpression.New(constructor, args);
+				}
+				else {
+					return _runtimeLibrary.ApplyConstructor(constructor, arguments.Count == 1 ? arguments[0] : JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(arguments.Take(arguments.Count - 1)), "concat"), arguments[arguments.Count - 1]));
+				}
+			}
+			else {
+				return JsExpression.New(constructor, arguments);
+			}
+		}
+
+		private JsExpression CompileMethodInvocationWithPotentialExpandParams(IList<JsExpression> thisAndArguments, JsExpression method, bool expandParams, bool needCall) {
+			if (expandParams) {
+				if (thisAndArguments[thisAndArguments.Count - 1] is JsArrayLiteralExpression) {
+					var args = thisAndArguments.Take(thisAndArguments.Count - 1).Concat(((JsArrayLiteralExpression)thisAndArguments[thisAndArguments.Count - 1]).Elements);
+					return needCall ? JsExpression.Invocation(JsExpression.Member(method, "call"), args) : JsExpression.Invocation(method, args.Skip(1));
+				}
+				else {
+					return JsExpression.Invocation(JsExpression.Member(method, "apply"), thisAndArguments[0], thisAndArguments.Count == 2 ? thisAndArguments[1] : JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(thisAndArguments.Skip(1).Take(thisAndArguments.Count - 2)), "concat"), thisAndArguments[thisAndArguments.Count - 1]));
+				}
+			}
+			else {
+				return needCall ? JsExpression.Invocation(JsExpression.Member(method, "call"), thisAndArguments) : JsExpression.Invocation(method, thisAndArguments.Skip(1));
+			}
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, bool isNonVirtualInvocationOfVirtualMethod, bool isExpandedForm) {
@@ -1037,31 +1055,29 @@ namespace Saltarelle.Compiler.Compiler {
 			switch (impl.Type) {
 				case MethodScriptSemantics.ImplType.NormalMethod: {
 					if (isNonVirtualInvocationOfVirtualMethod) {
-						return _runtimeLibrary.CallBase(method.DeclaringType, impl.Name, typeArguments, thisAndArguments, ResolveTypeParameter);
+						return _runtimeLibrary.CallBase(method, thisAndArguments, ResolveTypeParameter);
 					}
 					else {
-						var jsMethod = (JsExpression)JsExpression.Member(thisAndArguments[0], impl.Name);
+						var jsMethod = JsExpression.Member(thisAndArguments[0], impl.Name);
+						if (method.IsStatic)
+							thisAndArguments = new[] { JsExpression.Null }.Concat(thisAndArguments.Skip(1)).ToList();
 
 						if (typeArguments.Count > 0) {
-							var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
-							if (method.IsStatic)
-								thisAndArguments[0] = JsExpression.Null;
-							return JsExpression.Invocation(JsExpression.Member(genMethod, "call"), thisAndArguments);
+							return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter), impl.ExpandParams, true);
 						}
-						else {
-							return JsExpression.Invocation(jsMethod, thisAndArguments.Skip(1));
-						}
+						else
+							return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, jsMethod, impl.ExpandParams, false);
 					}
 				}
 
 				case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-					var jsMethod = (JsExpression)JsExpression.Member(InstantiateType(method.DeclaringType), impl.Name);
+					var jsMethod = JsExpression.Member(InstantiateType(method.DeclaringType), impl.Name);
+					thisAndArguments.Insert(0, JsExpression.Null);
 					if (typeArguments.Count > 0) {
-						var genMethod = _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter);
-						return JsExpression.Invocation(JsExpression.Member(genMethod, "call"), new[] { JsExpression.Null }.Concat(thisAndArguments));
+						return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, ResolveTypeParameter), impl.ExpandParams, true);
 					}
 					else {
-						return JsExpression.Invocation(jsMethod, thisAndArguments);
+						return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, jsMethod, impl.ExpandParams, false);
 					}
 				}
 
@@ -1213,24 +1229,21 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements);
 			}
 			else {
-				if (impl.ExpandParams && !isExpandedForm) {
-					_errorReporter.Message(Messages._7502, method.DeclaringType.FullName + "." + method.DeclaringType.Name);
-				}
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, InstantiateType(method.DeclaringType), false, argumentsForCall, argumentToParameterMap, impl.ExpandParams && isExpandedForm);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, InstantiateType(method.DeclaringType), false, argumentsForCall, argumentToParameterMap);
 
 				JsExpression constructorCall;
 
 				switch (impl.Type) {
 					case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
-						constructorCall = JsExpression.New(thisAndArguments[0], thisAndArguments.Skip(1));
+						constructorCall = CompileConstructorInvocationWithPotentialExpandParams(thisAndArguments.Skip(1).ToList(), thisAndArguments[0], impl.ExpandParams);
 						break;
 
 					case ConstructorScriptSemantics.ImplType.NamedConstructor:
-						constructorCall = JsExpression.New(JsExpression.Member(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+						constructorCall = CompileConstructorInvocationWithPotentialExpandParams(thisAndArguments.Skip(1).ToList(), JsExpression.Member(thisAndArguments[0], impl.Name), impl.ExpandParams);
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						constructorCall = JsExpression.Invocation((JsExpression)JsExpression.Member(thisAndArguments[0], impl.Name), thisAndArguments.Skip(1));
+						constructorCall = CompileMethodInvocationWithPotentialExpandParams(new[] { JsExpression.Null }.Concat(thisAndArguments.Skip(1)).ToList(), JsExpression.Member(thisAndArguments[0], impl.Name), impl.ExpandParams, false);
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
@@ -1255,15 +1268,17 @@ namespace Saltarelle.Compiler.Compiler {
 				if (member.DeclaringType.Kind == TypeKind.Delegate && member.Equals(member.DeclaringType.GetDelegateInvokeMethod())) {
 					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringTypeDefinition);
 
-					if (sem.ExpandParams && !isExpandedForm) {
-						_errorReporter.Message(Messages._7534, member.DeclaringType.FullName);
-					}
-					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap, sem.ExpandParams && isExpandedForm);
+					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap);
+					var method = thisAndArguments[0];
+					thisAndArguments = thisAndArguments.Skip(1).ToList();
 
-					if (sem.BindThisToFirstParameter)
-						return JsExpression.Invocation(JsExpression.Member(thisAndArguments[0], "call"), thisAndArguments.Skip(1));
-					else
-						return JsExpression.Invocation(thisAndArguments[0], thisAndArguments.Skip(1));
+					if (sem.BindThisToFirstParameter) {
+						return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, method, sem.ExpandParams, true);
+					}
+					else {
+						thisAndArguments.Insert(0, JsExpression.Null);
+						return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, method, sem.ExpandParams, false);
+					}
 				}
 				else {
 					var method = (IMethod)member;
@@ -1360,7 +1375,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
 				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body.Expression) : (JsStatement)new JsReturnStatement(body.Expression);
 				var jsBody = new JsBlockStatement(MethodCompiler.PrepareParameters(rr.Parameters, _variables, semantics.ExpandParams).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
-				def = JsExpression.FunctionDefinition(rr.Parameters.Select(p => _variables[p].Name), jsBody);
+				def = JsExpression.FunctionDefinition(rr.Parameters.Where((p, i) => i != rr.Parameters.Count - 1 || !semantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
 			}
 
 			JsExpression captureObject;
@@ -1593,7 +1608,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression PerformMethodGroupConversionOnNormalMethod(IMethod method, IType delegateType, bool isBaseCall, ResolveResult target, MethodScriptSemantics methodSemantics, DelegateScriptSemantics delegateSemantics) {
 			if (methodSemantics.ExpandParams != delegateSemantics.ExpandParams) {
-				_errorReporter.Message(Messages._7524, method.DeclaringType + "." + method.Name, delegateType.FullName);
+				_errorReporter.Message(Messages._7524, method.FullName, delegateType.FullName);
 				return JsExpression.Null;
 			}
 
@@ -1604,7 +1619,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (isBaseCall) {
 				// base.Method
 				var jsTarget = InnerCompile(target, true);
-				result = _runtimeLibrary.BindBaseCall(method.DeclaringType, methodSemantics.Name, typeArguments, jsTarget, ResolveTypeParameter);
+				result = _runtimeLibrary.BindBaseCall(method, jsTarget, ResolveTypeParameter);
 			}
 			else {
 				JsExpression jsTarget, jsMethod;
@@ -1646,11 +1661,18 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Null;
 			}
 				
-			var parameters = new string[method.Parameters.Count];
-			for (int i = 0; i < method.Parameters.Count; i++)
+			var parameters = new string[method.Parameters.Count - (delegateSemantics.ExpandParams ? 1 : 0)];
+			for (int i = 0; i < parameters.Length; i++)
 				parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
 
-			var body = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, method.IsStatic ? null : JsExpression.This, parameters.Select(p => (JsExpression)JsExpression.Identifier(p)).ToList(), ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, ResolveTypeParameter), false, s => _errorReporter.Message(Messages._7525, s));
+			var body = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method,
+			                                                                      tokens,
+			                                                                      method.IsStatic ? null : JsExpression.This,
+			                                                                      parameters.Select(p => (JsExpression)JsExpression.Identifier(p)).Concat(delegateSemantics.ExpandParams ? new[] { JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Length)) }: new JsExpression[0]).ToList(),
+			                                                                      ResolveTypeForInlineCode,
+			                                                                      t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, ResolveTypeParameter),
+			                                                                      false,
+			                                                                      s => _errorReporter.Message(Messages._7525, s));
 			var result = (JsExpression)JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
 
 			if (!method.IsStatic && UsesThisVisitor.Analyze(body))
@@ -1661,12 +1683,24 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression PerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgument(IMethod method, IType delegateType, bool isBaseCall, ResolveResult target, MethodScriptSemantics methodSemantics, DelegateScriptSemantics delegateSemantics) {
-			var parameters = new string[method.Parameters.Count];
-			for (int i = 0; i < method.Parameters.Count; i++)
-				parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
+			if (methodSemantics.ExpandParams != delegateSemantics.ExpandParams) {
+				_errorReporter.Message(Messages._7524, method.FullName, delegateType.FullName);
+				return JsExpression.Null;
+			}
 
-			var body = JsExpression.Invocation(JsExpression.Member(InstantiateType(method.DeclaringType), methodSemantics.Name), new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
-			var result = (JsExpression)JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+			JsExpression result;
+			if (methodSemantics.ExpandParams) {
+				var body = JsExpression.Invocation(JsExpression.Member(JsExpression.Member(InstantiateType(method.DeclaringType), methodSemantics.Name), "apply"), JsExpression.Null, JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(JsExpression.This), "concat"), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"))));
+				result = JsExpression.FunctionDefinition(new string[0], method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+			}
+			else {
+				var parameters = new string[method.Parameters.Count];
+				for (int i = 0; i < method.Parameters.Count; i++)
+					parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
+
+				var body = JsExpression.Invocation(JsExpression.Member(InstantiateType(method.DeclaringType), methodSemantics.Name), new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
+				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+			}
 
 			result = _runtimeLibrary.Bind(result, InnerCompile(target, false));
 			if (delegateSemantics.BindThisToFirstParameter)
@@ -1687,6 +1721,10 @@ namespace Saltarelle.Compiler.Compiler {
 					var sem2 = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 					if (sem1.BindThisToFirstParameter != sem2.BindThisToFirstParameter) {
 						_errorReporter.Message(Messages._7533, mgrr.TargetType.FullName, rr.Type.FullName);
+						return JsExpression.Null;
+					}
+					if (sem1.ExpandParams != sem2.ExpandParams) {
+						_errorReporter.Message(Messages._7537, mgrr.TargetType.FullName, rr.Type.FullName);
 						return JsExpression.Null;
 					}
 

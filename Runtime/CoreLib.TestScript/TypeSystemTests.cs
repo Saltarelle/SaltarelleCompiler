@@ -1,10 +1,19 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using QUnit;
 using System;
 
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class TypeSystemTests {
+		public class ClassWithExpandParamsCtor {
+			public object[] CtorArgs;
+			[ExpandParams]
+			public ClassWithExpandParamsCtor(params object[] args) {
+				this.CtorArgs = args;
+			}
+		}
+
 		public interface I1 {}
 		public interface I2 : I1 {}
 		public interface I3 {}
@@ -33,6 +42,15 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FullNamePropertyReturnsTheNameWithTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).FullName, "CoreLib.TestScript.TypeSystemTests");
+		}
+
+		[Test]
+		public void InstantiatingClassWithConstructorThatNeedsToBeAppliedWorks() {
+			var args = new List<object> { 42, "x", 18 };
+			var obj = new ClassWithExpandParamsCtor(args.ToArray());
+
+			Assert.AreEqual(obj.CtorArgs, args);
+			Assert.AreEqual(obj.GetType(), typeof(ClassWithExpandParamsCtor));
 		}
 
 		[Test]
