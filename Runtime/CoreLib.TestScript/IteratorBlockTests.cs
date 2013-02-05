@@ -91,6 +91,10 @@ namespace CoreLib.TestScript {
 			}
 		}
 
+		private void AssertEqual(string actual, string expected, string message = null) {
+			Assert.AreEqual(actual.Replace("\r\n", "\n"), expected.Replace("\r\n", "\n"), message);
+		}
+
 		[Test]
 		public void TypeReturnedByIteratorBlockReturningIEnumeratorImplementsThatInterfaceAndIDisposable() {
 			var enm = new C(null).GetEnumerator(0);
@@ -108,7 +112,7 @@ namespace CoreLib.TestScript {
 				sb.AppendLine("got " + enm.Current);
 			}
 
-			Assert.AreEqual(sb.ToString().Replace("\r\n", "\n"),
+			AssertEqual(sb.ToString(),
 @"yielding 0
 got 0
 yielding 1
@@ -116,7 +120,7 @@ got 1
 yielding -1
 got -1
 in finally
-".Replace("\r\n", "\n"));
+");
 		}
 
 		[Test]
@@ -130,13 +134,13 @@ in finally
 			}
 			enm.Dispose();
 	
-			Assert.AreEqual(sb.ToString().Replace("\r\n", "\n"),
+			AssertEqual(sb.ToString(),
 @"yielding 0
 got 0
 yielding 1
 got 1
 in finally
-".Replace("\r\n", "\n"));
+");
 		}
 
 		[Test]
@@ -155,7 +159,7 @@ in finally
 				sb.AppendLine("caught exception");
 			}
 	
-			Assert.AreEqual(sb.ToString(),
+			AssertEqual(sb.ToString(),
 @"yielding 1
 got 1
 yielding 2
@@ -184,7 +188,7 @@ caught exception
 			foreach (var i in enm)
 				sb.AppendLine("got " + i);
 
-			Assert.AreEqual(sb.ToString().Replace("\r\n", "\n"),
+			AssertEqual(sb.ToString(),
 @"yielding 0
 got 0
 yielding 1
@@ -200,7 +204,7 @@ got 1
 yielding -1
 got -1
 in finally
-".Replace("\r\n", "\n"));
+");
 		}
 
 		[Test]
@@ -213,7 +217,7 @@ in finally
 					break;
 			}
 
-			Assert.AreEqual(sb.ToString(),
+			AssertEqual(sb.ToString(),
 @"yielding 0
 got 0
 yielding 1
@@ -239,7 +243,7 @@ in finally
 				sb.AppendLine("caught exception");
 			}
 	
-			Assert.AreEqual(sb.ToString(),
+			AssertEqual(sb.ToString(),
 @"yielding 1
 got 1
 yielding 2
@@ -260,7 +264,7 @@ caught exception
 			foreach (int i in enm)
 				sb.AppendLine(i);
 
-			Assert.AreEqual(sb.ToString(),
+			AssertEqual(sb.ToString(),
 @"3
 2
 1
@@ -284,7 +288,7 @@ caught exception
 				sb.AppendLine(enm2.Current);
 			}
 	
-			Assert.AreEqual(sb.ToString(),
+			AssertEqual(sb.ToString(),
 @"0
 0
 1
