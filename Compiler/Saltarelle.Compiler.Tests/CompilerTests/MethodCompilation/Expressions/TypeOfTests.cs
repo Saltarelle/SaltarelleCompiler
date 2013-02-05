@@ -72,7 +72,7 @@ public void M() {
 	}
 }
 ",
-@"	var $x = to_$T1;
+@"	var $x = $T1;
 ");
 		}
 
@@ -85,7 +85,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $x = to_$T1;
+@"	var $x = $T1;
 ");
 		}
 
@@ -103,7 +103,7 @@ public void M() {
 	}
 }
 ",
-@"	var $x = to_$T1;
+@"	var $x = $T1;
 ");
 		}
 
@@ -140,8 +140,8 @@ class C {
 	}
 }" }, metadataImporter: metadataImporter, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("typeof") && er.AllMessagesText[0].Contains("C1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("typeof") && er.AllMessages[0].FormattedMessage.Contains("C1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -152,8 +152,8 @@ class C {
 		var t= typeof(I1<I1<C1>>);
 	}
 }" }, metadataImporter: metadataImporter, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("typeof") && er.AllMessagesText[0].Contains("C1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("typeof") && er.AllMessages[0].FormattedMessage.Contains("C1"));
 		}
 	}
 }

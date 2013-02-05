@@ -2,26 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Moq;
 
 namespace Saltarelle.Compiler.Tests {
 	internal class Common {
-		public static readonly string MscorlibPath = Path.GetFullPath(@"..\..\..\Runtime\bin\mscorlib.dll");
-		public static readonly string LinqPath = Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Linq.dll");
+		public static readonly string MscorlibPath = Path.GetFullPath(@"..\..\..\Runtime\CoreLib\bin\mscorlib.dll");
 
 		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(MscorlibPath));
 		internal static IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
-
-		private static readonly Lazy<IAssemblyReference> _linqLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(LinqPath));
-		internal static IAssemblyReference Linq { get { return _linqLazy.Value; } }
-
-		private static readonly Lazy<string> _mscorlibScriptLazy = new Lazy<string>(() => File.ReadAllText(@"..\..\..\Runtime\bin\Script\mscorlib.js"));
-		internal static string MscorlibScript { get { return _mscorlibScriptLazy.Value; } }
-
-		private static readonly Lazy<string> _linqScriptLazy = new Lazy<string>(() => File.ReadAllText(@"..\..\..\Runtime\bin\Script\linq.js"));
-		internal static string LinqScript { get { return _linqScriptLazy.Value; } }
 
 		public static Mock<ITypeDefinition> CreateTypeMock(string fullName) {
 			int dot = fullName.LastIndexOf(".", StringComparison.InvariantCulture);
@@ -41,9 +33,50 @@ namespace Saltarelle.Compiler.Tests {
 			result.SetupGet(_ => _.Region).Returns(DomRegion.Empty);
 			return result;
 		}
+
+		public static IAssembly CreateMockAssembly(IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
+			var result = new Mock<IAssembly>(MockBehavior.Strict);
+			result.SetupGet(_ => _.AssemblyAttributes).Returns(CreateMockAttributes(attributes));
+			return result.Object;
+		}
 		
-		public static ITypeDefinition CreateMockType(string fullName) {
-			return CreateTypeMock(fullName).Object;
+		public static ITypeDefinition CreateMockTypeDefinition(string name, IAssembly assembly, Accessibility accessibility = Accessibility.Public, ITypeDefinition declaringType = null, IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
+			var typeDef = Common.CreateTypeMock(name);
+			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
+			typeDef.SetupGet(_ => _.Accessibility).Returns(accessibility);
+			typeDef.SetupGet(_ => _.DeclaringTypeDefinition).Returns(declaringType);
+			typeDef.SetupGet(_ => _.ParentAssembly).Returns(assembly);
+			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
+			typeDef.SetupGet(_ => _.Attributes).Returns(CreateMockAttributes(attributes));
+
+			return typeDef.Object;
+		}
+
+		private static IList<IAttribute> CreateMockAttributes(IEnumerable<Expression<Func<System.Attribute>>> attributes) {
+			var result = new List<IAttribute>();
+			if (attributes != null) {
+				foreach (var attrExpression in attributes) {
+					var attr = new Mock<IAttribute>(MockBehavior.Strict);
+					var body = (NewExpression)attrExpression.Body;
+					attr.SetupGet(_ => _.AttributeType).Returns(CreateMockTypeDefinition(body.Type.FullName, null));
+					var posArgs = new List<ResolveResult>();
+					foreach (var argExpression in body.Arguments) {
+						var argType = new Mock<IType>(MockBehavior.Strict);
+						argType.SetupGet(_ => _.FullName).Returns(argExpression.Type.FullName);
+						var arg = new ConstantResolveResult(argType.Object, ((ConstantExpression)argExpression).Value);
+						posArgs.Add(arg);
+					}
+					attr.SetupGet(_ => _.PositionalArguments).Returns(posArgs);
+
+					if (body.Members != null && body.Members.Count > 0)
+						throw new InvalidOperationException("Named attribute args are not supported");
+
+					attr.SetupGet(_ => _.NamedArguments).Returns(new KeyValuePair<IMember, ResolveResult>[0]);
+
+					result.Add(attr.Object);
+				}
+			}
+			return result;
 		}
 	}
 }

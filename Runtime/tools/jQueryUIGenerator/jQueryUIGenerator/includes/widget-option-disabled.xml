@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<option name="disabled" default="false" example-value="true">
-	<desc>Disables the <placeholder name="name"/> if set to <code>true</code>.</desc>
-	<type name="Boolean" />
-</option>

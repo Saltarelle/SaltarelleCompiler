@@ -4,8 +4,8 @@ using ICSharpCode.NRefactory;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
-    [TestFixture]
-    public class VariableGatheringTests : MethodCompilerTestBase {
+	[TestFixture]
+	public class VariableGatheringTests : MethodCompilerTestBase {
 		private void AssertUsedByReference(string scriptVariableName) {
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.True, scriptVariableName + " should be used by reference");
 		}
@@ -14,149 +14,149 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == scriptVariableName).UseByRefSemantics, Is.False, scriptVariableName + " should not be used by reference");
 		}
 
-        [Test]
-        public void ParameterGetCorrectNamesForSimpleMethods() {
-            CompileMethod("public void M(int i, string s, int i2) {} }");
-            CompiledMethod.ParameterNames.Should().Equal(new[] { "$i", "$s", "$i2" });
-        }
+		[Test]
+		public void ParameterGetCorrectNamesForSimpleMethods() {
+			CompileMethod("public void M(int i, string s, int i2) {} }");
+			CompiledMethod.ParameterNames.Should().Equal(new[] { "$i", "$s", "$i2" });
+		}
 
-        [Test]
-        public void TypeParametersAreConsideredUsedDuringParameterNameDetermination() {
-            CompileMethod("class C<TX> { public class C2<TY> { public void M<TZ>(int TX, int TY, int TZ) {} } }");
-            CompiledMethod.ParameterNames.Should().Equal(new[] { "$TX2", "$TY2", "$TZ2" });
-        }
+		[Test]
+		public void TypeParametersAreConsideredUsedDuringParameterNameDetermination() {
+			CompileMethod("class C<TX> { public class C2<TY> { public void M<TZ>(int TX, int TY, int TZ) {} } }");
+			CompiledMethod.ParameterNames.Should().Equal(new[] { "$TX2", "$TY2", "$TZ2" });
+		}
 
-        [Test]
-        public void VariablesAreCorrectlyRegistered() {
-            CompileMethod(@"
-                public void M(int a, int b) {
-                    int c = a + b, d = c;
-                    int e = c;
+		[Test]
+		public void VariablesAreCorrectlyRegistered() {
+			CompileMethod(@"
+				public void M(int a, int b) {
+					int c = a + b, d = c;
+					int e = c;
 
-                    for (e = 0; e < c; e++) {
-                        int f = a + e;
-                    }
-                    for (e = 0; e < d; e++) {
-                        int f = a + e;
-                    }
-                }
-            ");
+					for (e = 0; e < c; e++) {
+						int f = a + e;
+					}
+					for (e = 0; e < d; e++) {
+						int f = a + e;
+					}
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void VariableDeclaredInForStatementIsCorrectlyRegistered() {
-            CompileMethod(@"
-                public void M() {
-                    for (int i = 0; i < 1; i++) {
-                        int a = i;
-                    }
-                    for (int i = 0, j = 0; i < 1; i++) {
-                        int a = i;
-                    }
-                }
-            ");
+		[Test]
+		public void VariableDeclaredInForStatementIsCorrectlyRegistered() {
+			CompileMethod(@"
+				public void M() {
+					for (int i = 0; i < 1; i++) {
+						int a = i;
+					}
+					for (int i = 0, j = 0; i < 1; i++) {
+						int a = i;
+					}
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$i", "$a", "$i2", "$j", "$a2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$i", "$a", "$i2", "$j", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void ForStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
-            CompileMethod(@"
-                public void M() {
+		[Test]
+		public void ForStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
+			CompileMethod(@"
+				public void M() {
 					int i;
-                    for (i = 0; i < 1; i++) {
-                        int a = i;
-                    }
-                }
-            ");
+					for (i = 0; i < 1; i++) {
+						int a = i;
+					}
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$i", "$a" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$i", "$a" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void VariableDeclaredInForeachStatementIsCorrectlyRegistered() {
-            CompileMethod(@"
-                public void M() {
-                    foreach (int i in new[] { 1, 2, 3 }) {
-                        int a = i;
-                    }
-                    foreach (int i in new[] { 1, 2, 3 }) {
-                        int a = i;
-                    }
-                }
-            ");
+		[Test]
+		public void VariableDeclaredInForeachStatementIsCorrectlyRegistered() {
+			CompileMethod(@"
+				public void M() {
+					foreach (int i in new[] { 1, 2, 3 }) {
+						int a = i;
+					}
+					foreach (int i in new[] { 1, 2, 3 }) {
+						int a = i;
+					}
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Where(name => !name.StartsWith("$tmp"))
-                .Should()
-                .Equal(new[] { "$i", "$a", "$i2", "$a2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Where(name => !name.StartsWith("$tmp"))
+			              .Should()
+			              .Equal(new[] { "$i", "$a", "$i2", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void VariableDeclaredInUsingStatementIsCorrectlyRegistered() {
-            CompileMethod(@"class MemoryStream : IDisposable {}
-                public void M() {
-                    using (var ms = new MemoryStream()) {
-                        int a = 1;
-                    }
-                    using (var ms = new MemoryStream()) {
-                        int a = 1;
-                    }
-                }
-            ");
+		[Test]
+		public void VariableDeclaredInUsingStatementIsCorrectlyRegistered() {
+			CompileMethod(@"class MemoryStream : IDisposable {}
+				public void M() {
+					using (var ms = new MemoryStream()) {
+						int a = 1;
+					}
+					using (var ms = new MemoryStream()) {
+						int a = 1;
+					}
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$ms", "$a", "$ms2", "$a2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$ms", "$a", "$ms2", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void UsingStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
-            CompileMethod(@"class MemoryStream : IDisposable {}
-                public void M() {
+		[Test]
+		public void UsingStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
+			CompileMethod(@"class MemoryStream : IDisposable {}
+				public void M() {
 					IDisposable ms;
-                    using (ms = new MemoryStream()) {
-                        int a = 1;
-                    }
-                }
-            ");
+					using (ms = new MemoryStream()) {
+						int a = 1;
+					}
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Where(name => !name.StartsWith("$tmp"))
-                .Should()
-                .Equal(new[] { "$ms", "$a" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Where(name => !name.StartsWith("$tmp"))
+			              .Should()
+			              .Equal(new[] { "$ms", "$a" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void VariableDeclaredInCatchBlockIsCorrectlyRegistered() {
-            CompileMethod(@"class InvalidOperationException : Exception {} class ArgumentException : Exception {}
-                public void M() {
+		[Test]
+		public void VariableDeclaredInCatchBlockIsCorrectlyRegistered() {
+			CompileMethod(@"class InvalidOperationException : Exception {} class ArgumentException : Exception {}
+				public void M() {
 					try {
 						int a = 0;
 					}
@@ -176,22 +176,22 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 					catch (ArgumentException ex) {
 						int a = 0;
 					}
-                }
-            ");
+				}
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Where(name => !name.StartsWith("$tmp"))
-                .Should()
-                .Equal(new[] { "$a", "$ex", "$a2", "$ex2", "$a3", "$a4", "$ex3", "$a5", "$ex4", "$a6" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Where(name => !name.StartsWith("$tmp"))
+			              .Should()
+			              .Equal(new[] { "$a", "$ex", "$a2", "$ex2", "$a3", "$a4", "$ex3", "$a5", "$ex4", "$a6" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void CatchBlockWithoutVariableDeclarationDoesNotCauseRegistration() {
-            CompileMethod(@"class InvalidOperationException : System.Exception {}
-                public void M() {
+		[Test]
+		public void CatchBlockWithoutVariableDeclarationDoesNotCauseRegistration() {
+			CompileMethod(@"class InvalidOperationException : System.Exception {}
+				public void M() {
 					try {
 						int a = 0;
 					}
@@ -199,21 +199,21 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 						int a = 0;
 					}
 				}
-            ");
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Where(name => !name.StartsWith("$tmp"))
-                .Should()
-                .Equal(new[] { "$a", "$a2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Where(name => !name.StartsWith("$tmp"))
+			              .Should()
+			              .Equal(new[] { "$a", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
-        [Test]
-        public void CatchAllBlockWorks() {
-            CompileMethod(@"
-                public void M() {
+		[Test]
+		public void CatchAllBlockWorks() {
+			CompileMethod(@"
+				public void M() {
 					try {
 						int a = 0;
 					}
@@ -221,16 +221,16 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 						int a = 0;
 					}
 				}
-            ");
+			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Where(name => !name.StartsWith("$tmp"))
-                .Should()
-                .Equal(new[] { "$a", "$a2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Where(name => !name.StartsWith("$tmp"))
+			              .Should()
+			              .Equal(new[] { "$a", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
-        }
+		}
 
 		[Test]
 		public void ImplicitlyTypedLamdaExpressionParametersAreCorrectlyRegistered() {
@@ -241,11 +241,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
@@ -258,11 +258,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
@@ -275,11 +275,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
@@ -292,71 +292,71 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "$f", "$f2" });
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$f", "$f2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void PropertyGetterDoesNotHaveAnyParameters() {
-            CompileMethod(@"public int P { get { return 0; } }", methodName: "get_P");
+			CompileMethod(@"public int P { get { return 0; } }", methodName: "get_P");
 			MethodCompiler.variables.Should().BeEmpty();
 		}
 
 		[Test]
 		public void ImplicitValueParameterToPropertySetterIsCorrectlyRegistered() {
-            CompileMethod(@"public int P { set {} }", methodName: "set_P");
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Should()
-				.Equal(new[] { "$value" });
+			CompileMethod(@"public int P { set {} }", methodName: "set_P");
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$value" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void ImplicitValueParameterToEventAdderIsCorrectlyRegistered() {
-            CompileMethod(@"public event System.EventHandler E { add {} remove {} }", methodName: "add_E");
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Should()
-				.Equal(new[] { "$value" });
+			CompileMethod(@"public event System.EventHandler E { add {} remove {} }", methodName: "add_E");
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$value" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void ImplicitValueParameterToEventRemoverIsCorrectlyRegistered() {
-            CompileMethod(@"public event System.EventHandler E { remove {} add {} }", methodName: "remove_E");
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Should()
-				.Equal(new[] { "$value" });
+			CompileMethod(@"public event System.EventHandler E { remove {} add {} }", methodName: "remove_E");
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$value" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void IndexerGetterParametersAreCorrectlyRegistered() {
-            CompileMethod(@"public int this[int a, string b] { get { return 0; } }", methodName: "get_Item");
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-				.Should()
-				.Equal(new[] { "$a", "$b" });
+			CompileMethod(@"public int this[int a, string b] { get { return 0; } }", methodName: "get_Item");
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$a", "$b" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
 		[Test]
 		public void IndexerSetterParametersAreCorrectlyRegistered() {
-            CompileMethod(@"public int this[int a, string b] { set {} }", methodName: "set_Item");
-            MethodCompiler.variables
-                .Select(kvp => kvp.Value.Name)
-				.Should()
-				.BeEquivalentTo(new[] { "$a", "$b", "$value" });
+			CompileMethod(@"public int this[int a, string b] { set {} }", methodName: "set_Item");
+			MethodCompiler.variables
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .BeEquivalentTo(new[] { "$a", "$b", "$value" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
@@ -634,47 +634,47 @@ public void M() {
 			AssertNotUsedByReference("$x");
 		}
 
-        [Test]
-        public void DeclaringMethodsAreCorrect() {
-            CompileMethod(
+		[Test]
+		public void DeclaringMethodsAreCorrect() {
+			CompileMethod(
 @"
 public void M(int p) {
-    Func<int, int> f = p2 => {
-        Func<string, double> f2 = delegate(string s) {
-            Func<int, int, int> f3 = (int i, int j) => (i + j);
-            Action<double> a1 = x => {};
-            return f3(1, 4);
-        };
-        Action<string> f4 = s2 => {
-            Func<int, string> f5 = y => y.ToString();
-        };
+	Func<int, int> f = p2 => {
+		Func<string, double> f2 = delegate(string s) {
+			Func<int, int, int> f3 = (int i, int j) => (i + j);
+			Action<double> a1 = x => {};
+			return f3(1, 4);
+		};
+		Action<string> f4 = s2 => {
+			Func<int, string> f5 = y => y.ToString();
+		};
 		return 0;
-    };
-    Action<Type> a = delegate {};
+	};
+	Action<Type> a = delegate {};
 }");
 
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 24)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 24)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 38)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 38)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 35)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 24)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(9, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 21)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 21)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 21)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(9, 23)));
 			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
-        }
+		}
 
 		[Test]
 		public void UsedNamesIsCorrectWhenGeneratingTemporaryVariables() {
-            CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
-            MethodCompiler.variables
-                .OrderBy(kvp => kvp.Key.Region.Begin)
-                .Select(kvp => kvp.Value.Name)
-                .Should()
-                .Equal(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ });
+			CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
+			MethodCompiler.variables
+				.OrderBy(kvp => kvp.Key.Region.Begin)
+				.Select(kvp => kvp.Value.Name)
+				.Should()
+				.Equal(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ });
 		}
-    }
+	}
 }

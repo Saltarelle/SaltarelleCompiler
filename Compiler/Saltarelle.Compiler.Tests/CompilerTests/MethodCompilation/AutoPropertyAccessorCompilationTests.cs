@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class AutoPropertyAccessorCompilationTests : CompilerTestBase {
 		[Test]
 		public void InstanceAutoPropertyAccessorsImplementedAsInstanceMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" });
+			Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" });
 
 			var getter = FindInstanceMethod("C.get_MyProperty");
 			var setter = FindInstanceMethod("C.set_MyProperty");
@@ -25,13 +25,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyProperty = 0;
+	this.$MyProperty = $Default({def_Int32});
 }");
 		}
 
 		[Test]
 		public void InstanceAutoPropertyAccessorsImplementedAsStaticMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name)) });
+			Compile(new[] { "using System; class C { public int MyProperty { get; set; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name)) });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
@@ -48,13 +48,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyProperty = 0;
+	this.$MyProperty = $Default({def_Int32});
 }");
 		}
 
 		[Test]
 		public void StaticAutoPropertyAccessorsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public static int MyProperty { get; set; } }" });
+			Compile(new[] { "using System; class C { public static int MyProperty { get; set; } }" });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
@@ -71,29 +71,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			AssertCorrect(c.StaticInitStatements[0], "{sm_C}.$MyProperty = 0;" + Environment.NewLine);
+			AssertCorrect(c.StaticInitStatements[0], "{sm_C}.$MyProperty = $Default({def_Int32});" + Environment.NewLine);
 		}
 
 		[Test]
 		public void StaticAutoPropertyAccessorsAreCorrectlyCompiledForGenericClasses() {
-            Compile(new[] { "using System; class C<T> { public static int MyProperty { get; set; } }" });
+			Compile(new[] { "using System; class C<T> { public static int MyProperty { get; set; } }" });
 
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
 			AssertCorrect(getter.Definition,
 @"function() {
-	return sm_$InstantiateGenericType({C}, ga_$T).$MyProperty;
+	return sm_$InstantiateGenericType({C}, $T).$MyProperty;
 }");
 
 			AssertCorrect(setter.Definition,
 @"function($value) {
-	sm_$InstantiateGenericType({C}, ga_$T).$MyProperty = $value;
+	sm_$InstantiateGenericType({C}, $T).$MyProperty = $value;
 }");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, ga_$T).$MyProperty = 0;" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, $T).$MyProperty = $Default({def_Int32});" + Environment.NewLine));
 		}
 	}
 }

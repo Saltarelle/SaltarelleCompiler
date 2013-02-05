@@ -48,7 +48,29 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
 		public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
 
-		void IMetadataImporter.Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter) {
+		void IMetadataImporter.Prepare(ITypeDefinition type) {
+		}
+
+		void IMetadataImporter.ReserveMemberName(ITypeDefinition type, string name, bool isStatic) {
+		}
+
+		bool IMetadataImporter.IsMemberNameAvailable(ITypeDefinition type, string name, bool isStatic) {
+			return true;
+		}
+
+		void IMetadataImporter.SetMethodSemantics(IMethod method, MethodScriptSemantics semantics) {
+		}
+
+		void IMetadataImporter.SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics) {
+		}
+
+		void IMetadataImporter.SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics) {
+		}
+
+		void IMetadataImporter.SetFieldSemantics(IField field, FieldScriptSemantics semantics) {
+		}
+
+		void IMetadataImporter.SetEventSemantics(IEvent evt,EventScriptSemantics semantics) {
 		}
 
 		TypeScriptSemantics IMetadataImporter.GetTypeSemantics(ITypeDefinition typeDefinition) {

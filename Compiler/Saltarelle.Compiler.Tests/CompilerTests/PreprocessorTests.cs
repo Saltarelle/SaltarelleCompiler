@@ -3,35 +3,35 @@ using NUnit.Framework;
 using FluentAssertions;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests {
-    [TestFixture]
-    public class PreprocessorTests : CompilerTestBase {
-        [Test]
-        public void TakenIfWorks() {
-            Compile(new[] {
+	[TestFixture]
+	public class PreprocessorTests : CompilerTestBase {
+		[Test]
+		public void TakenIfWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if true
 class B {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+		}
 
-        [Test]
-        public void NotTakenIfWorks() {
-            Compile(new[] {
+		[Test]
+		public void NotTakenIfWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if false
 class B {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
+		}
 
-        [Test]
-        public void TakenElifWorks() {
-            Compile(new[] {
+		[Test]
+		public void TakenElifWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if false
@@ -40,12 +40,12 @@ class B {}
 class C {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
+		}
 
-        [Test]
-        public void NotTakenElifWorks() {
-            Compile(new[] {
+		[Test]
+		public void NotTakenElifWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if true
@@ -56,12 +56,12 @@ class C {}
 class D {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+		}
 
-        [Test]
-        public void TakenElseWorks() {
-            Compile(new[] {
+		[Test]
+		public void TakenElseWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if false
@@ -70,12 +70,12 @@ class B {}
 class C {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
+		}
 
-        [Test]
-        public void TakenElseWorksWithElif() {
-            Compile(new[] {
+		[Test]
+		public void TakenElseWorksWithElif() {
+			Compile(new[] {
 @"
 class A {}
 #if false
@@ -86,12 +86,12 @@ class C {}
 class D {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "D" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "D" });
+		}
 
-        [Test]
-        public void NotTakenElseWorks() {
-            Compile(new[] {
+		[Test]
+		public void NotTakenElseWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if true
@@ -100,12 +100,12 @@ class B {}
 class C {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+		}
 
-        [Test]
-        public void PassingDefineConstantsWorks() {
-            Compile(new[] {
+		[Test]
+		public void PassingDefineConstantsWorks() {
+			Compile(new[] {
 @"
 class A {}
 #if MY_SYMBOL1
@@ -115,12 +115,12 @@ class B {}
 class B {}
 #endif
 " }, defineConstants: new[] { "MY_SYMBOL1" });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+		}
 
-        [Test]
-        public void DefineWorks() {
-            Compile(new[] {
+		[Test]
+		public void DefineWorks() {
+			Compile(new[] {
 @"
 #define MY_SYMBOL
 class A {}
@@ -128,12 +128,12 @@ class A {}
 class B {}
 #endif
 " });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
-        }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+		}
 
-        [Test]
-        public void UndefWorks() {
-            Compile(new[] {
+		[Test]
+		public void UndefWorks() {
+			Compile(new[] {
 @"
 #undef MY_SYMBOL
 class A {}
@@ -141,7 +141,7 @@ class A {}
 class B {}
 #endif
 " }, defineConstants: new[] { "MY_SYMBOL" });
-            CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
-        }
-    }
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
+		}
+	}
 }

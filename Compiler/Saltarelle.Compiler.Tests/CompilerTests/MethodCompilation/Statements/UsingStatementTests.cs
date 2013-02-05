@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($d, null)) {
+			if ($ReferenceNotEquals($d, $Default({def_IDisposable}))) {
 				$d.$Dispose();
 			}
 		}
@@ -47,7 +47,7 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($d, null)) {
+			if ($ReferenceNotEquals($d, $Default({def_IDisposable}))) {
 				$d.$Dispose();
 			}
 		}
@@ -74,7 +74,7 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($tmp1, null)) {
+			if ($ReferenceNotEquals($tmp1, $Default({def_IDisposable}))) {
 				$tmp1.$Dispose();
 			}
 		}
@@ -109,19 +109,19 @@ public void M() {
 					var $x = 0;
 				}
 				finally {
-					if ($ReferenceNotEquals($d3, null)) {
+					if ($ReferenceNotEquals($d3, $Default({def_IDisposable}))) {
 						$d3.$Dispose();
 					}
 				}
 			}
 			finally {
-				if ($ReferenceNotEquals($d2, null)) {
+				if ($ReferenceNotEquals($d2, $Default({def_IDisposable}))) {
 					$d2.$Dispose();
 				}
 			}
 		}
 		finally {
-			if ($ReferenceNotEquals($d1, null)) {
+			if ($ReferenceNotEquals($d1, $Default({def_IDisposable}))) {
 				$d1.$Dispose();
 			}
 		}

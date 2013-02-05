@@ -32,24 +32,24 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		public override JsStatement VisitForStatement(JsForStatement statement, object data) {
-            var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)        : null;
-            var condition     = statement.ConditionExpression != null ? VisitExpression(statement.ConditionExpression, data) : null;
-            var iterator      = statement.IteratorExpression  != null ? VisitExpression(statement.IteratorExpression, data)  : null;
-            var body          = VisitStatement(statement.Body, data);
+			var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)        : null;
+			var condition     = statement.ConditionExpression != null ? VisitExpression(statement.ConditionExpression, data) : null;
+			var iterator      = statement.IteratorExpression  != null ? VisitExpression(statement.IteratorExpression, data)  : null;
+			var body          = VisitStatement(statement.Body, data);
 
 			if (initStatement is JsBlockStatement) {	// Will happen if the init statement is a variable declaration without initializers.
 				Debug.Assert(((JsBlockStatement)initStatement).Statements.Count == 0);
 				initStatement = new JsEmptyStatement();
 			}
 
-            return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
-                 ? statement
-                 : new JsForStatement(initStatement, condition, iterator, body);
+			return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
+			     ? statement
+			     : new JsForStatement(initStatement, condition, iterator, body);
 		}
 
 		public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, object data) {
-            var objectToIterateOver = VisitExpression(statement.ObjectToIterateOver, data);
-            var body = VisitStatement(statement.Body, data);
+			var objectToIterateOver = VisitExpression(statement.ObjectToIterateOver, data);
+			var body = VisitStatement(statement.Body, data);
 			if (statement.IsLoopVariableDeclared) {
 				_variables.Add(statement.LoopVariableName);
 				return new JsForEachInStatement(statement.LoopVariableName, objectToIterateOver, body, false);

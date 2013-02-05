@@ -955,7 +955,7 @@ public void M() {
 		public void UsingPropertyThatIsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { UnusableProperty += 0; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableProperty")));
 		}
 
 		[Test]
@@ -1000,7 +1000,7 @@ class D : B {
 		// END
 	}
 }",
-@"	$CallBase({bind_B}, 'set_$P', [], [this, $CallBase({bind_B}, 'get_$P', [], [this]) + 10]);
+@"	$CallBase({bind_B}, '$set_P', [], [this, $CallBase({bind_B}, '$get_P', [], [this]) + 10]);
 ", addSkeleton: false);
 		}
 
@@ -1107,16 +1107,16 @@ class D : B {
 		public void CompoundAssignmentToDynamicPropertyOfNonDynamicObject() {
 			AssertCorrectForBulkOperators(@"
 public class SomeClass {
-    public dynamic Value { get; set; }
+	public dynamic Value { get; set; }
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        c.Value += 1;
+		c.Value += 1;
 		// END
-    }
+	}
 }",
 @"	$c.set_$Value($c.get_$Value() + 1);
 ", addSkeleton: false);
@@ -1126,16 +1126,16 @@ class C {
 		public void CompoundAssignmentToDynamicFieldOfNonDynamicObject() {
 			AssertCorrectForBulkOperators(@"
 public class SomeClass {
-    public dynamic Value;
+	public dynamic Value;
 }
 
 class C {
-    public void M() {
-        var c = new SomeClass();
+	public void M() {
+		var c = new SomeClass();
 		// BEGIN
-        $c.Value += 1;
+		$c.Value += 1;
 		// END
-    }
+	}
 }",
 @"	$c.$Value += 1;
 ", addSkeleton: false);

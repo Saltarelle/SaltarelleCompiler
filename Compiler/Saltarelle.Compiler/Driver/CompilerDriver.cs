@@ -7,18 +7,20 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Policy;
 using System.Text;
+using Castle.MicroKernel.Registration;
+using Castle.Windsor;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using System.Linq;
 using Mono.CSharp;
+using Mono.Cecil;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
-using Saltarelle.Compiler.OOPEmulator;
-using Saltarelle.Compiler.Linker;
-using Saltarelle.Compiler.RuntimeLibrary;
+using Saltarelle.Compiler.JSModel.TypeSystem;
+using ArrayType = ICSharpCode.NRefactory.TypeSystem.ArrayType;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
 namespace Saltarelle.Compiler.Driver {
@@ -55,7 +57,7 @@ namespace Saltarelle.Compiler.Driver {
 				return Path.GetFullPath(file);
 			}
 			er.Region = DomRegion.Empty;
-			er.Message(7997, filename);
+			er.Message(Messages._7997, filename);
 			return null;
 		}
 
@@ -92,8 +94,6 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddConditionalSymbol(c);
 			foreach (var w in options.DisabledWarnings)
 				result.SetIgnoreWarning(w);
-			result.SetIgnoreWarning(660);	// 660 and 661: class defines operator == or operator != but does not override Equals / GetHashCode. These warnings don't really apply, since we have no Equals / GetHashCode methods to override.
-			result.SetIgnoreWarning(661);
 			foreach (var w in options.WarningsAsErrors)
 				result.AddWarningAsError(w);
 			foreach (var w in options.WarningsNotAsErrors)
@@ -101,7 +101,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
 				er.Region = DomRegion.Empty;
-				er.Message(7998, "aliased reference");
+				er.Message(Messages._7998, "aliased reference");
 			}
 
 			return result;
@@ -204,6 +204,18 @@ namespace Saltarelle.Compiler.Driver {
 				return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
 			}
 
+			private static IEnumerable<Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> references) {
+				return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
+				                        .Select(r => r.Item3)
+				                        .Where(a => a != null);
+			}
+
+			private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker) };
+
+			private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
+				container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
+			}
+
 			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
 				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
 				try {
@@ -221,45 +233,35 @@ namespace Saltarelle.Compiler.Driver {
 							return false;
 					}
 
-					// Compile the script
-					var md = new MetadataImporter.ScriptSharpMetadataImporter(options.MinimizeScript);
-					var n = new DefaultNamer();
-					PreparedCompilation compilation = null;
-					var rtl = new ScriptSharpRuntimeLibrary(md, er, n.GetTypeParameterName, tr => new JsTypeReferenceExpression(tr.Resolve(compilation.Compilation).GetDefinition()));
-					var compiler = new Compiler.Compiler(md, n, rtl, er, allowUserDefinedStructs: options.References.Count == 0 /* We allow user-defined structs in mscorlib only, which can be identified by the fact that it has no references*/);
-
 					var references = LoadReferences(settings.AssemblyReferences, er);
 					if (references == null)
 						return false;
 
-					compilation = compiler.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references, options.DefineConstants);
-					var compiledTypes = compiler.Compile(compilation);
+					PreparedCompilation compilation = PreparedCompilation.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
 
-					IMethod entryPoint = null;
-					if (options.HasEntryPoint) {
-						List<IMethod> candidates;
-						if (!string.IsNullOrEmpty(options.EntryPointClass)) {
-							var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
-							if (t == null) {
-								er.Region = DomRegion.Empty;
-								er.Message(7950, "Could not find the entry point class " + options.EntryPointClass + ".");
-								return false;
-							}
-							candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
-						}
-						else {
-							candidates = compilation.Compilation.MainAssembly.GetAllTypeDefinitions().SelectMany(t => t.Methods).Where(IsEntryPointCandidate).ToList();
-						}
-						if (candidates.Count != 1) {
-							er.Region = DomRegion.Empty;
-							er.Message(7950, "Could not find a unique entry point.");
-							return false;
-						}
-						entryPoint = candidates[0];
-					}
+					IMethod entryPoint = FindEntryPoint(options, er, compilation);
 
-					var js = new ScriptSharpOOPEmulator(compilation.Compilation, md, rtl, n, er).Process(compiledTypes, compilation.Compilation, entryPoint);
-					js = new DefaultLinker(md, n).Process(js, compilation.Compilation.MainAssembly);
+					var container = new WindsorContainer();
+					foreach (var plugin in TopologicalSortPlugins(references).Reverse())
+						RegisterPlugin(container, plugin);
+
+					// Compile the script
+					container.Register(Component.For<INamer>().ImplementedBy<DefaultNamer>(),
+					                   Component.For<IErrorReporter>().Instance(er),
+					                   Component.For<CompilerOptions>().Instance(options),
+					                   Component.For<ICompilation>().Instance(compilation.Compilation),
+					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
+					                  );
+
+					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());
+
+					var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
+
+					foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())
+						compiledTypes = rewriter.Rewrite(compiledTypes);
+
+					var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
+					js = container.Resolve<ILinker>().Process(js);
 
 					if (er.HasErrors)
 						return false;
@@ -273,7 +275,7 @@ namespace Saltarelle.Compiler.Driver {
 						}
 						catch (IOException ex) {
 							er.Region = DomRegion.Empty;
-							er.Message(7950, ex.Message);
+							er.Message(Messages._7950, ex.Message);
 							return false;
 						}
 						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
@@ -282,7 +284,7 @@ namespace Saltarelle.Compiler.Driver {
 							}
 							catch (IOException ex) {
 								er.Region = DomRegion.Empty;
-								er.Message(7952, ex.Message);
+								er.Message(Messages._7952, ex.Message);
 								return false;
 							}
 						}
@@ -298,7 +300,7 @@ namespace Saltarelle.Compiler.Driver {
 					}
 					catch (IOException ex) {
 						er.Region = DomRegion.Empty;
-						er.Message(7951, ex.Message);
+						er.Message(Messages._7951, ex.Message);
 						return false;
 					}
 					return true;
@@ -315,11 +317,41 @@ namespace Saltarelle.Compiler.Driver {
 					}
 				}
 			}
+
+			private IMethod FindEntryPoint(CompilerOptions options, ErrorReporterWrapper er, PreparedCompilation compilation) {
+				if (options.HasEntryPoint) {
+					List<IMethod> candidates;
+					if (!string.IsNullOrEmpty(options.EntryPointClass)) {
+						var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
+						if (t == null) {
+							er.Region = DomRegion.Empty;
+							er.Message(Messages._7950, "Could not find the entry point class " + options.EntryPointClass + ".");
+							return null;
+						}
+						candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
+					}
+					else {
+						candidates =
+							compilation.Compilation.MainAssembly.GetAllTypeDefinitions()
+							           .SelectMany(t => t.Methods)
+							           .Where(IsEntryPointCandidate)
+							           .ToList();
+					}
+					if (candidates.Count != 1) {
+						er.Region = DomRegion.Empty;
+						er.Message(Messages._7950, "Could not find a unique entry point.");
+						return null;
+					}
+					return candidates[0];
+				}
+
+				return null;
+			}
 		}
 
 		/// <param name="options">Compile options</param>
-		/// <param name="runInSeparateAppDomain">Should be set to true for production code, but there are issues with NUnit, so tests need to set this to false.</param>
-		public bool Compile(CompilerOptions options, bool runInSeparateAppDomain) {
+		/// <param name="createAppDomain">If not null, a function that should return a new app domain which is setup correctly to perform a compilation.</param>
+		public bool Compile(CompilerOptions options, Func<AppDomain> createAppDomain) {
 			try {
 				AppDomain ad = null;
 				var actualOut = Console.Out;
@@ -329,9 +361,8 @@ namespace Saltarelle.Compiler.Driver {
 					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
 
 					Executor executor;
-					if (runInSeparateAppDomain) {
-						var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Executor).Assembly.Location) };
-						ad = AppDomain.CreateDomain("SCTask", null, setup);
+					if (createAppDomain != null) {
+						ad = createAppDomain();
 						executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
 					}
 					else {
@@ -355,7 +386,26 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		private static IEnumerable<IAssemblyReference> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
+		private static Assembly LoadPlugin(AssemblyDefinition def) {
+			foreach (var r in def.Modules.SelectMany(m => m.Resources).OfType<EmbeddedResource>()) {
+				if (r.Name.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase)) {
+					var data = r.GetResourceData();
+					var asm = AssemblyDefinition.ReadAssembly(new MemoryStream(data));
+
+					var result = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == asm.Name.Name);
+					if (result == null)
+						result = Assembly.Load(data);
+					return result;
+				}
+			}
+			return null;
+		}
+
+		private static IList<string> GetReferencedAssemblyNames(AssemblyDefinition asm) {
+			return asm.Modules.SelectMany(m => m.AssemblyReferences, (_, r) => r.Name).Distinct().ToList();
+		}
+
+		private static IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
 			var loader = new CecilLoader { IncludeInternalMembers = true };
 			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
 
@@ -372,11 +422,11 @@ namespace Saltarelle.Compiler.Driver {
 			if (missingReferences.Count > 0) {
 				er.Region = DomRegion.Empty;
 				foreach (var r in missingReferences)
-					er.Message(7996, r);
+					er.Message(Messages._7996, r);
 				return null;
 			}
 
-			return assemblies.Select(a => loader.LoadAssembly(a)).ToList();
+			return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), GetReferencedAssemblyNames(asm), LoadPlugin(asm))).ToList();
 		}
 	}
 }

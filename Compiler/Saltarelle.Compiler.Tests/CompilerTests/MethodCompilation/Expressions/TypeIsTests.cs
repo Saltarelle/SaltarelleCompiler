@@ -66,9 +66,9 @@ public void M<T>() where T : D {
 	bool b3 = d is T;
 	// END
 }",
-@"	var $b1 = $TypeIs($o, ct_$T);
-	var $b2 = $TypeIs($b, ct_$T);
-	var $b3 = $TypeIs($d, ct_$T);
+@"	var $b1 = $TypeIs($o, $T);
+	var $b2 = $TypeIs($b, $T);
+	var $b3 = $TypeIs($d, $T);
 ");
 
 			AssertCorrect(
@@ -84,9 +84,9 @@ public void M<T>() where T : class, D {
 	bool b3 = d is T;
 	// END
 }",
-@"	var $b1 = $TypeIs($o, ct_$T);
-	var $b2 = $TypeIs($b, ct_$T);
-	var $b3 = $TypeIs($d, ct_$T);
+@"	var $b1 = $TypeIs($o, $T);
+	var $b2 = $TypeIs($b, $T);
+	var $b3 = $TypeIs($d, $T);
 ");
 		}
 
@@ -100,7 +100,7 @@ public void M<T>() {
 	bool b = i is T;
 	// END
 }",
-@"	var $b = $TypeIs($i, ct_$T);
+@"	var $b = $TypeIs($i, $T);
 ");
 
 			AssertCorrect(
@@ -111,7 +111,7 @@ public void M<T>() where T : class {
 	bool b = i is T;
 	// END
 }",
-@"	var $b = $TypeIs($i, ct_$T);
+@"	var $b = $TypeIs($i, $T);
 ");
 		}
 
@@ -149,7 +149,7 @@ public void M<T>() where T : class {
 	bool b = t is U;
 	// END
 }",
-@"	var $b = $TypeIs($t, ct_$U);
+@"	var $b = $TypeIs($t, $U);
 ");
 
 			AssertCorrect(
@@ -159,7 +159,7 @@ public void M<T>() where T : class {
 	bool b = t is U;
 	// END
 }",
-@"	var $b = $TypeIs($t, ct_$U);
+@"	var $b = $TypeIs($t, $U);
 ");
 
 			AssertCorrect(
@@ -169,7 +169,7 @@ public void M<T>() where T : class {
 	bool b = t is U;
 	// END
 }",
-@"	var $b = $TypeIs($t, ct_$U);
+@"	var $b = $TypeIs($t, $U);
 ");
 		}
 	}

@@ -49,7 +49,7 @@ public void M() {
 		public void ReadingNotUsableFieldGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableField; public void M() { int x = UnusableField; } }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableField")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableField")));
 		}
 
 		[Test]
@@ -126,8 +126,8 @@ class D : B {
 }",
 @"	this.set_$P(1);
 	var $i1 = this.get_$P();
-	$CallBase({bind_B}, 'set_$P', [], [this, 2]);
-	var $i2 = $CallBase({bind_B}, 'get_$P', [], [this]);
+	$CallBase({bind_B}, '$set_P', [], [this, 2]);
+	var $i2 = $CallBase({bind_B}, '$get_P', [], [this]);
 ", addSkeleton: false);
 		}
 
@@ -135,7 +135,7 @@ class D : B {
 		public void ReadingNotUsablePropertyGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableProperty")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableProperty")));
 		}
 
 		[Test]
@@ -256,8 +256,8 @@ class D : B {
 }",
 @"	this.add_$MyEvent($h);
 	this.remove_$MyEvent($h);
-	$CallBase({bind_B}, 'add_$MyEvent', [], [this, $h]);
-	$CallBase({bind_B}, 'remove_$MyEvent', [], [this, $h]);
+	$CallBase({bind_B}, '$add_MyEvent', [], [this, $h]);
+	$CallBase({bind_B}, '$remove_MyEvent', [], [this, $h]);
 ", addSkeleton: false);
 		}
 
@@ -310,8 +310,8 @@ class D : B {
 }",
 @"	this.set_$Item(0, 1);
 	var $i1 = this.get_$Item(2);
-	$CallBase({bind_B}, 'set_$Item', [], [this, 3, 4]);
-	var $i2 = $CallBase({bind_B}, 'get_$Item', [], [this, 5]);
+	$CallBase({bind_B}, '$set_Item', [], [this, 3, 4]);
+	var $i2 = $CallBase({bind_B}, '$get_Item', [], [this, 5]);
 ", addSkeleton: false);
 		}
 
@@ -319,28 +319,28 @@ class D : B {
 		public void SubscribingToNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent += null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void UnsubscribingFromNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent -= null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void  RaisingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent(null, null); } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void ReadingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
@@ -380,8 +380,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
 			
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("C.F1") && m.FormattedMessage.Contains("cannot be assigned to")));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -394,8 +394,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.Name == "F1" ? FieldScriptSemantics.NullConstant() : FieldScriptSemantics.Field(f.Name) }, errorReporter: er);
 			
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.Contains("C.F1") && m.Contains("cannot be assigned to")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("C.F1") && m.FormattedMessage.Contains("cannot be assigned to")));
 		}
 
 		[Test]
@@ -406,11 +406,11 @@ public class Class1 {
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1 = Test1 + 1;
+		Test1 = Test1 + 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
 ", addSkeleton: false);
@@ -420,18 +420,18 @@ public class Class2 : Class1 {
 		public void UsingBaseStaticFieldThroughDerivedClassWorks1() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1;
+	public static int Test1;
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1 = Class2.Test1 + 1;
+		Class2.Test1 = Class2.Test1 + 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
 ", addSkeleton: false);
@@ -441,15 +441,15 @@ public class C {
 		public void UsingBaseStaticFieldFromDerivedClassWorks2() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1;
+	public static int Test1;
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1 += 1;
+		Test1 += 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 += 1;
 ", addSkeleton: false);
@@ -459,18 +459,18 @@ public class Class2 : Class1 {
 		public void UsingBaseStaticFieldThroughDerivedClassWorks2() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1;
+	public static int Test1;
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1 += 1;
+		Class2.Test1 += 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 += 1;
 ", addSkeleton: false);
@@ -480,15 +480,15 @@ public class C {
 		public void UsingBaseStaticPropertyFromDerivedClassWorks1() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1 { get; set; }
+	public static int Test1 { get; set; }
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1 = Test1 + 1;
+		Test1 = Test1 + 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.set_$Test1({sm_Class1}.get_$Test1() + 1);
 ", addSkeleton: false);
@@ -498,18 +498,18 @@ public class Class2 : Class1 {
 		public void UsingBaseStaticPropertyThroughDerivedClassWorks1() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1 { get; set; }
+	public static int Test1 { get; set; }
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1 = Class2.Test1 + 1;
+		Class2.Test1 = Class2.Test1 + 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.set_$Test1({sm_Class1}.get_$Test1() + 1);
 ", addSkeleton: false);
@@ -519,15 +519,15 @@ public class C {
 		public void UsingBaseStaticPropertyFromDerivedClassWorks2() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1 { get; set; }
+	public static int Test1 { get; set; }
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1 = Test1 + 1;
+		Test1 = Test1 + 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
@@ -537,18 +537,18 @@ public class Class2 : Class1 {
 		public void UsingBaseStaticPropertyThroughDerivedClassWorks2() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1 { get; set; }
+	public static int Test1 { get; set; }
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1 = Class2.Test1 + 1;
+		Class2.Test1 = Class2.Test1 + 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 = {sm_Class1}.$Test1 + 1;
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
@@ -558,15 +558,15 @@ public class C {
 		public void UsingBaseStaticPropertyFromDerivedClassWorks3() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1 { get; set; }
+	public static int Test1 { get; set; }
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1 += 1;
+		Test1 += 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 += 1;
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
@@ -576,18 +576,18 @@ public class Class2 : Class1 {
 		public void UsingBaseStaticPropertyThroughDerivedClassWorks3() {
 			AssertCorrect(@"
 public class Class1 {
-    public static int Test1 { get; set; }
+	public static int Test1 { get; set; }
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1 += 1;
+		Class2.Test1 += 1;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1 += 1;
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
@@ -598,18 +598,18 @@ public class C {
 			AssertCorrect(@"
 using System;
 public class Class1 {
-    public static event Action Test1;
+	public static event Action Test1;
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		Action a = null, b = null;
 		// BEGIN
-        Test1 += a;
+		Test1 += a;
 		Test1 -= b;
 		Test1();
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.add_$Test1($a);
 	{sm_Class1}.remove_$Test1($b);
@@ -622,24 +622,82 @@ public class Class2 : Class1 {
 			AssertCorrect(@"
 using System;
 public class Class1 {
-    public static event Action Test1;
+	public static event Action Test1;
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		Action a = null, b = null;
 		// BEGIN
-        Class2.Test1 += a;
+		Class2.Test1 += a;
 		Class2.Test1 -= b;
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.add_$Test1($a);
 	{sm_Class1}.remove_$Test1($b);
 ", addSkeleton: false);
+		}
+
+		[Test]
+		public void UsingStaticMembersInGenericClassWorks() {
+			AssertCorrect(@"
+using System;
+public class C<T> {
+	static int F;
+	static void A() {}
+	static event System.EventHandler E;
+	static int P { get; set; }
+	
+	static void M() {
+		// BEGIN
+		F = 0;
+		A();
+		E += null;
+		P += 1;
+		// END
+	}
+}",
+@"	sm_$InstantiateGenericType({C}, $T).$F = 0;
+	sm_$InstantiateGenericType({C}, $T).$A();
+	sm_$InstantiateGenericType({C}, $T).add_$E(null);
+	sm_$InstantiateGenericType({C}, $T).set_$P(sm_$InstantiateGenericType({C}, $T).get_$P() + 1);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CanUseStaticMembersOfGenericTypes() {
+			AssertCorrect(@"
+class X<T> {
+	public static int F;
+	public static event System.EventHandler E;
+	public static int P { get; set; }
+	public static void M() {}
+}
+public void M() {
+	System.EventHandler h1 = null, h2 = null;
+	// BEGIN
+	X<int>.F = 10;
+	int f = X<int>.F;
+	X<int>.E += h1;
+	X<int>.E -= h2;
+	X<int>.P = 10;
+	int p = X<int>.P;
+	X<int>.M();
+	// END
+}
+",
+@"	sm_$InstantiateGenericType({X}, {ga_Int32}).$F = 10;
+	var $f = sm_$InstantiateGenericType({X}, {ga_Int32}).$F;
+	sm_$InstantiateGenericType({X}, {ga_Int32}).add_$E($h1);
+	sm_$InstantiateGenericType({X}, {ga_Int32}).remove_$E($h2);
+	sm_$InstantiateGenericType({X}, {ga_Int32}).set_$P(10);
+	var $p = sm_$InstantiateGenericType({X}, {ga_Int32}).get_$P();
+	sm_$InstantiateGenericType({X}, {ga_Int32}).$M();
+");
 		}
 	}
 }

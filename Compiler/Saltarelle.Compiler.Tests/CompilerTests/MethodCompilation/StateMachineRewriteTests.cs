@@ -511,7 +511,7 @@ public class C {
 			switch ($state) {
 				case 0: {
 					$state = -1;
-					$a = new {inst_MyAwaitable}();
+					$a = new {sm_MyAwaitable}();
 					$tmp1 = $a.$GetAwaiter();
 					$state = 1;
 					$tmp1.$OnCompleted($sm);
@@ -562,7 +562,7 @@ public class C {
 				switch ($state) {
 					case 0: {
 						$state = -1;
-						$a = new {inst_MyAwaitable}();
+						$a = new {sm_MyAwaitable}();
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
@@ -618,7 +618,7 @@ public class C {
 				switch ($state) {
 					case 0: {
 						$state = -1;
-						$a = new {inst_MyAwaitable}();
+						$a = new {sm_MyAwaitable}();
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
@@ -666,7 +666,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tmp1;
 		var $sm = function() {
@@ -719,7 +719,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
 		var $sm = function() {
@@ -779,7 +779,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {
@@ -843,7 +843,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tmp1;
 		var $sm = function() {
@@ -896,7 +896,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
 		var $sm = function() {
@@ -956,7 +956,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {

@@ -203,8 +203,8 @@ public class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "OnCompleted" ? MethodScriptSemantics.InlineCode("_OnCompleted({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(e => e.Contains("OnCompleted") && e.Contains("normal method") && e.Contains("await")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("OnCompleted") && e.FormattedMessage.Contains("normal method") && e.FormattedMessage.Contains("await")));
 		}
 
 		[Test]

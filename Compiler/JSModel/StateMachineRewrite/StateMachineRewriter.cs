@@ -309,7 +309,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 						currentBlock.Add(stmt);
 					stack = PushFollowing(stack, tos);
 				}
-				else if (FindInterestingConstructsVisitor.Analyze(stmt, InterestingConstruct.YieldReturn | InterestingConstruct.Label)) {
+				else if (FindInterestingConstructsVisitor.Analyze(stmt, InterestingConstruct.YieldReturn | InterestingConstruct.Label | InterestingConstruct.Await)) {
 					if (stmt is JsBlockStatement) {
 						stack = PushFollowing(stack, tos).Push(new StackEntry((JsBlockStatement)stmt, 0));
 					}

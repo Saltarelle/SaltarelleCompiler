@@ -5,26 +5,26 @@ using System.Text;
 
 namespace Saltarelle.Compiler.ScriptSemantics {
 	public class TypeScriptSemantics {
-        public enum ImplType {
-            /// <summary>
-            /// Normal type.
-            /// </summary>
-            NormalType,
+		public enum ImplType {
+			/// <summary>
+			/// Normal type.
+			/// </summary>
+			NormalType,
 
-            /// <summary>
-            /// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
-            /// However, its members might still be used (but care must be taken to specify attributes on the members to ensure that they work even when the type does not exist.
-            /// </summary>
-            NotUsableFromScript,
-        }
+			/// <summary>
+			/// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
+			/// However, its members might still be used (but care must be taken to specify attributes on the members to ensure that they work even when the type does not exist.
+			/// </summary>
+			NotUsableFromScript,
+		}
 
-        private TypeScriptSemantics() {
-        }
+		private TypeScriptSemantics() {
+		}
 
-        /// <summary>
-        /// Implementation type.
-        /// </summary>
-        public ImplType Type { get; private set; }
+		/// <summary>
+		/// Implementation type.
+		/// </summary>
+		public ImplType Type { get; private set; }
 
 		private string _name;
 		/// <summary>

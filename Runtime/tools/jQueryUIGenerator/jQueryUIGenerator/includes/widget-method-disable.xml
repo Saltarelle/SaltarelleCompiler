@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<method name="disable">
-	<desc>
-		Disables the <placeholder name="name"/>.
-	</desc>
-</method>
