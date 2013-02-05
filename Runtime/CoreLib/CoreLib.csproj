@@ -76,6 +76,7 @@
     <Compile Include="ArrayEnumerator.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="DayOfWeek.cs" />
+    <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="SerializableAttribute.cs" />
     <Compile Include="Lazy.cs" />
     <Compile Include="IComparable.cs" />

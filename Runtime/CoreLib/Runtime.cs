@@ -586,17 +586,6 @@ namespace System.Reflection {
 }
 
 namespace System.Runtime.CompilerServices {
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	[NonScriptable]
-	[Imported]
-	public class RuntimeHelpers {
-
-		public static void InitializeArray(Array array, RuntimeFieldHandle handle) {
-		}
-
-		public static int OffsetToStringData { get { return 0; } }
-	}
-
 	[AttributeUsage(AttributeTargets.All, Inherited = true)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]

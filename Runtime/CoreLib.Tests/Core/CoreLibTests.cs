@@ -160,6 +160,11 @@ namespace CoreLib.Tests.Core {
 	[TestFixture]
 	public class JsonTests : CoreLibTestBase {}
 
+	// System.Runtime.CompilerServices
+
+	[TestFixture]
+	public class RuntimeHelpersTests : CoreLibTestBase {}
+
 	// System.Text
 
 	[TestFixture]
