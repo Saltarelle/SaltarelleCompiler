@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AlreadyCompiled>false</AlreadyCompiled>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8780581F-7C26-4B64-9235-BA1C458DF36E}</ProjectGuid>
+    <ToolsPath>..\tools\</ToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Function.js" />
+    <Content Include="Lazy.js" />
+    <Content Include="IComparable.js" />
+    <Content Include="EqualityComparer.js" />
+    <Content Include="IEquatable.js" />
+    <Content Include="JsErrorException.js" />
+    <Content Include="PromiseException.js" />
+    <Content Include="NotSupportedException.js" />
+    <Content Include="TaskCompletionSource.js" />
+    <Content Include="Task.js" />
+    <Content Include="JsDate.js" />
+    <Content Include="IteratorBlockEnumerable.js" />
+    <Content Include="Enum.js" />
+    <Content Include="IEqualityComparer.js" />
+    <Content Include="Exception.js" />
+    <Content Include="IDictionary.js" />
+    <Content Include="Dictionary.js" />
+    <Content Include="Nullable.js" />
+    <Content Include="ObjectEnumerator.js" />
+    <Content Include="IList.js" />
+    <Content Include="ICollection.js" />
+    <Content Include="Int32.js" />
+    <Content Include="IteratorBlockEnumerator.js" />
+    <Content Include="mscorlib.js" />
+    <Content Include="Array.js" />
+    <Content Include="Number.js" />
+    <Content Include="Object.js" />
+    <Content Include="String.js" />
+    <Content Include="Date.js" />
+    <Content Include="Debug.js" />
+    <Content Include="ArrayEnumerator.js" />
+    <Content Include="CancelEventArgs.js" />
+    <Content Include="CultureInfo.js" />
+    <Content Include="EventArgs.js" />
+    <Content Include="IDisposable.js" />
+    <Content Include="IEnumerable.js" />
+    <Content Include="IEnumerator.js" />
+    <Content Include="StringBuilder.js" />
+    <Content Include="TypeSystem.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AggregateException.js" />
+  </ItemGroup>
+  <Target Name="Build">
+    <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.js" />
+    <Exec Command="$(ToolsPath)\sspp.exe /nologo /stripCommentsOnly /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.rel.js" />
+    <Exec Command="$(ToolsPath)\ajaxmin.exe -clobber:true $(OutputPath)\mscorlib.rel.js -out $(OutputPath)\mscorlib.min.js" />
+  </Target>
+  <Target Name="Clean">
+  </Target>
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+  <Target Name="GetNativeManifest">
+  </Target>
+  <Target Name="GetCopyToOutputDirectoryItems">
+  </Target>
+  <Target Name="GetTargetPath" Returns="$(TargetPath)">
+  </Target>
+</Project>

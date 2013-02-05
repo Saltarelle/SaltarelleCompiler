@@ -6,16 +6,16 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
-    public abstract class JsType : IFreezable {
-        protected bool Frozen { get; private set; }
-    	public ITypeDefinition CSharpTypeDefinition { get; private set; }
+	public abstract class JsType : IFreezable {
+		protected bool Frozen { get; private set; }
+		public ITypeDefinition CSharpTypeDefinition { get; private set; }
 
-    	protected JsType(ITypeDefinition csharpTypeDefinition) {
+		protected JsType(ITypeDefinition csharpTypeDefinition) {
 			CSharpTypeDefinition = csharpTypeDefinition;
-        }
+		}
 
-        public virtual void Freeze() {
-            Frozen = true;
-        }
-    }
+		public virtual void Freeze() {
+			Frozen = true;
+		}
+	}
 }

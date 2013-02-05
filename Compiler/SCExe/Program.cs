@@ -166,10 +166,25 @@ namespace Saltarelle.Compiler {
 			var options = ParseOptions(args, Console.Out, Console.Error);
 			if (options != null) {
 				var driver = new CompilerDriver(new ExecutableErrorReporter(Console.Out));
-				bool result = driver.Compile(options, true);
+				bool result = driver.Compile(options, CreateAppDomain);
 				return result ? 0 : 1;
 			}
 			return 1;
+		}
+
+		private static AppDomain CreateAppDomain() {
+			var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(Program).Assembly.Location) };
+			var ad = AppDomain.CreateDomain("SCTask", null, setup);
+
+			var initializer = (AppDomainInitializer)ad.CreateInstanceAndUnwrap(typeof(AppDomainInitializer).Assembly.FullName, typeof(AppDomainInitializer).FullName);
+			initializer.DoIt();
+			return ad;
+		}
+
+		public class AppDomainInitializer : MarshalByRefObject {
+			public void DoIt() {
+				// We need not do anything because we have a module initializer that will do the work for us.
+			}
 		}
 	}
 }

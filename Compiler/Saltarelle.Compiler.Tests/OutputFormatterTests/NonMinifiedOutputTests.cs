@@ -6,8 +6,8 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 {
-    [TestFixture]
-    public class NonMinifiedOutputTests {
+	[TestFixture]
+	public class NonMinifiedOutputTests {
 		private void AssertCorrect(JsExpression expr, string expected) {
 			var actual = OutputFormatter.Format(expr);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
@@ -18,83 +18,83 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
-        [Test]
-        public void ArrayLiteralWorks() {
-            AssertCorrect(JsExpression.ArrayLiteral(), "[]");
-            AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1)), "[1]");
-            AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), JsExpression.Number(2)), "[1, 2]");
-            AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), null, JsExpression.Number(2), null), "[1, , 2, ]");
-        }
+		[Test]
+		public void ArrayLiteralWorks() {
+			AssertCorrect(JsExpression.ArrayLiteral(), "[]");
+			AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1)), "[1]");
+			AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), JsExpression.Number(2)), "[1, 2]");
+			AssertCorrect(JsExpression.ArrayLiteral(JsExpression.Number(1), null, JsExpression.Number(2), null), "[1, , 2, ]");
+		}
 
-        [Test]
-        public void IndexingWorks() {
-            AssertCorrect(JsExpression.Binary(ExpressionNodeType.Index,
-                              JsExpression.Binary(ExpressionNodeType.Index,
-                                  JsExpression.Number(1),
-                                  JsExpression.Number(2)
-                              ),
-                              JsExpression.Number(3)
-                          ),
-                          "1[2][3]");
-        }
+		[Test]
+		public void IndexingWorks() {
+			AssertCorrect(JsExpression.Binary(ExpressionNodeType.Index,
+			                   JsExpression.Binary(ExpressionNodeType.Index,
+			                       JsExpression.Number(1),
+			                       JsExpression.Number(2)
+			                   ),
+			                   JsExpression.Number(3)
+			               ),
+			               "1[2][3]");
+		}
 
-        [Test]
-        public void StringLiteralsAreCorrectlyEncoded() {
-            AssertCorrect(JsExpression.String("x"), "'x'");
-            AssertCorrect(JsExpression.String("\""), "'\"'");
-            AssertCorrect(JsExpression.String("'"), "'\\''");
-            AssertCorrect(JsExpression.String("\r\n/\\"), "'\\r\\n/\\\\'");
-        }
+		[Test]
+		public void StringLiteralsAreCorrectlyEncoded() {
+			AssertCorrect(JsExpression.String("x"), "'x'");
+			AssertCorrect(JsExpression.String("\""), "'\"'");
+			AssertCorrect(JsExpression.String("'"), "'\\''");
+			AssertCorrect(JsExpression.String("\r\n/\\"), "'\\r\\n/\\\\'");
+		}
 
-        [Test]
-        public void RegularExpressionLiteralsAreCorrectlyEncoded() {
-            AssertCorrect(JsExpression.Regexp("x"), "/x/");
-            AssertCorrect(JsExpression.Regexp("\""), "/\"/");
-            AssertCorrect(JsExpression.Regexp("/"), "/\\//");
-            AssertCorrect(JsExpression.Regexp("\r\n/\\"), "/\\r\\n\\/\\\\/");
-            AssertCorrect(JsExpression.Regexp("x", "g"), "/x/g");
-        }
+		[Test]
+		public void RegularExpressionLiteralsAreCorrectlyEncoded() {
+			AssertCorrect(JsExpression.Regexp("x"), "/x/");
+			AssertCorrect(JsExpression.Regexp("\""), "/\"/");
+			AssertCorrect(JsExpression.Regexp("/"), "/\\//");
+			AssertCorrect(JsExpression.Regexp("\r\n/\\"), "/\\r\\n\\/\\\\/");
+			AssertCorrect(JsExpression.Regexp("x", "g"), "/x/g");
+		}
 
-        [Test]
-        public void NullLiteralWorks() {
-            AssertCorrect(JsExpression.Null, "null");
-        }
+		[Test]
+		public void NullLiteralWorks() {
+			AssertCorrect(JsExpression.Null, "null");
+		}
 
-        [Test]
-        public void BooleanLiteralsWork() {
-            AssertCorrect(JsExpression.True, "true");
-            AssertCorrect(JsExpression.False, "false");
-        }
+		[Test]
+		public void BooleanLiteralsWork() {
+			AssertCorrect(JsExpression.True, "true");
+			AssertCorrect(JsExpression.False, "false");
+		}
 
-        [Test]
-        public void NumbersAreCorrectlyRepresented() {
-            AssertCorrect(JsExpression.Number(1), "1");
-            AssertCorrect(JsExpression.Number(1.25), "1.25");
-            AssertCorrect(JsExpression.Number(double.PositiveInfinity), "Infinity");
-            AssertCorrect(JsExpression.Number(double.NegativeInfinity), "-Infinity");
-            AssertCorrect(JsExpression.Number(double.NaN), "NaN");
-        }
+		[Test]
+		public void NumbersAreCorrectlyRepresented() {
+			AssertCorrect(JsExpression.Number(1), "1");
+			AssertCorrect(JsExpression.Number(1.25), "1.25");
+			AssertCorrect(JsExpression.Number(double.PositiveInfinity), "Infinity");
+			AssertCorrect(JsExpression.Number(double.NegativeInfinity), "-Infinity");
+			AssertCorrect(JsExpression.Number(double.NaN), "NaN");
+		}
 
-        [Test]
-        public void IdentifierIsOutputCorrectly() {
-            AssertCorrect(JsExpression.Identifier("SomeIdentifier"), "SomeIdentifier");
-        }
+		[Test]
+		public void IdentifierIsOutputCorrectly() {
+			AssertCorrect(JsExpression.Identifier("SomeIdentifier"), "SomeIdentifier");
+		}
 
-        [Test]
-        public void ObjectLiteralIsOutputCorrectly() {
-            AssertCorrect(JsExpression.ObjectLiteral(), "{}");
-            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1))), "{ x: 1 }");
-            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
-                                                     new JsObjectLiteralProperty("y", JsExpression.Number(2)),
-                                                     new JsObjectLiteralProperty("z", JsExpression.Number(3))),
-                          "{ x: 1, y: 2, z: 3 }");
-        }
+		[Test]
+		public void ObjectLiteralIsOutputCorrectly() {
+			AssertCorrect(JsExpression.ObjectLiteral(), "{}");
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1))), "{ x: 1 }");
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
+			                                         new JsObjectLiteralProperty("y", JsExpression.Number(2)),
+			                                         new JsObjectLiteralProperty("z", JsExpression.Number(3))),
+			              "{ x: 1, y: 2, z: 3 }");
+		}
 
-        [Test]
-        public void ObjectLiteralWithFunctionValuesAreOutputOnMultipleLines() {
-            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
-                                                                          new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], new JsReturnStatement())),
-                                                                          new JsObjectLiteralProperty("z", JsExpression.Number(3))),
+		[Test]
+		public void ObjectLiteralWithFunctionValuesAreOutputOnMultipleLines() {
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
+			                                                              new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], new JsReturnStatement())),
+			                                                              new JsObjectLiteralProperty("z", JsExpression.Number(3))),
 @"{
 	x: 1,
 	y: function() {
@@ -102,93 +102,93 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 	},
 	z: 3
 }");
-        }
+		}
 
-        [Test]
-        public void ObjectLiteralWithNumericPropertyWorks() {
-            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("1", JsExpression.Number(2))), "{ '1': 2 }");
-        }
+		[Test]
+		public void ObjectLiteralWithNumericPropertyWorks() {
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("1", JsExpression.Number(2))), "{ '1': 2 }");
+		}
 
-        [Test]
-        public void ObjectLiteralWithInvalidIdentifierPropertyWorks() {
-            AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a\\b", JsExpression.Number(1))), "{ 'a\\\\b': 1 }");
-        }
+		[Test]
+		public void ObjectLiteralWithInvalidIdentifierPropertyWorks() {
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a\\b", JsExpression.Number(1))), "{ 'a\\\\b': 1 }");
+		}
 
-        [Test]
+		[Test]
 		public void FunctionDefinitionExpressionIsCorrectlyOutput() {
-            AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function() {\n\treturn null;\n}");
-            AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, new JsReturnStatement(JsExpression.Null)), "function(a, b) {\n\treturn null;\n}");
-            AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null), name: "myFunction"), "function myFunction() {\n\treturn null;\n}");
-        }
+			AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function() {\n\treturn null;\n}");
+			AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, new JsReturnStatement(JsExpression.Null)), "function(a, b) {\n\treturn null;\n}");
+			AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null), name: "myFunction"), "function myFunction() {\n\treturn null;\n}");
+		}
 
-        [Test]
-        public void UnaryOperatorsAreCorrectlyOutput() {
-            var operators = new Dictionary<ExpressionNodeType, string> { { ExpressionNodeType.TypeOf, "typeof({0})" },
-                                                                         { ExpressionNodeType.LogicalNot, "!{0}" },
-                                                                         { ExpressionNodeType.Negate, "-{0}" },
-                                                                         { ExpressionNodeType.Positive, "+{0}" },
-                                                                         { ExpressionNodeType.PrefixPlusPlus, "++{0}" },
-                                                                         { ExpressionNodeType.PrefixMinusMinus, "--{0}" },
-                                                                         { ExpressionNodeType.PostfixPlusPlus, "{0}++" },
-                                                                         { ExpressionNodeType.PostfixMinusMinus, "{0}--" },
-                                                                         { ExpressionNodeType.Delete, "delete {0}" },
-                                                                         { ExpressionNodeType.Void, "void({0})" },
-                                                                         { ExpressionNodeType.BitwiseNot, "~{0}" },
-                                                                       };
+		[Test]
+		public void UnaryOperatorsAreCorrectlyOutput() {
+			var operators = new Dictionary<ExpressionNodeType, string> { { ExpressionNodeType.TypeOf, "typeof({0})" },
+			                                                             { ExpressionNodeType.LogicalNot, "!{0}" },
+			                                                             { ExpressionNodeType.Negate, "-{0}" },
+			                                                             { ExpressionNodeType.Positive, "+{0}" },
+			                                                             { ExpressionNodeType.PrefixPlusPlus, "++{0}" },
+			                                                             { ExpressionNodeType.PrefixMinusMinus, "--{0}" },
+			                                                             { ExpressionNodeType.PostfixPlusPlus, "{0}++" },
+			                                                             { ExpressionNodeType.PostfixMinusMinus, "{0}--" },
+			                                                             { ExpressionNodeType.Delete, "delete {0}" },
+			                                                             { ExpressionNodeType.Void, "void({0})" },
+			                                                             { ExpressionNodeType.BitwiseNot, "~{0}" },
+			                                                           };
 
-            for (var oper = ExpressionNodeType.UnaryFirst; oper <= ExpressionNodeType.UnaryLast; oper++) {
-                Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
-                var expr = JsExpression.Unary(oper, JsExpression.Identifier("a"));
-                AssertCorrect(expr, string.Format(operators[oper], "a"));
-            }
-        }
+			for (var oper = ExpressionNodeType.UnaryFirst; oper <= ExpressionNodeType.UnaryLast; oper++) {
+				Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
+				var expr = JsExpression.Unary(oper, JsExpression.Identifier("a"));
+				AssertCorrect(expr, string.Format(operators[oper], "a"));
+			}
+		}
 
-        [Test]
-        public void BinaryOperatorssAreCorrectlyOutput() {
-            var operators = new Dictionary<ExpressionNodeType, string> { { ExpressionNodeType.LogicalAnd, "{0} && {1}" },
-                                                                         { ExpressionNodeType.LogicalOr, "{0} || {1}" },
-                                                                         { ExpressionNodeType.NotEqual, "{0} != {1}" },
-                                                                         { ExpressionNodeType.LesserOrEqual, "{0} <= {1}" },
-                                                                         { ExpressionNodeType.GreaterOrEqual, "{0} >= {1}" },
-                                                                         { ExpressionNodeType.Lesser, "{0} < {1}" },
-                                                                         { ExpressionNodeType.Greater, "{0} > {1}" },
-                                                                         { ExpressionNodeType.Equal, "{0} == {1}" },
-                                                                         { ExpressionNodeType.Subtract, "{0} - {1}" },
-                                                                         { ExpressionNodeType.Add, "{0} + {1}" },
-                                                                         { ExpressionNodeType.Modulo, "{0} % {1}" },
-                                                                         { ExpressionNodeType.Divide, "{0} / {1}" },
-                                                                         { ExpressionNodeType.Multiply, "{0} * {1}" },
-                                                                         { ExpressionNodeType.BitwiseAnd, "{0} & {1}" },
-                                                                         { ExpressionNodeType.BitwiseOr, "{0} | {1}" },
-                                                                         { ExpressionNodeType.BitwiseXor, "{0} ^ {1}" },
-                                                                         { ExpressionNodeType.Same, "{0} === {1}" },
-                                                                         { ExpressionNodeType.NotSame, "{0} !== {1}" },
-                                                                         { ExpressionNodeType.LeftShift, "{0} << {1}" },
-                                                                         { ExpressionNodeType.RightShiftSigned, "{0} >> {1}" },
-                                                                         { ExpressionNodeType.RightShiftUnsigned, "{0} >>> {1}" },
-                                                                         { ExpressionNodeType.InstanceOf, "{0} instanceof {1}" },
-                                                                         { ExpressionNodeType.In, "{0} in {1}" },
-                                                                         { ExpressionNodeType.Index, "{0}[{1}]" },
-                                                                         { ExpressionNodeType.Assign, "{0} = {1}" },
-                                                                         { ExpressionNodeType.MultiplyAssign, "{0} *= {1}" },
-                                                                         { ExpressionNodeType.DivideAssign, "{0} /= {1}" },
-                                                                         { ExpressionNodeType.ModuloAssign, "{0} %= {1}" },
-                                                                         { ExpressionNodeType.AddAssign, "{0} += {1}" },
-                                                                         { ExpressionNodeType.SubtractAssign, "{0} -= {1}" },
-                                                                         { ExpressionNodeType.LeftShiftAssign, "{0} <<= {1}" },
-                                                                         { ExpressionNodeType.RightShiftSignedAssign, "{0} >>= {1}" },
-                                                                         { ExpressionNodeType.RightShiftUnsignedAssign, "{0} >>>= {1}" },
-                                                                         { ExpressionNodeType.BitwiseAndAssign, "{0} &= {1}" },
-                                                                         { ExpressionNodeType.BitwiseOrAssign, "{0} |= {1}" },
-                                                                         { ExpressionNodeType.BitwiseXorAssign, "{0} ^= {1}" },
-                                                                       };
+		[Test]
+		public void BinaryOperatorssAreCorrectlyOutput() {
+			var operators = new Dictionary<ExpressionNodeType, string> { { ExpressionNodeType.LogicalAnd, "{0} && {1}" },
+			                                                             { ExpressionNodeType.LogicalOr, "{0} || {1}" },
+			                                                             { ExpressionNodeType.NotEqual, "{0} != {1}" },
+			                                                             { ExpressionNodeType.LesserOrEqual, "{0} <= {1}" },
+			                                                             { ExpressionNodeType.GreaterOrEqual, "{0} >= {1}" },
+			                                                             { ExpressionNodeType.Lesser, "{0} < {1}" },
+			                                                             { ExpressionNodeType.Greater, "{0} > {1}" },
+			                                                             { ExpressionNodeType.Equal, "{0} == {1}" },
+			                                                             { ExpressionNodeType.Subtract, "{0} - {1}" },
+			                                                             { ExpressionNodeType.Add, "{0} + {1}" },
+			                                                             { ExpressionNodeType.Modulo, "{0} % {1}" },
+			                                                             { ExpressionNodeType.Divide, "{0} / {1}" },
+			                                                             { ExpressionNodeType.Multiply, "{0} * {1}" },
+			                                                             { ExpressionNodeType.BitwiseAnd, "{0} & {1}" },
+			                                                             { ExpressionNodeType.BitwiseOr, "{0} | {1}" },
+			                                                             { ExpressionNodeType.BitwiseXor, "{0} ^ {1}" },
+			                                                             { ExpressionNodeType.Same, "{0} === {1}" },
+			                                                             { ExpressionNodeType.NotSame, "{0} !== {1}" },
+			                                                             { ExpressionNodeType.LeftShift, "{0} << {1}" },
+			                                                             { ExpressionNodeType.RightShiftSigned, "{0} >> {1}" },
+			                                                             { ExpressionNodeType.RightShiftUnsigned, "{0} >>> {1}" },
+			                                                             { ExpressionNodeType.InstanceOf, "{0} instanceof {1}" },
+			                                                             { ExpressionNodeType.In, "{0} in {1}" },
+			                                                             { ExpressionNodeType.Index, "{0}[{1}]" },
+			                                                             { ExpressionNodeType.Assign, "{0} = {1}" },
+			                                                             { ExpressionNodeType.MultiplyAssign, "{0} *= {1}" },
+			                                                             { ExpressionNodeType.DivideAssign, "{0} /= {1}" },
+			                                                             { ExpressionNodeType.ModuloAssign, "{0} %= {1}" },
+			                                                             { ExpressionNodeType.AddAssign, "{0} += {1}" },
+			                                                             { ExpressionNodeType.SubtractAssign, "{0} -= {1}" },
+			                                                             { ExpressionNodeType.LeftShiftAssign, "{0} <<= {1}" },
+			                                                             { ExpressionNodeType.RightShiftSignedAssign, "{0} >>= {1}" },
+			                                                             { ExpressionNodeType.RightShiftUnsignedAssign, "{0} >>>= {1}" },
+			                                                             { ExpressionNodeType.BitwiseAndAssign, "{0} &= {1}" },
+			                                                             { ExpressionNodeType.BitwiseOrAssign, "{0} |= {1}" },
+			                                                             { ExpressionNodeType.BitwiseXorAssign, "{0} ^= {1}" },
+			                                                           };
 
-            for (var oper = ExpressionNodeType.BinaryFirst; oper <= ExpressionNodeType.BinaryLast; oper++) {
-                Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
-                var expr = JsExpression.Binary(oper, JsExpression.Identifier("a"), JsExpression.Identifier("b"));
-                AssertCorrect(expr, string.Format(operators[oper], "a", "b"));
-            }
-        }
+			for (var oper = ExpressionNodeType.BinaryFirst; oper <= ExpressionNodeType.BinaryLast; oper++) {
+				Assert.That(operators.ContainsKey(oper), string.Format("Unexpected operator {0}", oper));
+				var expr = JsExpression.Binary(oper, JsExpression.Identifier("a"), JsExpression.Identifier("b"));
+				AssertCorrect(expr, string.Format(operators[oper], "a", "b"));
+			}
+		}
 
 		[Test]
 		public void ThisIsCorrectlyOutput() {
@@ -375,5 +375,5 @@ else {
 			AssertCorrect(new JsBlockStatement(new JsLabelledStatement("lbl", new JsExpressionStatement(JsExpression.Identifier("X")))),
 			              "{\n\tlbl:\n\tX;\n}\n");
 		}
-    }
+	}
 }

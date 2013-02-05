@@ -6,27 +6,27 @@ using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler.Compiler {
-    public class VariableGatherer : DepthFirstAstVisitor {
-        private readonly CSharpAstResolver _resolver;
-        private readonly INamer _namer;
-        private readonly IErrorReporter _errorReporter;
-        private HashSet<string> _usedNames;
-        private Dictionary<IVariable, VariableData> _result;
+	public class VariableGatherer : DepthFirstAstVisitor {
+		private readonly CSharpAstResolver _resolver;
+		private readonly INamer _namer;
+		private readonly IErrorReporter _errorReporter;
+		private HashSet<string> _usedNames;
+		private Dictionary<IVariable, VariableData> _result;
 		private HashSet<IVariable> _variablesDeclaredInsideLoop;
 
-        private AstNode _currentMethod;
+		private AstNode _currentMethod;
 		private bool _isInsideLoop;
 
-        public VariableGatherer(CSharpAstResolver resolver, INamer namer, IErrorReporter errorReporter) {
-            _resolver = resolver;
-            _namer = namer;
-            _errorReporter = errorReporter;
-        }
+		public VariableGatherer(CSharpAstResolver resolver, INamer namer, IErrorReporter errorReporter) {
+			_resolver = resolver;
+			_namer = namer;
+			_errorReporter = errorReporter;
+		}
 
-        public Tuple<IDictionary<IVariable, VariableData>, ISet<string>> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
-            _result = new Dictionary<IVariable, VariableData>();
-            _usedNames = new HashSet<string>(usedNames);
-            _currentMethod = node;
+		public Tuple<IDictionary<IVariable, VariableData>, ISet<string>> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
+			_result = new Dictionary<IVariable, VariableData>();
+			_usedNames = new HashSet<string>(usedNames);
+			_currentMethod = node;
 			_variablesDeclaredInsideLoop = new HashSet<IVariable>();
 
 			if (method != null) {
@@ -35,34 +35,34 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-            node.AcceptVisitor(this);
-            return Tuple.Create((IDictionary<IVariable, VariableData>)_result, (ISet<string>)_usedNames);
-        }
+			node.AcceptVisitor(this);
+			return Tuple.Create((IDictionary<IVariable, VariableData>)_result, (ISet<string>)_usedNames);
+		}
 
-    	private void AddVariable(AstNode variableNode, string variableName, bool isUsedByReference = false) {
+		private void AddVariable(AstNode variableNode, string variableName, bool isUsedByReference = false) {
 			var resolveResult = _resolver.Resolve(variableNode);
-            if (!(resolveResult is LocalResolveResult)) {
-                _errorReporter.InternalError("Variable " + variableName + " does not resolve to a local (resolves to " + (resolveResult != null ? resolveResult.ToString() : "null") + ")");
-                return;
-            }
+			if (!(resolveResult is LocalResolveResult)) {
+				_errorReporter.InternalError("Variable " + variableName + " does not resolve to a local (resolves to " + (resolveResult != null ? resolveResult.ToString() : "null") + ")");
+				return;
+			}
 			AddVariable(((LocalResolveResult)resolveResult).Variable, isUsedByReference);
-    	}
+		}
 
 		private void AddVariable(IVariable v, bool isUsedByReference = false) {
-    		string n = _namer.GetVariableName(v.Name, _usedNames);
-    		_usedNames.Add(n);
-    		_result.Add(v, new VariableData(n, _currentMethod, isUsedByReference));
+			string n = _namer.GetVariableName(v.Name, _usedNames);
+			_usedNames.Add(n);
+			_result.Add(v, new VariableData(n, _currentMethod, isUsedByReference));
 			if (_isInsideLoop)
 				_variablesDeclaredInsideLoop.Add(v);
 		}
 
-    	public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
-            foreach (var varNode in variableDeclarationStatement.Variables) {
+		public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
+			foreach (var varNode in variableDeclarationStatement.Variables) {
 				AddVariable(varNode, varNode.Name);
-            }
+			}
 
-            base.VisitVariableDeclarationStatement(variableDeclarationStatement);
-        }
+			base.VisitVariableDeclarationStatement(variableDeclarationStatement);
+		}
 
 		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
@@ -83,10 +83,10 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
-            AstNode oldMethod = _currentMethod;
+			AstNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
-                _currentMethod = lambdaExpression;
+				_currentMethod = lambdaExpression;
 				_isInsideLoop = false;
 
 				foreach (var p in lambdaExpression.Parameters)
@@ -95,16 +95,16 @@ namespace Saltarelle.Compiler.Compiler {
 				base.VisitLambdaExpression(lambdaExpression);
 			}
 			finally {
-                _currentMethod = oldMethod;
+				_currentMethod = oldMethod;
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
 		public override void VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression) {
-            AstNode oldMethod = _currentMethod;
+			AstNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
-                _currentMethod = anonymousMethodExpression;
+				_currentMethod = anonymousMethodExpression;
 				_isInsideLoop = false;
 
 				foreach (var p in anonymousMethodExpression.Parameters)
@@ -113,7 +113,7 @@ namespace Saltarelle.Compiler.Compiler {
 				base.VisitAnonymousMethodExpression(anonymousMethodExpression);
 			}
 			finally {
-                _currentMethod = oldMethod;
+				_currentMethod = oldMethod;
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
@@ -192,5 +192,5 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			base.VisitIdentifierExpression(identifierExpression);
 		}
-    }
+	}
 }

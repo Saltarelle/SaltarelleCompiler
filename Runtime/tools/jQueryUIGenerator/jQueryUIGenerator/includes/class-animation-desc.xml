@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<div>
-	<p>Similar to native CSS transitions, jQuery UI's class animations provide a smooth transition from one state to another while allowing you to keep all the details about which styles to change in CSS and out of your JavaScript. All class animation methods, including <code>.<placeholder name="name"/>()</code>, support custom durations and easings, as well as providing a callback for when the animation completes.</p>
-	<p>Not all styles can be animated. For example, there is no way to animate a background image. Any styles that cannot be animated will be changed at the end of the animation.</p>
-</div>

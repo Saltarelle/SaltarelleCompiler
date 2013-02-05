@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		public override IList<JsStatement> VisitStatements(IList<JsStatement> statements, object data) {
-            return VisitCollection(statements, (s, i) => {
+			return VisitCollection(statements, (s, i) => {
 				if (s is JsSetNextStateStatement && i < statements.Count - 1) {
 					var next = statements[i + 1];
 					if (next is JsBlockStatement && ((JsBlockStatement)next).Statements.Count > 0)

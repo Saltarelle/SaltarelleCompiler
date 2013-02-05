@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\CommonAssemblyInfo.cs">
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\CompilerVersion.cs">
@@ -116,7 +116,6 @@
     <Compile Include="TypeSystem\JsNamedConstructor.cs" />
     <Compile Include="TypeSystem\JsClass.cs" />
     <Compile Include="TypeSystem\JsEnum.cs" />
-    <Compile Include="TypeSystem\JsEnumValue.cs" />
     <Compile Include="TypeSystem\JsMethod.cs" />
     <Compile Include="TypeSystem\JsType.cs" />
     <Compile Include="Utils.cs" />

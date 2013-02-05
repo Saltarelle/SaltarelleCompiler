@@ -18,7 +18,7 @@ The following options exist (usage: `.\psake.ps1 -properties @{opt1=value1; opt2
 
 ## Obtaining binaries ##
 
-All packages can be installed through NuGet, as well as downloaded from the CI server at teamcity.codebetter.com: [Master (latest release)](http://teamcity.codebetter.com/viewLog.html?buildId=lastSuccessful&buildTypeId=bt720&tab=artifacts), [Develop (latest, potentially unstable)](http://teamcity.codebetter.com/viewLog.html?buildId=lastSuccessful&buildTypeId=bt810&tab=artifacts).
+All packages can be installed through NuGet, as well as downloaded from the CI server at [teamcity.codebetter.com](http://teamcity.codebetter.com/project.html?projectId=project234&tab=projectOverview). Trunk builds are the latest releases, Develop builds are the most recent (potentially unstable) ones.
 
 ## Contributing ##
 

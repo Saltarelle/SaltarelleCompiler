@@ -50,9 +50,9 @@ public void M<T>() where T : D {
 	T t3 = d as T;
 	// END
 }",
-@"	var $t1 = $TryCast($o, ct_$T);
-	var $t2 = $TryCast($b, ct_$T);
-	var $t3 = $TryCast($d, ct_$T);
+@"	var $t1 = $TryCast($o, $T);
+	var $t2 = $TryCast($b, $T);
+	var $t3 = $TryCast($d, $T);
 ");
 
 			AssertCorrect(
@@ -68,9 +68,9 @@ public void M<T>() where T : class, D {
 	T t3 = d as T;
 	// END
 }",
-@"	var $t1 = $TryCast($o, ct_$T);
-	var $t2 = $TryCast($b, ct_$T);
-	var $t3 = $TryCast($d, ct_$T);
+@"	var $t1 = $TryCast($o, $T);
+	var $t2 = $TryCast($b, $T);
+	var $t3 = $TryCast($d, $T);
 ");
 		}
 
@@ -84,7 +84,7 @@ public void M<T>() where T : class {
 	T t = i as T;
 	// END
 }",
-@"	var $t = $TryCast($i, ct_$T);
+@"	var $t = $TryCast($i, $T);
 ");
 		}
 
@@ -122,7 +122,7 @@ public void M<T>() where T : class {
 	U u = t as U;
 	// END
 }",
-@"	var $u = $TryCast($t, ct_$U);
+@"	var $u = $TryCast($t, $U);
 ");
 
 			AssertCorrect(
@@ -132,7 +132,7 @@ public void M<T>() where T : class {
 	U u = t as U;
 	// END
 }",
-@"	var $u = $TryCast($t, ct_$U);
+@"	var $u = $TryCast($t, $U);
 ");
 		}
 

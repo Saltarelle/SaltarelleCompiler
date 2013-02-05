@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 
 namespace Saltarelle.Compiler {
-    public interface ISourceFile {
-        string Filename { get; }
-        TextReader Open();
-    }
+	public interface ISourceFile {
+		string Filename { get; }
+		TextReader Open();
+	}
 }

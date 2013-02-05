@@ -12,6 +12,7 @@
     <AssemblyName>Saltarelle.Compiler</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,6 +36,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages-manual\antlr\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.1.0\lib\net40-client\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor, Version=3.1.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Castle.Windsor.3.1.0\lib\net40-client\Castle.Windsor.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,30 +52,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\CommonAssemblyInfo.cs">
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="AttributeReader.cs" />
+    <Compile Include="CompilerOptions.cs" />
     <Compile Include="Compiler\DefaultNamer.cs" />
     <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
+    <Compile Include="Compiler\DoesJsExpressionHaveSideEffects.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\INamer.cs" />
+    <Compile Include="Compiler\InlineCodeToken.cs" />
+    <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
+    <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
-    <Compile Include="Driver\CompilerOptions.cs" />
+    <Compile Include="IJSTypeSystemRewriter.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
-    <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
-    <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
-    <Compile Include="Linker\DefaultLinker.cs" />
     <Compile Include="TopologicalSorter.cs" />
-    <Compile Include="OOPEmulator\TypeReferenceFinder.cs" />
-    <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />
@@ -86,13 +96,13 @@
     <Compile Include="ScriptSemantics\MethodScriptSemantics.cs" />
     <Compile Include="Compiler\NestedFunctionData.cs" />
     <Compile Include="Compiler\NestedFunctionGatherer.cs" />
-    <Compile Include="MetadataImporter\ScriptSharpMetadataImporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\Compiler.cs" />
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
+    <Compile Include="TypeReferenceFinder.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />
     <Compile Include="Compiler\VariableGatherer.cs" />
@@ -118,6 +128,9 @@
       <Project>{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}</Project>
       <Name>ICSharpCode.NRefactory</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
