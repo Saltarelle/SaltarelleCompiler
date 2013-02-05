@@ -1,3 +1,4 @@
+2.0.0
 Fixed issue with labels in switch section bodies (#128)
 Support using the params parameter in [ExpandParams] methods and allow [ExpandParams] methods to be called in non-expanded form.
 Created a MinimizePublicNamesAttribute that can be used to specify that public members are minified in addition to non-public ones (#84).
