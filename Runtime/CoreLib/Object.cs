@@ -50,7 +50,7 @@ namespace System {
 			return false;
 		}
 
-		[InlineCode("{$System.Script}.getHashCode({this})", GeneratedMethodName = "getHashCode", NonVirtualCode = "0")]
+		[InlineCode("{$System.Script}.getHashCode({this})", GeneratedMethodName = "getHashCode", NonVirtualCode = "{$System.Script}.defaultHashCode({this})")]
 		public virtual int GetHashCode() {
 			return 0;
 		}

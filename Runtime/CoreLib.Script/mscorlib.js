@@ -70,8 +70,12 @@ ss.getHashCode = function(obj) {
 		return obj.valueOf() & 0xffffffff;
 	}
 	else {
-		return 0;
+		return ss.defaultHashCode(obj);
 	}
+};
+
+ss.defaultHashCode = function(obj) {
+	return obj.$__hashCode__ || (obj.$__hashCode__ = (Math.random() * 0xffffffff) | 0);
 };
 
 ss.equals = function(a, b) {
