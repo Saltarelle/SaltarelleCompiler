@@ -10,7 +10,7 @@ using Moq;
 
 namespace Saltarelle.Compiler.Tests {
 	internal class Common {
-		public static readonly string MscorlibPath = Path.GetFullPath(@"..\..\..\Runtime\CoreLib\bin\mscorlib.dll");
+		public static readonly string MscorlibPath = Path.GetFullPath(@"../../../Runtime/CoreLib/bin/mscorlib.dll");
 
 		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(MscorlibPath));
 		internal static IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }

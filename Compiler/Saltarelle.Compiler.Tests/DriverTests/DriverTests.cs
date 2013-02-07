@@ -845,12 +845,12 @@ class Program {
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
 
-				File.WriteAllText(Path.GetFullPath("MyAdditionalReferencePath\\Ref.cs"), @"public class Class1 { public void M() {} }");
+				File.WriteAllText(Path.GetFullPath("MyAdditionalReferencePath/Ref.cs"), @"public class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
 					References         = { new Reference(Common.MscorlibPath) },
-					SourceFiles        = { Path.GetFullPath("MyAdditionalReferencePath\\Ref.cs") },
-					OutputAssemblyPath = Path.GetFullPath("MyAdditionalReferencePath\\Ref.dll"),
-					OutputScriptPath   = Path.GetFullPath("MyAdditionalReferencePath\\Ref.js"),
+					SourceFiles        = { Path.GetFullPath("MyAdditionalReferencePath/Ref.cs") },
+					OutputAssemblyPath = Path.GetFullPath("MyAdditionalReferencePath/Ref.dll"),
+					OutputScriptPath   = Path.GetFullPath("MyAdditionalReferencePath/Ref.js"),
 				};
 				bool result = driver.Compile(options, null);
 				Assert.That(result, Is.True);
