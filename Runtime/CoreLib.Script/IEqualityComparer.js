@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// IEnumerator
+// IEqualityComparer
 
 var ss_IEqualityComparer = function#? DEBUG IEqualityComparer$##() { };
 ss_IEqualityComparer.prototype = {

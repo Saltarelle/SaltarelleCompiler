@@ -96,7 +96,6 @@ namespace Saltarelle.Compiler.Compiler {
 		internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 		private ISet<string> _usedNames;
-		private string _thisAlias;
 
 		public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
 			_metadataImporter = metadataImporter;
@@ -109,7 +108,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, ITypeDefinition type, string thisAlias) {
-			_thisAlias = thisAlias;
 			_usedNames = method != null ? new HashSet<string>(method.DeclaringTypeDefinition.TypeParameters.Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
 			if (entity != null) {
 				var x = new VariableGatherer(_resolver, _namer, _errorReporter).GatherVariables(entity, method, _usedNames);

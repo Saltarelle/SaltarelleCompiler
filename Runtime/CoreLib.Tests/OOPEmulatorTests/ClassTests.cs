@@ -764,19 +764,33 @@ var $I2 = function() {
 		}
 
 		[Test]
-		public void ImportedTypeThatDoesNotObeyTheTypeSystemDoesNotAppearAsBaseClass() {
+		public void ImportedClassThatDoesNotObeyTheTypeSystemAppearsAsBaseClass() {
 			AssertCorrect(@"
 using System.Runtime.CompilerServices;
-[Imported] public interface I1 {}
-public interface I2 {}
-public interface I3 : I1, I2 {}
 [Imported] public class B {}
-public class D : B, I1, I2 {}
+public class D : B {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{B}.call(this);
+};
+{Script}.registerClass(global, 'D', $D, {B});
+", new [] { "D", "I3" });
+		}
+
+		[Test]
+		public void ImportedInterfaceThatDoesNotObeyTheTypeSystemDoesNotAppearAsABaseInterface() {
+			AssertCorrect(@"
+using System.Runtime.CompilerServices;
+[Imported] public interface I1 {}
+public interface I2 {}
+public interface I3 : I1, I2 {}
+public class D : I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // I3
@@ -788,25 +802,23 @@ var $I3 = function() {
 		}
 
 		[Test]
-		public void InheritingImportedTypeThatDoesObeyTheTypeSystemIsTheSameAsInheritingNonImportedType() {
+		public void ImportedInterfaceThatDoesObeyTheTypeSystemDoesAppearsAsABaseInterface() {
 			AssertCorrect(@"
 using System.Runtime.CompilerServices;
 [Imported(ObeysTypeSystem = true)] public interface I1 {}
 public interface I2 {}
 public interface I3 : I1, I2 {}
-[Imported(ObeysTypeSystem = true)] public class B {}
-public class D : B, I1, I2 {}
+public class D : I1, I2 {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
-	{B}.call(this);
 };
 ////////////////////////////////////////////////////////////////////////////////
 // I3
 var $I3 = function() {
 };
-{Script}.registerClass(global, 'D', $D, {B}, {I1}, {I2});
+{Script}.registerClass(global, 'D', $D, null, {I1}, {I2});
 {Script}.registerInterface(global, 'I3', $I3, [{I1}, {I2}]);
 ", new[] { "D", "I3" });
 		}

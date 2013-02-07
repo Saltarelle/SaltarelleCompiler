@@ -29,6 +29,9 @@ namespace CoreLib.Tests.Core {
 	public class CharTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class ComparerTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class DateTimeTests : CoreLibTestBase {}
 
 	[TestFixture]

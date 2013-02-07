@@ -183,9 +183,9 @@
       <Project>{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}</Project>
       <Name>Saltarelle.Compiler</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SCExe\SCExe.csproj">
-      <Project>{6799A75C-6F0A-41DA-AA45-6A67587AB6C7}</Project>
-      <Name>SCExe</Name>
+    <ProjectReference Include="..\SCExeWorker\SCExeWorker.csproj">
+      <Project>{7dfb28ee-5fde-40e1-9e60-465b6c034f8f}</Project>
+      <Name>SCExeWorker</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

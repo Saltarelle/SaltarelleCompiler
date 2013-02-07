@@ -50,6 +50,8 @@
     <Compile Include="Activator.cs" />
     <Compile Include="AggregateException.cs" />
     <Compile Include="ArrayExtensions.cs" />
+    <Compile Include="Collections\Generic\Comparer.cs" />
+    <Compile Include="Collections\Generic\IComparer.cs" />
     <Compile Include="Collections\Generic\EqualityComparer.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
     <Compile Include="Collections\Generic\Dictionary.cs" />
@@ -75,6 +77,7 @@
     <Compile Include="Collections\Stack.cs" />
     <Compile Include="ArrayEnumerator.cs" />
     <Compile Include="Converter.cs" />
+    <Compile Include="Comparison.cs" />
     <Compile Include="DayOfWeek.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="SerializableAttribute.cs" />

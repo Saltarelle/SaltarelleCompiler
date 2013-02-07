@@ -39,7 +39,7 @@ Task Fix-AntlrLocalization {
 Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization {
 	Exec { msbuild "$baseDir\Compiler\Compiler.sln" /verbosity:minimal /p:"Configuration=$configuration" }
 	$exedir  = "$baseDir\Compiler\SCExe\bin"
-	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\sc.exe" /a "$exedir\*.dll" "$exedir\sc.exe" }
+	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\sc.exe" /a "$baseDir\Compiler\SCExeWorker\bin\*.dll" "$baseDir\Compiler\SCExe\bin\sc.exe" }
 	Exec { & "$buildtoolsDir\EmbedAssemblies.exe" /o "$outDir\SCTask.dll" /a "$baseDir\Compiler\SCTaskWorker\bin\*.dll" "$baseDir\Compiler\SCTask\bin\SCTask.dll" }
 	copy "$baseDir\Compiler\SCTask\Saltarelle.Compiler.targets" "$outDir"
 

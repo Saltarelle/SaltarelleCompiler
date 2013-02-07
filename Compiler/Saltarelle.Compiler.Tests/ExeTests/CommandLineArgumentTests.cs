@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
+using Saltarelle.Compiler.SCExe;
 
 namespace Saltarelle.Compiler.Tests.ExeTests {
 	[TestFixture]
@@ -11,7 +12,7 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		private void RunTest(string[] args, Action<CompilerOptions> optionsChecker, Action<string> errorChecker) {
 			var infoWriter  = new StringWriter();
 			var errorWriter = new StringWriter();
-			var options = Program.ParseOptions(args, infoWriter, errorWriter);
+			var options = Worker.ParseOptions(args, infoWriter, errorWriter);
 			string errors = errorWriter.ToString();
 			if (optionsChecker != null) {
 				Assert.That(options, Is.Not.Null);
@@ -253,9 +254,9 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 			var errorWriter = new StringWriter();
 			var infoWriter = new StringWriter();
 
-			var result = Program.ParseOptions(new string[0], infoWriter, errorWriter);
+			var result = Worker.ParseOptions(new string[0], infoWriter, errorWriter);
 			Assert.That(result, Is.Null);
-			Assert.That(infoWriter.ToString().Contains(Program.OptionsText));
+			Assert.That(infoWriter.ToString().Contains(Worker.OptionsText));
 		}
 
 		[Test]
@@ -263,16 +264,16 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 			var errorWriter = new StringWriter();
 			var infoWriter = new StringWriter();
 
-			var result = Program.ParseOptions(new[] { "/?", "File.cs" }, infoWriter, errorWriter);
+			var result = Worker.ParseOptions(new[] { "/?", "File.cs" }, infoWriter, errorWriter);
 			Assert.That(result, Is.Null);
-			Assert.That(infoWriter.ToString().Contains(Program.OptionsText));
+			Assert.That(infoWriter.ToString().Contains(Worker.OptionsText));
 
 			errorWriter = new StringWriter();
 			infoWriter = new StringWriter();
 
-			result = Program.ParseOptions(new[] { "/help", "File.cs" }, infoWriter, errorWriter);
+			result = Worker.ParseOptions(new[] { "/help", "File.cs" }, infoWriter, errorWriter);
 			Assert.That(result, Is.Null);
-			Assert.That(infoWriter.ToString().Contains(Program.OptionsText));
+			Assert.That(infoWriter.ToString().Contains(Worker.OptionsText));
 		}
 	}
 }

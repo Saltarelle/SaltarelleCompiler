@@ -1,3 +1,7 @@
+2.0.1
+Added types IComparer<T> and Comparer<T> (#130)
+Fixed issue running sc.exe in Mono (#131)
+
 2.0.0
 Fixed issue with labels in switch section bodies (#128)
 Support using the params parameter in [ExpandParams] methods and allow [ExpandParams] methods to be called in non-expanded form.
