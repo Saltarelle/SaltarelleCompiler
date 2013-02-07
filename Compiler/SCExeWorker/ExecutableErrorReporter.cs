@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 
-namespace Saltarelle.Compiler {
+namespace Saltarelle.Compiler.SCExe {
 	public class ExecutableErrorReporter : IErrorReporter {
 		private readonly TextWriter _writer;
 
