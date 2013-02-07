@@ -1,3 +1,4 @@
+Added types IComparer<T> and Comparer<T> (#130)
 Fixed issue running sc.exe in Mono (#131)
 
 2.0.0

@@ -206,6 +206,8 @@ if (typeof(window) == 'object') {
 
 #include "IEqualityComparer.js"
 
+#include "IComparer.js"
+
 #include "Nullable.js"
 
 #include "IList.js"
@@ -221,6 +223,8 @@ if (typeof(window) == 'object') {
 #include "ObjectEnumerator.js"
 
 #include "EqualityComparer.js"
+
+#include "Comparer.js"
 
 #include "Dictionary.js"
 
