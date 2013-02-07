@@ -136,7 +136,7 @@ namespace CoreLib.Plugin {
 
 		private JsExpression GetBaseClass(ITypeDefinition type) {
 			var csBase = type.DirectBaseTypes.SingleOrDefault(b => b.Kind == TypeKind.Class);
-			return csBase != null && MetadataUtils.DoesTypeObeyTypeSystem(csBase.GetDefinition()) ? _runtimeLibrary.InstantiateType(csBase, tp => ResolveTypeParameter(tp, type)) : JsExpression.Null;
+			return csBase != null ? _runtimeLibrary.InstantiateType(csBase, tp => ResolveTypeParameter(tp, type)) : JsExpression.Null;
 		}
 
 		private void AddClassMembers(JsClass c, JsExpression typeRef, List<JsStatement> stmts) {
