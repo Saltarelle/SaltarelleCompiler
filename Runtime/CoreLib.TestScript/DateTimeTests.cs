@@ -11,15 +11,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(DateTime).IsClass);
 			Assert.IsTrue(typeof(IComparable<DateTime>).IsAssignableFrom(typeof(DateTime)));
 			Assert.IsTrue(typeof(IEquatable<DateTime>).IsAssignableFrom(typeof(DateTime)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(DateTime)));
 			object d = new DateTime();
 			Assert.IsTrue(d is DateTime);
 			Assert.IsTrue(d is IComparable<DateTime>);
 			Assert.IsTrue(d is IEquatable<DateTime>);
+			Assert.IsTrue(d is IFormattable);
 
 			var interfaces = typeof(DateTime).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<DateTime>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<DateTime>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[Test]
@@ -124,6 +127,13 @@ namespace CoreLib.TestScript {
 		public void FormatWorks() {
 			var dt = new DateTime(2011, 7, 12, 13);
 			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-07-12");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			var dt = new DateTime(2011, 7, 12, 13);
+			Assert.AreEqual(dt.ToString("yyyy-MM-dd"), "2011-07-12");
+			Assert.AreEqual(((IFormattable)dt).ToString("yyyy-MM-dd"), "2011-07-12");
 		}
 
 		[Test]

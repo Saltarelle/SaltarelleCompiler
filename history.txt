@@ -1,3 +1,8 @@
+2.0.2
+Fixed problems causing @-signs to appear in verbatim identifiers (eg. public int @event).
+Hopefully this time fixed issue running sc.exe in Mono (#131)
+Added interface IFormattable and used that to fix String.Format with custom format (#133)
+
 2.0.1
 Added types IComparer<T> and Comparer<T> (#130)
 Fixed issue running sc.exe in Mono (#131)

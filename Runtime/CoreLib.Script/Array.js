@@ -75,7 +75,7 @@ ss.arrayAddRange = function#? DEBUG ss$arrayAddRange##(arr, items) {
 			}
 		}
 		finally {
-			if (ss_IDisposable.isInstanceOfType(e)) {
+			if (ss.isInstanceOfType(e, ss_IDisposable)) {
 				ss.cast(e, ss_IDisposable).dispose();
 			}
 		}
@@ -172,7 +172,7 @@ ss.arrayInsertRange = function#? DEBUG ss$arrayInsertRange##(arr, index, items) 
 			}
 		}
 		finally {
-			if (ss_IDisposable.isInstanceOfType(e)) {
+			if (ss.isInstanceOfType(e, ss_IDisposable)) {
 				ss.cast(e, ss_IDisposable).dispose();
 			}
 		}

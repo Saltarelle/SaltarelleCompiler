@@ -182,7 +182,9 @@ ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
 ss.getInterfaces = function#? DEBUG ss$getInterfaces##(type) {
 	if (type === Array)
 		return [ ss_IEnumerable, ss_ICollection, ss_IList ];
-	else if (type === Boolean || type === Date || type === Number || type === String)
+	else if (type === Date || type === Number)
+		return [ ss_IEquatable, ss_IComparable, ss_IFormattable ];
+	else if (type === Boolean || type === String)
 		return [ ss_IEquatable, ss_IComparable ];
 	else
 		return type.__interfaces || [];

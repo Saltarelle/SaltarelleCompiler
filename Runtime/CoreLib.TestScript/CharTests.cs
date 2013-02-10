@@ -9,8 +9,15 @@ namespace CoreLib.TestScript {
 		public void TypePropertiesAreInt32() {
 			Assert.AreEqual(typeof(char).FullName, "ss.Int32");
 			Assert.IsFalse(typeof(char).IsClass);
-			Assert.IsTrue(typeof(IComparable<char>).IsAssignableFrom(typeof(char)));
-			Assert.IsTrue(typeof(IEquatable<char>).IsAssignableFrom(typeof(char)));
+			Assert.IsTrue(typeof(IComparable<byte>).IsAssignableFrom(typeof(char)));
+			Assert.IsTrue(typeof(IEquatable<byte>).IsAssignableFrom(typeof(char)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(char)));
+
+			var interfaces = typeof(char).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 3);
+			Assert.IsTrue(interfaces.Contains(typeof(IComparable<char>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<char>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -58,6 +65,11 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual('\x23'.Format("x4"), "0023");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual('\x23'.ToString("x4"), "0023");
 		}
 
 		[Test]

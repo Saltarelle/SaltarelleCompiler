@@ -12,15 +12,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(decimal).IsClass);
 			Assert.IsTrue(typeof(IComparable<decimal>).IsAssignableFrom(typeof(decimal)));
 			Assert.IsTrue(typeof(IEquatable<decimal>).IsAssignableFrom(typeof(decimal)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(decimal)));
 			object d = (decimal)0;
 			Assert.IsTrue(d is decimal);
 			Assert.IsTrue(d is IComparable<decimal>);
 			Assert.IsTrue(d is IEquatable<decimal>);
+			Assert.IsTrue(d is IFormattable);
 
 			var interfaces = typeof(decimal).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<decimal>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<decimal>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -65,6 +68,12 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(291m.Format("x"), "123");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual(291m.ToString("x"), "123");
+			Assert.AreEqual(((IFormattable)291m).ToString("x"), "123");
 		}
 
 		[Test]

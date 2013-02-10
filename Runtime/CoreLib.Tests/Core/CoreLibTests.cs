@@ -65,6 +65,9 @@ namespace CoreLib.Tests.Core {
 	public class IEquatableTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class IFormattableTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class Int16Tests : CoreLibTestBase {}
 
 	[TestFixture]

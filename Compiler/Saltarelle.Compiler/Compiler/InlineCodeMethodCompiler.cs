@@ -29,7 +29,10 @@ namespace Saltarelle.Compiler.Compiler {
 			string argName = text.TrimStart('@', '*');
 
 			for (int i = 0; i < method.Parameters.Count; i++) {
-				if (method.Parameters[i].Name == argName) {
+				string paramName = method.Parameters[i].Name;
+				if (paramName[0] == '@')
+					paramName = paramName.Substring(1);
+				if (paramName == argName) {
 					if (i >= 0) {
 						if (text[0] == '@')
 							return new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: i);

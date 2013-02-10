@@ -12,15 +12,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(float).IsClass);
 			Assert.IsTrue(typeof(IComparable<float>).IsAssignableFrom(typeof(float)));
 			Assert.IsTrue(typeof(IEquatable<float>).IsAssignableFrom(typeof(float)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(float)));
 			object f = (float)0;
 			Assert.IsTrue(f is float);
 			Assert.IsTrue(f is IComparable<float>);
 			Assert.IsTrue(f is IEquatable<float>);
+			Assert.IsTrue(f is IFormattable);
 
 			var interfaces = typeof(float).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<float>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<float>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -56,6 +59,12 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((float)291.0).Format("x"), "123");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual(((float)291.0).ToString("x"), "123");
+			Assert.AreEqual(((IFormattable)((float)291.0)).ToString("x"), "123");
 		}
 
 		[Test]
