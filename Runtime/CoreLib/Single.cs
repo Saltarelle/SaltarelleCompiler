@@ -15,7 +15,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
-	public struct Single : IComparable<Single>, IEquatable<Single> {
+	public struct Single : IComparable<Single>, IEquatable<Single>, IFormattable {
 		[InlineCode("0")]
 		public Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -37,6 +37,11 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string Format(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 

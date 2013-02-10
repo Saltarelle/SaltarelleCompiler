@@ -5,6 +5,12 @@ using System.Text.RegularExpressions;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class StringTests {
+		class MyFormattable : IFormattable {
+			public string ToString(string format) {
+				return "Formatted: " + format;
+			}
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(string).FullName, "String");
@@ -167,6 +173,12 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(string.Format("x{0}{1}", "a", "b"), "xab");
 			Assert.AreEqual(string.Format("x{0}{1}{2}", "a", "b", "c"), "xabc");
 			Assert.AreEqual(string.Format("x{0}{1}{2}{3}", "a", "b", "c", "d"), "xabcd");
+		}
+
+		[Test]
+		public void FormatWorksWithIFormattable() {
+			Assert.AreEqual(string.Format("{0:F2}", 22.0 / 7.0), "3.14");
+			Assert.AreEqual(string.Format("{0:FMT}", new MyFormattable()), "Formatted: FMT");
 		}
 
 		[Test]

@@ -13,15 +13,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(ushort).IsClass);
 			Assert.IsTrue(typeof(IComparable<ushort>).IsAssignableFrom(typeof(ushort)));
 			Assert.IsTrue(typeof(IEquatable<ushort>).IsAssignableFrom(typeof(ushort)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(ushort)));
 			object s = (ushort)0;
 			Assert.IsTrue(s is ushort);
 			Assert.IsTrue(s is IComparable<ushort>);
 			Assert.IsTrue(s is IEquatable<ushort>);
+			Assert.IsTrue(s is IFormattable);
 
 			var interfaces = typeof(ushort).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<ushort>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<ushort>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -53,6 +56,12 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((ushort)0x123).Format("x"), "123");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual(((ushort)0x123).ToString("x"), "123");
+			Assert.AreEqual(((IFormattable)((ushort)0x123)).ToString("x"), "123");
 		}
 
 		[Test]

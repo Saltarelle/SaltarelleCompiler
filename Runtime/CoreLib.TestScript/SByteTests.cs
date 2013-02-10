@@ -13,15 +13,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(sbyte).IsClass);
 			Assert.IsTrue(typeof(IComparable<sbyte>).IsAssignableFrom(typeof(sbyte)));
 			Assert.IsTrue(typeof(IEquatable<sbyte>).IsAssignableFrom(typeof(sbyte)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(sbyte)));
 			object b = (sbyte)0;
 			Assert.IsTrue(b is sbyte);
 			Assert.IsTrue(b is IComparable<sbyte>);
 			Assert.IsTrue(b is IEquatable<sbyte>);
+			Assert.IsTrue(b is IFormattable);
 
 			var interfaces = typeof(sbyte).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<sbyte>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<sbyte>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -54,6 +57,12 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((sbyte)0x12).Format("x"), "12");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual(((sbyte)0x12).ToString("x"), "12");
+			Assert.AreEqual(((IFormattable)((sbyte)0x12)).ToString("x"), "12");
 		}
 
 		[Test]

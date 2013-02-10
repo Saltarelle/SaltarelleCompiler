@@ -18,7 +18,7 @@ namespace System {
 	/// </summary>
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-	public sealed class JsDate : IComparable<JsDate>, IEquatable<JsDate> {
+	public sealed class JsDate : IComparable<JsDate>, IEquatable<JsDate>, IFormattable {
 		/// <summary>
 		/// Creates a new instance of Date initialized from the current time.
 		/// </summary>
@@ -131,6 +131,11 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
 		public string Format(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 

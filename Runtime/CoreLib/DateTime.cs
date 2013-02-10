@@ -14,7 +14,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Date")]
-	public struct DateTime : IComparable<DateTime>, IEquatable<DateTime> {
+	public struct DateTime : IComparable<DateTime>, IEquatable<DateTime>, IFormattable {
 		/// <summary>
 		/// Creates a new instance of Date initialized from the specified number of milliseconds.
 		/// </summary>
@@ -112,6 +112,11 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
 		public string Format(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 

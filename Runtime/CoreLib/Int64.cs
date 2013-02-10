@@ -13,7 +13,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-	public struct Int64 : IComparable<Int64>, IEquatable<Int64> {
+	public struct Int64 : IComparable<Int64>, IEquatable<Int64>, IFormattable {
 		[InlineCode("0")]
 		public Int64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -52,6 +52,11 @@ namespace System {
 		/// <param name="radix">The radix used in the conversion (eg. 10 for decimal, 16 for hexadecimal)</param>
 		/// <returns>The string representation of the value.</returns>
 		public string ToString(int radix) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 

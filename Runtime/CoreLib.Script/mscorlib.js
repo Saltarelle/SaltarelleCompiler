@@ -176,6 +176,8 @@ if (typeof(window) == 'object') {
 
 #include "TypeSystem.js"
 
+#include "IFormattable.js"
+
 #include "IComparable.js"
 
 #include "IEquatable.js"

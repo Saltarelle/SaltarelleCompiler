@@ -13,15 +13,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(ulong).IsClass);
 			Assert.IsTrue(typeof(IComparable<ulong>).IsAssignableFrom(typeof(ulong)));
 			Assert.IsTrue(typeof(IEquatable<ulong>).IsAssignableFrom(typeof(ulong)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(ulong)));
 			object l = (ulong)0;
 			Assert.IsTrue(l is ulong);
 			Assert.IsTrue(l is IComparable<ulong>);
 			Assert.IsTrue(l is IEquatable<ulong>);
+			Assert.IsTrue(l is IFormattable);
 
 			var interfaces = typeof(ulong).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<ulong>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<ulong>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -52,6 +55,12 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((ulong)0x123).Format("x"), "123");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual(((ulong)0x123).ToString("x"), "123");
+			Assert.AreEqual(((IFormattable)((ulong)0x123)).ToString("x"), "123");
 		}
 
 		[Test]

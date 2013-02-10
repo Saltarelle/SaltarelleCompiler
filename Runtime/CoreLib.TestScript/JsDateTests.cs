@@ -120,6 +120,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void IFormattableToStringWorks() {
+			var dt = new JsDate(2011, 7, 12, 13);
+			Assert.AreEqual(dt.ToString("yyyy-MM-dd"), "2011-08-12");
+			Assert.AreEqual(((IFormattable)dt).ToString("yyyy-MM-dd"), "2011-08-12");
+		}
+
+		[Test]
 		public void LocaleFormatWorks() {
 			var dt = new JsDate(2011, 7, 12, 13);
 			Assert.AreEqual(dt.Format("yyyy-MM-dd"), "2011-08-12");

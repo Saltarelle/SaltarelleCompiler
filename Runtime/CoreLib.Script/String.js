@@ -48,13 +48,13 @@ ss._formatString = function#? DEBUG ss$_formatString##(format, values, useLocale
 							  if (ss.isNullOrUndefined(value)) {
 								  return '';
 							  }
-							  if (value.format) {
+							  if (ss.isInstanceOfType(value, ss_IFormattable)) {
 								  var formatSpec = null;
 								  var formatIndex = m.indexOf(':');
 								  if (formatIndex > 0) {
 									  formatSpec = m.substring(formatIndex + 1, m.length - 1);
 								  }
-								  return useLocale ? value.localeFormat(formatSpec) : value.format(formatSpec);
+								  return ss.format(value, formatSpec);
 							  }
 							  else {
 								  return useLocale ? value.toLocaleString() : value.toString();

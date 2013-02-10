@@ -15,7 +15,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
-	public struct Decimal : IComparable<Decimal>, IEquatable<Decimal> {
+	public struct Decimal : IComparable<Decimal>, IEquatable<Decimal>, IFormattable {
 		[ScriptName("MAX_VALUE")]
 		public const decimal MaxValue = 0;
 
@@ -78,6 +78,11 @@ namespace System {
 		/// <param name="radix">The radix used in the conversion (eg. 10 for decimal, 16 for hexadecimal)</param>
 		/// <returns>The string representation of the value.</returns>
 		public string ToString(int radix) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 

@@ -13,7 +13,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-	public struct Char : IComparable<Char>, IEquatable<Char> {
+	public struct Char : IComparable<Char>, IEquatable<Char>, IFormattable {
 		[InlineCode("0")]
 		public Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -49,8 +49,12 @@ namespace System {
 		/// </summary>
 		/// <returns>The string representation of the value.</returns>
 		[InlineCode("{$System.String}.fromCharCode({this})")]
-		[PreserveName]
 		public new string ToString() {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 

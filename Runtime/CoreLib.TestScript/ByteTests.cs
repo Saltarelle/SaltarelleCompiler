@@ -13,15 +13,18 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(typeof(byte).IsClass);
 			Assert.IsTrue(typeof(IComparable<byte>).IsAssignableFrom(typeof(byte)));
 			Assert.IsTrue(typeof(IEquatable<byte>).IsAssignableFrom(typeof(byte)));
+			Assert.IsTrue(typeof(IFormattable).IsAssignableFrom(typeof(byte)));
 			object b = (byte)0;
 			Assert.IsTrue(b is byte);
 			Assert.IsTrue(b is IComparable<byte>);
 			Assert.IsTrue(b is IEquatable<byte>);
+			Assert.IsTrue(b is IFormattable);
 
 			var interfaces = typeof(byte).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 2);
+			Assert.AreEqual(interfaces.Length, 3);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<byte>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<byte>)));
+			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
 		}
 
 		[IncludeGenericArguments]
@@ -53,6 +56,12 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void FormatWorks() {
 			Assert.AreEqual(((byte)0x12).Format("x"), "12");
+		}
+
+		[Test]
+		public void IFormattableToStringWorks() {
+			Assert.AreEqual(((byte)0x12).ToString("x"), "12");
+			Assert.AreEqual(((IFormattable)((byte)0x12)).ToString("x"), "12");
 		}
 
 		[Test]

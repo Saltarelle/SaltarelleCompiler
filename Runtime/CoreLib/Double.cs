@@ -13,7 +13,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
-	public struct Double : IComparable<Double>, IEquatable<Double> {
+	public struct Double : IComparable<Double>, IEquatable<Double>, IFormattable {
 		[InlineCode("0")]
 		public Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -35,6 +35,11 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string Format(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		public string ToString(string format) {
 			return null;
 		}
 
