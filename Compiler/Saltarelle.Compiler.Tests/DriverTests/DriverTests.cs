@@ -983,5 +983,52 @@ class Program {
 				Assert.That(result.Item2[0].Args[0], Is.EqualTo("Asm1"));
 			}, (from name in new[] { "Asm1", "Asm2", "Asm3", "Asm4" } from ext in new[] { ".cs", ".dll", ".js" } select name + ext).ToArray());
 		}
+
+		[Test]
+		public void GeneratedMetadataDoesNotHaveLeadingAtSignsInIdentifiers() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"),
+@"class @char {}
+namespace @string {
+	namespace @float {
+		class @for {}
+	}
+}
+public class C {
+	public void M(int @event) {
+		@event = 10;
+		@int = @event;
+		@short = @event;
+		@double(@event);
+		var t = typeof(@char);
+		var t2 = typeof(@string.@float.@for);
+	}
+	public int @int { get; set; }
+	public int @short;
+	public void @double(int x) {}
+	public event System.EventHandler @if;
+}");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options, null);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("Test.dll"));
+				Assert.That(asm.MainModule.Types.Any(t => t.Name == "char"));
+				Assert.That(asm.MainModule.Types.Any(t => t.FullName == "string.float.for"));
+				var c = asm.MainModule.Types.Single(t => t.Name == "C");
+				Assert.That(c.Properties.Any(p => p.Name == "int"));
+				Assert.That(c.Fields.Any(p => p.Name == "short"));
+				Assert.That(c.Methods.Any(p => p.Name == "double"));
+				Assert.That(c.Events.Any(p => p.Name == "if"));
+			}, "File1.cs", "Test.dll", "Test.js");	
+		}
 	}
 }

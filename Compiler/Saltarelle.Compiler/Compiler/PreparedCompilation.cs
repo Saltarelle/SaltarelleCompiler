@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.Compiler {
 			                                            var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
 			                                            syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
 			                                            var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
-			                                            return new PreparedCompilation.ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
+			                                            return new ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
 			                                        }
 			                                    }).ToList();
 
