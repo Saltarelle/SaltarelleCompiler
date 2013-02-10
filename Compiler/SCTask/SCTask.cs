@@ -12,7 +12,10 @@ namespace Saltarelle.Compiler.SCTask {
 	public class SCTask : Task {
 		public class AppDomainInitializer : MarshalByRefObject {
 			public void DoIt() {
-				// We need not do anything because we have a module initializer that will do the work for us.
+				// The module initializer seems to not work in all cases on mono.
+				var t = typeof(SCTask).Assembly.GetType("EmbedAssemblies.EmbeddedAssemblyLoader");
+				var m = t.GetMethod("Register", BindingFlags.Static | BindingFlags.Public);
+				m.Invoke(null, new object[0]);
 			}
 		}
 
