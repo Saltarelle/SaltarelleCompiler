@@ -417,7 +417,9 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void ConstructingInstanceWithNamedConstructorWorks() {
-			Assert.AreEqual(new ConstructingInstanceWithNamedConstructorTypes.D().GetMessage(), "The message from ctor");
+			var d = new ConstructingInstanceWithNamedConstructorTypes.D();
+			Assert.AreEqual(d.GetType(), typeof(ConstructingInstanceWithNamedConstructorTypes.D));
+			Assert.AreEqual(d.GetMessage(), "The message from ctor");
 		}
 
 		public class BaseMethodInvocationTypes {
