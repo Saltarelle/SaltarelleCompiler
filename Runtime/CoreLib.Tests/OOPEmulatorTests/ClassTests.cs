@@ -723,7 +723,7 @@ using System;
 var $D = function() {
 };
 $D.createInstance = function() {
-	return $D.$ctor();
+	return {D}.$ctor();
 };
 $D.$ctor = function() {
 	var $this = {B}.$ctor();
