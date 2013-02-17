@@ -647,6 +647,26 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).IsSerializable && !property.IsStatic) {
+				var getica = property.Getter != null ? AttributeReader.ReadAttribute<InlineCodeAttribute>(property.Getter) : null;
+				var setica = property.Setter != null ? AttributeReader.ReadAttribute<InlineCodeAttribute>(property.Setter) : null;
+				if (property.Getter != null && property.Setter != null && (getica != null) != (setica != null)) {
+					Message(Messages._7028, property);
+				}
+				else if (getica != null || setica != null) {
+					bool hasError = false;
+					if (property.Getter != null && !ValidateInlineCode(property.Getter, getica.Code, Messages._7130)) {
+						hasError = true;
+					}
+					if (property.Setter != null && !ValidateInlineCode(property.Setter, setica.Code, Messages._7130)) {
+						hasError = true;
+					}
+
+					if (!hasError) {
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(getica != null ? MethodScriptSemantics.InlineCode(getica.Code) : null, setica != null ? MethodScriptSemantics.InlineCode(setica.Code) : null);
+						return;
+					}
+				}
+
 				usedNames[preferredName] = true;
 				_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
 				return;

@@ -105,8 +105,8 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
-		public void InstancePropertiessOnSerializableTypesUseFieldSemanticsAndCanBeRenamedButUsesPreserveNameIfNoOtherAttributeWasSpecified() {
-			TestBothKinds(@"[PreserveName] int Prop1 { get; set; } [PreserveCase] int Prop2 { get; set; } [ScriptName(""Renamed"")] int Prop3 { get; set; } int Prop4 { get; set; } }", () => {
+		public void InstancePropertiesOnSerializableTypesUseFieldSemanticsAndCanBeRenamedButUsesPreserveNameIfNoOtherAttributeWasSpecified() {
+			TestBothKinds(@"[PreserveName] int Prop1 { get; set; } [PreserveCase] int Prop2 { get; set; } [ScriptName(""Renamed"")] int Prop3 { get; set; } int Prop4 { get; set; }", () => {
 				Assert.That(FindProperty("C1.Prop1").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 				Assert.That(FindProperty("C1.Prop1").FieldName, Is.EqualTo("prop1"));
 				Assert.That(FindProperty("C1.Prop2").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
@@ -116,6 +116,56 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(FindProperty("C1.Prop4").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 				Assert.That(FindProperty("C1.Prop4").FieldName, Is.EqualTo("prop4"));
 			});
+		}
+
+		[Test]
+		public void InstancePropertiesOnSerializableTypesCanHaveInlineCode() {
+			TestBothKinds(@"int Prop1 { [InlineCode(""_({this}).X"")] get; [InlineCode(""_({this})._({value})"")] set; } int Prop2 { [InlineCode(""_({this}).X2"")] get { return 0; } } int Prop3 { [InlineCode(""_({this})._({value}).X2"")] set {} }", () => {
+				var prop1 = FindProperty("C1.Prop1");
+				Assert.That(prop1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(prop1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop1.GetMethod.LiteralCode, Is.EqualTo("_({this}).X"));
+				Assert.That(prop1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop1.SetMethod.LiteralCode, Is.EqualTo("_({this})._({value})"));
+
+				var prop2 = FindProperty("C1.Prop2");
+				Assert.That(prop2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(prop2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop2.GetMethod.LiteralCode, Is.EqualTo("_({this}).X2"));
+				Assert.That(prop2.SetMethod, Is.Null);
+
+				var prop3 = FindProperty("C1.Prop3");
+				Assert.That(prop3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(prop3.GetMethod, Is.Null);
+				Assert.That(prop3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop3.SetMethod.LiteralCode, Is.EqualTo("_({this})._({value}).X2"));
+			});
+		}
+
+		[Test]
+		public void IfInlineCodeIsSpecifiedForOneAccessorOfSerializableTypeInstancePropertyItMustAlsoBeSpecifiedOnTheOther() {
+			TestBothKinds(@"int Prop1 { [InlineCode(""X"")] get; set; }", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1.Prop1") && m.Contains("InlineCodeAttribute")));
+			}, expectErrors: true);
+
+			TestBothKinds(@"int Prop1 { get; [InlineCode(""X"")] set; }", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1.Prop1") && m.Contains("InlineCodeAttribute")));
+			}, expectErrors: true);
+		}
+
+		[Test]
+		public void ErrorInInlineCodeForSerializableTypePropertyAccessorIsReported() {
+			TestBothKinds(@"int Prop1 { [InlineCode(""{a}"")] get; [InlineCode(""X"")] set; }", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1.get_Prop1") && m.Contains("{a}")));
+			}, expectErrors: true);
+
+			TestBothKinds(@"int Prop1 { [InlineCode(""X"")] get; [InlineCode(""{a}"")] set; }", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("C1.set_Prop1") && m.Contains("{a}")));
+			}, expectErrors: true);
 		}
 
 		[Test]

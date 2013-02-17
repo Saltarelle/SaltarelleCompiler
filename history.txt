@@ -1,3 +1,5 @@
+Support [InlineCode] on property accessors on serializable types
+
 2.0.2
 Fixed problems causing @-signs to appear in verbatim identifiers (eg. public int @event).
 Hopefully this time fixed issue running sc.exe in Mono (#131)
