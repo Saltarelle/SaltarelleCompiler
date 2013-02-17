@@ -31,20 +31,20 @@ ss.makeGenericType = function#? DEBUG ss$makeGenericType##(genericType, typeArgu
 	return ss.__genericCache[name] || genericType.apply(null, typeArguments);
 };
 
-ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(instance, genericType, typeArguments, baseType, interfaceTypes) {
+ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(instance, genericType, typeArguments, baseType, interfaceTypes, metadata) {
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
 	ss.__genericCache[name] = instance;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.registerClass(null, name, instance, baseType(), interfaceTypes(), genericType.__metadata);
+	ss.registerClass(null, name, instance, baseType(), interfaceTypes(), metadata);
 };
 
-ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, baseInterfaces) {
+ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, baseInterfaces, metadata) {
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
 	ss.__genericCache[name] = instance;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.registerInterface(null, name, instance, baseInterfaces(), genericType.__metadata);
+	ss.registerInterface(null, name, instance, baseInterfaces(), metadata);
 };
 
 ss.isGenericTypeDefinition = function#? DEBUG ss$isGenericTypeDefinition##(type) {
@@ -63,6 +63,15 @@ ss.getGenericArguments = function#? DEBUG ss$getGenericArguments##(type) {
 	return type.__typeArguments || null;
 };
 
+ss._setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
+	if (metadata.members) {
+		for (var i = 0; i < metadata.members.length; i++) {
+			metadata.members[i].typeDef = type;
+		}
+	}
+	type.__metadata = metadata;
+}
+
 ss.registerClass = function#? DEBUG ss$registerClass##(root, name, ctor, baseType, interfaces, metadata) {
 	if (root)
 		ss.registerType(root, name, ctor);
@@ -74,7 +83,7 @@ ss.registerClass = function#? DEBUG ss$registerClass##(root, name, ctor, baseTyp
 	if (interfaces)
 		ctor.__interfaces = interfaces;
 	if (metadata)
-		ctor.__metadata = metadata;
+		ss._setMetadata(ctor, metadata);
 
 	if (baseType) {
 		ss.setupBase(ctor);
@@ -92,7 +101,7 @@ ss.registerGenericClass = function#? DEBUG ss$registerGenericClass##(root, name,
 	ctor.__isGenericTypeDefinition = true;
 	ctor.__baseType = Object;
 	if (metadata)
-		ctor.__metadata = metadata;
+		ss._setMetadata(ctor, metadata);
 };
 
 ss.registerInterface = function#? DEBUG ss$createInterface##(root, name, ctor, baseInterfaces, metadata) {
@@ -104,7 +113,7 @@ ss.registerInterface = function#? DEBUG ss$createInterface##(root, name, ctor, b
 	if (baseInterfaces)
 		ctor.__interfaces = baseInterfaces;
 	if (metadata)
-		ctor.__metadata = metadata;
+		ss._setMetadata(ctor, metadata);
 };
 
 ss.registerGenericInterface = function#? DEBUG ss$registerGenericClass##(root, name, ctor, typeArgumentCount, metadata) {
@@ -117,7 +126,7 @@ ss.registerGenericInterface = function#? DEBUG ss$registerGenericClass##(root, n
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
 	if (metadata)
-		ctor.__metadata = metadata;
+		ss._setMetadata(ctor, metadata);
 };
 
 ss.registerEnum = function#? DEBUG ss$registerEnum##(root, name, ctor, metadata) {
@@ -130,7 +139,7 @@ ss.registerEnum = function#? DEBUG ss$registerEnum##(root, name, ctor, metadata)
 	ctor.__typeName = name;
 	ctor.__enum = true;
 	if (metadata)
-		ctor.__metadata = metadata;
+		ss._setMetadata(ctor, metadata);
 	ctor.getDefaultValue = ctor.createInstance = function() { return 0; };
 	ctor.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
 };
@@ -352,4 +361,40 @@ ss.getAttributes = function#? DEBUG ss$getAttributes##(type, attrType, inherit) 
 		}
 	}
 	return result;
+};
+
+ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAttr) {
+	if (!bindingAttr)
+		bindingAttr = 12;
+	if (!memberTypes)
+		memberTypes = 0xffff;
+	var result = [];
+	if (type.__metadata && type.__metadata.members) {
+		for (var i = 0; i < type.__metadata.members.length; i++) {
+			var m = type.__metadata.members[i];
+			if ((memberTypes & m.type) && (((bindingAttr & 4) && !m.isStatic) || ((bindingAttr & 8) && m.isStatic)))
+				result.push(m);
+		}
+	}
+	return result;
+};
+
+ss.midel = function#? DEBUG ss$getAttributes##(mi, target, typeArguments) {
+	if (mi.isStatic && !!target)
+		throw 'Cannot specify target for static method';
+	else if (!mi.isStatic && !target)
+		throw 'Must specify target for instance method';
+
+	var method = mi.isStatic ? mi.typeDef[mi.js] : target[mi.js];
+
+	if (mi.tpcount) {
+		if (!typeArguments || typeArguments.length !== mi.tpcount)
+			throw 'Wrong number of type arguments';
+		method = method.apply(null, typeArguments);
+	}
+	else {
+		if (typeArguments && typeArguments.length)
+			throw 'Cannot specify type arguments for non-generic method';
+	}
+	return ss.mkdel(target, method);
 };

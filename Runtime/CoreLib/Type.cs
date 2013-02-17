@@ -5,6 +5,7 @@
 
 using System.Collections;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace System {
@@ -34,6 +35,16 @@ namespace System {
 			get {
 				return null;
 			}
+		}
+
+		[InlineCode("{$System.Script}.getMembers({this}, 0, 0)")]
+		public MemberInfo[] GetMembers() {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.getMembers({this}, 0, {bindingAttr})")]
+		public MemberInfo[] GetMembers(BindingFlags bindingAttr) {
+			return null;
 		}
 
 		/// <summary>

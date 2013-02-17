@@ -424,4 +424,20 @@ namespace System.Runtime.CompilerServices {
 	[NonScriptable]
 	public sealed class InlineConstantAttribute : Attribute {
 	}
+
+	/// <summary>
+	/// Can be applied to a member to indicate that metadata for the member should be included in the compiled script.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.All)]
+	[NonScriptable]
+	public sealed class ReflectableAttribute : Attribute {
+		public bool Reflectable { get; private set; }
+
+		public ReflectableAttribute() {
+			Reflectable = true;
+		}
+		public ReflectableAttribute(bool reflectable) {
+			Reflectable = reflectable;
+		}
+	}
 }

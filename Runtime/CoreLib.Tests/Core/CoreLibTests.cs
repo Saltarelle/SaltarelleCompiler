@@ -113,6 +113,10 @@ namespace CoreLib.Tests.Core {
 	}
 
 	[TestFixture]
+	public class ReflectionTests : CoreLibTestBase {
+	}
+
+	[TestFixture]
 	public class SByteTests : CoreLibTestBase {}
 
 	[TestFixture]

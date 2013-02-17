@@ -471,9 +471,9 @@ namespace System.Reflection {
 		}
 	}
 
-	[NonScriptable]
 	[Imported]
-	public class MethodBase {
+	[Serializable]
+	public class MethodBase : MemberInfo {
 		public static MethodBase GetMethodFromHandle(RuntimeMethodHandle h) {
 			return null;
 		}
@@ -481,11 +481,6 @@ namespace System.Reflection {
 		public static MethodBase GetMethodFromHandle(RuntimeMethodHandle h, RuntimeTypeHandle x) {
 			return null;
 		}
-	}
-
-	[NonScriptable]
-	[Imported]
-	public class MethodInfo : MethodBase {
 	}
 }
 

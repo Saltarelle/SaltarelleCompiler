@@ -11,6 +11,7 @@ namespace System {
 	// This doesn't map to an actual type, but needs to be present
 	// in the set of types, so that the C# void type can be mapped
 	[IgnoreNamespace]
+	[ScriptName("Object")]
 	[Imported]
 	public struct Void {
 	}
