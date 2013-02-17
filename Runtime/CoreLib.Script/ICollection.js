@@ -10,7 +10,7 @@ ss_ICollection.prototype = {
 	remove: null
 };
 
-ss.registerInterface(global, 'ss.ICollection', ss_IEnumerable);
+ss.registerInterface(global, 'ss.ICollection', ss_ICollection);
 
 ss.count = function#? DEBUG ss$count##(obj) {
 	return ss.isArray(obj) ? obj.length : obj.get_count();

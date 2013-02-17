@@ -10,5 +10,5 @@ ss_Comparer.prototype.compare = function#? DEBUG Comparer$compare##(x, y) {
 ss_Comparer.create = function#? DEBUG Comparer$create##(f) {
 	return new ss_Comparer(f);
 };
-ss.registerClass(global, 'ss.Comparer', ss_Comparer, null, ss_IComparer);
+ss.registerClass(global, 'ss.Comparer', ss_Comparer, null, [ss_IComparer]);
 ss_Comparer.def = new ss_Comparer(ss.compare);

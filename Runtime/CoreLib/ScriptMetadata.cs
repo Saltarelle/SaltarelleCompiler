@@ -14,8 +14,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	public sealed class NonScriptableAttribute : Attribute {
 	}
 
@@ -25,7 +23,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Struct)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ImportedAttribute : Attribute {
 		/// <summary>
 		/// Indicates that the type obeys the Saltarelle type system. If false (the default), the type is ignored in inheritance lists, casts to it is a no-op, and Object will be used if the type is used as a generic argument.
@@ -44,7 +41,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptAssemblyAttribute : Attribute {
 		public ScriptAssemblyAttribute(string name) {
 			Name = name;
@@ -61,7 +57,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptQualifierAttribute : Attribute {
 		public ScriptQualifierAttribute(string prefix) {
 			Prefix = prefix;
@@ -77,7 +72,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Struct, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class IgnoreNamespaceAttribute : Attribute {
 	}
 
@@ -91,7 +85,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptNamespaceAttribute : Attribute {
 		public ScriptNamespaceAttribute(string name) {
 			Name = name;
@@ -106,7 +99,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ResourcesAttribute : Attribute {
 	}
 
@@ -116,13 +108,11 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 	[NonScriptable]
-	[Imported]
 	public sealed class GlobalMethodsAttribute : Attribute {
 	}
 
 	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class MixinAttribute : Attribute {
 		public MixinAttribute(string expression) {
 			Expression = expression;
@@ -138,7 +128,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class NamedValuesAttribute : Attribute {
 	}
 
@@ -149,7 +138,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class NumericValuesAttribute : Attribute {
 	}
 
@@ -161,7 +149,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AlternateSignatureAttribute : Attribute {
 	}
 
@@ -173,7 +160,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class IntrinsicPropertyAttribute : Attribute {
 	}
 
@@ -182,7 +168,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Constructor, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptNameAttribute : Attribute {
 		public ScriptNameAttribute(string name) {
 			Name = name;
@@ -197,7 +182,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class PreserveCaseAttribute : Attribute {
 	}
 
@@ -208,7 +192,6 @@ namespace System.Runtime.CompilerServices {
 	/// attribute by default</summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class PreserveMemberCaseAttribute : Attribute {
 		public PreserveMemberCaseAttribute() {
 			Preserve = true;
@@ -227,7 +210,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class PreserveNameAttribute : Attribute {
 	}
 
@@ -236,7 +218,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class MinimizePublicNamesAttribute : Attribute {
 	}
 
@@ -248,7 +229,6 @@ namespace System.Runtime.CompilerServices {
 	// REVIEW: Eventually do we want to support this on properties/field and instance methods as well?
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptAliasAttribute : Attribute {
 		public ScriptAliasAttribute(string alias) {
 			Alias = alias;
@@ -262,7 +242,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptSkipAttribute : Attribute {
 	}
 
@@ -274,7 +253,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class InlineCodeAttribute : Attribute {
 		public InlineCodeAttribute(string code) {
 			Code = code;
@@ -300,7 +278,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class InstanceMethodOnFirstArgumentAttribute : Attribute {
 	}
 
@@ -309,7 +286,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class IncludeGenericArgumentsAttribute : Attribute {
 		public IncludeGenericArgumentsAttribute() {
 			Include = true;
@@ -326,7 +302,6 @@ namespace System.Runtime.CompilerServices {
 	/// This enum defines the possibilities for default values for generic argument handling in an assembly. 
 	/// </summary>
 	[NonScriptable]
-	[Imported]
 	public enum GenericArgumentsDefault {
 		/// <summary>
 		/// Include generic arguments for all types that are not [Imported]
@@ -347,7 +322,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	[NonScriptable]
-	[Imported]
 	public sealed class IncludeGenericArgumentsDefaultAttribute : Attribute {
 		public GenericArgumentsDefault TypeDefault { get; set; }
 		public GenericArgumentsDefault MethodDefault { get; set; }
@@ -358,7 +332,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class IntrinsicOperatorAttribute : Attribute {
 	}
 
@@ -368,7 +341,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Delegate, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ExpandParamsAttribute : Attribute {
 	}
 
@@ -377,7 +349,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Delegate)]
 	[NonScriptable]
-	[Imported]
 	public sealed class BindThisToFirstParameterAttribute : Attribute {
 	}
 
@@ -388,7 +359,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Constructor, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ObjectLiteralAttribute : Attribute {
 	}
 
@@ -397,7 +367,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ScriptSharpCompatibilityAttribute : Attribute {
 		/// <summary>
 		/// If true, code will not be generated for casts of type '(MyClass)someValue'. Code will still be generated for 'someValue is MyClass' and 'someValue as MyClass'.
@@ -424,7 +393,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Assembly)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ModuleNameAttribute : Attribute {	
 		public ModuleNameAttribute(string moduleName) {
 			this.ModuleName = moduleName;
@@ -438,7 +406,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AsyncModuleAttribute : Attribute {	
 	}
 
@@ -447,7 +414,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
 	[NonScriptable]
-	[Imported]
 	public sealed class EnumerateAsArrayAttribute : Attribute {	
 	}
 
@@ -456,7 +422,6 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
 	[NonScriptable]
-	[Imported]
 	public sealed class InlineConstantAttribute : Attribute {
 	}
 }

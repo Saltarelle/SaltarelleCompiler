@@ -136,6 +136,16 @@ namespace System {
 			get { return false; }
 		}
 
+		[InlineCode("{$System.Script}.getAttributes({this}, null, {inherit})")]
+		public object[] GetCustomAttributes(bool inherit) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.getAttributes({this}, {attributeType}, {inherit})")]
+		public object[] GetCustomAttributes(Type attributeType, bool inherit) {
+			return null;
+		}
+
 		[InlineCode("{$System.Script}.isInstanceOfType({instance}, {type})")]
 		public static bool IsInstanceOfType(object instance, Type type) {
 			return false;

@@ -7,7 +7,7 @@ ss.registerClass(global, 'ss.Enum', ss_Enum);
 
 ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 	var values = enumType.prototype;
-	if (!enumType.__flags) {
+	if (!ss.isFlags(enumType)) {
 		for (var f in values) {
 			if (f === s) {
 				return values[f];
@@ -45,7 +45,7 @@ ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 
 ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 	var values = enumType.prototype;
-	if (!enumType.__flags || (value === 0)) {
+	if (!ss.isFlags(enumType) || (value === 0)) {
 		for (var i in values) {
 			if (values[i] === value) {
 				return i;

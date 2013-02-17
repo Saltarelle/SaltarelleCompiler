@@ -50,6 +50,8 @@
     <Compile Include="Activator.cs" />
     <Compile Include="AggregateException.cs" />
     <Compile Include="ArrayExtensions.cs" />
+    <Compile Include="Attribute.cs" />
+    <Compile Include="AttributeUsageAttribute.cs" />
     <Compile Include="Collections\Generic\Comparer.cs" />
     <Compile Include="Collections\Generic\IComparer.cs" />
     <Compile Include="Collections\Generic\EqualityComparer.cs" />
@@ -81,6 +83,7 @@
     <Compile Include="IFormattable.cs" />
     <Compile Include="DayOfWeek.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
+    <Compile Include="MulticastDelegate.cs" />
     <Compile Include="SerializableAttribute.cs" />
     <Compile Include="Lazy.cs" />
     <Compile Include="IComparable.cs" />

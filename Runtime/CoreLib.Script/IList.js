@@ -10,7 +10,7 @@ ss_IList.prototype = {
 	removeAt: null
 };
 
-ss.registerInterface(global, 'ss.IList', ss_IList, ss_ICollection, ss_IEnumerable);
+ss.registerInterface(global, 'ss.IList', ss_IList, [ss_ICollection, ss_IEnumerable]);
 
 ss.getItem = function#? DEBUG ss$getItem##(obj, index) {
 	return ss.isArray(obj) ? obj[index] : obj.get_item(index);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.NRefactory;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
@@ -73,49 +74,191 @@ namespace CoreLib.Plugin {
 			return method.TypeParameterNames.Count == 0 ? method.Definition : JsExpression.FunctionDefinition(method.TypeParameterNames, new JsReturnStatement(method.Definition));
 		}
 
-		private JsExpression CreateRegisterClassCall(JsExpression root, string name, JsExpression ctor, JsExpression baseClass, IEnumerable<JsExpression> interfaces) {
+		private JsExpression Compile(ResolveResult rr) {
+			if (rr is ArrayCreateResolveResult){
+				return JsExpression.ArrayLiteral(((ArrayCreateResolveResult)rr).InitializerElements.Select(Compile));
+			}
+			else if (rr is TypeOfResolveResult) {
+				return _runtimeLibrary.InstantiateType(((TypeOfResolveResult)rr).ReferencedType, t => { throw new InvalidOperationException("Cannot have type parameters in attribute constructor"); });
+			}
+			else if (rr.IsCompileTimeConstant && rr.ConstantValue == null) {
+				return JsExpression.Null;
+			}
+			else {
+				object v = null;
+				if (rr is MemberResolveResult && ((MemberResolveResult)rr).Member is IField) {
+					var f = _metadataImporter.GetFieldSemantics((IField)((MemberResolveResult)rr).Member);
+					if (f.Type == FieldScriptSemantics.ImplType.Constant)
+						v = f.Value;
+				}
+				if (v == null) {
+					if (rr.ConstantValue == null)
+						throw new ArgumentException("Invalid attribute argument " + rr);
+					v = Saltarelle.Compiler.JSModel.Utils.ConvertToDoubleOrStringOrBoolean(rr.ConstantValue);
+				}
+
+				if (v is double)
+					return JsExpression.Number((double)v);
+				else if (v is bool)
+					return JsExpression.Boolean((bool)v);
+				else if (v is string)
+					return JsExpression.String((string)v);
+				else
+					throw new ArgumentException("Invalid constant " + v);
+			}
+		}
+
+		private JsExpression ConstructAttribute(IAttribute attr) {
+			JsExpression result = CompileConstructorInvocation(attr.Constructor, _runtimeLibrary.InstantiateType(attr.AttributeType, t => { throw new InvalidOperationException("Cannot have type parameters in attribute constructor"); }), attr.PositionalArguments.Select(Compile).ToList());
+			if (attr.NamedArguments.Count > 0) {
+				var initializers = new List<JsExpression>();
+				foreach (var a in attr.NamedArguments) {
+					if (a.Key is IProperty) {
+						var sem = _metadataImporter.GetPropertySemantics((IProperty)a.Key);
+						switch (sem.Type) {
+							case PropertyScriptSemantics.ImplType.Field:
+								initializers.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier("$a"), sem.FieldName), Compile(a.Value)));
+								break;
+							case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
+								switch (sem.SetMethod.Type) {
+									case MethodScriptSemantics.ImplType.NormalMethod:
+										initializers.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$a"), sem.SetMethod.Name), Compile(a.Value)));
+										break;
+									case MethodScriptSemantics.ImplType.InlineCode: {
+										var method = ((IProperty)a.Key).Setter;
+										var tokens = InlineCodeMethodCompiler.Tokenize(method, sem.SetMethod.LiteralCode, s => _errorReporter.InternalError("Error in inline code during attribute generation: " + s));
+										if (tokens != null) {
+											initializers.Add(InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method,
+											                                                                            tokens,
+											                                                                            JsExpression.Identifier("$a"),
+											                                                                            new[] { Compile(a.Value) },
+											                                                                            n => _runtimeLibrary.InstantiateType(ReflectionHelper.ParseReflectionName(n).Resolve(_compilation), t => { throw new InvalidOperationException("Cannot have type parameters in attribute constructor"); }),
+											                                                                            t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => { throw new InvalidOperationException("Cannot have type parameters in attribute constructor"); }),
+											                                                                            s => _errorReporter.InternalError("Error in inline code during attribute generation: " + s)));
+										}
+										break;
+									}
+									default:
+										throw new Exception("Invalid implementation type for set method of property: " + a.Key.Name);
+								}
+								break;
+							}
+							case PropertyScriptSemantics.ImplType.NotUsableFromScript:
+								break;
+							default:
+								throw new Exception("Invalid implementation type for attribute property: " + sem.Type);
+						}
+					}
+					else if (a.Key is IField) {
+						var sem = _metadataImporter.GetFieldSemantics((IField)a.Key);
+						switch (sem.Type) {
+							case FieldScriptSemantics.ImplType.Field:
+								initializers.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier("$a"), sem.Name), Compile(a.Value)));
+								break;
+							case FieldScriptSemantics.ImplType.NotUsableFromScript:
+								break;
+							default:
+								throw new Exception("Invalid implementation type for attribute field: " + sem.Type);
+						}
+					}
+					else
+						throw new Exception("Invalid attribute named argument member: " + a.Key);
+				}
+
+				if (initializers.Count > 0) {
+					result = JsExpression.Invocation(
+					             JsExpression.FunctionDefinition(
+					             new string[0],
+					             new JsBlockStatement(
+					                 new JsStatement[] { new JsVariableDeclarationStatement("$a", result) }
+					                 .Concat(initializers.Select(x => new JsExpressionStatement(x)))
+					                 .Concat(new[] { new JsReturnStatement(JsExpression.Identifier("$a")) }))));
+				}
+			}
+			return result;
+		}
+
+		private JsExpression GetMetadataDescriptor(ITypeDefinition type) {
+			var properties = new List<JsObjectLiteralProperty>();
+			var scriptableAttributes = type.Attributes.Where(a => _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
+			if (scriptableAttributes.Count != 0) {
+				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(ConstructAttribute))));
+			}
+			if (type.Kind == TypeKind.Class) {
+				var aua = AttributeReader.ReadAttribute<AttributeUsageAttribute>(type);
+				if (aua != null) {
+					if (!aua.Inherited)
+						properties.Add(new JsObjectLiteralProperty("attrNoInherit", JsExpression.True));
+					if (aua.AllowMultiple)
+						properties.Add(new JsObjectLiteralProperty("attrAllowMultiple", JsExpression.True));
+				}
+			}
+			if (type.Kind == TypeKind.Enum && AttributeReader.HasAttribute<FlagsAttribute>(type))
+				properties.Add(new JsObjectLiteralProperty("enumFlags", JsExpression.True));
+
+			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
+		}
+
+		private JsExpression CreateRegisterClassCall(ITypeDefinition type, string name, JsExpression ctor, JsExpression baseClass, IList<JsExpression> interfaces) {
 			if (baseClass is JsTypeReferenceExpression && ((JsTypeReferenceExpression)baseClass).Type.IsKnownType(KnownTypeCode.Object))
 				baseClass = null;
 
-			var args = new List<JsExpression> { root, JsExpression.String(name), ctor };
-			if (baseClass != null)
-				args.Add(baseClass);
-			bool hasInterface = false;
-			foreach (var i in interfaces) {
-				hasInterface = true;
-				args.Add(i);
-			}
-			if (hasInterface && baseClass == null)
-				args.Insert(3, JsExpression.Null);
+			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
+			var metadata = GetMetadataDescriptor(type);
+			if (baseClass != null || interfaces.Count > 0 || metadata != null)
+				args.Add(baseClass ?? JsExpression.Null);
+			if (interfaces.Count > 0 || metadata != null)
+				args.Add(JsExpression.ArrayLiteral(interfaces));
+			if (metadata != null)
+				args.Add(metadata);
+
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterClass), args);
 		}
 
-		private JsExpression CreateDefaultConstructorInvocation(IMethod defaultConstructor, JsExpression typeRef) {
-			var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
+		private JsExpression CreateRegisterInterfaceCall(ITypeDefinition type, string name, JsExpression ctor, IList<JsExpression> interfaces) {
+			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
+			var metadata = GetMetadataDescriptor(type);
+			if (interfaces.Count > 0 || metadata != null)
+				args.Add(JsExpression.ArrayLiteral(interfaces));
+			if (metadata != null)
+				args.Add(metadata);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterInterface), args);
+		}
+
+		private JsExpression CreateRegisterEnumCall(ITypeDefinition type, string name, JsExpression ctor) {
+			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
+			var metadata = GetMetadataDescriptor(type);
+			if (metadata != null)
+				args.Add(metadata);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterEnum), args);
+		}
+
+		private JsExpression CompileConstructorInvocation(IMethod constructor, JsExpression typeRef, IList<JsExpression> arguments) {
+			var sem = _metadataImporter.GetConstructorSemantics(constructor);
 			switch (sem.Type) {
-				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:  // default behavior is good enough.
-				case ConstructorScriptSemantics.ImplType.NotUsableFromScript: // Can't be invoked so we don't need to create it.
-					return null;
+				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
+					return JsExpression.New(typeRef, arguments);
 
 				case ConstructorScriptSemantics.ImplType.NamedConstructor:
-					return JsExpression.New(JsExpression.Member(typeRef, sem.Name));
+					return JsExpression.New(JsExpression.Member(typeRef, sem.Name), arguments);
 
 				case ConstructorScriptSemantics.ImplType.StaticMethod:
-					return JsExpression.Invocation(JsExpression.Member(typeRef, sem.Name));
+					return JsExpression.Invocation(JsExpression.Member(typeRef, sem.Name), arguments);
 
 				case ConstructorScriptSemantics.ImplType.InlineCode:
 					var prevRegion = _errorReporter.Region;
 					try {
-						_errorReporter.Region = defaultConstructor.Region;
-						var tokens = InlineCodeMethodCompiler.Tokenize(defaultConstructor, sem.LiteralCode, s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
+						_errorReporter.Region = constructor.Region;
+						var tokens = InlineCodeMethodCompiler.Tokenize(constructor, sem.LiteralCode, s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 						if (tokens == null)
 							return JsExpression.Null;
-						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(defaultConstructor,
+						return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(constructor,
 						                                                                  tokens,
 						                                                                  null,
-						                                                                  EmptyList<JsExpression>.Instance,
-						                                                                  n => _runtimeLibrary.InstantiateType(ReflectionHelper.ParseReflectionName(n).Resolve(_compilation), t => ResolveTypeParameter(t, defaultConstructor.DeclaringTypeDefinition)),
-						                                                                  t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => ResolveTypeParameter(tp, defaultConstructor.DeclaringTypeDefinition)),
+						                                                                  arguments,
+						                                                                  n => _runtimeLibrary.InstantiateType(ReflectionHelper.ParseReflectionName(n).Resolve(_compilation),
+						                                                                  t => ResolveTypeParameter(t, constructor.DeclaringTypeDefinition)),
+						                                                                  t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => ResolveTypeParameter(tp, constructor.DeclaringTypeDefinition)),
 						                                                                  s => _errorReporter.InternalError("Error in inline code during default constructor generation: " + s));
 					}
 					finally {
@@ -124,6 +267,9 @@ namespace CoreLib.Plugin {
 
 				case ConstructorScriptSemantics.ImplType.Json:
 					return JsExpression.ObjectLiteral();
+
+				case ConstructorScriptSemantics.ImplType.NotUsableFromScript: // Can't be invoked so we don't need to create it.
+					return null;
 
 				default:
 					throw new Exception("Invalid constructor implementation type: " + sem.Type);
@@ -151,13 +297,16 @@ namespace CoreLib.Plugin {
 
 			var defaultConstructor = c.CSharpTypeDefinition.GetConstructors().SingleOrDefault(x => x.Parameters.Count == 0 && x.IsPublic);
 			if (defaultConstructor != null) {
-				JsExpression createInstance = CreateDefaultConstructorInvocation(defaultConstructor, typeRef);
-				if (createInstance != null) {
-					stmts.Add(new JsExpressionStatement(
-					              JsExpression.Assign(
-					                  JsExpression.Member(typeRef, "createInstance"),
-					                      JsExpression.FunctionDefinition(new string[0],
-					                          new JsReturnStatement(createInstance)))));
+				var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
+				if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NotUsableFromScript) {
+					JsExpression createInstance = CompileConstructorInvocation(defaultConstructor, typeRef, EmptyList<JsExpression>.Instance);
+					if (createInstance != null) {
+						stmts.Add(new JsExpressionStatement(
+						              JsExpression.Assign(
+						                  JsExpression.Member(typeRef, "createInstance"),
+						                      JsExpression.FunctionDefinition(new string[0],
+						                          new JsReturnStatement(createInstance)))));
+					}
 				}
 			}
 
@@ -195,7 +344,7 @@ namespace CoreLib.Plugin {
 			return new JsVariableDeclarationStatement(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
 		}
 
-		private IEnumerable<JsClass> TopologicalSortTypesByInheritance(IEnumerable<JsClass> types) {
+		private IEnumerable<JsType> TopologicalSortTypesByInheritance(IEnumerable<JsType> types) {
 			var backref = types.ToDictionary(c => c.CSharpTypeDefinition);
 			var edges = from s in backref.Keys from t in s.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(backref.Keys) select Tuple.Create(s, t);
 			return TopologicalSorter.TopologicalSort(backref.Keys, edges).Select(t => backref[t]);
@@ -250,12 +399,11 @@ namespace CoreLib.Plugin {
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)), new JsBlockStatement(stmts))));
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(
-								                                         JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? RegisterGenericInterface : RegisterGenericClass),
-								                                         GetRoot(t.CSharpTypeDefinition),
-								                                         JsExpression.String(name),
-								                                         typeRef,
-								                                         JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount))));
+								var args = new List<JsExpression> { GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
+								var metadata = GetMetadataDescriptor(t.CSharpTypeDefinition);
+								if (metadata != null)
+									args.Add(metadata);
+								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? RegisterGenericInterface : RegisterGenericClass), args)));
 							}
 							else {
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, unnamedCtor));
@@ -265,7 +413,6 @@ namespace CoreLib.Plugin {
 					}
 					else if (t is JsEnum) {
 						var e = (JsEnum)t;
-						bool flags = AttributeReader.HasAttribute<FlagsAttribute>(t.CSharpTypeDefinition);
 						result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)));
 						var values = new List<JsObjectLiteralProperty>();
 						foreach (var v in e.CSharpTypeDefinition.Fields) {
@@ -285,7 +432,6 @@ namespace CoreLib.Plugin {
 							
 						}
 						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(values))));
-						result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterEnum), GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Boolean(flags))));
 					}
 				}
 				catch (Exception ex) {
@@ -294,10 +440,10 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			var typesToRegister = orderedTypes.OfType<JsClass>()
-			                            .Where(c =>    !IsJsGeneric(c)
+			var typesToRegister = orderedTypes
+			                            .Where(c =>    !(c is JsClass && IsJsGeneric((JsClass)c))
 			                                        && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
-			                                        && (!MetadataUtils.IsResources(c.CSharpTypeDefinition) || Utils.IsExternallyVisible(c.CSharpTypeDefinition))	// Resources classes are only exported if they are public.
+			                                        && (!MetadataUtils.IsResources(c.CSharpTypeDefinition) || c.CSharpTypeDefinition.IsExternallyVisible())	// Resources classes are only exported if they are public.
 			                                        && !MetadataUtils.IsMixin(c.CSharpTypeDefinition))
 			                            .ToList();
 
@@ -305,23 +451,24 @@ namespace CoreLib.Plugin {
 			                .Select(c => {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
+			                                     if (c.CSharpTypeDefinition.Kind == TypeKind.Enum) {
+			                                         return CreateRegisterEnumCall(c.CSharpTypeDefinition, name, JsExpression.Identifier(_namer.GetTypeVariableName(name)));
+			                                     }
 			                                     if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
 			                                         return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterType), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
 			                                     }
 			                                     if (c.CSharpTypeDefinition.Kind == TypeKind.Interface) {
-			                                         return JsExpression.Invocation(
-			                                                    JsExpression.Member(_systemScript, RegisterInterface),
-			                                                    GetRoot(c.CSharpTypeDefinition),
-			                                                    JsExpression.String(name),
-			                                                    JsExpression.Identifier(_namer.GetTypeVariableName(name)),
-			                                                    JsExpression.ArrayLiteral(GetImplementedInterfaces(c.CSharpTypeDefinition.GetDefinition())));
+			                                         return CreateRegisterInterfaceCall(c.CSharpTypeDefinition,
+			                                                                            name,
+			                                                                            JsExpression.Identifier(_namer.GetTypeVariableName(name)),
+			                                                                            GetImplementedInterfaces(c.CSharpTypeDefinition.GetDefinition()).ToList());
 			                                     }
 			                                     else {
-			                                         return CreateRegisterClassCall(GetRoot(c.CSharpTypeDefinition),
+			                                         return CreateRegisterClassCall(c.CSharpTypeDefinition,
 			                                                                        name, 
 			                                                                        JsExpression.Identifier(_namer.GetTypeVariableName(name)),
 			                                                                        GetBaseClass(c.CSharpTypeDefinition),
-			                                                                        GetImplementedInterfaces(c.CSharpTypeDefinition));
+			                                                                        GetImplementedInterfaces(c.CSharpTypeDefinition).ToList());
 			                                     }
 			                                 }
 			                                 catch (Exception ex) {

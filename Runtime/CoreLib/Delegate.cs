@@ -6,7 +6,6 @@
 using System.Runtime.CompilerServices;
 
 namespace System {
-
 	[Imported(ObeysTypeSystem = true)]
 	[IgnoreNamespace]
 	[ScriptName("Function")]

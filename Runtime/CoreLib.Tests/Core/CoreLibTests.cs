@@ -20,6 +20,9 @@ namespace CoreLib.Tests.Core {
 	public class AsyncTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class AttributeTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class BooleanTests : CoreLibTestBase {}
 
 	[TestFixture]

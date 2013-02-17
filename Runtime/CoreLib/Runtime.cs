@@ -45,30 +45,6 @@ namespace System {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	[Imported]
-	public abstract class MulticastDelegate : Delegate {
-
-		protected MulticastDelegate(object target, string method)
-			: base(target, method) {
-		}
-
-		protected MulticastDelegate(Type target, string method)
-			: base(target, method) {
-		}
-
-		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]
-		public static bool operator==(MulticastDelegate a, MulticastDelegate b) { return false; }
-
-		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
-		public static bool operator!=(MulticastDelegate a, MulticastDelegate b) { return false; }
-
-		[InlineCode("{$System.Script}.getInvocationList({this})")]
-		public Delegate[] GetInvocationList() {
-			return null;
-		}
-	}
-
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
 	[Imported]
 	public struct RuntimeTypeHandle {
@@ -89,81 +65,9 @@ namespace System {
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
 	[Imported]
-	public abstract class Attribute {
-	}
-
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	[NonScriptable]
-	[Imported]
 	public sealed class ParamArrayAttribute : Attribute {
 	}
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	[NonScriptable]
-	[Imported]
-	[Flags]
-	public enum AttributeTargets {
-		Assembly = 0x0001,
-		Module = 0x0002,
-		Class = 0x0004,
-		Struct = 0x0008,
-		Enum = 0x0010,
-		Constructor = 0x0020,
-		Method = 0x0040,
-		Property = 0x0080,
-		Field = 0x0100,
-		Event = 0x0200,
-		Interface = 0x0400,
-		Parameter = 0x0800,
-		Delegate = 0x1000,
-		ReturnValue = 0x2000,
-		GenericParameter = 0x4000,
-		All = Assembly | Module | Class | Struct | Enum | Constructor |
-			  Method | Property | Field | Event | Interface | Parameter |
-			  Delegate | ReturnValue | GenericParameter,
-	}
-
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	[AttributeUsage(AttributeTargets.Class, Inherited = true)]
-	[NonScriptable]
-	[Imported]
-	public sealed class AttributeUsageAttribute : Attribute {
-
-		private AttributeTargets _attributeTarget = AttributeTargets.All;
-		private bool _allowMultiple;
-		private bool _inherited;
-
-		public AttributeUsageAttribute(AttributeTargets validOn) {
-			_attributeTarget = validOn;
-			_inherited = true;
-		}
-
-		public AttributeTargets ValidOn {
-			get {
-				return _attributeTarget;
-			}
-		}
-
-		public bool AllowMultiple {
-			get {
-				return _allowMultiple;
-			}
-			set {
-				_allowMultiple = value;
-			}
-		}
-
-		public bool Inherited {
-			get {
-				return _inherited;
-			}
-			set {
-				_inherited = value;
-			}
-		}
-	}
-
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	[AttributeUsage(AttributeTargets.Delegate | AttributeTargets.Interface | AttributeTargets.Event | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Enum | AttributeTargets.Struct | AttributeTargets.Class, Inherited = false)]
 	[NonScriptable]
 	[Imported]

@@ -14,10 +14,6 @@ using Saltarelle.Compiler.Tests;
 namespace CoreLib.Tests.OOPEmulatorTests {
 	[TestFixture]
 	public class ClassTests : OOPEmulatorTestBase {
-		private JsFunctionDefinitionExpression CreateFunction(string id) {
-			return JsExpression.FunctionDefinition(new[] { id }, new JsExpressionStatement(JsExpression.Identifier(id.ToUpper())));
-		}
-
 		[Test]
 		public void NonGenericClassWithAllDataWorks() {
 			AssertCorrect(
@@ -68,7 +64,7 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -125,7 +121,7 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -171,7 +167,7 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -196,7 +192,7 @@ var $MyClass = function(x) {
 	{TheBaseClass}.call(this);
 	x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -217,7 +213,7 @@ public class MyClass : Interface1, Interface2, Interface3 {
 var $MyClass = function(x) {
 	x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, null, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, null, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -640,7 +636,7 @@ var $$Outer$Inner = function() {
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
-{Script}.registerInterface(null, '$Interface', $$Interface, []);
+{Script}.registerInterface(null, '$Interface', $$Interface);
 {Script}.registerClass(null, '$Outer', $$Outer);
 {Script}.registerClass(null, '$Outer$Inner', $$Outer$Inner);
 ");
@@ -709,7 +705,7 @@ var $NormalClass = function() {
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
-{Script}.registerInterface(exports, 'Interface', $Interface, []);
+{Script}.registerInterface(exports, 'Interface', $Interface);
 {Script}.registerClass(exports, 'NormalClass', $NormalClass);
 {Script}.registerType(exports, 'ResourceClass', $ResourceClass);
 ");
@@ -757,7 +753,7 @@ var $C = function() {
 // I2
 var $I2 = function() {
 };
-{Script}.registerInterface(global, 'I1', $I1, []);
+{Script}.registerInterface(global, 'I1', $I1);
 {Script}.registerClass(global, 'C', $C, Object, $I1);
 {Script}.registerInterface(global, 'I2', $I2, [$I1]);
 ");
@@ -796,7 +792,7 @@ var $D = function() {
 // I3
 var $I3 = function() {
 };
-{Script}.registerClass(global, 'D', $D, null, {I2});
+{Script}.registerClass(global, 'D', $D, null, [{I2}]);
 {Script}.registerInterface(global, 'I3', $I3, [{I2}]);
 ", new [] { "D", "I3" });
 		}
@@ -818,7 +814,7 @@ var $D = function() {
 // I3
 var $I3 = function() {
 };
-{Script}.registerClass(global, 'D', $D, null, {I1}, {I2});
+{Script}.registerClass(global, 'D', $D, null, [{I1}, {I2}]);
 {Script}.registerInterface(global, 'I3', $I3, [{I1}, {I2}]);
 ", new[] { "D", "I3" });
 		}
@@ -842,7 +838,7 @@ var $D = function() {
 // I2
 var $I2 = function() {
 };
-{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), {Script}.makeGenericType({I}, [{String}, {Object}]));
+{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
 {Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
@@ -866,7 +862,7 @@ var $D = function() {
 // I2
 var $I2 = function() {
 };
-{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{C}, {Int32}]), {Script}.makeGenericType({I}, [{String}, {C}]));
+{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
 {Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}

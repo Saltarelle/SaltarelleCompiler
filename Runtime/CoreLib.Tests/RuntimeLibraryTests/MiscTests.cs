@@ -135,7 +135,7 @@ class C<T1, T2> where T1 : class {
 	// X
 	var $$X = function() {
 	};
-	ss.registerInterface(null, '$I', $$I, []);
+	ss.registerInterface(null, '$I', $$I);
 	ss.registerClass(null, '$X', $$X);
 })();
 ");

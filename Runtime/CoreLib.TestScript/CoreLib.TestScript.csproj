@@ -61,6 +61,7 @@
     <Compile Include="ActivatorTests.cs" />
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
+    <Compile Include="AttributeTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
     <Compile Include="ComparerTests.cs" />
