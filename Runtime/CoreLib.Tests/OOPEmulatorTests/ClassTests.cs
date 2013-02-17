@@ -879,5 +879,47 @@ public class D1<T> : I<T> {}
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
 		}
+
+		[Test]
+		public void ReferenceToGenericClassIsReplacedWithClassVariableForReferenceToSameClass() {
+			AssertCorrect(
+@"[System.Runtime.CompilerServices.IncludeGenericArguments(true)]
+public class OtherClass<T1, T2> {
+	public static void F() {}
+}
+[System.Runtime.CompilerServices.IncludeGenericArguments(true)]
+public class MyClass<T1, T2> {
+	public static void F() {}
+	public MyClass() {
+		F();
+		MyClass<T1, T2>.F();
+		MyClass<int, string>.F();
+		MyClass<T2, T1>.F();
+		OtherClass<T1, T2>.F();
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass$2 = function(T1, T2) {
+	var $type = function() {
+		$type.f();
+		$type.f();
+		{Script}.makeGenericType({MyClass}, [{Int32}, {String}]).f();
+		{Script}.makeGenericType({MyClass}, [T2, T1]).f();
+		{Script}.makeGenericType({OtherClass}, [T1, T2]).f();
+	};
+	$type.f = function() {
+	};
+	{Script}.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
+		return {Object};
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+{Script}.registerGenericClass(global, 'MyClass$2', $MyClass$2, 2);
+", new[] { "MyClass" });
+		}
 	}
 }

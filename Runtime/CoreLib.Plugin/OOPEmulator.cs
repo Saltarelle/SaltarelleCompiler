@@ -1,18 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace CoreLib.Plugin {
 	public class OOPEmulator : IOOPEmulator {
+		private class GenericSimplifier : RewriterVisitorBase<object> {
+			private readonly ITypeDefinition _genericType;
+			private readonly ReadOnlyCollection<string> _typeParameterNames;
+			private readonly JsExpression _replaceWith;
+
+			public GenericSimplifier(ITypeDefinition genericType, IEnumerable<string> typeParameterNames, JsExpression replaceWith) {
+				_genericType = genericType;
+				_typeParameterNames = typeParameterNames.AsReadOnly();
+				_replaceWith = replaceWith;
+			}
+
+			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
+				if (expression.Arguments.Count != 2)
+					return base.VisitInvocationExpression(expression, data);
+				var access = expression.Method as JsMemberAccessExpression;
+				if (access != null && access.MemberName == "makeGenericType") {
+					var target = access.Target as JsTypeReferenceExpression;
+					if (target != null && target.Type.FullName == "System.Script") {
+						var genericType = expression.Arguments[0] as JsTypeReferenceExpression;
+						if (genericType != null && genericType.Type.Equals(_genericType)) {
+							var arr = expression.Arguments[1] as JsArrayLiteralExpression;
+							if (arr != null && arr.Elements.Count == _typeParameterNames.Count && arr.Elements.All(e => e is JsIdentifierExpression)) {
+								if (arr.Elements.Select(e => ((JsIdentifierExpression)e).Name).SequenceEqual(_typeParameterNames))
+									return _replaceWith;
+							}
+						}
+					}
+				}
+				return base.VisitInvocationExpression(expression, data);
+			}
+
+			public JsExpression Process(JsExpression expr) {
+				return VisitExpression(expr, null);
+			}
+
+			public JsStatement Process(JsStatement stmt) {
+				return VisitStatement(stmt, null);
+			}
+		}
+
 		private const string Prototype = "prototype";
 		private const string RegisterClass = "registerClass";
 		private const string RegisterInterface = "registerInterface";
@@ -394,11 +437,15 @@ namespace CoreLib.Plugin {
 							var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 
 							if (IsJsGeneric(c)) {
+								var typeParameterNames = c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
 								var stmts = new List<JsStatement> { new JsVariableDeclarationStatement(InstantiatedGenericTypeVariableName, unnamedCtor) };
 								AddClassMembers(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName), stmts);
 								stmts.AddRange(c.StaticInitStatements);
 								stmts.Add(new JsReturnStatement(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
-								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)), new JsBlockStatement(stmts))));
+								var replacer = new GenericSimplifier(c.CSharpTypeDefinition, typeParameterNames, JsExpression.Identifier(InstantiatedGenericTypeVariableName));
+								for (int i = 0; i < stmts.Count; i++)
+									stmts[i] = replacer.Process(stmts[i]);
+								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(typeParameterNames, new JsBlockStatement(stmts))));
 								var args = new List<JsExpression> { GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
 								var metadata = GetMetadataDescriptor(t.CSharpTypeDefinition);
 								if (metadata != null)
