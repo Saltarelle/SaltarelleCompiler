@@ -28,7 +28,7 @@ namespace CoreLib.Tests
 			get { return "CoreLib.TestScript." + GetType().Name; }
 		}
 
-		protected HtmlPage GeneratePage(bool print = false) {
+		protected HtmlPage GeneratePage(bool print = false, bool waitForResults = true) {
 			var client = new WebClient();
 			try {
 				var html =
@@ -56,11 +56,13 @@ namespace CoreLib.Tests
 				try {
 					File.WriteAllText(tempFile, html);
 					var result = (HtmlPage)client.getPage("file://" + tempFile.Replace("\\", "/"));
-					DateTime startTime = DateTime.Now;
-					while (!result.getElementById("qunit-testresult").getTextContent().Contains("completed")) {
-						System.Threading.Thread.Sleep(100);
-						if ((DateTime.Now - startTime).Seconds > 3600)
-							throw new Exception("Tests timed out");
+					if (waitForResults) {
+						DateTime startTime = DateTime.Now;
+						while (!result.getElementById("qunit-testresult").getTextContent().Contains("completed")) {
+							System.Threading.Thread.Sleep(100);
+							if ((DateTime.Now - startTime).Seconds > 3600)
+								throw new Exception("Tests timed out");
+						}
 					}
 					return result;
 				}
@@ -75,7 +77,7 @@ namespace CoreLib.Tests
 
 		//[Test, Ignore("Not a real test")]
 		public void WriteThePage() {
-			GeneratePage(true);
+			GeneratePage(true, false);
 		}
 
 		[TestCaseSource("PerformTest")]
