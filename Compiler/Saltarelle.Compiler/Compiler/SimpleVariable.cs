@@ -2,7 +2,7 @@ using System.Diagnostics;
 using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler.Compiler {
-	internal class SimpleVariable : IVariable {
+	public class SimpleVariable : IVariable {
 		readonly DomRegion region;
 		readonly IType type;
 		readonly string name;
