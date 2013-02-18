@@ -85,8 +85,18 @@ namespace CoreLib.TestScript {
 			[Reflectable] public C11(DateTime dt) { D = dt; }
 		}
 
+		public class C12 {
+			[Reflectable] public int F1;
+			[Reflectable] public DateTime F2;
+			[Reflectable] public static string F3;
+		}
+
 		private MethodInfo GetMethod(Type type, string name, BindingFlags flags = BindingFlags.Default) {
 			return (MethodInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
+		}
+
+		private FieldInfo GetField(Type type, string name, BindingFlags flags = BindingFlags.Default) {
+			return (FieldInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
 		}
 
 		[Test]
@@ -119,9 +129,9 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void IsStaticFlagWorks() {
-			Assert.AreStrictEqual(typeof(C2).GetMembers(BindingFlags.Instance)[0].IsStatic, false, "Instance member should not be static");
-			Assert.AreStrictEqual(typeof(C2).GetMembers(BindingFlags.Static)[0].IsStatic, true, "Static member should be static");
+		public void IsStaticFlagWorksForMethod() {
+			Assert.AreStrictEqual(((MethodInfo)typeof(C2).GetMembers(BindingFlags.Instance)[0]).IsStatic, false, "Instance member should not be static");
+			Assert.AreStrictEqual(((MethodInfo)typeof(C2).GetMembers(BindingFlags.Static)[0]).IsStatic, true, "Static member should be static");
 		}
 
 		[Test]
@@ -389,6 +399,63 @@ namespace CoreLib.TestScript {
 			var c3 = (ConstructorInfo)typeof(C11).GetMembers()[0];
 			var o3 = (C11)c3.Invoke(new DateTime(2012, 1, 2));
 			Assert.AreEqual(o3.D, new DateTime(2012, 1, 2), "o3.D");
+		}
+
+		[Test]
+		public void MemberTypeIsFieldForField() {
+			Assert.AreStrictEqual(GetField(typeof(C12), "F1").MemberType, MemberTypes.Field, "Instance");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F3").MemberType, MemberTypes.Field, "Static");
+		}
+
+		[Test]
+		public void DeclaringTypeIsCorrectForField() {
+			Assert.AreStrictEqual(GetField(typeof(C12), "F1").DeclaringType, typeof(C12), "Instance");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F3").DeclaringType, typeof(C12), "Static");
+		}
+
+		[Test]
+		public void NameIsCorrectForField() {
+			Assert.AreStrictEqual(GetField(typeof(C12), "F1").Name, "F1", "Instance");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F3").Name, "F3", "Static");
+		}
+
+		[Test]
+		public void FieldTypeIsCorrectForField() {
+			Assert.AreStrictEqual(GetField(typeof(C12), "F1").FieldType, typeof(int), "Instance 1");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F2").FieldType, typeof(DateTime), "Instance 2");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F3").FieldType, typeof(string), "Static");
+		}
+
+		[Test]
+		public void IsStaticIsCorrectForField() {
+			Assert.AreStrictEqual(GetField(typeof(C12), "F1").IsStatic, false, "Instance 1");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F2").IsStatic, false, "Instance 2");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F3").IsStatic, true, "Static");
+		}
+
+		[Test]
+		public void GetValueWorksForInstanceField() {
+			var c = new C12 { F1 = 42 };
+			Assert.AreEqual(GetField(typeof(C12), "F1").GetValue(c), 42);
+		}
+
+		[Test]
+		public void GetValueWorksForStaticField() {
+			C12.F3 = "X_Test";
+			Assert.AreEqual(GetField(typeof(C12), "F3").GetValue(null), "X_Test");
+		}
+
+		[Test]
+		public void SetValueWorksForInstanceField() {
+			var c = new C12();
+			GetField(typeof(C12), "F1").SetValue(c, 14);
+			Assert.AreEqual(c.F1, 14);
+		}
+
+		[Test]
+		public void SetValueWorksForStaticField() {
+			GetField(typeof(C12), "F3").SetValue(null, "Hello, world");
+			Assert.AreEqual(C12.F3, "Hello, world");
 		}
 	}
 }

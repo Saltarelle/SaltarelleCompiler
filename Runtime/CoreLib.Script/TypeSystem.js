@@ -405,3 +405,15 @@ ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
 	else
 		return ss.applyConstructor(ci.js ? ci.typeDef[ci.js] : ci.typeDef, args);
 }
+
+ss.fieldAccess = function#? DEBUG ss$fieldAccess##(fi, obj) {
+	if (fi.isStatic && !!obj)
+		throw 'Cannot specify target for static field';
+	else if (!fi.isStatic && !obj)
+		throw 'Must specify target for instance field';
+	obj = fi.isStatic ? fi.typeDef : obj;
+	if (arguments.length === 3)
+		obj[fi.js] = arguments[2];
+	else
+		return obj[fi.js];
+}

@@ -458,18 +458,6 @@ namespace System.Reflection {
 			}
 		}
 	}
-
-	[NonScriptable]
-	[Imported]
-	public class FieldInfo {
-		public static FieldInfo GetFieldFromHandle(RuntimeFieldHandle h) {
-			return null;
-		}
-
-		public static FieldInfo GetFieldFromHandle(RuntimeFieldHandle h, RuntimeTypeHandle x) {
-			return null;
-		}
-	}
 }
 
 namespace System.Runtime.CompilerServices {

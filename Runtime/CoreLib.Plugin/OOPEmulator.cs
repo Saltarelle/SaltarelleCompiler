@@ -199,6 +199,7 @@ namespace CoreLib.Plugin {
 			if (attr.Count > 0)
 				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(attr.Select(a => ConstructAttribute(a, m.DeclaringTypeDefinition)))));
 
+			properties.Add(new JsObjectLiteralProperty("name", JsExpression.String(m.Name)));
 			if (m is IMethod) {
 				var method = (IMethod)m;
 				if (method.IsConstructor) {
@@ -208,7 +209,6 @@ namespace CoreLib.Plugin {
 						return null;
 					}
 					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Constructor)));
-					properties.Add(new JsObjectLiteralProperty("name", JsExpression.String(".ctor")));
 					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(method.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
 					if (sem.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
 						properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
@@ -223,7 +223,6 @@ namespace CoreLib.Plugin {
 					}
 
 					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)));
-					properties.Add(new JsObjectLiteralProperty("name", JsExpression.String(m.Name)));
 					if (m.IsStatic || sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
 						properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
 					}
@@ -235,9 +234,29 @@ namespace CoreLib.Plugin {
 					properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
 				}
 			}
-			else {
+			else if (m is IField) {
+				var field = (IField)m;
+				var sem = _metadataImporter.GetFieldSemantics(field);
+				if (sem.Type != FieldScriptSemantics.ImplType.Field) {
+					// TODO: Error message
+					return null;
+				}
+				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Field)));
+				if (m.IsStatic)
+					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
+				properties.Add(new JsObjectLiteralProperty("fieldType", InstantiateType(field.ReturnType, isGenericSpecialization)));
+				properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
+			}
+			else if (m is IProperty) {
 				// TODO
 				return null;
+			}
+			else if (m is IEvent) {
+				// TODO
+				return null;
+			}
+			else {
+				throw new ArgumentException("Invalid member " + m);
 			}
 
 			return JsExpression.ObjectLiteral(properties);

@@ -85,6 +85,7 @@
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Reflection\BindingFlags.cs" />
     <Compile Include="Reflection\ConstructorInfo.cs" />
+    <Compile Include="Reflection\FieldInfo.cs" />
     <Compile Include="Reflection\MemberInfo.cs" />
     <Compile Include="Reflection\MemberTypes.cs" />
     <Compile Include="Reflection\MethodBase.cs" />
