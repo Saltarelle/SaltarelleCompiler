@@ -470,18 +470,6 @@ namespace System.Reflection {
 			return null;
 		}
 	}
-
-	[Imported]
-	[Serializable]
-	public class MethodBase : MemberInfo {
-		public static MethodBase GetMethodFromHandle(RuntimeMethodHandle h) {
-			return null;
-		}
-
-		public static MethodBase GetMethodFromHandle(RuntimeMethodHandle h, RuntimeTypeHandle x) {
-			return null;
-		}
-	}
 }
 
 namespace System.Runtime.CompilerServices {

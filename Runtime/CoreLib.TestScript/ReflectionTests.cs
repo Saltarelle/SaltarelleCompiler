@@ -71,6 +71,20 @@ namespace CoreLib.TestScript {
 			[Reflectable] public static string M(string a) { return typeof(T1).FullName + " " + typeof(T2).FullName + " " + a; }
 		}
 
+		public class C10 {
+			public int X;
+			public string S;
+
+			[Reflectable, ScriptName("")] public C10(int x) { X = x; S = "X"; }
+			[Reflectable, ScriptName("ctor1")] public C10(int x, string s) { X = x; S = s; }
+		}
+
+		[Serializable]
+		public class C11 {
+			public DateTime D;
+			[Reflectable] public C11(DateTime dt) { D = dt; }
+		}
+
 		private MethodInfo GetMethod(Type type, string name, BindingFlags flags = BindingFlags.Default) {
 			return (MethodInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
 		}
@@ -121,7 +135,52 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void DeclaringTypeShouldBeCorrect() {
+		public void IsConstructorIsTrueForAllKindsOfConstructors() {
+			var c10 = typeof(C10).GetMembers();
+			var c11 = typeof(C11).GetMembers();
+			Assert.IsTrue(((ConstructorInfo)c10[0]).IsConstructor, "Unnamed");
+			Assert.IsTrue(((ConstructorInfo)c10[1]).IsConstructor, "Named");
+			Assert.IsTrue(((ConstructorInfo)c11[0]).IsConstructor, "Static method");
+		}
+
+		[Test]
+		public void IsStaticIsFalseForAllKindsOfConstructors() {
+			var c10 = typeof(C10).GetMembers();
+			var c11 = typeof(C11).GetMembers();
+			Assert.IsTrue(((ConstructorInfo)c10[0]).IsConstructor, "Unnamed");
+			Assert.IsTrue(((ConstructorInfo)c10[1]).IsConstructor, "Named");
+			Assert.IsTrue(((ConstructorInfo)c11[0]).IsConstructor, "Static method");
+		}
+
+		[Test]
+		public void MemberTypeIsConstructorForAllKindsOfConstructors() {
+			var c10 = typeof(C10).GetMembers();
+			var c11 = typeof(C11).GetMembers();
+			Assert.AreEqual(c10[0].MemberType, MemberTypes.Constructor, "Unnamed");
+			Assert.AreEqual(c10[1].MemberType, MemberTypes.Constructor, "Named");
+			Assert.AreEqual(c11[0].MemberType, MemberTypes.Constructor, "Static method");
+		}
+
+		[Test]
+		public void NameIsCtorForAllKindsOfConstructors() {
+			var c10 = typeof(C10).GetMembers();
+			var c11 = typeof(C11).GetMembers();
+			Assert.AreEqual(c10[0].Name, ".ctor", "Unnamed");
+			Assert.AreEqual(c10[1].Name, ".ctor", "Named");
+			Assert.AreEqual(c11[0].Name, ".ctor", "Static method");
+		}
+
+		[Test]
+		public void DeclaringTypeIsCorrectForAllKindsOfConstructors() {
+			var c10 = typeof(C10).GetMembers();
+			var c11 = typeof(C11).GetMembers();
+			Assert.AreEqual(c10[0].DeclaringType, typeof(C10), "Unnamed");
+			Assert.AreEqual(c10[1].DeclaringType, typeof(C10), "Named");
+			Assert.AreEqual(c11[0].DeclaringType, typeof(C11), "Static method");
+		}
+
+		[Test]
+		public void DeclaringTypeShouldBeCorrectForMethods() {
 			Assert.AreStrictEqual(GetMethod(typeof(C3), "M1").DeclaringType, typeof(C3), "Simple type");
 			Assert.AreStrictEqual(GetMethod(typeof(C5<,>), "M").DeclaringType, typeof(C5<,>), "Open generic type");
 			Assert.AreStrictEqual(GetMethod(typeof(C5<int,string>), "M").DeclaringType, typeof(C5<int,string>), "Constructed generic type");
@@ -138,6 +197,15 @@ namespace CoreLib.TestScript {
 
 			var m3 = GetMethod(typeof(C3), "M3");
 			Assert.AreEqual(m3.ParameterTypes, new[] { typeof(string), typeof(int) }, "M3 parameter types should be correct");
+		}
+
+		[Test]
+		public void ParameterTypesShouldBeCorrectForConstructors() {
+			var c10 = typeof(C10).GetMembers();
+			var c11 = typeof(C11).GetMembers();
+			Assert.AreEqual(((ConstructorInfo)c10[0]).ParameterTypes, new[] { typeof(int) }, "Unnamed");
+			Assert.AreEqual(((ConstructorInfo)c10[1]).ParameterTypes, new[] { typeof(int), typeof(string) }, "Named");
+			Assert.AreEqual(((ConstructorInfo)c11[0]).ParameterTypes, new[] { typeof(DateTime) }, "Static method");
 		}
 
 		[Test]
@@ -304,6 +372,23 @@ namespace CoreLib.TestScript {
 			Assert.Throws(() => m.Invoke(null, new Type[0], "a"), "0 type arguments without target should throw");
 			Assert.Throws(() => m.Invoke(null, new Type[1], "a"), "1 type arguments without target should throw");
 			Assert.Throws(() => m.Invoke(null, new Type[3], "a"), "3 type arguments without target should throw");
+		}
+
+		[Test]
+		public void InvokeWorksForAllKindsOfConstructors() {
+			var c1 = (ConstructorInfo)typeof(C10).GetMembers().Filter(m => ((ConstructorInfo)m).ParameterTypes.Length == 1)[0];
+			var o1 = (C10)c1.Invoke(42);
+			Assert.AreEqual(o1.X, 42, "o1.X");
+			Assert.AreEqual(o1.S, "X", "o1.S");
+
+			var c2 = (ConstructorInfo)typeof(C10).GetMembers().Filter(m => ((ConstructorInfo)m).ParameterTypes.Length == 2)[0];
+			var o2 = (C10)c2.Invoke(14, "Hello");
+			Assert.AreEqual(o2.X, 14, "o2.X");
+			Assert.AreEqual(o2.S, "Hello", "o2.S");
+
+			var c3 = (ConstructorInfo)typeof(C11).GetMembers()[0];
+			var o3 = (C11)c3.Invoke(new DateTime(2012, 1, 2));
+			Assert.AreEqual(o3.D, new DateTime(2012, 1, 2), "o3.D");
 		}
 	}
 }

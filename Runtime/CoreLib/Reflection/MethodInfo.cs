@@ -5,9 +5,6 @@ namespace System.Reflection {
 	[Serializable]
 	public class MethodInfo : MethodBase {
 		public Type ReturnType { get; private set; }
-		[ScriptName("params")]
-		public Type[] ParameterTypes { get; private set; }
-		public bool IsConstructor { [InlineCode("{this}.type === 1")] get; [InlineCode("0")] private set; }
 
 		[InlineCode("{$System.Script}.midel({this})")]
 		public Delegate CreateDelegate(Type delegateType) { return null; }

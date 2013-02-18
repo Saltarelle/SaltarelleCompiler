@@ -202,7 +202,18 @@ namespace CoreLib.Plugin {
 			if (m is IMethod) {
 				var method = (IMethod)m;
 				if (method.IsConstructor) {
-					return null;
+					var sem = _metadataImporter.GetConstructorSemantics(method);
+					if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.StaticMethod) {
+						// TODO: Error message
+						return null;
+					}
+					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Constructor)));
+					properties.Add(new JsObjectLiteralProperty("name", JsExpression.String(".ctor")));
+					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(method.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
+					if (sem.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
+						properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
+					if (sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
+						properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
 				}
 				else {
 					var sem = _metadataImporter.GetMethodSemantics(method);

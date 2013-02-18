@@ -379,7 +379,7 @@ ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAt
 	return result;
 };
 
-ss.midel = function#? DEBUG ss$getAttributes##(mi, target, typeArguments) {
+ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 	if (mi.isStatic && !!target)
 		throw 'Cannot specify target for static method';
 	else if (!mi.isStatic && !target)
@@ -398,3 +398,10 @@ ss.midel = function#? DEBUG ss$getAttributes##(mi, target, typeArguments) {
 	}
 	return ss.mkdel(target, method);
 };
+
+ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
+	if (ci.sm)
+		return ci.typeDef[ci.js].apply(null, args);
+	else
+		return ss.applyConstructor(ci.js ? ci.typeDef[ci.js] : ci.typeDef, args);
+}

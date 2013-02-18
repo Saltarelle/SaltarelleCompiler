@@ -84,8 +84,10 @@
     <Compile Include="DayOfWeek.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Reflection\BindingFlags.cs" />
+    <Compile Include="Reflection\ConstructorInfo.cs" />
     <Compile Include="Reflection\MemberInfo.cs" />
     <Compile Include="Reflection\MemberTypes.cs" />
+    <Compile Include="Reflection\MethodBase.cs" />
     <Compile Include="Reflection\MethodInfo.cs" />
     <Compile Include="MulticastDelegate.cs" />
     <Compile Include="SerializableAttribute.cs" />
