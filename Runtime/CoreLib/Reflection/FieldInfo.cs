@@ -6,7 +6,6 @@ namespace System.Reflection {
 	[Serializable]
 	public class FieldInfo : MemberInfo {
 		public Type FieldType { get; private set; }
-		public bool IsStatic { [InlineCode("{this}.isStatic || false")] get; [InlineCode("0")] private set; }
 
 		[InlineCode("{$System.Script}.fieldAccess({this}, {obj})")]
 		public object GetValue(object obj) { return null; }

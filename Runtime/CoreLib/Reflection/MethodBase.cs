@@ -8,7 +8,6 @@ namespace System.Reflection {
 		[ScriptName("params")]
 		public Type[] ParameterTypes { get; private set; }
 		public bool IsConstructor { [InlineCode("{this}.type === 1")] get; [InlineCode("0")] private set; }
-		public bool IsStatic { [InlineCode("{this}.isStatic || false")] get; [InlineCode("0")] private set; }
 
 		[NonScriptable, EditorBrowsable(EditorBrowsableState.Never)]
 		public static MethodBase GetMethodFromHandle(RuntimeMethodHandle h) {

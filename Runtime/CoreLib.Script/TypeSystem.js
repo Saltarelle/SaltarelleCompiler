@@ -66,7 +66,10 @@ ss.getGenericArguments = function#? DEBUG ss$getGenericArguments##(type) {
 ss._setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 	if (metadata.members) {
 		for (var i = 0; i < metadata.members.length; i++) {
-			metadata.members[i].typeDef = type;
+			var m = metadata.members[i];
+			m.typeDef = type;
+			if (m.adder) m.adder.typeDef = type;
+			if (m.remover) m.remover.typeDef = type;
 		}
 	}
 	type.__metadata = metadata;

@@ -9,6 +9,7 @@ namespace System.Reflection {
 		public string Name { get; private set; }
 		[ScriptName("typeDef")]
 		public Type DeclaringType { get; private set; } // TODO: Test
+		public bool IsStatic { [InlineCode("{this}.isStatic || false")] get; [InlineCode("0")] private set; }
 
 #warning TODO: GetCustomAttributes
 		public object[] GetCustomAttributes(bool inherit) { return null; }

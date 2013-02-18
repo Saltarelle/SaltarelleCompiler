@@ -91,12 +91,24 @@ namespace CoreLib.TestScript {
 			[Reflectable] public static string F3;
 		}
 
+		public class C13 {
+			[Reflectable] public event Action E1;
+			[Reflectable] public static event Action E2;
+
+			public void RaiseE1() { if (E1 != null) E1(); }
+			public static void RaiseE2() { if (E2 != null) E2(); }
+		}
+
 		private MethodInfo GetMethod(Type type, string name, BindingFlags flags = BindingFlags.Default) {
 			return (MethodInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
 		}
 
 		private FieldInfo GetField(Type type, string name, BindingFlags flags = BindingFlags.Default) {
 			return (FieldInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
+		}
+
+		private EventInfo GetEvent(Type type, string name, BindingFlags flags = BindingFlags.Default) {
+			return (EventInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
 		}
 
 		[Test]
@@ -420,17 +432,17 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void FieldTypeIsCorrectForField() {
-			Assert.AreStrictEqual(GetField(typeof(C12), "F1").FieldType, typeof(int), "Instance 1");
-			Assert.AreStrictEqual(GetField(typeof(C12), "F2").FieldType, typeof(DateTime), "Instance 2");
-			Assert.AreStrictEqual(GetField(typeof(C12), "F3").FieldType, typeof(string), "Static");
-		}
-
-		[Test]
 		public void IsStaticIsCorrectForField() {
 			Assert.AreStrictEqual(GetField(typeof(C12), "F1").IsStatic, false, "Instance 1");
 			Assert.AreStrictEqual(GetField(typeof(C12), "F2").IsStatic, false, "Instance 2");
 			Assert.AreStrictEqual(GetField(typeof(C12), "F3").IsStatic, true, "Static");
+		}
+
+		[Test]
+		public void FieldTypeIsCorrectForField() {
+			Assert.AreStrictEqual(GetField(typeof(C12), "F1").FieldType, typeof(int), "Instance 1");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F2").FieldType, typeof(DateTime), "Instance 2");
+			Assert.AreStrictEqual(GetField(typeof(C12), "F3").FieldType, typeof(string), "Static");
 		}
 
 		[Test]
@@ -456,6 +468,158 @@ namespace CoreLib.TestScript {
 		public void SetValueWorksForStaticField() {
 			GetField(typeof(C12), "F3").SetValue(null, "Hello, world");
 			Assert.AreEqual(C12.F3, "Hello, world");
+		}
+
+
+
+
+
+
+
+		[Test]
+		public void MemberTypeIsEventForEvent() {
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E1").MemberType, MemberTypes.Event, "Instance");
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E2").MemberType, MemberTypes.Event, "Static");
+		}
+
+		[Test]
+		public void DeclaringTypeIsCorrectForEvent() {
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E1").DeclaringType, typeof(C13), "Instance");
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E2").DeclaringType, typeof(C13), "Static");
+		}
+
+		[Test]
+		public void NameIsCorrectForEvent() {
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E1").Name, "E1", "Instance");
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E2").Name, "E2", "Static");
+		}
+
+		[Test]
+		public void IsStaticIsCorrectForEvent() {
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E1").IsStatic, false, "Instance");
+			Assert.AreStrictEqual(GetEvent(typeof(C13), "E2").IsStatic, true, "Static");
+		}
+
+		[Test]
+		public void AddEventHandlerMethodWorksForInstanceEvent() {
+			int i = 0;
+			Action handler = () => i++;
+			var obj = new C13();
+			var e = GetEvent(typeof(C13), "E1");
+			e.AddEventHandler(obj, handler);
+			obj.RaiseE1();
+			Assert.AreEqual(i, 1, "Event should have been raised");
+		}
+
+		[Test]
+		public void AddEventHandlerMethodWorksForStaticEvent() {
+			int i = 0;
+			Action handler = () => i++;
+			var e = GetEvent(typeof(C13), "E2");
+			e.AddEventHandler(null, handler);
+			C13.RaiseE2();
+			Assert.AreEqual(i, 1, "Event should have been raised");
+		}
+
+		[Test]
+		public void RemoveEventHandlerMethodWorksForInstanceEvent() {
+			int i = 0;
+			Action handler = () => i++;
+			var obj = new C13();
+			obj.E1 += handler;
+			obj.RaiseE1();
+
+			GetEvent(typeof(C13), "E1").RemoveEventHandler(obj, handler);
+			obj.RaiseE1();
+
+			Assert.AreEqual(i, 1, "Event handler should have been removed");
+		}
+
+		[Test]
+		public void RemoveEventHandlerMethodWorksForStaticEvent() {
+			int i = 0;
+			Action handler = () => i++;
+			C13.E2 += handler;
+			C13.RaiseE2();
+
+			GetEvent(typeof(C13), "E2").RemoveEventHandler(null, handler);
+			C13.RaiseE2();
+
+			Assert.AreEqual(i, 1, "Event handler should have been removed");
+		}
+
+		[Test]
+		public void PropertiesForAddMethodAreCorrect() {
+			var m1 = GetEvent(typeof(C13), "E1").AddMethod;
+			var m2 = GetEvent(typeof(C13), "E2").AddMethod;
+
+			Assert.AreEqual(m1.MemberType, MemberTypes.Method, "m1.MemberType");
+			Assert.AreEqual(m2.MemberType, MemberTypes.Method, "m2.MemberType");
+			Assert.AreEqual(m1.Name, "add_E1", "m1.Name");
+			Assert.AreEqual(m2.Name, "add_E2", "m2.Name");
+			Assert.AreEqual(m1.DeclaringType, typeof(C13), "m1.DeclaringType");
+			Assert.AreEqual(m2.DeclaringType, typeof(C13), "m2.DeclaringType");
+			Assert.IsFalse (m1.IsStatic, "m1.IsStatic");
+			Assert.IsTrue  (m2.IsStatic, "m2.IsStatic");
+			Assert.AreEqual(m1.ParameterTypes, new[] { typeof(Delegate) }, "m1.ParameterTypes");
+			Assert.AreEqual(m2.ParameterTypes, new[] { typeof(Delegate) }, "m2.ParameterTypes");
+			Assert.IsFalse (m1.IsConstructor, "m1.IsConstructor");
+			Assert.IsFalse (m2.IsConstructor, "m2.IsConstructor");
+			Assert.AreEqual(m1.ReturnType, typeof(object), "m1.ReturnType");
+			Assert.AreEqual(m2.ReturnType, typeof(object), "m2.ReturnType");
+			Assert.AreEqual(m1.TypeParameterCount, 0, "m1.TypeParameterCount");
+			Assert.AreEqual(m2.TypeParameterCount, 0, "m2.TypeParameterCount");
+			Assert.AreStrictEqual(m1.IsGenericMethodDefinition, false, "m1.IsGenericMethodDefinition");
+			Assert.AreStrictEqual(m2.IsGenericMethodDefinition, false, "m2.IsGenericMethodDefinition");
+
+			int i1 = 0, i2 = 0;
+			var obj = new C13();
+			Action handler1 = () => i1++, handler2 = () => i2++;
+			m1.Invoke(obj, handler1);
+			obj.RaiseE1();
+			Assert.AreEqual(i1, 1, "m1.Invoke");
+
+			m2.Invoke(null, handler2);
+			C13.RaiseE2();
+			Assert.AreEqual(i2, 1, "m2.Invoke");
+		}
+
+		[Test]
+		public void PropertiesForRemoveMethodAreCorrect() {
+			var m1 = GetEvent(typeof(C13), "E1").RemoveMethod;
+			var m2 = GetEvent(typeof(C13), "E2").RemoveMethod;
+
+			Assert.AreEqual(m1.MemberType, MemberTypes.Method, "m1.MemberType");
+			Assert.AreEqual(m2.MemberType, MemberTypes.Method, "m2.MemberType");
+			Assert.AreEqual(m1.Name, "remove_E1", "m1.Name");
+			Assert.AreEqual(m2.Name, "remove_E2", "m2.Name");
+			Assert.AreEqual(m1.DeclaringType, typeof(C13), "m1.DeclaringType");
+			Assert.AreEqual(m2.DeclaringType, typeof(C13), "m2.DeclaringType");
+			Assert.IsFalse (m1.IsStatic, "m1.IsStatic");
+			Assert.IsTrue  (m2.IsStatic, "m2.IsStatic");
+			Assert.AreEqual(m1.ParameterTypes, new[] { typeof(Delegate) }, "m1.ParameterTypes");
+			Assert.AreEqual(m2.ParameterTypes, new[] { typeof(Delegate) }, "m2.ParameterTypes");
+			Assert.IsFalse (m1.IsConstructor, "m1.IsConstructor");
+			Assert.IsFalse (m2.IsConstructor, "m2.IsConstructor");
+			Assert.AreEqual(m1.ReturnType, typeof(object), "m1.ReturnType");
+			Assert.AreEqual(m2.ReturnType, typeof(object), "m2.ReturnType");
+			Assert.AreEqual(m1.TypeParameterCount, 0, "m1.TypeParameterCount");
+			Assert.AreEqual(m2.TypeParameterCount, 0, "m2.TypeParameterCount");
+			Assert.AreStrictEqual(m1.IsGenericMethodDefinition, false, "m1.IsGenericMethodDefinition");
+			Assert.AreStrictEqual(m2.IsGenericMethodDefinition, false, "m2.IsGenericMethodDefinition");
+
+			int i1 = 0, i2 = 0;
+			var obj = new C13();
+			Action handler1 = () => i1++, handler2 = () => i2++;
+			obj.E1 += handler1;
+			m1.Invoke(obj, handler1);
+			obj.RaiseE1();
+			Assert.AreEqual(i1, 0, "m1.Invoke");
+
+			C13.E2 += handler2;
+			m2.Invoke(null, handler2);
+			C13.RaiseE2();
+			Assert.AreEqual(i2, 0, "m2.Invoke");
 		}
 	}
 }

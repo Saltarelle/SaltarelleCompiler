@@ -189,8 +189,8 @@ namespace CoreLib.Plugin {
 			return _runtimeLibrary.InstantiateType(type, tp => isGenericSpecialization && tp.OwnerType == EntityType.TypeDefinition ? JsExpression.Identifier(_namer.GetTypeParameterName(tp)) : (JsExpression)_systemObject);
 		}
 
-		private JsExpression ConstructReflectableMember(IMember m, bool isGenericSpecialization) {
-			if (!m.Attributes.Any(a => a.AttributeType.FullName == typeof(ReflectableAttribute).FullName || _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
+		private JsExpression ConstructReflectableMember(IMember m, bool isGenericSpecialization, bool alwaysInclude = false) {
+			if (!alwaysInclude && !m.Attributes.Any(a => a.AttributeType.FullName == typeof(ReflectableAttribute).FullName || _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
 				return null;
 
 			var properties = new List<JsObjectLiteralProperty>();
@@ -252,8 +252,28 @@ namespace CoreLib.Plugin {
 				return null;
 			}
 			else if (m is IEvent) {
-				// TODO
-				return null;
+				var evt = (IEvent)m;
+				var sem = _metadataImporter.GetEventSemantics(evt);
+				if (sem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods) {
+					// TODO: Error message
+					return null;
+				}
+				var addSem = _metadataImporter.GetMethodSemantics(evt.AddAccessor);
+				if (addSem.Type != MethodScriptSemantics.ImplType.NormalMethod && addSem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+					// TODO: Error message
+					return null;
+				}
+				var removeSem = _metadataImporter.GetMethodSemantics(evt.RemoveAccessor);
+				if (removeSem.Type != MethodScriptSemantics.ImplType.NormalMethod && removeSem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+					// TODO: Error message
+					return null;
+				}
+
+				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Event)));
+				if (m.IsStatic)
+					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
+				properties.Add(new JsObjectLiteralProperty("adder", ConstructReflectableMember(evt.AddAccessor, isGenericSpecialization, alwaysInclude: true)));
+				properties.Add(new JsObjectLiteralProperty("remover", ConstructReflectableMember(evt.RemoveAccessor, isGenericSpecialization, alwaysInclude: true)));
 			}
 			else {
 				throw new ArgumentException("Invalid member " + m);
