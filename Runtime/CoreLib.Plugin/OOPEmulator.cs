@@ -248,8 +248,14 @@ namespace CoreLib.Plugin {
 				properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
 			}
 			else if (m is IProperty) {
-				// TODO
-				return null;
+				var prop = (IProperty)m;
+				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Property)));
+				if (m.IsStatic)
+					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
+				properties.Add(new JsObjectLiteralProperty("propertyType", InstantiateType(prop.ReturnType, isGenericSpecialization)));
+				if (prop.Parameters.Count > 0)
+					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(prop.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
+				// TODO: Getter and setter
 			}
 			else if (m is IEvent) {
 				var evt = (IEvent)m;

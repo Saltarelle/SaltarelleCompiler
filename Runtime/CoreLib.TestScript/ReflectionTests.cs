@@ -99,6 +99,17 @@ namespace CoreLib.TestScript {
 			public static void RaiseE2() { if (E2 != null) E2(); }
 		}
 
+		public class C14 {
+			[Reflectable] public int P1 { get; set; }
+			[Reflectable, IntrinsicProperty] public string P2 { get; set; }
+			[Reflectable] public static DateTime P3 { get; set; }
+			[Reflectable, IntrinsicProperty] public static double P4 { get; set; }
+		}
+
+		public class C15 {
+			[Reflectable] public int this[int x, string s] { get { return 0; } set {} }
+		}
+
 		private MethodInfo GetMethod(Type type, string name, BindingFlags flags = BindingFlags.Default) {
 			return (MethodInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
 		}
@@ -109,6 +120,10 @@ namespace CoreLib.TestScript {
 
 		private EventInfo GetEvent(Type type, string name, BindingFlags flags = BindingFlags.Default) {
 			return (EventInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
+		}
+
+		private PropertyInfo GetProperty(Type type, string name, BindingFlags flags = BindingFlags.Default) {
+			return (PropertyInfo)type.GetMembers(flags).Filter(m => m.Name == name)[0];
 		}
 
 		[Test]
@@ -470,12 +485,6 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(C12.F3, "Hello, world");
 		}
 
-
-
-
-
-
-
 		[Test]
 		public void MemberTypeIsEventForEvent() {
 			Assert.AreStrictEqual(GetEvent(typeof(C13), "E1").MemberType, MemberTypes.Event, "Instance");
@@ -620,6 +629,87 @@ namespace CoreLib.TestScript {
 			m2.Invoke(null, handler2);
 			C13.RaiseE2();
 			Assert.AreEqual(i2, 0, "m2.Invoke");
+		}
+
+
+
+
+		[Test]
+		public void MemberTypeIsPropertyForProperty() {
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1").MemberType, MemberTypes.Property, "P1");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2").MemberType, MemberTypes.Property, "P2");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3").MemberType, MemberTypes.Property, "P3");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4").MemberType, MemberTypes.Property, "P4");
+		}
+
+		[Test]
+		public void MemberTypeIsPropertyForIndexer() {
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").MemberType, MemberTypes.Property);
+		}
+
+		[Test]
+		public void DeclaringTypeIsCorrectForProperty() {
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1").DeclaringType, typeof(C14), "P1");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2").DeclaringType, typeof(C14), "P2");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3").DeclaringType, typeof(C14), "P3");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4").DeclaringType, typeof(C14), "P4");
+		}
+
+		[Test]
+		public void DeclaringTypeIsCorrectForIndexer() {
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").DeclaringType, typeof(C15));
+		}
+
+		[Test]
+		public void NameIsCorrectForProperty() {
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1").Name, "P1");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2").Name, "P2");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3").Name, "P3");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4").Name, "P4");
+		}
+
+		[Test]
+		public void NameIsCorrectForIndexer() {
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").Name, "Item");
+		}
+
+		[Test]
+		public void IsStaticIsCorrectForProperty() {
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1").IsStatic, false, "P1");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2").IsStatic, false, "P2");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3").IsStatic, true, "P3");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4").IsStatic, true, "P4");
+		}
+
+		[Test]
+		public void IsStaticIsFalseForIndexer() {
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").IsStatic, false);
+		}
+
+		[Test]
+		public void PropertyTypeIsCorrectForProperty() {
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1").PropertyType, typeof(int), "P1");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2").PropertyType, typeof(string), "P2");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3").PropertyType, typeof(DateTime), "P3");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4").PropertyType, typeof(double), "P4");
+		}
+
+		[Test]
+		public void PropertyTypeIsCorrectForIndexer() {
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").PropertyType, typeof(int));
+		}
+
+		[Test]
+		public void IndexParameterTypesAreEmptyForProperty() {
+			Assert.AreEqual(GetProperty(typeof(C14), "P1").IndexParameterTypes, new Type[0], "P1");
+			Assert.AreEqual(GetProperty(typeof(C14), "P2").IndexParameterTypes, new Type[0], "P2");
+			Assert.AreEqual(GetProperty(typeof(C14), "P3").IndexParameterTypes, new Type[0], "P3");
+			Assert.AreEqual(GetProperty(typeof(C14), "P4").IndexParameterTypes, new Type[0], "P4");
+		}
+
+		[Test]
+		public void IndexParameterTypesAreCorrectForIndexer() {
+			Assert.AreEqual(GetProperty(typeof(C15), "Item").IndexParameterTypes, new[] { typeof(int), typeof(string) });
 		}
 	}
 }

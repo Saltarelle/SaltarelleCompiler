@@ -8,7 +8,7 @@ namespace System.Reflection {
 		public MemberTypes MemberType { get; private set; }
 		public string Name { get; private set; }
 		[ScriptName("typeDef")]
-		public Type DeclaringType { get; private set; } // TODO: Test
+		public Type DeclaringType { get; private set; }
 		public bool IsStatic { [InlineCode("{this}.isStatic || false")] get; [InlineCode("0")] private set; }
 
 #warning TODO: GetCustomAttributes
