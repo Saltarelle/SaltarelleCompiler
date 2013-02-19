@@ -61,6 +61,11 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		private void Message(Tuple<int, MessageSeverity, string> message, IEntity entity, params object[] otherArgs) {
+			_errorReporter.Region = entity.Region;
+			_errorReporter.Message(message, otherArgs.Length > 0 ? new[] { entity.FullName }.Concat(otherArgs).ToArray() : new[] { entity.FullName });
+		}
+
 		private const string Prototype = "prototype";
 		private const string RegisterClass = "registerClass";
 		private const string RegisterInterface = "registerInterface";
@@ -219,7 +224,7 @@ namespace CoreLib.Plugin {
 				if (method.IsConstructor) {
 					var sem = _metadataImporter.GetConstructorSemantics(method);
 					if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.StaticMethod) {
-						// TODO: Error message
+						Message(Messages._7200, m);
 						return null;
 					}
 					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Constructor)));
@@ -232,7 +237,7 @@ namespace CoreLib.Plugin {
 				else {
 					var sem = _metadataImporter.GetMethodSemantics(method);
 					if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-						// TODO: Error message
+						Message(Messages._7201, m, "method");
 						return null;
 					}
 
@@ -255,7 +260,7 @@ namespace CoreLib.Plugin {
 				var field = (IField)m;
 				var sem = _metadataImporter.GetFieldSemantics(field);
 				if (sem.Type != FieldScriptSemantics.ImplType.Field) {
-					// TODO: Error message
+					Message(Messages._7201, m, "field");
 					return null;
 				}
 				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Field)));
@@ -277,11 +282,11 @@ namespace CoreLib.Plugin {
 				switch (sem.Type) {
 					case PropertyScriptSemantics.ImplType.GetAndSetMethods:
 						if (sem.GetMethod != null && sem.GetMethod.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.SetMethod.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-							// TODO: Error message
+							Message(Messages._7202, m, "property", "getter");
 							return null;
 						}
 						if (sem.SetMethod != null && sem.SetMethod.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.SetMethod.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-							// TODO: Error message
+							Message(Messages._7202, m, "property", "setter");
 							return null;
 						}
 						if (sem.GetMethod != null)
@@ -296,7 +301,7 @@ namespace CoreLib.Plugin {
 							properties.Add(new JsObjectLiteralProperty("setter", ConstructFieldPropertyAccessor(prop.Setter, sem.FieldName, isGenericSpecialization: isGenericSpecialization, isGetter: false)));
 						break;
 					default:
-						// TODO: Error message
+						Message(Messages._7201, m, "property");
 						return null;
 				}
 			}
@@ -304,17 +309,17 @@ namespace CoreLib.Plugin {
 				var evt = (IEvent)m;
 				var sem = _metadataImporter.GetEventSemantics(evt);
 				if (sem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods) {
-					// TODO: Error message
+					Message(Messages._7201, m, "event");
 					return null;
 				}
 				var addSem = _metadataImporter.GetMethodSemantics(evt.AddAccessor);
 				if (addSem.Type != MethodScriptSemantics.ImplType.NormalMethod && addSem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					// TODO: Error message
+					Message(Messages._7202, m, "event", "add accessor");
 					return null;
 				}
 				var removeSem = _metadataImporter.GetMethodSemantics(evt.RemoveAccessor);
 				if (removeSem.Type != MethodScriptSemantics.ImplType.NormalMethod && removeSem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					// TODO: Error message
+					Message(Messages._7202, m, "event", "remove accessor");
 					return null;
 				}
 

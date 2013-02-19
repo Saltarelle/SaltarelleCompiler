@@ -191,6 +191,7 @@
     <Compile Include="MetadataImporterTests\SerializableTypeTests.cs" />
     <Compile Include="MetadataImporterTests\TypeTests.cs" />
     <Compile Include="OOPEmulatorTests\ClassTests.cs" />
+    <Compile Include="OOPEmulatorTests\ReflectionTests.cs" />
     <Compile Include="OOPEmulatorTests\EnumTests.cs" />
     <Compile Include="OOPEmulatorTests\OverallStructureTests.cs" />
     <Compile Include="OOPEmulatorTests\OOPEmulatorTestBase.cs" />
