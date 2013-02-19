@@ -104,10 +104,31 @@ namespace CoreLib.TestScript {
 			[Reflectable, IntrinsicProperty] public string P2 { get; set; }
 			[Reflectable] public static DateTime P3 { get; set; }
 			[Reflectable, IntrinsicProperty] public static double P4 { get; set; }
+
+			[Reflectable] public int P5 { get { return 0; } }
+			[Reflectable, IntrinsicProperty] public string P6 { get { return null; } }
+			[Reflectable] public static DateTime P7 { get { return default(DateTime); } }
+			[Reflectable, IntrinsicProperty] public static double P8 { get { return 0; } }
+
+			[Reflectable] public int P9 { set {} }
+			[Reflectable, IntrinsicProperty] public string P10 { set {} }
+			[Reflectable] public static DateTime P11 { set {} }
+			[Reflectable, IntrinsicProperty] public static double P12 { set {} }
 		}
 
 		public class C15 {
-			[Reflectable] public int this[int x, string s] { get { return 0; } set {} }
+			public int x;
+			public string s;
+			public string v;
+			[Reflectable] public string this[int x, string s] { get { return v + " " + x + " " + s; } set { this.x = x; this.s = s; this.v = value; } }
+		}
+
+		public class C16 {
+			[Reflectable] public string this[int x, string s] { get { return null; } }
+		}
+
+		public class C17 {
+			[Reflectable] public string this[int x, string s] { set {} }
 		}
 
 		private MethodInfo GetMethod(Type type, string name, BindingFlags flags = BindingFlags.Default) {
@@ -631,9 +652,6 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(i2, 0, "m2.Invoke");
 		}
 
-
-
-
 		[Test]
 		public void MemberTypeIsPropertyForProperty() {
 			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1").MemberType, MemberTypes.Property, "P1");
@@ -696,7 +714,7 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void PropertyTypeIsCorrectForIndexer() {
-			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").PropertyType, typeof(int));
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item").PropertyType, typeof(string));
 		}
 
 		[Test]
@@ -710,6 +728,295 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void IndexParameterTypesAreCorrectForIndexer() {
 			Assert.AreEqual(GetProperty(typeof(C15), "Item").IndexParameterTypes, new[] { typeof(int), typeof(string) });
+		}
+
+		[Test]
+		public void PropertiesForGetMethodAreCorrectForPropertyImplementedAsGetAndSetMethods() {
+			var m1 = GetProperty(typeof(C14), "P1").GetMethod;
+			var m2 = GetProperty(typeof(C14), "P3").GetMethod;
+
+			Assert.AreEqual(m1.MemberType, MemberTypes.Method, "m1.MemberType");
+			Assert.AreEqual(m2.MemberType, MemberTypes.Method, "m2.MemberType");
+			Assert.AreEqual(m1.Name, "get_P1", "m1.Name");
+			Assert.AreEqual(m2.Name, "get_P3", "m2.Name");
+			Assert.AreEqual(m1.DeclaringType, typeof(C14), "m1.DeclaringType");
+			Assert.AreEqual(m2.DeclaringType, typeof(C14), "m2.DeclaringType");
+			Assert.IsFalse (m1.IsStatic, "m1.IsStatic");
+			Assert.IsTrue  (m2.IsStatic, "m2.IsStatic");
+			Assert.AreEqual(m1.ParameterTypes.Length, 0, "m1.ParameterTypes");
+			Assert.AreEqual(m2.ParameterTypes.Length, 0, "m2.ParameterTypes");
+			Assert.IsFalse (m1.IsConstructor, "m1.IsConstructor");
+			Assert.IsFalse (m2.IsConstructor, "m2.IsConstructor");
+			Assert.AreEqual(m1.ReturnType, typeof(int), "m1.ReturnType");
+			Assert.AreEqual(m2.ReturnType, typeof(DateTime), "m2.ReturnType");
+			Assert.AreEqual(m1.TypeParameterCount, 0, "m1.TypeParameterCount");
+			Assert.AreEqual(m2.TypeParameterCount, 0, "m2.TypeParameterCount");
+			Assert.AreStrictEqual(m1.IsGenericMethodDefinition, false, "m1.IsGenericMethodDefinition");
+			Assert.AreStrictEqual(m2.IsGenericMethodDefinition, false, "m2.IsGenericMethodDefinition");
+
+			var c = new C14() { P1 = 78 };
+			object p1 = m1.Invoke(c);
+			Assert.AreEqual(p1, 78, "m1.Invoke");
+
+			C14.P3 = new DateTime(2012, 4, 2);
+			object p2 = m2.Invoke(null);
+			Assert.AreEqual(p2, new DateTime(2012, 4, 2), "m2.Invoke");
+		}
+
+		[Test]
+		public void PropertiesForSetMethodAreCorrectForPropertyImplementedAsGetAndSetMethods() {
+			var m1 = GetProperty(typeof(C14), "P1").SetMethod;
+			var m2 = GetProperty(typeof(C14), "P3").SetMethod;
+
+			Assert.AreEqual(m1.MemberType, MemberTypes.Method, "m1.MemberType");
+			Assert.AreEqual(m2.MemberType, MemberTypes.Method, "m2.MemberType");
+			Assert.AreEqual(m1.Name, "set_P1", "m1.Name");
+			Assert.AreEqual(m2.Name, "set_P3", "m2.Name");
+			Assert.AreEqual(m1.DeclaringType, typeof(C14), "m1.DeclaringType");
+			Assert.AreEqual(m2.DeclaringType, typeof(C14), "m2.DeclaringType");
+			Assert.IsFalse (m1.IsStatic, "m1.IsStatic");
+			Assert.IsTrue  (m2.IsStatic, "m2.IsStatic");
+			Assert.AreEqual(m1.ParameterTypes, new[] { typeof(int) }, "m1.ParameterTypes");
+			Assert.AreEqual(m2.ParameterTypes, new[] { typeof(DateTime) }, "m2.ParameterTypes");
+			Assert.IsFalse (m1.IsConstructor, "m1.IsConstructor");
+			Assert.IsFalse (m2.IsConstructor, "m2.IsConstructor");
+			Assert.AreEqual(m1.ReturnType, typeof(object), "m1.ReturnType");
+			Assert.AreEqual(m2.ReturnType, typeof(object), "m2.ReturnType");
+			Assert.AreEqual(m1.TypeParameterCount, 0, "m1.TypeParameterCount");
+			Assert.AreEqual(m2.TypeParameterCount, 0, "m2.TypeParameterCount");
+			Assert.AreStrictEqual(m1.IsGenericMethodDefinition, false, "m1.IsGenericMethodDefinition");
+			Assert.AreStrictEqual(m2.IsGenericMethodDefinition, false, "m2.IsGenericMethodDefinition");
+
+			var c = new C14();
+			m1.Invoke(c, 42);
+			Assert.AreEqual(c.P1, 42, "m1.Invoke");
+
+			C14.P3 = new DateTime(2010, 1, 1);
+			m2.Invoke(null, new DateTime(2012, 2, 3));
+			Assert.AreEqual(C14.P3, new DateTime(2012, 2, 3), "m2.Invoke");
+		}
+
+		[Test]
+		public void PropertiesForGetMethodAreCorrectForPropertyImplementedAsFields() {
+			var m1 = GetProperty(typeof(C14), "P2").GetMethod;
+			var m2 = GetProperty(typeof(C14), "P4").GetMethod;
+
+			Assert.AreEqual(m1.MemberType, MemberTypes.Method, "m1.MemberType");
+			Assert.AreEqual(m2.MemberType, MemberTypes.Method, "m2.MemberType");
+			Assert.AreEqual(m1.Name, "get_P2", "m1.Name");
+			Assert.AreEqual(m2.Name, "get_P4", "m2.Name");
+			Assert.AreEqual(m1.DeclaringType, typeof(C14), "m1.DeclaringType");
+			Assert.AreEqual(m2.DeclaringType, typeof(C14), "m2.DeclaringType");
+			Assert.IsFalse (m1.IsStatic, "m1.IsStatic");
+			Assert.IsTrue  (m2.IsStatic, "m2.IsStatic");
+			Assert.AreEqual(m1.ParameterTypes.Length, 0, "m1.ParameterTypes");
+			Assert.AreEqual(m2.ParameterTypes.Length, 0, "m2.ParameterTypes");
+			Assert.IsFalse (m1.IsConstructor, "m1.IsConstructor");
+			Assert.IsFalse (m2.IsConstructor, "m2.IsConstructor");
+			Assert.AreEqual(m1.ReturnType, typeof(string), "m1.ReturnType");
+			Assert.AreEqual(m2.ReturnType, typeof(double), "m2.ReturnType");
+			Assert.AreEqual(m1.TypeParameterCount, 0, "m1.TypeParameterCount");
+			Assert.AreEqual(m2.TypeParameterCount, 0, "m2.TypeParameterCount");
+			Assert.AreStrictEqual(m1.IsGenericMethodDefinition, false, "m1.IsGenericMethodDefinition");
+			Assert.AreStrictEqual(m2.IsGenericMethodDefinition, false, "m2.IsGenericMethodDefinition");
+
+			var c = new C14() { P2 = "Hello, world" };
+			object p1 = m1.Invoke(c);
+			Assert.AreEqual(p1, "Hello, world", "m1.Invoke");
+
+			C14.P4 = 3.5;
+			object p2 = m2.Invoke(null);
+			Assert.AreEqual(p2, 3.5, "m2.Invoke");
+		}
+
+		[Test]
+		public void PropertiesForSetMethodAreCorrectForPropertyImplementedAsFields() {
+			var m1 = GetProperty(typeof(C14), "P2").SetMethod;
+			var m2 = GetProperty(typeof(C14), "P4").SetMethod;
+
+			Assert.AreEqual(m1.MemberType, MemberTypes.Method, "m1.MemberType");
+			Assert.AreEqual(m2.MemberType, MemberTypes.Method, "m2.MemberType");
+			Assert.AreEqual(m1.Name, "set_P2", "m1.Name");
+			Assert.AreEqual(m2.Name, "set_P4", "m2.Name");
+			Assert.AreEqual(m1.DeclaringType, typeof(C14), "m1.DeclaringType");
+			Assert.AreEqual(m2.DeclaringType, typeof(C14), "m2.DeclaringType");
+			Assert.IsFalse (m1.IsStatic, "m1.IsStatic");
+			Assert.IsTrue  (m2.IsStatic, "m2.IsStatic");
+			Assert.AreEqual(m1.ParameterTypes, new[] { typeof(string) }, "m1.ParameterTypes");
+			Assert.AreEqual(m2.ParameterTypes, new[] { typeof(double) }, "m2.ParameterTypes");
+			Assert.IsFalse (m1.IsConstructor, "m1.IsConstructor");
+			Assert.IsFalse (m2.IsConstructor, "m2.IsConstructor");
+			Assert.AreEqual(m1.ReturnType, typeof(object), "m1.ReturnType");
+			Assert.AreEqual(m2.ReturnType, typeof(object), "m2.ReturnType");
+			Assert.AreEqual(m1.TypeParameterCount, 0, "m1.TypeParameterCount");
+			Assert.AreEqual(m2.TypeParameterCount, 0, "m2.TypeParameterCount");
+			Assert.AreStrictEqual(m1.IsGenericMethodDefinition, false, "m1.IsGenericMethodDefinition");
+			Assert.AreStrictEqual(m2.IsGenericMethodDefinition, false, "m2.IsGenericMethodDefinition");
+
+			var c = new C14();
+			m1.Invoke(c, "Something");
+			Assert.AreEqual(c.P2, "Something", "m1.Invoke");
+
+			C14.P4 = 7.5;
+			m2.Invoke(null, 2.5);
+			Assert.AreEqual(C14.P4, 2.5, "m2.Invoke");
+		}
+
+		[Test]
+		public void PropertiesForGetMethodAreCorrectForIndexer() {
+			var m = GetProperty(typeof(C15), "Item").GetMethod;
+
+			Assert.AreEqual(m.MemberType, MemberTypes.Method, "MemberType");
+			Assert.AreEqual(m.Name, "get_Item", "Name");
+			Assert.AreEqual(m.DeclaringType, typeof(C15), "DeclaringType");
+			Assert.IsFalse (m.IsStatic, "IsStatic");
+			Assert.AreEqual(m.ParameterTypes, new[] { typeof(int), typeof(string) }, "ParameterTypes");
+			Assert.IsFalse (m.IsConstructor, "IsConstructor");
+			Assert.AreEqual(m.ReturnType, typeof(string), "ReturnType");
+			Assert.AreEqual(m.TypeParameterCount, 0, "TypeParameterCount");
+			Assert.AreStrictEqual(m.IsGenericMethodDefinition, false, "IsGenericMethodDefinition");
+
+			var c = new C15() { v = "X" };
+			object v = m.Invoke(c, 42, "Hello");
+			Assert.AreEqual(v, "X 42 Hello", "Invoke");
+		}
+
+		[Test]
+		public void PropertiesForSetMethodAreCorrectForIndexer() {
+			var m = GetProperty(typeof(C15), "Item").SetMethod;
+
+			Assert.AreEqual(m.MemberType, MemberTypes.Method, "MemberType");
+			Assert.AreEqual(m.Name, "set_Item", "Name");
+			Assert.AreEqual(m.DeclaringType, typeof(C15), "DeclaringType");
+			Assert.IsFalse (m.IsStatic, "IsStatic");
+			Assert.AreEqual(m.ParameterTypes, new[] { typeof(int), typeof(string), typeof(string) }, "ParameterTypes");
+			Assert.IsFalse (m.IsConstructor, "IsConstructor");
+			Assert.AreEqual(m.ReturnType, typeof(object), "ReturnType");
+			Assert.AreEqual(m.TypeParameterCount, 0, "TypeParameterCount");
+			Assert.AreStrictEqual(m.IsGenericMethodDefinition, false, "IsGenericMethodDefinition");
+
+			var c = new C15();
+			m.Invoke(c, 42, "Hello", "The_value");
+
+			Assert.AreEqual(c.x, 42, "invoke (x)");
+			Assert.AreEqual(c.s, "Hello", "invoke (s)");
+			Assert.AreEqual(c.v, "The_value", "invoke (value)");
+		}
+
+		[Test]
+		public void CanReadAndWriteAndPropertiesWithOnlyOneAccessor() {
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1" ).CanRead,  true,   "P1.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P1" ).CanWrite, true,   "P1.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2" ).CanRead,  true,   "P2.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P2" ).CanWrite, true,   "P2.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3" ).CanRead,  true,   "P3.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P3" ).CanWrite, true,   "P3.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4" ).CanRead,  true,   "P4.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P4" ).CanWrite, true,   "P4.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P5" ).CanRead,  true,   "P5.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P5" ).CanWrite, false,  "P5.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P6" ).CanRead,  true,   "P6.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P6" ).CanWrite, false,  "P6.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P7" ).CanRead,  true,   "P7.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P7" ).CanWrite, false,  "P7.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P8" ).CanRead,  true,   "P8.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P8" ).CanWrite, false,  "P8.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P9" ).CanRead,  false,  "P9.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P9" ).CanWrite, true,   "P9.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P10").CanRead,  false, "P10.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P10").CanWrite, true,  "P10.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P11").CanRead,  false, "P11.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P11").CanWrite, true,  "P11.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P12").CanRead,  false, "P12.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C14), "P12").CanWrite, true,  "P12.CanWrite");
+
+			Assert.IsTrue (GetProperty(typeof(C14), "P1" ).GetMethod != null,  "P1.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P1" ).SetMethod != null,  "P1.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P2" ).GetMethod != null,  "P2.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P2" ).SetMethod != null,  "P2.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P3" ).GetMethod != null,  "P3.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P3" ).SetMethod != null,  "P3.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P4" ).GetMethod != null,  "P4.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P4" ).SetMethod != null,  "P4.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P5" ).GetMethod != null,  "P5.GetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P5" ).SetMethod != null,  "P5.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P6" ).GetMethod != null,  "P6.GetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P6" ).SetMethod != null,  "P6.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P7" ).GetMethod != null,  "P7.GetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P7" ).SetMethod != null,  "P7.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P8" ).GetMethod != null,  "P8.GetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P8" ).SetMethod != null,  "P8.SetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P9" ).GetMethod != null,  "P9.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P9" ).SetMethod != null,  "P9.SetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P10").GetMethod != null, "P10.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P10").SetMethod != null, "P10.SetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P11").GetMethod != null, "P11.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P11").SetMethod != null, "P11.SetMethod");
+			Assert.IsFalse(GetProperty(typeof(C14), "P12").GetMethod != null, "P12.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C14), "P12").SetMethod != null, "P12.SetMethod");
+		}
+
+		[Test]
+		public void CanReadAndWriteAndIndexersWithOnlyOneAccessor() {
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item" ).CanRead,  true,  "C15.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C15), "Item" ).CanWrite, true,  "C15.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C16), "Item" ).CanRead,  true,  "C16.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C16), "Item" ).CanWrite, false, "C16.CanWrite");
+			Assert.AreStrictEqual(GetProperty(typeof(C17), "Item" ).CanRead,  false, "C17.CanRead");
+			Assert.AreStrictEqual(GetProperty(typeof(C17), "Item" ).CanWrite, true,  "C17.CanWrite");
+
+			Assert.IsTrue (GetProperty(typeof(C15), "Item" ).GetMethod != null, "C15.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C15), "Item" ).SetMethod != null, "C15.SetMethod");
+			Assert.IsTrue (GetProperty(typeof(C16), "Item" ).GetMethod != null, "C16.GetMethod");
+			Assert.IsFalse(GetProperty(typeof(C16), "Item" ).SetMethod != null, "C16.SetMethod");
+			Assert.IsFalse(GetProperty(typeof(C17), "Item" ).GetMethod != null, "C17.GetMethod");
+			Assert.IsTrue (GetProperty(typeof(C17), "Item" ).SetMethod != null, "C17.SetMethod");
+		}
+
+		[Test]
+		public void PropertyInfoGetValueWorks() {
+			var p1 = GetProperty(typeof(C14), "P1");
+			var p2 = GetProperty(typeof(C14), "P2");
+			var p3 = GetProperty(typeof(C14), "P3");
+			var p4 = GetProperty(typeof(C14), "P4");
+			var i  = GetProperty(typeof(C15), "Item");
+
+			var c14 = new C14 { P1 = 42, P2 = "Hello, world!" };
+			C14.P3 = new DateTime(2013, 3, 5);
+			C14.P4 = 7.5;
+			Assert.AreEqual(p1.GetValue(c14), 42, "P1.GetValue");
+			Assert.AreEqual(p2.GetValue(c14), "Hello, world!", "P2.GetValue");
+			Assert.AreEqual(p3.GetValue(null), new DateTime(2013, 3, 5), "P3.GetValue");
+			Assert.AreEqual(p4.GetValue(null), 7.5, "P4.GetValue");
+
+			var c15 = new C15() { v = "X" };
+			Assert.AreEqual(i.GetValue(c15, new object[] { 42, "Hello" }), "X 42 Hello", "Item.GetValue");
+		}
+
+		[Test]
+		public void PropertyInfoSetValueWorks() {
+			var p1 = GetProperty(typeof(C14), "P1");
+			var p2 = GetProperty(typeof(C14), "P2");
+			var p3 = GetProperty(typeof(C14), "P3");
+			var p4 = GetProperty(typeof(C14), "P4");
+			var i  = GetProperty(typeof(C15), "Item");
+
+			var c14 = new C14();
+			p1.SetValue(c14, 42);
+			p2.SetValue(c14, "Hello, world!");
+			p3.SetValue(null, new DateTime(2013, 3, 5));
+			p4.SetValue(null, 7.5);
+
+			Assert.AreEqual(c14.P1, 42, "P1.SetValue");
+			Assert.AreEqual(c14.P2, "Hello, world!", "P2.SetValue");
+			Assert.AreEqual(C14.P3, new DateTime(2013, 3, 5), "P3.SetValue");
+			Assert.AreEqual(C14.P4, 7.5, "P4.SetValue");
+
+			var c15 = new C15() { v = "X" };
+			i.SetValue(c15, "The_value", new object[] { 378, "X" });
+			Assert.AreEqual(c15.s, "X", "Item.SetValue.s");
+			Assert.AreEqual(c15.x, 378, "Item.SetValue.x");
+			Assert.AreEqual(c15.v, "The_value", "Item.SetValue.value");
 		}
 	}
 }

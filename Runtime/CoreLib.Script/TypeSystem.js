@@ -70,6 +70,8 @@ ss._setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 			m.typeDef = type;
 			if (m.adder) m.adder.typeDef = type;
 			if (m.remover) m.remover.typeDef = type;
+			if (m.getter) m.getter.typeDef = type;
+			if (m.setter) m.setter.typeDef = type;
 		}
 	}
 	type.__metadata = metadata;
@@ -388,16 +390,25 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 	else if (!mi.isStatic && !target)
 		throw 'Must specify target for instance method';
 
-	var method = mi.isStatic ? mi.typeDef[mi.js] : target[mi.js];
-
-	if (mi.tpcount) {
-		if (!typeArguments || typeArguments.length !== mi.tpcount)
-			throw 'Wrong number of type arguments';
-		method = method.apply(null, typeArguments);
+	var method;
+	if (mi.fget) {
+		method = function() { return (mi.isStatic ? mi.typeDef : this)[mi.fget]; };
+	}
+	else if (mi.fset) {
+		method = function(v) { (mi.isStatic ? mi.typeDef : this)[mi.fset] = v; };
 	}
 	else {
-		if (typeArguments && typeArguments.length)
-			throw 'Cannot specify type arguments for non-generic method';
+		var method = mi.isStatic ? mi.typeDef[mi.js] : target[mi.js];
+
+		if (mi.tpcount) {
+			if (!typeArguments || typeArguments.length !== mi.tpcount)
+				throw 'Wrong number of type arguments';
+			method = method.apply(null, typeArguments);
+		}
+		else {
+			if (typeArguments && typeArguments.length)
+				throw 'Cannot specify type arguments for non-generic method';
+		}
 	}
 	return ss.mkdel(target, method);
 };

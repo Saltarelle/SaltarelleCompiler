@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory;
+using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -189,6 +190,19 @@ namespace CoreLib.Plugin {
 			return _runtimeLibrary.InstantiateType(type, tp => isGenericSpecialization && tp.OwnerType == EntityType.TypeDefinition ? JsExpression.Identifier(_namer.GetTypeParameterName(tp)) : (JsExpression)_systemObject);
 		}
 
+		private JsExpression ConstructFieldPropertyAccessor(IMethod m, string fieldName, bool isGenericSpecialization, bool isGetter) {
+			var properties = new List<JsObjectLiteralProperty> {
+				new JsObjectLiteralProperty("name", JsExpression.String(m.Name)),
+				new JsObjectLiteralProperty("type", JsExpression.Number((int) MemberTypes.Method)),
+				new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(m.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))),
+				new JsObjectLiteralProperty("returnType", InstantiateType(m.ReturnType, isGenericSpecialization)),
+				new JsObjectLiteralProperty(isGetter ? "fget" : "fset", JsExpression.String(fieldName))
+			};
+			if (m.IsStatic)
+				properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
+			return JsExpression.ObjectLiteral(properties);
+		}
+
 		private JsExpression ConstructReflectableMember(IMember m, bool isGenericSpecialization, bool alwaysInclude = false) {
 			if (!alwaysInclude && !m.Attributes.Any(a => a.AttributeType.FullName == typeof(ReflectableAttribute).FullName || _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
 				return null;
@@ -249,13 +263,39 @@ namespace CoreLib.Plugin {
 			}
 			else if (m is IProperty) {
 				var prop = (IProperty)m;
+				var sem = _metadataImporter.GetPropertySemantics(prop);
 				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Property)));
 				if (m.IsStatic)
 					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
 				properties.Add(new JsObjectLiteralProperty("propertyType", InstantiateType(prop.ReturnType, isGenericSpecialization)));
 				if (prop.Parameters.Count > 0)
 					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(prop.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
-				// TODO: Getter and setter
+
+				switch (sem.Type) {
+					case PropertyScriptSemantics.ImplType.GetAndSetMethods:
+						if (sem.GetMethod != null && sem.GetMethod.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.SetMethod.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+							// TODO: Error message
+							return null;
+						}
+						if (sem.SetMethod != null && sem.SetMethod.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.SetMethod.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+							// TODO: Error message
+							return null;
+						}
+						if (sem.GetMethod != null)
+							properties.Add(new JsObjectLiteralProperty("getter", ConstructReflectableMember(prop.Getter, isGenericSpecialization, alwaysInclude: true)));
+						if (sem.SetMethod != null)
+							properties.Add(new JsObjectLiteralProperty("setter", ConstructReflectableMember(prop.Setter, isGenericSpecialization, alwaysInclude: true)));
+						break;
+					case PropertyScriptSemantics.ImplType.Field:
+						if (prop.CanGet)
+							properties.Add(new JsObjectLiteralProperty("getter", ConstructFieldPropertyAccessor(prop.Getter, sem.FieldName, isGenericSpecialization: isGenericSpecialization, isGetter: true)));
+						if (prop.CanSet)
+							properties.Add(new JsObjectLiteralProperty("setter", ConstructFieldPropertyAccessor(prop.Setter, sem.FieldName, isGenericSpecialization: isGenericSpecialization, isGetter: false)));
+						break;
+					default:
+						// TODO: Error message
+						return null;
+				}
 			}
 			else if (m is IEvent) {
 				var evt = (IEvent)m;
