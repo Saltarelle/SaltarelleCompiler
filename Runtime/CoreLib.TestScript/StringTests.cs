@@ -190,16 +190,6 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void HtmlEncodeWorks() {
-			Assert.AreEqual("<".HtmlEncode(), "&lt;");
-		}
-
-		[Test]
-		public void HtmlDecodeWorks() {
-			Assert.AreEqual("&lt;".HtmlDecode(), "<");
-		}
-
-		[Test]
 		public void IndexOfCharWorks() {
 			Assert.AreEqual("abc".IndexOf('b'), 1);
 			Assert.AreEqual("abc".IndexOf('d'), -1);

@@ -101,16 +101,7 @@ namespace CoreLib.Tests.Core {
 	public class ObjectTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class PromiseTests : CoreLibTestBase {
-		private static readonly Lazy<string> _simplePromiseScript = new Lazy<string>(() => File.ReadAllText(@"SimplePromise.js"));
-		internal static string SimplePromiseScript { get { return _simplePromiseScript.Value; } }
-
-		protected override IEnumerable<string> ScriptSources {
-			get {
-				return base.ScriptSources.Concat(new[] { SimplePromiseScript });
-			}
-		}
-	}
+	public class PromiseTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class ReflectionTests : CoreLibTestBase {}
