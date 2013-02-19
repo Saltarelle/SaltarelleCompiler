@@ -6,10 +6,18 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class ReflectionTests {
-		class A1Attribute : Attribute {}
+		class A1Attribute : Attribute {
+			public int X { get; private set; }
+			public A1Attribute() {}
+			public A1Attribute(int x) { X = x; }
+		}
 
 		[NonScriptable]
 		class A2Attribute : Attribute {}
+
+		class A3Attribute : Attribute {}
+
+		class A4Attribute : Attribute {}
 
 		public class C1 {
 			public void M1() {}
@@ -131,6 +139,18 @@ namespace CoreLib.TestScript {
 
 		public class C17 {
 			[Reflectable] public string this[int x, string s] { set {} }
+		}
+
+		public class C18 {
+			[A1(1), A3] public C18() {}
+			[A1(2), A3] public void M() {}
+			[A1(3), A3] public int F;
+			[A1(4), A3] public int P { [A1(5), A3] get; [A1(6), A3] set; }
+			[A1(7), A3] public event Action E { [A1(8), A3] add {} [A1(9), A3] remove {} }
+		}
+
+		private ConstructorInfo GetConstructor(Type type) {
+			return (ConstructorInfo)type.GetMembers(BindingFlags.Default).Filter(m => m.Name == ".ctor")[0];
 		}
 
 		private MethodInfo GetMethod(Type type, string name, BindingFlags flags = BindingFlags.Default) {
@@ -1024,6 +1044,48 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(c15.s, "X", "Item.SetValue.s");
 			Assert.AreEqual(c15.x, 378, "Item.SetValue.x");
 			Assert.AreEqual(c15.v, "The_value", "Item.SetValue.value");
+		}
+
+		private void TestMemberAttribute(MemberInfo member, int expectedA1) {
+			var all = member.GetCustomAttributes();
+			Assert.AreEqual(all.Length, 2);
+			Assert.IsTrue(all[0] is A1Attribute || all[1] is A1Attribute);
+			Assert.IsTrue(all[0] is A3Attribute || all[1] is A3Attribute);
+			Assert.AreEqual(((A1Attribute)(all[0] is A1Attribute ? all[0] : all[1])).X, expectedA1);
+
+			all = member.GetCustomAttributes(true);
+			Assert.AreEqual(all.Length, 2);
+			Assert.IsTrue(all[0] is A1Attribute || all[1] is A1Attribute);
+			Assert.IsTrue(all[0] is A3Attribute || all[1] is A3Attribute);
+			Assert.AreEqual(((A1Attribute)(all[0] is A1Attribute ? all[0] : all[1])).X, expectedA1);
+
+			all = member.GetCustomAttributes(typeof(A1Attribute));
+			Assert.AreEqual(all.Length, 1);
+			Assert.IsTrue(all[0] is A1Attribute);
+			Assert.AreEqual(((A1Attribute)all[0]).X, expectedA1);
+
+			all = member.GetCustomAttributes(typeof(A1Attribute), false);
+			Assert.AreEqual(all.Length, 1);
+			Assert.IsTrue(all[0] is A1Attribute);
+			Assert.AreEqual(((A1Attribute)all[0]).X, expectedA1);
+
+			Assert.AreEqual(member.GetCustomAttributes(typeof(A4Attribute)).Length, 0);
+			Assert.AreEqual(member.GetCustomAttributes(typeof(A4Attribute), false).Length, 0);
+		}
+
+		[Test]
+		public void MemberAttributesWork() {
+			TestMemberAttribute(GetConstructor(typeof(C18)), 1);
+			TestMemberAttribute(GetMethod(typeof(C18), "M"), 2);
+			TestMemberAttribute(GetField(typeof(C18), "F"), 3);
+			TestMemberAttribute(GetProperty(typeof(C18), "P"), 4);
+			TestMemberAttribute(GetProperty(typeof(C18), "P").GetMethod, 5);
+			TestMemberAttribute(GetProperty(typeof(C18), "P").SetMethod, 6);
+			TestMemberAttribute(GetEvent(typeof(C18), "E"), 7);
+			TestMemberAttribute(GetEvent(typeof(C18), "E").AddMethod, 8);
+			TestMemberAttribute(GetEvent(typeof(C18), "E").RemoveMethod, 9);
+
+			Assert.AreEqual(GetMethod(typeof(C2), "M1").GetCustomAttributes().Length, 0);
 		}
 	}
 }
