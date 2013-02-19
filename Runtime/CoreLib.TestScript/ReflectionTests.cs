@@ -52,8 +52,10 @@ namespace CoreLib.TestScript {
 
 		[Serializable]
 		public class C7 {
-			[Reflectable] public void M1(int x) {}
+			public int x;
+			[Reflectable] public int M1(int x) { return this.x + x; }
 			[Reflectable] public static void M2(string x) {}
+			[Reflectable] public string M3<T1, T2>(string s) { return x.ToString() + " "  + typeof(T1).FullName + " " + typeof(T2).FullName + " " + s; }
 		}
 
 		public class C8 {
@@ -255,6 +257,10 @@ namespace CoreLib.TestScript {
 
 			var m3 = GetMethod(typeof(C3), "M3");
 			Assert.AreEqual(m3.ParameterTypes, new[] { typeof(string), typeof(int) }, "M3 parameter types should be correct");
+
+			var m4 = GetMethod(typeof(C7), "M1");
+			Assert.IsFalse(m4.IsStatic, "M4 should not be static");
+			Assert.AreEqual(m4.ParameterTypes, new[] { typeof(int) }, "C7.M1 parameters should be correct");
 		}
 
 		[Test]
@@ -275,17 +281,6 @@ namespace CoreLib.TestScript {
 		public void MethodNameIsTheCSharp() {
 			var members = (MethodInfo[])typeof(C4).GetMembers();
 			Assert.AreEqual(members.Filter(m => m.Name == "M").Length, 3, "All methods should have name M");
-		}
-
-		[Test]
-		public void InstanceMethodForSerializableTypeIsConsideredStaticWithExtraParameter() {
-			var m1 = GetMethod(typeof(C7), "M1");
-			Assert.IsTrue(m1.IsStatic, "M1 should be static");
-			Assert.AreEqual(m1.ParameterTypes, new[] { typeof(C7), typeof(int) }, "M1 parameters should be correct");
-
-			var m2 = GetMethod(typeof(C7), "M2");
-			Assert.IsTrue(m2.IsStatic, "M2 should be static");
-			Assert.AreEqual(m2.ParameterTypes, new[] { typeof(string) }, "M2 parameters should be correct");
 		}
 
 		[Test]
@@ -401,12 +396,18 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void InvokeWorksNonGenericStaticMethods() {
+		public void InvokeWorksForNonGenericStaticMethods() {
 			var m = GetMethod(typeof(C8), "M2");
 			Assert.AreEqual(m.Invoke(null, "a", "b"), "a b", "Invoke without target should work");
 			Assert.Throws(() => m.Invoke(new C8(""), "a", "b"), "Invoke with target should throw");
 			Assert.Throws(() => m.Invoke(new C8(""), new[] { typeof(string) }, "a", "b"), "Invoke with type arguments with target should throw");
 			Assert.Throws(() => m.Invoke(null, new[] { typeof(string) }, "a", "b"), "Invoke with type arguments without target should throw");
+		}
+
+		[Test]
+		public void InvokeWorksForNonGenericInstanceMethodsOnSerializableTypes() {
+			var m = GetMethod(typeof(C7), "M1");
+			Assert.AreEqual(m.Invoke(new C7 { x = 13 }, 14), 27, "Invoke should work");
 		}
 
 		[Test]
@@ -430,6 +431,12 @@ namespace CoreLib.TestScript {
 			Assert.Throws(() => m.Invoke(null, new Type[0], "a"), "0 type arguments without target should throw");
 			Assert.Throws(() => m.Invoke(null, new Type[1], "a"), "1 type arguments without target should throw");
 			Assert.Throws(() => m.Invoke(null, new Type[3], "a"), "3 type arguments without target should throw");
+		}
+
+		[Test]
+		public void InvokeWorksForGenericInstanceMethodsOnSerializableTypes() {
+			var m = GetMethod(typeof(C7), "M3");
+			Assert.AreEqual(m.Invoke(new C7 { x = 13 }, new[] { typeof(int), typeof(string) }, "Suffix"), "13 ss.Int32 String Suffix", "Invoke should work");
 		}
 
 		[Test]

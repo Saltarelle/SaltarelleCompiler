@@ -237,14 +237,17 @@ namespace CoreLib.Plugin {
 					}
 
 					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)));
-					if (m.IsStatic || sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+					if (m.IsStatic) {
 						properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
 					}
 					if (IsJsGeneric(method)) {
 						properties.Add(new JsObjectLiteralProperty("tpcount", JsExpression.Number(method.TypeParameters.Count)));
 					}
+					if (sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+						properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
+					}
 					properties.Add(new JsObjectLiteralProperty("returnType", InstantiateType(method.ReturnType, isGenericSpecialization)));
-					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral((sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? new[] { method.DeclaringType } : new IType[0]).Concat(method.Parameters.Select(p => p.Type)).Select(t => InstantiateType(t, isGenericSpecialization)))));
+					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(method.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
 					properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
 				}
 			}

@@ -398,7 +398,7 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 		method = function(v) { (mi.isStatic ? mi.typeDef : this)[mi.fset] = v; };
 	}
 	else {
-		var method = mi.isStatic ? mi.typeDef[mi.js] : target[mi.js];
+		var method = mi.isStatic || mi.sm ? mi.typeDef[mi.js] : target[mi.js];
 
 		if (mi.tpcount) {
 			if (!typeArguments || typeArguments.length !== mi.tpcount)
@@ -408,6 +408,10 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 		else {
 			if (typeArguments && typeArguments.length)
 				throw 'Cannot specify type arguments for non-generic method';
+		}
+		if (mi.sm) {
+			var _m = method;
+			method = function() { return _m.apply(null, [this].concat(Array.prototype.slice.call(arguments))); };
 		}
 	}
 	return ss.mkdel(target, method);
