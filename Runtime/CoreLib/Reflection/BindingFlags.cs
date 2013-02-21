@@ -7,8 +7,11 @@ namespace System.Reflection {
 	[Imported]
 	[Flags]
 	public enum BindingFlags {
-		Default  = 0,
-		Instance = 4,
-		Static   = 8,
+		Default          =  0,
+		DeclaredOnly     =  2,
+		Instance         =  4,
+		Static           =  8,
+		Public           = 16,
+		FlattenHierarchy = 64,
 	}
 }

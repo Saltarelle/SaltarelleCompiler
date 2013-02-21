@@ -368,19 +368,43 @@ ss.getAttributes = function#? DEBUG ss$getAttributes##(type, attrType, inherit) 
 	return result;
 };
 
-ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAttr) {
-	if (!bindingAttr)
-		bindingAttr = 12;
-	if (!memberTypes)
-		memberTypes = 0xffff;
-	var result = [];
+ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAttr, name, params) {
+	var result = type.__baseType && ((bindingAttr & 72) == 72 || (bindingAttr & 6) == 4) ? ss.getMembers(type.__baseType, memberTypes & ~1, bindingAttr & (bindingAttr & 64 ? 255 : 247) & (bindingAttr & 2 ? 251 : 255), name, params) : [];
+
+	var f = function(m) {
+		if ((memberTypes & m.type) && (((bindingAttr & 4) && !m.isStatic) || ((bindingAttr & 8) && m.isStatic)) && (!name || m.name === name)) {
+			if (params) {
+				if ((m.params || []).length !== params.length)
+					return;
+				for (var i = 0; i < params.length; i++) {
+					if (params[i] !== m.params[i])
+						return;
+				}
+			}
+			result.push(m);
+		}
+	};
+
 	if (type.__metadata && type.__metadata.members) {
 		for (var i = 0; i < type.__metadata.members.length; i++) {
 			var m = type.__metadata.members[i];
-			if ((memberTypes & m.type) && (((bindingAttr & 4) && !m.isStatic) || ((bindingAttr & 8) && m.isStatic)))
-				result.push(m);
+			f(m);
+			['getter','setter','adder','remover'].forEach(function(e) { if (m[e]) f(m[e]); });
 		}
 	}
+
+	if (bindingAttr & 256) {
+		while (type) {
+			var r = result.filter(function(m) { return m.typeDef === type; });
+			if (r.length > 1)
+				throw 'Ambiguous match';
+			else if (r.length === 1)
+				return r[0];
+			type = type.__baseType;
+		}
+		return null;
+	}
+
 	return result;
 };
 

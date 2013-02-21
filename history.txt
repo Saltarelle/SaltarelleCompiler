@@ -1,3 +1,4 @@
+Implemented .net reflection API (#125)
 Support [InlineCode] on property accessors on serializable types
 
 2.0.3
