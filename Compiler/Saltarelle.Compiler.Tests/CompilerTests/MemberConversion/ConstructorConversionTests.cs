@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor") };
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ctor.DeclaringType.IsKnownType(KnownTypeCode.Object) ? ConstructorScriptSemantics.Unnamed(skipInInitializer: true) : (ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor")) };
 			Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, metadataImporter: metadataImporter);
 			FindClass("C").NamedConstructors.Should().HaveCount(1);
 			FindClass("C").StaticMethods.Should().HaveCount(1);

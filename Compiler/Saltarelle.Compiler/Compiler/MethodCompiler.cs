@@ -145,16 +145,12 @@ namespace Saltarelle.Compiler.Compiler {
 				IList<JsStatement> body = new List<JsStatement>();
 				body.AddRange(PrepareParameters(constructor.Parameters, variables, impl.ExpandParams));
 
-				var systemObject = _compilation.FindType(KnownTypeCode.Object);
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
 					if (ctor != null && !ctor.Initializer.IsNull) {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 					}
-					else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringTypeDefinition, true));
-					}
 					else {
-						body.Add(new JsVariableDeclarationStatement(_namer.ThisAlias, JsExpression.ObjectLiteral()));
+						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringTypeDefinition, true));
 					}
 				}
 
@@ -171,7 +167,7 @@ namespace Saltarelle.Compiler.Compiler {
 					if (ctor != null && !ctor.Initializer.IsNull) {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 					}
-					else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
+					else {
 						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringTypeDefinition, false));
 					}
 				}

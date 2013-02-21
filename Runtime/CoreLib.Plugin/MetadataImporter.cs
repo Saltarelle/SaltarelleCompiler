@@ -543,8 +543,9 @@ namespace CoreLib.Plugin {
 				Message(Messages._7102, constructor);
 			}
 
-			bool isSerializable = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsSerializable;
-			bool isImported     = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported;
+			bool isSerializable    = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsSerializable;
+			bool isImported        = GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported;
+			bool skipInInitializer = AttributeReader.HasAttribute<ScriptSkipAttribute>(constructor);
 
 			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(source);
 			if (ica != null) {
@@ -553,11 +554,11 @@ namespace CoreLib.Plugin {
 					return;
 				}
 
-				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(ica.Code);
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(ica.Code, skipInInitializer: skipInInitializer);
 				return;
 			}
 			else if (asa != null) {
-				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null);
+				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null, skipInInitializer: skipInInitializer);
 				return;
 			}
 			else if (ola != null || (isSerializable && GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported)) {
@@ -585,7 +586,7 @@ namespace CoreLib.Plugin {
 							hasError = true;
 						}
 					}
-					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap);
+					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap, skipInInitializer: skipInInitializer);
 				}
 				else {
 					Message(Messages._7146, constructor.Region, source.DeclaringTypeDefinition.FullName);
@@ -594,20 +595,20 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else if (source.Parameters.Count == 1 && source.Parameters[0].Type is ArrayType && ((ArrayType)source.Parameters[0].Type).ElementType.IsKnownType(KnownTypeCode.Object) && source.Parameters[0].IsParams && isImported) {
-				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode("ss.mkdict({" + source.Parameters[0].Name + "})");
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode("ss.mkdict({" + source.Parameters[0].Name + "})", skipInInitializer: skipInInitializer);
 				return;
 			}
 			else if (nameSpecified) {
 				if (isSerializable)
-					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, expandParams: epa != null);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, expandParams: epa != null, skipInInitializer: skipInInitializer);
 				else
-					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(expandParams: epa != null) : ConstructorScriptSemantics.Named(preferredName, expandParams: epa != null);
+					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(preferredName, expandParams: epa != null, skipInInitializer: skipInInitializer);
 				usedNames[preferredName] = true;
 				return;
 			}
 			else {
 				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && MetadataUtils.CanBeMinimized(source))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
-					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null, skipInInitializer: skipInInitializer);
 					usedNames["$ctor"] = true;
 					return;
 				}
@@ -624,7 +625,7 @@ namespace CoreLib.Plugin {
 						} while (usedNames.ContainsKey(name));
 					}
 
-					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, expandParams: epa != null) : ConstructorScriptSemantics.Named(name, expandParams: epa != null);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(name, expandParams: epa != null, skipInInitializer: skipInInitializer);
 					usedNames[name] = true;
 					return;
 				}

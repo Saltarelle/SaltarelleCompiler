@@ -26,6 +26,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
 	this.$MyEvent = $Default({def_EventHandler});
+	{sm_Object}.call(this);
 }");
 		}
 
@@ -49,6 +50,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
 	this.$MyEvent = $Default({def_EventHandler});
+	{sm_Object}.call(this);
 }");
 		}
 

@@ -85,8 +85,15 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public IList<JsStatement> CompileConstructorInitializer(IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool currentIsStaticMethod) {
-			_additionalStatements = new List<JsStatement>();
 			var impl = _metadataImporter.GetConstructorSemantics(method);
+			if (impl.SkipInInitializer) {
+				if (currentIsStaticMethod)
+					return new[] { new JsVariableDeclarationStatement(_thisAlias, JsExpression.ObjectLiteral()) };
+				else
+					return EmptyList<JsStatement>.Instance;
+			}
+
+			_additionalStatements = new List<JsStatement>();
 
 			if (currentIsStaticMethod) {
 				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, method, argumentsForCall, argumentToParameterMap, initializerStatements)));

@@ -239,8 +239,9 @@ namespace System.Runtime.CompilerServices {
 
 	/// <summary>
 	/// This attributes causes a method to not be invoked. The method must either be a static method with one argument (in case Foo.M(x) will become x), or an instance method with no arguments (in which x.M() will become x).
+	/// Can also be applied to a constructor, in which case the constructor will not be called if used as an initializer (": base()" or ": this()").
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
 	public sealed class ScriptSkipAttribute : Attribute {
 	}

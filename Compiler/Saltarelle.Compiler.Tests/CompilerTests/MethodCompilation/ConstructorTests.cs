@@ -44,6 +44,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	}
 }",
 @"function() {
+	{sm_Object}.call(this);
 	this.M();
 }");
 		}
@@ -60,7 +61,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	}
 }",
 @"function() {
-	var $this = {};
+	var $this = {sm_Object}.ctor();
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
@@ -123,7 +124,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {};
+	var $this = {sm_Object}.ctor();
 	if (false) {
 		var $a = function($i) {
 			return $i + 1;
@@ -367,7 +368,7 @@ class C {
 		}
 
 		[Test]
-		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotDerivingFromObject() {
+		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotMarkedAsSkipInInitializer() {
 			AssertCorrect(
 @"class B {
 	public B() {}
@@ -385,6 +386,26 @@ class D : B {
 	{sm_B}.call(this);
 	this.M();
 }");
+		}
+
+		[Test]
+		public void ConstructorWithoutExplicitBaseInvokerDoesNotInvokeBaseClassDefaultConstructorIfMarkedAsSkipInInitializer() {
+			AssertCorrect(
+@"class B {
+	public B() {}
+}
+
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() {
+		M();
+	}
+}",
+@"function() {
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.Name == "B") });
 		}
 
 		[Test]
@@ -439,7 +460,7 @@ class D : B {
 	var $this = new {sm_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "C" && c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -459,6 +480,44 @@ class D : B {
 	{sm_B}.call(this);
 	this.M();
 }");
+		}
+
+		[Test]
+		public void InvokingBaseConstructorMarkedAsSkipInInitializerDoesNothing() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base() {
+		this.M();
+	}
+}",
+@"function() {
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.Name == "B") });
+		}
+
+		[Test]
+		public void InvokingStaticMethodBaseConstructorMarkedAsSkipInInitializerCreatesAnEmptyObjectLiteral() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base() {
+		this.M();
+	}
+}",
+@"function() {
+	var $this = {};
+	$this.M();
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.DeclaringType.Name, skipInInitializer: c.DeclaringType.Name == "B") });
 		}
 
 		[Test]
@@ -526,6 +585,7 @@ class D : B {
 @"function() {
 	this.$f1 = 1;
 	this.$f2 = 'X';
+	{sm_Object}.call(this);
 }");
 		}
 
@@ -539,6 +599,7 @@ class D : B {
 @"function() {
 	this.$f1 = 1;
 	this.$f2 = 'X';
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -576,7 +637,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {};
+	var $this = {sm_Object}.ctor();
 	$this.$x = 1;
 	$this.M();
 	return $this;
@@ -660,15 +721,6 @@ class D : B {
 		}
 
 		[Test]
-		public void ImplicitlyDeclaredConstructorDoesNotInvokeBaseWhenDerivedFromObject() {
-			AssertCorrect(
-@"class C {
-}",
-@"function() {
-}", useFirstConstructor: true);
-		}
-
-		[Test]
 		public void ImplicitlyDeclaredConstructorInitializesFieldsBeforeInvokingBase() {
 			AssertCorrect(
 @"class B {
@@ -695,6 +747,7 @@ class C {
 	var $tmp1 = new {sm_X}();
 	$tmp1.set_P(10);
 	this.$x = $tmp1;
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -712,6 +765,7 @@ class C {
 	this.$i2 = 1;
 	this.$s = $Default({def_String});
 	this.$o = $Default({def_Object});
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -724,6 +778,7 @@ class C {
 @"function() {
 	this.$t1 = $Default($T);
 	this.$t2 = $Default($T);
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -736,6 +791,7 @@ class C {
 @"function() {
 	this.$t1 = $Default($T);
 	this.$t2 = $Default($T);
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -757,6 +813,7 @@ class C {
 	this.$f3 = function($x) {
 		return 'C';
 	};
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 

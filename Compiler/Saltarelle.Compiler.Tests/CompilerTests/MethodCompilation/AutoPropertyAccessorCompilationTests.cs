@@ -26,6 +26,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
 	this.$MyProperty = $Default({def_Int32});
+	{sm_Object}.call(this);
 }");
 		}
 
@@ -49,6 +50,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
 	this.$MyProperty = $Default({def_Int32});
+	{sm_Object}.call(this);
 }");
 		}
 

@@ -1,3 +1,4 @@
+ScriptSkipAttribute can now be specified to constructors to indicate that the constructor call will be skipped when used as a constructor initializer (": base()" or ": this()")
 Some more .net string methods (thanks to Marcel F)
 Implemented .net reflection API (#125)
 Support [InlineCode] on property accessors on serializable types
