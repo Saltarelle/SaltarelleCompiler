@@ -32,105 +32,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HtmlUnit, Version=2.10.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NHtmlUnit.2.10.0.0\lib\HtmlUnit.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory.CSharp">
       <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="ikvm">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ikvm.exe</HintPath>
-    </Reference>
-    <Reference Include="IKVM.AWT.WinForms">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.AWT.WinForms.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Beans">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Beans.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Charsets">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Charsets.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Corba">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Corba.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Core">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Jdbc">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Jdbc.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Management">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Management.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Media">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Media.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Misc">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Misc.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Naming">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Naming.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Remoting">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Remoting.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Security">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.SwingAWT">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.SwingAWT.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Text">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Text.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Tools">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Tools.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Util">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.Util.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.API">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.API.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Bind">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Bind.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Crypto">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Crypto.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Parse">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Parse.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Transform">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.Transform.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.WebServices">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.WebServices.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.XPath">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.OpenJDK.XML.XPath.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Reflection">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.Reflection.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime.JNI">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\IKVM.Runtime.JNI.dll</HintPath>
-    </Reference>
-    <Reference Include="ikvmc">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ikvmc.exe</HintPath>
-    </Reference>
-    <Reference Include="ikvmstub">
-      <HintPath>..\packages\IKVM.NET.7.0.4335.1\lib\ikvmstub.exe</HintPath>
     </Reference>
     <Reference Include="JavaScriptParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -140,8 +46,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
     </Reference>
-    <Reference Include="NHtmlUnit">
-      <HintPath>..\packages\NHtmlUnit.2.10.0.0\lib\NHtmlUnit.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -191,6 +97,7 @@
     <Compile Include="MetadataImporterTests\SerializableTypeTests.cs" />
     <Compile Include="MetadataImporterTests\TypeTests.cs" />
     <Compile Include="OOPEmulatorTests\ClassTests.cs" />
+    <Compile Include="OOPEmulatorTests\ReflectionTests.cs" />
     <Compile Include="OOPEmulatorTests\EnumTests.cs" />
     <Compile Include="OOPEmulatorTests\OverallStructureTests.cs" />
     <Compile Include="OOPEmulatorTests\OOPEmulatorTestBase.cs" />
@@ -205,6 +112,58 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="runner\node_modules\qunit\.npmignore" />
+    <None Include="runner\node_modules\qunit\Makefile" />
+    <None Include="runner\node_modules\qunit\node_modules\argsparser\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\argsparser\Makefile" />
+    <None Include="runner\node_modules\qunit\node_modules\argsparser\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\argsparser\readme.md" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\.travis.yml" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\.travis.yml" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\.bin\uglifyjs" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\.bin\uglifyjs.cmd" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\LICENSE" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\README.markdown" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\bin\uglifyjs" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\package.json~" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\README.org" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\README.markdown" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\bunker\README.markdown" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\History.md" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\Makefile" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\node_modules\colors\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\node_modules\colors\ReadMe.md" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\cli-table\README.md" />
+    <None Include="runner\node_modules\qunit\node_modules\tracejs\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\tracejs\README.md" />
+    <None Include="runner\node_modules\qunit\node_modules\underscore\.npmignore" />
+    <None Include="runner\node_modules\qunit\node_modules\underscore\CNAME" />
+    <None Include="runner\node_modules\qunit\node_modules\underscore\LICENSE" />
+    <None Include="runner\node_modules\qunit\node_modules\underscore\package.json" />
+    <None Include="runner\node_modules\qunit\node_modules\underscore\raw\underscore.psd" />
+    <None Include="runner\node_modules\qunit\node_modules\underscore\README.md" />
+    <None Include="runner\node_modules\qunit\package.json" />
+    <None Include="runner\node_modules\qunit\readme.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\.npmignore" />
+    <None Include="runner\node_modules\qunit\support\qunit\addons\canvas\README.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\addons\close-enough\README.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\addons\composite\README.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\addons\phantomjs\README.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\addons\step\README.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\addons\themes\README.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\History.md" />
+    <None Include="runner\node_modules\qunit\support\qunit\package.json" />
+    <None Include="runner\node_modules\qunit\support\qunit\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreLib.Plugin\CoreLib.Plugin.csproj">
@@ -236,11 +195,230 @@
     <Content Include="qunit-1.9.0.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="runner\node.exe" />
+    <Content Include="runner\node_modules\qunit\.gitmodules" />
+    <Content Include="runner\node_modules\qunit\bin\cli.js" />
+    <Content Include="runner\node_modules\qunit\index.js" />
+    <Content Include="runner\node_modules\qunit\lib\child.js" />
+    <Content Include="runner\node_modules\qunit\lib\coverage.js" />
+    <Content Include="runner\node_modules\qunit\lib\log.js" />
+    <Content Include="runner\node_modules\qunit\lib\testrunner.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\argsparser\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\argsparser\lib\argsparser.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\argsparser\test\test.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\example\prof.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\example\tiny.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\example\top\run.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\example\top\src.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\example\microwave.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\example\web\bs.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\example\web\index.html" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\example\web\main.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\example\web\server.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\example\wrap.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\examples\json.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\examples\leaves.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\examples\negative.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\examples\scrub.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\examples\stringify.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\main.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\circular.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\date.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\equal.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\instance.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\interface.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\json.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\keys.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\leaves.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\lib\deep_equal.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\mutability.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\negative.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\obj.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\siblings.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\stop.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\stringify.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\subexpr.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\traverse\test\super_deep.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\docstyle.css" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\lib\object-ast.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\lib\parse-js.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\lib\process.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\lib\squeeze-more.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\README.html" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\beautify.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\testparser.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\array1.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\array2.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\array3.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\array4.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\assignment.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\concatstring.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\const.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\empty-blocks.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\forstatement.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\if.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\ifreturn.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\ifreturn2.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue10.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue11.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue13.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue14.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue16.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue17.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue20.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue21.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue25.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue27.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue28.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue29.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue30.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue34.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue4.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue48.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue50.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue53.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue54.1.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue68.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue69.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\issue9.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\mangle.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\null_string.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\strict-equals.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\var.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\whitespace.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\expected\with.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\array1.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\array2.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\array3.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\array4.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\assignment.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\concatstring.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\const.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\empty-blocks.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\forstatement.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\if.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\ifreturn.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\ifreturn2.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue10.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue11.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue13.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue14.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue16.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue17.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue20.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue21.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue25.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue27.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue28.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue29.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue30.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue34.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue4.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue48.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue50.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue53.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue54.1.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue68.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue69.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\issue9.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\mangle.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\null_string.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\strict-equals.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\var.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\whitespace.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\compress\test\with.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\test\unit\scripts.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\tmp\hoist.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\tmp\instrument.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\tmp\instrument2.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\tmp\test.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\node_modules\uglify-js\uglify-js.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\ast.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\err.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\fail.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\fail\src.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\label.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\microwave.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\parent.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\node_modules\burrito\test\wrap.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\test\cover.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\test\return.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\bunker\test\src\cover.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\examples\revs.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\examples\table.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\lib\cli-table\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\lib\cli-table\utils.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\node_modules\colors\colors.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\node_modules\colors\example.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\node_modules\colors\MIT-LICENSE.txt" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\test\common.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\cli-table\test\index.test.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\tracejs\test\fixture\example.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\tracejs\test\test.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\tracejs\trace.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\underscore\favicon.ico" />
+    <Content Include="runner\node_modules\qunit\node_modules\underscore\index.html" />
+    <Content Include="runner\node_modules\qunit\node_modules\underscore\index.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\underscore\underscore-min.js" />
+    <Content Include="runner\node_modules\qunit\node_modules\underscore\underscore.js" />
+    <Content Include="runner\node_modules\qunit\support\json\cycle.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\canvas\canvas-test.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\canvas\canvas.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\canvas\qunit-canvas.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\close-enough\close-enough-test.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\close-enough\close-enough.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\close-enough\qunit-close-enough.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\composite\composite-demo-test.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\composite\index.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\composite\qunit-composite.css" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\composite\qunit-composite.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\junitlogger\index.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\junitlogger\junitlogger.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\phantomjs\runner.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\step\qunit-step.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\step\step-test.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\step\step.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\themes\gabe.css" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\themes\gabe.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\themes\nv.css" />
+    <Content Include="runner\node_modules\qunit\support\qunit\addons\themes\nv.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\AUTHORS.txt" />
+    <Content Include="runner\node_modules\qunit\support\qunit\grunt.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\qunit\qunit.css" />
+    <Content Include="runner\node_modules\qunit\support\qunit\qunit\qunit.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\deepEqual.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\headless.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\index.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\logs.html" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\logs.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\narwhal-test.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\node-test.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\swarminject.js" />
+    <Content Include="runner\node_modules\qunit\support\qunit\test\test.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\async-code.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\async-test.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\child-code-global.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\child-code-namespace.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\child-tests-global.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\child-tests-namespace.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\testrunner-code.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\testrunner-tests.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\uncaught-exception-code.js" />
+    <Content Include="runner\node_modules\qunit\test\fixtures\uncaught-exception-test.js" />
+    <Content Include="runner\node_modules\qunit\test\testrunner.js" />
+    <Content Include="runner\run-tests.js" />
     <Content Include="SimplePromise.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(ProjectDir)\runner" "$(TargetDir)\runner" /e /i /q /y</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

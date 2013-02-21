@@ -58,3 +58,6 @@ Promise.prototype = {
 		delete this._thens;
 	}
 };
+
+if (global)
+	global.Promise = Promise;

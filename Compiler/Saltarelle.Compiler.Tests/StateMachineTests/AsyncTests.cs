@@ -1025,5 +1025,97 @@ lbl: z;
 }
 ", methodType: MethodType.AsyncVoid);
 		}
+
+		[Test]
+		public void TryBlockAsFirstStatementInsideIf() {
+			AssertCorrect(@"
+{
+	a;
+	await b:onCompleted1;
+	c;
+	if (d) {
+		try {
+			e;
+			await f:onCompleted2;
+			g;
+		}
+		catch (h) {
+		}
+	}
+	i;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					a;
+					$state1 = 1;
+					b.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					c;
+					if (d) {
+						$state1 = 3;
+						continue $loop1;
+					}
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 3:
+				case 4:
+				case 5: {
+					if ($state1 === 3) {
+						$state1 = 4;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 4: {
+									$state1 = -1;
+									e;
+									$state1 = 5;
+									f.onCompleted2($sm);
+									return;
+								}
+								case 5: {
+									$state1 = -1;
+									g;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					catch (h) {
+					}
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					i;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
 	}
 }
