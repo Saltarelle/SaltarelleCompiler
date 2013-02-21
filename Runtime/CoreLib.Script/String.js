@@ -203,3 +203,31 @@ ss.trimEndString = function#? DEBUG ss$trimEndString##(s) {
 ss.trimStartString = function#? DEBUG ss$trimStartString##(s) {
 	return s.replace(/^\s*/, '');
 };
+
+ss.trimWithCharsString = function#? DEBUG ss$trimWithCharsString##(s, chars) {
+    return ss.trimStartWithCharsString(ss.trimEndWithCharsString(s, chars), chars);
+};
+
+ss.trimStartWithCharsString = function#? DEBUG ss$trimStartWithCharsString##(s, chars) {
+    chars = String.fromCharCode.apply(null, chars);
+    return s.replace(new RegExp('^[' + chars + ']+'), '');
+};
+
+ss.trimEndWithCharsString = function#? DEBUG ss$trimEndWithCharsString##(s, chars) {
+    chars = String.fromCharCode.apply(null, chars);
+    return s.replace(new RegExp('[' + chars + ']+$'), '');
+};
+
+ss.fromCharArray = function#? DEBUG ss$fromCharArray##(chars) {
+    return String.fromCharCode.apply(null, chars);
+};
+
+ss.lastIndexOfWithStartIndexAndCount = function#? DEBUG ss$lastIndexOfWithStartIndexAndCount##(s, search, startIndex, count) {
+    var index = s.lastIndexOf(search, startIndex);
+    return (index < (startIndex - count + 1)) ? -1 : index;
+};
+
+ss.indexOfWithStartIndexAndCount = function#? DEBUG ss$indexOfWithStartIndexAndCount##(s, search, startIndex, count) {
+    var index = s.indexOf(search, startIndex);
+    return ((index + search.length) <= (startIndex + count)) ? index : -1;
+};
