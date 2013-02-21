@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using QUnit;
 using System.Text.RegularExpressions;
@@ -9,6 +10,20 @@ namespace CoreLib.TestScript {
 		class MyFormattable : IFormattable {
 			public string ToString(string format) {
 				return "Formatted: " + format;
+			}
+		}
+
+		class MyEnumerable<T> : IEnumerable<T> {
+			private readonly T[] _items;
+
+			public MyEnumerable(T[] items) {
+				_items = items;
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() { return null; }
+
+			public IEnumerator<T> GetEnumerator() {
+				return (IEnumerator<T>)(object)_items.GetEnumerator();
 			}
 		}
 
@@ -654,9 +669,9 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(string.Join(", ", new[] { "a", "ab", "abc", "abcd" }), "a, ab, abc, abcd");
 			Assert.AreEqual(string.Join(", ", new[] { "a", "ab", "abc", "abcd" }, 1, 2), "ab, abc");
 
-			IEnumerable<int> intValues = new List<int>(new[] { 1, 5, 6 });
+			IEnumerable<int> intValues = new MyEnumerable<int>(new[] { 1, 5, 6 });
 			Assert.AreEqual(String.Join(", ", intValues), "1, 5, 6");
-			IEnumerable<string> stringValues = new List<string>(new[] { "a", "ab", "abc", "abcd" });
+			IEnumerable<string> stringValues = new MyEnumerable<string>(new[] { "a", "ab", "abc", "abcd" });
 			Assert.AreEqual(String.Join(", ", stringValues), "a, ab, abc, abcd");
 
 			// TODO: c# makes it False but js false
