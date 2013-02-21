@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using QUnit;
 using System.Text.RegularExpressions;
 
@@ -41,6 +42,18 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void CharAndCountConstructorWorks() {
 			Assert.AreEqual(new string('x', 5), "xxxxx");
+		}
+
+		[Test]
+		public void CharArrayConstructorWorks()
+		{
+			Assert.AreEqual(new string(new[]{'a', 'b', 'C'}), "abC");
+		}
+
+		[Test]
+		public void CharArrayWithStartIndexAndLengthConstructorWorks()
+		{
+			Assert.AreEqual(new string(new[]{'a', 'b', 'c', 'D'}, 1, 2), "bc");
 		}
 
 		[Test]
@@ -104,6 +117,7 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void ConcatWithObjectsWorks() {
+			Assert.AreEqual(string.Concat(1), "1");
 			Assert.AreEqual(string.Concat(1, 2), "12");
 			Assert.AreEqual(string.Concat(1, 2, 3), "123");
 			Assert.AreEqual(string.Concat(1, 2, 3, 4), "1234");
@@ -154,6 +168,13 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(string.Equals("abcd", "abcd", true));
 			Assert.IsFalse(string.Equals("abcd", "abce", true));
 			Assert.IsTrue(string.Equals("abcd", "ABCD", true));
+
+			Assert.IsTrue(string.Equals("abcd", "abcd"));
+			Assert.IsFalse(string.Equals("abcd", "abce"));
+			Assert.IsFalse(string.Equals("abcd", "ABCD"));
+			Assert.IsTrue(string.Equals("abcd", "abcd"));
+			Assert.IsFalse(string.Equals("abcd", "abce"));
+			Assert.IsFalse(string.Equals("abcd", "ABCD"));
 		}
 
 		[Test]
@@ -218,17 +239,33 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void IndexOfCharWithStartIndexAndCountWorks()
+		{
+			Assert.AreEqual("xxxxxabcxxx".IndexOf('c', 3, 8), 7);
+			Assert.AreEqual("xxxxxabcxxx".IndexOf('c', 3, 5), 7);
+			Assert.AreEqual("xxxxxabcxxx".IndexOf('c', 3, 4), -1);
+		}
+
+		[Test]
 		public void IndexOfStringWithStartIndexWorks() {
 			Assert.AreEqual("abcabc".IndexOf("bc", 3), 4);
 			Assert.AreEqual("abcabc".IndexOf("bd", 3), -1);
 		}
 
 		[Test]
+		public void IndexOfStringWithStartIndexAndCountWorks()
+		{
+			Assert.AreEqual("xxxxxabcxxx".IndexOf("abc", 3, 8), 5);
+			Assert.AreEqual("xxxxxabcxxx".IndexOf("abc", 3, 5), 5);
+			Assert.AreEqual("xxxxxabcxxx".IndexOf("abc", 3, 4), -1);
+		}
+
+		[Test]
 		public void IndexOfAnyWorks() {
-			Assert.AreEqual("abcd".IndexOfAny('b'), 1);
-			Assert.AreEqual("abcd".IndexOfAny('b', 'x'), 1);
-			Assert.AreEqual("abcd".IndexOfAny('b', 'x', 'y'), 1);
-			Assert.AreEqual("abcd".IndexOfAny('x', 'y'), -1);
+			Assert.AreEqual("abcd".IndexOfAny(new[]{'b'}), 1);
+			Assert.AreEqual("abcd".IndexOfAny(new[]{'b', 'x'}), 1);
+			Assert.AreEqual("abcd".IndexOfAny(new[]{'b', 'x', 'y'}), 1);
+			Assert.AreEqual("abcd".IndexOfAny(new[]{'x', 'y'}), -1);
 		}
 
 		[Test]
@@ -283,6 +320,22 @@ namespace CoreLib.TestScript {
 		public void LastIndexOfStringWithStartIndexWorks() {
 			Assert.AreEqual("abcabc".LastIndexOf("bc", 3), 1);
 			Assert.AreEqual("abcabc".LastIndexOf("bd", 3), -1);
+		}
+
+		[Test]
+		public void LastIndexOfCharWithStartIndexAndCountWorks()
+		{
+			Assert.AreEqual("abcabc".LastIndexOf('b', 3, 3), 1);
+			Assert.AreEqual("abcabc".LastIndexOf('b', 3, 2), -1);
+			Assert.AreEqual("abcabc".LastIndexOf('d', 3, 3), -1);
+		}
+
+		[Test]
+		public void LastIndexOfStringWithStartIndexAndCountWorks()
+		{
+			Assert.AreEqual("xbcxxxbc".LastIndexOf("bc", 3, 3), 1);
+			Assert.AreEqual("xbcxxxbc".LastIndexOf("bc", 3, 2), -1);
+			Assert.AreEqual("xbcxxxbc".LastIndexOf("bd", 3, 3), -1);
 		}
 
 		[Test]
@@ -366,6 +419,13 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void ReplaceWorks() {
 			Assert.AreEqual("abcabcabc".Replace("a", "x"), "xbcxbcxbc");
+			Assert.AreEqual("abcabcabc".Replace("ab", "x"), "xcxcxc");
+		}
+
+		[Test]
+		public void ReplaceCharWorks()
+		{
+			Assert.AreEqual("abcabcabc".Replace('a', 'x'), "xbcxbcxbc");
 		}
 
 		[Test]
@@ -492,6 +552,24 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void TrimCharsWorks()
+		{
+			Assert.AreEqual(",., aa, aa,... ".Trim(',', '.', ' '), "aa, aa");
+		}
+
+		[Test]
+		public void TrimStartCharsWorks()
+		{
+			Assert.AreEqual(",., aa, aa,... ".TrimStart(',', '.', ' '), "aa, aa,... ");
+		}
+
+		[Test]
+		public void TrimEndCharsWorks()
+		{
+			Assert.AreEqual(",., aa, aa,... ".TrimEnd(',', '.', ' '), ",., aa, aa");
+		}
+
+		[Test]
 		public void TrimStartWorks() {
 			Assert.AreEqual("  abc  ".TrimStart(), "abc  ");
 		}
@@ -578,6 +656,30 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcD") != 0);
 			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcb") > 0);
 			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abce") < 0);
+		}
+
+		[Test]
+		public void JoinWorks()
+		{
+			Assert.AreEqual(string.Join(", ", new[] { "a", "ab", "abc", "abcd" }), "a, ab, abc, abcd");
+			Assert.AreEqual(string.Join(", ", new[] { "a", "ab", "abc", "abcd" }, 1, 2), "ab, abc");
+
+			IEnumerable<int> intValues = new List<int>(new[] { 1, 5, 6 });
+			Assert.AreEqual(String.Join(", ", intValues), "1, 5, 6");
+			IEnumerable<string> stringValues = new List<string>(new[] { "a", "ab", "abc", "abcd" });
+			Assert.AreEqual(String.Join(", ", stringValues), "a, ab, abc, abcd");
+
+			// TODO: c# makes it False but js false
+			Assert.AreEqual(String.Join(", ", new Object[] { "a", 1, "abc", false }), "a, 1, abc, false");// False");
+		}
+
+		[Test]
+		public void ContainsWorks()
+		{
+			string text = "Lorem ipsum dolor sit amet";
+			Assert.IsTrue(text.Contains("Lorem"));
+			Assert.IsFalse(text.Contains("lorem"));
+			Assert.IsTrue(text.Contains(text));
 		}
 	}
 }
