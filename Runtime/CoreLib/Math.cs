@@ -243,6 +243,16 @@ namespace System {
 			return 0;
 		}
 
+		[ScriptName("round")]
+		public static decimal JsRound(decimal d) {
+			return 0;
+		}
+
+		[ScriptName("round")]
+		public static double JsRound(double d) {
+			return 0;
+		}
+
 		[InlineCode("{$System.Script}.round({d}, {digits})")]
 		public static decimal Round(decimal d, int digits) {
 			return 0;

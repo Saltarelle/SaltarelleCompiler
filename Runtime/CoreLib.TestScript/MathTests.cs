@@ -311,6 +311,26 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void JsRoundOfDoubleWorks() {
+			Assert.AreEqual(Math.JsRound(3.432), 3.0);
+			Assert.AreEqual(Math.JsRound(3.6), 4.0);
+			Assert.AreEqual(Math.JsRound(3.5), 4.0);
+			Assert.AreEqual(Math.JsRound(4.5), 5.0);
+			Assert.AreEqual(Math.JsRound(-3.5), -3.0);
+			Assert.AreEqual(Math.JsRound(-4.5), -4.0);
+		}
+
+		[Test]
+		public void JsRoundOfDecimalWorks() {
+			Assert.AreEqual(Math.JsRound(3.432m), 3.0m);
+			Assert.AreEqual(Math.JsRound(3.6m), 4.0m);
+			Assert.AreEqual(Math.JsRound(3.5m), 4.0m);
+			Assert.AreEqual(Math.JsRound(4.5m), 5.0m);
+			Assert.AreEqual(Math.JsRound(-3.5m), -3.0m);
+			Assert.AreEqual(Math.JsRound(-4.5m), -4.0m);
+		}
+
+		[Test]
 		public void RoundOfDoubleWithDigitsWorks() {
 			Assert.AreEqual(Math.Round(3.432, 2), 3.43);
 			Assert.AreEqual(Math.Round(3.6, 0), 4.0);
