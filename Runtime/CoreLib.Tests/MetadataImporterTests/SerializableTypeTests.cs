@@ -2,6 +2,7 @@
 using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Tests.MetadataImporterTests {
@@ -57,14 +58,99 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
-		public void SerializableTypesCannotImplementInterfaces() {
-			Prepare(@"using System; using System.Runtime.CompilerServices; interface I {} [Serializable] sealed class C1 : I {}", expectErrors: true);
+		public void SerializableTypesCannotImplementNonSerializableInterfaces() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; interface I1 {} [Serializable] sealed class C1 : I1 {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot implement interface")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot implement") && m.Contains("I1")));
 
-			Prepare(@"interface I {} sealed class C1 : System.Record, I {}", expectErrors: true);
+			Prepare(@"interface I1 {} sealed class C1 : System.Record, I1 {}", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot implement interface")));
+			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot implement") && m.Contains("I1")));
+		}
+
+		[Test]
+		public void SerializableTypesCanImplementSerializableInterfaces() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] interface I { int Prop1 { get; set; } } [Serializable] sealed class C1 : I { public int Prop1 { get; set; } }", expectErrors: false);
+			var p = FindProperty("C1.Prop1");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop1"));
+
+			Prepare(@"using System; [Serializable] interface I { int Prop1 { get; set; } } sealed class C1 : Record, I { public int Prop1 { get; set; } }", expectErrors: false);
+			p = FindProperty("C1.Prop1");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop1"));
+		}
+
+		[Test]
+		public void NonSerializableTypesCanImplementSerializableInterfaces() {
+			Prepare(@"using System; [Serializable] interface I { int Prop1 { get; set; } } class C1 : I { public int Prop1 { get; set; } }", expectErrors: false);
+			var p = FindProperty("C1.Prop1");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop1"));
+		}
+
+		[Test, Ignore("TODO: We currently do not allow this inheritance")]
+		public void SerializableClassPropertyCanImplementTwoDistinctSerializableInterfacePropertiesIfAndOnlyIfTheyHaveTheSameName() {
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { int Prop1 { get; set; } } [Serializable] class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: false);
+			var p = FindProperty("C1.Prop1");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop1"));
+
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { [ScriptName(""renamed"")] int Prop1 { get; set; } } [Serializable] class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
+			Assert.Fail("TODO: Fix assertions");
+		}
+
+		[Test, Ignore("TODO: We currently do not allow this inheritance")]
+		public void NonSerializableClassPropertyCanImplementTwoDistinctSerializableInterfacePropertiesIfAndOnlyIfTheyHaveTheSameName() {
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: false);
+			var p = FindProperty("C1.Prop1");
+			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p.FieldName, Is.EqualTo("prop1"));
+
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { [ScriptName(""renamed"")] int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
+			Assert.Fail("TODO: Fix assertions");
+		}
+
+		[Test, Ignore("TODO: We currently do not allow this inheritance")]
+		public void NonSerializableClassPropertyCannotImplementPropertyFromBothSerializableAndNonSerializableInterface() {
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } public interface I2 { int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
+			Assert.Fail("TODO: Fix assertions");
+		}
+
+		[Test]
+		public void VirtualPropertyCannotImplementSerializableInterfaceProperty() {
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class C1 : I1 { public virtual int Prop1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7153 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("virtual")));
+		}
+
+		[Test]
+		public void OverridingPropertyCannotImplementSerializableInterfaceProperty() {
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class B { public virtual int Prop1 { get; set; } } class C1 : B, I1 { public sealed override int Prop1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7154 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("overrides")));
+		}
+
+		[Test]
+		public void PropertyOfNonSerializableClassThatImplementsSerializedInterfaceMemberMustBeImplementedAsAutoProperty() {
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class C1 : I1 { public int Prop1 { get { return 0; } set {} } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
+
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; } } class C1 : I1 { public int Prop1 { get { return 0; } } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
+
+			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { set; } } class C1 : I1 { public int Prop1 { set {} } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
+		}
+
+		[Test]
+		public void SerializableInterfaceCannotDeclareMethods() {
+			Prepare(@"using System; [Serializable] public interface I1 { void M1(); }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7155 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("cannot declare methods")));
 		}
 
 		[Test]
@@ -116,6 +202,16 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(FindProperty("C1.Prop4").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 				Assert.That(FindProperty("C1.Prop4").FieldName, Is.EqualTo("prop4"));
 			});
+
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] interface I1 { [PreserveName] int Prop1 { get; set; } [PreserveCase] int Prop2 { get; set; } [ScriptName(""Renamed"")] int Prop3 { get; set; } int Prop4 { get; set; } }");
+			Assert.That(FindProperty("I1.Prop1").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(FindProperty("I1.Prop1").FieldName, Is.EqualTo("prop1"));
+			Assert.That(FindProperty("I1.Prop2").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(FindProperty("I1.Prop2").FieldName, Is.EqualTo("Prop2"));
+			Assert.That(FindProperty("I1.Prop3").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(FindProperty("I1.Prop3").FieldName, Is.EqualTo("Renamed"));
+			Assert.That(FindProperty("I1.Prop4").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(FindProperty("I1.Prop4").FieldName, Is.EqualTo("prop4"));
 		}
 
 		[Test]
@@ -385,6 +481,25 @@ public class C2 {
 			var c22 = FindConstructor("C2", 1);
 			Assert.That(c22.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
 			Assert.That(c22.SkipInInitializer, Is.False);
+		}
+
+		[Test]
+		public void InterfacesCanBeSerializable() {
+			Prepare("[System.Serializable] public interface I1 {}", expectErrors: false);
+			// No error is good enough.
+		}
+
+		[Test]
+		public void SerializableInterfaceCanInheritFromOtherSerializableInterfaces() {
+			Prepare("using System; [Serializable] public interface I1 {} [Serializable] public interface I2 : I1 {}", expectErrors: false);
+			// No error is good enough.
+		}
+
+		[Test]
+		public void SerializableInterfaceCannotInheritFromNonSerializableInterfaces() {
+			Prepare("using System; public interface I1 {} [Serializable] public interface I2 : I1 {}", expectErrors: true);
+			Assert.AreEqual(AllErrors.Count, 1);
+			Assert.IsTrue(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7010 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("I2")));
 		}
 	}
 }

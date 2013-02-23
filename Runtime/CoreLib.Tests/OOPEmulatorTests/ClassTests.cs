@@ -935,5 +935,28 @@ var $D = function() {
 {Script}.registerClass(global, 'D', $D);
 ", new[] { "D" });
 		}
+
+		[Test]
+		public void InheritanceFromImportedSerializableInterfaceIsNotRecordedInInheritanceList() {
+			AssertCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[Imported, Serializable] public interface I1 {}
+[Serializable] public interface I2 {}
+[Serializable] public interface I3 : I1, I2 {}
+public class C : I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// C
+var $C = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// I3
+var $I3 = function() {
+};
+{Script}.registerClass(global, 'C', $C, null, [{I2}]);
+{Script}.registerInterface(global, 'I3', $I3, [{I2}]);
+", new[] { "C", "I3" });
+		}
 	}
 }

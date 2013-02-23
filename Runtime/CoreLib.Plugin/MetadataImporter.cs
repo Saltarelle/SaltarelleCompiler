@@ -193,6 +193,12 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		private bool? IsAutoProperty(IProperty property) {
+			if (property.Region == default(DomRegion))
+				return null;
+			return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
+		}
+
 		private string DetermineNamespace(ITypeDefinition typeDefinition) {
 			while (typeDefinition.DeclaringTypeDefinition != null) {
 				typeDefinition = typeDefinition.DeclaringTypeDefinition;
@@ -338,23 +344,22 @@ namespace CoreLib.Plugin {
 				var baseClass = typeDefinition.DirectBaseTypes.Single(c => c.Kind == TypeKind.Class).GetDefinition();
 				if (!baseClass.Equals(_systemObject) && baseClass.FullName != "System.Record" && !GetTypeSemanticsInternal(baseClass).IsSerializable) {
 					Message(Messages._7009, typeDefinition);
-					isSerializable = false;
 				}
-				if (typeDefinition.DirectBaseTypes.Any(b => b.Kind == TypeKind.Interface)) {
-					Message(Messages._7010, typeDefinition);
-					isSerializable = false;
+				foreach (var i in typeDefinition.DirectBaseTypes.Where(b => b.Kind == TypeKind.Interface && !GetTypeSemanticsInternal(b.GetDefinition()).IsSerializable)) {
+					Message(Messages._7010, typeDefinition, i);
 				}
 				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
 					Message(Messages._7011, typeDefinition);
-					isSerializable = false;
 				}
 				foreach (var m in typeDefinition.Members.Where(m => m.IsVirtual)) {
 					Message(Messages._7023, typeDefinition, m.Name);
-					isSerializable = false;
 				}
 				foreach (var m in typeDefinition.Members.Where(m => m.IsOverride)) {
 					Message(Messages._7024, typeDefinition, m.Name);
-					isSerializable = false;
+				}
+
+				if (typeDefinition.Kind == TypeKind.Interface && typeDefinition.Methods.Any()) {
+					Message(Messages._7155, typeDefinition);
 				}
 			}
 			else {
@@ -728,6 +733,27 @@ namespace CoreLib.Plugin {
 				// Inherit [NonScriptable] for explicit interface implementations.
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
 				return;
+			}
+
+			if (property.ImplementedInterfaceMembers.Count > 0) {
+				var bases = property.ImplementedInterfaceMembers.Where(b => GetPropertySemantics((IProperty)b).Type != PropertyScriptSemantics.ImplType.NotUsableFromScript).ToList();
+				var firstField = bases.FirstOrDefault(b => GetPropertySemantics((IProperty)b).Type == PropertyScriptSemantics.ImplType.Field);
+				if (firstField != null) {
+					var firstFieldSemantics = GetPropertySemantics((IProperty)firstField);
+					if (property.IsOverride) {
+						Message(Messages._7154, property, firstField.FullName);
+					}
+					else if (property.IsOverridable) {
+						Message(Messages._7153, property, firstField.FullName);
+					}
+
+					if (IsAutoProperty(property) == false) {
+						Message(Messages._7156, property, firstField.FullName);
+					}
+
+					_propertySemantics[property] = firstFieldSemantics;
+					return;
+				}
 			}
 
 			MethodScriptSemantics getter, setter;

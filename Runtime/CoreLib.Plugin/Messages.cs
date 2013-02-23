@@ -11,7 +11,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7006 = Tuple.Create(7006, MessageSeverity.Error, "{0}: The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.");
 		public static readonly Tuple<int, MessageSeverity, string> _7007 = Tuple.Create(7007, MessageSeverity.Error, "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type {0}.");
 		public static readonly Tuple<int, MessageSeverity, string> _7009 = Tuple.Create(7009, MessageSeverity.Error, "The serializable type {0} must inherit from another serializable type, System.Object or System.Record.");
-		public static readonly Tuple<int, MessageSeverity, string> _7010 = Tuple.Create(7010, MessageSeverity.Error, "The serializable type {0} cannot implement interfaces.");
+		public static readonly Tuple<int, MessageSeverity, string> _7010 = Tuple.Create(7010, MessageSeverity.Error, "The serializable type {0} cannot implement the non-serializable interface {1}.");
 		public static readonly Tuple<int, MessageSeverity, string> _7011 = Tuple.Create(7011, MessageSeverity.Error, "The serializable type {0} cannot declare instance events.");
 		public static readonly Tuple<int, MessageSeverity, string> _7012 = Tuple.Create(7012, MessageSeverity.Error, "The type {0} must be static in order to be decorated with a [MixinAttribute]");
 		public static readonly Tuple<int, MessageSeverity, string> _7013 = Tuple.Create(7013, MessageSeverity.Error, "The type {0} can contain only methods order to be decorated with a [MixinAttribute]");
@@ -77,6 +77,10 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7150 = Tuple.Create(7150, MessageSeverity.Error, "The method {0} cannot have an [InstanceMethodOnFirstArgumentAttribute] because its only parameter is a 'params' array.");
 		public static readonly Tuple<int, MessageSeverity, string> _7151 = Tuple.Create(7151, MessageSeverity.Error, "The method {0} cannot have an [EnumerateAsArrayAttribute] because it is not a GetEnumerator() method for the iterator pattern.");
 		public static readonly Tuple<int, MessageSeverity, string> _7152 = Tuple.Create(7152, MessageSeverity.Error, "The field {0} cannot have an [InlineConstantAttribute] because it is not constant.");
+		public static readonly Tuple<int, MessageSeverity, string> _7153 = Tuple.Create(7153, MessageSeverity.Error, "The property {0} cannot implement the property {1} because the property is declared by a serializable interface and the implementation is virtual.");
+		public static readonly Tuple<int, MessageSeverity, string> _7154 = Tuple.Create(7154, MessageSeverity.Error, "The property {0} cannot implement the property {1} because the property is declared by a serializable interface and the implementation also overrides a base property.");
+		public static readonly Tuple<int, MessageSeverity, string> _7155 = Tuple.Create(7155, MessageSeverity.Error, "The interface {0} cannot declare methods because it is serializable.");
+		public static readonly Tuple<int, MessageSeverity, string> _7156 = Tuple.Create(7156, MessageSeverity.Error, "The property {0} must be implemented as an auto-property because it implements the property {1} from a serializable interface.");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7200 = Tuple.Create(7200, MessageSeverity.Error, "This constructor for the type {0} cannot be used with reflection because it has a special implementation.");
 		public static readonly Tuple<int, MessageSeverity, string> _7201 = Tuple.Create(7201, MessageSeverity.Error, "The {1} {0} cannot be used with reflection because it has a special implementation.");

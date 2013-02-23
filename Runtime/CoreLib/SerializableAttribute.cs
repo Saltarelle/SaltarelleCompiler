@@ -8,7 +8,7 @@ namespace System {
 	/// Instance properties in serializable types are implemented as fields.
 	/// All instance fields and properties on serializable types will act as they were decorated with a [PreserveNameAttribute], unless another renaming attribute was specified.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = true, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
 	[Imported]
 	public sealed class SerializableAttribute : Attribute {
