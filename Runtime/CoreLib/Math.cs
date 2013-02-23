@@ -49,6 +49,23 @@ namespace System {
 			return 0;
 		}
 
+		public static short Abs(short l) {
+			return 0;
+		}
+
+		public static sbyte Abs(sbyte l) {
+			return 0;
+		}
+
+		public static float Abs(float l)
+		{
+			return 0;
+		}
+
+		public static decimal Abs(decimal l) {
+			return 0;
+		}
+
 		public static double Acos(double d) {
 			return 0;
 		}
@@ -66,6 +83,11 @@ namespace System {
 		}
 
 		[ScriptName("ceil")]
+		public static double Ceiling(decimal d) {
+			return 0;
+		}
+
+		[ScriptName("ceil")]
 		public static double Ceiling(double d) {
 			return 0;
 		}
@@ -74,7 +96,26 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("(Math.exp({d}) + Math.exp({d} * -1))/2")]
+		public static double Cosh(double d) {
+			return 0;
+		}
+
+		[InlineCode("(Math.exp({d}) - Math.exp({d} * -1))/2")]
+		public static double Sinh(double d) {
+			return 0;
+		}
+
+		[InlineCode("(Math.exp({d}) - Math.exp({d} * -1)) / (Math.exp({d}) + Math.exp({d} * -1))")]
+		public static double Tanh(double d) {
+			return 0;
+		}
+
 		public static double Exp(double d) {
+			return 0;
+		}
+
+		public static double Floor(decimal d) {
 			return 0;
 		}
 
@@ -86,33 +127,101 @@ namespace System {
 			return 0;
 		}
 
-		[ExpandParams]
-		public static double Max(params double[] numbers) {
+		[InlineCode("Math.log({d}) / Math.log({newBase})")]
+		public static double Log(double d, double newBase) {
 			return 0;
 		}
 
-		[ExpandParams]
-		public static int Max(params int[] numbers) {
+		[InlineCode("Math.log({d}) / Math.log(10)")]
+		public static double Log10(double d) {
 			return 0;
 		}
 
-		[ExpandParams]
-		public static long Max(params long[] numbers) {
+		public static int Max(byte a, byte b) {
 			return 0;
 		}
 
-		[ExpandParams]
-		public static double Min(params double[] numbers) {
+		public static int Max(decimal a, decimal b) {
 			return 0;
 		}
 
-		[ExpandParams]
-		public static int Min(params int[] numbers) {
+		public static double Max(double a, double b) {
 			return 0;
 		}
 
-		[ExpandParams]
-		public static int Min(params long[] numbers) {
+		public static int Max(short a, short b) {
+			return 0;
+		}
+
+		public static int Max(int a, int b) {
+			return 0;
+		}
+
+		public static long Max(long a, long b) {
+			return 0;
+		}
+
+		public static sbyte Max(sbyte a, sbyte b) {
+			return 0;
+		}
+
+		public static float Max(float a, float b) {
+			return 0;
+		}
+
+		public static ushort Max(ushort a, ushort b) {
+			return 0;
+		}
+
+		public static uint Max(uint a, uint b) {
+			return 0;
+		}
+
+		public static ulong Max(ulong a, ulong b) {
+			return 0;
+		}
+
+		public static byte Min(byte a, byte b) {
+			return 0;
+		}
+
+		public static decimal Min(decimal a, decimal b) {
+			return 0;
+		}
+
+		public static double Min(double a, double b) {
+			return 0;
+		}
+
+		public static short Min(short a, short b) {
+			return 0;
+		}
+
+		public static int Min(int a, int b) {
+			return 0;
+		}
+
+		public static long Min(long a, long b) {
+			return 0;
+		}
+
+		public static sbyte Min(sbyte a, sbyte b) {
+			return 0;
+		}
+
+		public static float Min(float a, float b) {
+			return 0;
+		}
+
+		public static ushort Min(ushort a, ushort b) {
+			return 0;
+		}
+
+		public static uint Min(uint a, uint b) {
+			return 0;
+		}
+
+		public static ulong Min(ulong a, ulong b) {
 			return 0;
 		}
 
@@ -124,7 +233,97 @@ namespace System {
 			return 0;
 		}
 
-		public static int Round(double d) {
+		[InlineCode("{$System.Script}.round({d})")]
+		public static decimal Round(decimal d) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d})")]
+		public static double Round(double d) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d}, {digits})")]
+		public static decimal Round(decimal d, int digits) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d}, {digits})")]
+		public static double Round(double d, int digits) {
+			return 0;
+		}
+
+		[InlineCode("{x} - ({y} * Math.round({x} / {y}))")]
+		public static double IEEERemainder(double x, double y) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d}, 0, {method})")]
+		public static decimal Round(decimal d, MidpointRounding method) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d}, 0, {method})")]
+		public static double Round(double d, MidpointRounding method) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d}, {digits}, {method})")]
+		public static decimal Round(decimal d, int digits, MidpointRounding method)
+		{
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.round({d}, {digits}, {method})")]
+		public static double Round(double d, int digits, MidpointRounding method)
+		{
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.divRem({a}, {b}, {result})")]
+		public static int DivRem(int a, int b, out int result) {
+			result = 0;
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.divRem({a}, {b}, {result})")]
+		public static long DivRem(long a, long b, out long result) {
+			result = 0;
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(decimal value) {
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(double value) {
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(short value) {
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(int value) {
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(long value) {
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(sbyte value) {
+			return 0;
+		}
+
+		[InlineCode("{value} > 0 ? 1 : {value} < 0 ? -1 : 0")]
+		public static int Sign(float value) {
 			return 0;
 		}
 
@@ -142,6 +341,16 @@ namespace System {
 
 		[InlineCode("{d} | 0")]
 		public static int Truncate(double d) {
+			return 0;
+		}
+
+		[InlineCode("{d} | 0")]
+		public static int Truncate(decimal d) {
+			return 0;
+		}
+		
+		[InlineCode("{a} * {b}")]
+		public static long BigMul(int a, int b) {
 			return 0;
 		}
 	}

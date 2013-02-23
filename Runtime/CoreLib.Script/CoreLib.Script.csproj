@@ -49,6 +49,7 @@
     <Content Include="Int32.js" />
     <Content Include="IteratorBlockEnumerator.js" />
     <Content Include="mscorlib.js" />
+    <Content Include="Math.js" />
     <Content Include="Array.js" />
     <Content Include="Number.js" />
     <Content Include="Object.js" />

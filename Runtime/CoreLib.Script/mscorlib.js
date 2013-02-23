@@ -195,6 +195,8 @@ if (typeof(window) == 'object') {
 
 #include "String.js"
 
+#include "Math.js"
+
 #include "Array.js"
 
 #include "Date.js"

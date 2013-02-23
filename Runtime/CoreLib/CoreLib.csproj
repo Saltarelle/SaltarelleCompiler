@@ -111,6 +111,7 @@
     <Compile Include="Threading\Tasks\Promise.cs" />
     <Compile Include="Threading\Tasks\Task.cs" />
     <Compile Include="Tuple.cs" />
+    <Compile Include="MidpointRounding.cs" />
     <Compile Include="Nullable.cs" />
     <Compile Include="Diagnostics\ConditionalAttribute.cs" />
     <Compile Include="Diagnostics\SuppressMessageAttribute.cs" />
