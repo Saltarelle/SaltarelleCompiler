@@ -357,5 +357,34 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("out")));
 			}, expectErrors: true);
 		}
+
+		[Test]
+		public void ParameterlessConstructorForImportedSerializableTypeIsSkippedInInitializers() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+[Imported, Serializable]
+public class C1 {
+}
+[Imported, Serializable]
+public class C2 {
+	public int X { get; set; }
+	public C2() {}
+	public C2(int x) {}
+}
+");
+
+			var c11 = FindConstructor("C1", 0);
+			Assert.That(c11.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(c11.SkipInInitializer, Is.True);
+
+			var c21 = FindConstructor("C2", 0);
+			Assert.That(c21.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(c21.SkipInInitializer, Is.True);
+
+			var c22 = FindConstructor("C2", 1);
+			Assert.That(c22.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(c22.SkipInInitializer, Is.False);
+		}
 	}
 }

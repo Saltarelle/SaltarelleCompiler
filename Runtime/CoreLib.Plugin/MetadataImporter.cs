@@ -581,7 +581,7 @@ namespace CoreLib.Plugin {
 							hasError = true;
 						}
 					}
-					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = hasError ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(parameterToMemberMap, skipInInitializer: skipInInitializer || constructor.Parameters.Count == 0);
 				}
 				else {
 					Message(Messages._7146, constructor.Region, source.DeclaringTypeDefinition.FullName);
