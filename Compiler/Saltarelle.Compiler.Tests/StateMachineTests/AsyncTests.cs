@@ -207,8 +207,12 @@ lbl: z;
 	await a:onCompleted1;
 	return;
 	await b:onCompleted2;
-	return y;
-	z;
+	if (c) {
+		return y;
+		z;
+		return;
+	}
+	return u;
 }", 
 @"{
 	var $state1 = 0, $tcs = new TaskCompletionSource();
@@ -235,9 +239,60 @@ lbl: z;
 					}
 					case 2: {
 						$state1 = -1;
-						$tcs.setResult(y);
+						if (c) {
+							$tcs.setResult(y);
+							return;
+							z;
+							$tcs.setResult('<<null>>');
+							return;
+						}
+						$tcs.setResult(u);
 						return;
-						z;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+			$tcs.setException($tmp1);
+		}
+	};
+	$sm();
+	return $tcs.getTask();
+}
+", methodType: MethodType.AsyncTask);
+		}
+
+		[Test]
+		public void AsyncMethodReturningTaskWithReturnStatementsInsideTryCatch() {
+			AssertCorrect(@"
+{
+	try {
+		return x;
+	}
+	catch (ex) {
+		return y;
+	}
+}", 
+@"{
+	var $state1 = 0, $tcs = new TaskCompletionSource();
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state1) {
+					case 0: {
+						$state1 = -1;
+						try {
+							$tcs.setResult(x);
+							return;
+						}
+						catch (ex) {
+							$tcs.setResult(y);
+							return;
+						}
 						$state1 = -1;
 						break $loop1;
 					}
@@ -256,6 +311,61 @@ lbl: z;
 	return $tcs.getTask();
 }
 ", methodType: MethodType.AsyncTask);
+		}
+
+		[Test]
+		public void AsyncMethodReturningVoidWithReturnStatements() {
+			AssertCorrect(@"
+{
+	return;
+	await a:onCompleted1;
+	return;
+	await b:onCompleted2;
+	if (c) {
+		return;
+		z;
+		return;
+	}
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					return;
+					$state1 = 1;
+					a.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					return;
+					$state1 = 2;
+					b.onCompleted2($sm);
+					return;
+				}
+				case 2: {
+					$state1 = -1;
+					if (c) {
+						return;
+						z;
+						return;
+					}
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
 		}
 
 		[Test]

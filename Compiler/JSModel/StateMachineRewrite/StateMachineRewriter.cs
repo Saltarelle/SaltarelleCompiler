@@ -288,7 +288,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 							return currentBlock;
 					}
 					else {
-						currentBlock.AddRange(new NestedJumpStatementRewriter(breakStack, continueStack, currentState, _exitState.Value).Process(stmt));
+						currentBlock.AddRange(new NestedStatementFixer(breakStack, continueStack, currentState, _exitState.Value, _makeSetResult).Process(stmt));
 					}
 					stack = PushFollowing(stack, tos);
 				}
@@ -300,15 +300,6 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				else if (stmt is JsTryStatement) {
 					if (!HandleTryStatement((JsTryStatement)stmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock, isFirstStatement))
 						return currentBlock;
-					stack = PushFollowing(stack, tos);
-				}
-				else if (stmt is JsReturnStatement) {
-					if (_makeSetResult != null)
-						currentBlock.Add(new JsExpressionStatement(_makeSetResult(((JsReturnStatement)stmt).Value)));
-					if (_isAsync)
-						currentBlock.Add(new JsReturnStatement());
-					else
-						currentBlock.Add(stmt);
 					stack = PushFollowing(stack, tos);
 				}
 				else if (FindInterestingConstructsVisitor.Analyze(stmt, InterestingConstruct.YieldReturn | InterestingConstruct.Label | InterestingConstruct.Await)) {
@@ -345,7 +336,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					}
 				}
 				else {
-					currentBlock.AddRange(new NestedJumpStatementRewriter(breakStack, continueStack, currentState, _exitState.Value).Process(stmt));
+					currentBlock.AddRange(new NestedStatementFixer(breakStack, continueStack, currentState, _exitState.Value, _makeSetResult).Process(stmt));
 					stack = PushFollowing(stack, tos);
 				}
 				if (setIsFirstStatementFalse)
@@ -451,7 +442,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				return HandleTryStatement(new JsTryStatement(new JsTryStatement(stmt.GuardedStatement, stmt.Catch, null), null, stmt.Finally), location, stack, breakStack, continueStack, currentState, returnState, currentBlock, isFirstStatement);
 			}
 			else {
-				var rewriter = new NestedJumpStatementRewriter(breakStack, continueStack, currentState, _exitState.Value);
+				var rewriter = new NestedStatementFixer(breakStack, continueStack, currentState, _exitState.Value, _makeSetResult);
 				JsBlockStatement guarded;
 				var guardedConstructs = FindInterestingConstructsVisitor.Analyze(stmt.GuardedStatement);
 				if ((guardedConstructs & (InterestingConstruct.Label | InterestingConstruct.Await)) != InterestingConstruct.None) {

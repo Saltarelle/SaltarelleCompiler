@@ -7,17 +7,19 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
-	internal class NestedJumpStatementRewriter : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
+	internal class NestedStatementFixer : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
 		private ImmutableStack<Tuple<string, State>> _breakStack;
 		private ImmutableStack<Tuple<string, State>> _continueStack;
-		private State _currentState;
-		private State _exitState;
+		private readonly State _currentState;
+		private readonly State _exitState;
+		private readonly Func<JsExpression, JsExpression> _makeSetResult;
 
-		public NestedJumpStatementRewriter(ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State exitState) {
+		public NestedStatementFixer(ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State exitState, Func<JsExpression, JsExpression> makeSetResult) {
 			_breakStack = breakStack;
 			_continueStack = continueStack;
 			_currentState = currentState;
 			_exitState = exitState;
+			_makeSetResult = makeSetResult;
 		}
 
 		public JsBlockStatement Process(JsBlockStatement statement) {
@@ -121,6 +123,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		public override JsStatement VisitGotoStatement(JsGotoStatement statement, object data) {
 			return new JsGotoStateStatement(statement.TargetLabel, _currentState);
+		}
+
+		public override JsStatement VisitReturnStatement(JsReturnStatement statement, object data) {
+			if (_makeSetResult != null)
+				return new JsBlockStatement(new JsStatement[] { new JsExpressionStatement(_makeSetResult(statement.Value)), new JsReturnStatement() }, mergeWithParent: true);
+			else
+				return statement;
 		}
 
 		public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {

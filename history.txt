@@ -1,3 +1,6 @@
+2.0.4
+Fixed bug generating async methods with return statements inside nested blocks (#143)
+
 2.0.3
 Fixed bug causing invalid code being generated for async methods when a try block is the first statement inside a nested block (#141)
 

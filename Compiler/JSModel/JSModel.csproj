@@ -58,7 +58,7 @@
     <Compile Include="StateMachineRewrite\FinalizerRewriter.cs" />
     <Compile Include="StateMachineRewrite\IntermediateStatements.cs" />
     <Compile Include="StateMachineRewrite\FindInterestingConstructsVisitor.cs" />
-    <Compile Include="StateMachineRewrite\NestedJumpStatementRewriter.cs" />
+    <Compile Include="StateMachineRewrite\NestedStatementFixer.cs" />
     <Compile Include="StateMachineRewrite\RemainingBlock.cs" />
     <Compile Include="StateMachineRewrite\Section.cs" />
     <Compile Include="StateMachineRewrite\StackEntry.cs" />
