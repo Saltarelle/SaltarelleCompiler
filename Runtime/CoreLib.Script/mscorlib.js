@@ -201,8 +201,6 @@ if (typeof(window) == 'object') {
 
 #include "Function.js"
 
-#include "Attribute.js"
-
 #include "Debug.js"
 
 #include "Enum.js"

@@ -178,17 +178,6 @@ namespace CoreLib.TestScript {
 		class C21 {}
 
 		[Test]
-		public void TypePropertiesAreCorrect() {
-			Assert.AreEqual(typeof(Attribute).FullName, "ss.Attribute", "FullName should be correct");
-			Assert.IsTrue(typeof(Attribute).IsClass, "IsClass should be true");
-			Assert.AreStrictEqual(typeof(Attribute).BaseType, typeof(object), "BaseType should be correct");
-
-			object a1 = new A1Attribute(1);
-			Assert.IsTrue((object)a1 is A1Attribute, "is A1Attribute should be true");
-			Assert.IsTrue((object)a1 is Attribute, "is Attribute should be true");
-		}
-
-		[Test]
 		public void CanGetCustomTypeAttributesForTypeWithNoAttributes() {
 			var arr = typeof(C1).GetCustomAttributes(false);
 			Assert.AreEqual(arr.Length, 0, "Should have no attributes");
