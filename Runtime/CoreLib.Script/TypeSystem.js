@@ -346,7 +346,7 @@ ss.createInstance = function#? DEBUG ss$createInstance##(type) {
 
 ss.applyConstructor = function#? DEBUG ss$applyConstructor##(constructor, args) {
 	var f = function() {
-		return constructor.apply(this, args);
+		constructor.apply(this, args);
 	};
 	f.prototype = constructor.prototype;
 	return new f();
