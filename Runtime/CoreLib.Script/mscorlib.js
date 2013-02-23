@@ -6,28 +6,28 @@ if (typeof(global) === "undefined")
 
 var ss = {};
 
-ss.isUndefined = function (o) {
+ss.isUndefined = function#? DEBUG ss$isUndefined##(o) {
 	return (o === undefined);
 };
 
-ss.isNull = function (o) {
+ss.isNull = function#? DEBUG ss$isNull##(o) {
 	return (o === null);
 };
 
-ss.isNullOrUndefined = function (o) {
+ss.isNullOrUndefined = function#? DEBUG ss$isNullOrUndefined##(o) {
 	return (o === null) || (o === undefined);
 };
 
-ss.isValue = function (o) {
+ss.isValue = function#? DEBUG ss$isValue##(o) {
 	return (o !== null) && (o !== undefined);
 };
 
-ss.referenceEquals = function (a, b) {
+ss.referenceEquals = function#? DEBUG ss$referenceEquals##(a, b) {
 	return ss.isValue(a) ? a === b : !ss.isValue(b);
 };
 
-ss.mkdict = function (a) {
-	a = (arguments.length != 1 ? arguments : arguments[0]);
+ss.mkdict = function#? DEBUG ss$mkdict##() {
+	var a = (arguments.length != 1 ? arguments : arguments[0]);
 	var r = {};
 	for (var i = 0; i < a.length; i += 2) {
 		r[a[i]] = a[i + 1];
@@ -35,19 +35,19 @@ ss.mkdict = function (a) {
 	return r;
 };
 
-ss.coalesce = function (a, b) {
+ss.coalesce = function#? DEBUG ss$coalesce##(a, b) {
 	return ss.isValue(a) ? a : b;
 };
 
-ss.isDate = function(obj) {
+ss.isDate = function#? DEBUG ss$isDate##(obj) {
 	return Object.prototype.toString.call(obj) === '[object Date]';
 };
 
-ss.isArray = function(obj) {
+ss.isArray = function#? DEBUG ss$isArray##(obj) {
 	return Object.prototype.toString.call(obj) === '[object Array]';
 };
 
-ss.getHashCode = function(obj) {
+ss.getHashCode = function#? DEBUG ss$getHashCode##(obj) {
 	if (!ss.isValue(obj))
 		throw 'Cannot get hash code of null';
 	else if (typeof(obj.getHashCode) === 'function')
@@ -74,11 +74,11 @@ ss.getHashCode = function(obj) {
 	}
 };
 
-ss.defaultHashCode = function(obj) {
+ss.defaultHashCode = function#? DEBUG ss$defaultHashCode##(obj) {
 	return obj.$__hashCode__ || (obj.$__hashCode__ = (Math.random() * 0xffffffff) | 0);
 };
 
-ss.equals = function(a, b) {
+ss.equals = function#? DEBUG ss$equals##(a, b) {
 	if (!ss.isValue(a))
 		throw 'Object is null';
 	else if (typeof(a.equals) === 'function')
@@ -93,7 +93,7 @@ ss.equals = function(a, b) {
 		return a === b;
 };
 
-ss.compare = function(a, b) {
+ss.compare = function#? DEBUG ss$compare##(a, b) {
 	if (!ss.isValue(a))
 		throw 'Object is null';
 	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
@@ -104,7 +104,7 @@ ss.compare = function(a, b) {
 		return a.compareTo(b);
 };
 
-ss.equalsT = function(a, b) {
+ss.equalsT = function#? DEBUG ss$equalsT##(a, b) {
 	if (!ss.isValue(a))
 		throw 'Object is null';
 	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
@@ -115,7 +115,7 @@ ss.equalsT = function(a, b) {
 		return a.equalsT(b);
 };
 
-ss.staticEquals = function(a, b) {
+ss.staticEquals = function#? DEBUG ss$staticEquals##(a, b) {
 	if (!ss.isValue(a))
 		return !ss.isValue(b);
 	else
