@@ -362,9 +362,6 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression CreateRegisterClassCall(ITypeDefinition type, string name, JsExpression ctor, JsExpression baseClass, IList<JsExpression> interfaces) {
-			if (baseClass is JsTypeReferenceExpression && ((JsTypeReferenceExpression)baseClass).Type.IsKnownType(KnownTypeCode.Object))
-				baseClass = null;
-
 			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
 			var metadata = GetMetadataDescriptor(type, false);
 			if (baseClass != null || interfaces.Count > 0 || metadata != null)
@@ -401,7 +398,9 @@ namespace CoreLib.Plugin {
 
 		private JsExpression GetBaseClass(ITypeDefinition type) {
 			var csBase = type.DirectBaseTypes.SingleOrDefault(b => b.Kind == TypeKind.Class);
-			return csBase != null ? _runtimeLibrary.InstantiateType(csBase, tp => ResolveTypeParameter(tp, type)) : JsExpression.Null;
+			if (csBase == null || csBase.IsKnownType(KnownTypeCode.Object) || MetadataUtils.IsImported(csBase.GetDefinition()) && MetadataUtils.IsSerializable(csBase.GetDefinition()))
+				return null;
+			return _runtimeLibrary.InstantiateType(csBase, tp => ResolveTypeParameter(tp, type));
 		}
 
 		private void AddClassMembers(JsClass c, JsExpression typeRef, List<JsStatement> stmts) {
@@ -431,7 +430,7 @@ namespace CoreLib.Plugin {
 			if (IsJsGeneric(c.CSharpTypeDefinition)) {
 				var args = new List<JsExpression> { typeRef, new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))) };
 				if (c.CSharpTypeDefinition.Kind == TypeKind.Class)
-					args.Add(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(GetBaseClass(c.CSharpTypeDefinition))));
+					args.Add(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(GetBaseClass(c.CSharpTypeDefinition) ?? JsExpression.Null)));
 				args.Add(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.ArrayLiteral(GetImplementedInterfaces(c.CSharpTypeDefinition)))));
 				var metadata = GetMetadataDescriptor(c.CSharpTypeDefinition, true);
 				if (metadata != null)

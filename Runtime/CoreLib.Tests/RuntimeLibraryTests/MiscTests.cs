@@ -98,7 +98,7 @@ class C<T1, T2> where T1 : class {
 		var $type = function() {
 		};
 		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
-			return Object;
+			return null;
 		}, function() {
 			return [];
 		});

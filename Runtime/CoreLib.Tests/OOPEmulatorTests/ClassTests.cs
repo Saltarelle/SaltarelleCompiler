@@ -603,7 +603,7 @@ var $$GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
-		return {Object};
+		return null;
 	}, function() {
 		return [];
 	});
@@ -676,7 +676,7 @@ var $GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
-		return {Object};
+		return null;
 	}, function() {
 		return [];
 	});
@@ -912,7 +912,7 @@ var $MyClass$2 = function(T1, T2) {
 	$type.f = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
-		return {Object};
+		return null;
 	}, function() {
 		return [];
 	});
@@ -920,6 +920,20 @@ var $MyClass$2 = function(T1, T2) {
 };
 {Script}.registerGenericClass(global, 'MyClass$2', $MyClass$2, 2);
 ", new[] { "MyClass" });
+		}
+
+		[Test]
+		public void InheritanceFromImportedSerializableClassIsNotRecordedInInheritanceList() {
+			AssertCorrect(
+@"[System.Runtime.CompilerServices.Imported, System.Serializable] public class B {}
+public class D : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+};
+{Script}.registerClass(global, 'D', $D);
+", new[] { "D" });
 		}
 	}
 }
