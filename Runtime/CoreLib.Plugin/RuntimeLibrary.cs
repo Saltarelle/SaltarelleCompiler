@@ -49,6 +49,9 @@ namespace CoreLib.Plugin {
 			else if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
+			else if (MetadataUtils.IsSerializable(type) && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
+				return CreateTypeReferenceExpression(KnownTypeReference.Object);
+			}
 			else {
 				return CreateTypeReferenceExpression(type);
 			}
