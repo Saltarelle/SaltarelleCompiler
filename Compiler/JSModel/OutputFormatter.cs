@@ -4,11 +4,14 @@ using System.Globalization;
 using System.Linq;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
+using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel
 {
-	public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool> {
+	public class OutputFormatter : IExpressionVisitor<object, bool>, IStatementVisitor<object, bool>,
+                                   IStateMachineRewriterIntermediateStatementsVisitor<object, bool>
+    {
 		private readonly bool _allowIntermediates;
 		private readonly bool _minify;
 		private readonly string _space;
@@ -747,6 +750,20 @@ redo:
 			_cb.Append(":" + statement.OnCompletedMethodName + ";");
 			if (addNewline)
 				_cb.AppendLine();
+			return null;
+		}
+
+		object IStateMachineRewriterIntermediateStatementsVisitor<object, bool>.VisitGotoStateStatement(JsGotoStateStatement stmt, bool data)
+		{
+			_cb.Append("GOTOSTATE:");
+			_cb.Append(stmt.TargetState.ToString());
+			return null;
+		}
+
+		object IStateMachineRewriterIntermediateStatementsVisitor<object, bool>.VisitSetNextStateStatement(JsSetNextStateStatement stmt, bool data)
+		{
+			_cb.Append("SETNEXTSTATE:");
+			_cb.Append(stmt.TargetStateValue.ToString());
 			return null;
 		}
 	}

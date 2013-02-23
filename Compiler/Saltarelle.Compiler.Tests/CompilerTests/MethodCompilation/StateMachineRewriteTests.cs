@@ -646,6 +646,99 @@ public class C {
 		}
 
 		[Test]
+		public void AsyncGenericTaskMethodWithReturnInBlockWorks()
+		{
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class C {
+	public async Task<string> M() {
+		if (true) {
+			return ""Test"";
+		}
+		return ""Test2"";
+	}
+}",
+@"function() {
+	var $state = 0, $tcs = $CreateTaskCompletionSource({ga_String});
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						if (true) {
+							$SetAsyncResult($tcs, 'Test');
+							return;
+						}
+						$state = 1;
+						continue $loop1;
+					}
+					case 1: {
+						$state = -1;
+						$SetAsyncResult($tcs, 'Test2');
+						return;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+			$SetAsyncException($tcs, $tmp1);
+		}
+	};
+	$sm();
+	return $GetTask($tcs);
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncGenericTaskMethodWithReturnInBareBlockWorks()
+		{
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class C {
+	public async Task<string> M() {
+		{
+			return ""Test"";
+		}
+		return ""Test2"";
+	}
+}",
+@"function() {
+	var $state = 0, $tcs = $CreateTaskCompletionSource({ga_String});
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$SetAsyncResult($tcs, 'Test');
+						return;
+						$SetAsyncResult($tcs, 'Test2');
+						return;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+			$SetAsyncException($tcs, $tmp1);
+		}
+	};
+	$sm();
+	return $GetTask($tcs);
+}", addSkeleton: false);
+		}
+
+		[Test]
 		public void AsyncVoidLambdaWorks() {
 			AssertCorrect(@"
 using System;
