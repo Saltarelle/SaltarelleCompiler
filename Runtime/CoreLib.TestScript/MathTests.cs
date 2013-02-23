@@ -39,26 +39,22 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void AbsOfSbyteWorks()
-		{
+		public void AbsOfSbyteWorks() {
 			Assert.AreEqual(Math.Abs((sbyte)-15), (sbyte)15);
 		}
 
 		[Test]
-		public void AbsOfShortWorks()
-		{
+		public void AbsOfShortWorks() {
 			Assert.AreEqual(Math.Abs((short)-15), (short)15);
 		}
 
 		[Test]
-		public void AbsOfFloatWorks()
-		{
+		public void AbsOfFloatWorks() {
 			Assert.AreEqual(Math.Abs(-17.5f), 17.5f);
 		}
 
 		[Test]
-		public void AbsOfDecimalWorks()
-		{
+		public void AbsOfDecimalWorks() {
 			Assert.AreEqual(Math.Abs(-10.0m), 10.0m);
 		}
 
@@ -89,8 +85,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void CeilingOfDecimalWorks()
-		{
+		public void CeilingOfDecimalWorks() {
 			Assert.AreEqual(Math.Ceiling(3.2m), 4.0m);
 			Assert.AreEqual(Math.Ceiling(-3.2m), -3.0m);
 		}
@@ -101,20 +96,17 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void CoshWorks()
-		{
+		public void CoshWorks() {
 			AssertAlmostEqual(Math.Cosh(0.1), 1.0050041680558035E+000);
 		}
 
 		[Test]
-		public void SinhWorks()
-		{
+		public void SinhWorks() {
 			AssertAlmostEqual(Math.Sinh(-0.98343), -1.1497925156481d);
 		}
 
 		[Test]
-		public void TanhWorks()
-		{
+		public void TanhWorks() {
 			AssertAlmostEqual(Math.Tanh(5.4251848), 0.999961205877d);
 		}
 
@@ -130,8 +122,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void FloorOfDecimalWorks()
-		{
+		public void FloorOfDecimalWorks() {
 			Assert.AreEqual(Math.Floor(3.6m), 3.0m);
 			Assert.AreEqual(Math.Floor(-3.6m), -4.0m);
 		}
@@ -142,169 +133,145 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void LogWithBaseWorks()
-		{
+		public void LogWithBaseWorks() {
 			Assert.AreEqual(Math.Log(16, 2), 4.0);
 			Assert.AreEqual(Math.Log(16, 4), 2.0);
 		}
 
 		[Test]
-		public void Log10Works()
-		{
+		public void Log10Works() {
 			Assert.AreEqual(Math.Log10(10), 1.0);
 			Assert.AreEqual(Math.Log10(100), 2.0);
 		}
 
 		[Test]
-		public void MaxOfByteWorks()
-		{
+		public void MaxOfByteWorks() {
 			Assert.AreEqual(Math.Max((byte)1, (byte)3), 3.0);
 			Assert.AreEqual(Math.Max((byte)5, (byte)3), 5.0);
 		}
 
 		[Test]
-		public void MaxOfDecimalWorks()
-		{
+		public void MaxOfDecimalWorks() {
 			Assert.AreEqual(Math.Max(-14.5m, 3.0m), 3.0m);
 			Assert.AreEqual(Math.Max(5.4m, 3.0m), 5.4m);
 		}
 
 		[Test]
-		public void MaxOfDoubleWorks()
-		{
+		public void MaxOfDoubleWorks() {
 			Assert.AreEqual(Math.Max(1.0, 3.0), 3.0);
 			Assert.AreEqual(Math.Max(4.0, 3.0), 4.0);
 		}
 
 		[Test]
-		public void MaxOfShortWorks()
-		{
+		public void MaxOfShortWorks() {
 			Assert.AreEqual(Math.Max((short)1, (short)3), (short)3);
 			Assert.AreEqual(Math.Max((short)4, (short)3), (short)4);
 		}
 
 		[Test]
-		public void MaxOfIntWorks()
-		{
+		public void MaxOfIntWorks() {
 			Assert.AreEqual(Math.Max(1, 3), 3);
 			Assert.AreEqual(Math.Max(4, 3), 4);
 		}
 
 		[Test]
-		public void MaxOfLongWorks()
-		{
+		public void MaxOfLongWorks() {
 			Assert.AreEqual(Math.Max(1L, 3L), 3L);
 			Assert.AreEqual(Math.Max(4L, 3L), 4L);
 		}
 
 		[Test]
-		public void MaxOfSByteWorks()
-		{
+		public void MaxOfSByteWorks() {
 			Assert.AreEqual(Math.Max((sbyte)-1, (sbyte)3), (sbyte)3);
 			Assert.AreEqual(Math.Max((sbyte)5, (sbyte)3), (sbyte)5);
 		}
 
 		[Test]
-		public void MaxOfFloatWorks()
-		{
+		public void MaxOfFloatWorks() {
 			Assert.AreEqual(Math.Max(-14.5f, 3.0f), 3.0f);
 			Assert.AreEqual(Math.Max(5.4f, 3.0f), 5.4f);
 		}
 
 		[Test]
-		public void MaxOfUShortWorks()
-		{
+		public void MaxOfUShortWorks() {
 			Assert.AreEqual(Math.Max((ushort)1, (ushort)3), (ushort)3);
 			Assert.AreEqual(Math.Max((ushort)5, (ushort)3), (ushort)5);
 		}
 
 		[Test]
-		public void MaxOfUIntWorks()
-		{
+		public void MaxOfUIntWorks() {
 			Assert.AreEqual(Math.Max((uint)1, (uint)3), (uint)3);
 			Assert.AreEqual(Math.Max((uint)5, (uint)3), (uint)5);
 		}
 
 		[Test]
-		public void MaxOfULongWorks()
-		{
+		public void MaxOfULongWorks() {
 			Assert.AreEqual(Math.Max((ulong)100, (ulong)300), (ulong)300);
 			Assert.AreEqual(Math.Max((ulong)500, (ulong)300), (ulong)500);
 		}
 
 		[Test]
-		public void MinOfByteWorks()
-		{
+		public void MinOfByteWorks() {
 			Assert.AreEqual(Math.Min((byte)1, (byte)3), 1.0);
 			Assert.AreEqual(Math.Min((byte)5, (byte)3), 3.0);
 		}
 
 		[Test]
-		public void MinOfDecimalWorks()
-		{
+		public void MinOfDecimalWorks() {
 			Assert.AreEqual(Math.Min(-14.5m, 3.0m), -14.5m);
 			Assert.AreEqual(Math.Min(5.4m, 3.0m), 3.0m);
 		}
 
 		[Test]
-		public void MinOfDoubleWorks()
-		{
+		public void MinOfDoubleWorks() {
 			Assert.AreEqual(Math.Min(1.0, 3.0), 1.0);
 			Assert.AreEqual(Math.Min(4.0, 3.0), 3.0);
 		}
 
 		[Test]
-		public void MinOfShortWorks()
-		{
+		public void MinOfShortWorks() {
 			Assert.AreEqual(Math.Min((short)1, (short)3), (short)1);
 			Assert.AreEqual(Math.Min((short)4, (short)3), (short)3);
 		}
 
 		[Test]
-		public void MinOfIntWorks()
-		{
+		public void MinOfIntWorks() {
 			Assert.AreEqual(Math.Min(1, 3), 1);
 			Assert.AreEqual(Math.Min(4, 3), 3);
 		}
 
 		[Test]
-		public void MinOfLongWorks()
-		{
+		public void MinOfLongWorks() {
 			Assert.AreEqual(Math.Min(1L, 3L), 1L);
 			Assert.AreEqual(Math.Min(4L, 3L), 3L);
 		}
 
 		[Test]
-		public void MinOfSByteWorks()
-		{
+		public void MinOfSByteWorks() {
 			Assert.AreEqual(Math.Min((sbyte)-1, (sbyte)3), (sbyte)-1);
 			Assert.AreEqual(Math.Min((sbyte)5, (sbyte)3), (sbyte)3);
 		}
 
 		[Test]
-		public void MinOfFloatWorks()
-		{
+		public void MinOfFloatWorks() {
 			Assert.AreEqual(Math.Min(-14.5f, 3.0f), -14.5f);
 			Assert.AreEqual(Math.Min(5.4f, 3.0f), 3.0f);
 		}
 
 		[Test]
-		public void MinOfUShortWorks()
-		{
+		public void MinOfUShortWorks() {
 			Assert.AreEqual(Math.Min((ushort)1, (ushort)3), (ushort)1);
 			Assert.AreEqual(Math.Min((ushort)5, (ushort)3), (ushort)3);
 		}
 
 		[Test]
-		public void MinOfUIntWorks()
-		{
+		public void MinOfUIntWorks() {
 			Assert.AreEqual(Math.Min((uint)1, (uint)3), (uint)1);
 			Assert.AreEqual(Math.Min((uint)5, (uint)3), (uint)3);
 		}
 
 		[Test]
-		public void MinOfULongWorks()
-		{
+		public void MinOfULongWorks() {
 			Assert.AreEqual(Math.Min((ulong)100, (ulong)300), (ulong)100);
 			Assert.AreEqual(Math.Min((ulong)500, (ulong)300), (ulong)300);
 		}
@@ -324,86 +291,75 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void RoundOfDoubleWorks()
-		{
+		public void RoundOfDoubleWorks() {
 			Assert.AreEqual(Math.Round(3.432), 3.0);
 			Assert.AreEqual(Math.Round(3.6), 4.0);
 		}
 
 		[Test]
-		public void RoundOfDecimalWorks()
-		{
+		public void RoundOfDecimalWorks() {
 			Assert.AreEqual(Math.Round(3.432m), 3.0m);
 			Assert.AreEqual(Math.Round(3.6m), 4.0m);
 		}
 
 		[Test]
-		public void RoundOfDoubleWithDigitsWorks()
-		{
+		public void RoundOfDoubleWithDigitsWorks() {
 			Assert.AreEqual(Math.Round(3.432, 2), 3.43);
 			Assert.AreEqual(Math.Round(3.6, 0), 4.0);
 			Assert.AreEqual(Math.Round(3.35, 1), 3.4);
 		}
 
 		[Test]
-		public void RoundOfDecimalWithDigitsWorks()
-		{
+		public void RoundOfDecimalWithDigitsWorks() {
 			Assert.AreEqual(Math.Round(3.432m, 2), 3.43m);
 			Assert.AreEqual(Math.Round(3.6m, 0), 4.0m);
 			Assert.AreEqual(Math.Round(3.35m, 1), 3.4m);
 		}
 
 		[Test]
-		public void SignWithDecimalWorks()
-		{
+		public void SignWithDecimalWorks() {
 			Assert.AreEqual(Math.Sign(-0.5m), -1);
 			Assert.AreEqual(Math.Sign(0.0m), 0);
 			Assert.AreEqual(Math.Sign(3.35m), 1);
 		}
 
 		[Test]
-		public void SignWithDoubleWorks()
-		{
+		public void SignWithDoubleWorks() {
 			Assert.AreEqual(Math.Sign(-0.5), -1);
 			Assert.AreEqual(Math.Sign(0.0), 0);
 			Assert.AreEqual(Math.Sign(3.35), 1);
 		}
 
 		[Test]
-		public void SignWithShortWorks()
-		{
+		public void SignWithShortWorks() {
 			Assert.AreEqual(Math.Sign((short)-15), -1);
 			Assert.AreEqual(Math.Sign((short)0), 0);
 			Assert.AreEqual(Math.Sign((short)4), 1);
 		}
 
 		[Test]
-		public void SignWithIntWorks()
-		{
+		public void SignWithIntWorks() {
 			Assert.AreEqual(Math.Sign(-15), -1);
 			Assert.AreEqual(Math.Sign(0), 0);
 			Assert.AreEqual(Math.Sign(4), 1);
 		}
 
 		[Test]
-		public void SignWithLongWorks()
-		{
+		public void SignWithLongWorks() {
 			Assert.AreEqual(Math.Sign(-15L), -1);
 			Assert.AreEqual(Math.Sign(0L), 0);
 			Assert.AreEqual(Math.Sign(4L), 1);
 		}
 
 		[Test]
-		public void SignWithSByteWorks()
-		{
+		public void SignWithSByteWorks() {
 			Assert.AreEqual(Math.Sign((sbyte)-15), -1);
 			Assert.AreEqual(Math.Sign((sbyte)0), 0);
 			Assert.AreEqual(Math.Sign((sbyte)4), 1);
 		}
 
 		[Test]
-		public void SignWithFloatWorks()
-		{
+		public void SignWithFloatWorks() {
 			Assert.AreEqual(Math.Sign(-0.5f), -1);
 			Assert.AreEqual(Math.Sign(0.0f), 0);
 			Assert.AreEqual(Math.Sign(3.35f), 1);
@@ -431,15 +387,13 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void TruncateWithDecimalWorks()
-		{
+		public void TruncateWithDecimalWorks() {
 			Assert.AreEqual(Math.Truncate(3.9m), 3.0m);
 			Assert.AreEqual(Math.Truncate(-3.9m), -3.0m);
 		}
 
 		[Test]
-		public void IEEERemainderWorks()
-		{
+		public void IEEERemainderWorks() {
 			Assert.AreEqual(Math.IEEERemainder(3.0, 2.0), -1.0);
 			Assert.AreEqual(Math.IEEERemainder(4.0, 2.0), 0.0);
 			Assert.AreEqual(Math.IEEERemainder(10.0, 3.0), 1.0);
@@ -454,8 +408,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void RoundOfDoubleWithMidpointRoundingWorks()
-		{
+		public void RoundOfDoubleWithMidpointRoundingWorks() {
 			Assert.AreEqual(Math.Round(3.432, MidpointRounding.AwayFromZero), 3.0);
 			Assert.AreEqual(Math.Round(3.432, MidpointRounding.ToEven), 3.0);
 			Assert.AreEqual(Math.Round(3.5, MidpointRounding.AwayFromZero), 4.0);
@@ -469,8 +422,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void RoundOfDecimalWithMidpointRoundingWorks()
-		{
+		public void RoundOfDecimalWithMidpointRoundingWorks() {
 			Assert.AreEqual(Math.Round(3.432m, MidpointRounding.AwayFromZero), 3.0m);
 			Assert.AreEqual(Math.Round(3.432m, MidpointRounding.ToEven), 3.0m);
 			Assert.AreEqual(Math.Round(3.5m, MidpointRounding.AwayFromZero), 4.0m);
@@ -484,8 +436,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void RoundOfDoubleWithDigitsAndMidpointRoundingWorks()
-		{
+		public void RoundOfDoubleWithDigitsAndMidpointRoundingWorks() {
 			Assert.AreEqual(Math.Round(3.45, 1, MidpointRounding.AwayFromZero), 3.5);
 			Assert.AreEqual(Math.Round(3.45, 1, MidpointRounding.ToEven), 3.4);
 			Assert.AreEqual(Math.Round(3.5, 0, MidpointRounding.AwayFromZero), 4.0);
@@ -499,8 +450,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void RoundOfDecimalWithDigitsAndMidpointRoundingWorks()
-		{
+		public void RoundOfDecimalWithDigitsAndMidpointRoundingWorks() {
 			Assert.AreEqual(Math.Round(3.45m, 1, MidpointRounding.AwayFromZero), 3.5m);
 			Assert.AreEqual(Math.Round(3.45m, 1, MidpointRounding.ToEven), 3.4m);
 			Assert.AreEqual(Math.Round(3.5m, 0, MidpointRounding.AwayFromZero), 4.0m);
@@ -514,16 +464,14 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void BigMulWorks()
-		{
+		public void BigMulWorks() {
 			// TODO: doesn't work cause of wrong long type
 			//Assert.AreEqual(Math.BigMul(Int32.MaxValue, Int32.MaxValue), 4611686014132420609L);
 			Assert.AreEqual(Math.BigMul(214748364, 214748364), 46116859840676496L);
 		}
 
 		[Test]
-		public void DivRemWorks()
-		{
+		public void DivRemWorks() {
 			int result;
 			Assert.AreEqual(Math.DivRem(2147483647, 2, out result), 1073741823);
 			Assert.AreEqual(result, 1);
