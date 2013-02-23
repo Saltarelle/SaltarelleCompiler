@@ -9,11 +9,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace System {
-
 	[Imported]
-	[ScriptNamespace("ss")]
+	[IgnoreNamespace]
+	[ScriptName("Object")]
 	public abstract class Record {
-
 		[ScriptSkip]
 		public static explicit operator JsDictionary(Record r) {
 			return null;

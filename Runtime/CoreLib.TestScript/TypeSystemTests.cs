@@ -53,6 +53,10 @@ namespace CoreLib.TestScript {
 			}
 		}
 
+		public class CS2 : Record {
+			public int X;
+		}
+
 		[Test]
 		public void FullNamePropertyReturnsTheNameWithTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).FullName, "CoreLib.TestScript.TypeSystemTests");
@@ -561,6 +565,12 @@ namespace CoreLib.TestScript {
 			var d = new DS(42);
 			Assert.AreEqual(d.X, 42, "d.X");
 			Assert.AreEqual(d.GetX(), 42, "d.GetX");
+		}
+		
+		[Test]
+		public void InheritingFromRecordWorks() {
+			var c = new CS2() { X = 42 };
+			Assert.AreEqual(c.X, 42);
 		}
 	}
 }
