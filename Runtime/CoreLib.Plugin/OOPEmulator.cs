@@ -10,6 +10,7 @@ using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -426,6 +427,42 @@ namespace CoreLib.Plugin {
 			}
 
 			stmts.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, m.Name), RewriteMethod(m)))));
+
+			if (MetadataUtils.IsSerializable(c.CSharpTypeDefinition)) {
+				string typeCheckCode = MetadataUtils.GetSerializableTypeCheckCode(c.CSharpTypeDefinition);
+				if (typeCheckCode != null) {
+					var oldReg = _errorReporter.Region;
+					_errorReporter.Region = c.CSharpTypeDefinition.Attributes.Single(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName).Region;
+					IMethod method = new DefaultResolvedMethod(new DefaultUnresolvedMethod(c.CSharpTypeDefinition.Parts[0], "IsInstanceOfType"), _compilation.TypeResolveContext.WithCurrentTypeDefinition(c.CSharpTypeDefinition));
+					method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: c.CSharpTypeDefinition.TypeParameters.ToList<IType>(), methodTypeArguments: null));
+
+					var errors = new List<string>();
+					var tokens = InlineCodeMethodCompiler.Tokenize(method, typeCheckCode, errors.Add);
+					if (errors.Count == 0) {
+						var result = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, JsExpression.Identifier("obj"), new JsExpression[0],
+						                 n => {
+						                     var type = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation);
+						                     if (type.Kind == TypeKind.Unknown) {
+						                         errors.Add("Unknown type '" + n + "' specified in inline implementation");
+						                         return JsExpression.Null;
+						                     }
+						                     return _runtimeLibrary.InstantiateType(type, tp => ResolveTypeParameter(tp, c.CSharpTypeDefinition));
+						                 },
+						                 t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => ResolveTypeParameter(tp, c.CSharpTypeDefinition)),
+						                 errors.Add);
+
+						stmts.Add(new JsExpressionStatement(
+						              JsExpression.Assign(
+						                  JsExpression.Member(typeRef, "isInstanceOfType"),
+						                  JsExpression.FunctionDefinition(new[] { "obj" }, new JsReturnStatement(result)))));
+
+						foreach (var e in errors) {
+							_errorReporter.Message(Messages._7157, c.CSharpTypeDefinition.FullName, e);
+						}
+					}
+					_errorReporter.Region = oldReg;
+				}
+			}
 
 			if (IsJsGeneric(c.CSharpTypeDefinition)) {
 				var args = new List<JsExpression> { typeRef, new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))) };

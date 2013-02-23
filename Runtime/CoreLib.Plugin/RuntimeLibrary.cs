@@ -14,7 +14,6 @@ namespace CoreLib.Plugin {
 		private enum TypeContext {
 			TypeOf,
 			GetScriptType,
-			CastTarget,
 			GenericArgument,
 		}
 
@@ -43,10 +42,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetTypeDefinitionScriptType(ITypeDefinition type, TypeContext context) {
-			if (MetadataUtils.IsSerializable(type) && (context == TypeContext.CastTarget)) {
-				return null;
-			}
-			else if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
+			if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else if (MetadataUtils.IsSerializable(type) && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
@@ -64,8 +60,6 @@ namespace CoreLib.Plugin {
 			else if (type is ParameterizedType) {
 				var pt = (ParameterizedType)type;
 				var def = pt.GetDefinition();
-				if (MetadataUtils.IsSerializable(def) && context == TypeContext.CastTarget)
-					return null;
 				var sem = _metadataImporter.GetTypeSemantics(def);
 				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
 					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
@@ -75,9 +69,6 @@ namespace CoreLib.Plugin {
 			else if (type.TypeParameterCount > 0) {
 				// This handles open generic types ( typeof(C<,>) )
 				return CreateTypeReferenceExpression(type.GetDefinition());
-			}
-			else if (type.Kind == TypeKind.Enum && context == TypeContext.CastTarget) {
-				return CreateTypeReferenceExpression(type.GetDefinition().EnumUnderlyingType.GetDefinition());
 			}
 			else if (type.Kind == TypeKind.Array) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Array);
@@ -100,17 +91,32 @@ namespace CoreLib.Plugin {
 			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Type.IsKnownType(KnownTypeCode.Object);
 		}
 
+		private JsExpression GetCastTarget(IType type, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
+			if (type.Kind == TypeKind.Enum)
+				return CreateTypeReferenceExpression(type.GetDefinition().EnumUnderlyingType.GetDefinition());
+
+			var def = type.GetDefinition();
+			if (def != null) {
+				if (MetadataUtils.IsSerializable(def) && MetadataUtils.GetSerializableTypeCheckCode(def) == null)
+					return null;
+				if (!MetadataUtils.DoesTypeObeyTypeSystem(def))
+					return null;
+			}
+
+			return GetScriptType(type, TypeContext.GetScriptType, resolveTypeParameter);
+		}
+
 		private JsExpression GetCastTarget(IType sourceType, IType targetType, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
-			var ss = GetScriptType(sourceType, TypeContext.CastTarget, resolveTypeParameter);
-			var st = GetScriptType(targetType, TypeContext.CastTarget, resolveTypeParameter);
+			var ss = GetCastTarget(sourceType, resolveTypeParameter);
+			var st = GetCastTarget(targetType, resolveTypeParameter);
 			if (st == null) {
-				return null;	// Either the target is not a real type.
+				return null;	// The target is not a real type.
 			}
 			else if (ss is JsTypeReferenceExpression && st is JsTypeReferenceExpression) {
 				var ts = ((JsTypeReferenceExpression)ss).Type;
 				var tt = ((JsTypeReferenceExpression)st).Type;
 				if (_metadataImporter.GetTypeSemantics(ts).Name == _metadataImporter.GetTypeSemantics(tt).Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
-					return null;	// The types are the same in script, so no runtimeConversion is required.
+					return null;	// The types are the same in script, so no runtime conversion is required.
 			}
 
 			return st;

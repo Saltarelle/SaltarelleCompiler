@@ -41,6 +41,16 @@ namespace CoreLib.Plugin {
 			return AttributeReader.HasAttribute<SerializableAttribute>(type) || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
 		}
 
+		public static string GetSerializableTypeCheckCode(ITypeDefinition type) {
+			var attr = type.Attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName);
+			if (attr != null) {
+				var result = attr.NamedArguments.SingleOrDefault(a => a.Key.Name == "TypeCheckCode");
+				if (result.Value != null && result.Value.ConstantValue is string)
+					return result.Value.ConstantValue as string;
+			}
+			return null;
+		}
+
 		public static bool DoesTypeObeyTypeSystem(ITypeDefinition type) {
 			var ia = AttributeReader.ReadAttribute<ImportedAttribute>(type);
 			return ia == null || ia.ObeysTypeSystem;
