@@ -92,6 +92,9 @@ namespace CoreLib.Tests.Core {
 	public class MathTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class RandomTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class MultidimArrayTests : CoreLibTestBase {}
 
 	[TestFixture]

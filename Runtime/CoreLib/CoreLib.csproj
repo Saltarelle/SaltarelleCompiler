@@ -94,6 +94,7 @@
     <Compile Include="Reflection\MethodInfo.cs" />
     <Compile Include="MulticastDelegate.cs" />
     <Compile Include="SerializableAttribute.cs" />
+    <Compile Include="Random.cs" />
     <Compile Include="Lazy.cs" />
     <Compile Include="IComparable.cs" />
     <Compile Include="IEquatable.cs" />

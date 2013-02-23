@@ -243,6 +243,8 @@ if (typeof(window) == 'object') {
 
 #include "StringBuilder.js"
 
+#include "Random.js"
+
 #include "EventArgs.js"
 
 #include "Exception.js"

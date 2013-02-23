@@ -53,6 +53,7 @@
     <Content Include="Array.js" />
     <Content Include="Number.js" />
     <Content Include="Object.js" />
+    <Content Include="Random.js" />
     <Content Include="String.js" />
     <Content Include="Date.js" />
     <Content Include="Debug.js" />
