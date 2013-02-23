@@ -30,12 +30,12 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
-		public void TypeWithoutSerializableAttributeCanInheritRecordButNotOtherSerializableType() {
+		public void TypeWithoutSerializableAttributeCanInheritRecordAndSerializableType() {
 			Prepare(@"using System; using System.Runtime.CompilerServices; class C1 : Record {}", expectErrors: false);
 			// No error is good enough
 
-			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class B {} class C1 : B {}", expectErrors: true);
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("B") && m.Contains("cannot inherit from the serializable type")));
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] class B {} class C1 : B {}", expectErrors: false);
+			// No error is good enough
 		}
 
 		[Test]

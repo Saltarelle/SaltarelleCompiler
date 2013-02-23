@@ -148,5 +148,9 @@ namespace Saltarelle.Compiler.Decorators {
 		public virtual JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray) {
 			return _prev.ApplyConstructor(constructor, argumentsArray);
 		}
+
+		public virtual JsExpression ShallowCopy(JsExpression source, JsExpression target) {
+			return _prev.ShallowCopy(source, target);
+		}
 	}
 }

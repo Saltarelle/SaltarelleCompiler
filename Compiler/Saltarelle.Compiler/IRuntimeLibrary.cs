@@ -211,5 +211,12 @@ namespace Saltarelle.Compiler {
 		/// <param name="constructor">The constructor to apply.</param>
 		/// <param name="argumentsArray">Arguments for the call (should evaluate to an array).</param>
 		JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray);
+
+		/// <summary>
+		/// Generates an expression that copies all properties from an object to another one (not cloning nested objects).
+		/// </summary>
+		/// <param name="source">The object whose properties are examined.</param>
+		/// <param name="target">The object that the properties from <paramref name="source"/> will be added to.</param>
+		JsExpression ShallowCopy(JsExpression source, JsExpression target);
 	}
 }

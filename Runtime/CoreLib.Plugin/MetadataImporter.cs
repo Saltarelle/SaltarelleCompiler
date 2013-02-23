@@ -358,11 +358,6 @@ namespace CoreLib.Plugin {
 				}
 			}
 			else {
-				var baseClass = typeDefinition.DirectBaseTypes.SingleOrDefault(c => c.Kind == TypeKind.Class);
-				if (baseClass != null && GetTypeSemanticsInternal(baseClass.GetDefinition()).IsSerializable) {
-					Message(Messages._7008, typeDefinition, baseClass.FullName);
-				}
-
 				var globalMethodsAttr = AttributeReader.ReadAttribute<GlobalMethodsAttribute>(typeDefinition);
 				var mixinAttr = AttributeReader.ReadAttribute<MixinAttribute>(typeDefinition);
 				if (mixinAttr != null) {

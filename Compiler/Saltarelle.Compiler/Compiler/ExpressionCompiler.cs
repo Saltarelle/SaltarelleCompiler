@@ -98,6 +98,9 @@ namespace Saltarelle.Compiler.Compiler {
 			if (currentIsStaticMethod) {
 				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, method, argumentsForCall, argumentToParameterMap, initializerStatements)));
 			}
+			else if (impl.Type == ConstructorScriptSemantics.ImplType.Json) {
+				_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements), CompileThis())));
+			}
 			else {
 				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, InstantiateType(method.DeclaringType), false, argumentsForCall, argumentToParameterMap);
 				var jsType           = thisAndArguments[0];
@@ -113,15 +116,11 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						_errorReporter.Message(Messages._7503);
+						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, JsExpression.Member(jsType, impl.Name), impl.ExpandParams, false), thisAndArguments[0])));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						_errorReporter.Message(Messages._7504);
-						break;
-
-					case ConstructorScriptSemantics.ImplType.Json:
-						_errorReporter.Message(Messages._7532);
+						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList()), thisAndArguments[0])));
 						break;
 
 					default:

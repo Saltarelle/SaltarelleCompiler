@@ -419,5 +419,9 @@ namespace CoreLib.Plugin {
 		public JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray) {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "applyConstructor"), constructor, argumentsArray);
 		}
+
+		public virtual JsExpression ShallowCopy(JsExpression source, JsExpression target) {
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "shallowCopy"), source, target);
+		}
 	}
 }

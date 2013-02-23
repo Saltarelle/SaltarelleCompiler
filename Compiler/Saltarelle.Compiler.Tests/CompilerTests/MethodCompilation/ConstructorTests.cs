@@ -205,39 +205,50 @@ class D : B {
 		}
 
 		[Test]
-		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorWprks() {
+			AssertCorrect(
 @"class C {
+	static int P { get; set; }
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public C() : this(0, ""X"") {
+	public C() : this(P = 42, ""X"") {
 		M();
 	}
 
 	public C(int x, string s) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
-			Assert.That(rpt.AllMessages.Any(msg => msg.Severity ==MessageSeverity.Error && msg.FormattedMessage.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+}",
+@"function() {
+	{sm_C}.set_P(42);
+	$ShallowCopy(_(42)._('X'), this);
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("_({x})._({s})") });
 		}
 
 		[Test]
-		public void ChainingToConstructorImplementedAsJsonFromUnnamedConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void ChainingToConstructorImplementedAsJsonFromUnnamedConstructorWorks() {
+			AssertCorrect(
 @"class C {
+	public int X;
+	public string S;
+
+	static int P { get; set; }
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public C() : this(0, ""X"") {
+	public C() : this(P = 42, ""X"") {
 		M();
 	}
 
 	public C(int x, string s) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(new IMember[0]) });
-			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+}",
+@"function() {
+	{sm_C}.set_P(42);
+	$ShallowCopy({ $X: 42, $S: 'X' }, this);
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
 		[Test]
@@ -319,29 +330,37 @@ class D : B {
 		}
 
 		[Test]
-		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorWorks() {
+			AssertCorrect(
 @"class C {
-	public C() : this(0) {
+	public static int P { get; set; }
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(P = 0) {
 	}
 	public C(int x) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
-			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
+}",
+@"function() {
+	{sm_C}.set_P(0);
+	$ShallowCopy({sm_C}.ctor(0), this);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
-		public void InvokingBaseStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void InvokingBaseStaticMethodConstructorFromAnotherTypeOfConstructorWorks() {
+			AssertCorrect(
 @"class B {
-	public B() {}
+	public B(int x) {}
 }
 class D : B {
-	public D() {}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
-			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
+	public static int P { get; set; }
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base(P = 1) {}
+}",
+@"function() {
+	{sm_D}.set_P(1);
+	$ShallowCopy({sm_B}.ctor(1), this);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]

@@ -65,6 +65,7 @@ namespace Saltarelle.Compiler.Tests {
 			SetAsyncException                               = (t, e)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncException"), t, e);
 			GetTaskFromTaskCompletionSource                 = (t)                  => JsExpression.Invocation(JsExpression.Identifier("$GetTask"), t);
 			ApplyConstructor                                = (c, a)               => JsExpression.Invocation(JsExpression.Identifier("$ApplyConstructor"), c, a);
+			ShallowCopy                                     = (s, t)               => JsExpression.Invocation(JsExpression.Identifier("$ShallowCopy"), s, t);
 		}
 
 		public Func<IType, Func<ITypeParameter, JsExpression>, JsExpression> GetTypeOf { get; set; }
@@ -101,6 +102,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, JsExpression> SetAsyncException { get; set; }
 		public Func<JsExpression, JsExpression> GetTaskFromTaskCompletionSource { get; set; }
 		public Func<JsExpression, JsExpression, JsExpression> ApplyConstructor { get; set; }
+		public Func<JsExpression, JsExpression, JsExpression> ShallowCopy { get; set; }
 
 		private JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			string contextName = GetTypeContextShortName(context);
@@ -260,6 +262,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.ApplyConstructor(JsExpression constructor, JsExpression argumentsArray) {
 			return ApplyConstructor(constructor, argumentsArray);
+		}
+
+		JsExpression IRuntimeLibrary.ShallowCopy(JsExpression source, JsExpression target) {
+			return ShallowCopy(source, target);
 		}
 	}
 }

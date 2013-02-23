@@ -39,6 +39,20 @@ namespace CoreLib.TestScript {
 
 		[Imported] public interface IImported {}
 
+		[Serializable]
+		public class BS {
+			public int X;
+			public BS(int x) {
+				X = x;
+			}
+		}
+
+		public class DS : BS {
+			public int GetX() { return X; }
+			public DS(int x) : base(x) {
+			}
+		}
+
 		[Test]
 		public void FullNamePropertyReturnsTheNameWithTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).FullName, "CoreLib.TestScript.TypeSystemTests");
@@ -540,6 +554,13 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void CastingUndefinedToOtherTypeShouldReturnUndefined() {
 			Assert.AreEqual(Type.GetScriptType((C)Script.Undefined), "undefined");
+		}
+
+		[Test]
+		public void NonSerializableTypeCanInheritFromSerializableType() {
+			var d = new DS(42);
+			Assert.AreEqual(d.X, 42, "d.X");
+			Assert.AreEqual(d.GetX(), 42, "d.GetX");
 		}
 	}
 }

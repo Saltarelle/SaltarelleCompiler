@@ -122,6 +122,13 @@ ss.staticEquals = function#? DEBUG ss$staticEquals##(a, b) {
 		return ss.isValue(b) ? ss.equals(a, b) : false;
 };
 
+ss.shallowCopy = function#? DEBUG ss$shallowCopy##(source, target) {
+	for (var p in source) {
+		if (source.hasOwnProperty(p))
+			target[p] = source[p];
+	}
+};
+
 if (typeof(window) == 'object') {
 	// Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
 	if (!window.Element) {
