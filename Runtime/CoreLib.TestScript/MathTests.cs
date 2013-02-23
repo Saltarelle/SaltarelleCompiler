@@ -294,12 +294,20 @@ namespace CoreLib.TestScript {
 		public void RoundOfDoubleWorks() {
 			Assert.AreEqual(Math.Round(3.432), 3.0);
 			Assert.AreEqual(Math.Round(3.6), 4.0);
+			Assert.AreEqual(Math.Round(3.5), 4.0);
+			Assert.AreEqual(Math.Round(4.5), 4.0);
+			Assert.AreEqual(Math.Round(-3.5), -4.0);
+			Assert.AreEqual(Math.Round(-4.5), -4.0);
 		}
 
 		[Test]
 		public void RoundOfDecimalWorks() {
 			Assert.AreEqual(Math.Round(3.432m), 3.0m);
 			Assert.AreEqual(Math.Round(3.6m), 4.0m);
+			Assert.AreEqual(Math.Round(3.5m), 4.0m);
+			Assert.AreEqual(Math.Round(4.5m), 4.0m);
+			Assert.AreEqual(Math.Round(-3.5m), -4.0m);
+			Assert.AreEqual(Math.Round(-4.5m), -4.0m);
 		}
 
 		[Test]
@@ -307,6 +315,9 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(Math.Round(3.432, 2), 3.43);
 			Assert.AreEqual(Math.Round(3.6, 0), 4.0);
 			Assert.AreEqual(Math.Round(3.35, 1), 3.4);
+			Assert.AreEqual(Math.Round(3.45, 1), 3.4);
+			Assert.AreEqual(Math.Round(-3.35, 1), -3.4);
+			Assert.AreEqual(Math.Round(-3.45, 1), -3.4);
 		}
 
 		[Test]
@@ -314,6 +325,9 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(Math.Round(3.432m, 2), 3.43m);
 			Assert.AreEqual(Math.Round(3.6m, 0), 4.0m);
 			Assert.AreEqual(Math.Round(3.35m, 1), 3.4m);
+			Assert.AreEqual(Math.Round(3.45m, 1), 3.4m);
+			Assert.AreEqual(Math.Round(-3.35m, 1), -3.4m);
+			Assert.AreEqual(Math.Round(-3.45m, 1), -3.4m);
 		}
 
 		[Test]
@@ -465,8 +479,6 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void BigMulWorks() {
-			// TODO: doesn't work cause of wrong long type
-			//Assert.AreEqual(Math.BigMul(Int32.MaxValue, Int32.MaxValue), 4611686014132420609L);
 			Assert.AreEqual(Math.BigMul(214748364, 214748364), 46116859840676496L);
 		}
 
@@ -476,9 +488,6 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(Math.DivRem(2147483647, 2, out result), 1073741823);
 			Assert.AreEqual(result, 1);
 			long longResult;
-			// TODO: doesn't work cause of wrong long type
-			//Assert.AreEqual(Math.DivRem(9223372036854775807L, 4L, out longResult), 2305843009213693951L);
-			//Assert.AreEqual(longResult, 3L);
 			Assert.AreEqual(Math.DivRem(92233720368547L, 4L, out longResult), 23058430092136L);
 			Assert.AreEqual(longResult, 3L);
 		}

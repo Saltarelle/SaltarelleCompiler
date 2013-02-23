@@ -49,23 +49,20 @@ namespace System {
 			return 0;
 		}
 
-		public static int Abs(short l)
+		public static short Abs(short l) {
+			return 0;
+		}
+
+		public static sbyte Abs(sbyte l) {
+			return 0;
+		}
+
+		public static float Abs(float l)
 		{
 			return 0;
 		}
 
-		public static int Abs(sbyte l)
-		{
-			return 0;
-		}
-
-		public static int Abs(float l)
-		{
-			return 0;
-		}
-
-		public static int Abs(decimal l)
-		{
+		public static decimal Abs(decimal l) {
 			return 0;
 		}
 
@@ -164,38 +161,31 @@ namespace System {
 			return 0;
 		}
 
-		public static int Max(sbyte a, sbyte b)
-		{
+		public static sbyte Max(sbyte a, sbyte b) {
 			return 0;
 		}
 
-		public static int Max(float a, float b)
-		{
+		public static float Max(float a, float b) {
 			return 0;
 		}
 
-		public static int Max(ushort a, ushort b)
-		{
+		public static ushort Max(ushort a, ushort b) {
 			return 0;
 		}
 
-		public static int Max(uint a, uint b)
-		{
+		public static uint Max(uint a, uint b) {
 			return 0;
 		}
 
-		public static int Max(ulong a, ulong b)
-		{
+		public static ulong Max(ulong a, ulong b) {
 			return 0;
 		}
 
-		public static int Min(byte a, byte b)
-		{
+		public static byte Min(byte a, byte b) {
 			return 0;
 		}
 
-		public static int Min(decimal a, decimal b)
-		{
+		public static decimal Min(decimal a, decimal b) {
 			return 0;
 		}
 
@@ -203,8 +193,7 @@ namespace System {
 			return 0;
 		}
 
-		public static int Min(short a, short b)
-		{
+		public static short Min(short a, short b) {
 			return 0;
 		}
 
@@ -216,28 +205,23 @@ namespace System {
 			return 0;
 		}
 
-		public static int Min(sbyte a, sbyte b)
-		{
+		public static sbyte Min(sbyte a, sbyte b) {
 			return 0;
 		}
 
-		public static int Min(float a, float b)
-		{
+		public static float Min(float a, float b) {
 			return 0;
 		}
 
-		public static int Min(ushort a, ushort b)
-		{
+		public static ushort Min(ushort a, ushort b) {
 			return 0;
 		}
 
-		public static int Min(uint a, uint b)
-		{
+		public static uint Min(uint a, uint b) {
 			return 0;
 		}
 
-		public static int Min(ulong a, ulong b)
-		{
+		public static ulong Min(ulong a, ulong b) {
 			return 0;
 		}
 
@@ -249,20 +233,22 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.round({d})")]
 		public static decimal Round(decimal d) {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.round({d})")]
 		public static double Round(double d) {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.roundWithDigits({d}, {digits})")]
+		[InlineCode("{$System.Script}.round({d}, {digits})")]
 		public static decimal Round(decimal d, int digits) {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.roundWithDigits({d}, {digits})")]
+		[InlineCode("{$System.Script}.round({d}, {digits})")]
 		public static double Round(double d, int digits) {
 			return 0;
 		}
@@ -272,23 +258,23 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.roundWithDigitsAndMidpoint({d}, 0, {method})")]
+		[InlineCode("{$System.Script}.round({d}, 0, {method})")]
 		public static decimal Round(decimal d, MidpointRounding method) {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.roundWithDigitsAndMidpoint({d}, 0, {method})")]
+		[InlineCode("{$System.Script}.round({d}, 0, {method})")]
 		public static double Round(double d, MidpointRounding method) {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.roundWithDigitsAndMidpoint({d}, {digits}, {method})")]
+		[InlineCode("{$System.Script}.round({d}, {digits}, {method})")]
 		public static decimal Round(decimal d, int digits, MidpointRounding method)
 		{
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.roundWithDigitsAndMidpoint({d}, {digits}, {method})")]
+		[InlineCode("{$System.Script}.round({d}, {digits}, {method})")]
 		public static double Round(double d, int digits, MidpointRounding method)
 		{
 			return 0;
