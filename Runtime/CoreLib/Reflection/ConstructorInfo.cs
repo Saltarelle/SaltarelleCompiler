@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-	[Imported]
+	[Imported(TypeCheckCode = "{this}.type === 1")]
 	[Serializable]
 	public class ConstructorInfo : MethodBase {
 		[InlineCode("{$System.Script}.invokeCI({this}, {arguments})")]

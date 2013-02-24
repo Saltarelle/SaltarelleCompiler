@@ -698,5 +698,23 @@ namespace CoreLib.TestScript {
 			AssertEqual(typeof(D2).GetEvent("F", BindingFlags.Public | BindingFlags.Instance), null);
 			AssertEqual(typeof(D2).GetEvent("X", BindingFlags.Public | BindingFlags.Instance), null);
 		}
+
+		[Test]
+		public void IsOperatorForMemberInfoWorks() {
+			Assert.IsTrue ((object)typeof(B1).GetConstructor(new Type[0]) is ConstructorInfo);
+			Assert.IsFalse((object)typeof(B1).GetField("FB1") is ConstructorInfo);
+
+			Assert.IsTrue ((object)typeof(B1).GetMethod("MB2") is MethodInfo);
+			Assert.IsFalse((object)typeof(B1).GetField("FB1") is MethodInfo);
+
+			Assert.IsTrue ((object)typeof(B1).GetField("FB1") is FieldInfo);
+			Assert.IsFalse((object)typeof(B1).GetMethod("MB2") is FieldInfo);
+
+			Assert.IsTrue ((object)typeof(B1).GetProperty("PB1") is PropertyInfo);
+			Assert.IsFalse((object)typeof(B1).GetField("FB1") is PropertyInfo);
+
+			Assert.IsTrue ((object)typeof(B1).GetEvent("EB1") is EventInfo);
+			Assert.IsFalse((object)typeof(B1).GetField("FB1") is EventInfo);
+		}
 	}
 }
