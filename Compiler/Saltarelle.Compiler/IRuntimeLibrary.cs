@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -216,6 +217,23 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="source">The object whose properties are examined.</param>
 		/// <param name="target">The object that the properties from <paramref name="source"/> will be added to.</param>
+		/// <param name="context">Current context.</param>
 		JsExpression ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context);
+
+		/// <summary>
+		/// Returns a Javascript expression to get the <see cref="MemberInfo"/> of a member.
+		/// </summary>
+		/// <param name="member">Member of interest. May be specialized.</param>
+		/// <param name="context">Current context.</param>
+		JsExpression GetMember(IMember member, IRuntimeContext context);
+
+		/// <summary>
+		/// Returns an Expression that references a local variable.
+		/// </summary>
+		/// <param name="name">C# name of the variable.</param>
+		/// <param name="accessor">Javascript to access the variable (eg. a or this.a).</param>
+		/// <param name="type">Type of the variable.</param>
+		/// <param name="context">Current context</param>
+		JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context);
 	}
 }

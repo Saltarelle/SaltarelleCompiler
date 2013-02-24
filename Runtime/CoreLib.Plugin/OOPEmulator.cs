@@ -179,7 +179,7 @@ namespace CoreLib.Plugin {
 			return method.TypeParameterNames.Count == 0 ? method.Definition : JsExpression.FunctionDefinition(method.TypeParameterNames, new JsReturnStatement(method.Definition));
 		}
 
-		private ExpressionCompiler.Result Compile(ResolveResult rr, ITypeDefinition currentType, bool returnValueIsImportant, Dictionary<IVariable, VariableData> variables = null) {
+		private ExpressionCompileResult Compile(ResolveResult rr, ITypeDefinition currentType, bool returnValueIsImportant, Dictionary<IVariable, VariableData> variables = null) {
 			return new ExpressionCompiler(_compilation,
 			                              _metadataImporter,
 			                              _namer,
@@ -197,7 +197,7 @@ namespace CoreLib.Plugin {
 			                             ).Compile(rr, returnValueIsImportant);
 		}
 
-		private ExpressionCompiler.Result CompileConstructorInvocation(IMethod constructor, ITypeDefinition currentType, IList<ResolveResult> arguments) {
+		private ExpressionCompileResult CompileConstructorInvocation(IMethod constructor, ITypeDefinition currentType, IList<ResolveResult> arguments) {
 			return Compile(new CSharpInvocationResolveResult(new TypeResolveResult(constructor.DeclaringType), constructor, arguments), currentType, returnValueIsImportant: true);
 		}
 

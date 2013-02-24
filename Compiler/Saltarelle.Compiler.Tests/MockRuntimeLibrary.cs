@@ -38,19 +38,19 @@ namespace Saltarelle.Compiler.Tests {
 			TryDowncast                                     = (e, s, d, c)       => JsExpression.Invocation(JsExpression.Identifier("$TryCast"), e, GetScriptType(d, TypeContext.CastTarget, c.ResolveTypeParameter));
 			Downcast                                        = (e, s, d, c)       => JsExpression.Invocation(JsExpression.Identifier("$Cast"), e, GetScriptType(d, TypeContext.CastTarget, c.ResolveTypeParameter));
 			Upcast                                          = (e, s, d, c)       => JsExpression.Invocation(JsExpression.Identifier("$Upcast"), e, GetScriptType(d, TypeContext.CastTarget, c.ResolveTypeParameter));
-			ReferenceEquals                                 = (a, b, c)            => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
-			ReferenceNotEquals                              = (a, b, c)            => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
+			ReferenceEquals                                 = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceEquals"), a, b);
+			ReferenceNotEquals                              = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$ReferenceNotEquals"), a, b);
 			InstantiateGenericMethod                        = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter))));
-			MakeException                                   = (e, c)                  => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
-			IntegerDivision                                 = (n, d, c)               => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-			FloatToInt                                      = (e, c)                  => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
-			Coalesce                                        = (a, b, c)               => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-			Lift                                            = (e, c)                  => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
-			FromNullable                                    = (e, c)                  => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
-			LiftedBooleanAnd                                = (a, b, c)               => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
-			LiftedBooleanOr                                 = (a, b, c)               => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
-			Bind                                            = (f, t, c)               => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
-			BindFirstParameterToThis                        = (f, c)                  => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
+			MakeException                                   = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
+			IntegerDivision                                 = (n, d, c)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
+			FloatToInt                                      = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
+			Coalesce                                        = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
+			Lift                                            = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+			FromNullable                                    = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
+			LiftedBooleanAnd                                = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
+			LiftedBooleanOr                                 = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
+			Bind                                            = (f, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
+			BindFirstParameterToThis                        = (f, c)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
 			Default                                         = (t, c)             => t.Kind == TypeKind.Dynamic ? (JsExpression)JsExpression.Identifier("$DefaultDynamic") : JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue, c.ResolveTypeParameter));
 			CreateArray                                     = (t, dim, c)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue, c.ResolveTypeParameter) }.Concat(dim));
 			CloneDelegate                                   = (e, s, t, c)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
@@ -58,14 +58,16 @@ namespace Saltarelle.Compiler.Tests {
 			BindBaseCall                                    = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(m.DeclaringType, TypeContext.BindBaseCall, c.ResolveTypeParameter), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m is SpecializedMethod ? ((SpecializedMethod)m).TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter)) : new JsExpression[0]), a });
 			MakeEnumerator                                  = (yt, mn, gc, d, c) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), mn, gc, d ?? (JsExpression)JsExpression.Null });
 			MakeEnumerable                                  = (yt, ge, c)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), ge });
-			GetMultiDimensionalArrayValue                   = (a, i, c)               => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
-			SetMultiDimensionalArrayValue                   = (a, i, v, c)            => JsExpression.Invocation(JsExpression.Identifier("$MultidimArraySet"), new[] { a }.Concat(i).Concat(new[] { v }));
+			GetMultiDimensionalArrayValue                   = (a, i, c)          => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
+			SetMultiDimensionalArrayValue                   = (a, i, v, c)       => JsExpression.Invocation(JsExpression.Identifier("$MultidimArraySet"), new[] { a }.Concat(i).Concat(new[] { v }));
 			CreateTaskCompletionSource                      = (t, c)             => JsExpression.Invocation(JsExpression.Identifier("$CreateTaskCompletionSource"), t != null ? GetScriptType(t, TypeContext.GenericArgument, c.ResolveTypeParameter) : JsExpression.String("non-generic"));
-			SetAsyncResult                                  = (t, v, c)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncResult"), t, v ?? JsExpression.String("<<null>>"));
-			SetAsyncException                               = (t, e, c)               => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncException"), t, e);
-			GetTaskFromTaskCompletionSource                 = (t, c)                  => JsExpression.Invocation(JsExpression.Identifier("$GetTask"), t);
-			ApplyConstructor                                = (c, a, x)               => JsExpression.Invocation(JsExpression.Identifier("$ApplyConstructor"), c, a);
-			ShallowCopy                                     = (s, t, c)               => JsExpression.Invocation(JsExpression.Identifier("$ShallowCopy"), s, t);
+			SetAsyncResult                                  = (t, v, c)          => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncResult"), t, v ?? JsExpression.String("<<null>>"));
+			SetAsyncException                               = (t, e, c)          => JsExpression.Invocation(JsExpression.Identifier("$SetAsyncException"), t, e);
+			GetTaskFromTaskCompletionSource                 = (t, c)             => JsExpression.Invocation(JsExpression.Identifier("$GetTask"), t);
+			ApplyConstructor                                = (c, a, x)          => JsExpression.Invocation(JsExpression.Identifier("$ApplyConstructor"), c, a);
+			ShallowCopy                                     = (s, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$ShallowCopy"), s, t);
+			GetMember                                       = (m, c)             => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), GetScriptType(m.DeclaringType, TypeContext.TypeOf, c.ResolveTypeParameter), JsExpression.String(m.Name));
+			GetExpressionForLocal                           = (n, a, t, c)       => JsExpression.Invocation(JsExpression.Identifier("$Local"), JsExpression.String(n), GetScriptType(t, TypeContext.TypeOf, c.ResolveTypeParameter), a);
 		}
 
 		public Func<IType, IRuntimeContext, JsExpression> GetTypeOf { get; set; }
@@ -103,6 +105,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, IRuntimeContext, JsExpression> GetTaskFromTaskCompletionSource { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> ApplyConstructor { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> ShallowCopy { get; set; }
+		public Func<IMember, IRuntimeContext, JsExpression> GetMember { get; set; }
+		public Func<string, JsExpression, IType, IRuntimeContext, JsExpression> GetExpressionForLocal { get; set; }
 
 		private JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			string contextName = GetTypeContextShortName(context);
@@ -266,6 +270,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context) {
 			return ShallowCopy(source, target, context);
+		}
+
+		JsExpression IRuntimeLibrary.GetMember(IMember member, IRuntimeContext context) {
+			return GetMember(member, context);
+		}
+
+		JsExpression IRuntimeLibrary.GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
+			return GetExpressionForLocal(name, accessor, type, context);
 		}
 	}
 }

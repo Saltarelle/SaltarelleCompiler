@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using ICSharpCode.NRefactory;
@@ -12,7 +10,6 @@ using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel;
@@ -47,16 +44,6 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly ITypeDefinition _typeBeingCompiled;
 		private IVariable _objectBeingInitialized;
 
-		public class Result {
-			public JsExpression Expression { get; set; }
-			public ReadOnlyCollection<JsStatement> AdditionalStatements { get; private set; }
-
-			public Result(JsExpression expression, IEnumerable<JsStatement> additionalStatements) {
-				this.Expression           = expression;
-				this.AdditionalStatements = additionalStatements.AsReadOnly();
-			}
-		}
-
 		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled, ITypeDefinition typeBeingCompiled) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
@@ -78,10 +65,10 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsStatement> _additionalStatements;
 
-		public Result Compile(ResolveResult expression, bool returnValueIsImportant) {
+		public ExpressionCompileResult Compile(ResolveResult expression, bool returnValueIsImportant) {
 			_additionalStatements = new List<JsStatement>();
 			var expr = VisitResolveResult(expression, returnValueIsImportant);
-			return new Result(expr, _additionalStatements);
+			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
 		public IList<JsStatement> CompileConstructorInitializer(IMethod method, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool currentIsStaticMethod) {
@@ -134,16 +121,20 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private Result CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled).Compile(expression, returnValueIsImportant);
+		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
+			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled);
 		}
 
-		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, Result newExpressions) {
+		private ExpressionCompileResult CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
+			return Clone(nestedFunctionContext).Compile(expression, returnValueIsImportant);
+		}
+
+		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, ExpressionCompileResult newExpressions) {
 			Utils.CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(_additionalStatements, expressions, newExpressions, () => { var temp = _createTemporaryVariable(SpecialType.UnknownType); return _variables[temp].Name; });
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, JsExpression newExpression) {
-			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, new Result(newExpression, new JsStatement[0]));
+			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, new ExpressionCompileResult(newExpression, new JsStatement[0]));
 		}
 
 		JsExpression IRuntimeContext.ResolveTypeParameter(ITypeParameter tp) {
@@ -1391,7 +1382,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (data.UseByRefSemantics) {
 				var target = _nestedFunctionContext != null && _nestedFunctionContext.CapturedByRefVariables.Contains(variable)
 				           ? (JsExpression)JsExpression.Member(JsExpression.This, data.Name)	// If using a captured by-ref variable, we access it using this.name.$
-						   : (JsExpression)JsExpression.Identifier(data.Name);
+				           : (JsExpression)JsExpression.Identifier(data.Name);
 
 				return returnReference ? target : JsExpression.Member(target, "$");
 			}
@@ -1697,8 +1688,27 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, bool returnValueIsImportant) {
 			if (rr.Conversion.IsAnonymousFunctionConversion) {
-				var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
-				return CompileLambda((LambdaResolveResult)rr.Input, retType, _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
+				if (rr.Type.FullName == typeof(System.Linq.Expressions.Expression).FullName && rr.Type.TypeParameterCount == 1) {
+					var tree = new ExpressionTreeBuilder(_compilation,
+					                                     t => { var v = _createTemporaryVariable(t); return _variables[v].Name; },
+					                                     (m, t, a) => {
+					                                         var c = Clone();
+					                                         var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? _runtimeLibrary.InstantiateType(m.DeclaringType, this) : t }.Concat(a).ToList(), false);
+					                                         return new ExpressionCompileResult(e, c._additionalStatements);
+					                                     },
+					                                     t => _runtimeLibrary.InstantiateType(t, this),
+					                                     t => _runtimeLibrary.Default(t, this),
+					                                     m => _runtimeLibrary.GetMember(m, this),
+					                                     v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), v.Type, this),
+					                                     CompileThis()
+					                                    ).BuildExpressionTree((LambdaResolveResult)rr.Input);
+					_additionalStatements.AddRange(tree.AdditionalStatements);
+					return tree.Expression;
+				}
+				else {
+					var retType = rr.Type.GetDelegateInvokeMethod().ReturnType;
+					return CompileLambda((LambdaResolveResult)rr.Input, retType, _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition()));
+				}
 			}
 			else if (rr.Conversion.IsMethodGroupConversion) {
 				var mgrr = (MethodGroupResolveResult)rr.Input;

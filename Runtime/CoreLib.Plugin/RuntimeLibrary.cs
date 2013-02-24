@@ -467,5 +467,13 @@ namespace CoreLib.Plugin {
 		public virtual JsExpression ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context) {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "shallowCopy"), source, target);
 		}
+
+		public JsExpression GetMember(IMember member, IRuntimeContext context) {
+			throw new NotImplementedException();
+		}
+
+		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
+			throw new NotImplementedException();
+		}
 	}
 }

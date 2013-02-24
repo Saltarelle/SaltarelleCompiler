@@ -58,10 +58,10 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsStatement> statementList, IList<JsExpression> expressions, JsExpression newExpression, Func<string> createTemporaryVariable) {
-			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressions, new ExpressionCompiler.Result(newExpression, new JsStatement[0]), createTemporaryVariable);
+			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressions, new ExpressionCompileResult(newExpression, new JsStatement[0]), createTemporaryVariable);
 		}
 
-		public static void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsStatement> statementList, IList<JsExpression> expressions, ExpressionCompiler.Result newExpressions, Func<string> createTemporaryVariable) {
+		public static void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsStatement> statementList, IList<JsExpression> expressions, ExpressionCompileResult newExpressions, Func<string> createTemporaryVariable) {
 			for (int i = 0; i < expressions.Count; i++) {
 				if (ExpressionOrderer.DoesOrderMatter(expressions[i], newExpressions)) {
 					var temp = createTemporaryVariable();

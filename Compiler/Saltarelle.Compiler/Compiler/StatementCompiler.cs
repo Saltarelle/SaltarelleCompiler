@@ -333,7 +333,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return rr;
 		}
 
-		private ExpressionCompiler.Result CompileExpression(Expression expr, bool returnValueIsImportant) {
+		private ExpressionCompileResult CompileExpression(Expression expr, bool returnValueIsImportant) {
 			var oldRegion = _errorReporter.Region;
 			try {
 				_errorReporter.Region = expr.GetRegion();

@@ -152,5 +152,13 @@ namespace Saltarelle.Compiler.Decorators {
 		public virtual JsExpression ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context) {
 			return _prev.ShallowCopy(source, target, context);
 		}
+
+		public virtual JsExpression GetMember(IMember member, IRuntimeContext context) {
+			return _prev.GetMember(member, context);
+		}
+
+		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
+			return _prev.GetExpressionForLocal(name, accessor, type, context);
+		}
 	}
 }

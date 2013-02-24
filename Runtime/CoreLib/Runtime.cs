@@ -15,13 +15,11 @@ namespace System {
 
 	[AttributeUsage(AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class FlagsAttribute : Attribute {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public abstract class MarshalByRefObject {
 	}
 
@@ -34,43 +32,36 @@ namespace System {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public struct IntPtr {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public struct UIntPtr {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public struct RuntimeTypeHandle {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public struct RuntimeFieldHandle {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public struct RuntimeMethodHandle {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ParamArrayAttribute : Attribute {
 	}
 
 	[AttributeUsage(AttributeTargets.Delegate | AttributeTargets.Interface | AttributeTargets.Event | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Enum | AttributeTargets.Struct | AttributeTargets.Class, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ObsoleteAttribute : Attribute {
 
 		private bool _error;
@@ -104,7 +95,6 @@ namespace System {
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[AttributeUsage(AttributeTargets.All, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class CLSCompliantAttribute : Attribute {
 
 		private bool _isCompliant;
@@ -122,11 +112,9 @@ namespace System {
 }
 
 namespace System.CodeDom.Compiler {
-
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class GeneratedCodeAttribute : Attribute {
 
 		private string _tool;
@@ -152,7 +140,6 @@ namespace System.CodeDom.Compiler {
 }
 
 namespace System.ComponentModel {
-
 	/// <summary>
 	/// This attribute marks a field, property, event or method as
 	/// "browsable", i.e. present in the type descriptor associated with
@@ -161,14 +148,12 @@ namespace System.ComponentModel {
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class BrowsableAttribute : Attribute {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Event | AttributeTargets.Delegate | AttributeTargets.Interface)]
 	[NonScriptable]
-	[Imported]
 	public sealed class EditorBrowsableAttribute : Attribute {
 
 		private EditorBrowsableState _browsableState;
@@ -186,7 +171,6 @@ namespace System.ComponentModel {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public enum EditorBrowsableState {
 		Always = 0,
 		Never = 1,
@@ -195,10 +179,8 @@ namespace System.ComponentModel {
 }
 
 namespace System.Reflection {
-
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class DefaultMemberAttribute {
 
 		private string _memberName;
@@ -216,9 +198,7 @@ namespace System.Reflection {
 
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyCopyrightAttribute : Attribute {
-
 		private string _copyright;
 
 		public AssemblyCopyrightAttribute(string copyright) {
@@ -232,12 +212,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyTrademarkAttribute : Attribute {
-
 		private string _trademark;
 
 		public AssemblyTrademarkAttribute(string trademark) {
@@ -251,12 +228,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyProductAttribute : Attribute {
-
 		private string _product;
 
 		public AssemblyProductAttribute(string product) {
@@ -270,12 +244,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyCompanyAttribute : Attribute {
-
 		private string _company;
 
 		public AssemblyCompanyAttribute(string company) {
@@ -289,12 +260,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyDescriptionAttribute : Attribute {
-
 		private string _description;
 
 		public AssemblyDescriptionAttribute(string description) {
@@ -308,12 +276,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyTitleAttribute : Attribute {
-
 		private string _title;
 
 		public AssemblyTitleAttribute(string title) {
@@ -329,9 +294,7 @@ namespace System.Reflection {
 
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyConfigurationAttribute : Attribute {
-
 		private string _configuration;
 
 		public AssemblyConfigurationAttribute(string configuration) {
@@ -345,12 +308,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyFileVersionAttribute : Attribute {
-
 		private string _version;
 
 		public AssemblyFileVersionAttribute(string version) {
@@ -364,12 +324,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyInformationalVersionAttribute : Attribute {
-
 		private string _informationalVersion;
 
 		public AssemblyInformationalVersionAttribute(string informationalVersion) {
@@ -383,12 +340,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyCultureAttribute : Attribute {
-
 		private string _culture;
 
 		public AssemblyCultureAttribute(string culture) {
@@ -402,12 +356,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyVersionAttribute : Attribute {
-
 		private string _version;
 
 		public AssemblyVersionAttribute(string version) {
@@ -421,12 +372,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyKeyFileAttribute : Attribute {
-
 		private string _keyFile;
 
 		public AssemblyKeyFileAttribute(string keyFile) {
@@ -440,12 +388,9 @@ namespace System.Reflection {
 		}
 	}
 
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class AssemblyDelaySignAttribute : Attribute {
-
 		private bool _delaySign;
 
 		public AssemblyDelaySignAttribute(bool delaySign) {
@@ -464,19 +409,13 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.All, Inherited = true)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class CompilerGeneratedAttribute : Attribute {
-
-		public CompilerGeneratedAttribute() {
-		}
 	}
 
 	[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field, Inherited = false)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class DecimalConstantAttribute : Attribute {
-
 		public DecimalConstantAttribute(byte scale, byte sign, int hi, int mid, int low) {
 		}
 
@@ -493,14 +432,12 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Class|AttributeTargets.Method)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class ExtensionAttribute : Attribute {
 	}
 
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.ReturnValue)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class DynamicAttribute : Attribute {
 		public IList<bool> TransformFlags { get { return null; } }
 		public DynamicAttribute() {}
@@ -510,7 +447,6 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Field, Inherited = false)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class FixedBufferAttribute : Attribute {
 		public Type ElementType { get { return null; } }
 		public int Length { get { return 0; } }
@@ -520,14 +456,12 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class RuntimeCompatibilityAttribute : Attribute {
 		public bool WrapNonExceptionThrows { get; set; }
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public class CallSite {
 		public CallSiteBinder Binder { get { return null; } }
 
@@ -538,7 +472,6 @@ namespace System.Runtime.CompilerServices {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class CallSite<T> : CallSite where T : class {
 		public T Update { get { return null; } }
 		public T Target;
@@ -550,7 +483,6 @@ namespace System.Runtime.CompilerServices {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public abstract class CallSiteBinder {
 		public static LabelTarget UpdateLabel { get { return null; } }
 
@@ -560,7 +492,6 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	[NonScriptable]
-	[Imported]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[AttributeUsage(AttributeTargets.Property)]
 	public class IndexerNameAttribute : Attribute {
@@ -673,18 +604,14 @@ namespace System.Runtime.CompilerServices {
 }
 
 namespace System.Runtime.InteropServices {
-
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public class OutAttribute {
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
-	public sealed class StructLayoutAttribute : Attribute
-	{
+	public sealed class StructLayoutAttribute : Attribute {
 		public int Pack;
 		public int Size;
 		public CharSet CharSet;
@@ -697,7 +624,6 @@ namespace System.Runtime.InteropServices {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public enum CharSet {
 		None = 1,
 		Ansi = 2,
@@ -707,7 +633,6 @@ namespace System.Runtime.InteropServices {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public enum LayoutKind {
 		Sequential = 0,
 		Explicit = 2,
@@ -716,12 +641,9 @@ namespace System.Runtime.InteropServices {
 }
 
 namespace System.Runtime.Versioning {
-
 	[AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
-	[Imported]
 	public sealed class TargetFrameworkAttribute : Attribute {
-
 		private string _frameworkName;
 		private string _frameworkDisplayName;
 
@@ -749,7 +671,6 @@ namespace System.Runtime.Versioning {
 namespace System.Threading {
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public static class Interlocked {
 		public static int CompareExchange(ref int location1, int value, int comparand) {
 			return 0;
@@ -762,7 +683,6 @@ namespace System.Threading {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public static class Monitor {
 		public static void Enter(object obj) {
 		}
@@ -776,7 +696,6 @@ namespace System.Threading {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public class Thread {
 		public int ManagedThreadId { get { return 0; } }
 		public static Thread CurrentThread { get { return null; } }
@@ -786,25 +705,22 @@ namespace System.Threading {
 namespace System.Security.Permissions {
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public enum SecurityAction {
-	  Demand = 2,
-	  Assert = 3,
-	  Deny = 4,
-	  PermitOnly = 5,
-	  LinkDemand = 6,
-	  InheritanceDemand = 7,
-	  RequestMinimum = 8,
-	  RequestOptional = 9,
-	  RequestRefuse = 10,
+		Demand = 2,
+		Assert = 3,
+		Deny = 4,
+		PermitOnly = 5,
+		LinkDemand = 6,
+		InheritanceDemand = 7,
+		RequestMinimum = 8,
+		RequestOptional = 9,
+		RequestRefuse = 10,
 	}
 }
 
-namespace Microsoft.CSharp.RuntimeBinder
-{
+namespace Microsoft.CSharp.RuntimeBinder {
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public static class Binder {
 		public static CallSiteBinder BinaryOperation(CSharpBinderFlags flags, ExpressionType operation, Type context, IEnumerable<CSharpArgumentInfo> argumentInfo) {
 			return null;
@@ -854,7 +770,6 @@ namespace Microsoft.CSharp.RuntimeBinder
 	[Flags]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public enum CSharpBinderFlags {
 		None = 0,
 		CheckedContext = 1,
@@ -870,7 +785,6 @@ namespace Microsoft.CSharp.RuntimeBinder
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public sealed class CSharpArgumentInfo {
 		public static CSharpArgumentInfo Create(CSharpArgumentInfoFlags flags, string name) {
 			return null;
@@ -880,7 +794,6 @@ namespace Microsoft.CSharp.RuntimeBinder
 	[Flags]
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
-	[Imported]
 	public enum CSharpArgumentInfoFlags {
 		None = 0,
 		UseCompileTimeType = 1,
@@ -892,114 +805,10 @@ namespace Microsoft.CSharp.RuntimeBinder
 	}
 }
 
-namespace System.Linq.Expressions
-{
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	[NonScriptable]
-	[Imported]
-	public enum ExpressionType {
-		Add,
-		AddChecked,
-		And,
-		AndAlso,
-		ArrayLength,
-		ArrayIndex,
-		Call,
-		Coalesce,
-		Conditional,
-		Constant,
-		Convert,
-		ConvertChecked,
-		Divide,
-		Equal,
-		ExclusiveOr,
-		GreaterThan,
-		GreaterThanOrEqual,
-		Invoke,
-		Lambda,
-		LeftShift,
-		LessThan,
-		LessThanOrEqual,
-		ListInit,
-		MemberAccess,
-		MemberInit,
-		Modulo,
-		Multiply,
-		MultiplyChecked,
-		Negate,
-		UnaryPlus,
-		NegateChecked,
-		New,
-		NewArrayInit,
-		NewArrayBounds,
-		Not,
-		NotEqual,
-		Or,
-		OrElse,
-		Parameter,
-		Power,
-		Quote,
-		RightShift,
-		Subtract,
-		SubtractChecked,
-		TypeAs,
-		TypeIs,
-		Assign,
-		Block,
-		DebugInfo,
-		Decrement,
-		Dynamic,
-		Default,
-		Extension,
-		Goto,
-		Increment,
-		Index,
-		Label,
-		RuntimeVariables,
-		Loop,
-		Switch,
-		Throw,
-		Try,
-		Unbox,
-		AddAssign,
-		AndAssign,
-		DivideAssign,
-		ExclusiveOrAssign,
-		LeftShiftAssign,
-		ModuloAssign,
-		MultiplyAssign,
-		OrAssign,
-		PowerAssign,
-		RightShiftAssign,
-		SubtractAssign,
-		AddAssignChecked,
-		MultiplyAssignChecked,
-		SubtractAssignChecked,
-		PreIncrementAssign,
-		PreDecrementAssign,
-		PostIncrementAssign,
-		PostDecrementAssign,
-		TypeEqual,
-		OnesComplement,
-		IsTrue,
-		IsFalse,
-	}
-
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	[NonScriptable]
-	[Imported]
-	public sealed class LabelTarget {
-		public string Name { get { return null; } }
-		public Type Type { get { return null; } }
-	}
-}
-
 namespace System.Diagnostics {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Constructor | AttributeTargets.Method, Inherited = false)]
 	[NonScriptable]
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	[Serializable]
 	public sealed class DebuggerStepThroughAttribute : Attribute {
-		public DebuggerStepThroughAttribute() {}
 	}
 }
