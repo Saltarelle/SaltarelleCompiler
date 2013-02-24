@@ -22,6 +22,57 @@ using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace CoreLib.Plugin {
 	public class OOPEmulator : IOOPEmulator {
+		private class ReflectionRuntimeContext : IRuntimeContext {
+			private readonly bool _isGenericSpecialization;
+			private readonly JsExpression _systemObject;
+			private readonly INamer _namer;
+
+			public ReflectionRuntimeContext(bool isGenericSpecialization, JsExpression systemObject, INamer namer) {
+				_isGenericSpecialization = isGenericSpecialization;
+				_systemObject = systemObject;
+				_namer = namer;
+			}
+
+			public JsExpression ResolveTypeParameter(ITypeParameter tp) {
+				if (_isGenericSpecialization && tp.OwnerType == EntityType.TypeDefinition)
+					return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
+				else
+					return _systemObject;
+			}
+
+			public JsExpression EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
+				throw new NotSupportedException();
+			}
+		}
+
+		private class DefaultRuntimeContext : IRuntimeContext {
+			private readonly ITypeDefinition _currentType;
+			private readonly IMetadataImporter _metadataImporter;
+			private readonly IErrorReporter _errorReporter;
+			private readonly INamer _namer;
+
+			public DefaultRuntimeContext(ITypeDefinition currentType, IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer) {
+				_currentType = currentType;
+				_metadataImporter = metadataImporter;
+				_errorReporter = errorReporter;
+				_namer = namer;
+			}
+
+			public JsExpression ResolveTypeParameter(ITypeParameter tp) {
+				if (_metadataImporter.GetTypeSemantics(_currentType).IgnoreGenericArguments) {
+					_errorReporter.Message(Saltarelle.Compiler.Messages._7536, tp.Name, "type", _currentType.FullName);
+					return JsExpression.Null;
+				}
+				else {
+					return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
+				}
+			}
+
+			public JsExpression EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
+				throw new NotSupportedException();
+			}
+		}
+
 		private class GenericSimplifier : RewriterVisitorBase<object> {
 			private readonly ITypeDefinition _genericType;
 			private readonly ReadOnlyCollection<string> _typeParameterNames;
@@ -100,6 +151,8 @@ namespace CoreLib.Plugin {
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
+		private readonly IRuntimeContext _defaultReflectionRuntimeContext;
+		private readonly IRuntimeContext _genericSpecializationReflectionRuntimeContext;
 
 		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
 			_compilation = compilation;
@@ -110,16 +163,8 @@ namespace CoreLib.Plugin {
 			_runtimeLibrary = runtimeLibrary;
 			_namer = namer;
 			_errorReporter = errorReporter;
-		}
-
-		private JsExpression ResolveTypeParameter(ITypeParameter tp, ITypeDefinition currentType) {
-			if (_metadataImporter.GetTypeSemantics(currentType).IgnoreGenericArguments) {
-				_errorReporter.Message(Saltarelle.Compiler.Messages._7536, tp.Name, "type", currentType.FullName);
-				return JsExpression.Null;
-			}
-			else {
-				return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
-			}
+			_defaultReflectionRuntimeContext = new ReflectionRuntimeContext(false, _systemObject, _namer);
+			_genericSpecializationReflectionRuntimeContext = new ReflectionRuntimeContext(true, _systemObject, _namer);
 		}
 
 		private bool IsJsGeneric(ITypeDefinition type) {
@@ -193,7 +238,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression InstantiateType(IType type, bool isGenericSpecialization) {
-			return _runtimeLibrary.InstantiateType(type, tp => isGenericSpecialization && tp.OwnerType == EntityType.TypeDefinition ? JsExpression.Identifier(_namer.GetTypeParameterName(tp)) : (JsExpression)_systemObject);
+			return _runtimeLibrary.InstantiateType(type, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext);
 		}
 
 		private JsExpression ConstructFieldPropertyAccessor(IMethod m, string fieldName, bool isGenericSpecialization, bool isGetter) {
@@ -394,14 +439,14 @@ namespace CoreLib.Plugin {
 		}
 
 		private IEnumerable<JsExpression> GetImplementedInterfaces(ITypeDefinition type) {
-			return type.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem(t.GetDefinition())).Select(t => _runtimeLibrary.InstantiateType(t, tp => ResolveTypeParameter(tp, type)));
+			return type.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem(t.GetDefinition())).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer)));
 		}
 
 		private JsExpression GetBaseClass(ITypeDefinition type) {
 			var csBase = type.DirectBaseTypes.SingleOrDefault(b => b.Kind == TypeKind.Class);
 			if (csBase == null || csBase.IsKnownType(KnownTypeCode.Object) || MetadataUtils.IsImported(csBase.GetDefinition()) && MetadataUtils.IsSerializable(csBase.GetDefinition()))
 				return null;
-			return _runtimeLibrary.InstantiateType(csBase, tp => ResolveTypeParameter(tp, type));
+			return _runtimeLibrary.InstantiateType(csBase, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
 		}
 
 		private void AddClassMembers(JsClass c, JsExpression typeRef, List<JsStatement> stmts) {
@@ -446,9 +491,9 @@ namespace CoreLib.Plugin {
 						                         errors.Add("Unknown type '" + n + "' specified in inline implementation");
 						                         return JsExpression.Null;
 						                     }
-						                     return _runtimeLibrary.InstantiateType(type, tp => ResolveTypeParameter(tp, c.CSharpTypeDefinition));
+						                     return _runtimeLibrary.InstantiateType(type, new DefaultRuntimeContext(c.CSharpTypeDefinition, _metadataImporter, _errorReporter, _namer));
 						                 },
-						                 t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, tp => ResolveTypeParameter(tp, c.CSharpTypeDefinition)),
+						                 t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, new DefaultRuntimeContext(c.CSharpTypeDefinition, _metadataImporter, _errorReporter, _namer)),
 						                 errors.Add);
 
 						stmts.Add(new JsExpressionStatement(

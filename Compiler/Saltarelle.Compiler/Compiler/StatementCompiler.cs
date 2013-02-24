@@ -23,7 +23,7 @@ namespace Saltarelle.Compiler.Compiler {
 		AsyncTask
 	}
 
-	public class StatementCompiler : DepthFirstAstVisitor {
+	public class StatementCompiler : DepthFirstAstVisitor, IRuntimeContext {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
@@ -91,7 +91,7 @@ namespace Saltarelle.Compiler.Compiler {
 			                                                              JsExpression.FunctionDefinition(new string[0], sm.MainBlock),
 			                                                              JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Identifier(yieldResultVariable))),
 			                                                              sm.Disposer != null ? JsExpression.FunctionDefinition(new string[0], sm.Disposer) : null,
-																		  tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))));
+			                                                              this)));
 			if (returnsIEnumerable) {
 				body = new List<JsStatement> {
 				    new JsReturnStatement(_runtimeLibrary.MakeEnumerable(
@@ -106,7 +106,7 @@ namespace Saltarelle.Compiler.Compiler {
 				                )
 				            )
 				        ),
-						tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))
+				        this
 				    ))
 				};
 			}
@@ -172,11 +172,11 @@ namespace Saltarelle.Compiler.Compiler {
 			                                                   () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
 			                                                   stateMachineVariable,
 			                                                   doFinallyBlocksVariable,
-			                                                   taskCompletionSourceVariable != null ? new JsVariableDeclaration(taskCompletionSourceVariable, _runtimeLibrary.CreateTaskCompletionSource(taskGenericArgument, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))) : null,
-			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncResult(JsExpression.Identifier(taskCompletionSourceVariable), expr) : (Func<JsExpression, JsExpression>)null,
-			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncException(JsExpression.Identifier(taskCompletionSourceVariable), expr) : (Func<JsExpression, JsExpression>)null,
-			                                                   taskCompletionSourceVariable != null ? () => _runtimeLibrary.GetTaskFromTaskCompletionSource(JsExpression.Identifier(taskCompletionSourceVariable)) : (Func<JsExpression>)null,
-			                                                   _runtimeLibrary.Bind);
+			                                                   taskCompletionSourceVariable != null ? new JsVariableDeclaration(taskCompletionSourceVariable, _runtimeLibrary.CreateTaskCompletionSource(taskGenericArgument, this)) : null,
+			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncResult(JsExpression.Identifier(taskCompletionSourceVariable), expr, this) : (Func<JsExpression, JsExpression>)null,
+			                                                   taskCompletionSourceVariable != null ? expr => _runtimeLibrary.SetAsyncException(JsExpression.Identifier(taskCompletionSourceVariable), expr, this) : (Func<JsExpression, JsExpression>)null,
+			                                                   taskCompletionSourceVariable != null ? () => _runtimeLibrary.GetTaskFromTaskCompletionSource(JsExpression.Identifier(taskCompletionSourceVariable), this) : (Func<JsExpression>)null,
+			                                                   (f, t) => _runtimeLibrary.Bind(f, t, this));
 
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
@@ -305,7 +305,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
 			SetRegion(region);
 			try {
-				return new[] { new JsExpressionStatement(JsExpression.Assign(field, _runtimeLibrary.Default(type, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))))) };
+				return new[] { new JsExpressionStatement(JsExpression.Assign(field, _runtimeLibrary.Default(type, this))) };
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
@@ -360,6 +360,14 @@ namespace Saltarelle.Compiler.Compiler {
 					child.AcceptVisitor(this);
 				}
 			}
+		}
+
+		JsExpression IRuntimeContext.ResolveTypeParameter(ITypeParameter tp) {
+			return Utils.ResolveTypeParameter(tp, _typeBeingCompiled, _methodBeingCompiled, _metadataImporter, _errorReporter, _namer);
+		}
+
+		JsExpression IRuntimeContext.EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
+			return Utils.EnsureCanBeEvaluatedMultipleTimes(_result, expression, expressionsThatMustBeEvaluatedBefore, () => { var temp = CreateTemporaryVariable(SpecialType.UnknownType, DomRegion.Empty); return _variables[temp].Name; });
 		}
 
 		public override void VisitComment(Comment comment) {
@@ -789,9 +797,9 @@ namespace Saltarelle.Compiler.Compiler {
 			if (!catchClause.VariableNameToken.IsNull) {
 				JsExpression compiledAssignment;
 				if (isCatchAll)	// If this is the only handler we need to construct the exception
-					compiledAssignment = isOnly ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name)) : JsExpression.Identifier(_variables[catchVariable.Variable].Name);
+					compiledAssignment = isOnly ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name), this) : JsExpression.Identifier(_variables[catchVariable.Variable].Name);
 				else
-					compiledAssignment = _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					compiledAssignment = _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type, this);
 
 				variableDeclaration = new JsVariableDeclarationStatement(new JsVariableDeclaration(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment));
 			}
@@ -821,13 +829,13 @@ namespace Saltarelle.Compiler.Compiler {
 					                : new JsBlockStatement(new JsThrowStatement(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
-					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _currentVariableForRethrow.Type, _resolver.Resolve(catchClauses[i].Type).Type, tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _currentVariableForRethrow.Type, _resolver.Resolve(catchClauses[i].Type).Type, this);
 					current = new JsIfStatement(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false, catchClauses.Count == 1), current);
 				}
 
 				if (!lastIsCatchall || catchClauses.Count > 1) {
 					// We need to wrap the exception.
-					current = new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(catchVariableName), _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName)))), current);
+					current = new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(catchVariableName), _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName), this))), current);
 				}
 
 				catchClause = new JsCatchClause(catchVariableName, current);

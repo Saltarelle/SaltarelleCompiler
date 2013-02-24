@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
@@ -53,6 +55,51 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		public static IType SelfParameterize(ITypeDefinition type) {
 			return type.TypeParameterCount == 0 ? (IType)type : new ParameterizedType(type, type.TypeParameters.Select(tp => new DefaultTypeParameter(type, tp.Index, tp.Name)));
+		}
+
+		public static void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsStatement> statementList, IList<JsExpression> expressions, JsExpression newExpression, Func<string> createTemporaryVariable) {
+			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressions, new ExpressionCompiler.Result(newExpression, new JsStatement[0]), createTemporaryVariable);
+		}
+
+		public static void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsStatement> statementList, IList<JsExpression> expressions, ExpressionCompiler.Result newExpressions, Func<string> createTemporaryVariable) {
+			for (int i = 0; i < expressions.Count; i++) {
+				if (ExpressionOrderer.DoesOrderMatter(expressions[i], newExpressions)) {
+					var temp = createTemporaryVariable();
+					statementList.Add(new JsVariableDeclarationStatement(temp, expressions[i]));
+					expressions[i] = JsExpression.Identifier(temp);
+				}
+			}
+		}
+
+		public static JsExpression EnsureCanBeEvaluatedMultipleTimes(IList<JsStatement> statementList, JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore, Func<string> createTemporaryVariable) {
+			if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(expression)) {
+				CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressionsThatMustBeEvaluatedBefore, expression, createTemporaryVariable);
+				var temp = createTemporaryVariable();
+				statementList.Add(new JsVariableDeclarationStatement(temp, expression));
+				return JsExpression.Identifier(temp);
+			}
+			else
+				return expression;
+		}
+
+		public static JsExpression ResolveTypeParameter(ITypeParameter tp, ITypeDefinition currentType, IMethod currentMethod, IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer) {
+			bool unusable = false;
+			switch (tp.OwnerType) {
+				case EntityType.TypeDefinition:
+					unusable = metadataImporter.GetTypeSemantics(currentType).IgnoreGenericArguments;
+					break;
+				case EntityType.Method:
+					unusable = metadataImporter.GetMethodSemantics(currentMethod).IgnoreGenericArguments;
+					break;
+				default:
+					errorReporter.InternalError("Invalid owner " + tp.OwnerType + " for type parameter " + tp);
+					return JsExpression.Null;
+			}
+			if (unusable) {
+				errorReporter.Message(Messages._7536, tp.Name, tp.OwnerType == EntityType.TypeDefinition ? "type" : "method", tp.OwnerType == EntityType.TypeDefinition ? currentType.FullName : currentMethod.FullName);
+				return JsExpression.Null;
+			}
+			return JsExpression.Identifier(namer.GetTypeParameterName(tp));
 		}
 	}
 }
