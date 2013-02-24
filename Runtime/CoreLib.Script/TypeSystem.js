@@ -261,13 +261,18 @@ ss.isInterface = function#? DEBUG Type$isInterface##(type) {
 };
 
 ss.safeCast = function#? DEBUG ss$safeCast##(instance, type) {
-	return ss.isInstanceOfType(instance, type) ? instance : null;
+	if (type === true)
+		return instance;
+	else if (type === false)
+		return null;
+	else
+		return ss.isInstanceOfType(instance, type) ? instance : null;
 };
 
 ss.cast = function#? DEBUG ss$cast##(instance, type) {
-	if (instance === null)
+	if (instance === null || type === false)
 		return null;
-	else if (typeof(instance) === "undefined" || ss.isInstanceOfType(instance, type)) {
+	else if (typeof(instance) === "undefined" || type === true || ss.isInstanceOfType(instance, type)) {
 		return instance;
 	}
 	throw 'Cannot cast object to type ' + ss.getTypeFullName(type);

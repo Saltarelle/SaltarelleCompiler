@@ -478,12 +478,12 @@ namespace CoreLib.Plugin {
 				if (!string.IsNullOrEmpty(typeCheckCode)) {
 					var oldReg = _errorReporter.Region;
 					_errorReporter.Region = c.CSharpTypeDefinition.Attributes.Single(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName).Region;
-					IMethod method = new DefaultResolvedMethod(new DefaultUnresolvedMethod(c.CSharpTypeDefinition.Parts[0], "IsInstanceOfType"), _compilation.TypeResolveContext.WithCurrentTypeDefinition(c.CSharpTypeDefinition));
-					method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: c.CSharpTypeDefinition.TypeParameters.ToList<IType>(), methodTypeArguments: null));
+					var method = MetadataUtils.CreateTypeCheckMethod(Saltarelle.Compiler.Utils.SelfParameterize(c.CSharpTypeDefinition), _compilation);
 
 					var errors = new List<string>();
 					var tokens = InlineCodeMethodCompiler.Tokenize(method, typeCheckCode, errors.Add);
 					if (errors.Count == 0) {
+						var context = new DefaultRuntimeContext(c.CSharpTypeDefinition, _metadataImporter, _errorReporter, _namer);
 						var result = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, JsExpression.Identifier("obj"), new JsExpression[0],
 						                 n => {
 						                     var type = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation);
@@ -491,9 +491,9 @@ namespace CoreLib.Plugin {
 						                         errors.Add("Unknown type '" + n + "' specified in inline implementation");
 						                         return JsExpression.Null;
 						                     }
-						                     return _runtimeLibrary.InstantiateType(type, new DefaultRuntimeContext(c.CSharpTypeDefinition, _metadataImporter, _errorReporter, _namer));
+						                     return _runtimeLibrary.InstantiateType(type, context);
 						                 },
-						                 t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, new DefaultRuntimeContext(c.CSharpTypeDefinition, _metadataImporter, _errorReporter, _namer)),
+						                 t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context),
 						                 errors.Add);
 
 						stmts.Add(new JsExpressionStatement(

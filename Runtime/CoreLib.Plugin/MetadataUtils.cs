@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Utils = Saltarelle.Compiler.JSModel.Utils;
@@ -267,6 +268,13 @@ namespace CoreLib.Plugin {
 				i++;
 			}
 			return name;
+		}
+
+		public static IMethod CreateTypeCheckMethod(IType type, ICompilation compilation) {
+			IMethod method = new DefaultResolvedMethod(new DefaultUnresolvedMethod(type.GetDefinition().Parts[0], "IsInstanceOfType"), compilation.TypeResolveContext.WithCurrentTypeDefinition(type.GetDefinition()));
+			if (type is ParameterizedType)
+				method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: ((ParameterizedType)type).TypeArguments, methodTypeArguments: null));
+			return method;
 		}
 	}
 }

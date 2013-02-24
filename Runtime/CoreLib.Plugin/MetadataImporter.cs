@@ -170,15 +170,10 @@ namespace CoreLib.Plugin {
 			_errorReporter.Message(message, additionalArgs);
 		}
 
-		private void Message(Tuple<int, MessageSeverity, string> message, ITypeDefinition t, params object[] additionalArgs) {
-			_errorReporter.Region = t.Region;
-			_errorReporter.Message(message, new object[] { t.FullName }.Concat(additionalArgs).ToArray());
-		}
-
-		private void Message(Tuple<int, MessageSeverity, string> message, IMember m, params object[] additionalArgs) {
-			var name = (m is IMethod && ((IMethod)m).IsConstructor ? m.DeclaringType.Name : m.Name);
-			_errorReporter.Region = m.Region;
-			_errorReporter.Message(message, new object[] { m.DeclaringType.FullName + "." + name }.Concat(additionalArgs).ToArray());
+		private void Message(Tuple<int, MessageSeverity, string> message, IEntity e, params object[] additionalArgs) {
+			var name = (e is IMethod && ((IMethod)e).IsConstructor ? e.DeclaringType.FullName : e.FullName);
+			_errorReporter.Region = e.Region;
+			_errorReporter.Message(message, new object[] { name }.Concat(additionalArgs).ToArray());
 		}
 
 		private string GetDefaultTypeName(ITypeDefinition def, bool ignoreGenericArguments) {
@@ -275,8 +270,7 @@ namespace CoreLib.Plugin {
 
 			var scriptNameAttr = AttributeReader.ReadAttribute<ScriptNameAttribute>(typeDefinition);
 			var importedAttr = AttributeReader.ReadAttribute<ImportedAttribute>(typeDefinition.Attributes);
-			bool isImported = importedAttr != null;
-			bool preserveName = isImported || AttributeReader.HasAttribute<PreserveNameAttribute>(typeDefinition);
+			bool preserveName = importedAttr != null || AttributeReader.HasAttribute<PreserveNameAttribute>(typeDefinition);
 
 			bool? includeGenericArguments = typeDefinition.TypeParameterCount > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(typeDefinition) : false;
 			if (includeGenericArguments == null) {
@@ -396,7 +390,19 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: !isImported), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
+			if (importedAttr != null) {
+				if (!string.IsNullOrEmpty(importedAttr.TypeCheckCode)) {
+					if (importedAttr.ObeysTypeSystem) {
+						Message(Messages._7158, typeDefinition);
+					}
+					ValidateInlineCode(MetadataUtils.CreateTypeCheckMethod(typeDefinition, _compilation), typeDefinition, importedAttr.TypeCheckCode, Messages._7157);
+				}
+				if (!string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(typeDefinition))) {
+					Message(Messages._7159, typeDefinition);
+				}
+			}
+
+			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: importedAttr != null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -493,7 +499,7 @@ namespace CoreLib.Plugin {
 			return MetadataUtils.GetUniqueName(preferredName, n => !usedNames.ContainsKey(n));
 		}
 
-		private bool ValidateInlineCode(IMethod method, string code, Tuple<int, MessageSeverity, string> errorTemplate) {
+		private bool ValidateInlineCode(IMethod method, IEntity errorEntity, string code, Tuple<int, MessageSeverity, string> errorTemplate) {
 			var typeErrors = new List<string>();
 			var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, n => {
 				var type = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation);
@@ -503,7 +509,7 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}, t => JsExpression.Null);
 			if (errors.Count > 0 || typeErrors.Count > 0) {
-				Message(errorTemplate, method, string.Join(", ", errors.Concat(typeErrors)));
+				Message(errorTemplate, errorEntity, string.Join(", ", errors.Concat(typeErrors)));
 				return false;
 			}
 			return true;
@@ -542,7 +548,7 @@ namespace CoreLib.Plugin {
 
 			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(source);
 			if (ica != null) {
-				if (!ValidateInlineCode(source, ica.Code, Messages._7103)) {
+				if (!ValidateInlineCode(source, source, ica.Code, Messages._7103)) {
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
@@ -648,10 +654,10 @@ namespace CoreLib.Plugin {
 				}
 				else if (getica != null || setica != null) {
 					bool hasError = false;
-					if (property.Getter != null && !ValidateInlineCode(property.Getter, getica.Code, Messages._7130)) {
+					if (property.Getter != null && !ValidateInlineCode(property.Getter, property.Getter, getica.Code, Messages._7130)) {
 						hasError = true;
 					}
-					if (property.Setter != null && !ValidateInlineCode(property.Setter, setica.Code, Messages._7130)) {
+					if (property.Setter != null && !ValidateInlineCode(property.Setter, property.Setter, setica.Code, Messages._7130)) {
 						hasError = true;
 					}
 
@@ -886,10 +892,10 @@ namespace CoreLib.Plugin {
 						return;
 					}
 					else {
-						if (!ValidateInlineCode(method, code, Messages._7130)) {
+						if (!ValidateInlineCode(method, method, code, Messages._7130)) {
 							code = nonVirtualCode = "X";
 						}
-						if (!string.IsNullOrEmpty(ica.NonVirtualCode) && !ValidateInlineCode(method, ica.NonVirtualCode, Messages._7130)) {
+						if (!string.IsNullOrEmpty(ica.NonVirtualCode) && !ValidateInlineCode(method, method, ica.NonVirtualCode, Messages._7130)) {
 							code = nonVirtualCode = "X";
 						}
 						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: !string.IsNullOrEmpty(ica.GeneratedMethodName) ? ica.GeneratedMethodName : null, nonVirtualInvocationLiteralCode: nonVirtualCode);

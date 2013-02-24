@@ -45,6 +45,10 @@ namespace CoreLib.TestScript {
 			public DS() : base(0) {}
 		}
 
+		[Imported(TypeCheckCode = "{$System.Script}.isValue({this}.y)")]
+		public class CI {
+		}
+
 		[IncludeGenericArguments]
 		private static bool CanConvert<T>(object arg) {
 			try {
@@ -168,6 +172,18 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue((o2 as DS) == o2, "Try cast o2 to type should return o2");
 			Assert.Throws(() => { object x = (DS)o1; }, "Cast o1 to type should throw");
 			Assert.IsTrue((DS)o2 == o2, "Cast o2 to type should return o2");
+		}
+
+		[Test]
+		public void CastOperatorsWorkForImportedTypesWithCustomTypeCheckCode() {
+			object o1 = new { x = 1 };
+			object o2 = new { x = 1, y = 2 };
+			Assert.IsFalse(o1 is CI, "o1 should not be of type");
+			Assert.IsTrue (o2 is CI, "o2 should be of type");
+			Assert.AreStrictEqual(o1 as CI, null, "Try cast o1 to type should be null");
+			Assert.IsTrue((o2 as CI) == o2, "Try cast o2 to type should return o2");
+			Assert.Throws(() => { object x = (DS)o1; }, "Cast o1 to type should throw");
+			Assert.IsTrue((CI)o2 == o2, "Cast o2 to type should return o2");
 		}
 #pragma warning restore 219
 	}

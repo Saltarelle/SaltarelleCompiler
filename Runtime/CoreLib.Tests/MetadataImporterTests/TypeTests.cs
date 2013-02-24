@@ -1499,5 +1499,45 @@ public class DerivedClass : TestClass.InnerClass {}");
 
 			// No error is good enough
 		}
+
+		[Test]
+		public void ValidTypeCheckCodeForImportedTypeIsNotAnError() {
+			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{this} == 0"")] public class C1 {}", expectErrors: false);
+			// No error is good enough
+
+			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(true)] public class C1<T> {}", expectErrors: false);
+			// No error is good enough
+
+			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}", expectErrors: false);
+			// No error is good enough
+		}
+
+		[Test]
+		public void TypeCheckCodeInSerializableAttributeForImportedSerializableTypeIsAnError() {
+			Prepare(@"[System.Serializable(TypeCheckCode = ""{this} == 0""), System.Runtime.CompilerServices.Imported] public class C1 {}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7158 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("SerializableAttribute")));
+		}
+
+		[Test]
+		public void TypeCheckCodeAndObeysTypeSystemOnSameImportedTypeIsAnError() {
+			Prepare(@"using System.Runtime.CompilerServices; [Imported(TypeCheckCode = ""{this} == 0"", ObeysTypeSystem = true)] public class C1 {}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7158 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("ObeysTypeSystem")));
+		}
+
+		[Test]
+		public void ReferencingNonExistentTypeInImportedTypeCheckCodeIsAnError() {
+			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}"")] public class C1<T> {}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
+		}
+
+		[Test]
+		public void SyntaxErrorInImportedTypeCheckCodeIsAnError() {
+			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{{this} == 1"")] public class C1<T> {}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
+		}
 	}
 }

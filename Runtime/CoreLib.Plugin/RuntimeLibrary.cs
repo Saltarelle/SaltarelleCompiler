@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler;
@@ -134,7 +136,31 @@ namespace CoreLib.Plugin {
 			return GetScriptType(type, TypeContext.GenericArgument, context);
 		}
 
+		private JsExpression CompileImportedTypeCheckCode(IType type, ref JsExpression @this, IRuntimeContext context, bool isTypeIs) {
+			var def = type.GetDefinition();
+			if (def == null)
+				return null;
+			var ia = AttributeReader.ReadAttribute<ImportedAttribute>(def);
+			if (ia == null || string.IsNullOrEmpty(ia.TypeCheckCode))
+				return null;
+
+			// Can ignore errors here because they are caught by the metadata importer
+			var method = MetadataUtils.CreateTypeCheckMethod(type, _compilation);
+			var tokens = InlineCodeMethodCompiler.Tokenize(method, ia.TypeCheckCode, _ => {});
+			int thisCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
+			if (thisCount > (isTypeIs ? 1 : 0))
+				@this = context.EnsureCanBeEvaluatedMultipleTimes(@this, new JsExpression[0]);
+			var result = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {});
+			if (isTypeIs && thisCount == 0 && DoesJsExpressionHaveSideEffects.Analyze(@this))
+				return JsExpression.Comma(@this, result);
+			return result;
+		}
+
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+			var importedCheck = CompileImportedTypeCheckCode(targetType, ref expression, context, true);
+			if (importedCheck != null)
+				return importedCheck;
+
 			var jsTarget = GetCastTarget(sourceType, targetType, context);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null, context);
@@ -142,9 +168,14 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
-			var jsTarget = GetCastTarget(sourceType, targetType, context);
+			JsExpression jsTarget = CompileImportedTypeCheckCode(targetType, ref expression, context, false);
+
+			if (jsTarget == null)
+				jsTarget = GetCastTarget(sourceType, targetType, context);
+
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
+
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "safeCast"), expression, jsTarget);
 		}
 
@@ -154,7 +185,12 @@ namespace CoreLib.Plugin {
 
 			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
-			var jsTarget = GetCastTarget(sourceType, targetType, context);
+
+			JsExpression jsTarget = CompileImportedTypeCheckCode(targetType, ref expression, context, false);
+
+			if (jsTarget == null)
+				jsTarget = GetCastTarget(sourceType, targetType, context);
+
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "cast"), expression, jsTarget);
