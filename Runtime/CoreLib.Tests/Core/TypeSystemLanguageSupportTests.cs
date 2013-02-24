@@ -49,14 +49,15 @@ public class C {
 		// END
 	}
 }",
-@"			var b1 = true;
-			var b2 = o.x;
-			var b3 = o.x || o.y;
-			var b4 = this.$getO(), true;
-			var b5 = this.$getO().x;
+@"			var b1 = ss.isValue(o) && true;
+			var b2 = ss.isValue(o) && o.x;
+			var b3 = ss.isValue(o) && (o.x || o.y);
+			var b4 = ss.isValue(this.$getO()) && true;
 			var $t1 = this.$getO();
-			var b6 = $t1.x || $t1.y;
-			var b7 = o.x == ss.Int32;
+			var b5 = ss.isValue($t1) && $t1.x;
+			var $t2 = this.$getO();
+			var b6 = ss.isValue($t2) && ($t2.x || $t2.y);
+			var b7 = ss.isValue(o) && o.x == ss.Int32;
 ");
 		}
 
@@ -83,15 +84,16 @@ public class C {
 		// END
 	}
 }",
-@"			var o1 = ss.safeCast(o, true);
-			var o2 = ss.safeCast(o, o.x);
-			var o3 = ss.safeCast(o, o.x || o.y);
-			var o4 = ss.safeCast(this.$getO(), true);
+@"			var o1 = ss.safeCast(o, ss.isValue(o) && true);
+			var o2 = ss.safeCast(o, ss.isValue(o) && o.x);
+			var o3 = ss.safeCast(o, ss.isValue(o) && (o.x || o.y));
 			var $t1 = this.$getO();
-			var o5 = ss.safeCast($t1, $t1.x);
+			var o4 = ss.safeCast($t1, ss.isValue($t1) && true);
 			var $t2 = this.$getO();
-			var o6 = ss.safeCast($t2, $t2.x || $t2.y);
-			var o7 = ss.safeCast(o, o.x == ss.Int32);
+			var o5 = ss.safeCast($t2, ss.isValue($t2) && $t2.x);
+			var $t3 = this.$getO();
+			var o6 = ss.safeCast($t3, ss.isValue($t3) && ($t3.x || $t3.y));
+			var o7 = ss.safeCast(o, ss.isValue(o) && o.x == ss.Int32);
 ");
 		}
 
@@ -118,15 +120,16 @@ public class C {
 		// END
 	}
 }",
-@"			var o1 = ss.cast(o, true);
-			var o2 = ss.cast(o, o.x);
-			var o3 = ss.cast(o, o.x || o.y);
-			var o4 = ss.cast(this.$getO(), true);
+@"			var o1 = ss.cast(o, ss.isValue(o) && true);
+			var o2 = ss.cast(o, ss.isValue(o) && o.x);
+			var o3 = ss.cast(o, ss.isValue(o) && (o.x || o.y));
 			var $t1 = this.$getO();
-			var o5 = ss.cast($t1, $t1.x);
+			var o4 = ss.cast($t1, ss.isValue($t1) && true);
 			var $t2 = this.$getO();
-			var o6 = ss.cast($t2, $t2.x || $t2.y);
-			var o7 = ss.cast(o, o.x == ss.Int32);
+			var o5 = ss.cast($t2, ss.isValue($t2) && $t2.x);
+			var $t3 = this.$getO();
+			var o6 = ss.cast($t3, ss.isValue($t3) && ($t3.x || $t3.y));
+			var o7 = ss.cast(o, ss.isValue(o) && o.x == ss.Int32);
 ");
 		}
 	}

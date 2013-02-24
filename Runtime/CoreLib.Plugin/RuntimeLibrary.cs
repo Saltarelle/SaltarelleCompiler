@@ -148,12 +148,11 @@ namespace CoreLib.Plugin {
 			var method = MetadataUtils.CreateTypeCheckMethod(type, _compilation);
 			var tokens = InlineCodeMethodCompiler.Tokenize(method, ia.TypeCheckCode, _ => {});
 			int thisCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
-			if (thisCount > (isTypeIs ? 1 : 0))
+			if (!isTypeIs || thisCount > 0)
 				@this = context.EnsureCanBeEvaluatedMultipleTimes(@this, new JsExpression[0]);
-			var result = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {});
-			if (isTypeIs && thisCount == 0 && DoesJsExpressionHaveSideEffects.Analyze(@this))
-				return JsExpression.Comma(@this, result);
-			return result;
+			return JsExpression.LogicalAnd(
+			           ReferenceNotEquals(@this, JsExpression.Null, context),
+			           InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
