@@ -125,7 +125,6 @@ namespace CoreLib.Plugin {
 		private Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
 		private Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
 		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
-		private Dictionary<ITypeParameter, string> _typeParameterNames;
 		private Dictionary<IProperty, string> _propertyBackingFieldNames;
 		private Dictionary<IEvent, string> _eventBackingFieldNames;
 		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
@@ -151,7 +150,6 @@ namespace CoreLib.Plugin {
 			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
 			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
 			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
-			_typeParameterNames = new Dictionary<ITypeParameter, string>();
 			_propertyBackingFieldNames = new Dictionary<IProperty, string>();
 			_eventBackingFieldNames = new Dictionary<IEvent, string>();
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
@@ -396,11 +394,6 @@ namespace CoreLib.Plugin {
 						typeName = "";
 					}
 				}
-			}
-
-			for (int i = 0; i < typeDefinition.TypeParameterCount; i++) {
-				var tp = typeDefinition.TypeParameters[i];
-				_typeParameterNames[tp] = _minimizeNames ? MetadataUtils.EncodeNumber(i, true) : tp.Name;
 			}
 
 			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: !isImported), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: isImported);
@@ -785,11 +778,6 @@ namespace CoreLib.Plugin {
 		}
 
 		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
-			for (int i = 0; i < method.TypeParameters.Count; i++) {
-				var tp = method.TypeParameters[i];
-				_typeParameterNames[tp] = _minimizeNames ? MetadataUtils.EncodeNumber(method.DeclaringType.TypeParameterCount + i, true) : tp.Name;
-			}
-
 			var eaa = AttributeReader.ReadAttribute<EnumerateAsArrayAttribute>(method);
 			var ssa = AttributeReader.ReadAttribute<ScriptSkipAttribute>(method);
 			var saa = AttributeReader.ReadAttribute<ScriptAliasAttribute>(method);
@@ -1215,10 +1203,6 @@ namespace CoreLib.Plugin {
 			else if (typeDefinition.Kind == TypeKind.Array)
 				return TypeScriptSemantics.NormalType("Array");
 			return GetTypeSemanticsInternal(typeDefinition).Semantics;
-		}
-
-		public string GetTypeParameterName(ITypeParameter typeParameter) {
-			return _typeParameterNames[typeParameter];
 		}
 
 		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
