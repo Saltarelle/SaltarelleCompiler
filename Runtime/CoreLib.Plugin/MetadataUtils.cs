@@ -263,7 +263,7 @@ namespace CoreLib.Plugin {
 			string name = preferredName;
 			int i = (name == null ? 0 : 1);
 			while (name == null || !isNameAvailable(name)) {
-				name = preferredName + "$" + MetadataUtils.EncodeNumber(i, false);
+				name = preferredName + "$" + EncodeNumber(i, false);
 				i++;
 			}
 			return name;

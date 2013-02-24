@@ -199,7 +199,7 @@ namespace CoreLib.Plugin {
 		private JsExpression ConstructFieldPropertyAccessor(IMethod m, string fieldName, bool isGenericSpecialization, bool isGetter) {
 			var properties = new List<JsObjectLiteralProperty> {
 				new JsObjectLiteralProperty("name", JsExpression.String(m.Name)),
-				new JsObjectLiteralProperty("type", JsExpression.Number((int) MemberTypes.Method)),
+				new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
 				new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(m.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))),
 				new JsObjectLiteralProperty("returnType", InstantiateType(m.ReturnType, isGenericSpecialization)),
 				new JsObjectLiteralProperty(isGetter ? "fget" : "fset", JsExpression.String(fieldName))
@@ -430,7 +430,7 @@ namespace CoreLib.Plugin {
 
 			if (MetadataUtils.IsSerializable(c.CSharpTypeDefinition)) {
 				string typeCheckCode = MetadataUtils.GetSerializableTypeCheckCode(c.CSharpTypeDefinition);
-				if (typeCheckCode != null) {
+				if (!string.IsNullOrEmpty(typeCheckCode)) {
 					var oldReg = _errorReporter.Region;
 					_errorReporter.Region = c.CSharpTypeDefinition.Attributes.Single(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName).Region;
 					IMethod method = new DefaultResolvedMethod(new DefaultUnresolvedMethod(c.CSharpTypeDefinition.Parts[0], "IsInstanceOfType"), _compilation.TypeResolveContext.WithCurrentTypeDefinition(c.CSharpTypeDefinition));

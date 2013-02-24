@@ -407,7 +407,7 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	[NonScriptable]
-	public sealed class AsyncModuleAttribute : Attribute {	
+	public sealed class AsyncModuleAttribute : Attribute {
 	}
 
 	/// <summary>
@@ -415,7 +415,7 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
 	[NonScriptable]
-	public sealed class EnumerateAsArrayAttribute : Attribute {	
+	public sealed class EnumerateAsArrayAttribute : Attribute {
 	}
 
 	/// <summary>

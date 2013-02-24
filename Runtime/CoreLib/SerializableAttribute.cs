@@ -13,7 +13,7 @@ namespace System {
 	[Imported]
 	public sealed class SerializableAttribute : Attribute {
 		/// <summary>
-		/// Code used to check whether an object is of this type. Can use the placeholder {this} to reference the object being checked.
+		/// Code used to check whether an object is of this type. Can use the placeholder {this} to reference the object being checked, as well as all type parameter for the type.
 		/// </summary>
 		public string TypeCheckCode { get; set; }
 	}

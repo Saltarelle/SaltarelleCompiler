@@ -1020,7 +1020,7 @@ var $D$1 = function(T) {
 		}
 
 		[Test]
-		public void UsingUnavailableTypeParameterInTypeCheckCodeIsAnError() {
+		public void UsingUnavailableTypeParameterInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			Process(@"
 [System.Serializable(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
@@ -1030,7 +1030,7 @@ var $D$1 = function(T) {
 		}
 
 		[Test]
-		public void ReferencingNonExistentTypeInTypeCheckCodeIsAnError() {
+		public void ReferencingNonExistentTypeInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			Process(@"
 [System.Serializable(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
@@ -1040,7 +1040,7 @@ var $D$1 = function(T) {
 		}
 
 		[Test]
-		public void SyntaxErrorInTypeCheckCodeIsAnError() {
+		public void SyntaxErrorInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			Process(@"
 [System.Serializable(TypeCheckCode = ""{{this} == 1""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}

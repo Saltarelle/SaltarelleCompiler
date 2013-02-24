@@ -97,7 +97,7 @@ namespace CoreLib.Plugin {
 
 			var def = type.GetDefinition();
 			if (def != null) {
-				if (MetadataUtils.IsSerializable(def) && MetadataUtils.GetSerializableTypeCheckCode(def) == null)
+				if (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def)))
 					return null;
 				if (!MetadataUtils.DoesTypeObeyTypeSystem(def))
 					return null;
