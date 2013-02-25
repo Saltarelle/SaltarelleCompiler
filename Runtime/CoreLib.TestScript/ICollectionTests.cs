@@ -43,15 +43,34 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue((object)new int[1] is ICollection<int>);
 		}
 
+		//[Test]
+		//public void ArrayImplementsIReadOnlyCollection()
+		//{
+		//	Assert.IsTrue((object)new int[1] is IReadOnlyCollection<int>);
+		//}
+
 		[Test]
 		public void CustomClassThatShouldImplementICollectionDoesSo() {
 			Assert.IsTrue((object)new MyCollection(new string[0]) is ICollection<string>);
 		}
 
 		[Test]
-		public void ArrayCastToICollectionCountWorks() {
+		public void CustomClassThatShouldImplementIReadOnlyCollectionDoesSo()
+		{
+			Assert.IsTrue((object)new MyCollection(new string[0]) is IReadOnlyCollection<string>);
+		}
+
+		[Test]
+		public void ArrayCastToICollectionCountWorks()
+		{
 			Assert.AreEqual(((ICollection<string>)new[] { "x", "y", "z" }).Count, 3);
 		}
+
+		//[Test]
+		//public void ArrayCastToIReadOnlyCollectionCountWorks()
+		//{
+		//	Assert.AreEqual(((IReadOnlyCollection<string>)new[] { "x", "y", "z" }).Count, 3);
+		//}
 
 		[Test]
 		public void ClassImplementingICollectionCountWorks() {
@@ -59,8 +78,15 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void ClassImplementingICollectionCastToICollectionCountWorks() {
+		public void ClassImplementingICollectionCastToICollectionCountWorks()
+		{
 			Assert.AreEqual(((ICollection<string>)new MyCollection(new[] { "x", "y", "z" })).Count, 3);
+		}
+
+		[Test]
+		public void ClassImplementingICollectionCastToIReadOnlyCollectionCountWorks()
+		{
+			Assert.AreEqual(((IReadOnlyCollection<string>)new MyCollection(new[] { "x", "y", "z" })).Count, 3);
 		}
 
 		[Test]
@@ -100,6 +126,14 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(arr.Contains(new C(4)));
 		}
 
+		//[Test]
+		//public void ArrayCastToIReadOnlyCollectionContainsWorks()
+		//{
+		//	IReadOnlyCollection<C> arr = new[] { new C(1), new C(2), new C(3) };
+		//	Assert.IsTrue(arr.Contains(new C(2)));
+		//	Assert.IsFalse(arr.Contains(new C(4)));
+		//}
+
 		[Test]
 		public void ClassImplementingICollectionContainsWorks() {
 			MyCollection c = new MyCollection(new[] { "x", "y" });
@@ -115,16 +149,28 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ClassImplementingICollectionCastToIReadOnlyCollectionContainsWorks()
+		{
+			ICollection<string> c = new MyCollection(new[] { "x", "y" });
+			Assert.IsTrue(c.Contains("x"));
+			Assert.IsFalse(c.Contains("z"));
+		}
+
+		[Test]
 		public void ClassImplementingICollectionRemoveWorks() {
 			MyCollection c = new MyCollection(new[] { "x", "y" });
-			c.Clear();
+			c.Remove("x");
+			Assert.AreEqual(c.Count, 1);
+			c.Remove("y");
 			Assert.AreEqual(c.Count, 0);
 		}
 
 		[Test]
 		public void ClassImplementingICollectionCastToICollectionRemoveWorks() {
 			ICollection<string> c = new MyCollection(new[] { "x", "y" });
-			c.Clear();
+			c.Remove("x");
+			Assert.AreEqual(c.Count, 1);
+			c.Remove("y");
 			Assert.AreEqual(c.Count, 0);
 		}
 	}

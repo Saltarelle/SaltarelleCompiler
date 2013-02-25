@@ -66,6 +66,7 @@
     <Compile Include="AsyncTests.cs" />
     <Compile Include="ComparerTests.cs" />
     <Compile Include="GetMembersTests.cs" />
+    <Compile Include="IDictionaryTests.cs" />
     <Compile Include="ReflectionTests.cs" />
     <Compile Include="IFormattableTests.cs" />
     <Compile Include="RuntimeHelpersTests.cs" />

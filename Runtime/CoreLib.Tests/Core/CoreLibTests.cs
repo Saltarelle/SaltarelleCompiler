@@ -150,6 +150,9 @@ namespace CoreLib.Tests.Core {
 	public class GenericDictionaryTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class IDictionaryTests : CoreLibTestBase { }
+
+	[TestFixture]
 	public class GenericJsDictionaryTests : CoreLibTestBase {}
 
 	[TestFixture]
