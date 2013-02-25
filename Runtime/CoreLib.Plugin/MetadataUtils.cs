@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Utils = Saltarelle.Compiler.JSModel.Utils;
@@ -39,6 +40,16 @@ namespace CoreLib.Plugin {
 
 		public static bool IsSerializable(ITypeDefinition type) {
 			return AttributeReader.HasAttribute<SerializableAttribute>(type) || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
+		}
+
+		public static string GetSerializableTypeCheckCode(ITypeDefinition type) {
+			var attr = type.Attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName);
+			if (attr != null) {
+				var result = attr.NamedArguments.SingleOrDefault(a => a.Key.Name == "TypeCheckCode");
+				if (result.Value != null && result.Value.ConstantValue is string)
+					return result.Value.ConstantValue as string;
+			}
+			return null;
 		}
 
 		public static bool DoesTypeObeyTypeSystem(ITypeDefinition type) {
@@ -253,10 +264,17 @@ namespace CoreLib.Plugin {
 			string name = preferredName;
 			int i = (name == null ? 0 : 1);
 			while (name == null || !isNameAvailable(name)) {
-				name = preferredName + "$" + MetadataUtils.EncodeNumber(i, false);
+				name = preferredName + "$" + EncodeNumber(i, false);
 				i++;
 			}
 			return name;
+		}
+
+		public static IMethod CreateTypeCheckMethod(IType type, ICompilation compilation) {
+			IMethod method = new DefaultResolvedMethod(new DefaultUnresolvedMethod(type.GetDefinition().Parts[0], "IsInstanceOfType"), compilation.TypeResolveContext.WithCurrentTypeDefinition(type.GetDefinition()));
+			if (type is ParameterizedType)
+				method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: ((ParameterizedType)type).TypeArguments, methodTypeArguments: null));
+			return method;
 		}
 	}
 }

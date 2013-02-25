@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-	[Imported]
+	[Imported(TypeCheckCode = "{this}.type === 2")]
 	[Serializable]
 	public class EventInfo : MemberInfo {
 		[ScriptName("adder")]

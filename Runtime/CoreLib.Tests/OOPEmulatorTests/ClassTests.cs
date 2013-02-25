@@ -958,5 +958,95 @@ var $I3 = function() {
 {Script}.registerInterface(global, 'I3', $I3, [{I2}]);
 ", new[] { "C", "I3" });
 		}
+
+		[Test]
+		public void TypeCheckCodeForSerializableTypesWorks() {
+			AssertCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[Serializable] public class C {}
+[Serializable(TypeCheckCode = ""{this}.X"")] public class D : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+};
+$D.createInstance = function() {
+	return {D}.$ctor();
+};
+$D.$ctor = function() {
+	var $this = {};
+	return $this;
+};
+$D.isInstanceOfType = function(obj) {
+	return obj.X;
+};
+{Script}.registerClass(global, 'D', $D);
+", new[] { "D" });
+		}
+
+		[Test]
+		public void TypeCheckCodeForGenericSerializableTypesWorks() {
+			AssertCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[Serializable] public class C {}
+[Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D$1 = function(T) {
+	var $type = function() {
+	};
+	$type.createInstance = function() {
+		return $type.$ctor();
+	};
+	$type.$ctor = function() {
+		var $this = {};
+		return $this;
+	};
+	$type.isInstanceOfType = function(obj) {
+		return obj.X == T;
+	};
+	{Script}.registerGenericClassInstance($type, {D}, [T], function() {
+		return null;
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+{Script}.registerGenericClass(global, 'D$1', $D$1, 1);
+", new[] { "D" });
+		}
+
+		[Test]
+		public void UsingUnavailableTypeParameterInSerializableTypeCheckCodeIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+[System.Serializable(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void ReferencingNonExistentTypeInSerializableTypeCheckCodeIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+[System.Serializable(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
+		}
+
+		[Test]
+		public void SyntaxErrorInSerializableTypeCheckCodeIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+[System.Serializable(TypeCheckCode = ""{{this} == 1""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
+		}
 	}
 }

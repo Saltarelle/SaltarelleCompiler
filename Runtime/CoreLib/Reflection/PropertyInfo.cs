@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-	[Imported]
+	[Imported(TypeCheckCode = "{this}.type === 16")]
 	[Serializable]
 	public class PropertyInfo : MemberInfo {
 		public Type PropertyType { get; private set; }

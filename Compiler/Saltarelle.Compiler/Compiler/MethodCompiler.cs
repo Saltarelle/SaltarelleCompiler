@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -224,7 +220,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 				if (property.IsStatic) {
-					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), _statementCompiler);
 					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -247,7 +243,7 @@ namespace Saltarelle.Compiler.Compiler {
 				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 
 				if (property.IsStatic) {
-					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), _statementCompiler);
 					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -272,7 +268,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), _statementCompiler);
 					args = new[] { valueName };
 				}
 				else if (impl.AddMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -303,7 +299,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), _statementCompiler);
 					args = new[] { valueName };
 				}
 				else if (impl.RemoveMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {

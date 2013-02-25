@@ -29,6 +29,11 @@ namespace System.Runtime.CompilerServices {
 		/// The default is false. Requiring this to be set should be very uncommon.
 		/// </summary>
 		public bool ObeysTypeSystem { get; set; }
+
+		/// <summary>
+		/// Code used to check whether an object is of this type. Can use the placeholder {this} to reference the object being checked, as well as all type parameter for the type.
+		/// </summary>
+		public string TypeCheckCode { get; set; }
 	}
 
 	/// <summary>
@@ -407,7 +412,7 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	[NonScriptable]
-	public sealed class AsyncModuleAttribute : Attribute {	
+	public sealed class AsyncModuleAttribute : Attribute {
 	}
 
 	/// <summary>
@@ -415,7 +420,7 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
 	[NonScriptable]
-	public sealed class EnumerateAsArrayAttribute : Attribute {	
+	public sealed class EnumerateAsArrayAttribute : Attribute {
 	}
 
 	/// <summary>

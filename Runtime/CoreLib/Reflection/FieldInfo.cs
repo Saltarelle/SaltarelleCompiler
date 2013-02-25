@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-	[Imported]
+	[Imported(TypeCheckCode = "{this}.type === 4")]
 	[Serializable]
 	public class FieldInfo : MemberInfo {
 		public Type FieldType { get; private set; }

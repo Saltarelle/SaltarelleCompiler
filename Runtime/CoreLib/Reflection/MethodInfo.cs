@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-	[Imported]
+	[Imported(TypeCheckCode = "{this}.type === 8")]
 	[Serializable]
 	public class MethodInfo : MethodBase {
 		public Type ReturnType { get; private set; }

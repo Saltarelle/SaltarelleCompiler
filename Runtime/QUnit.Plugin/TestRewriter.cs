@@ -10,16 +10,16 @@ using Saltarelle.Compiler.JSModel.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem;
 
 namespace QUnit.Plugin {
-    public class TestRewriter : IJSTypeSystemRewriter {
-	    private readonly IErrorReporter _errorReporter;
-	    private readonly IRuntimeLibrary _runtimeLibrary;
+	public class TestRewriter : IJSTypeSystemRewriter, IRuntimeContext {
+		private readonly IErrorReporter _errorReporter;
+		private readonly IRuntimeLibrary _runtimeLibrary;
 
-	    public TestRewriter(IErrorReporter errorReporter, IRuntimeLibrary runtimeLibrary) {
-		    _errorReporter  = errorReporter;
-		    _runtimeLibrary = runtimeLibrary;
-	    }
+		public TestRewriter(IErrorReporter errorReporter, IRuntimeLibrary runtimeLibrary) {
+			_errorReporter  = errorReporter;
+			_runtimeLibrary = runtimeLibrary;
+		}
 
-	    private JsType ConvertType(JsClass type) {
+		private JsType ConvertType(JsClass type) {
 			if (type.InstanceMethods.Any(m => m.Name == "runTests")) {
 				_errorReporter.Region = type.CSharpTypeDefinition.Region;
 				_errorReporter.Message(MessageSeverity.Error, 7019, string.Format("The type {0} cannot define a method named 'runTests' because it has a [TestFixtureAttribute].", type.CSharpTypeDefinition.FullName));
@@ -48,7 +48,7 @@ namespace QUnit.Plugin {
 			foreach (var category in tests.GroupBy(t => t.Item2).Select(g => new { Category = g.Key, Tests = g.Select(x => new { Description = x.Item1, IsAsync = x.Item3, ExpectedAssertionCount = x.Item4, Function = x.Item5 }) }).OrderBy(x => x.Category)) {
 				if (category.Category != null)
 					testInvocations.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("QUnit"), "module"), JsExpression.String(category.Category)));
-				testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), _runtimeLibrary.Bind(t.Function, JsExpression.This) } : new JsExpression[] { JsExpression.String(t.Description), _runtimeLibrary.Bind(t.Function, JsExpression.This) })));
+				testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), _runtimeLibrary.Bind(t.Function, JsExpression.This, this) } : new JsExpression[] { JsExpression.String(t.Description), _runtimeLibrary.Bind(t.Function, JsExpression.This, this) })));
 			}
 
 			instanceMethods.Add(new JsMethod(null, "runTests", null, JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(testInvocations.Select(t => new JsExpressionStatement(t))))));
@@ -60,8 +60,8 @@ namespace QUnit.Plugin {
 			return result;
 		}
 
-	    public IEnumerable<JsType> Rewrite(IEnumerable<JsType> types) {
-		    foreach (var type in types) {
+		public IEnumerable<JsType> Rewrite(IEnumerable<JsType> types) {
+			foreach (var type in types) {
 				var cls = type as JsClass;
 				if (cls != null) {
 					var attr = AttributeReader.ReadAttribute<TestFixtureAttribute>(type.CSharpTypeDefinition);
@@ -71,6 +71,14 @@ namespace QUnit.Plugin {
 					yield return type;
 				}
 			}
-	    }
-    }
+		}
+
+		public JsExpression ResolveTypeParameter(ITypeParameter tp) {
+			throw new NotSupportedException();
+		}
+
+		public JsExpression EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
+			throw new NotSupportedException();
+		}
+	}
 }

@@ -109,6 +109,11 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.isInstanceOfType({instance}, {this})")]
+		public bool IsInstanceOfType(object instance) {
+			return false;
+		}
+
 		[InlineCode("{$System.Script}.isInstanceOfType({instance}, {type})")]
 		public static bool IsInstanceOfType(object instance, Type type) {
 			return false;
