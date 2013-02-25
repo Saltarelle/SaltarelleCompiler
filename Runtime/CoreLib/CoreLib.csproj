@@ -82,6 +82,7 @@
     <Compile Include="Comparison.cs" />
     <Compile Include="IFormattable.cs" />
     <Compile Include="DayOfWeek.cs" />
+    <Compile Include="TimeSpan.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Reflection\BindingFlags.cs" />
     <Compile Include="Reflection\ConstructorInfo.cs" />

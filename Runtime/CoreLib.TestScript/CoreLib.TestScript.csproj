@@ -86,6 +86,7 @@
     <Compile Include="IteratorBlockTests.cs" />
     <Compile Include="QueueTests.cs" />
     <Compile Include="BooleanTests.cs" />
+    <Compile Include="TimeSpanTests.cs" />
     <Compile Include="ByteTests.cs" />
     <Compile Include="StackTests.cs" />
     <Compile Include="GenericDictionaryTests.cs" />

@@ -70,6 +70,35 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void TryParseWorks()
+		{
+			byte numberResult;
+			bool result = byte.TryParse("234", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, 234);
+
+			result = byte.TryParse("", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = byte.TryParse(null, out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = byte.TryParse("notanumber", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = byte.TryParse("54768", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = byte.TryParse("-15678", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
 		public void ParseWithoutRadixWorks() {
 			Assert.AreEqual(byte.Parse("234"), 234);
 		}

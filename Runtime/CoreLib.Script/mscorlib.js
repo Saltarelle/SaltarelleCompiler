@@ -215,6 +215,8 @@ if (typeof(window) == 'object') {
 
 #include "ICollection.js"
 
+#include "TimeSpan.js"
+
 #include "IEqualityComparer.js"
 
 #include "IComparer.js"
