@@ -158,6 +158,11 @@ namespace CoreLib.Tests.Core {
 	[TestFixture]
 	public class QueueTests : CoreLibTestBase {}
 
+	// System.Linq.Expressions
+
+	[TestFixture]
+	public class ExpressionTests : CoreLibTestBase {}
+
 	// System.Serialization
 
 	[TestFixture]

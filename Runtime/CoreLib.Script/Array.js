@@ -232,3 +232,10 @@ ss.multidimArray = function#? DEBUG ss$multidimArray##(defvalue, sizes) {
 	arr.length = length;
 	return arr;
 };
+
+ss.repeat = function#? DEBUG ss$repeat##(value, count) {
+	var result = [];
+	for (var i = 0; i < count; i++)
+		result.push(value);
+	return result;
+};

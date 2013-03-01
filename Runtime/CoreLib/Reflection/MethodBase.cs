@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-	[Imported]
+	[Imported(TypeCheckCode = "{this}.type === 1 || {this}.type === 8")]
 	[Serializable]
 	public class MethodBase : MemberInfo {
 		[ScriptName("params")]

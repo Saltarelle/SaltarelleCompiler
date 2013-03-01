@@ -162,9 +162,6 @@ namespace CoreLib.TestScript {
 		[A9(P3 = 43)]
 		class C16 {}
 
-		[A9(P1 = 12, P4 = 44, F2 = 123)]
-		class C17 {}
-
 		[A9(F1 = 13)]
 		class C18 {}
 
@@ -359,12 +356,6 @@ namespace CoreLib.TestScript {
 		public void PropertiesImplementedAsFieldsCanBeAssignedInAttributeDeclaration() {
 			var a = (A9Attribute)typeof(C16).GetCustomAttributes(false)[0];
 			Assert.AreEqual(a.P3, 43);
-		}
-
-		[Test]
-		public void MembersMarkedNotUsableFromScriptAreIgnoredInAttributeDeclaration() {
-			var a = (A9Attribute)typeof(C17).GetCustomAttributes(false)[0];
-			Assert.AreEqual(a.P1, 12);
 		}
 
 		[Test]

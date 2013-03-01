@@ -2,15 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -113,11 +107,6 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private void Message(Tuple<int, MessageSeverity, string> message, IEntity entity, params object[] otherArgs) {
-			_errorReporter.Region = entity.Region;
-			_errorReporter.Message(message, otherArgs.Length > 0 ? new[] { entity.FullName }.Concat(otherArgs).ToArray() : new[] { entity.FullName });
-		}
-
 		private const string Prototype = "prototype";
 		private const string RegisterClass = "registerClass";
 		private const string RegisterInterface = "registerInterface";
@@ -167,229 +156,24 @@ namespace CoreLib.Plugin {
 			_genericSpecializationReflectionRuntimeContext = new ReflectionRuntimeContext(true, _systemObject, _namer);
 		}
 
-		private bool IsJsGeneric(ITypeDefinition type) {
-			return type.TypeParameterCount > 0 && !_metadataImporter.GetTypeSemantics(type).IgnoreGenericArguments;
-		}
-
-		private bool IsJsGeneric(IMethod method) {
-			return method.TypeParameters.Count > 0 && !_metadataImporter.GetMethodSemantics(method).IgnoreGenericArguments;
-		}
-
 		private JsExpression RewriteMethod(JsMethod method) {
 			return method.TypeParameterNames.Count == 0 ? method.Definition : JsExpression.FunctionDefinition(method.TypeParameterNames, new JsReturnStatement(method.Definition));
-		}
-
-		private ExpressionCompileResult Compile(ResolveResult rr, ITypeDefinition currentType, bool returnValueIsImportant, Dictionary<IVariable, VariableData> variables = null) {
-			return new ExpressionCompiler(_compilation,
-			                              _metadataImporter,
-			                              _namer,
-			                              _runtimeLibrary,
-			                              _errorReporter,
-			                              variables ?? new Dictionary<IVariable, VariableData>(),
-			                              new Dictionary<LambdaResolveResult, NestedFunctionData>(),
-			                              _ => { throw new Exception("Cannot create temporary variables in OOP emulator"); },
-			                              _ => { throw new Exception("Cannot compile nested functions in OOP emulator"); },
-			                              null,
-			                              new NestedFunctionContext(EmptyList<IVariable>.Instance),
-			                              null,
-			                              null,
-			                              currentType
-			                             ).Compile(rr, returnValueIsImportant);
-		}
-
-		private ExpressionCompileResult CompileConstructorInvocation(IMethod constructor, ITypeDefinition currentType, IList<ResolveResult> arguments) {
-			return Compile(new CSharpInvocationResolveResult(new TypeResolveResult(constructor.DeclaringType), constructor, arguments), currentType, returnValueIsImportant: true);
-		}
-
-		private JsExpression ConstructAttribute(IAttribute attr, ITypeDefinition currentType) {
-			var constructorResult = CompileConstructorInvocation(attr.Constructor, currentType, attr.PositionalArguments);
-			if (attr.NamedArguments.Count > 0 || constructorResult.AdditionalStatements.Count > 0) {
-				var stmts = constructorResult.AdditionalStatements.ToList();
-				var variable = new SimpleVariable(attr.AttributeType, "a", DomRegion.Empty);
-				var variables = new Dictionary<IVariable, VariableData> { { variable, new VariableData("$a", null, false) } };
-				bool hasNamedArg = false;
-				foreach (var a in attr.NamedArguments) {
-					if (a.Key is IProperty) {
-						if (_metadataImporter.GetPropertySemantics((IProperty)a.Key).Type == PropertyScriptSemantics.ImplType.NotUsableFromScript)
-							continue;
-					}
-					else if (a.Key is IField) {
-						if (_metadataImporter.GetFieldSemantics((IField)a.Key).Type == FieldScriptSemantics.ImplType.NotUsableFromScript)
-							continue;
-					}
-					else
-						throw new Exception("Invalid attribute named argument member: " + a.Key);
-
-					if (!hasNamedArg)
-						stmts.Add(new JsVariableDeclarationStatement("$a", constructorResult.Expression));
-
-					var compileResult = Compile(new OperatorResolveResult(a.Key.ReturnType, ExpressionType.Assign, new MemberResolveResult(new LocalResolveResult(variable), a.Key), a.Value), currentType, returnValueIsImportant: false, variables: variables);
-					stmts.AddRange(compileResult.AdditionalStatements);
-					stmts.Add(new JsExpressionStatement(compileResult.Expression));
-
-					hasNamedArg = true;
-				}
-				if (stmts.Count > 0) {
-					stmts.Add(new JsReturnStatement(hasNamedArg ? JsExpression.Identifier("$a") : constructorResult.Expression));
-					return JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(stmts)));
-				}
-			}
-			return constructorResult.Expression;
-		}
-
-		private JsExpression InstantiateType(IType type, bool isGenericSpecialization) {
-			return _runtimeLibrary.InstantiateType(type, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext);
-		}
-
-		private JsExpression ConstructFieldPropertyAccessor(IMethod m, string fieldName, bool isGenericSpecialization, bool isGetter) {
-			var properties = new List<JsObjectLiteralProperty> {
-				new JsObjectLiteralProperty("name", JsExpression.String(m.Name)),
-				new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
-				new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(m.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))),
-				new JsObjectLiteralProperty("returnType", InstantiateType(m.ReturnType, isGenericSpecialization)),
-				new JsObjectLiteralProperty(isGetter ? "fget" : "fset", JsExpression.String(fieldName))
-			};
-			if (m.IsStatic)
-				properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
-			return JsExpression.ObjectLiteral(properties);
-		}
-
-		private JsExpression ConstructReflectableMember(IMember m, bool isGenericSpecialization, bool alwaysInclude = false) {
-			if (!alwaysInclude && !m.Attributes.Any(a => a.AttributeType.FullName == typeof(ReflectableAttribute).FullName || _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
-				return null;
-
-			var properties = new List<JsObjectLiteralProperty>();
-
-			var attr = m.Attributes.Where(a => _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
-			if (attr.Count > 0)
-				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(attr.Select(a => ConstructAttribute(a, m.DeclaringTypeDefinition)))));
-
-			properties.Add(new JsObjectLiteralProperty("name", JsExpression.String(m.Name)));
-			if (m is IMethod) {
-				var method = (IMethod)m;
-				if (method.IsConstructor) {
-					var sem = _metadataImporter.GetConstructorSemantics(method);
-					if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.StaticMethod) {
-						Message(Messages._7200, m);
-						return null;
-					}
-					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Constructor)));
-					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(method.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
-					if (sem.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
-						properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
-					if (sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
-						properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
-				}
-				else {
-					var sem = _metadataImporter.GetMethodSemantics(method);
-					if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-						Message(Messages._7201, m, "method");
-						return null;
-					}
-
-					properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)));
-					if (m.IsStatic) {
-						properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
-					}
-					if (IsJsGeneric(method)) {
-						properties.Add(new JsObjectLiteralProperty("tpcount", JsExpression.Number(method.TypeParameters.Count)));
-					}
-					if (sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-						properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
-					}
-					properties.Add(new JsObjectLiteralProperty("returnType", InstantiateType(method.ReturnType, isGenericSpecialization)));
-					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(method.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
-					properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
-				}
-			}
-			else if (m is IField) {
-				var field = (IField)m;
-				var sem = _metadataImporter.GetFieldSemantics(field);
-				if (sem.Type != FieldScriptSemantics.ImplType.Field) {
-					Message(Messages._7201, m, "field");
-					return null;
-				}
-				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Field)));
-				if (m.IsStatic)
-					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
-				properties.Add(new JsObjectLiteralProperty("fieldType", InstantiateType(field.ReturnType, isGenericSpecialization)));
-				properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
-			}
-			else if (m is IProperty) {
-				var prop = (IProperty)m;
-				var sem = _metadataImporter.GetPropertySemantics(prop);
-				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Property)));
-				if (m.IsStatic)
-					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
-				properties.Add(new JsObjectLiteralProperty("propertyType", InstantiateType(prop.ReturnType, isGenericSpecialization)));
-				if (prop.Parameters.Count > 0)
-					properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(prop.Parameters.Select(p => InstantiateType(p.Type, isGenericSpecialization)))));
-
-				switch (sem.Type) {
-					case PropertyScriptSemantics.ImplType.GetAndSetMethods:
-						if (sem.GetMethod != null && sem.GetMethod.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.SetMethod.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-							Message(Messages._7202, m, "property", "getter");
-							return null;
-						}
-						if (sem.SetMethod != null && sem.SetMethod.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.SetMethod.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-							Message(Messages._7202, m, "property", "setter");
-							return null;
-						}
-						if (sem.GetMethod != null)
-							properties.Add(new JsObjectLiteralProperty("getter", ConstructReflectableMember(prop.Getter, isGenericSpecialization, alwaysInclude: true)));
-						if (sem.SetMethod != null)
-							properties.Add(new JsObjectLiteralProperty("setter", ConstructReflectableMember(prop.Setter, isGenericSpecialization, alwaysInclude: true)));
-						break;
-					case PropertyScriptSemantics.ImplType.Field:
-						if (prop.CanGet)
-							properties.Add(new JsObjectLiteralProperty("getter", ConstructFieldPropertyAccessor(prop.Getter, sem.FieldName, isGenericSpecialization: isGenericSpecialization, isGetter: true)));
-						if (prop.CanSet)
-							properties.Add(new JsObjectLiteralProperty("setter", ConstructFieldPropertyAccessor(prop.Setter, sem.FieldName, isGenericSpecialization: isGenericSpecialization, isGetter: false)));
-						break;
-					default:
-						Message(Messages._7201, m, "property");
-						return null;
-				}
-			}
-			else if (m is IEvent) {
-				var evt = (IEvent)m;
-				var sem = _metadataImporter.GetEventSemantics(evt);
-				if (sem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods) {
-					Message(Messages._7201, m, "event");
-					return null;
-				}
-				var addSem = _metadataImporter.GetMethodSemantics(evt.AddAccessor);
-				if (addSem.Type != MethodScriptSemantics.ImplType.NormalMethod && addSem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					Message(Messages._7202, m, "event", "add accessor");
-					return null;
-				}
-				var removeSem = _metadataImporter.GetMethodSemantics(evt.RemoveAccessor);
-				if (removeSem.Type != MethodScriptSemantics.ImplType.NormalMethod && removeSem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					Message(Messages._7202, m, "event", "remove accessor");
-					return null;
-				}
-
-				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Event)));
-				if (m.IsStatic)
-					properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
-				properties.Add(new JsObjectLiteralProperty("adder", ConstructReflectableMember(evt.AddAccessor, isGenericSpecialization, alwaysInclude: true)));
-				properties.Add(new JsObjectLiteralProperty("remover", ConstructReflectableMember(evt.RemoveAccessor, isGenericSpecialization, alwaysInclude: true)));
-			}
-			else {
-				throw new ArgumentException("Invalid member " + m);
-			}
-
-			return JsExpression.ObjectLiteral(properties);
 		}
 
 		private JsExpression GetMetadataDescriptor(ITypeDefinition type, bool isGenericSpecialization) {
 			var properties = new List<JsObjectLiteralProperty>();
 			var scriptableAttributes = type.Attributes.Where(a => _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
 			if (scriptableAttributes.Count != 0) {
-				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => ConstructAttribute(a, type)))));
+				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, type, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
 			}
 			if (type.Kind == TypeKind.Class) {
-				var members = type.Members.Select(m => ConstructReflectableMember(m, isGenericSpecialization)).Where(m => m != null).ToList();
+				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter))
+				                          .OrderBy(m => m, MemberOrderer.Instance)
+				                          .Select(m => {
+				                                           _errorReporter.Region = m.Region;
+				                                           return MetadataUtils.ConstructMemberInfo(m, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, t => _runtimeLibrary.InstantiateType(t, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext), includeDeclaringType: false);
+				                                       })
+				                          .ToList();
 				if (members.Count > 0)
 					properties.Add(new JsObjectLiteralProperty("members", JsExpression.ArrayLiteral(members)));
 
@@ -463,7 +247,7 @@ namespace CoreLib.Plugin {
 			if (defaultConstructor != null) {
 				var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
 				if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NotUsableFromScript) {
-					var createInstance = CompileConstructorInvocation(defaultConstructor, c.CSharpTypeDefinition, EmptyList<ResolveResult>.Instance);
+					var createInstance = MetadataUtils.CompileConstructorInvocation(defaultConstructor, null, c.CSharpTypeDefinition, null, EmptyList<ResolveResult>.Instance, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, null, null);
 					stmts.Add(new JsExpressionStatement(
 						            JsExpression.Assign(
 						                JsExpression.Member(typeRef, "createInstance"),
@@ -509,7 +293,7 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			if (IsJsGeneric(c.CSharpTypeDefinition)) {
+			if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
 				var args = new List<JsExpression> { typeRef, new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))) };
 				if (c.CSharpTypeDefinition.Kind == TypeKind.Class)
 					args.Add(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(GetBaseClass(c.CSharpTypeDefinition) ?? JsExpression.Null)));
@@ -581,7 +365,7 @@ namespace CoreLib.Plugin {
 						else {
 							var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
 
-							if (IsJsGeneric(c.CSharpTypeDefinition)) {
+							if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
 								var typeParameterNames = c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
 								var stmts = new List<JsStatement> { new JsVariableDeclarationStatement(InstantiatedGenericTypeVariableName, unnamedCtor) };
 								AddClassMembers(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName), stmts);
@@ -633,7 +417,7 @@ namespace CoreLib.Plugin {
 			}
 
 			var typesToRegister = orderedTypes
-			                      .Where(c =>    !(c is JsClass && IsJsGeneric(c.CSharpTypeDefinition))
+			                      .Where(c =>    !(c is JsClass && MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter))
 			                                  && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
 			                                  && (!MetadataUtils.IsResources(c.CSharpTypeDefinition) || c.CSharpTypeDefinition.IsExternallyVisible())	// Resources classes are only exported if they are public.
 			                                  && !MetadataUtils.IsMixin(c.CSharpTypeDefinition))
@@ -671,7 +455,7 @@ namespace CoreLib.Plugin {
 			                             })
 			                .Select(expr => new JsExpressionStatement(expr)));
 			result.AddRange(GetStaticInitializationOrder(orderedTypes.OfType<JsClass>(), 1)
-			                .Where(c => !IsJsGeneric(c.CSharpTypeDefinition) && !MetadataUtils.IsResources(c.CSharpTypeDefinition))
+			                .Where(c => !MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(c.CSharpTypeDefinition))
 			                .SelectMany(c => c.StaticInitStatements));
 
 			if (entryPoint != null) {

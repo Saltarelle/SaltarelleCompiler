@@ -88,9 +88,11 @@ namespace Saltarelle.Compiler {
 				case EntityType.TypeDefinition:
 					unusable = metadataImporter.GetTypeSemantics(currentType).IgnoreGenericArguments;
 					break;
-				case EntityType.Method:
-					unusable = metadataImporter.GetMethodSemantics(currentMethod).IgnoreGenericArguments;
+				case EntityType.Method: {
+					var sem = metadataImporter.GetMethodSemantics(currentMethod);
+					unusable = sem.Type != MethodScriptSemantics.ImplType.InlineCode && metadataImporter.GetMethodSemantics(currentMethod).IgnoreGenericArguments;
 					break;
+				}
 				default:
 					errorReporter.InternalError("Invalid owner " + tp.OwnerType + " for type parameter " + tp);
 					return JsExpression.Null;

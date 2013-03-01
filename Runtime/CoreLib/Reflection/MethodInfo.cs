@@ -28,5 +28,7 @@ namespace System.Reflection {
 		public object Invoke(object obj, params object[] arguments) { return null; }
 		[InlineCode("{$System.Script}.midel({this}, {obj}, {typeArguments})({*arguments})")]
 		public object Invoke(object obj, Type[] typeArguments, params object[] arguments) { return null; }
+
+		private MethodInfo() {}
 	}
 }

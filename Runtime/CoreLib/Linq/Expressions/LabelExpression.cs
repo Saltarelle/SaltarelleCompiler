@@ -1,12 +1,11 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace System.Linq.Expressions {
-	[Imported, Serializable]
+	[Imported(TypeCheckCode = "{this}.ntype === 56"), Serializable]
 	public sealed class LabelExpression : Expression {
-		public LabelTarget Target { get; private set; }
 		public Expression DefaultValue { get; private set; }
-
-		public LabelExpression Update(LabelTarget target, Expression defaultValue) { return null; }
+		public LabelTarget Target { get; private set; }
 
 		internal LabelExpression() {}
 	}

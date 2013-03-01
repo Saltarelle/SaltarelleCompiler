@@ -1690,9 +1690,27 @@ namespace Saltarelle.Compiler.Compiler {
 			if (rr.Conversion.IsAnonymousFunctionConversion) {
 				if (rr.Type.FullName == typeof(System.Linq.Expressions.Expression).FullName && rr.Type.TypeParameterCount == 1) {
 					var tree = new ExpressionTreeBuilder(_compilation,
+					                                     _metadataImporter,
 					                                     t => { var v = _createTemporaryVariable(t); return _variables[v].Name; },
 					                                     (m, t, a) => {
 					                                         var c = Clone();
+					                                         c._additionalStatements = new List<JsStatement>();
+					                                         var sem = _metadataImporter.GetMethodSemantics(m);
+					                                         if (sem.Type == MethodScriptSemantics.ImplType.InlineCode) {
+					                                             var tokens = InlineCodeMethodCompiler.Tokenize(m, sem.LiteralCode, _ => {});
+					                                             if (tokens != null) {
+					                                                 for (int i = 0; i < a.Length; i++) {
+					                                                     if (tokens.Count(k => k.Type == InlineCodeToken.TokenType.Parameter && k.Index == i) > 1) {
+					                                                         if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(a[i])) {
+					                                                             var temp = _createTemporaryVariable(rr.Type);
+					                                                             c._additionalStatements = c._additionalStatements ?? new List<JsStatement>();
+					                                                             c._additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, a[i]));
+					                                                             a[i] = JsExpression.Identifier(_variables[temp].Name);
+					                                                         }
+					                                                     }
+					                                                 }
+					                                             }
+					                                         }
 					                                         var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? _runtimeLibrary.InstantiateType(m.DeclaringType, this) : t }.Concat(a).ToList(), false);
 					                                         return new ExpressionCompileResult(e, c._additionalStatements);
 					                                     },

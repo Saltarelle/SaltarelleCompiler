@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -9,6 +11,8 @@ using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.StateMachineRewrite;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Plugin {
@@ -24,13 +28,15 @@ namespace CoreLib.Plugin {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
 		private readonly ICompilation _compilation;
+		private readonly INamer _namer;
 		private readonly bool _omitDowncasts;
 		private readonly bool _omitNullableChecks;
 
-		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, ICompilation compilation) {
+		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, ICompilation compilation, INamer namer) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 			_compilation = compilation;
+			_namer = namer;
 			_omitDowncasts = MetadataUtils.OmitDowncasts(compilation);
 			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation);
 		}
@@ -85,7 +91,7 @@ namespace CoreLib.Plugin {
 				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {
-				throw new InvalidOperationException("Could not determine the script type for " + type.ToString() + ", context " + typeContext);
+				throw new InvalidOperationException("Could not determine the script type for " + type + ", context " + typeContext);
 			}
 		}
 
@@ -464,16 +470,104 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "applyConstructor"), constructor, argumentsArray);
 		}
 
-		public virtual JsExpression ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context) {
+		public JsExpression ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context) {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "shallowCopy"), source, target);
 		}
 
+		private int FindIndexInReflectableMembers(IMember member) {
+			if (!MetadataUtils.IsReflectable(member, _metadataImporter))
+				return -1;
+
+			int i = 0;
+			foreach (var m in member.DeclaringTypeDefinition.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter))
+			                                                        .OrderBy(m => m, MemberOrderer.Instance)) {
+				if (m.Equals(member))
+					return i;
+				i++;
+			}
+			throw new Exception("Member " + member + " not found even though it should be present");
+		}
+
 		public JsExpression GetMember(IMember member, IRuntimeContext context) {
-			throw new NotImplementedException();
+			var owner = member is IMethod && ((IMethod)member).IsAccessor ? ((IMethod)member).AccessorOwner : null;
+
+			int index = FindIndexInReflectableMembers(owner ?? member);
+			if (index >= 0) {
+				JsExpression result = JsExpression.Index(
+				                          JsExpression.Member(
+				                              JsExpression.Member(
+				                                  TypeOf(member.DeclaringType, context),
+				                                  "__metadata"),
+				                              "members"),
+				                          JsExpression.Number(index));
+				if (owner != null) {
+					if (owner is IProperty) {
+						if (ReferenceEquals(member, ((IProperty)owner).Getter))
+							result = JsExpression.MemberAccess(result, "getter");
+						else if (ReferenceEquals(member, ((IProperty)owner).Setter))
+							result = JsExpression.MemberAccess(result, "setter");
+						else
+							throw new ArgumentException("Invalid member " + member);
+					}
+					else if (owner is IEvent) {
+						if (ReferenceEquals(member, ((IEvent)owner).AddAccessor))
+							result = JsExpression.MemberAccess(result, "adder");
+						else if (ReferenceEquals(member, ((IEvent)owner).RemoveAccessor))
+							result = JsExpression.MemberAccess(result, "remover");
+						else
+							throw new ArgumentException("Invalid member " + member);
+					}
+					else
+						throw new ArgumentException("Invalid owner " + owner);
+				}
+				return result;
+			}
+			else {
+				return MetadataUtils.ConstructMemberInfo(member, _compilation, _metadataImporter, _namer, this, _errorReporter, t => TypeOf(t, context), includeDeclaringType: true);
+			}
 		}
 
 		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
-			throw new NotImplementedException();
+			var scriptType = TypeOf(type, context);
+
+			JsExpression getterDefinition = JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(accessor));
+			JsExpression setterDefinition = JsExpression.FunctionDefinition(new[] { "$" }, new JsExpressionStatement(JsExpression.Assign(accessor, JsExpression.Identifier("$"))));
+			if (UsesThisVisitor.Analyze(accessor)) {
+				getterDefinition = JsExpression.Invocation(JsExpression.Member(getterDefinition, "bind"), JsExpression.This);
+				setterDefinition = JsExpression.Invocation(JsExpression.Member(setterDefinition, "bind"), JsExpression.This);
+			}
+
+			return JsExpression.ObjectLiteral(
+			           new JsObjectLiteralProperty("ntype", JsExpression.Number((int)ExpressionType.MemberAccess)),
+			           new JsObjectLiteralProperty("type", scriptType),
+			           new JsObjectLiteralProperty("expression", JsExpression.ObjectLiteral(
+			               new JsObjectLiteralProperty("ntype", JsExpression.Number((int)ExpressionType.Constant)),
+			               new JsObjectLiteralProperty("type", scriptType),
+			               new JsObjectLiteralProperty("value", JsExpression.ObjectLiteral())
+			           )),
+			           new JsObjectLiteralProperty("member", JsExpression.ObjectLiteral(
+			               new JsObjectLiteralProperty("typeDef", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Object).GetDefinition())),
+			               new JsObjectLiteralProperty("name", JsExpression.String(name)),
+			               new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Property)),
+			               new JsObjectLiteralProperty("returnType", scriptType),
+			               new JsObjectLiteralProperty("getter", JsExpression.ObjectLiteral(
+			                   new JsObjectLiteralProperty("typeDef", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Object).GetDefinition())),
+			                   new JsObjectLiteralProperty("name", JsExpression.String("get_" + name)),
+			                   new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
+			                   new JsObjectLiteralProperty("returnType", scriptType),
+			                   new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral()),
+			                   new JsObjectLiteralProperty("def", getterDefinition)
+			               )),
+			               new JsObjectLiteralProperty("setter", JsExpression.ObjectLiteral(
+			                   new JsObjectLiteralProperty("typeDef", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Object).GetDefinition())),
+			                   new JsObjectLiteralProperty("name", JsExpression.String("set_" + name)),
+			                   new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
+			                   new JsObjectLiteralProperty("returnType", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Void).GetDefinition())),
+			                   new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(scriptType)),
+			                   new JsObjectLiteralProperty("def", setterDefinition)
+			               ))
+			           ))
+			       );
 		}
 	}
 }

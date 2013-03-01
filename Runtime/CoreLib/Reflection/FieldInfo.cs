@@ -5,6 +5,7 @@ namespace System.Reflection {
 	[Imported(TypeCheckCode = "{this}.type === 4")]
 	[Serializable]
 	public class FieldInfo : MemberInfo {
+		[ScriptName("returnType")]
 		public Type FieldType { get; private set; }
 
 		[InlineCode("{$System.Script}.fieldAccess({this}, {obj})")]

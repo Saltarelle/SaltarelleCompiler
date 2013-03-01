@@ -197,7 +197,6 @@
     </Content>
     <Content Include="runner\node.exe" />
     <Content Include="runner\node_modules\qunit\.gitmodules" />
-    <Content Include="runner\node_modules\qunit\bin\cli.js" />
     <Content Include="runner\node_modules\qunit\index.js" />
     <Content Include="runner\node_modules\qunit\lib\child.js" />
     <Content Include="runner\node_modules\qunit\lib\coverage.js" />
@@ -414,6 +413,9 @@
     <Content Include="SimplePromise.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="runner\node_modules\qunit\bin\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

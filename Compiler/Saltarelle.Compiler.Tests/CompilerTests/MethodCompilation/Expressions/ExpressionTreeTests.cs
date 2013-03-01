@@ -9,6 +9,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
@@ -35,19 +36,19 @@ namespace System.Linq.Expressions {
 	public class Expression {
 		public static Expression Assign(Expression left, Expression right, Type type) { return null; }
 		public static Expression Equal(Expression left, Expression right, Type type) { return null; }
-		public static Expression Equal(Expression left, Expression right, bool liftToNull, MethodInfo method) { return null; }
+		public static Expression Equal(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression ReferenceEqual(Expression left, Expression right, Type type) { return null; }
 		public static Expression NotEqual(Expression left, Expression right, Type type) { return null; }
-		public static Expression NotEqual(Expression left, Expression right, bool liftToNull, MethodInfo method) { return null; }
+		public static Expression NotEqual(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression ReferenceNotEqual(Expression left, Expression right, Type type) { return null; }
 		public static Expression GreaterThan(Expression left, Expression right, Type type) { return null; }
-		public static Expression GreaterThan(Expression left, Expression right, bool liftToNull, MethodInfo method) { return null; }
+		public static Expression GreaterThan(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression LessThan(Expression left, Expression right, Type type) { return null; }
-		public static Expression LessThan(Expression left, Expression right, bool liftToNull, MethodInfo method) { return null; }
+		public static Expression LessThan(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression GreaterThanOrEqual(Expression left, Expression right, Type type) { return null; }
-		public static Expression GreaterThanOrEqual(Expression left, Expression right, bool liftToNull, MethodInfo method) { return null; }
+		public static Expression GreaterThanOrEqual(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression LessThanOrEqual(Expression left, Expression right, Type type) { return null; }
-		public static Expression LessThanOrEqual(Expression left, Expression right, bool liftToNull, MethodInfo method) { return null; }
+		public static Expression LessThanOrEqual(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression AndAlso(Expression left, Expression right, Type type) { return null; }
 		public static Expression AndAlso(Expression left, Expression right, MethodInfo method) { return null; }
 		public static Expression OrElse(Expression left, Expression right, Type type) { return null; }
@@ -209,6 +210,7 @@ namespace System.Linq.Expressions {
 		public static NewExpression New(ConstructorInfo constructor, params Expression[] arguments) { return null; }
 		public static NewExpression New(ConstructorInfo constructor, IEnumerable<Expression> arguments) { return null; }
 		public static NewExpression New(ConstructorInfo constructor, IEnumerable<Expression> arguments, IEnumerable<MemberInfo> members) { return null; }
+		public static NewExpression New(ConstructorInfo constructor, Expression[] arguments, params MemberInfo[] members) { return null; }
 		public static NewExpression New(ConstructorInfo constructor, IEnumerable<Expression> arguments, params MemberInfo[] members) { return null; }
 		public static NewExpression New(Type type) { return null; }
 
@@ -269,8 +271,8 @@ namespace System.Linq.Expressions {
 
 		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => { var l = new CecilLoader(); return new[] { l.LoadAssemblyFile(typeof(object).Assembly.Location), _expressionAssembly.Value }; });
 
-		private void AssertCorrect(string csharp, string expected, IRuntimeLibrary runtimeLibrary = null, string methodName = "M") {
-			base.AssertCorrect("using System; using System.Linq.Expressions; using System.Collections.Generic; class C { " + csharp + "}", expected, references: _referencesLazy.Value, methodName: methodName, addSkeleton: false, runtimeLibrary: runtimeLibrary);
+		private void AssertCorrect(string csharp, string expected, IRuntimeLibrary runtimeLibrary = null, IMetadataImporter metadataImporter = null, string methodName = "M") {
+			base.AssertCorrect("using System; using System.Linq.Expressions; using System.Collections.Generic; class C { " + csharp + "}", expected, references: _referencesLazy.Value, methodName: methodName, metadataImporter: metadataImporter, addSkeleton: false, runtimeLibrary: runtimeLibrary);
 		}
 
 		[Test]
@@ -381,6 +383,8 @@ void M() {
 			testUnchecked(">", "GreaterThan", "Boolean", "Int32");
 			testUnchecked("<=", "LessThanOrEqual", "Boolean", "Int32");
 			testUnchecked(">=", "GreaterThanOrEqual", "Boolean", "Int32");
+			testUnchecked("==", "Equal", "Boolean", "Int32");
+			testUnchecked("!=", "NotEqual", "Boolean", "Int32");
 			testUnchecked("&", "And", "Int32", "Int32");
 			testUnchecked("^", "ExclusiveOr", "Int32", "Int32");
 			testUnchecked("|", "Or", "Int32", "Int32");
@@ -530,6 +534,24 @@ void M() {
 			testChecked("*", "MultiplyChecked", "op_Multiply");
 			testChecked("+", "AddChecked", "op_Addition");
 			testChecked("-", "SubtractChecked", "op_Subtraction");
+		}
+
+		[Test]
+		public void OperatorMethodImplementedAsNativeOperatorIsNotConsideredAMethod() {
+			AssertCorrect(@"
+class X { public static X operator+(X a, X b) { return null; } public static X operator-(X a) { return null; } }
+void M() {
+	// BEGIN
+	Expression<Func<X, X, X>> e1 = (a, b) => a + b;
+	Expression<Func<X, X>>    e2 = a => -a;
+	// END
+}",
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_X}, 'a');
+	var $tmp2 = {sm_Expression}.$Parameter({sm_X}, 'b');
+	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$Add($tmp1, $tmp2, {sm_X}), [$tmp1, $tmp2]);
+	var $tmp3 = {sm_Expression}.$Parameter({sm_X}, 'a');
+	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Negate($tmp3, {sm_X}), [$tmp3]);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.IsOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -732,11 +754,29 @@ void M() {
 ",
 @"	var $tmp1 = {sm_Expression}.$Parameter(sm_$Array({ga_Int32}), 'a');
 	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
-	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$ArrayAccess({sm_Int32}, $tmp1, [$tmp2]), [$tmp1, $tmp2]);
+	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$ArrayIndex({sm_Int32}, $tmp1, $tmp2), [$tmp1, $tmp2]);
 	var $tmp3 = {sm_Expression}.$Parameter(sm_$Array({ga_Double}), 'a');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
 	var $tmp5 = {sm_Expression}.$Parameter({sm_Int32}, 'c');
-	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$ArrayAccess({sm_Double}, $tmp3, [$tmp4, $tmp5]), [$tmp3, $tmp4, $tmp5]);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$ArrayIndex({sm_Double}, $tmp3, [$tmp4, $tmp5]), [$tmp3, $tmp4, $tmp5]);
+");
+		}
+
+		[Test]
+		public void CanUseArrayLength() {
+			// This is what csc does
+			AssertCorrect(@"
+void M() {
+	// BEGIN
+	Expression<Func<int[], int>> e1 = a => a.Length;
+	Expression<Func<Array, int>> e2 = a => a.Length;
+	// END
+}
+",
+@"	var $tmp1 = {sm_Expression}.$Parameter(sm_$Array({ga_Int32}), 'a');
+	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$ArrayLength($tmp1), [$tmp1]);
+	var $tmp2 = {sm_Expression}.$Parameter({sm_Array}, 'a');
+	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Property($tmp2, $GetMember({to_Array}, 'Length')), [$tmp2]);
 ");
 		}
 
@@ -918,6 +958,24 @@ void M() {
 		}
 
 		[Test]
+		public void CanCreateAnonymousObject() {
+			AssertCorrect(@"
+C() {}
+C(int a) {}
+C(int a, string b) {}
+void M() {
+	// BEGIN
+	Expression<Func<int, string, object>> e = (a, b) => new { a, B = b };
+	// END
+}
+",
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $tmp2 = {sm_Expression}.$Parameter({sm_String}, 'b');
+	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$New($GetMember(to_$Anonymous, '.ctor'), [$tmp1, $tmp2], [$GetMember(to_$Anonymous, 'a'), $GetMember(to_$Anonymous, 'B')]), {sm_Object}), [$tmp1, $tmp2]);
+");
+		}
+
+		[Test]
 		public void CanUseObjectInitializers() {
 			AssertCorrect(@"
 int F;
@@ -933,10 +991,10 @@ void M() {
 	// END
 }
 ",
-@"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(42, {sm_Int32})), {sm_Expression}.$Bind($GetMember({to_C}, 'set_P'), {sm_Expression}.$Constant(17, {sm_Int32}))]), []);
+@"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(42, {sm_Int32})), {sm_Expression}.$Bind($GetMember({to_C}, 'P'), {sm_Expression}.$Constant(17, {sm_Int32}))]), []);
 	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$MemberBind($GetMember({to_C}, 'X'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(42, {sm_Int32}))])]), []);
-	var $e3 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$MemberBind($GetMember({to_C}, 'get_Y'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(448, {sm_Int32}))])]), []);
-	var $e4 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$MemberBind($GetMember({to_C}, 'X'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(12, {sm_Int32})), {sm_Expression}.$MemberBind($GetMember({to_C}, 'X'), [{sm_Expression}.$Bind($GetMember({to_C}, 'set_P'), {sm_Expression}.$Constant(14, {sm_Int32})), {sm_Expression}.$MemberBind($GetMember({to_C}, 'get_Y'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(89, {sm_Int32}))]), {sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(38, {sm_Int32}))])])]), []);
+	var $e3 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$MemberBind($GetMember({to_C}, 'Y'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(448, {sm_Int32}))])]), []);
+	var $e4 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$MemberBind($GetMember({to_C}, 'X'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(12, {sm_Int32})), {sm_Expression}.$MemberBind($GetMember({to_C}, 'X'), [{sm_Expression}.$Bind($GetMember({to_C}, 'P'), {sm_Expression}.$Constant(14, {sm_Int32})), {sm_Expression}.$MemberBind($GetMember({to_C}, 'Y'), [{sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(89, {sm_Int32}))]), {sm_Expression}.$Bind($GetMember({to_C}, 'F'), {sm_Expression}.$Constant(38, {sm_Int32}))])])]), []);
 ");
 		}
 
@@ -951,10 +1009,12 @@ void M() {
 	// BEGIN
 	Expression<Func<C>> e1 = () => new C { LF = { 7, 4 }, LP = {9, 78 } };
 	Expression<Func<C>> e2 = () => new C { D = { { 42, ""Truth"" }, 13 } };
+	Expression<Func<MyDictionary>> e3 = () => new MyDictionary { { 14, ""X"" }, { 42, ""Y"" } };
 	// END
 }",
-@"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember('C', '.ctor$0'), []), [{sm_Expression}.$ListBind($GetMember('C', 'LF'), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(7, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(4, {sm_Int32})])]), {sm_Expression}.$ListBind($GetMember('C', 'get_LP$0'), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(9, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(78, {sm_Int32})])])]), []);
+@"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember('C', '.ctor$0'), []), [{sm_Expression}.$ListBind($GetMember('C', 'LF'), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(7, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(4, {sm_Int32})])]), {sm_Expression}.$ListBind($GetMember('C', 'LP'), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(9, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(78, {sm_Int32})])])]), []);
 	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember('C', '.ctor$0'), []), [{sm_Expression}.$ListBind($GetMember('C', 'D'), [{sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant('Truth', {sm_String})]), {sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$1'), [{sm_Expression}.$Constant(13, {sm_Int32})])])]), []);
+	var $e3 = {sm_Expression}.$Lambda({sm_Expression}.$ListInit({sm_Expression}.$New($GetMember('MyDictionary', '.ctor$0'), []), [{sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(14, {sm_Int32}), {sm_Expression}.$Constant('X', {sm_String})]), {sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant('Y', {sm_String})])]), []);
 ", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.DeclaringType.Name), JsExpression.String(m.Name + (m is IMethod ? "$" + ((IMethod)m).Parameters.Count : ""))) });
 		}
 
@@ -974,6 +1034,46 @@ void M() {
 }",
 @"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember({to_C}, '.ctor'), []), [{sm_Expression}.$Bind($GetMember({to_C}, 'F1'), {sm_Expression}.$Constant(7, {sm_Int32})), {sm_Expression}.$MemberBind($GetMember({to_C}, 'X'), [{sm_Expression}.$MemberBind($GetMember({to_C}, 'Y'), [{sm_Expression}.$ListBind($GetMember({to_C}, 'L1'), [{sm_Expression}.$ElementInit($GetMember(to_$InstantiateGenericType({List}, {ga_Int32}), 'Add'), [{sm_Expression}.$Constant(9, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember(to_$InstantiateGenericType({List}, {ga_Int32}), 'Add'), [{sm_Expression}.$Constant(78, {sm_Int32})])]), {sm_Expression}.$Bind($GetMember({to_C}, 'F1'), {sm_Expression}.$Constant(23, {sm_Int32}))])]), {sm_Expression}.$Bind($GetMember({to_C}, 'F2'), {sm_Expression}.$Constant(12, {sm_Int32}))]), []);
 ");
+		}
+
+		[Test]
+		public void TemporariesAreCreatedForArgumentsUsedMoreThanOnce() {
+			AssertCorrect(@"
+void M() {
+	// BEGIN
+	Expression<Func<int>> e1 = () => 42;
+	Expression<Func<int, int>> e2 = a => a + 1;
+	// END
+}",
+@"	var $tmp1 = {sm_Expression}.$Constant(42, {sm_Int32});
+	var $e1 = _($tmp1)._($tmp1)._([])._([]);
+	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $tmp3 = {sm_Expression}.$Add($tmp2, {sm_Expression}.$Constant(1, {sm_Int32}), {sm_Int32});
+	var $e2 = _($tmp3)._($tmp3)._([$tmp2])._([$tmp2]);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Lambda" ? MethodScriptSemantics.InlineCode("_({body})._({body})._({parameters})._({parameters})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+
+			AssertCorrect(@"
+void M() {
+	// BEGIN
+	Expression<Func<int, int>> e = a => a + 1;
+	// END
+}",
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $tmp2 = {sm_Expression}.$Add($tmp1, {sm_Expression}.$Constant(1, {sm_Int32}), {sm_Int32});
+	var $e = _($tmp2)._($tmp2)._([$tmp1]);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Lambda" ? MethodScriptSemantics.InlineCode("_({body})._({body})._({parameters})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+
+			AssertCorrect(@"
+void M() {
+	// BEGIN
+	Expression<Func<int>> e1 = () => 42;
+	Expression<Func<int, int>> e2 = a => a + 1;
+	// END
+}",
+@"	var $e1 = _({sm_Expression}.$Constant(42, {sm_Int32}))._([]);
+	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $e2 = _({sm_Expression}.$Add($tmp1, {sm_Expression}.$Constant(1, {sm_Int32}), {sm_Int32}))._([$tmp1]);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Lambda" ? MethodScriptSemantics.InlineCode("_({body})._({parameters})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 	}
 }

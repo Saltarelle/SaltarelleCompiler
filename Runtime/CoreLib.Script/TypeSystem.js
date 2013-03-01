@@ -427,7 +427,7 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 		method = function(v) { (mi.isStatic ? mi.typeDef : this)[mi.fset] = v; };
 	}
 	else {
-		var method = mi.isStatic || mi.sm ? mi.typeDef[mi.js] : target[mi.js];
+		method = mi.def || (mi.isStatic || mi.sm ? mi.typeDef[mi.js] : target[mi.js]);
 
 		if (mi.tpcount) {
 			if (!typeArguments || typeArguments.length !== mi.tpcount)
@@ -447,7 +447,9 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 };
 
 ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
-	if (ci.sm)
+	if (ci.def)
+		return ci.def.apply(null, args);
+	else if (ci.sm)
 		return ci.typeDef[ci.js].apply(null, args);
 	else
 		return ss.applyConstructor(ci.js ? ci.typeDef[ci.js] : ci.typeDef, args);

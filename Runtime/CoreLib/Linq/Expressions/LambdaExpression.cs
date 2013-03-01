@@ -2,13 +2,12 @@ using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
 namespace System.Linq.Expressions {
-	[Imported, Serializable]
+	[Imported(TypeCheckCode = "{this}.ntype === 18"), Serializable]
 	public abstract class LambdaExpression : Expression {
+		[ScriptName("params")]
 		public ReadOnlyCollection<ParameterExpression> Parameters { get; private set; }
-		public string Name { get; private set; }
 		public Expression Body { get; private set; }
 		public Expression ReturnType { get; private set; }
-		public bool TailCall { get; private set; }
 
 		internal LambdaExpression() {}
 	}

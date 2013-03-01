@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
-using Moq;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests {
 	public class MockRuntimeLibrary : IRuntimeLibrary {
@@ -56,7 +54,7 @@ namespace Saltarelle.Compiler.Tests {
 			CloneDelegate                                   = (e, s, t, c)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
 			CallBase                                        = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(m.DeclaringType, TypeContext.BindBaseCall, c.ResolveTypeParameter), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m is SpecializedMethod ? ((SpecializedMethod)m).TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter)) : new JsExpression[0]), JsExpression.ArrayLiteral(a) });
 			BindBaseCall                                    = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(m.DeclaringType, TypeContext.BindBaseCall, c.ResolveTypeParameter), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m is SpecializedMethod ? ((SpecializedMethod)m).TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter)) : new JsExpression[0]), a });
-			MakeEnumerator                                  = (yt, mn, gc, d, c) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), mn, gc, d ?? (JsExpression)JsExpression.Null });
+			MakeEnumerator                                  = (yt, mn, gc, d, c) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), mn, gc, d ?? JsExpression.Null });
 			MakeEnumerable                                  = (yt, ge, c)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), ge });
 			GetMultiDimensionalArrayValue                   = (a, i, c)          => JsExpression.Invocation(JsExpression.Identifier("$MultidimArrayGet"), new[] { a }.Concat(i));
 			SetMultiDimensionalArrayValue                   = (a, i, v, c)       => JsExpression.Invocation(JsExpression.Identifier("$MultidimArraySet"), new[] { a }.Concat(i).Concat(new[] { v }));
@@ -118,8 +116,11 @@ namespace Saltarelle.Compiler.Tests {
 				// This handles open generic types ( typeof(C<,>) )
 				return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.GetDefinition().Name, Common.CreateMockAssembly()));
 			}
-			else if (type is ArrayType) {
+			else if (type.Kind == TypeKind.Array) {
 				return JsExpression.Invocation(JsExpression.Identifier(contextName + "_$Array"), GetScriptType(((ArrayType)type).ElementType, TypeContext.GenericArgument, resolveTypeParameter));
+			}
+			else if (type.Kind == TypeKind.Anonymous) {
+				return JsExpression.Identifier(contextName + "_$Anonymous");
 			}
 			else if (type is ITypeDefinition) {
 				return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
@@ -128,7 +129,7 @@ namespace Saltarelle.Compiler.Tests {
 				return resolveTypeParameter((ITypeParameter)type);
 			}
 			else {
-				throw new ArgumentException("Unsupported type + " + type.ToString());
+				throw new ArgumentException("Unsupported type + " + type);
 			}
 		}
 

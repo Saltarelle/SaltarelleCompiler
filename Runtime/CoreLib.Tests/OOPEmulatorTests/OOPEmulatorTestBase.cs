@@ -19,7 +19,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);;
 			var md = new MetadataImporter(errorReporter, compilation.Compilation, new CompilerOptions());
-			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation);
+			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation, n);
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
 			var compiler = new Compiler(md, n, rtl, errorReporter);
 			var compiledTypes = compiler.Compile(compilation).ToList();

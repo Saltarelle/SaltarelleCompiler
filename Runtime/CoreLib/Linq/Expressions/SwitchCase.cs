@@ -8,8 +8,6 @@ namespace System.Linq.Expressions {
 		public ReadOnlyCollection<Expression> TestValues { get; private set; }
 		public Expression Body { get; private set; }
 
-		public SwitchCase Update(IEnumerable<Expression> testValues, Expression body) { return null; }
-
 		internal SwitchCase() {}
 	}
 }

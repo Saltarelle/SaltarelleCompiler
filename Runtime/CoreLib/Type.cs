@@ -15,6 +15,7 @@ namespace System {
 	/// </summary>
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
+	[ScriptName("Function")]
 	public sealed class Type {
 		#region .Net reflection
 

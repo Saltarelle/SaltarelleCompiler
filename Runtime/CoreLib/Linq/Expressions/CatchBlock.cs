@@ -8,8 +8,6 @@ namespace System.Linq.Expressions {
 		public Expression Body { get; private set; }
 		public Expression Filter { get; private set; }
 
-		public CatchBlock Update(ParameterExpression variable, Expression filter, Expression body) { return null; }
-
 		internal CatchBlock() {}
 	}
 }

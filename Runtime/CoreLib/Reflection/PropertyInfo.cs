@@ -5,6 +5,7 @@ namespace System.Reflection {
 	[Imported(TypeCheckCode = "{this}.type === 16")]
 	[Serializable]
 	public class PropertyInfo : MemberInfo {
+		[ScriptName("returnType")]
 		public Type PropertyType { get; private set; }
 		public Type[] IndexParameterTypes { [InlineCode("{this}.params || []")] get; [InlineCode("0")] private set; }
 
