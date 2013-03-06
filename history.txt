@@ -1,3 +1,4 @@
+Implemented support for expression trees.
 Interfaces can now be serializable (#106)
 BREAKING CHANGE: Math.Round now uses C# semantics (RoundToEven). To get JS semantics (round up), use Math.JsRound.
 ScriptSkipAttribute can now be specified to constructors to indicate that the constructor call will be skipped when used as a constructor initializer (": base()" or ": this()")
