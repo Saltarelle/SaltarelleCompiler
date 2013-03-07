@@ -65,6 +65,7 @@
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
     <Compile Include="ComparerTests.cs" />
+    <Compile Include="ReadOnlyCollectionTests.cs" />
     <Compile Include="ExpressionTests.cs" />
     <Compile Include="GetMembersTests.cs" />
     <Compile Include="ReflectionTests.cs" />

@@ -54,7 +54,7 @@ public class C1 {
 		}
 
 		[Test]
-		public void ReflectionOnConstantFieldIsAnError() {
+		public void ReflectionOnInlineConstantFieldIsAnError() {
 			var er = new MockErrorReporter();
 			Process(@"
 using System.Runtime.CompilerServices;
