@@ -376,7 +376,7 @@ namespace CoreLib.Plugin {
 			properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Constructor)));
 			properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(constructor.Parameters.Select(p => instantiateType(p.Type)))));
 			if (sem.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
-				properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
+				properties.Add(new JsObjectLiteralProperty("sname", JsExpression.String(sem.Name)));
 			if (sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
 				properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
 			if (sem.Type == ConstructorScriptSemantics.ImplType.Json || sem.Type == ConstructorScriptSemantics.ImplType.InlineCode) {
@@ -463,7 +463,7 @@ namespace CoreLib.Plugin {
 					if (sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
 						properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
 					}
-					properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
+					properties.Add(new JsObjectLiteralProperty("sname", JsExpression.String(sem.Name)));
 				}
 				properties.Add(new JsObjectLiteralProperty("returnType", instantiateType(method.ReturnType)));
 				properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(method.Parameters.Select(p => instantiateType(p.Type)))));
@@ -477,7 +477,7 @@ namespace CoreLib.Plugin {
 				}
 				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Field)));
 				properties.Add(new JsObjectLiteralProperty("returnType", instantiateType(field.ReturnType)));
-				properties.Add(new JsObjectLiteralProperty("js", JsExpression.String(sem.Name)));
+				properties.Add(new JsObjectLiteralProperty("sname", JsExpression.String(sem.Name)));
 			}
 			else if (m is IProperty) {
 				var prop = (IProperty)m;
@@ -507,6 +507,7 @@ namespace CoreLib.Plugin {
 							properties.Add(new JsObjectLiteralProperty("getter", ConstructFieldPropertyAccessor(prop.Getter, sem.FieldName, instantiateType, isGetter: true)));
 						if (prop.CanSet)
 							properties.Add(new JsObjectLiteralProperty("setter", ConstructFieldPropertyAccessor(prop.Setter, sem.FieldName, instantiateType, isGetter: false)));
+						properties.Add(new JsObjectLiteralProperty("fname", JsExpression.String(sem.FieldName)));
 						break;
 					default:
 						errorReporter.Message(Messages._7201, m.FullName, "property");

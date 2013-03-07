@@ -427,7 +427,7 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 		method = function(v) { (mi.isStatic ? mi.typeDef : this)[mi.fset] = v; };
 	}
 	else {
-		method = mi.def || (mi.isStatic || mi.sm ? mi.typeDef[mi.js] : target[mi.js]);
+		method = mi.def || (mi.isStatic || mi.sm ? mi.typeDef[mi.sname] : target[mi.sname]);
 
 		if (mi.tpcount) {
 			if (!typeArguments || typeArguments.length !== mi.tpcount)
@@ -450,9 +450,9 @@ ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
 	if (ci.def)
 		return ci.def.apply(null, args);
 	else if (ci.sm)
-		return ci.typeDef[ci.js].apply(null, args);
+		return ci.typeDef[ci.sname].apply(null, args);
 	else
-		return ss.applyConstructor(ci.js ? ci.typeDef[ci.js] : ci.typeDef, args);
+		return ss.applyConstructor(ci.sname ? ci.typeDef[ci.sname] : ci.typeDef, args);
 }
 
 ss.fieldAccess = function#? DEBUG ss$fieldAccess##(fi, obj) {
@@ -462,7 +462,7 @@ ss.fieldAccess = function#? DEBUG ss$fieldAccess##(fi, obj) {
 		throw 'Must specify target for instance field';
 	obj = fi.isStatic ? fi.typeDef : obj;
 	if (arguments.length === 3)
-		obj[fi.js] = arguments[2];
+		obj[fi.sname] = arguments[2];
 	else
-		return obj[fi.js];
+		return obj[fi.sname];
 }

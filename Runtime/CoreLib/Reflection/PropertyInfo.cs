@@ -26,5 +26,11 @@ namespace System.Reflection {
 		public void SetValue(object obj, object value) {}
 		[InlineCode("{$System.Script}.midel({this}.setter, {obj}).apply(null, {index}.concat({value}))")]
 		public void SetValue(object obj, object value, object[] index) {}
+
+		/// <summary>
+		/// For properties implemented as fields, contains the name of the field. Null for properties implemented as get and set methods.
+		/// </summary>
+		[ScriptName("fname")]
+		public string ScriptFieldName { get; private set; }
 	}
 }

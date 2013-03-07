@@ -13,6 +13,12 @@ namespace System.Reflection {
 		[InlineCode("{$System.Script}.fieldAccess({this}, {obj}, {value})")]
 		public void SetValue(object obj, object value) {}
 
+		/// <summary>
+		/// Script name of the field
+		/// </summary>
+		[ScriptName("sname")]
+		public string ScriptName { get; private set; }
+
 		[NonScriptable, EditorBrowsable(EditorBrowsableState.Never)]
 		public static FieldInfo GetFieldFromHandle(RuntimeFieldHandle h) { return null; }
 
