@@ -87,6 +87,7 @@
     <Compile Include="IteratorBlockTests.cs" />
     <Compile Include="QueueTests.cs" />
     <Compile Include="BooleanTests.cs" />
+    <Compile Include="TimeSpanTests.cs" />
     <Compile Include="ByteTests.cs" />
     <Compile Include="StackTests.cs" />
     <Compile Include="GenericDictionaryTests.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="UInt32Tests.cs" />
     <Compile Include="UInt64Tests.cs" />
     <Compile Include="TupleTests.cs" />
+    <Compile Include="RandomTests.cs" />
     <Compile Include="SingleTests.cs" />
     <Compile Include="ScriptTests.cs" />
     <Compile Include="SByteTests.cs" />

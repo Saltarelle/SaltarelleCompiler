@@ -23,6 +23,9 @@ namespace CoreLib.Tests.Core {
 	public class AttributeTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class TimeSpanTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class BooleanTests : CoreLibTestBase {}
 
 	[TestFixture]
@@ -90,6 +93,9 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class MathTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class RandomTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class MultidimArrayTests : CoreLibTestBase {}

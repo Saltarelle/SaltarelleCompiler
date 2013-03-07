@@ -21,3 +21,27 @@ ss_Int32.div = function#? DEBUG Int32$div##(a, b) {
 ss_Int32.trunc = function#? DEBUG Int32$trunc##(n) {
 	return ss.isValue(n) ? n | 0 : null;
 };
+
+ss_Int32.tryParseByte = function#? DEBUG Int32$tryParseByte##(s, result) {
+    if(s != 'undefined' && s != null && s.length > 0 && !isNaN(s)){
+        result.$ = parseInt(s);
+        if(result.$ < 0 || result.$ > 255) {
+            result.$ = 0;
+            return false;
+        }
+        return true;
+    }
+
+    result.$ = 0;
+    return false;
+};
+
+ss_Int32.tryParseInt = function#? DEBUG Int32$tryParseInt##(s, result) {
+    if(s != 'undefined' && s != null && s.length > 0 && !isNaN(s)){
+        result.$ = parseInt(s);
+        return true;
+    }
+
+    result.$ = 0;
+    return false;
+};

@@ -215,6 +215,8 @@ if (typeof(window) == 'object') {
 
 #include "ICollection.js"
 
+#include "TimeSpan.js"
+
 #include "IEqualityComparer.js"
 
 #include "IComparer.js"
@@ -242,6 +244,8 @@ if (typeof(window) == 'object') {
 #include "IDisposable.js"
 
 #include "StringBuilder.js"
+
+#include "Random.js"
 
 #include "EventArgs.js"
 

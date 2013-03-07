@@ -83,6 +83,7 @@
     <Compile Include="Comparison.cs" />
     <Compile Include="IFormattable.cs" />
     <Compile Include="DayOfWeek.cs" />
+    <Compile Include="TimeSpan.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Linq\Expressions\BinaryExpression.cs" />
     <Compile Include="Linq\Expressions\ConditionalExpression.cs" />
@@ -135,6 +136,7 @@
     <Compile Include="Reflection\MethodInfo.cs" />
     <Compile Include="MulticastDelegate.cs" />
     <Compile Include="SerializableAttribute.cs" />
+    <Compile Include="Random.cs" />
     <Compile Include="Lazy.cs" />
     <Compile Include="IComparable.cs" />
     <Compile Include="IEquatable.cs" />
