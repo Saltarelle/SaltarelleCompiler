@@ -36,9 +36,9 @@ namespace System {
 		/// </summary>
 		/// <param name="year">The full year.</param>
 		/// <param name="month">The month (1 through 12)</param>
-		/// <param name="date">The day of the month (1 through # of days in the specified month)</param>
-		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {date})")]
-		public DateTime(int year, int month, int date) {
+		/// <param name="day">The day of the month (1 through # of days in the specified month)</param>
+		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {day})")]
+		public DateTime(int year, int month, int day) {
 		}
 
 		/// <summary>
@@ -46,10 +46,11 @@ namespace System {
 		/// </summary>
 		/// <param name="year">The full year.</param>
 		/// <param name="month">The month (1 through 12)</param>
-		/// <param name="date">The day of the month (1 through # of days in the specified month)</param>
+		/// <param name="day">The day of the month (1 through # of days in the specified month)</param>
 		/// <param name="hours">The hours (0 through 23)</param>
-		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {date}, {hours})")]
-		public DateTime(int year, int month, int date, int hours) {
+		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {day}, {hours})")]
+		public DateTime(int year, int month, int day, int hours)
+		{
 		}
 
 		/// <summary>
@@ -57,11 +58,12 @@ namespace System {
 		/// </summary>
 		/// <param name="year">The full year.</param>
 		/// <param name="month">The month (1 through 12)</param>
-		/// <param name="date">The day of the month (1 through # of days in the specified month)</param>
+		/// <param name="day">The day of the month (1 through # of days in the specified month)</param>
 		/// <param name="hours">The hours (0 through 23)</param>
 		/// <param name="minutes">The minutes (0 through 59)</param>
-		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {date}, {hours}, {minutes})")]
-		public DateTime(int year, int month, int date, int hours, int minutes) {
+		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {day}, {hours}, {minutes})")]
+		public DateTime(int year, int month, int day, int hours, int minutes)
+		{
 		}
 
 		/// <summary>
@@ -69,12 +71,13 @@ namespace System {
 		/// </summary>
 		/// <param name="year">The full year.</param>
 		/// <param name="month">The month (1 through 12)</param>
-		/// <param name="date">The day of the month (1 through # of days in the specified month)</param>
+		/// <param name="day">The day of the month (1 through # of days in the specified month)</param>
 		/// <param name="hours">The hours (0 through 23)</param>
 		/// <param name="minutes">The minutes (0 through 59)</param>
 		/// <param name="seconds">The seconds (0 through 59)</param>
-		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {date}, {hours}, {minutes}, {seconds})")]
-		public DateTime(int year, int month, int date, int hours, int minutes, int seconds) {
+		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {day}, {hours}, {minutes}, {seconds})")]
+		public DateTime(int year, int month, int day, int hours, int minutes, int seconds)
+		{
 		}
 
 		/// <summary>
@@ -82,13 +85,14 @@ namespace System {
 		/// </summary>
 		/// <param name="year">The full year.</param>
 		/// <param name="month">The month (1 through 12)</param>
-		/// <param name="date">The day of the month (1 through # of days in the specified month)</param>
+		/// <param name="day">The day of the month (1 through # of days in the specified month)</param>
 		/// <param name="hours">The hours (0 through 23)</param>
 		/// <param name="minutes">The minutes (0 through 59)</param>
 		/// <param name="seconds">The seconds (0 through 59)</param>
 		/// <param name="milliseconds">The milliseconds (0 through 999)</param>
-		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {date}, {hours}, {minutes}, {seconds}, {milliseconds})")]
-		public DateTime(int year, int month, int date, int hours, int minutes, int seconds, int milliseconds) {
+		[InlineCode("new {$System.DateTime}({year}, {month} - 1, {day}, {hours}, {minutes}, {seconds}, {milliseconds})")]
+		public DateTime(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds)
+		{
 		}
 
 		/// <summary>
@@ -315,6 +319,11 @@ namespace System {
 		[IntrinsicOperator]
 		public static int operator -(DateTime a, DateTime b) {
 			return 0;
+		}
+
+		[InlineCode("new {$System.TimeSpan}(({this} - {value}) * 10000)")]
+		public TimeSpan Subtract(DateTime value) {
+			return default(TimeSpan);
 		}
 
 		[InlineCode("{$System.Script}.staticEquals({a}, {b})")]

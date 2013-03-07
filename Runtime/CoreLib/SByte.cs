@@ -43,6 +43,13 @@ namespace System {
 		public static sbyte Parse(string s, int radix) {
 			return 0;
 		}
+
+		[InlineCode("{$System.Int32}.tryParse({s}, {result}, -128, 127)")]
+		public static bool TryParse(string s, out sbyte result) {
+			result = 0;
+			return false;
+		}
+
 		/// <summary>
 		/// Converts the value to its string representation.
 		/// </summary>

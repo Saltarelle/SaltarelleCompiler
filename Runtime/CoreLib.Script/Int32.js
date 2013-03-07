@@ -21,3 +21,14 @@ ss_Int32.div = function#? DEBUG Int32$div##(a, b) {
 ss_Int32.trunc = function#? DEBUG Int32$trunc##(n) {
 	return ss.isValue(n) ? n | 0 : null;
 };
+
+ss_Int32.tryParse = function#? DEBUG Int32$tryParse##(s, result, min, max) {
+	result.$ = 0;
+	if (!/^[+-]?[0-9]+$/.test(s))
+		return 0;
+	var n = parseInt(s);
+	if (n < min || n > max)
+		return false;
+	result.$ = n;
+	return true;
+};

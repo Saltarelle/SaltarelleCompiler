@@ -1,3 +1,4 @@
+Added types System.TimeSpan, System.Random (thanks to Marcel F)
 Implemented support for expression trees.
 Interfaces can now be serializable (#106)
 BREAKING CHANGE: Math.Round now uses C# semantics (RoundToEven). To get JS semantics (round up), use Math.JsRound.

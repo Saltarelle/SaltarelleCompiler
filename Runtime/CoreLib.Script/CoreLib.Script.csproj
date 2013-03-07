@@ -36,6 +36,7 @@
     <Content Include="TaskCompletionSource.js" />
     <Content Include="Task.js" />
     <Content Include="JsDate.js" />
+    <Content Include="TimeSpan.js" />
     <Content Include="IteratorBlockEnumerable.js" />
     <Content Include="Enum.js" />
     <Content Include="IEqualityComparer.js" />
@@ -53,6 +54,7 @@
     <Content Include="Array.js" />
     <Content Include="Number.js" />
     <Content Include="Object.js" />
+    <Content Include="Random.js" />
     <Content Include="String.js" />
     <Content Include="Date.js" />
     <Content Include="Debug.js" />

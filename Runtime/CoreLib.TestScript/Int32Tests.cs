@@ -105,6 +105,34 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void TryParseWorks() {
+			int numberResult;
+			bool result = int.TryParse("57574", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, 57574);
+
+			result = int.TryParse("-14", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, -14);
+
+			result = int.TryParse("", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = int.TryParse(null, out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = int.TryParse("notanumber", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = int.TryParse("2.5", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
 		public void ParseWithRadixWorks() {
 			Assert.AreEqual(int.Parse("234", 16), 0x234);
 		}
