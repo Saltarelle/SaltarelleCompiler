@@ -369,8 +369,7 @@ namespace CoreLib.Plugin {
 					case KnownTypeCode.Double:
 						return JsExpression.Number(0);
 					default:
-						_errorReporter.InternalError("Cannot use default value for the type " + type);
-						return JsExpression.Null;
+						return JsExpression.Invocation(JsExpression.Member(InstantiateType(type, context), "getDefaultValue"));
 				}
 			}
 		}

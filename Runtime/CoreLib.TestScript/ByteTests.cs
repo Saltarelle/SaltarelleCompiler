@@ -70,8 +70,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void TryParseWorks()
-		{
+		public void TryParseWorks() {
 			byte numberResult;
 			bool result = byte.TryParse("234", out numberResult);
 			Assert.IsTrue(result);
@@ -93,7 +92,11 @@ namespace CoreLib.TestScript {
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
 
-			result = byte.TryParse("-15678", out numberResult);
+			result = byte.TryParse("-1", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = byte.TryParse("2.5", out numberResult);
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
 		}

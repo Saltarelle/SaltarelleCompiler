@@ -79,6 +79,34 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void TryParseWorks() {
+			ulong numberResult;
+			bool result = ulong.TryParse("23445", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, 23445);
+
+			result = ulong.TryParse("", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ulong.TryParse(null, out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ulong.TryParse("notanumber", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ulong.TryParse("-1", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ulong.TryParse("2.5", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
 		public void ToStringWithoutRadixWorks() {
 			Assert.AreEqual(((ulong)123).ToString(), "123");
 		}

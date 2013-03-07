@@ -105,8 +105,7 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
-		public void TryParseWorks()
-		{
+		public void TryParseWorks() {
 			int numberResult;
 			bool result = int.TryParse("57574", out numberResult);
 			Assert.IsTrue(result);
@@ -125,6 +124,10 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(numberResult, 0);
 
 			result = int.TryParse("notanumber", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = int.TryParse("2.5", out numberResult);
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
 		}

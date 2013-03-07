@@ -1,22 +1,14 @@
-// Random.cs
-// Script#/Libraries/CoreLib
-// This source code is subject to terms and conditions of the Apache License, Version 2.0.
-//
-
 using System.Runtime.CompilerServices;
 
-namespace System
-{
+namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
-	public class Random
-	{
+	public class Random {
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Random"/> class, using a time-dependent default seed value.
 		/// </summary>
 		[ScriptName("")]
-		public Random()
-		{
+		public Random() {
 		}
 
 		/// <summary>
@@ -27,15 +19,13 @@ namespace System
 		/// If a negative number is specified, the absolute value of the number is used.
 		/// </param>
 		[ScriptName("")]
-		public Random(int seed)
-		{
+		public Random(int seed) {
 		}
 
 		/// <summary>
 		/// Returns a nonnegative random number.
 		/// </summary>
-		public virtual int Next()
-		{
+		public virtual int Next() {
 			return 0;
 		}
 
@@ -43,40 +33,36 @@ namespace System
 		/// Returns a nonnegative random number less than the specified maximum.
 		/// </summary>
 		[ScriptName("nextMax")]
-		public virtual int Next(int maxValue)
-		{
+		public virtual int Next(int maxValue) {
 			return 0;
 		}
 
 		/// <summary>
 		/// Returns a random number within a specified range.
 		/// </summary>
-		public virtual int Next(int minValue, int maxValue)
-		{
+		[ScriptName("nextMinMax")]
+		public virtual int Next(int minValue, int maxValue) {
 			return 0;
 		}
 
 		/// <summary>
 		/// Fills the elements of a specified array of bytes with random numbers.
 		/// </summary>
-		public virtual void NextBytes(byte[] buffer)
-		{
+		public virtual void NextBytes(byte[] buffer) {
 		}
 
 		/// <summary>
 		/// Returns a random number between 0.0 and 1.0.
 		/// </summary>
 		/// <returns></returns>
-		public virtual double NextDouble()
-		{
+		public virtual double NextDouble() {
 			return 0;
 		}
 
 		/// <summary>
 		/// Returns a random number between 0.0 and 1.0.
 		/// </summary>
-		protected virtual double Sample()
-		{
+		protected virtual double Sample() {
 			return 0;
 		}
 	}

@@ -321,9 +321,8 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.TimeSpan}.fromTicks(({this} - {value}) * 10000)")]
-		public TimeSpan Subtract(DateTime value)
-		{
+		[InlineCode("new {$System.TimeSpan}(({this} - {value}) * 10000)")]
+		public TimeSpan Subtract(DateTime value) {
 			return default(TimeSpan);
 		}
 

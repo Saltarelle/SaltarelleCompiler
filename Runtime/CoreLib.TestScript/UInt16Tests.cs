@@ -80,6 +80,38 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void TryParseWorks() {
+			ushort numberResult;
+			bool result = ushort.TryParse("23445", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, 23445);
+
+			result = ushort.TryParse("", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ushort.TryParse(null, out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ushort.TryParse("notanumber", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ushort.TryParse("32768", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, 32768);
+
+			result = ushort.TryParse("-1", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = ushort.TryParse("2.5", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
 		public void ToStringWithoutRadixWorks() {
 			Assert.AreEqual(((ushort)123).ToString(), "123");
 		}
