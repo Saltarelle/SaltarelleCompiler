@@ -21,6 +21,7 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(typeof(Dictionary<int, string>).IsClass, "IsClass should be true");
 			object dict = new Dictionary<int, string>();
 			Assert.IsTrue(dict is Dictionary<int, string>, "is Dictionary<int,string> should be true");
+			Assert.IsTrue(dict is IReadOnlyDictionary<int, string>, "is IReadOnlyDictionary<int,string> should be true");
 			Assert.IsTrue(dict is IDictionary<int, string>, "is IDictionary<int,string> should be true");
 			Assert.IsTrue(dict is IEnumerable<KeyValuePair<int,string>>, "is IEnumerable<KeyValuePair<int,string>> should be true");
 		}
@@ -191,6 +192,22 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(d[1], "a");
 			Assert.AreEqual(d[2], "b");
 			Assert.AreEqual(d[3], "c");
+
+			var di = (IDictionary<int, string>)d;
+
+			di.Add(new KeyValuePair<int, string>(4, "d"));
+			Assert.AreEqual(d.Count, 4);
+			Assert.AreEqual(d[4], "d");
+		}
+
+		[Test]
+		public void ICollectionAddWorks() {
+			var d = (IDictionary<int,string>)new Dictionary<int, string> { { 1, "a" }, { 2, "b" } };
+			d.Add(new KeyValuePair<int, string>(3, "c"));
+			Assert.AreEqual(3, d.Count);
+			Assert.AreEqual(d[1], "a");
+			Assert.AreEqual(d[2], "b");
+			Assert.AreEqual(d[3], "c");
 		}
 
 		[Test(ExpectedAssertionCount = 0)]
@@ -219,6 +236,14 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void ContainsWorks() {
+			var d = (ICollection<KeyValuePair<int, string>>)new Dictionary<int, string> { { 1, "a" }, { 2, "b" } };
+			Assert.IsTrue(d.Contains(new KeyValuePair<int, string>(1, "a")));
+			Assert.IsFalse(d.Contains(new KeyValuePair<int, string>(1, "b")));
+			Assert.IsFalse(d.Contains(new KeyValuePair<int, string>(3, "b")));
+		}
+
+		[Test]
 		public void EnumeratingWorks() {
 			var d = new Dictionary<string, string> { { "1", "a" }, { "2", "b" } };
 			int count = 0;
@@ -242,6 +267,16 @@ namespace CoreLib.TestScript {
 			var d = new Dictionary<int, string> { { 1, "a" }, { 2, "b" } };
 			Assert.AreStrictEqual(d.Remove(2), true);
 			Assert.AreStrictEqual(d.Remove(3), false);
+			Assert.AreEqual(d.Count, 1);
+			Assert.AreEqual(d[1], "a");
+		}
+
+		[Test]
+		public void ICollectionRemoveWorks() {
+			var d = (IDictionary<int, string>)new Dictionary<int, string> { { 1, "a" }, { 2, "b" } };
+			Assert.AreStrictEqual(d.Remove(new KeyValuePair<int, string>(2, "b")), true);
+			Assert.AreStrictEqual(d.Remove(new KeyValuePair<int, string>(1, "b")), false);
+			Assert.AreStrictEqual(d.Remove(new KeyValuePair<int, string>(3, "c")), false);
 			Assert.AreEqual(d.Count, 1);
 			Assert.AreEqual(d[1], "a");
 		}

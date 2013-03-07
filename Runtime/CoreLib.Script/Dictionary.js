@@ -51,7 +51,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			try {
 				while (e.moveNext()) {
 					var c = e.current();
-					this.add(c.key, c.value);
+					this.dictAdd(c.key, c.value);
 				}
 			}
 			finally {
@@ -63,7 +63,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		else if (o) {
 			var keys = Object.keys(o);
 			for (var i = 0; i < keys.length; i++) {
-				this.add(keys[i], o[keys[i]]);
+				this.dictAdd(keys[i], o[keys[i]]);
 			}
 		}
 	};
@@ -89,7 +89,32 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			this.countField++;
 		},
 
-		add: function(key, value) {
+		_remove: function (key, value, checkValue) {
+			var hash = this.comparer.getObjectHashCode(key);
+			if (!this.buckets.hasOwnProperty(hash))
+				return false;
+
+			var array = this.buckets[hash];
+			for (var i = 0; i < array.length; i++) {
+				if (this.comparer.areEqual(array[i].key, key)) {
+					
+					if(checkValue && !ss_EqualityComparer.def.areEqual(array[i].value,value))
+						return false;
+					
+					array.splice(i, 1);
+					if (array.length == 0) delete this.buckets[hash];
+					this.countField--;
+					return true;
+				}
+			}
+			return false;
+		},
+
+		add: function(kvPair) {
+			this._setOrAdd(kvPair.key, kvPair.value, true);
+		},
+
+		dictAdd: function(key, value) {
 			this._setOrAdd(key, value, true);
 		},
 
@@ -129,6 +154,13 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			}
 		},
 
+		contains: function(kvPair) {
+			var value = {};
+			if(!this.tryGetValue(kvPair.key, value))
+				return false;
+			return ss_EqualityComparer.def.areEqual(value.$, kvPair.value);
+		},
+
 		containsKey: function(key) {
 			var hash = this.comparer.getObjectHashCode(key);
 			if (!this.buckets.hasOwnProperty(hash))
@@ -147,21 +179,12 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 			this.buckets = {};
 		},
 
-		remove: function(key) {
-			var hash = this.comparer.getObjectHashCode(key);
-			if (!this.buckets.hasOwnProperty(hash))
-				return false;
+		remove: function(kvPair) {
+			return this._remove(kvPair.key, kvPair.value, true);
+		},
 
-			var array = this.buckets[hash];
-			for (var i = 0; i < array.length; i++) {
-				if (this.comparer.areEqual(array[i].key, key)) {
-					array.splice(i, 1);
-					if (array.length == 0) delete this.buckets[hash];
-					this.countField--;
-					return true;
-				}
-			}
-			return false;
+		dictRemove: function(key) {
+			return this._remove(key);
 		},
 
 		get_count: function() {
@@ -195,9 +218,9 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		}
 	};
 
-	ss.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], function() { return null; }, function() { return [ ss_IDictionary, ss_IEnumerable ]; });
+	ss.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], function() { return null; }, function() { return [ ss_IReadOnlyDictionary, ss_IDictionary, ss_IEnumerable ]; });
 	return $type;
 };
 
 ss.registerGenericClass(global, 'ss.Dictionary$2', ss_Dictionary$2, 2);
-ss.registerClass(global, 'ss.$DictionaryCollection', ss_$DictionaryCollection, null, [ss_IEnumerable, ss_ICollection]);
+ss.registerClass(global, 'ss.$DictionaryCollection', ss_$DictionaryCollection, null, [ss_IEnumerable, ss_IReadOnlyCollection, ss_ICollection]);

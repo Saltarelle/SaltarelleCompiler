@@ -68,6 +68,7 @@
     <Compile Include="ReadOnlyCollectionTests.cs" />
     <Compile Include="ExpressionTests.cs" />
     <Compile Include="GetMembersTests.cs" />
+    <Compile Include="IDictionaryTests.cs" />
     <Compile Include="ReflectionTests.cs" />
     <Compile Include="IFormattableTests.cs" />
     <Compile Include="RuntimeHelpersTests.cs" />

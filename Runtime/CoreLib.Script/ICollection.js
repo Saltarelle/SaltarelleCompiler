@@ -1,6 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ICollection
 
+
+var ss_IReadOnlyCollection = function#? DEBUG IReadOnlyCollection$##() { };
+ss_IReadOnlyCollection.prototype = {
+	get_count: null,
+	contains: null
+};
+
 var ss_ICollection = function#? DEBUG ICollection$##() { };
 ss_ICollection.prototype = {
 	get_count: null,
@@ -10,7 +17,9 @@ ss_ICollection.prototype = {
 	remove: null
 };
 
-ss.registerInterface(global, 'ss.ICollection', ss_ICollection);
+
+ss.registerInterface(global, 'ss.IReadOnlyCollection', ss_IReadOnlyCollection);
+ss.registerInterface(global, 'ss.ICollection', ss_ICollection, [ss_IReadOnlyCollection]);
 
 ss.count = function#? DEBUG ss$count##(obj) {
 	return ss.isArray(obj) ? obj.length : obj.get_count();
