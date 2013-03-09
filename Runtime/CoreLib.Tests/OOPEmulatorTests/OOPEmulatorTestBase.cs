@@ -15,7 +15,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			bool assertNoErrors = errorReporter == null;
 			errorReporter = errorReporter ?? new MockErrorReporter(true);
 			var sourceFile = new MockSourceFile("file.cs", source);
-			var n = new DefaultNamer();
+			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);;
 			var md = new MetadataImporter(errorReporter, compilation.Compilation, new CompilerOptions());

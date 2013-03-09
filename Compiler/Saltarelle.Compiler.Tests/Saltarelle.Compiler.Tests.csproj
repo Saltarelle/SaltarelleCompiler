@@ -127,7 +127,6 @@
     <Compile Include="CompilerTests\MethodCompilation\Statements\WhileStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\YieldStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\VariableGatheringTests.cs" />
-    <Compile Include="DefaultNamerTests\GetStateMachineLoopLabelTests.cs" />
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="ExeTests\CommandLineArgumentTests.cs" />
@@ -154,7 +153,6 @@
     <Compile Include="OutputFormatterTests\ParenthesationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CompilerTests\TypeConversionTests.cs" />
-    <Compile Include="DefaultNamerTests\GetVariableNameTests.cs" />
     <Compile Include="TypeReferenceFinderTests.cs" />
   </ItemGroup>
   <ItemGroup>
