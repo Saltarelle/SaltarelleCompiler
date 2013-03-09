@@ -42,5 +42,7 @@ namespace System.Reflection {
 		/// <returns>An array that contains all the custom attributes applied to this member, or an array with zero elements if no attributes are defined.</returns>
 		[InlineCode("({this}.attr || []).filter(function(a) {{ return {$System.Script}.isInstanceOfType(a, {attributeType}); }})")]
 		public object[] GetCustomAttributes(Type attributeType) { return null; }
+
+		internal MemberInfo() {}
 	}
 }

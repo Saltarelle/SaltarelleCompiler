@@ -15,5 +15,7 @@ namespace System.Reflection {
 
 		[InlineCode("{$System.Script}.midel({this}.remover, {target})({handler})")]
 		public void RemoveEventHandler(object target, Delegate handler) {}
+
+		internal EventInfo() {}
 	}
 }

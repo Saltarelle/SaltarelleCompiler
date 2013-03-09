@@ -18,5 +18,7 @@ namespace System.Reflection {
 		public static MethodBase GetMethodFromHandle(RuntimeMethodHandle h, RuntimeTypeHandle x) {
 			return null;
 		}
+
+		internal MethodBase() {}
 	}
 }

@@ -47,6 +47,6 @@ namespace System.Reflection {
 		[ScriptName("def")]
 		public Delegate SpecialImplementation { get; private set; }
 
-		private MethodInfo() {}
+		internal MethodInfo() {}
 	}
 }

@@ -23,5 +23,7 @@ namespace System.Reflection {
 		/// </summary>
 		[ScriptName("def")]
 		public Delegate SpecialImplementation { get; private set; }
+
+		internal ConstructorInfo() {}
 	}
 }

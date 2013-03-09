@@ -32,5 +32,7 @@ namespace System.Reflection {
 		/// </summary>
 		[ScriptName("fname")]
 		public string ScriptFieldName { get; private set; }
+
+		internal PropertyInfo() {}
 	}
 }

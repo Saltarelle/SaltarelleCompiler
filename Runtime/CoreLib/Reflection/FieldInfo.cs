@@ -24,5 +24,7 @@ namespace System.Reflection {
 
 		[NonScriptable, EditorBrowsable(EditorBrowsableState.Never)]
 		public static FieldInfo GetFieldFromHandle(RuntimeFieldHandle h, RuntimeTypeHandle x) { return null; }
+
+		internal FieldInfo() {}
 	}
 }
