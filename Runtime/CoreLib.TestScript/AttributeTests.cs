@@ -1,4 +1,7 @@
-﻿using System;
+#define THE_SYMBOL
+
+using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using QUnit;
 
@@ -104,6 +107,15 @@ namespace CoreLib.TestScript {
 			public A11Attribute(int i, string _) {}
 		}
 
+		[Conditional("THE_SYMBOL")]
+		class A12Attribute : Attribute {}
+
+		[Conditional("THE_SYMBOL"), Conditional("OTHER_SYMBOL")]
+		class A13Attribute : Attribute {}
+
+		[Conditional("OTHER_SYMBOL")]
+		class A14Attribute : Attribute {}
+
 		class C1 {}
 
 		[A1(1), A2(2)]
@@ -173,6 +185,11 @@ namespace CoreLib.TestScript {
 
 		[A11(18, "X")]
 		class C21 {}
+
+		[A12, A13, A14]
+		class C22 {
+			[A12, A13, A14] public void M() {}
+		}
 
 		[Test]
 		public void CanGetCustomTypeAttributesForTypeWithNoAttributes() {
@@ -374,6 +391,16 @@ namespace CoreLib.TestScript {
 		public void CreatingAttributeWithInlineCodeConstructorWorks() {
 			dynamic a = typeof(C21).GetCustomAttributes(false)[0];
 			Assert.AreEqual(a.i, 18);
+		}
+
+		[Test]
+		public void ConditionalAttributesWhoseSymbolsAreNotDefinedAreRemoved() {
+			Assert.AreEqual(typeof(C22).GetCustomAttributes(typeof(A12Attribute), false).Length, 1, "A12");
+			Assert.AreEqual(typeof(C22).GetCustomAttributes(typeof(A13Attribute), false).Length, 1, "A13");
+			Assert.AreEqual(typeof(C22).GetCustomAttributes(typeof(A14Attribute), false).Length, 0, "A14");
+			Assert.AreEqual(typeof(C22).GetMethod("M").GetCustomAttributes(typeof(A12Attribute), false).Length, 1, "A12");
+			Assert.AreEqual(typeof(C22).GetMethod("M").GetCustomAttributes(typeof(A13Attribute), false).Length, 1, "A13");
+			Assert.AreEqual(typeof(C22).GetMethod("M").GetCustomAttributes(typeof(A14Attribute), false).Length, 0, "A14");
 		}
 	}
 }

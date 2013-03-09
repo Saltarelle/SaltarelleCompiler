@@ -162,7 +162,7 @@ namespace CoreLib.Plugin {
 
 		private JsExpression GetMetadataDescriptor(ITypeDefinition type, bool isGenericSpecialization) {
 			var properties = new List<JsObjectLiteralProperty>();
-			var scriptableAttributes = type.Attributes.Where(a => _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
+			var scriptableAttributes = type.Attributes.Where(a => !a.IsConditionallyRemoved && _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
 			if (scriptableAttributes.Count != 0) {
 				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, type, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
 			}
