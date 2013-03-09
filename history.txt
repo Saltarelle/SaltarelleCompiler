@@ -1,3 +1,4 @@
+It is now an error to use the 'is' and 'as' operators with types that don't obey the type system.
 Allow parameters for ObjectLiteral constructors to be a type derived from the initialized member or a non-nullable version of a nullable member.
 Fixed issue when a local variable is called 'ss' (#154)
 Added types System.TimeSpan, System.Random (thanks to Marcel F)

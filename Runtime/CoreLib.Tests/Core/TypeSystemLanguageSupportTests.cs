@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
+using Saltarelle.Compiler;
 
 namespace CoreLib.Tests.Core {
 	[TestFixture]
@@ -131,6 +133,62 @@ public class C {
 			var o6 = ss.cast($t3, ss.isValue($t3) && ($t3.x || $t3.y));
 			var o7 = ss.cast(o, ss.isValue(o) && o.x == ss.Int32);
 ");
+		}
+
+		[Test]
+		public void CannotUseTheIsOperatorWithSerializableTypeWithoutTypeCheckCode() {
+			var actual = SourceVerifier.Compile(@"
+[System.Serializable] class C1 {}
+class C {
+	public void M() {
+		var x = new object() is C1;
+	}
+}
+", expectErrors: true);
+			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
+		}
+
+		[Test]
+		public void CannotUseTheIsOperatorWithImportedTypeThatDoesNotObeyTheTypeSystemOrHaveTypeCheckCode() {
+			var actual = SourceVerifier.Compile(@"
+[System.Runtime.CompilerServices.Imported] class C1 {}
+class C {
+	public void M() {
+		var x = new object() is C1;
+	}
+}
+", expectErrors: true);
+			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
+		}
+
+		[Test]
+		public void CannotUseTheAsOperatorWithSerializableTypeWithoutTypeCheckCode() {
+			var actual = SourceVerifier.Compile(@"
+[System.Serializable] class C1 {}
+class C {
+	public void M() {
+		var x = new object() as C1;
+	}
+}
+", expectErrors: true);
+			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7702 && m.FormattedMessage.Contains("'as' operator") && m.FormattedMessage.Contains("C1")));
+		}
+
+		[Test]
+		public void CannotUseTheAsOperatorWithImportedTypeThatDoesNotObeyTheTypeSystemOrHaveTypeCheckCode() {
+			var actual = SourceVerifier.Compile(@"
+[System.Runtime.CompilerServices.Imported] class C1 {}
+class C {
+	public void M() {
+		var x = new object() as C1;
+	}
+}
+", expectErrors: true);
+			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7702 && m.FormattedMessage.Contains("'as' operator") && m.FormattedMessage.Contains("C1")));
 		}
 	}
 }

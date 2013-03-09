@@ -90,6 +90,8 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7202 = Tuple.Create(7202, MessageSeverity.Error, "The {1} {0} cannot be used with reflection because its {2} has a special implementation.");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7700 = Tuple.Create(7700, MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.");
+		public static readonly Tuple<int, MessageSeverity, string> _7701 = Tuple.Create(7701, MessageSeverity.Error, "The type {0} cannot be used with the 'is' operator because there is no way to check its type.");
+		public static readonly Tuple<int, MessageSeverity, string> _7702 = Tuple.Create(7702, MessageSeverity.Error, "The type {0} cannot be used with the 'as' operator because there is no way to check its type. Use a cast instead (which will be compiled to a no-op).");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7800 = Tuple.Create(7800, MessageSeverity.Error, "The program entry point {0} may not have any parameters.");
 		public static readonly Tuple<int, MessageSeverity, string> _7801 = Tuple.Create(7801, MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.");

@@ -166,6 +166,12 @@ namespace CoreLib.Plugin {
 			if (importedCheck != null)
 				return importedCheck;
 
+			var def = targetType.GetDefinition();
+			if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def) || (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def))))) {
+				_errorReporter.Message(Messages._7701, targetType.FullName);
+				return JsExpression.Null;
+			}
+
 			var jsTarget = GetCastTarget(sourceType, targetType, context);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null, context);
@@ -175,8 +181,15 @@ namespace CoreLib.Plugin {
 		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
 			JsExpression jsTarget = CompileImportedTypeCheckCode(targetType, ref expression, context, false);
 
-			if (jsTarget == null)
+			if (jsTarget == null) {
+				var def = targetType.GetDefinition();
+				if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def) || (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def))))) {
+					_errorReporter.Message(Messages._7702, targetType.FullName);
+					return JsExpression.Null;
+				}
+
 				jsTarget = GetCastTarget(sourceType, targetType, context);
+			}
 
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
