@@ -340,14 +340,12 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public static JsExpression ConstructFieldPropertyAccessor(IMethod m, string fieldName, Func<IType, JsExpression> instantiateType, bool isGetter) {
-			var properties = new List<JsObjectLiteralProperty> {
-				new JsObjectLiteralProperty("name", JsExpression.String(m.Name)),
-				new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
-				new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(m.Parameters.Select(p => instantiateType(p.Type)))),
-				new JsObjectLiteralProperty("returnType", instantiateType(m.ReturnType)),
-				new JsObjectLiteralProperty(isGetter ? "fget" : "fset", JsExpression.String(fieldName))
-			};
+		public static JsExpression ConstructFieldPropertyAccessor(IMethod m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, string fieldName, Func<IType, JsExpression> instantiateType, bool isGetter, bool includeDeclaringType) {
+			var properties = GetCommonMemberInfoProperties(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType);
+			properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)));
+			properties.Add(new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(m.Parameters.Select(p => instantiateType(p.Type)))));
+			properties.Add(new JsObjectLiteralProperty("returnType", instantiateType(m.ReturnType)));
+			properties.Add(new JsObjectLiteralProperty(isGetter ? "fget" : "fset", JsExpression.String(fieldName)));
 			if (m.IsStatic)
 				properties.Add(new JsObjectLiteralProperty("isStatic", JsExpression.True));
 			return JsExpression.ObjectLiteral(properties);
@@ -504,9 +502,9 @@ namespace CoreLib.Plugin {
 						break;
 					case PropertyScriptSemantics.ImplType.Field:
 						if (prop.CanGet)
-							properties.Add(new JsObjectLiteralProperty("getter", ConstructFieldPropertyAccessor(prop.Getter, sem.FieldName, instantiateType, isGetter: true)));
+							properties.Add(new JsObjectLiteralProperty("getter", ConstructFieldPropertyAccessor(prop.Getter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, sem.FieldName, instantiateType, isGetter: true, includeDeclaringType: includeDeclaringType)));
 						if (prop.CanSet)
-							properties.Add(new JsObjectLiteralProperty("setter", ConstructFieldPropertyAccessor(prop.Setter, sem.FieldName, instantiateType, isGetter: false)));
+							properties.Add(new JsObjectLiteralProperty("setter", ConstructFieldPropertyAccessor(prop.Setter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, sem.FieldName, instantiateType, isGetter: false, includeDeclaringType: includeDeclaringType)));
 						properties.Add(new JsObjectLiteralProperty("fname", JsExpression.String(sem.FieldName)));
 						break;
 					default:
