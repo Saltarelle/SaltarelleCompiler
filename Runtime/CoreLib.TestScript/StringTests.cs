@@ -226,6 +226,19 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void HtmlEncodeWorks() {
+			Assert.AreEqual("a<\"&'>b".HtmlEncode(), "a&lt;&quot;&amp;&#39;&gt;b");
+		}
+
+		[Test]
+		public void HtmlDecodeWorks() {
+			Assert.AreEqual("abcd".HtmlDecode(), "abcd");
+			Assert.AreEqual("&lt;abcd".HtmlDecode(), "<abcd");
+			Assert.AreEqual("abcd&gt;".HtmlDecode(), "abcd>");
+			Assert.AreEqual("a&lt;&quot;&amp;&#39;&gt;b".HtmlDecode(), "a<\"&'>b");
+		}
+
+		[Test]
 		public void IndexOfCharWorks() {
 			Assert.AreEqual("abc".IndexOf('b'), 1);
 			Assert.AreEqual("abc".IndexOf('d'), -1);

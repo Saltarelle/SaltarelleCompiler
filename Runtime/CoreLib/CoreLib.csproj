@@ -160,6 +160,7 @@
     <Compile Include="Diagnostics\SuppressMessageAttribute.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="ScriptMetadata.cs" />
+    <Compile Include="Web\HttpUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Globalization\CultureInfo.cs" />

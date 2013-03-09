@@ -71,15 +71,27 @@ ss.stringFromChar = function#? DEBUG ss$stringFromChar##(ch, count) {
 };
 
 ss.htmlDecode = function#? DEBUG ss$htmlDecode##(s) {
-	var div = document.createElement('div');
-	div.innerHTML = s;
-	return div.textContent || div.innerText;
+	return s.replace(/&([^;]+);/g, function(_, e) {
+		if (e[0] === '#')
+			return String.fromCharCode(parseInt(e.substr(1)));
+		switch (e) {
+			case 'quot': return '"';
+			case 'apos': return "'";
+			case 'amp': return '&';
+			case 'lt': return '<';
+			case 'gt': return '>';
+			default : return '&' + e + ';';
+		}
+	});
 };
 
 ss.htmlEncode = function#? DEBUG ss$htmlEncode##(s) {
-	var div = document.createElement('div');
-	div.appendChild(document.createTextNode(s));
-	return div.innerHTML.replace(/\"/g, '&quot;');
+	return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+};
+
+ss.jsEncode = function#? DEBUG ss$jsEncode##(s, q) {
+	s = s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+	return q ? '"' + s + '"' : s;
 };
 
 ss.indexOfAnyString = function#? DEBUG ss$indexOfAnyString##(s, chars, startIndex, count) {

@@ -196,4 +196,9 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class StringBuilderTests : CoreLibTestBase {}
+
+	// System.Web
+
+	[TestFixture]
+	public class HttpUtilityTests : CoreLibTestBase {}
 }
