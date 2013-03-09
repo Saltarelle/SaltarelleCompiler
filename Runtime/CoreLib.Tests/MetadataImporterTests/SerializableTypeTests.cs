@@ -434,15 +434,38 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
+		public void ArgumentTypesForJsonConstructorCanBeNonNullableVersionOfFieldType() {
+			TestBothKinds(@"[ObjectLiteral] public C1(int someParameter) {} public int? SomeParameter;", () => {
+				var ctor = FindConstructor("C1", 1);
+				Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+				Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "SomeParameter" }));
+			}, expectErrors: false);
+		}
+
+		[Test]
+		public void ArgumentTypesForJsonConstructorCanBeTypeDerivedFromField() {
+			TestBothKinds(@"[ObjectLiteral] public C1(string someParameter) {} public object SomeParameter;", () => {
+				var ctor = FindConstructor("C1", 1);
+				Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+				Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "SomeParameter" }));
+			}, expectErrors: false);
+		}
+
+		[Test]
 		public void ArgumentTypesForJsonConstructorMustMatchMemberTypes() {
 			TestBothKinds(@"[ObjectLiteral] public C1(int someParameter) {} public string SomeParameter;", () => {
 				Assert.That(AllErrors.Count, Is.EqualTo(1));
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("System.String") && m.Contains("System.Int32")));
 			}, expectErrors: true);
+
+			TestBothKinds(@"[ObjectLiteral] public C1(int? someParameter) {} public int SomeParameter;", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("System.Nullable") && m.Contains("System.Int32")));
+			}, expectErrors: true);
 		}
 
 		[Test]
-		public void JsonConstructorCannotHaveRefOrOutParametersMustMatchMemberTypes() {
+		public void JsonConstructorCannotHaveRefOrOutParameters() {
 			TestBothKinds(@"[ObjectLiteral] public C1(ref int someParameter) {} public string SomeParameter;", () => {
 				Assert.That(AllErrors.Count, Is.EqualTo(1));
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("ref")));

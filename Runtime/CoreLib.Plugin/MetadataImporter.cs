@@ -486,7 +486,7 @@ namespace CoreLib.Plugin {
 							hasError = true;
 						}
 						else if (members.TryGetValue(p.Name.ToLowerInvariant(), out member)) {
-							if (member.ReturnType.Equals(p.Type)) {
+							if (p.Type.GetAllBaseTypes().Any(b => b.Equals(member.ReturnType)) || (member.ReturnType.IsKnownType(KnownTypeCode.NullableOfT) && member.ReturnType.TypeArguments[0].Equals(p.Type))) {
 								parameterToMemberMap.Add(member);
 							}
 							else {
