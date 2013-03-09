@@ -86,21 +86,19 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly ICompilation _compilation;
 		private readonly CSharpAstResolver _resolver;
 		private readonly IRuntimeLibrary _runtimeLibrary;
-		private readonly ISet<string> _definedSymbols;
 
 		internal IDictionary<IVariable, VariableData> variables;
 		internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 		private ISet<string> _usedNames;
 
-		public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
+		public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
 			_metadataImporter = metadataImporter;
 			_namer            = namer;
 			_errorReporter    = errorReporter;
 			_compilation      = compilation;
 			_resolver         = resolver;
 			_runtimeLibrary   = runtimeLibrary;
-			_definedSymbols   = definedSymbols;
 		}
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, ITypeDefinition type, string thisAlias) {
@@ -113,7 +111,7 @@ namespace Saltarelle.Compiler.Compiler {
 			nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
-			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, type, _definedSymbols);
+			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, type);
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {

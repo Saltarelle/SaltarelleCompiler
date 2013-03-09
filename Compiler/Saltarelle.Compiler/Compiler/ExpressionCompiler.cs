@@ -1564,17 +1564,10 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			else if (c.IsUserDefined) {
-				var conversions = new CSharpConversions(_compilation);
-				var preConv = conversions.ExplicitConversion(fromType, c.Method.Parameters[0].Type);
-				if (!preConv.IsIdentityConversion)
-					input = PerformConversion(input, preConv, fromType, c.Method.Parameters[0].Type);
-
+				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type);
 				var impl = _metadataImporter.GetMethodSemantics(c.Method);
 				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.InstantiateType(c.Method.DeclaringType, this), input }, false);
-
-				var postConv = conversions.ExplicitConversion(c.Method.ReturnType, toType);
-				if (!postConv.IsIdentityConversion)
-					result = PerformConversion(result, postConv, c.Method.ReturnType, toType);
+				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType);
 				return result;
 			}
 			else if (c.IsNullLiteralConversion || c.IsConstantExpressionConversion) {

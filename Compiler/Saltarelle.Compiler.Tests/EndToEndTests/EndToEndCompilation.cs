@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			return opts;
 		}
 
-		[Test, Ignore("Debugging purposes")]
+		//[Test, Ignore("Debugging purposes")]
 		public void CanCompileProject() {
 			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\CoreLib.TestScript\CoreLib.TestScript.csproj"));
 			opts.References.Clear();

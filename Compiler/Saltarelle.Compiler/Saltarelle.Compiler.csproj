@@ -62,7 +62,6 @@
     <Compile Include="Compiler\ExpressionCompileResult.cs" />
     <Compile Include="Compiler\ExpressionTreeBuilder.cs" />
     <Compile Include="Compiler\DefaultNamer.cs" />
-    <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
     <Compile Include="Compiler\DoesJsExpressionHaveSideEffects.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\INamer.cs" />
