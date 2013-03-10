@@ -460,7 +460,7 @@ ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
 		return ci.typeDef[ci.sname].apply(null, args);
 	else
 		return ss.applyConstructor(ci.sname ? ci.typeDef[ci.sname] : ci.typeDef, args);
-}
+};
 
 ss.fieldAccess = function#? DEBUG ss$fieldAccess##(fi, obj) {
 	if (fi.isStatic && !!obj)
@@ -472,4 +472,4 @@ ss.fieldAccess = function#? DEBUG ss$fieldAccess##(fi, obj) {
 		obj[fi.sname] = arguments[2];
 	else
 		return obj[fi.sname];
-}
+};
