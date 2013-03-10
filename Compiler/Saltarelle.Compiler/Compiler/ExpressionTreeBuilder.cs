@@ -121,7 +121,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("Convert", new[] { typeof(Expression), typeof(Type) }, new[] {
 				           CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { 
 				               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getMember(rr.Conversion.Method), _instantiateType(methodInfo) }),
-				               _getMember(methodInfo.GetMethods().Single(m => m.Parameters.Count == 2 && m.Parameters[0].Type.FullName == typeof(Type).FullName && m.Parameters[1].Type.FullName == typeof(object).FullName)),
+				               _getMember(methodInfo.GetMethods().Single(m => m.Name == "CreateDelegate" && m.Parameters.Count == 2 && m.Parameters[0].Type.FullName == typeof(Type).FullName && m.Parameters[1].Type.FullName == typeof(object).FullName)),
 				               JsExpression.ArrayLiteral(
 				                   _instantiateType(rr.Type),
 				                   rr.Conversion.Method.IsStatic ? JsExpression.Null : VisitResolveResult(((MethodGroupResolveResult)rr.Input).TargetResult, null)

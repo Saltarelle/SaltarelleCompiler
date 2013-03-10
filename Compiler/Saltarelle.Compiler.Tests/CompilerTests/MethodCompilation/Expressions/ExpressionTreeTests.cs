@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
@@ -840,6 +841,10 @@ void M() {
 
 		[Test]
 		public void CanUseMethodGroupConversion() {
+			if (typeof(MethodInfo).GetMethod("CreateDelegate", new[] { typeof(Type), typeof(object) }) == null) {
+				Assert.Inconclusive("Cannot run this test on .net 4.0 because the MethodInfo.CreateDelegate method does not exist.");
+			}
+
 			AssertCorrect(@"
 int F(string a, double b) { return 0; }
 static double F2(string a, double b) { return 0; }
