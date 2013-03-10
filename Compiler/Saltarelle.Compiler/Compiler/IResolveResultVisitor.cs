@@ -1,4 +1,5 @@
-﻿using ICSharpCode.NRefactory.CSharp.Resolver;
+﻿using System.Diagnostics;
+using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 
 namespace Saltarelle.Compiler.Compiler {
@@ -30,6 +31,7 @@ namespace Saltarelle.Compiler.Compiler {
 	}
 
 	public static class ResolveResultVisitorExtensions {
+		[DebuggerStepThrough]
 		public static TResult DefaultVisitResolveResult<TResult, TData>(this IResolveResultVisitor<TResult, TData> visitor, ResolveResult rr, TData data) {
 			if (rr is ArrayAccessResolveResult) {
 				return visitor.VisitArrayAccessResolveResult((ArrayAccessResolveResult)rr, data);

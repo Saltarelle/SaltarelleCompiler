@@ -340,5 +340,83 @@ public struct C1 {
 			var c2 = FindConstructor("C1", 1);
 			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
 		}
+
+		[Test]
+		public void ScriptSkipAttributeWorksOnConstructors() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+public class C1 {
+	[ScriptName("""")]
+	public C1() {}
+
+	[ScriptName(""X"")]
+	public C1(int x) {}
+
+	[InlineCode(""X"")]
+	public C1(int x, int y) {}
+}
+[Serializable]
+public class C2 {
+	public int x;
+
+	public C2() {}
+
+	[ObjectLiteral]
+	public C3(int x) {}
+}
+public class C3 {
+	[ScriptName(""""), ScriptSkip]
+	public C3() {}
+
+	[ScriptName(""X""), ScriptSkip]
+	public C3(int x) {}
+
+	[InlineCode(""X""), ScriptSkip]
+	public C3(int x, int y) {}
+}
+[Serializable]
+public class C4 {
+	public int x;
+
+	[ScriptSkip]
+	public C4() {}
+
+	[ObjectLiteral, ScriptSkip]
+	public C4(int x) {}
+}");
+
+			var c10 = FindConstructor("C1", 0);
+			var c11 = FindConstructor("C1", 1);
+			var c12 = FindConstructor("C1", 2);
+			var c20 = FindConstructor("C2", 0);
+			var c21 = FindConstructor("C2", 1);
+			Assert.That(c10.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(c10.SkipInInitializer, Is.False);
+			Assert.That(c11.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+			Assert.That(c11.SkipInInitializer, Is.False);
+			Assert.That(c12.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+			Assert.That(c12.SkipInInitializer, Is.False);
+			Assert.That(c20.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.StaticMethod));
+			Assert.That(c20.SkipInInitializer, Is.False);
+			Assert.That(c21.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(c21.SkipInInitializer, Is.False);
+
+			var c30 = FindConstructor("C3", 0);
+			var c31 = FindConstructor("C3", 1);
+			var c32 = FindConstructor("C3", 2);
+			var c40 = FindConstructor("C4", 0);
+			var c41 = FindConstructor("C4", 1);
+			Assert.That(c30.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(c30.SkipInInitializer, Is.True);
+			Assert.That(c31.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+			Assert.That(c31.SkipInInitializer, Is.True);
+			Assert.That(c32.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+			Assert.That(c32.SkipInInitializer, Is.True);
+			Assert.That(c40.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.StaticMethod));
+			Assert.That(c40.SkipInInitializer, Is.True);
+			Assert.That(c41.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(c41.SkipInInitializer, Is.True);
+		}
 	}
 }

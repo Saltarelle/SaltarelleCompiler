@@ -14,10 +14,6 @@ using Saltarelle.Compiler.Tests;
 namespace CoreLib.Tests.OOPEmulatorTests {
 	[TestFixture]
 	public class ClassTests : OOPEmulatorTestBase {
-		private JsFunctionDefinitionExpression CreateFunction(string id) {
-			return JsExpression.FunctionDefinition(new[] { id }, new JsExpressionStatement(JsExpression.Identifier(id.ToUpper())));
-		}
-
 		[Test]
 		public void NonGenericClassWithAllDataWorks() {
 			AssertCorrect(
@@ -68,7 +64,7 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -125,7 +121,7 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -171,7 +167,7 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -196,7 +192,7 @@ var $MyClass = function(x) {
 	{TheBaseClass}.call(this);
 	x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -217,7 +213,7 @@ public class MyClass : Interface1, Interface2, Interface3 {
 var $MyClass = function(x) {
 	x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, null, {Interface1}, {Interface2}, {Interface3});
+{Script}.registerClass(global, 'MyClass', $MyClass, null, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -607,7 +603,7 @@ var $$GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
-		return {Object};
+		return null;
 	}, function() {
 		return [];
 	});
@@ -640,7 +636,7 @@ var $$Outer$Inner = function() {
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
-{Script}.registerInterface(null, '$Interface', $$Interface, []);
+{Script}.registerInterface(null, '$Interface', $$Interface);
 {Script}.registerClass(null, '$Outer', $$Outer);
 {Script}.registerClass(null, '$Outer$Inner', $$Outer$Inner);
 ");
@@ -680,7 +676,7 @@ var $GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
 	{Script}.registerGenericClassInstance($type, {GenericClass}, [T1], function() {
-		return {Object};
+		return null;
 	}, function() {
 		return [];
 	});
@@ -709,7 +705,7 @@ var $NormalClass = function() {
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
-{Script}.registerInterface(exports, 'Interface', $Interface, []);
+{Script}.registerInterface(exports, 'Interface', $Interface);
 {Script}.registerClass(exports, 'NormalClass', $NormalClass);
 {Script}.registerType(exports, 'ResourceClass', $ResourceClass);
 ");
@@ -727,7 +723,7 @@ using System;
 var $D = function() {
 };
 $D.createInstance = function() {
-	return $D.$ctor();
+	return {D}.$ctor();
 };
 $D.$ctor = function() {
 	var $this = {B}.$ctor();
@@ -757,7 +753,7 @@ var $C = function() {
 // I2
 var $I2 = function() {
 };
-{Script}.registerInterface(global, 'I1', $I1, []);
+{Script}.registerInterface(global, 'I1', $I1);
 {Script}.registerClass(global, 'C', $C, Object, $I1);
 {Script}.registerInterface(global, 'I2', $I2, [$I1]);
 ");
@@ -796,7 +792,7 @@ var $D = function() {
 // I3
 var $I3 = function() {
 };
-{Script}.registerClass(global, 'D', $D, null, {I2});
+{Script}.registerClass(global, 'D', $D, null, [{I2}]);
 {Script}.registerInterface(global, 'I3', $I3, [{I2}]);
 ", new [] { "D", "I3" });
 		}
@@ -818,7 +814,7 @@ var $D = function() {
 // I3
 var $I3 = function() {
 };
-{Script}.registerClass(global, 'D', $D, null, {I1}, {I2});
+{Script}.registerClass(global, 'D', $D, null, [{I1}, {I2}]);
 {Script}.registerInterface(global, 'I3', $I3, [{I1}, {I2}]);
 ", new[] { "D", "I3" });
 		}
@@ -842,7 +838,7 @@ var $D = function() {
 // I2
 var $I2 = function() {
 };
-{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), {Script}.makeGenericType({I}, [{String}, {Object}]));
+{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
 {Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
@@ -866,7 +862,7 @@ var $D = function() {
 // I2
 var $I2 = function() {
 };
-{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{C}, {Int32}]), {Script}.makeGenericType({I}, [{String}, {C}]));
+{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
 {Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
@@ -882,6 +878,175 @@ public class D1<T> : I<T> {}
 ", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
+		}
+
+		[Test]
+		public void ReferenceToGenericClassIsReplacedWithClassVariableForReferenceToSameClass() {
+			AssertCorrect(
+@"[System.Runtime.CompilerServices.IncludeGenericArguments(true)]
+public class OtherClass<T1, T2> {
+	public static void F() {}
+}
+[System.Runtime.CompilerServices.IncludeGenericArguments(true)]
+public class MyClass<T1, T2> {
+	public static void F() {}
+	public MyClass() {
+		F();
+		MyClass<T1, T2>.F();
+		MyClass<int, string>.F();
+		MyClass<T2, T1>.F();
+		OtherClass<T1, T2>.F();
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass$2 = function(T1, T2) {
+	var $type = function() {
+		$type.f();
+		$type.f();
+		{Script}.makeGenericType({MyClass}, [{Int32}, {String}]).f();
+		{Script}.makeGenericType({MyClass}, [T2, T1]).f();
+		{Script}.makeGenericType({OtherClass}, [T1, T2]).f();
+	};
+	$type.f = function() {
+	};
+	{Script}.registerGenericClassInstance($type, {MyClass}, [T1, T2], function() {
+		return null;
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+{Script}.registerGenericClass(global, 'MyClass$2', $MyClass$2, 2);
+", new[] { "MyClass" });
+		}
+
+		[Test]
+		public void InheritanceFromImportedSerializableClassIsNotRecordedInInheritanceList() {
+			AssertCorrect(
+@"[System.Runtime.CompilerServices.Imported, System.Serializable] public class B {}
+public class D : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+};
+{Script}.registerClass(global, 'D', $D);
+", new[] { "D" });
+		}
+
+		[Test]
+		public void InheritanceFromImportedSerializableInterfaceIsNotRecordedInInheritanceList() {
+			AssertCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[Imported, Serializable] public interface I1 {}
+[Serializable] public interface I2 {}
+[Serializable] public interface I3 : I1, I2 {}
+public class C : I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// C
+var $C = function() {
+};
+////////////////////////////////////////////////////////////////////////////////
+// I3
+var $I3 = function() {
+};
+{Script}.registerClass(global, 'C', $C, null, [{I2}]);
+{Script}.registerInterface(global, 'I3', $I3, [{I2}]);
+", new[] { "C", "I3" });
+		}
+
+		[Test]
+		public void TypeCheckCodeForSerializableTypesWorks() {
+			AssertCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[Serializable] public class C {}
+[Serializable(TypeCheckCode = ""{this}.X"")] public class D : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+};
+$D.createInstance = function() {
+	return {D}.$ctor();
+};
+$D.$ctor = function() {
+	var $this = {};
+	return $this;
+};
+$D.isInstanceOfType = function(obj) {
+	return obj.X;
+};
+{Script}.registerClass(global, 'D', $D);
+", new[] { "D" });
+		}
+
+		[Test]
+		public void TypeCheckCodeForGenericSerializableTypesWorks() {
+			AssertCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[Serializable] public class C {}
+[Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : B {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D$1 = function(T) {
+	var $type = function() {
+	};
+	$type.createInstance = function() {
+		return $type.$ctor();
+	};
+	$type.$ctor = function() {
+		var $this = {};
+		return $this;
+	};
+	$type.isInstanceOfType = function(obj) {
+		return obj.X == T;
+	};
+	{Script}.registerGenericClassInstance($type, {D}, [T], function() {
+		return null;
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+{Script}.registerGenericClass(global, 'D$1', $D$1, 1);
+", new[] { "D" });
+		}
+
+		[Test]
+		public void UsingUnavailableTypeParameterInSerializableTypeCheckCodeIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+[System.Serializable(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void ReferencingNonExistentTypeInSerializableTypeCheckCodeIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+[System.Serializable(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
+		}
+
+		[Test]
+		public void SyntaxErrorInSerializableTypeCheckCodeIsAnError() {
+			var er = new MockErrorReporter();
+			Process(@"
+[System.Serializable(TypeCheckCode = ""{{this} == 1""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
+", errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
 		}
 	}
 }

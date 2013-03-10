@@ -14,11 +14,11 @@ namespace CoreLib.Tests {
 		public static Tuple<string, MockErrorReporter> Compile(string source, bool expectErrors = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var er = new MockErrorReporter(!expectErrors);
-			var n = new DefaultNamer();
+			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);;
 			var md = new MetadataImporter(er, compilation.Compilation, new CompilerOptions());
-			var rtl = new CoreLib.Plugin.RuntimeLibrary(md, er, compilation.Compilation);
+			var rtl = new CoreLib.Plugin.RuntimeLibrary(md, er, compilation.Compilation, n);
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
 			var compiler = new Saltarelle.Compiler.Compiler.Compiler(md, n, rtl, er);
 

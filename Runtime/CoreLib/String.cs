@@ -25,6 +25,12 @@ namespace System {
 		[InlineCode("{$System.Script}.stringFromChar({$System.String}.fromCharCode({ch}), {count})")]
 		public String(char ch, int count) {}
 
+		[InlineCode("{$System.String}.fromCharCode.apply(null, {value})")]
+		public String(char[] value) {}
+
+		[InlineCode("{$System.String}.fromCharCode.apply(null, {value}.slice({startIndex}, {startIndex} + {length}))")]
+		public String(char[] value, int startIndex, int length) {}
+
 		[IndexerName("Chars")]
 		public char this[int index] { [InlineCode("{this}.charCodeAt({index})")] get { return '\0'; } }
 
@@ -80,17 +86,17 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.concatStrings({s1}, {s2})")]
+		[InlineCode("[{s1}, {s2}].join('')")]
 		public static string Concat(string s1, string s2) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.concatStrings({s1}, {s2}, {s3})")]
+		[InlineCode("[{s1}, {s2}, {s3}].join('')")]
 		public static string Concat(string s1, string s2, string s3) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.concatStrings({s1}, {s2}, {s3}, {s4})")]
+		[InlineCode("[{s1}, {s2}, {s3}, {s4}].join('')")]
 		public static string Concat(string s1, string s2, string s3, string s4) {
 			return null;
 		}
@@ -100,31 +106,33 @@ namespace System {
 		/// </summary>
 		/// <param name="strings">The sequence of strings</param>
 		/// <returns>The concatenated string.</returns>
-		[InlineCode("{$System.Script}.concatStrings({*strings})")]
+		[InlineCode("[{*strings}].join('')")]
 		public static string Concat(params string[] strings) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.concatStrings({o1}, {o2})")]
+		[InlineCode("[{o1}, {o2}].join('')")]
 		public static string Concat(object o1, object o2) {
 			return null;
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[InlineCode("{$System.Script}.concatStrings({o1}, {o2}, {o3})")]
+		[InlineCode("[{o1}, {o2}, {o3}].join('')")]
 		public static string Concat(object o1, object o2, object o3) {
 			return null;
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[InlineCode("{$System.Script}.concatStrings({o1}, {o2}, {o3}, {o4})")]
+		[InlineCode("[{o1}, {o2}, {o3}, {o4}].join('')")]
 		public static string Concat(object o1, object o2, object o3, object o4) {
 			return null;
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[InlineCode("{$System.Script}.concatStrings({*o})")]
+		[InlineCode("[{*o}].join('')")]
 		public static string Concat(params object[] o) {
+			return null;
+		}
+
+		[InlineCode("[{o}].join('')")]
+		public static string Concat(object o) {
 			return null;
 		}
 
@@ -240,6 +248,18 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("{$System.Script}.indexOfString({this}, {$System.String}.fromCharCode({ch}), {startIndex}, {count})")]
+		public int IndexOf(char ch, int startIndex, int count)
+		{
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.indexOfString({this}, {ch}, {startIndex}, {count})")]
+		public int IndexOf(string ch, int startIndex, int count)
+		{
+			return 0;
+		}
+
 		[InlineCode("{$System.Script}.indexOfAnyString({this}, {ch})")]
 		public int IndexOfAny(params char[] ch) {
 			return 0;
@@ -275,6 +295,18 @@ namespace System {
 		}
 
 		public int LastIndexOf(string subString, int startIndex) {
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.lastIndexOfString({this}, {$System.String}.fromCharCode({ch}), {startIndex}, {count})")]
+		public int LastIndexOf(char ch, int startIndex, int count)
+		{
+			return 0;
+		}
+
+		[InlineCode("{$System.Script}.lastIndexOfString({this}, {subString}, {startIndex}, {count})")]
+		public int LastIndexOf(string subString, int startIndex, int count)
+		{
 			return 0;
 		}
 
@@ -343,6 +375,12 @@ namespace System {
 
 		[InlineCode("{$System.Script}.replaceAllString({this}, {oldText}, {replaceText})")]
 		public string Replace(string oldText, string replaceText) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.replaceAllString({this}, {$System.String}.fromCharCode({oldChar}), {$System.String}.fromCharCode({replaceChar}))")]
+		public string Replace(char oldChar, char replaceChar)
+		{
 			return null;
 		}
 
@@ -453,6 +491,24 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.trimString({this}, {values})")]
+		public string Trim(params char[] values)
+		{
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.trimStartString({this}, {values})")]
+		public string TrimStart(params char[] values)
+		{
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.trimEndString({this}, {values})")]
+		public string TrimEnd(params char[] values)
+		{
+			return null;
+		}
+
 		[InlineCode("{$System.Script}.trimStartString({this})")]
 		public string TrimStart() {
 			return null;
@@ -489,6 +545,48 @@ namespace System {
 
 		[InlineCode("{$System.Script}.equalsT({this}, {other})")]
 		public bool Equals(string other) {
+			return false;
+		}
+
+		[InlineCode("{$System.Script}.equalsT({a}, {b})")]
+		public static bool Equals(string a, string b)
+		{
+			return false;
+		}
+
+		[InlineCode("{args}.join({separator})")]
+		public static string Join(string separator, params string[] args)
+		{
+			return null;
+		}
+
+		[InlineCode("{args}.join({separator})")]
+		public static string Join(string separator, params Object[] args)
+		{
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.arrayFromEnumerable({args}).join({separator})")]
+		public static string Join(string separator, IEnumerable<string> args)
+		{
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.arrayFromEnumerable({args}).join({separator})")]
+		public static string Join<T>(string separator, IEnumerable<T> args)
+		{
+			return null;
+		}
+
+		[InlineCode("{args}.slice({startIndex}, {startIndex} + {count}).join({separator})")]
+		public static string Join(string separator, string[] args, int startIndex, int count)
+		{
+			return null;
+		}
+
+		[InlineCode("({this}.indexOf({value}) !== -1)")]
+		public bool Contains(string value)
+		{
 			return false;
 		}
 	}

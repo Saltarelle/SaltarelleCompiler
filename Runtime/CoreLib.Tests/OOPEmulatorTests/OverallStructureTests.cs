@@ -59,7 +59,6 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
 $OuterNamespace_InnerNamespace_SomeEnum.prototype = { value1: 1, value2: 2, value3: 3 };
-{Script}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum, false);
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
 var $OuterNamespace_InnerNamespace_SomeType = function(a) {
@@ -105,9 +104,10 @@ $OuterNamespace_InnerNamespace2_OtherType.prototype = {
 		b2 = 0;
 	}
 };
+{Script}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum);
 {Script}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType', $OuterNamespace_InnerNamespace_SomeType);
 {Script}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
-{Script}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface, []);
+{Script}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface);
 {Script}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
 var d1 = 0;
 var c2 = 0;
@@ -172,8 +172,8 @@ var $I1 = function() {
 };
 {Script}.registerClass(global, 'C3', $C3);
 {Script}.registerClass(global, 'C2', $C2, {C3});
-{Script}.registerInterface(global, 'I1', $I1, []);
-{Script}.registerClass(global, 'C1', $C1, {C2}, {I1});
+{Script}.registerInterface(global, 'I1', $I1);
+{Script}.registerClass(global, 'C1', $C1, {C2}, [{I1}]);
 ");
 		}
 
@@ -199,8 +199,8 @@ var $B = function() {
 var $I = function() {
 };
 {Script}.registerClass(global, 'B', $B);
-{Script}.registerInterface(global, 'I', $I, []);
-{Script}.registerClass(global, 'A', $A, {B}, {I});
+{Script}.registerInterface(global, 'I', $I);
+{Script}.registerClass(global, 'A', $A, {B}, [{I}]);
 ");
 		}
 

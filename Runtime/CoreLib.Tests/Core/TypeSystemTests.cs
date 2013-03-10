@@ -17,14 +17,10 @@ public class C {
 		object o = null;
 		// BEGIN
 		var v1 = (R)o;
-		var v2 = o as R;
-		var v3 = o is R;
 		// END
 	}
 }",
 @"			var v1 = o;
-			var v2 = o;
-			var v3 = ss.isValue(o);
 ");
 		}
 
@@ -42,14 +38,10 @@ public class C {
 		object o = null;
 		// BEGIN
 		var v1 = (I)o;
-		var v2 = o as I;
-		var v3 = o is I;
 		// END
 	}
 }",
 @"			var v1 = o;
-			var v2 = o;
-			var v3 = ss.isValue(o);
 ");
 		}
 
@@ -67,14 +59,10 @@ public class C {
 		object o = null;
 		// BEGIN
 		var v1 = (C1<int>)o;
-		var v2 = o as C1<int>;
-		var v3 = o is C1<int>;
 		// END
 	}
 }",
 @"			var v1 = o;
-			var v2 = o;
-			var v3 = ss.isValue(o);
 ");
 		}
 

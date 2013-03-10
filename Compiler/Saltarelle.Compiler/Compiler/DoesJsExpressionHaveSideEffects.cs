@@ -2,7 +2,7 @@
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.Compiler {
-	internal class DoesJsExpressionHaveSideEffects : RewriterVisitorBase<object> {
+	public class DoesJsExpressionHaveSideEffects : RewriterVisitorBase<object> {
 		private bool _result;
 
 		public static bool Analyze(JsExpression expression) {

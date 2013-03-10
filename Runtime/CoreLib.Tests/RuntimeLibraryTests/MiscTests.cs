@@ -98,32 +98,32 @@ class C<T1, T2> where T1 : class {
 		var $type = function() {
 		};
 		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
-			return Object;
+			return null;
 		}, function() {
 			return [];
 		});
-		ss.makeGenericType($$C$2, [T1, T2]).$f1 = false;
-		ss.makeGenericType($$C$2, [T1, T2]).$f2 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f3 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f4 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f5 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f6 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f7 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f8 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f9 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f10 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f11 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f12 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f13 = 0;
-		ss.makeGenericType($$C$2, [T1, T2]).$f14 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f15 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f16 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f17 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f18 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f19 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f20 = ss.getDefaultValue(T2);
-		ss.makeGenericType($$C$2, [T1, T2]).$f21 = null;
-		ss.makeGenericType($$C$2, [T1, T2]).$f22 = new Date(0);
+		$type.$f1 = false;
+		$type.$f2 = 0;
+		$type.$f3 = 0;
+		$type.$f4 = 0;
+		$type.$f5 = 0;
+		$type.$f6 = 0;
+		$type.$f7 = 0;
+		$type.$f8 = 0;
+		$type.$f9 = 0;
+		$type.$f10 = 0;
+		$type.$f11 = 0;
+		$type.$f12 = 0;
+		$type.$f13 = 0;
+		$type.$f14 = null;
+		$type.$f15 = null;
+		$type.$f16 = null;
+		$type.$f17 = null;
+		$type.$f18 = null;
+		$type.$f19 = null;
+		$type.$f20 = ss.getDefaultValue(T2);
+		$type.$f21 = null;
+		$type.$f22 = new Date(0);
 		return $type;
 	};
 	ss.registerGenericClass(null, '$C$2', $$C$2, 2);
@@ -135,7 +135,7 @@ class C<T1, T2> where T1 : class {
 	// X
 	var $$X = function() {
 	};
-	ss.registerInterface(null, '$I', $$I, []);
+	ss.registerInterface(null, '$I', $$I);
 	ss.registerClass(null, '$X', $$X);
 })();
 ");

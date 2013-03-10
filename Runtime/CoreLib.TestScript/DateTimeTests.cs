@@ -425,6 +425,12 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void SubtractMethodReturningTimeSpanWorks() {
+			Assert.AreEqual(new DateTime(2011, 7, 12).Subtract(new DateTime(2011, 7, 11)), new TimeSpan(1, 0, 0, 0));
+			Assert.AreEqual(new DateTime(2011, 7, 12, 15, 0, 0).Subtract(new DateTime(2011, 7, 11, 13, 0, 0)), new TimeSpan(1, 2, 0, 0));
+		}
+
+		[Test]
 		public void AreEqualWorks() {
 			Assert.IsTrue(DateTime.AreEqual(new DateTime(2011, 7, 12), new DateTime(2011, 7, 12)));
 			Assert.IsFalse(DateTime.AreEqual(new DateTime(2011, 7, 12), new DateTime(2011, 7, 13)));

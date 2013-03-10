@@ -45,6 +45,12 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("{$System.Int32}.tryParse({s}, {result}, 0)")]
+		public static bool TryParse(string s, out ulong result) {
+			result = 0;
+			return false;
+		}
+
 		/// <summary>
 		/// Converts the value to its string representation.
 		/// </summary>

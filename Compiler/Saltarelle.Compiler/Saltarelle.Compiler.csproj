@@ -59,8 +59,8 @@
     </Compile>
     <Compile Include="AttributeReader.cs" />
     <Compile Include="CompilerOptions.cs" />
-    <Compile Include="Compiler\DefaultNamer.cs" />
-    <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
+    <Compile Include="Compiler\ExpressionCompileResult.cs" />
+    <Compile Include="Compiler\ExpressionTreeBuilder.cs" />
     <Compile Include="Compiler\DoesJsExpressionHaveSideEffects.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\INamer.cs" />
@@ -73,6 +73,7 @@
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
     <Compile Include="IJSTypeSystemRewriter.cs" />
+    <Compile Include="IRuntimeContext.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />

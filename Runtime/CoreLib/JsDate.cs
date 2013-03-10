@@ -401,6 +401,11 @@ namespace System {
 			return 0;
 		}
 
+		[InlineCode("new {$System.TimeSpan}(({this} - {value}) * 10000)")]
+		public TimeSpan Subtract(JsDate value) {
+			return default(TimeSpan);
+		}
+
 		/// <summary>
 		/// Compares two dates
 		/// </summary>

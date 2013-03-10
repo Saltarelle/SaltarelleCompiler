@@ -371,5 +371,12 @@ namespace CoreLib.TestScript {
 			l.RemoveAt(1);
 			Assert.AreEqual(l, new[] { "x", "z" });
 		}
+
+		[Test]
+		public void RepeatWorks() {
+			Assert.AreEqual(Array.Repeat(10, 0), new int[0]);
+			Assert.AreEqual(Array.Repeat(42, 3), new[] { 42, 42, 42 });
+			Assert.AreEqual(Array.Repeat("X", 5), new[] { "X", "X", "X", "X", "X" });
+		}
 	}
 }

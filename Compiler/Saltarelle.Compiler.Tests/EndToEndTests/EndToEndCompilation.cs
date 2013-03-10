@@ -39,9 +39,10 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 
 		//[Test, Ignore("Debugging purposes")]
 		public void CanCompileProject() {
-			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
+			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\CoreLib.TestScript\CoreLib.TestScript.csproj"));
 			opts.References.Clear();
 			opts.References.Add(new Reference(Common.MscorlibPath));
+			opts.References.Add(new Reference(Path.GetFullPath(@"../../../Runtime/QUnit/bin/Saltarelle.QUnit.dll")));
 			opts.AlreadyCompiled = true;
 			try {
 				var er = new MockErrorReporter();

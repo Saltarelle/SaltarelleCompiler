@@ -9,8 +9,6 @@ namespace Saltarelle.Compiler {
 	public static class Messages {
 		public static readonly Message _7500 = Tuple.Create(7500, MessageSeverity.Error, "Cannot use the type {0} in the inheritance list for type {1} because it is marked as not usable from script.");
 		public static readonly Message _7501 = Tuple.Create(7501, MessageSeverity.Error, "More than one unnamed constructor for the type {0}.");
-		public static readonly Message _7503 = Tuple.Create(7503, MessageSeverity.Error, "Chaining from a normal constructor to a static method constructor is not supported.");
-		public static readonly Message _7504 = Tuple.Create(7504, MessageSeverity.Error, "Chaining from a normal constructor to a constructor implemented as inline code is not supported.");
 		public static readonly Message _7505 = Tuple.Create(7505, MessageSeverity.Error, "This constructor cannot be used from script.");
 		public static readonly Message _7506 = Tuple.Create(7506, MessageSeverity.Error, "Property {0}, declared as being a native indexer, is not an indexer with exactly one argument.");
 		public static readonly Message _7507 = Tuple.Create(7507, MessageSeverity.Error, "Cannot use the property {0} from script.");
@@ -35,7 +33,6 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7529 = Tuple.Create(7529, MessageSeverity.Error, "Cannot compile this dynamic invocation because all the applicable methods do not have the same script name. If you want to call the method with this exact name, cast the invocation target to dynamic.");
 		public static readonly Message _7530 = Tuple.Create(7530, MessageSeverity.Error, "Cannot compile this dynamic invocation because at least one of the applicable methods is not a normal method. If you want to call the method with this exact name, cast the invocation target to dynamic.");
 		public static readonly Message _7531 = Tuple.Create(7531, MessageSeverity.Error, "Cannot compile this dynamic invocation because the applicable methods are compiled in different ways.");
-		public static readonly Message _7532 = Tuple.Create(7532, MessageSeverity.Error, "Chaining from a normal constructor to a JSON constructor is not supported.");
 		public static readonly Message _7533 = Tuple.Create(7533, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.");
 		public static readonly Message _7535 = Tuple.Create(7535, MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.");
 		public static readonly Message _7536 = Tuple.Create(7536, MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.");

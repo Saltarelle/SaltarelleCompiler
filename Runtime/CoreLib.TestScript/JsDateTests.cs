@@ -362,6 +362,12 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void SubtractMethodReturningTimeSpanWorks() {
+			Assert.AreEqual(new JsDate(2011, 6, 12).Subtract(new JsDate(2011, 6, 11)), new TimeSpan(1, 0, 0, 0));
+			Assert.AreEqual(new JsDate(2011, 6, 12, 15, 0, 0).Subtract(new JsDate(2011, 6, 11, 13, 0, 0)), new TimeSpan(1, 2, 0, 0));
+		}
+
+		[Test]
 		public void DateEqualityWorks() {
 			Assert.IsTrue(new JsDate(2011, 7, 12) == new JsDate(2011, 7, 12));
 			Assert.IsFalse(new JsDate(2011, 7, 12) == new JsDate(2011, 7, 13));

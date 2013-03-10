@@ -39,6 +39,29 @@ namespace CoreLib.TestScript {
 
 		[Imported] public interface IImported {}
 
+		[Serializable]
+		public class BS {
+			public int X;
+			public BS(int x) {
+				X = x;
+			}
+		}
+
+		public class DS : BS {
+			public int GetX() { return X; }
+			public DS(int x) : base(x) {
+			}
+		}
+
+		public class CS2 : Record {
+			public int X;
+		}
+
+		[Serializable(TypeCheckCode = "{$System.Script}.isValue({this}.y)")]
+		public class DS2 : BS {
+			public DS2() : base(0) {}
+		}
+
 		[Test]
 		public void FullNamePropertyReturnsTheNameWithTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).FullName, "CoreLib.TestScript.TypeSystemTests");
@@ -302,6 +325,31 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue (Type.IsInstanceOfType(new E1(), typeof(int)));
 			Assert.IsTrue (Type.IsInstanceOfType(new E1(), typeof(object)));
 			Assert.IsFalse(Type.IsInstanceOfType(null, typeof(object)));
+
+			Assert.IsFalse(typeof(IsAssignableFromTypes.C1).IsInstanceOfType(new object()));
+			Assert.IsTrue (typeof(object).IsInstanceOfType(new IsAssignableFromTypes.C1()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I1).IsInstanceOfType(new object()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.D1).IsInstanceOfType(new IsAssignableFromTypes.C1()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.C1).IsInstanceOfType(new IsAssignableFromTypes.D1()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I1).IsInstanceOfType(new IsAssignableFromTypes.D1()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.C2<int>).IsInstanceOfType(new IsAssignableFromTypes.D2<int>()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.C2<string>).IsInstanceOfType(new IsAssignableFromTypes.D2<int>()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I2<int>).IsInstanceOfType(new IsAssignableFromTypes.D2<int>()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I2<string>).IsInstanceOfType(new IsAssignableFromTypes.D2<int>()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I1).IsInstanceOfType(new IsAssignableFromTypes.D2<int>()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.C2<string>).IsInstanceOfType(new IsAssignableFromTypes.D3()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.C2<int>).IsInstanceOfType(new IsAssignableFromTypes.D3()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I2<int>).IsInstanceOfType(new IsAssignableFromTypes.D3()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I2<string>).IsInstanceOfType(new IsAssignableFromTypes.D3()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I1).IsInstanceOfType(new IsAssignableFromTypes.D4()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I3).IsInstanceOfType(new IsAssignableFromTypes.D4()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I4).IsInstanceOfType(new IsAssignableFromTypes.D4()));
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I1).IsInstanceOfType(new IsAssignableFromTypes.X2()));
+			Assert.IsFalse(typeof(IsAssignableFromTypes.C2<>).IsInstanceOfType(new IsAssignableFromTypes.D3()));
+			Assert.IsTrue (typeof(E1).IsInstanceOfType(new E2()));
+			Assert.IsTrue (typeof(int).IsInstanceOfType(new E1()));
+			Assert.IsTrue (typeof(object).IsInstanceOfType(new E1()));
+			Assert.IsFalse(typeof(object).IsInstanceOfType(null));
 		}
 
 		public class BaseUnnamedConstructorWithoutArgumentsTypes {
@@ -417,7 +465,9 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void ConstructingInstanceWithNamedConstructorWorks() {
-			Assert.AreEqual(new ConstructingInstanceWithNamedConstructorTypes.D().GetMessage(), "The message from ctor");
+			var d = new ConstructingInstanceWithNamedConstructorTypes.D();
+			Assert.AreEqual(d.GetType(), typeof(ConstructingInstanceWithNamedConstructorTypes.D));
+			Assert.AreEqual(d.GetMessage(), "The message from ctor");
 		}
 
 		public class BaseMethodInvocationTypes {
@@ -538,6 +588,27 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void CastingUndefinedToOtherTypeShouldReturnUndefined() {
 			Assert.AreEqual(Type.GetScriptType((C)Script.Undefined), "undefined");
+		}
+
+		[Test]
+		public void NonSerializableTypeCanInheritFromSerializableType() {
+			var d = new DS(42);
+			Assert.AreEqual(d.X, 42, "d.X");
+			Assert.AreEqual(d.GetX(), 42, "d.GetX");
+		}
+		
+		[Test]
+		public void InheritingFromRecordWorks() {
+			var c = new CS2() { X = 42 };
+			Assert.AreEqual(c.X, 42);
+		}
+
+		[Test]
+		public void InstanceOfWorksForSerializableTypesWithCustomTypeCheckCode() {
+			object o1 = new { x = 1 };
+			object o2 = new { x = 1, y = 2 };
+			Assert.IsFalse(typeof(DS2).IsInstanceOfType(o1), "o1 should not be of type");
+			Assert.IsTrue (typeof(DS2).IsInstanceOfType(o2), "o2 should be of type");
 		}
 	}
 }

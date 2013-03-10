@@ -81,6 +81,7 @@ public C() {
 	for (;;) {
 		switch ($state) {
 			case 0: {
+				{sm_Object}.call(this);
 				$a = 0, $b = 0, $c = 0;
 				$state = 1;
 				continue $loop1;

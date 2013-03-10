@@ -3,10 +3,10 @@
 // This source code is subject to terms and conditions of the Apache License, Version 2.0.
 //
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace System {
-
 	[Imported(ObeysTypeSystem = true)]
 	[IgnoreNamespace]
 	[ScriptName("Function")]
@@ -173,6 +173,11 @@ namespace System {
 		[InlineCode("!{$System.Script}.staticEquals({a}, {b})")]
 		public static bool operator!=(Delegate a, Delegate b) {
 			return false;
+		}
+
+		[InlineCode("{$System.Script}.midel({method}, {firstArgument})")]
+		public static Delegate CreateDelegate(Type type, object firstArgument, MethodInfo method) {
+			return null;
 		}
 	}
 }

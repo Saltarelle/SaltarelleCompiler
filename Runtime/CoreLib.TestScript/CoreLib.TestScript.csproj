@@ -61,9 +61,15 @@
     <Compile Include="ActivatorTests.cs" />
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
+    <Compile Include="AttributeTests.cs" />
     <Compile Include="CharTests.cs" />
     <Compile Include="AsyncTests.cs" />
     <Compile Include="ComparerTests.cs" />
+    <Compile Include="HttpUtilityTests.cs" />
+    <Compile Include="ReadOnlyCollectionTests.cs" />
+    <Compile Include="ExpressionTests.cs" />
+    <Compile Include="GetMembersTests.cs" />
+    <Compile Include="ReflectionTests.cs" />
     <Compile Include="IFormattableTests.cs" />
     <Compile Include="RuntimeHelpersTests.cs" />
     <Compile Include="IListTests.cs" />
@@ -83,6 +89,7 @@
     <Compile Include="IteratorBlockTests.cs" />
     <Compile Include="QueueTests.cs" />
     <Compile Include="BooleanTests.cs" />
+    <Compile Include="TimeSpanTests.cs" />
     <Compile Include="ByteTests.cs" />
     <Compile Include="StackTests.cs" />
     <Compile Include="GenericDictionaryTests.cs" />
@@ -97,6 +104,7 @@
     <Compile Include="UInt32Tests.cs" />
     <Compile Include="UInt64Tests.cs" />
     <Compile Include="TupleTests.cs" />
+    <Compile Include="RandomTests.cs" />
     <Compile Include="SingleTests.cs" />
     <Compile Include="ScriptTests.cs" />
     <Compile Include="SByteTests.cs" />

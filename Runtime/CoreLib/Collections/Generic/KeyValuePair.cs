@@ -10,10 +10,6 @@ namespace System.Collections.Generic {
 	[Serializable]
 	[Imported]
 	public sealed class KeyValuePair<TKey, TValue> {
-
-		public KeyValuePair() {
-		}
-
 		public KeyValuePair(TKey key, TValue value) {
 		} 
 

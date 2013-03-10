@@ -44,8 +44,8 @@ Task Build-Compiler -Depends Clean, Generate-VersionInfo, Fix-AntlrLocalization 
 	copy "$baseDir\Compiler\SCTask\Saltarelle.Compiler.targets" "$outDir"
 
 	md -Force "$outDir\extensibility" > $null
-	copy "$baseDir\Compiler\SCExe\bin\*.*" "$outDir\extensibility" > $null
-	del "$outDir\extensibility\sc.*" > $null
+	copy "$baseDir\Compiler\SCExeWorker\bin\*.*" "$outDir\extensibility" > $null
+	del "$outDir\extensibility\SCExeWorker.*" > $null
 }
 
 Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {

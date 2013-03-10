@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -90,21 +86,19 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly ICompilation _compilation;
 		private readonly CSharpAstResolver _resolver;
 		private readonly IRuntimeLibrary _runtimeLibrary;
-		private readonly ISet<string> _definedSymbols;
 
 		internal IDictionary<IVariable, VariableData> variables;
 		internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 		private ISet<string> _usedNames;
 
-		public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary, ISet<string> definedSymbols) {
+		public MethodCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, ICompilation compilation, CSharpAstResolver resolver, IRuntimeLibrary runtimeLibrary) {
 			_metadataImporter = metadataImporter;
 			_namer            = namer;
 			_errorReporter    = errorReporter;
 			_compilation      = compilation;
 			_resolver         = resolver;
 			_runtimeLibrary   = runtimeLibrary;
-			_definedSymbols   = definedSymbols;
 		}
 
 		private void CreateCompilationContext(AstNode entity, IMethod method, ITypeDefinition type, string thisAlias) {
@@ -117,7 +111,7 @@ namespace Saltarelle.Compiler.Compiler {
 			nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_resolver).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.ResolveResult != null).ToDictionary(f => f.ResolveResult);
 
-			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, type, _definedSymbols);
+			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, type);
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(EntityDeclaration entity, BlockStatement body, IMethod method, MethodScriptSemantics impl) {
@@ -143,18 +137,14 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(ctor, constructor, constructor.DeclaringTypeDefinition, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
 				IList<JsStatement> body = new List<JsStatement>();
-				body.AddRange(PrepareParameters(constructor.Parameters, variables, impl.ExpandParams));
+				body.AddRange(PrepareParameters(constructor.Parameters, variables, expandParams: impl.ExpandParams, staticMethodWithThisAsFirstArgument: false));
 
-				var systemObject = _compilation.FindType(KnownTypeCode.Object);
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
 					if (ctor != null && !ctor.Initializer.IsNull) {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 					}
-					else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
-						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringTypeDefinition, true));
-					}
 					else {
-						body.Add(new JsVariableDeclarationStatement(_namer.ThisAlias, JsExpression.ObjectLiteral()));
+						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringTypeDefinition, true));
 					}
 				}
 
@@ -171,7 +161,7 @@ namespace Saltarelle.Compiler.Compiler {
 					if (ctor != null && !ctor.Initializer.IsNull) {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
 					}
-					else if (!constructor.DeclaringType.DirectBaseTypes.Any(t => t.Equals(systemObject))) {
+					else {
 						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.DeclaringTypeDefinition, false));
 					}
 				}
@@ -228,7 +218,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 				if (property.IsStatic) {
-					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), _statementCompiler);
 					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -251,7 +241,7 @@ namespace Saltarelle.Compiler.Compiler {
 				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 
 				if (property.IsStatic) {
-					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), _statementCompiler);
 					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -276,7 +266,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), _statementCompiler);
 					args = new[] { valueName };
 				}
 				else if (impl.AddMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -307,7 +297,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)));
+					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.DeclaringTypeDefinition), _statementCompiler);
 					args = new[] { valueName };
 				}
 				else if (impl.RemoveMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -330,11 +320,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static List<JsStatement> PrepareParameters(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, bool expandParams) {
+		public static List<JsStatement> PrepareParameters(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, bool expandParams, bool staticMethodWithThisAsFirstArgument) {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
 				result = result ?? new List<JsStatement>();
-				result.Add(new JsVariableDeclarationStatement(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1))));
+				result.Add(new JsVariableDeclarationStatement(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
 			}
 			foreach (var p in parameters) {
 				if (!p.IsOut && !p.IsRef && variables[p].UseByRefSemantics) {

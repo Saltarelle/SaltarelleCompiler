@@ -12,8 +12,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitArrayLiteralExpression(JsArrayLiteralExpression expression, object data) {
-			_result = true;
-			return expression;
+			if (expression.Elements.Count > 1) {
+				_result = true;
+				return expression;
+			}
+			else {
+				return base.VisitArrayLiteralExpression(expression, data);
+			}
 		}
 
 		public override JsExpression VisitBinaryExpression(JsBinaryExpression expression, object data) {
@@ -42,8 +47,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitObjectLiteralExpression(JsObjectLiteralExpression expression, object data) {
-			_result = true;
-			return expression;
+			if (expression.Values.Count > 0) {
+				_result = true;
+				return expression;
+			}
+			else {
+				return base.VisitObjectLiteralExpression(expression, data);
+			}
 		}
 
 		public override JsExpression VisitUnaryExpression(JsUnaryExpression expression, object data) {

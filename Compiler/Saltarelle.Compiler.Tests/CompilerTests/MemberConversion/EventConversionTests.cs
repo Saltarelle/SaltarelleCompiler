@@ -2,6 +2,7 @@
 using FluentAssertions;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
+using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 	[TestFixture]
@@ -27,7 +28,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void InstanceAutoEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
-			var metadataImporter = new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + e.Name, generateCode: false)),
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
+			                                                  GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + e.Name, generateCode: false)),
 			                                                  GetAutoEventBackingFieldName = e => { throw new InvalidOperationException(); }
 			                                                };
 			Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, metadataImporter: metadataImporter);
@@ -59,7 +61,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void InstanceManualEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
-			var metadataImporter = new MockMetadataImporter { GetEventSemantics = f => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + f.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + f.Name, generateCode: false)) };
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)), GetEventSemantics = f => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + f.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + f.Name, generateCode: false)) };
 			Compile(new[] { "class C { public event System.EventHandler SomeProp { add {} remove{} } }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
 			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();

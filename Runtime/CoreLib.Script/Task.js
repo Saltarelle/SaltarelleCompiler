@@ -253,7 +253,7 @@ ss_Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
 	return tcs.task;
 };
 
-ss.registerClass(global, 'ss.Task', ss_Task, null, ss_IDisposable);
+ss.registerClass(global, 'ss.Task', ss_Task, null, [ss_IDisposable]);
 
 ////////////////////////////////////////////////////////////////////////////////
 // TaskStatus

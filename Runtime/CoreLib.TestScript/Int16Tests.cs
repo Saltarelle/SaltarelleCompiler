@@ -70,6 +70,38 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void TryParseWorks() {
+			short numberResult;
+			bool result = short.TryParse("234", out numberResult);
+			Assert.IsTrue(result);
+			Assert.AreEqual(numberResult, 234);
+
+			result = short.TryParse("", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = short.TryParse(null, out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = short.TryParse("notanumber", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = short.TryParse("54768", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = short.TryParse("-55678", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = short.TryParse("2.5", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
 		public void ParseWithoutRadixWorks() {
 			Assert.AreEqual(short.Parse("234"), 234);
 		}

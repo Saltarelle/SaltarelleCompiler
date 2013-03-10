@@ -8,4 +8,4 @@ ss_IEnumerator.prototype = {
 	reset: null
 };
 
-ss.registerInterface(global, 'ss.IEnumerator', ss_IEnumerator, ss_IDisposable);
+ss.registerInterface(global, 'ss.IEnumerator', ss_IEnumerator, [ss_IDisposable]);

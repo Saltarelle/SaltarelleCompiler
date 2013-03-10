@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler.Compiler {
 		/// <summary>
 		/// Determine whether it matters if an expression is run before or after another sequence of statements/expressions
 		/// </summary>
-		public static bool DoesOrderMatter(JsExpression expr1, ExpressionCompiler.Result expr2) {
+		public static bool DoesOrderMatter(JsExpression expr1, ExpressionCompileResult expr2) {
 			// The algorithm is rather simple and conservative: For the both expression (sequences), determine a) which locals are read, b) which locals are written, and c) whether can possibly read or write any external state.
 			// The order of the two expressions then matters if and only if:
 			// 1) Either expression writes a local that the other uses,
@@ -121,7 +121,7 @@ namespace Saltarelle.Compiler.Compiler {
 		/// Determine whether it matters if an expression is run before or after another expression
 		/// </summary>
 		public static bool DoesOrderMatter(JsExpression expr1, JsExpression expr2) {
-			return DoesOrderMatter(expr1, new ExpressionCompiler.Result(expr2, new JsStatement[0]));
+			return DoesOrderMatter(expr1, new ExpressionCompileResult(expr2, new JsStatement[0]));
 		}
 	}
 }

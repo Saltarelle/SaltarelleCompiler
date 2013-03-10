@@ -82,7 +82,12 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// <summary>
 		/// Whether the param array to this method is output to script in expanded form. Methods that use this option can only be invoked in expanded form.
 		/// </summary>
-		public bool ExpandParams { get; set; }
+		public bool ExpandParams { get; private set; }
+
+		/// <summary>
+		/// Whether this constructor can be skipped when used as an initializer (": this()" or ": base()").
+		/// </summary>
+		public bool SkipInInitializer { get; private set; }
 
 		private ReadOnlyCollection<IMember> _parameterToMemberMap;
 		/// <summary>
@@ -96,28 +101,28 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
-		public static ConstructorScriptSemantics Unnamed(bool generateCode = true, bool expandParams = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode, ExpandParams = expandParams };
+		public static ConstructorScriptSemantics Unnamed(bool generateCode = true, bool expandParams = false, bool skipInInitializer = false) {
+			return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
 		}
 
-		public static ConstructorScriptSemantics Named(string name, bool generateCode = true, bool expandParams = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode, ExpandParams = expandParams };
+		public static ConstructorScriptSemantics Named(string name, bool generateCode = true, bool expandParams = false, bool skipInInitializer = false) {
+			return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
 		}
 
-		public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool expandParams = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, ExpandParams = expandParams };
+		public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool expandParams = false, bool skipInInitializer = false) {
+			return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
 		}
 
-		public static ConstructorScriptSemantics InlineCode(string literalCode) {
-			return new ConstructorScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, GenerateCode = false };
+		public static ConstructorScriptSemantics InlineCode(string literalCode, bool skipInInitializer = false) {
+			return new ConstructorScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, GenerateCode = false, SkipInInitializer = skipInInitializer };
 		}
 
 		public static ConstructorScriptSemantics NotUsableFromScript() {
 			return new ConstructorScriptSemantics { Type = ImplType.NotUsableFromScript, GenerateCode = false };
 		}
 
-		public static ConstructorScriptSemantics Json(IEnumerable<IMember> parameterToMemberMap) {
-			return new ConstructorScriptSemantics { Type = ImplType.Json, _parameterToMemberMap = parameterToMemberMap.AsReadOnly(), GenerateCode = false };
+		public static ConstructorScriptSemantics Json(IEnumerable<IMember> parameterToMemberMap, bool skipInInitializer = false) {
+			return new ConstructorScriptSemantics { Type = ImplType.Json, _parameterToMemberMap = parameterToMemberMap.AsReadOnly(), GenerateCode = false, SkipInInitializer = skipInInitializer };
 		}
 	}
 }

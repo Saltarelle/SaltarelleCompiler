@@ -210,7 +210,7 @@ namespace Saltarelle.Compiler.Driver {
 				                        .Where(a => a != null);
 			}
 
-			private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker) };
+			private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
 
 			private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
 				container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
@@ -246,8 +246,7 @@ namespace Saltarelle.Compiler.Driver {
 						RegisterPlugin(container, plugin);
 
 					// Compile the script
-					container.Register(Component.For<INamer>().ImplementedBy<DefaultNamer>(),
-					                   Component.For<IErrorReporter>().Instance(er),
+					container.Register(Component.For<IErrorReporter>().Instance(er),
 					                   Component.For<CompilerOptions>().Instance(options),
 					                   Component.For<ICompilation>().Instance(compilation.Compilation),
 					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()

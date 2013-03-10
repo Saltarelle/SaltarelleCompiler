@@ -77,5 +77,10 @@ namespace System {
 		public int GetUpperBound(int dimension) {
 			return 0;
 		}
+
+		[InlineCode("{$System.Script}.repeat({value}, {count})")]
+		public static T[] Repeat<T>(T value, int count) {
+			return null;
+		}
 	}
 }

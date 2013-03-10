@@ -111,9 +111,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
-			IList<IType> typeTypeArguments = method.DeclaringType is ParameterizedType ? ((ParameterizedType)method.DeclaringType).TypeArguments : null;
-			IList<IType> methodTypeArguments = method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : null;
-
 			var text = new StringBuilder();
 			var substitutions = new Dictionary<string, Tuple<JsExpression, bool>>();
 			bool hasErrors = false;
@@ -162,7 +159,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						var l = token.OwnerType == EntityType.TypeDefinition ? typeTypeArguments : methodTypeArguments;
+						var l = token.OwnerType == EntityType.TypeDefinition ? method.DeclaringType.TypeArguments : method.TypeArguments;
 						substitutions[s] = Tuple.Create(l != null ? resolveTypeArgument(l[token.Index]) : JsExpression.Null, false);
 						break;
 					}

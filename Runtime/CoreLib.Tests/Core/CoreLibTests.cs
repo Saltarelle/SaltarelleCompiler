@@ -20,6 +20,12 @@ namespace CoreLib.Tests.Core {
 	public class AsyncTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class AttributeTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class TimeSpanTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class BooleanTests : CoreLibTestBase {}
 
 	[TestFixture]
@@ -89,6 +95,9 @@ namespace CoreLib.Tests.Core {
 	public class MathTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class RandomTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class MultidimArrayTests : CoreLibTestBase {}
 
 	[TestFixture]
@@ -98,16 +107,10 @@ namespace CoreLib.Tests.Core {
 	public class ObjectTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class PromiseTests : CoreLibTestBase {
-		private static readonly Lazy<string> _simplePromiseScript = new Lazy<string>(() => File.ReadAllText(@"SimplePromise.js"));
-		internal static string SimplePromiseScript { get { return _simplePromiseScript.Value; } }
+	public class PromiseTests : CoreLibTestBase {}
 
-		protected override IEnumerable<string> ScriptSources {
-			get {
-				return base.ScriptSources.Concat(new[] { SimplePromiseScript });
-			}
-		}
-	}
+	[TestFixture]
+	public class ReflectionTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class SByteTests : CoreLibTestBase {}
@@ -161,10 +164,25 @@ namespace CoreLib.Tests.Core {
 	[TestFixture]
 	public class QueueTests : CoreLibTestBase {}
 
+	// System.Collections.ObjectModel
+
+	[TestFixture]
+	public class ReadOnlyCollectionTests : CoreLibTestBase {}
+
+	// System.Linq.Expressions
+
+	[TestFixture]
+	public class ExpressionTests : CoreLibTestBase {}
+
 	// System.Serialization
 
 	[TestFixture]
 	public class JsonTests : CoreLibTestBase {}
+
+	// System.Reflection
+
+	[TestFixture]
+	public class GetMembersTests : CoreLibTestBase {}
 
 	// System.Runtime.CompilerServices
 
@@ -178,4 +196,9 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class StringBuilderTests : CoreLibTestBase {}
+
+	// System.Web
+
+	[TestFixture]
+	public class HttpUtilityTests : CoreLibTestBase {}
 }

@@ -22,10 +22,6 @@ ss.compareStrings = function#? DEBUG ss$compareStrings##(s1, s2, ignoreCase) {
 	return 1;
 };
 
-ss.concatStrings = function#? DEBUG ss$concatStrings##() {
-	return Array.prototype.join.call(arguments, '');
-};
-
 ss.endsWithString = function#? DEBUG ss$endsWithString##(s, suffix) {
 	if (!suffix.length) {
 		return true;
@@ -75,15 +71,27 @@ ss.stringFromChar = function#? DEBUG ss$stringFromChar##(ch, count) {
 };
 
 ss.htmlDecode = function#? DEBUG ss$htmlDecode##(s) {
-	var div = document.createElement('div');
-	div.innerHTML = s;
-	return div.textContent || div.innerText;
+	return s.replace(/&([^;]+);/g, function(_, e) {
+		if (e[0] === '#')
+			return String.fromCharCode(parseInt(e.substr(1)));
+		switch (e) {
+			case 'quot': return '"';
+			case 'apos': return "'";
+			case 'amp': return '&';
+			case 'lt': return '<';
+			case 'gt': return '>';
+			default : return '&' + e + ';';
+		}
+	});
 };
 
 ss.htmlEncode = function#? DEBUG ss$htmlEncode##(s) {
-	var div = document.createElement('div');
-	div.appendChild(document.createTextNode(s));
-	return div.innerHTML.replace(/\"/g, '&quot;');
+	return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+};
+
+ss.jsEncode = function#? DEBUG ss$jsEncode##(s, q) {
+	s = s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+	return q ? '"' + s + '"' : s;
 };
 
 ss.indexOfAnyString = function#? DEBUG ss$indexOfAnyString##(s, chars, startIndex, count) {
@@ -196,10 +204,24 @@ if (!String.prototype.trim) {
 	};
 }
 
-ss.trimEndString = function#? DEBUG ss$trimEndString##(s) {
-	return s.replace(/\s*$/, '');
+ss.trimEndString = function#? DEBUG ss$trimEndString##(s, chars) {
+	return s.replace(chars ? new RegExp('[' + String.fromCharCode.apply(null, chars) + ']+$') : /\s*$/, '');
 };
 
-ss.trimStartString = function#? DEBUG ss$trimStartString##(s) {
-	return s.replace(/^\s*/, '');
+ss.trimStartString = function#? DEBUG ss$trimStartString##(s, chars) {
+	return s.replace(chars ? new RegExp('^[' + String.fromCharCode.apply(null, chars) + ']+') : /^\s*/, '');
+};
+
+ss.trimString = function#? DEBUG ss$trimString##(s, chars) {
+	return ss.trimStartString(ss.trimEndString(s, chars), chars);
+};
+
+ss.lastIndexOfString = function#? DEBUG ss$lastIndexOfString##(s, search, startIndex, count) {
+	var index = s.lastIndexOf(search, startIndex);
+	return (index < (startIndex - count + 1)) ? -1 : index;
+};
+
+ss.indexOfString = function#? DEBUG ss$indexOfString##(s, search, startIndex, count) {
+	var index = s.indexOf(search, startIndex);
+	return ((index + search.length) <= (startIndex + count)) ? index : -1;
 };

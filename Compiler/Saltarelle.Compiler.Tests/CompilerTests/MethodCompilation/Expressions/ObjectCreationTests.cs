@@ -236,7 +236,7 @@ public void M() {
 			AssertCorrect(
 @"class X : System.Collections.IEnumerable {
 	public void Add(int a) {}
-	public IEnumerator GetEnumerator() { return null; }
+	public System.Collections.IEnumerator GetEnumerator() { return null; }
 }
 public void M() {
 	int i = 0, j = 0;
@@ -256,7 +256,7 @@ public void M() {
 			AssertCorrect(
 @"class X : System.Collections.IEnumerable {
 	public void Add(int a, string b) {}
-	public IEnumerator GetEnumerator() { return null; }
+	public System.Collections.IEnumerator GetEnumerator() { return null; }
 }
 public void M() {
 	int i = 0, j = 0;
@@ -351,7 +351,7 @@ class Test {
 			AssertCorrect(
 @"class X : System.Collections.IEnumerable {
 	public void Add(int a) {}
-	public IEnumerator GetEnumerator() { return null; }
+	public System.Collections.IEnumerator GetEnumerator() { return null; }
 }
 public void M() {
 	int i = 0, j = 0;

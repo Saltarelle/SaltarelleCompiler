@@ -13,12 +13,10 @@ namespace Saltarelle.Compiler.Compiler {
 		internal class ParsedSourceFile {
 			public SyntaxTree SyntaxTree { get; private set; }
 			public CSharpUnresolvedFile ParsedFile { get; private set; }
-			public ISet<string> DefinedSymbols { get; private set; }
 
-			public ParsedSourceFile(SyntaxTree syntaxTree, CSharpUnresolvedFile parsedFile, ISet<string> definedSymbols) {
+			public ParsedSourceFile(SyntaxTree syntaxTree, CSharpUnresolvedFile parsedFile) {
 				SyntaxTree     = syntaxTree;
 				ParsedFile     = parsedFile;
-				DefinedSymbols = definedSymbols;
 			}
 		}
 
@@ -46,8 +44,7 @@ namespace Saltarelle.Compiler.Compiler {
 			                                            var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.Filename);
 			                                            var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
 			                                            syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
-			                                            var definedSymbols = DefinedSymbolsGatherer.Gather(syntaxTree, defineConstants);
-			                                            return new ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()), definedSymbols);
+			                                            return new ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()));
 			                                        }
 			                                    }).ToList();
 

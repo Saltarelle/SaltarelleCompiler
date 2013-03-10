@@ -11,7 +11,6 @@ using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
-using com.sun.xml.@internal.ws.api.addressing;
 
 namespace CoreLib.Tests.MetadataImporterTests {
 	[TestFixture]

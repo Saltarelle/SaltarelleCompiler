@@ -15,7 +15,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class Compiler : DepthFirstAstVisitor, ICompiler {
+	public class Compiler : DepthFirstAstVisitor, ICompiler, IRuntimeContext {
 		private class ResolveAllNavigator : IResolveVisitorNavigator {
 			public ResolveVisitorNavigationMode Scan(AstNode node) {
 				return ResolveVisitorNavigationMode.Resolve;
@@ -39,7 +39,6 @@ namespace Saltarelle.Compiler.Compiler {
 		private HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>> _constructorDeclarations;
 		private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
 		private AstNode _currentNode;
-		private ISet<string> _definedSymbols;
 
 		public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
 
@@ -128,8 +127,6 @@ namespace Saltarelle.Compiler.Compiler {
 
 			foreach (var f in compilation.SourceFiles) {
 				try {
-					_definedSymbols = f.DefinedSymbols;
-
 					_resolver = new CSharpAstResolver(_compilation, f.SyntaxTree, f.ParsedFile);
 					_resolver.ApplyNavigator(new ResolveAllNavigator());
 					f.SyntaxTree.AcceptVisitor(this);
@@ -180,7 +177,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private MethodCompiler CreateMethodCompiler() {
-			return new MethodCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, _runtimeLibrary, _definedSymbols);
+			return new MethodCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, _runtimeLibrary);
 		}
 
 		private void AddCompiledMethodToType(JsClass jsClass, IMethod method, MethodScriptSemantics options, JsMethod jsMethod) {
@@ -278,7 +275,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(_runtimeLibrary.InstantiateType(Utils.SelfParameterize(owningType), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), fieldName), fieldType, member.DeclaringTypeDefinition));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(_runtimeLibrary.InstantiateType(Utils.SelfParameterize(owningType), this), fieldName), fieldType, member.DeclaringTypeDefinition));
 			}
 			else {
 				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(JsExpression.This, fieldName), fieldType, member.DeclaringTypeDefinition));
@@ -287,7 +284,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(_runtimeLibrary.InstantiateType(Utils.SelfParameterize(owningType), tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp))), fieldName), initializer, owningType));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(_runtimeLibrary.InstantiateType(Utils.SelfParameterize(owningType), this), fieldName), initializer, owningType));
 			}
 			else {
 				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(JsExpression.This, fieldName), initializer, owningType));
@@ -612,6 +609,14 @@ namespace Saltarelle.Compiler.Compiler {
 				default:
 					throw new InvalidOperationException("Invalid indexer implementation type " + impl.Type);
 			}
+		}
+
+		JsExpression IRuntimeContext.ResolveTypeParameter(ITypeParameter tp) {
+			return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
+		}
+
+		JsExpression IRuntimeContext.EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
+			throw new NotSupportedException();
 		}
 	}
 }
