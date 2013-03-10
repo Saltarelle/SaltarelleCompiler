@@ -182,7 +182,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetRegion(body.GetRegion());
 			try {
-				_result = MethodCompiler.PrepareParameters(parameters, variables, expandParams);
+				_result = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
 				VisitChildren(body);
 				JsBlockStatement jsbody;
 				if (_result.Count == 1 && _result[0] is JsBlockStatement)

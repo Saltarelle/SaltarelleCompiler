@@ -148,6 +148,15 @@ class C : B {
 		}
 
 		[Test]
+		public void ExpandedParamArrayIsFixedAtTheTopOfMethodsForStaticMethodsWithThisAsFirstArgument() {
+			AssertCorrect(
+@"void M(int a, int b, params int[] c) {}",
+@"function($this, $a, $b) {
+	var $c = Array.prototype.slice.call(arguments, 3);
+}", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, expandParams: true) });
+		}
+
+		[Test]
 		public void ExpandedParamArrayIsFixedAtTheTopOfAnonymousDelegateExpressions() {
 			AssertCorrect(
 @"delegate void D(int a, int b, string c, params object[] d);

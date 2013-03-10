@@ -137,7 +137,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(ctor, constructor, constructor.DeclaringTypeDefinition, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
 				IList<JsStatement> body = new List<JsStatement>();
-				body.AddRange(PrepareParameters(constructor.Parameters, variables, impl.ExpandParams));
+				body.AddRange(PrepareParameters(constructor.Parameters, variables, expandParams: impl.ExpandParams, staticMethodWithThisAsFirstArgument: false));
 
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
 					if (ctor != null && !ctor.Initializer.IsNull) {
@@ -320,11 +320,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static List<JsStatement> PrepareParameters(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, bool expandParams) {
+		public static List<JsStatement> PrepareParameters(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, bool expandParams, bool staticMethodWithThisAsFirstArgument) {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
 				result = result ?? new List<JsStatement>();
-				result.Add(new JsVariableDeclarationStatement(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1))));
+				result.Add(new JsVariableDeclarationStatement(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
 			}
 			foreach (var p in parameters) {
 				if (!p.IsOut && !p.IsRef && variables[p].UseByRefSemantics) {
