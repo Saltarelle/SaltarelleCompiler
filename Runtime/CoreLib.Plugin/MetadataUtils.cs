@@ -377,6 +377,8 @@ namespace CoreLib.Plugin {
 				properties.Add(new JsObjectLiteralProperty("sname", JsExpression.String(sem.Name)));
 			if (sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod)
 				properties.Add(new JsObjectLiteralProperty("sm", JsExpression.True));
+			if ((sem.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor || sem.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || sem.Type == ConstructorScriptSemantics.ImplType.StaticMethod) && sem.ExpandParams)
+				properties.Add(new JsObjectLiteralProperty("exp", JsExpression.True));
 			if (sem.Type == ConstructorScriptSemantics.ImplType.Json || sem.Type == ConstructorScriptSemantics.ImplType.InlineCode) {
 				var usedNames = new HashSet<string>();
 				var parameters = new List<IVariable>();
@@ -428,6 +430,8 @@ namespace CoreLib.Plugin {
 					errorReporter.Message(Messages._7201, m.FullName, "method");
 					return JsExpression.Null;
 				}
+				if ((sem.Type == MethodScriptSemantics.ImplType.NormalMethod || sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) && sem.ExpandParams)
+					properties.Add(new JsObjectLiteralProperty("exp", JsExpression.True));
 
 				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)));
 				if (sem.Type == MethodScriptSemantics.ImplType.InlineCode) {

@@ -438,15 +438,22 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 			if (typeArguments && typeArguments.length)
 				throw 'Cannot specify type arguments for non-generic method';
 		}
+		if (mi.exp) {
+			var _m1 = method;
+			method = function () { return _m1.apply(this, Array.prototype.slice.call(arguments, 0, arguments.length - 1).concat(arguments[arguments.length - 1])); };
+		}
 		if (mi.sm) {
-			var _m = method;
-			method = function() { return _m.apply(null, [this].concat(Array.prototype.slice.call(arguments))); };
+			var _m2 = method;
+			method = function() { return _m2.apply(null, [this].concat(Array.prototype.slice.call(arguments))); };
 		}
 	}
 	return ss.mkdel(target, method);
 };
 
 ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
+	if (ci.exp)
+		args = args.slice(0, args.length - 1).concat(args[args.length - 1]);
+
 	if (ci.def)
 		return ci.def.apply(null, args);
 	else if (ci.sm)

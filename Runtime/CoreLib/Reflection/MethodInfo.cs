@@ -47,6 +47,11 @@ namespace System.Reflection {
 		[ScriptName("def")]
 		public Delegate SpecialImplementation { get; private set; }
 
+		/// <summary>
+		/// Whether the [ExpandParams] attribute was specified on the method.
+		/// </summary>
+		public bool IsExpandParams { [InlineCode("{this}.exp || false")] get; [InlineCode("{this}.exp = {value}")] private set; }
+
 		internal MethodInfo() {}
 	}
 }

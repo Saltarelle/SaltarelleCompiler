@@ -184,6 +184,51 @@ namespace CoreLib.TestScript {
 			public string M3<T>(string s) { return null; }
 		}
 
+		public class C22 {
+			public object a;
+			public object b;
+
+			[Reflectable] public C22(int a, params int[] b) {
+				this.a = a;
+				this.b = b;
+			}
+			[Reflectable, ExpandParams] public C22(string a, params string[] b) {
+				this.a = a;
+				this.b = b;
+			}
+
+			[Reflectable] public object[] M1(int a, params int[] b) {
+				return new object[] { a, b };
+			}
+
+			[Reflectable, ExpandParams] public object[] M2(int a, params int[] b) {
+				return new object[] { a, b };
+			}
+		}
+
+		[Serializable]
+		public class C23 {
+			public object a;
+			public object b;
+
+			[Reflectable] public C23(int a, params int[] b) {
+				this.a = a;
+				this.b = b;
+			}
+			[Reflectable, ExpandParams] public C23(string a, params string[] b) {
+				this.a = a;
+				this.b = b;
+			}
+
+			[Reflectable] public object[] M1(int a, params int[] b) {
+				return new object[] { a, b };
+			}
+
+			[Reflectable, ExpandParams] public object[] M2(int a, params int[] b) {
+				return new object[] { a, b };
+			}
+		}
+
 		[Test]
 		public void GetMembersReturnsMethodsWithAnyScriptableAttributeOrReflectableAttribute() {
 			var methods = typeof(C1).GetMembers();
@@ -299,6 +344,18 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue (((ConstructorInfo)c11[0]).IsStaticMethod, "Static method");
 			Assert.IsFalse(((ConstructorInfo)c19[0]).IsStaticMethod, "Object literal");
 			Assert.IsFalse(((ConstructorInfo)c20[0]).IsStaticMethod, "Inline code");
+		}
+
+		[Test]
+		public void IsExpandParamsIsCorrectForConstructors() {
+			var c1 = typeof(C22).GetConstructor(new[] { typeof(int), typeof(int[]) });
+			var c2 = typeof(C22).GetConstructor(new[] { typeof(string), typeof(string[]) });
+			var c3 = typeof(C23).GetConstructor(new[] { typeof(int), typeof(int[]) });
+			var c4 = typeof(C23).GetConstructor(new[] { typeof(string), typeof(string[]) });
+			Assert.IsFalse(c1.IsExpandParams);
+			Assert.IsTrue (c2.IsExpandParams);
+			Assert.IsFalse(c3.IsExpandParams);
+			Assert.IsTrue (c4.IsExpandParams);
 		}
 
 		[Test]
@@ -420,6 +477,18 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(typeof(C4).GetMethod("M", new[] { typeof(int) }).SpecialImplementation == null, "C4.M");
 			Assert.IsTrue(typeof(C21).GetMethod("M3").SpecialImplementation != null, "C21.M3");
 			Assert.IsTrue(typeof(C7).GetMethod("M1").SpecialImplementation == null, "C7.m1");
+		}
+
+		[Test]
+		public void IsExpandParamsIsCorrectForMethods() {
+			var m1 = typeof(C22).GetMethod("M1");
+			var m2 = typeof(C22).GetMethod("M2");
+			var m3 = typeof(C23).GetMethod("M1");
+			var m4 = typeof(C23).GetMethod("M2");
+			Assert.IsFalse(m1.IsExpandParams);
+			Assert.IsTrue (m2.IsExpandParams);
+			Assert.IsFalse(m3.IsExpandParams);
+			Assert.IsTrue (m4.IsExpandParams);
 		}
 
 		[Test]
@@ -563,6 +632,17 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void InvokeWorksForExpandParamsMethods() {
+			var m1 = typeof(C22).GetMethod("M2");
+			var r1 = (object[])m1.Invoke(new C22(0, null), new object[] { 2, new[] { 17, 31 } });
+			Assert.AreEqual(r1, new object[] { 2, new[] { 17, 31 } });
+
+			var m2 = typeof(C23).GetMethod("M2");
+			var r2 = (object[])m2.Invoke(new C23(0, null), new object[] { 2, new[] { 17, 32 } });
+			Assert.AreEqual(r2, new object[] { 2, new[] { 17, 32 } });
+		}
+
+		[Test]
 		public void InvokeWorksForAllKindsOfConstructors() {
 			var c1 = (ConstructorInfo)typeof(C10).GetMembers().Filter(m => ((ConstructorInfo)m).ParameterTypes.Length == 1)[0];
 			var o1 = (C10)c1.Invoke(42);
@@ -585,6 +665,19 @@ namespace CoreLib.TestScript {
 			var c20 = (ConstructorInfo)typeof(C20).GetMembers()[0];
 			var o5 = c20.Invoke(42, "Hello");
 			Assert.AreEqual(o5, new { A = 42, B = "Hello" });
+		}
+
+		[Test]
+		public void InvokeWorksForExpandParamsConstructors() {
+			var c1 = typeof(C22).GetConstructor(new[] { typeof(string), typeof(string[]) });
+			var o1 = (C22)c1.Invoke(new object[] { "a", new[] { "b", "c" } });
+			Assert.AreEqual(o1.a, "a", "o1.a");
+			Assert.AreEqual(o1.b, new[] { "b", "c" }, "o1.b");
+
+			var c2 = typeof(C23).GetConstructor(new[] { typeof(string), typeof(string[]) });
+			var o2 = (C23)c2.Invoke(new object[] { "a", new[] { "b", "c" } });
+			Assert.AreEqual(o2.a, "a", "o1.a");
+			Assert.AreEqual(o2.b, new[] { "b", "c" }, "o1.b");
 		}
 
 		[Test]
