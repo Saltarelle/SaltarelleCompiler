@@ -30,6 +30,7 @@ namespace CoreLib.TestScript {
 			for (var i = 0; i < 10; i++) {
 				int randomNumber = rand.Next();
 				Assert.IsTrue(randomNumber >= 0, randomNumber + " is greater or equal to 0");
+				Assert.IsTrue(randomNumber <= int.MaxValue, randomNumber + " is less than or equal to int.MaxValue");
 			}
 		}
 
@@ -65,12 +66,12 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void NextBytesWorks() {
-			var rand = new Random();
+			var rand = new Random((int)(1362952481370 % 2147483647));
 			var bytes = new byte[150];
 			rand.NextBytes(bytes);
 			for (var i = 0; i < bytes.Length; i++) {
-				Assert.IsTrue(bytes[i] >= byte.MinValue, bytes[i] + " is greater or equal to " + byte.MinValue);
-				Assert.IsTrue(bytes[i] < byte.MaxValue, bytes[i] + " is smaller than " + byte.MaxValue);
+				Assert.IsTrue(bytes[i] >= byte.MinValue, "a: " + bytes[i] + " is greater or equal to " + byte.MinValue);
+				Assert.IsTrue(bytes[i] <= byte.MaxValue, "a: " + bytes[i] + " is smaller than or equal to " + byte.MaxValue);
 			}
 		}
 	}

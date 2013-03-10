@@ -2,14 +2,16 @@
 // Random
 
 var ss_Random = function#? DEBUG Random$##(seed) {
-	var _seed = (seed === undefined) ? parseInt(Date.now() % 2147483647) : parseInt(Math.abs(seed));
+	var _seed = (seed === undefined) ? parseInt(Date.now() % 2147483648) : parseInt(Math.abs(seed));
 	this.inext = 0;
 	this.inextp = 21;
 	this.seedArray = new Array(56);
 	for(var i = 0; i < 56; i++)
 		this.seedArray[i] = 0;
 
-	var _seed = 161803398 - _seed;
+	_seed = 161803398 - _seed;
+	if (_seed < 0)
+		_seed += 2147483648;
 	this.seedArray[55] = _seed;
 	var mk = 1;
 	for (var i = 1; i < 55; i++) {
@@ -17,7 +19,7 @@ var ss_Random = function#? DEBUG Random$##(seed) {
 		this.seedArray[ii] = mk;
 		mk = _seed - mk;
 		if (mk < 0)
-			mk += 2147483647;
+			mk += 2147483648;
 
 		_seed = this.seedArray[ii];
 	}
@@ -25,14 +27,14 @@ var ss_Random = function#? DEBUG Random$##(seed) {
 		for (var k = 1; k < 56; k++) {
 			this.seedArray[k] -= this.seedArray[1 + (k + 30) % 55];
 			if (this.seedArray[k] < 0)
-				this.seedArray[k] += 2147483647;
+				this.seedArray[k] += 2147483648;
 		}
 	}
 };
 
 ss_Random.prototype = {
 	next: function#? DEBUG Random$next##() {
-		return this.sample() * 2147483647 | 0;
+		return this.sample() * 2147483648 | 0;
 	},
 	nextMax: function#? DEBUG Random$nextMax##(max) {
 		return this.sample() * max | 0;
@@ -42,7 +44,7 @@ ss_Random.prototype = {
 	},
 	nextBytes: function#? DEBUG Random$nextBytes##(bytes) {
 		for (var i = 0; i < bytes.length; i++)
-			bytes[i] = (this.sample() * 255) | 0;
+			bytes[i] = (this.sample() * 256) | 0;
 	},
 	nextDouble: function#? DEBUG Random$nextDouble##() {
 		return this.sample();
@@ -56,11 +58,11 @@ ss_Random.prototype = {
 		var retVal =  this.seedArray[this.inext] - this.seedArray[this.inextp];
 
 		if (retVal < 0)
-			retVal += 2147483647;
+			retVal += 2147483648;
 
 		this.seedArray[this.inext] = retVal;
 
-		return retVal * (1.0 / 2147483647);
+		return retVal * (1.0 / 2147483648);
 	}
 };
 
