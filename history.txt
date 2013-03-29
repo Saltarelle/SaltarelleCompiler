@@ -1,4 +1,5 @@
-Applying a [ScriptNameAttribute] to an [Imported] enum will now cause the fields of the enum to be treated as field access on the type (#160)
+All constructors for [Imported] types are now treated as unnamed constructors unless a [ScriptName] is specified for them (#164).
+Applying a [ScriptNameAttribute] to an [Imported] enum will now cause the fields of the enum to be treated as field access on the type (#160).
 
 2.1.0
 Added class HttpUtility

@@ -225,6 +225,10 @@ namespace CoreLib.Plugin {
 					name = "$ctor";
 				return Tuple.Create(name, true);
 			}
+			
+			if (isConstructor && IsImported(member.DeclaringTypeDefinition)) {
+				return Tuple.Create("$ctor", true);
+			}
 
 			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(member);
 			if (ica != null) {

@@ -418,5 +418,29 @@ public class C4 {
 			Assert.That(c41.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
 			Assert.That(c41.SkipInInitializer, Is.True);
 		}
+
+		[Test]
+		public void AllConstructorsOfImportedTypesAreUnnamedUnlessAScriptNameIsSpecified() {
+			Prepare(@"
+using System;
+using System.Runtime.CompilerServices;
+[Imported]
+public class C {
+	public C() {}
+	public C(int i) {}
+	[ScriptName(""someCtor"")]
+	public C(int i, int j) {}
+}");
+
+			var c1 = FindConstructor("C", 0);
+			Assert.That(c1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+			var c2 = FindConstructor("C", 1);
+			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+			var c3 = FindConstructor("C", 2);
+			Assert.That(c3.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+			Assert.That(c3.Name, Is.EqualTo("someCtor"));
+		}
 	}
 }
