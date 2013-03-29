@@ -1,3 +1,5 @@
+Applying a [ScriptNameAttribute] to an [Imported] enum will now cause the fields of the enum to be treated as field access on the type (#160)
+
 2.1.0
 Added class HttpUtility
 It is now an error to use the 'is' and 'as' operators with types that don't obey the type system.

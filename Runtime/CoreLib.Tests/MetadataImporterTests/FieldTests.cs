@@ -337,5 +337,27 @@ public class C {
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1.Value")));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("InlineConstantAttribute")));
 		}
+
+		[Test]
+		public void ImportedEnumWithScriptNameDoesNotGenerateCodeButItsFieldsAreAccessedByName() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[Imported, ScriptName(""MyEnum"")]
+public enum E {
+	FirstValue,
+	[ScriptName(""Renamed"")] SecondValue
+}");
+
+			var e = FindType("E");
+			Assert.IsFalse(e.GenerateCode);
+			var f1 = FindField("E.FirstValue");
+			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f1.Name, Is.EqualTo("firstValue"));
+			var f2 = FindField("E.SecondValue");
+			Assert.That(f2.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f2.Name, Is.EqualTo("Renamed"));
+		}
 	}
 }

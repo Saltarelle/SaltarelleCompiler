@@ -1023,6 +1023,10 @@ namespace CoreLib.Plugin {
 
 					_fieldSemantics[field] = FieldScriptSemantics.StringConstant(value, name);
 				}
+				else if (field.DeclaringType.Kind == TypeKind.Enum && AttributeReader.HasAttribute<ImportedAttribute>(field.DeclaringTypeDefinition) && AttributeReader.HasAttribute<ScriptNameAttribute>(field.DeclaringTypeDefinition)) {
+					// Fields of enums that are imported and have an explicit [ScriptName] are treated as normal fields.
+					_fieldSemantics[field] = FieldScriptSemantics.Field(name);
+				}
 				else if (name == null || (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames))) {
 					object value = Saltarelle.Compiler.JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
 					if (value is bool)
