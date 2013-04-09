@@ -135,7 +135,7 @@ ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLoc
 				var index = s.indexOf('.');
 				s = s.substr(0, index) + nf.currencyDecimalSeparator + s.substr(index + 1);
 			}
-			s = ss._commaFormatnumber(s, nf.currencyGroupSizes, nf.currencyDecimalSeparator, nf.currencyGroupSeparator);
+			s = ss._commaFormatNumber(s, nf.currencyGroupSizes, nf.currencyDecimalSeparator, nf.currencyGroupSeparator);
 			if (num < 0) {
 				s = ss.formatString(nf.currencyNegativePattern, s);
 			}
