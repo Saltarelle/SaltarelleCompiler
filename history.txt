@@ -1,3 +1,4 @@
+Make sure additional files are copied to the output directory in order to avoid unnecessary rebuilds (#172)
 Fixed bug in the 'C' number format.
 All constructors for [Imported] types are now treated as unnamed constructors unless a [ScriptName] is specified for them (#164).
 Applying a [ScriptNameAttribute] to an [Imported] enum will now cause the fields of the enum to be treated as field access on the type (#160).

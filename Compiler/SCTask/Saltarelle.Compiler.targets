@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
 	<UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
@@ -85,6 +85,36 @@
 	
 		</Copy>
 	
+		<!-- Copy the additional modules. -->
+		<Copy SourceFiles="@(AddModules)"
+		      DestinationFolder="$(OutDir)"
+		      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+		      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+		      Retries="$(CopyRetryCount)"
+		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+		      UseHardlinksIfPossible="$(CreateHardLinksForCopyAdditionalFilesIfPossible)"
+		      Condition="'@(AddModules)' != ''"
+	          >
+
+			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+
+		</Copy>
+
+		<!-- Copy the debug information file (.pdb), if any -->
+		<Copy SourceFiles="@(_DebugSymbolsIntermediatePath)"
+		      DestinationFiles="@(_DebugSymbolsOutputPath)"
+		      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+		      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+		      Retries="$(CopyRetryCount)"
+		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+		      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
+		      Condition="'$(_DebugSymbolsProduced)'=='true' and '$(SkipCopyingSymbolsToOutputDirectory)' != 'true' and '$(CopyOutputSymbolsToOutputDirectory)'=='true'"
+		      >
+
+			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+
+		</Copy>
+
 		<!-- Copy the generated script. -->
 		<Copy SourceFiles="@(IntermediateScript)"
 		      DestinationFolder="$(OutDir)"
