@@ -32,7 +32,7 @@ namespace CoreLib.Tests
 		}
 
 		protected virtual string TestClassName {
-			get { return "CoreLib.TestScript." + GetType().Name; }
+			get { return GetType().FullName.Replace("CoreLib.Tests.Core.", "CoreLib.TestScript."); }
 		}
 
 		//[Test, Ignore("Not a real test")]

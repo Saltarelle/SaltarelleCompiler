@@ -76,9 +76,21 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Common.cs" />
-    <Compile Include="Core\CoreLibTests.cs" />
-    <Compile Include="Core\TypeSystemLanguageSupportTests.cs" />
-    <Compile Include="Core\TypeSystemTests.cs" />
+    <Compile Include="Core\Collections\Generic\Tests.cs" />
+    <Compile Include="Core\Collections\ObjectModel\Tests.cs" />
+    <Compile Include="Core\Collections\Tests.cs" />
+    <Compile Include="Core\Tests.cs" />
+    <Compile Include="Core\Linq\Expressions\Tests.cs" />
+    <Compile Include="Core\Reflection\Tests.cs" />
+    <Compile Include="Core\Reflection\TypeSystemLanguageSupportTests.cs" />
+    <Compile Include="Core\Reflection\TypeSystemTests.cs" />
+    <Compile Include="Core\Runtime\CompilerServices\Tests.cs" />
+    <Compile Include="Core\Serialization\Tests.cs" />
+    <Compile Include="Core\SimpleTypes\Tests.cs" />
+    <Compile Include="Core\Text\RegularExpressions\Tests.cs" />
+    <Compile Include="Core\Text\Tests.cs" />
+    <Compile Include="Core\Threading\Tasks\Tests.cs" />
+    <Compile Include="Core\Web\Tests.cs" />
     <Compile Include="Files.cs" />
     <Compile Include="LinkerTests\LinkerTests.cs" />
     <Compile Include="MetadataImporterTests\AnonymousTypeTests.cs" />
