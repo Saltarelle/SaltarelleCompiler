@@ -1,3 +1,4 @@
+Fixed method group conversions on extension methods (#176)
 Make sure additional files are copied to the output directory in order to avoid unnecessary rebuilds (#172)
 Fixed bug in the 'C' number format.
 All constructors for [Imported] types are now treated as unnamed constructors unless a [ScriptName] is specified for them (#164).
