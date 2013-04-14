@@ -9,12 +9,12 @@ namespace System
 	[Imported]
 	public static class Activator
 	{
-		[InlineCode("new {type}({*arguments})")]
+		[InlineCode("new {type}({*arguments})", NonExpandedFormCode = "{$System.Script}.applyConstructor({type}, {arguments})")]
 		public static object CreateInstance(Type type, params object[] arguments) {
 			return null;
 		}
 
-		[InlineCode("new {T}({*arguments})")]
+		[InlineCode("new {T}({*arguments})", NonExpandedFormCode = "{$System.Script}.applyConstructor({T}, {arguments})")]
 		public static T CreateInstance<T>(params object[] arguments) {
 			return default(T);
 		}

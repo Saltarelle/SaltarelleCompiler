@@ -466,8 +466,17 @@ namespace CoreLib.Plugin {
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
 				}
+				if (ica.NonExpandedFormCode != null && !ValidateInlineCode(source, source, ica.NonExpandedFormCode, Messages._7103)) {
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
+					return;
+				}
+				if (ica.NonExpandedFormCode != null && !constructor.Parameters.Any(p => p.IsParams)) {
+					Message(Messages._7029, constructor.Region, "constructor", constructor.DeclaringType.FullName);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
+					return;
+				}
 
-				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(ica.Code, skipInInitializer: skipInInitializer);
+				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode(ica.Code, skipInInitializer: skipInInitializer, nonExpandedFormLiteralCode: ica.NonExpandedFormCode);
 				return;
 			}
 			else if (asa != null) {
@@ -788,7 +797,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else if (ica != null) {
-					string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode ?? ica.Code ?? "";
+					string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode, nonExpandedFormCode = ica.NonExpandedFormCode;
 
 					if (method.DeclaringTypeDefinition.Kind == TypeKind.Interface && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
 						Message(Messages._7126, method);
@@ -807,12 +816,21 @@ namespace CoreLib.Plugin {
 					}
 					else {
 						if (!ValidateInlineCode(method, method, code, Messages._7130)) {
-							code = nonVirtualCode = "X";
+							code = nonVirtualCode = nonExpandedFormCode = "X";
 						}
 						if (!string.IsNullOrEmpty(ica.NonVirtualCode) && !ValidateInlineCode(method, method, ica.NonVirtualCode, Messages._7130)) {
-							code = nonVirtualCode = "X";
+							code = nonVirtualCode = nonExpandedFormCode = "X";
 						}
-						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: !string.IsNullOrEmpty(ica.GeneratedMethodName) ? ica.GeneratedMethodName : null, nonVirtualInvocationLiteralCode: nonVirtualCode);
+						if (!string.IsNullOrEmpty(ica.NonExpandedFormCode)) {
+							if (!method.Parameters.Any(p => p.IsParams)) {
+								Message(Messages._7029, method.Region, "method", method.FullName);
+								code = nonVirtualCode = nonExpandedFormCode = "X";
+							}
+							if (!ValidateInlineCode(method, method, ica.NonExpandedFormCode, Messages._7130)) {
+								code = nonVirtualCode = nonExpandedFormCode = "X";
+							}
+						}
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: eaa != null, generatedMethodName: !string.IsNullOrEmpty(ica.GeneratedMethodName) ? ica.GeneratedMethodName : null, nonVirtualInvocationLiteralCode: nonVirtualCode, nonExpandedFormLiteralCode: nonExpandedFormCode);
 						if (!string.IsNullOrEmpty(ica.GeneratedMethodName))
 							usedNames[ica.GeneratedMethodName] = true;
 						return;

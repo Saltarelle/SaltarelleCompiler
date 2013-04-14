@@ -74,6 +74,18 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
+		private string _nonExpandedFormLiteralCode;
+		/// <summary>
+		/// Literal code for the constructor when invoked in non-expanded form (for it param array). May or may not be present when the method uses the {*parameter} placeholder.
+		/// </summary>
+		public string NonExpandedFormLiteralCode {
+			get {
+				if (Type != ImplType.InlineCode)
+					throw new InvalidOperationException();
+				return _nonExpandedFormLiteralCode;
+			}
+		}
+
 		/// <summary>
 		/// Whether code should be generated for this constructor.
 		/// </summary>
@@ -113,8 +125,8 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
 		}
 
-		public static ConstructorScriptSemantics InlineCode(string literalCode, bool skipInInitializer = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, GenerateCode = false, SkipInInitializer = skipInInitializer };
+		public static ConstructorScriptSemantics InlineCode(string literalCode, bool skipInInitializer = false, string nonExpandedFormLiteralCode = null) {
+			return new ConstructorScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, GenerateCode = false, SkipInInitializer = skipInInitializer, _nonExpandedFormLiteralCode = nonExpandedFormLiteralCode ?? literalCode };
 		}
 
 		public static ConstructorScriptSemantics NotUsableFromScript() {

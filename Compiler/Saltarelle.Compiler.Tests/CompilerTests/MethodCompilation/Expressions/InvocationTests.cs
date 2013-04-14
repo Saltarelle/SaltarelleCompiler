@@ -1763,5 +1763,38 @@ class C1 {
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
+
+		[Test]
+		public void InvokingInlineCodeMethodThatExpandsParamArrayInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void F1(params int[] args) {}
+	public void M() {
+		int[] a = new[] { 1, 2, 3 };
+		F1(a);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*args})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7525 && m.FormattedMessage.Contains("C1.F1") && m.FormattedMessage.Contains("params parameter expanded")));
+		}
+
+		[Test]
+		public void InvokingInlineCodeMethodInNonExpandedFormUsesTheNonExpandedFormPattern() {
+			AssertCorrect(
+@"class C1 {
+	public void F(params int[] args) {}
+	public void M() {
+		int[] a = new[] { 1, 2, 3 };
+		// BEGIN
+		F(a);
+		// END
+	}
+}",
+@"	_2($a);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
 	}
 }

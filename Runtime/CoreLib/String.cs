@@ -210,7 +210,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.formatString({format}, {*values})")]
+		[InlineCode("{$System.Script}.formatString({format}, {*values})", NonExpandedFormCode = "{$System.Script}.formatString.apply(null, [{format}].concat({values}))")]
 		public static string Format(string format, params object[] values) {
 			return null;
 		}

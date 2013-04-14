@@ -193,6 +193,35 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingConstructorImplementedAsInlineCodeWithExpandedParamArrayParameterInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {
+	public C1(params int[] args) {}
+	public void M() {
+		var a = new[] { 1, 2, 3 };
+		var c = new C1(a);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("_({*args})") }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("constructor") && msg.FormattedMessage.Contains("C1") && msg.FormattedMessage.Contains("params parameter expanded")));
+		}
+
+		[Test]
+		public void InvokingConstructorImplementedAsInlineCodeInNonExpandedFormUsesTheNonExpandedCode() {
+			AssertCorrect(
+@"public C(params int[] args) {}
+public void M() {
+	int[] a = new[] { 1, 2, 3 };
+	// BEGIN
+	var c = new C(a);
+	// END
+}
+",
+@"	var $c = _2($a);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") });
+		}
+
+		[Test]
 		public void InvokingConstructorImplementedAsInlineCodeWorksForGenericType() {
 			AssertCorrect(
 @"class X<T1, T2> {

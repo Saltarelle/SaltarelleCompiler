@@ -24,7 +24,7 @@ namespace System.Collections.Generic {
 		public List(int capacity) {
 		}
 
-		[InlineCode("[ {first}, {*rest} ]")]
+		[InlineCode("[ {first}, {*rest} ]", NonExpandedFormCode = "[{first}].concat({rest})")]
 		public List(T first, params T[] rest) {
 		}
 

@@ -505,6 +505,24 @@ public void M() {
 		}
 
 		[Test]
+		public void MethodGroupConversionOnInlineCodeMethodUsesNonExpandedFormPattern() {
+			AssertCorrect(
+@"class C1 {
+	public int F1(params object[] a) { return 0; }
+	public void M() {
+		// BEGIN
+		System.Func<object[], int> f = F1;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1) {
+		return _2($tmp1);
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*a})", nonExpandedFormLiteralCode: "_2({a})") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
 		public void CannotPerformMethodGroupConversionOnInlineCodeMethodThatIncludesAParameterAsLiteralText() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] {

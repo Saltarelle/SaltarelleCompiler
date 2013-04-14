@@ -89,7 +89,8 @@ namespace Saltarelle.Compiler.Compiler {
 				_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements), CompileThis(), this)));
 			}
 			else {
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, _runtimeLibrary.InstantiateType(method.DeclaringType, this), false, argumentsForCall, argumentToParameterMap);
+				string literalCode   = GetActualInlineCode(impl, argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, _runtimeLibrary.InstantiateType(method.DeclaringType, this), false, argumentsForCall, argumentToParameterMap);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 
@@ -107,7 +108,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList()), thisAndArguments[0], this)));
+						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileInlineCodeMethodInvocation(method, literalCode, null, thisAndArguments.Skip(1).ToList()), thisAndArguments[0], this)));
 						break;
 
 					default:
@@ -327,7 +328,7 @@ namespace Saltarelle.Compiler.Compiler {
 							}
 							else {
 								List<JsExpression> thisAndArguments;
-								if (property.IsIndexer) {
+								if (property.Parameters.Count > 0) {
 									var invocation = (CSharpInvocationResolveResult)target;
 									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 								}
@@ -983,11 +984,39 @@ namespace Saltarelle.Compiler.Compiler {
 			return expressions;
 		}
 
-		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall) {
+		private string GetActualInlineCode(MethodScriptSemantics sem, bool isNonVirtualInvocationOfVirtualMethod, bool isParamArrayExpanded) {
+			if (sem.Type == MethodScriptSemantics.ImplType.InlineCode) {
+				if (isNonVirtualInvocationOfVirtualMethod)
+					return sem.NonVirtualInvocationLiteralCode;
+				else if (!isParamArrayExpanded)
+					return sem.NonExpandedFormLiteralCode;
+				else
+					return sem.LiteralCode;
+			}
+			else {
+				return null;
+			}
+		}
+
+		private string GetActualInlineCode(ConstructorScriptSemantics sem, bool isParamArrayExpanded) {
+			if (sem.Type == ConstructorScriptSemantics.ImplType.InlineCode) {
+				if (!isParamArrayExpanded)
+					return sem.NonExpandedFormLiteralCode;
+				else
+					return sem.LiteralCode;
+			}
+			else {
+				return null;
+			}
+		}
+
+		private JsExpression CompileMethodInvocation(MethodScriptSemantics sem, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall) {
 			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
-			bool targetUsedMultipleTimes = impl != null && ((!impl.IgnoreGenericArguments && method.TypeParameters.Count > 0) || (impl.ExpandParams && !(argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult)));
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == MethodScriptSemantics.ImplType.InlineCode ? (isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode) : null, method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes), false, argumentsForCall, argumentToParameterMap);
-			return CompileMethodInvocation(impl, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod);
+			bool isParamArrayExpanded = argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult;
+			bool targetUsedMultipleTimes = sem != null && ((!sem.IgnoreGenericArguments && method.TypeParameters.Count > 0) || (sem.ExpandParams && !isParamArrayExpanded));
+			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocationOfVirtualMethod, isParamArrayExpanded);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes), false, argumentsForCall, argumentToParameterMap);
+			return CompileMethodInvocation(sem, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod);
 		}
 
 		private JsExpression CompileConstructorInvocationWithPotentialExpandParams(IList<JsExpression> arguments, JsExpression constructor, bool expandParams) {
@@ -1061,7 +1090,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				case MethodScriptSemantics.ImplType.InlineCode:
-					return CompileInlineCodeMethodInvocation(method, isNonVirtualInvocationOfVirtualMethod ? impl.NonVirtualInvocationLiteralCode : impl.LiteralCode, method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList());
+					return CompileInlineCodeMethodInvocation(method, GetActualInlineCode(impl, isNonVirtualInvocationOfVirtualMethod, thisAndArguments[thisAndArguments.Count - 1] is JsArrayLiteralExpression), method.IsStatic ? null : thisAndArguments[0], thisAndArguments.Skip(1).ToList());
 
 				case MethodScriptSemantics.ImplType.NativeIndexer:
 					return JsExpression.Index(thisAndArguments[0], thisAndArguments[1]);
@@ -1086,8 +1115,13 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileInlineCodeMethodInvocation(IMethod method, string code, JsExpression @this, IList<JsExpression> arguments) {
 			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(Messages._7525, s));
-			if (tokens == null)
+			if (tokens == null) {
 				return JsExpression.Null;
+			}
+			if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.Parameter && t.IsExpandedParamArray) && !(arguments[arguments.Count - 1] is JsArrayLiteralExpression)) {
+				_errorReporter.Message(Messages._7525, string.Format("The {0} can only be invoked with its params parameter expanded", method.IsConstructor ? "constructor " + method.DeclaringType.FullName : ("method " + method.FullName)));
+				return JsExpression.Null;
+			}
 			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s));
 		}
 
@@ -1208,7 +1242,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements);
 			}
 			else {
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, impl.Type == ConstructorScriptSemantics.ImplType.InlineCode ? impl.LiteralCode : null, _runtimeLibrary.InstantiateType(method.DeclaringType, this), false, argumentsForCall, argumentToParameterMap);
+				string literalCode = GetActualInlineCode(impl, argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, _runtimeLibrary.InstantiateType(method.DeclaringType, this), false, argumentsForCall, argumentToParameterMap);
 
 				JsExpression constructorCall;
 
@@ -1226,7 +1261,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						constructorCall = CompileInlineCodeMethodInvocation(method, impl.LiteralCode, null , thisAndArguments.Skip(1).ToList());
+						constructorCall = CompileInlineCodeMethodInvocation(method, literalCode, null , thisAndArguments.Skip(1).ToList());
 						break;
 
 					default:
@@ -1269,7 +1304,7 @@ namespace Saltarelle.Compiler.Compiler {
 							var activator = ReflectionHelper.ParseReflectionName("System.Activator").Resolve(_compilation);
 							var createInstance = activator.GetMethods(m => m.Name == "CreateInstance" && m.IsStatic && m.TypeParameters.Count == 1 && m.Parameters.Count == 0).Single();
 							var createInstanceSpec = new SpecializedMethod(createInstance, new TypeParameterSubstitution(EmptyList<IType>.Instance, new[] { method.DeclaringType }));
-							var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new JsExpression[] { _runtimeLibrary.InstantiateType(activator, this) }, false);
+							var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new[] { _runtimeLibrary.InstantiateType(activator, this) }, false);
 							return CompileInitializerStatements(createdObject, method.DeclaringType, initializerStatements);
 						}
 						else {
@@ -1637,7 +1672,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression PerformMethodGroupConversionOnInlineCodeMethod(IMethod method, IType delegateType, bool isBaseCall, bool isExtensionMethodGroupConversion, ResolveResult target, MethodScriptSemantics methodSemantics, DelegateScriptSemantics delegateSemantics) {
-			string code = isBaseCall ? methodSemantics.NonVirtualInvocationLiteralCode : methodSemantics.LiteralCode;
+			string code = isBaseCall ? methodSemantics.NonVirtualInvocationLiteralCode : methodSemantics.NonExpandedFormLiteralCode;
 			var tokens = InlineCodeMethodCompiler.Tokenize(method, code, s => _errorReporter.Message(Messages._7525, s));
 			if (tokens == null) {
 				return JsExpression.Null;

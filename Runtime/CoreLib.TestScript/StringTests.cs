@@ -209,6 +209,15 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(string.Format("x{0}{1}", "a", "b"), "xab");
 			Assert.AreEqual(string.Format("x{0}{1}{2}", "a", "b", "c"), "xabc");
 			Assert.AreEqual(string.Format("x{0}{1}{2}{3}", "a", "b", "c", "d"), "xabcd");
+
+			var arr1 = new object[] { "a" };
+			var arr2 = new object[] { "a", "b" };
+			var arr3 = new object[] { "a", "b", "c" };
+			var arr4 = new object[] { "a", "b", "c", "d" };
+			Assert.AreEqual(string.Format("x{0}", arr1), "xa");
+			Assert.AreEqual(string.Format("x{0}{1}", arr2), "xab");
+			Assert.AreEqual(string.Format("x{0}{1}{2}", arr3), "xabc");
+			Assert.AreEqual(string.Format("x{0}{1}{2}{3}", arr4), "xabcd");
 		}
 
 		[Test]

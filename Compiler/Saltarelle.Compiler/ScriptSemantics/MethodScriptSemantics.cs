@@ -78,6 +78,18 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
+		private string _nonExpandedFormLiteralCode;
+		/// <summary>
+		/// Literal code for the method when invoked in non-expanded form (for its param array). May or may not be present when the method uses the {*parameter} placeholder.
+		/// </summary>
+		public string NonExpandedFormLiteralCode {
+			get {
+				if (Type != ImplType.InlineCode)
+					throw new InvalidOperationException();
+				return _nonExpandedFormLiteralCode;
+			}
+		}
+
 		/// <summary>
 		/// Implementation type.
 		/// </summary>
@@ -114,8 +126,8 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GeneratedMethodName = generateCode ? name : null, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray };
 		}
 
-		public static MethodScriptSemantics InlineCode(string literalCode, bool enumerateAsArray = false, string generatedMethodName = null, string nonVirtualInvocationLiteralCode = null) {
-			return new MethodScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = true, GeneratedMethodName = generatedMethodName, EnumerateAsArray = enumerateAsArray, _nonVirtualInvocationLiteralCode = nonVirtualInvocationLiteralCode ?? literalCode };
+		public static MethodScriptSemantics InlineCode(string literalCode, bool enumerateAsArray = false, string generatedMethodName = null, string nonVirtualInvocationLiteralCode = null, string nonExpandedFormLiteralCode = null) {
+			return new MethodScriptSemantics { Type = ImplType.InlineCode, _text = literalCode, IgnoreGenericArguments = true, GeneratedMethodName = generatedMethodName, EnumerateAsArray = enumerateAsArray, _nonVirtualInvocationLiteralCode = nonVirtualInvocationLiteralCode ?? literalCode, _nonExpandedFormLiteralCode = nonExpandedFormLiteralCode ?? literalCode };
 		}
 
 		public static MethodScriptSemantics NativeIndexer() {

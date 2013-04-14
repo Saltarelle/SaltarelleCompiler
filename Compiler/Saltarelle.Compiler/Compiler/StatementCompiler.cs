@@ -258,7 +258,7 @@ namespace Saltarelle.Compiler.Compiler {
 			SetRegion(type.Region);
 			try {
 				var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
-				return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0],  currentIsStaticMethod);
+				return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0], currentIsStaticMethod);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);

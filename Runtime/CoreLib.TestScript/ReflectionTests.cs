@@ -568,8 +568,10 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void InvokeWorksForNonGenericInstanceMethods() {
 			var m = typeof(C8).GetMethod("M1");
+			var argsArr = new object[] { "c", "d" };
 			var c = new C8("X");
 			Assert.AreEqual(m.Invoke(c, "a", "b"), "X a b", "Invoke with target should work");
+			Assert.AreEqual(m.Invoke(c, argsArr), "X c d", "Invoke (non-expanded) with target should work");
 			Assert.Throws(() => m.Invoke(null, "a", "b"), "Invoke without target should throw");
 			Assert.Throws(() => m.Invoke(c, new[] { typeof(string) }, "a", "b"), "Invoke with type arguments with target should throw");
 			Assert.Throws(() => m.Invoke(null, new[] { typeof(string) }, "a", "b"), "Invoke with type arguments without target should throw");
@@ -605,8 +607,10 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void InvokeWorksForGenericInstanceMethod() {
 			var m = typeof(C8).GetMethod("M3");
+			var argsArr = new object[] { "x" };
 			var c = new C8("X");
 			Assert.AreEqual(m.Invoke(c, new[] { typeof(int), typeof(string) }, "a"), "X ss.Int32 String a", "Result of invoking delegate should be correct");
+			Assert.AreEqual(m.Invoke(c, new[] { typeof(int), typeof(string) }, argsArr), "X ss.Int32 String x", "Result of invoking delegate should be correct");
 			Assert.Throws(() => m.Invoke(null, new[] { typeof(int), typeof(string) }, "a"), "Null target with correct type arguments should throw");
 			Assert.Throws(() => m.Invoke(c, "a"), "No type arguments with target should throw");
 			Assert.Throws(() => m.Invoke(c, new Type[0], "a"), "0 type arguments with target should throw");

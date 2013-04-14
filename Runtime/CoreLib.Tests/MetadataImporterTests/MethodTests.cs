@@ -1096,6 +1096,28 @@ public class C : I {
 		}
 
 		[Test]
+		public void InlineCodeAttributeWithNonExpandedFormCodeWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	[InlineCode(""X"", NonExpandedFormCode = ""Y"")]
+	public void SomeMethod(int x, params int[] y) {}
+}");
+
+			var impl = FindMethod("C.SomeMethod", 2);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.NonExpandedFormLiteralCode, Is.EqualTo("Y"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotSpecifyNonExpandedFormCodeIfTheMethodDoesNotHaveAParamsParameter() {
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""Y"")] public void M1(int a, int[] b) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("method") && AllErrorTexts[0].Contains("C1.M1") && AllErrorTexts[0].Contains("NonExpandedFormCode") && AllErrorTexts[0].Contains("params"));
+		}
+
+		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
@@ -1106,6 +1128,10 @@ public class C : I {
 			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonVirtualCode = ""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""{x}"")] public void SomeMethod(params int[] a) {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 		}

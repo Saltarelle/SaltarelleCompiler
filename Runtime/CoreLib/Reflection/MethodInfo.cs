@@ -24,9 +24,9 @@ namespace System.Reflection {
 		public int TypeParameterCount { [InlineCode("{this}.tpcount || 0")] get; [InlineCode("X")] private set; }
 		public bool IsGenericMethodDefinition { [InlineCode("!!{this}.tpcount")] get; [InlineCode("X")] private set; }
 
-		[InlineCode("{$System.Script}.midel({this}, {obj})({*arguments})")]
+		[InlineCode("{$System.Script}.midel({this}, {obj})({*arguments})", NonExpandedFormCode = "{$System.Script}.midel({this}, {obj}).apply(null, {arguments})")]
 		public object Invoke(object obj, params object[] arguments) { return null; }
-		[InlineCode("{$System.Script}.midel({this}, {obj}, {typeArguments})({*arguments})")]
+		[InlineCode("{$System.Script}.midel({this}, {obj}, {typeArguments})({*arguments})", NonExpandedFormCode = "{$System.Script}.midel({this}, {obj}, {typeArguments}).apply(null, {arguments})")]
 		public object Invoke(object obj, Type[] typeArguments, params object[] arguments) { return null; }
 
 		/// <summary>

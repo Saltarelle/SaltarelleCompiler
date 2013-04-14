@@ -172,13 +172,42 @@ class C1<T1> {
 
 		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
-			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public C1() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
 
-			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public C1() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeWithNonExpandedFormCodeWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	[InlineCode(""X"", NonExpandedFormCode = ""Y"")]
+	public C(int x, params int[] y) {}
+}");
+
+			var impl = FindConstructor("C", 2);
+			Assert.That(impl.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.NonExpandedFormLiteralCode, Is.EqualTo("Y"));
+		}
+
+		[Test]
+		public void ErrorInNonExpandedFormCodeInInlineCodeAttributeIsAnError() {
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""Y"")] public C1(int a, int[] b) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("NonExpandedFormCode") && AllErrorTexts[0].Contains("params"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotSpecifyNonExpandedFormCodeIfTheConstructorDoesNotHaveAParamsParameter() {
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""{x}"")] public C1(int a, params int[] b) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 		}
 
 		[Test]
