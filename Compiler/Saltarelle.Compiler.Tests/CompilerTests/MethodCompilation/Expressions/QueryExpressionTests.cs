@@ -372,8 +372,6 @@ static int F(CI i, IEnumerable<CJ> j) { return 0; }
 void M() {
 	CI[] arr1 = null;
 	CJ[] arr2 = null;
-
-void M() {
 	int[] outer = null;
 	// BEGIN
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj into g let k = F(i, g) select F(i, g) + k;
