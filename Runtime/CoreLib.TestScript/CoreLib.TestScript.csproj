@@ -61,6 +61,17 @@
     <Compile Include="ActivatorTests.cs" />
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\ArrayBufferTests.cs" />
+    <Compile Include="Collections\TypedArrays\DataViewTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint8ClampedArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Float64ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Float32ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint16ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint32ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint8ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Int16ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Int8ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Int32ArrayTests.cs" />
     <Compile Include="Reflection\AttributeTests.cs" />
     <Compile Include="SimpleTypes\CharTests.cs" />
     <Compile Include="Threading\Tasks\AsyncTests.cs" />

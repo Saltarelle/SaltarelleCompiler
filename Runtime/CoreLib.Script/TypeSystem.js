@@ -165,16 +165,7 @@ ss.getBaseType = function#? DEBUG ss$getBaseType##(type) {
 };
 
 ss.getTypeFullName = function#? DEBUG ss$getTypeFullName##(type) {
-	if (type === Array) return 'Array';
-	if (type === Boolean) return 'Boolean';
-	if (type === Date) return 'Date';
-	if (type === Error) return 'Error';
-	if (type === Function) return 'Function';
-	if (type === Number) return 'Number';
-	if (type === Object) return 'Object';
-	if (type === RegExp) return 'RegExp';
-	if (type === String) return 'String';
-	return type.__typeName || 'Object';
+	return type.__typeName || type.name || (type.toString().match(/^\s*function\s*([^\s(]+)/) || [])[1] || 'Object';
 };
 
 ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
@@ -185,14 +176,16 @@ ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
 };
 
 ss.getInterfaces = function#? DEBUG ss$getInterfaces##(type) {
-	if (type === Array)
-		return [ ss_IEnumerable, ss_ICollection, ss_IList ];
+	if (type.__interfaces)
+		return type.__interfaces;
 	else if (type === Date || type === Number)
 		return [ ss_IEquatable, ss_IComparable, ss_IFormattable ];
 	else if (type === Boolean || type === String)
 		return [ ss_IEquatable, ss_IComparable ];
+	else if (type === Array || ss.isTypedArrayType(type))
+		return [ ss_IEnumerable, ss_ICollection, ss_IList ];
 	else
-		return type.__interfaces || [];
+		return [];
 };
 
 ss.isInstanceOfType = function#? DEBUG ss$isInstanceOfType##(instance, type) {
