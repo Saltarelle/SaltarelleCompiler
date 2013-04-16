@@ -172,13 +172,42 @@ class C1<T1> {
 
 		[Test]
 		public void InlineCodeAttributeWithUnknownArgumentsIsAnError() {
-			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public static void SomeMethod() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{this}"")] public C1() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{this}"));
 
-			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{x}"")] public C1() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeWithNonExpandedFormCodeWorks() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class C {
+	[InlineCode(""X"", NonExpandedFormCode = ""Y"")]
+	public C(int x, params int[] y) {}
+}");
+
+			var impl = FindConstructor("C", 2);
+			Assert.That(impl.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.NonExpandedFormLiteralCode, Is.EqualTo("Y"));
+		}
+
+		[Test]
+		public void ErrorInNonExpandedFormCodeInInlineCodeAttributeIsAnError() {
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""Y"")] public C1(int a, int[] b) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("NonExpandedFormCode") && AllErrorTexts[0].Contains("params"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotSpecifyNonExpandedFormCodeIfTheConstructorDoesNotHaveAParamsParameter() {
+			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""{x}"")] public C1(int a, params int[] b) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("constructor") && AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
 		}
 
 		[Test]
@@ -417,6 +446,30 @@ public class C4 {
 			Assert.That(c40.SkipInInitializer, Is.True);
 			Assert.That(c41.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
 			Assert.That(c41.SkipInInitializer, Is.True);
+		}
+
+		[Test]
+		public void AllConstructorsOfImportedTypesAreUnnamedUnlessAScriptNameIsSpecified() {
+			Prepare(@"
+using System;
+using System.Runtime.CompilerServices;
+[Imported]
+public class C {
+	public C() {}
+	public C(int i) {}
+	[ScriptName(""someCtor"")]
+	public C(int i, int j) {}
+}");
+
+			var c1 = FindConstructor("C", 0);
+			Assert.That(c1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+			var c2 = FindConstructor("C", 1);
+			Assert.That(c2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+			var c3 = FindConstructor("C", 2);
+			Assert.That(c3.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+			Assert.That(c3.Name, Is.EqualTo("someCtor"));
 		}
 	}
 }

@@ -25,6 +25,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7026 = Tuple.Create(7026, MessageSeverity.Error, "The type {0} must have an [IncludeGenericArgumentsAttribute]");
 		public static readonly Tuple<int, MessageSeverity, string> _7027 = Tuple.Create(7027, MessageSeverity.Error, "The method {0} must have an [IncludeGenericArgumentsAttribute]");
 		public static readonly Tuple<int, MessageSeverity, string> _7028 = Tuple.Create(7028, MessageSeverity.Error, "The property {0} must have an [InlineCodeAttribute] on either both or none of its accessors because its declaring type is serializable.");
+		public static readonly Tuple<int, MessageSeverity, string> _7029 = Tuple.Create(7029, MessageSeverity.Error, "The {0} {1} cannot have a NonExpandedFormCode specified on its [InlineCodeAttribute] because it does not have a parameter with the 'params' modifier.");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7100 = Tuple.Create(7100, MessageSeverity.Error, "The member {0} has an [AlternateSignatureAttribute], but there is not exactly one other method with the same name that does not have that attribute.");
 		public static readonly Tuple<int, MessageSeverity, string> _7102 = Tuple.Create(7102, MessageSeverity.Error, "The constructor {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.");

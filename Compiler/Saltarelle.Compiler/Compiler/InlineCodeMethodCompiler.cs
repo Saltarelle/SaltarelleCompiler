@@ -148,9 +148,7 @@ namespace Saltarelle.Compiler.Compiler {
 								substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
 							}
 							else if (arguments[arguments.Count - 1].NodeType != ExpressionNodeType.ArrayLiteral) {
-								hasErrors = true;
-								errorReporter("The method " + method.DeclaringType.FullName + "." + method.Name + " can only be invoked with its params parameter expanded");
-								substitutions[s] = Tuple.Create((JsExpression)JsExpression.ArrayLiteral(), true);
+								throw new Exception("The last argument must be a literal array if using the {*arg} placeholder");
 							}
 						}
 						break;
@@ -278,7 +276,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			CompileInlineCodeMethodInvocation(method,
 			                                  tokens,
-			                                  method.IsStatic ? null : JsExpression.Null,
+			                                  method.IsStatic || method.IsConstructor ? null : JsExpression.Null,
 			                                  method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
 			                                  resolveType,
 			                                  resolveTypeArgument,

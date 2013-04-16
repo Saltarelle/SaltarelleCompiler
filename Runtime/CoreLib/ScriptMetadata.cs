@@ -275,6 +275,11 @@ namespace System.Runtime.CompilerServices {
 		/// This code is used when the method is invoked non-virtually (eg. in a base.Method() call).
 		/// </summary>
 		public string NonVirtualCode { get; set; }
+
+		/// <summary>
+		/// This code is used when the method, which should be a method with a param array parameter, is invoked in non-expanded form. Optional, but can be used to support non-expanded invocation of a method that has a {*param} placeholder in its code.
+		/// </summary>
+		public string NonExpandedFormCode { get; set; }
 	}
 
 	/// <summary>

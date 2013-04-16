@@ -13,19 +13,31 @@ ss_ICollection.prototype = {
 ss.registerInterface(global, 'ss.ICollection', ss_ICollection);
 
 ss.count = function#? DEBUG ss$count##(obj) {
-	return ss.isArray(obj) ? obj.length : obj.get_count();
+	return obj.get_count ? obj.get_count() : obj.length;
 };
 
 ss.add = function#? DEBUG ss$add##(obj, item) {
-	ss.isArray(obj) ? obj.push(item) : obj.add(item);
+	if (obj.add)
+		obj.add(item);
+	else if (ss.isArray(obj))
+		obj.push(item);
+	else
+		throw new ss_NotSupportedException();
 };
 
-ss.clear = function#? DEBUG ss$clear##(obj, item) {
-	ss.isArray(obj) ? (obj.length = 0) : obj.clear();
+ss.clear = function#? DEBUG ss$clear##(obj) {
+	if (obj.clear)
+		obj.clear();
+	else if (ss.isArray(obj))
+		obj.length = 0;
+	else
+		throw new ss_NotSupportedException();
 };
 
 ss.remove = function#? DEBUG ss$remove##(obj, item) {
-	if (ss.isArray(obj)) {
+	if (obj.remove)
+		return obj.remove(item);
+	else if (ss.isArray(obj)) {
 		var index = ss.indexOf(obj, item);
 		if (index >= 0) {
 			obj.splice(index, 1);
@@ -34,9 +46,12 @@ ss.remove = function#? DEBUG ss$remove##(obj, item) {
 		return false;
 	}
 	else
-		return obj.remove(item);
+		throw new ss_NotSupportedException();
 };
 
 ss.contains = function#? DEBUG ss$contains##(obj, item) {
-	return ss.isArray(obj) ? (ss.indexOf(obj, item) >= 0) : obj.contains(item);
+	if (obj.contains)
+		return obj.contains(item);
+	else
+		return ss.indexOf(obj, item) >= 0;
 };

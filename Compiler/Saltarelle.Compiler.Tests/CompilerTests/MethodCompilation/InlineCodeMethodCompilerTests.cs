@@ -370,24 +370,6 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingMethodWithExpandedParamArrayInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
-			Compile(new[] {
-@"class C {
-	public void F(string p1, int p2, params string[] p3) {}
-	public void M() {
-		string[] args = null;
-		// BEGIN
-		F(""x"", 1, args);
-		// END
-	}
-}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{p1}*{p2}({*p3})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
-
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.FormattedMessage.Contains("C.F") && m.FormattedMessage.Contains("expanded")));
-		}
-
-		[Test]
 		public void ValidateReturnsNoErrosWhenCalledWithAValidString() {
 			Compile("class C<T1> { public void F<T2>(string s, int a, params string[] p) {} }");
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");

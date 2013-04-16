@@ -47,6 +47,14 @@ ss.isArray = function#? DEBUG ss$isArray##(obj) {
 	return Object.prototype.toString.call(obj) === '[object Array]';
 };
 
+ss.isTypedArrayType = function#? DEBUG ss$isTypedArrayType##(type) {
+	return ['Float32Array', 'Float64Array', 'Int8Array', 'Int16Array', 'Int32Array', 'Uint8Array', 'Uint16Array', 'Uint32Array', 'Uint8ClampedArray'].indexOf(ss.getTypeFullName(type)) >= 0;
+};
+
+ss.isArrayOrTypedArray = function#? DEBUG ss$isArray##(obj) {
+	return ss.isArray(obj) || ss.isTypedArrayType(ss.getInstanceType(obj));
+};
+
 ss.getHashCode = function#? DEBUG ss$getHashCode##(obj) {
 	if (!ss.isValue(obj))
 		throw 'Cannot get hash code of null';
@@ -75,7 +83,7 @@ ss.getHashCode = function#? DEBUG ss$getHashCode##(obj) {
 };
 
 ss.defaultHashCode = function#? DEBUG ss$defaultHashCode##(obj) {
-	return obj.$__hashCode__ || (obj.$__hashCode__ = (Math.random() * 0xffffffff) | 0);
+	return obj.$__hashCode__ || (obj.$__hashCode__ = (Math.random() * 0x100000000) | 0);
 };
 
 ss.equals = function#? DEBUG ss$equals##(a, b) {

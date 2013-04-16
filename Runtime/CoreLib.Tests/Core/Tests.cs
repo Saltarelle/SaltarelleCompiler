@@ -1,0 +1,49 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using NUnit.Framework;
+
+namespace CoreLib.Tests.Core {
+	[TestFixture]
+	public class ActivatorTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ArgumentsTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ArrayTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class DelegateTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ExceptionTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IComparableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IEquatableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IFormattableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class LazyTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class MathTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class MultidimArrayTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class NullableTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class RandomTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class ScriptTests : CoreLibTestBase {}
+}

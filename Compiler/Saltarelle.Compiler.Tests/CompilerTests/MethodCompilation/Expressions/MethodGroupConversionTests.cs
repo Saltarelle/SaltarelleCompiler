@@ -429,9 +429,9 @@ public void M() {
 	// END
 }
 ",
-@"	var $f = $Bind(function($tmp1, $tmp2) {
-		return _(this)._($tmp1)._($tmp2)._({ga_String});
-	}, $c);
+@"	var $f = function($tmp1, $tmp2) {
+		return _($c)._($tmp1)._($tmp2)._({ga_String});
+	};
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({b})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -502,6 +502,24 @@ public void M() {
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("expanded param array")));
+		}
+
+		[Test]
+		public void MethodGroupConversionOnInlineCodeMethodUsesNonExpandedFormPattern() {
+			AssertCorrect(
+@"class C1 {
+	public int F1(params object[] a) { return 0; }
+	public void M() {
+		// BEGIN
+		System.Func<object[], int> f = F1;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1) {
+		return _2($tmp1);
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*a})", nonExpandedFormLiteralCode: "_2({a})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]
@@ -634,6 +652,181 @@ public void M() {
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("C1.F") && er.AllMessages[0].FormattedMessage.Contains("System.Action") && er.AllMessages[0].FormattedMessage.Contains("expand") && er.AllMessages[0].FormattedMessage.Contains("param array"));
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsNormalMethod() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static void F(this string s, int a, params int[] b) {}
+}
+class C {
+	public void M() {
+		string s = null;
+		// BEGIN
+		Action<int, int[]> f = s.F;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		{sm_Ext}.$F($s, $tmp1, $tmp2);
+	};
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsNormalMethod_WithReturnValue() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static int F(this string s, int a, params int[] b) { return 0; }
+}
+class C {
+	public void M() {
+		string s = null;
+		// BEGIN
+		Func<int, int[], int> f = s.F;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		return {sm_Ext}.$F($s, $tmp1, $tmp2);
+	};
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsNormalMethod_ExpandParams() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static void F(this string s, int a, int b) {}
+}
+class C {
+	public void M() {
+		string s = null;
+		// BEGIN
+		Action<int, int> f = s.F;
+		// END
+	}
+}
+",
+@"	var $f = function() {
+		{sm_Ext}.$F.apply(null, [$s].concat(Array.prototype.slice.call(arguments)));
+	};
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true), GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsNormalMethodAppliedToThis() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static void F(this C c, int a, int b) {}
+}
+class C {
+	public void M() {
+		// BEGIN
+		Action<int, int> f = this.F;
+		// END
+	}
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		{sm_Ext}.$F(this, $tmp1, $tmp2);
+	}, this);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsInlineCode() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static void F(this string s, int a, int b) {}
+}
+class C {
+	public void M() {
+		string s = null;
+		// BEGIN
+		Action<int, int> f = s.F;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		_($s)._($tmp1)._($tmp2);
+	};
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({s})._({a})._({b})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsInlineCode_WithReturnValue() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static int F(this string s, int a, params int[] b) { return 0; }
+}
+class C {
+	public void M() {
+		string s = null;
+		// BEGIN
+		Func<int, int[], int> f = s.F;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		return _($s)._($tmp1)._($tmp2);
+	};
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({s})._({a})._({b})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsInlineCode_ExpandParams() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static void F(this string s, int a, int[] b) {}
+}
+class C {
+	public void M() {
+		string s = null;
+		// BEGIN
+		Action<int, int[]> f = s.F;
+		// END
+	}
+}
+",
+@"	var $f = function($tmp1) {
+		_($s)._($tmp1)._(Array.prototype.slice.call(arguments, 1));
+	};
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({s})._({a})._({b})") : MethodScriptSemantics.NormalMethod("$" + m.Name), GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) });
+		}
+
+		[Test]
+		public void MethodGroupConversionOnExtensionMethodImplementedAsInlineCodeAppliedToThis() {
+			AssertCorrect(
+@"using System;
+static class Ext {
+	public static void F(this C c, int a, int b) {}
+}
+class C {
+	public void M() {
+		// BEGIN
+		Action<int, int> f = this.F;
+		// END
+	}
+}
+",
+@"	var $f = $Bind(function($tmp1, $tmp2) {
+		_(this)._($tmp1)._($tmp2);
+	}, this);
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({c})._({a})._({b})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+
 		}
 	}
 }

@@ -106,7 +106,7 @@ namespace System {
 		/// </summary>
 		/// <param name="strings">The sequence of strings</param>
 		/// <returns>The concatenated string.</returns>
-		[InlineCode("[{*strings}].join('')")]
+		[InlineCode("{strings}.join('')")]
 		public static string Concat(params string[] strings) {
 			return null;
 		}
@@ -126,7 +126,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("[{*o}].join('')")]
+		[InlineCode("{o}.join('')")]
 		public static string Concat(params object[] o) {
 			return null;
 		}
@@ -210,7 +210,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.formatString({format}, {*values})")]
+		[InlineCode("{$System.Script}.formatString({format}, {*values})", NonExpandedFormCode = "{$System.Script}.formatString.apply(null, [{format}].concat({values}))")]
 		public static string Format(string format, params object[] values) {
 			return null;
 		}

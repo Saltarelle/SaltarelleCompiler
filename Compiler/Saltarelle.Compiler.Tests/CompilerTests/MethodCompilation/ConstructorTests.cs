@@ -1044,5 +1044,36 @@ class C {
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 		}
+
+		[Test]
+		public void ChainingToInlineCodeConstructorThatUsesExpandedParameterPlaceholderInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {
+	public static int[] a = null;
+
+	public C1(params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(a) {
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})") : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("constructor") && msg.FormattedMessage.Contains("C1") && msg.FormattedMessage.Contains("params parameter expanded")));
+		}
+
+		[Test]
+		public void ChainingToInlineCodeConstructorInNonExpandedFormUsesNonExpandedPattern() {
+			AssertCorrect(
+@"class C {
+	public static int[] a = null;
+	public C(params int[] args) {}
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(a) {
+	}
+}",
+@"function() {
+	$ShallowCopy(_2({sm_C}.$a), this);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : ConstructorScriptSemantics.Unnamed() });
+		}
 	}
 }
