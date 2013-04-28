@@ -101,8 +101,8 @@ namespace CoreLib.Plugin {
 					if (ch == '_' || ch == '$' || char.IsLetter(ch) || (i > 0 && char.IsDigit(ch)))
 						result += ch;
 				}
-				if (result == "")
-					result = "_";
+				if (result == "" || char.IsDigit(result[0]))
+					result = "_" + result;
 
 				result = _namer.GetVariableName(result, _usedSymbols);
 				_usedSymbols.Add(result);
