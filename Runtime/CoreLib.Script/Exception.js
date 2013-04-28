@@ -6,7 +6,8 @@ var ss_Exception = function#? DEBUG Exception$##(message, innerException) {
 	this._innerException = innerException || null;
 }
 ss_Exception.__typeName = 'ss.Exception';
-ss.registerClass(global, 'ss.Exception', ss_Exception);
+ss.Exception = ss_Exception;
+ss.initClass(ss_Exception);
 
 ss_Exception.prototype = {
 	get_message: function#? DEBUG Exception$get_message##() {

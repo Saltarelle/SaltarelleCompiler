@@ -12,4 +12,5 @@ ss_PromiseException.prototype = {
 };
 
 ss_PromiseException.__typeName = 'ss.PromiseException';
-ss.registerClass(global, 'ss.PromiseException', ss_PromiseException, ss_Exception);
+ss.PromiseException = ss_PromiseException;
+ss.initClass(ss_PromiseException, ss_Exception);

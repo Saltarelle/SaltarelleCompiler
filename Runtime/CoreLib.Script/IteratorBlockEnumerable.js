@@ -13,4 +13,5 @@ ss_IteratorBlockEnumerable.prototype = {
 };
 
 ss_IteratorBlockEnumerable.__typeName = 'ss.IteratorBlockEnumerable';
-ss.registerClass(global, 'ss.IteratorBlockEnumerable', ss_IteratorBlockEnumerable, null, [ss_IEnumerable]);
+ss.IteratorBlockEnumerable = ss_IteratorBlockEnumerable;
+ss.initClass(ss_IteratorBlockEnumerable, null, [ss_IEnumerable]);

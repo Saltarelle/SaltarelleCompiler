@@ -65,7 +65,8 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -123,7 +124,8 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -170,7 +172,8 @@ $MyClass.s1 = function(f) {
 $MyClass.s2 = function(g) {
 	g = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 var h = 0;
 var i = 0;
 ", new[] { "MyClass" });
@@ -196,7 +199,8 @@ var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -218,7 +222,8 @@ var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
-{Script}.registerClass(global, 'MyClass', $MyClass, null, [{Interface1}, {Interface2}, {Interface3}]);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass, null, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -239,7 +244,8 @@ var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
-{Script}.registerClass(global, 'MyClass', $MyClass, {TheBaseClass});
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass, {TheBaseClass});
 ", new[] { "MyClass" });
 		}
 
@@ -255,7 +261,8 @@ var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 ", new[] { "MyClass" });
 		}
 
@@ -267,13 +274,16 @@ $MyClass.__typeName = 'MyClass';
 		public MyClass(int x) { x = 0; }
 	}
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"global.SomeNamespace = global.SomeNamespace || {};
+global.SomeNamespace.InnerNamespace = global.SomeNamespace.InnerNamespace || {};
+////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
 var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	x = 0;
 };
 $SomeNamespace_InnerNamespace_MyClass.__typeName = 'SomeNamespace.InnerNamespace.MyClass';
-{Script}.registerClass(global, 'SomeNamespace.InnerNamespace.MyClass', $SomeNamespace_InnerNamespace_MyClass);
+global.SomeNamespace.InnerNamespace.MyClass = $SomeNamespace_InnerNamespace_MyClass;
+{Script}.initClass($SomeNamespace_InnerNamespace_MyClass);
 ");
 		}
 
@@ -294,7 +304,8 @@ var $IMyInterface = function() {
 };
 $IMyInterface.__typeName = 'IMyInterface';
 $IMyInterface.prototype = { m1: null, m2: null };
-{Script}.registerInterface(global, 'IMyInterface', $IMyInterface, [{Interface1}, {Interface2}, {Interface3}]);
+global.IMyInterface = $IMyInterface;
+{Script}.initInterface($IMyInterface, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "IMyInterface" });
 		}
 
@@ -319,7 +330,8 @@ $MyClass.prototype = {
 $MyClass.someName = function(x) {
 };
 $MyClass.someName.prototype = $MyClass.prototype;
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 ", new[] { "MyClass" });
 		}
 
@@ -385,7 +397,8 @@ var $MyClass$2 = function(T1, T2) {
 	return $type;
 };
 $MyClass$2.__typeName = 'MyClass$2';
-{Script}.registerGenericClass(global, 'MyClass$2', $MyClass$2, 2);
+{Script}.initGenericClass($MyClass$2, 2);
+global.MyClass$2 = $MyClass$2;
 ", new[] { "MyClass" });
 		}
 
@@ -412,7 +425,8 @@ var $IMyInterface$2 = function(T1, T2) {
 	return $type;
 };
 $IMyInterface$2.__typeName = 'IMyInterface$2';
-{Script}.registerGenericInterface(global, 'IMyInterface$2', $IMyInterface$2, 2);
+{Script}.initGenericInterface($IMyInterface$2, 2);
+global.IMyInterface$2 = $IMyInterface$2;
 ", new[] { "IMyInterface" });
 		}
 
@@ -437,7 +451,8 @@ $MyClass.prototype = {
 		};
 	}
 };
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 ", new[] { "MyClass" });
 		}
 
@@ -461,7 +476,8 @@ $MyClass.prototype = {
 		var x = 0;
 	}
 };
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 ", new[] { "MyClass" });
 		}
 
@@ -484,7 +500,8 @@ $MyClass.m1 = function(T1, T2) {
 		var x = 0;
 	};
 };
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 ", new[] { "MyClass" });
 		}
 
@@ -506,7 +523,8 @@ $MyClass.__typeName = 'MyClass';
 $MyClass.m1 = function(a) {
 	var x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 ", new[] { "MyClass" });
 		}
 
@@ -574,7 +592,7 @@ public static class MyClass {
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = { field1: 'the value', field2: 42, field3: null };
-{Script}.registerType(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
 ", new[] { "MyClass" });
 		}
 
@@ -626,7 +644,7 @@ var $$GenericClass$1 = function(T1) {
 	return $type;
 };
 $$GenericClass$1.__typeName = '$GenericClass$1';
-{Script}.registerGenericClass(null, '$GenericClass$1', $$GenericClass$1, 1);
+{Script}.initGenericClass($$GenericClass$1, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
 var $$GenericInterface$1 = function(T1) {
@@ -638,7 +656,7 @@ var $$GenericInterface$1 = function(T1) {
 	return $type;
 };
 $$GenericInterface$1.__typeName = '$GenericInterface$1';
-{Script}.registerGenericInterface(null, '$GenericInterface$1', $$GenericInterface$1, 1);
+{Script}.initGenericInterface($$GenericInterface$1, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
 var $$Interface = function() {
@@ -657,9 +675,9 @@ $$Outer$Inner.__typeName = '$Outer$Inner';
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
-{Script}.registerInterface(null, '$Interface', $$Interface);
-{Script}.registerClass(null, '$Outer', $$Outer);
-{Script}.registerClass(null, '$Outer$Inner', $$Outer$Inner);
+{Script}.initInterface($$Interface);
+{Script}.initClass($$Outer);
+{Script}.initClass($$Outer$Inner);
 ");
 		}
 
@@ -674,7 +692,8 @@ var $C = function() {
 };
 $C.__typeName = 'C';
 $C.prototype = { $m: null };
-{Script}.registerClass(global, 'C', $C);
+global.C = $C;
+{Script}.initClass($C);
 ");
 		}
 
@@ -705,7 +724,8 @@ var $GenericClass$1 = function(T1) {
 	return $type;
 };
 $GenericClass$1.__typeName = 'GenericClass$1';
-{Script}.registerGenericClass(exports, 'GenericClass$1', $GenericClass$1, 1);
+{Script}.initGenericClass($GenericClass$1, 1);
+exports.GenericClass$1 = $GenericClass$1;
 ////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
 var $GenericInterface$1 = function(T1) {
@@ -717,23 +737,26 @@ var $GenericInterface$1 = function(T1) {
 	return $type;
 };
 $GenericInterface$1.__typeName = 'GenericInterface$1';
-{Script}.registerGenericInterface(exports, 'GenericInterface$1', $GenericInterface$1, 1);
+{Script}.initGenericInterface($GenericInterface$1, 1);
+exports.GenericInterface$1 = $GenericInterface$1;
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
 var $Interface = function() {
 };
 $Interface.__typeName = 'Interface';
+exports.Interface = $Interface;
 ////////////////////////////////////////////////////////////////////////////////
 // NormalClass
 var $NormalClass = function() {
 };
 $NormalClass.__typeName = 'NormalClass';
+exports.NormalClass = $NormalClass;
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
-{Script}.registerInterface(exports, 'Interface', $Interface);
-{Script}.registerClass(exports, 'NormalClass', $NormalClass);
-{Script}.registerType(exports, 'ResourceClass', $ResourceClass);
+exports.ResourceClass = $ResourceClass;
+{Script}.initInterface($Interface);
+{Script}.initClass($NormalClass);
 ");
 		}
 
@@ -756,11 +779,12 @@ $D.$ctor = function() {
 	var $this = {B}.$ctor();
 	return $this;
 };
-{Script}.registerClass(global, 'D', $D, {B});
+global.D = $D;
+{Script}.initClass($D, {B});
 ", new[] { "D" });
 		}
 
-		[Test, Ignore("Defining serializable interfaces is not yet possible")]
+		[Test]
 		public void SerializableInterfaceAppearsInInheritanceList() {
 			AssertCorrect(@"
 using System;
@@ -769,20 +793,33 @@ using System;
 [Serializable] public class C : I1 {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// I1
-var $I1 = function() {
-};
-////////////////////////////////////////////////////////////////////////////////
 // C
 var $C = function() {
 };
+$C.__typeName = 'C';
+$C.createInstance = function() {
+	return {C}.$ctor();
+};
+$C.$ctor = function() {
+	var $this = {};
+	return $this;
+};
+global.C = $C;
+////////////////////////////////////////////////////////////////////////////////
+// I1
+var $I1 = function() {
+};
+$I1.__typeName = 'I1';
+global.I1 = $I1;
 ////////////////////////////////////////////////////////////////////////////////
 // I2
 var $I2 = function() {
 };
-{Script}.registerInterface(global, 'I1', $I1);
-{Script}.registerClass(global, 'C', $C, Object, $I1);
-{Script}.registerInterface(global, 'I2', $I2, [$I1]);
+$I2.__typeName = 'I2';
+global.I2 = $I2;
+{Script}.initInterface($I1);
+{Script}.initClass($C, null, [{I1}]);
+{Script}.initInterface($I2, [{I1}]);
 ");
 		}
 
@@ -799,7 +836,8 @@ var $D = function() {
 	{B}.call(this);
 };
 $D.__typeName = 'D';
-{Script}.registerClass(global, 'D', $D, {B});
+global.D = $D;
+{Script}.initClass($D, {B});
 ", new [] { "D", "I3" });
 		}
 
@@ -817,13 +855,15 @@ public class D : I1, I2 {}
 var $D = function() {
 };
 $D.__typeName = 'D';
+global.D = $D;
 ////////////////////////////////////////////////////////////////////////////////
 // I3
 var $I3 = function() {
 };
 $I3.__typeName = 'I3';
-{Script}.registerClass(global, 'D', $D, null, [{I2}]);
-{Script}.registerInterface(global, 'I3', $I3, [{I2}]);
+global.I3 = $I3;
+{Script}.initClass($D, null, [{I2}]);
+{Script}.initInterface($I3, [{I2}]);
 ", new [] { "D", "I3" });
 		}
 
@@ -841,13 +881,15 @@ public class D : I1, I2 {}
 var $D = function() {
 };
 $D.__typeName = 'D';
+global.D = $D;
 ////////////////////////////////////////////////////////////////////////////////
 // I3
 var $I3 = function() {
 };
 $I3.__typeName = 'I3';
-{Script}.registerClass(global, 'D', $D, null, [{I1}, {I2}]);
-{Script}.registerInterface(global, 'I3', $I3, [{I1}, {I2}]);
+global.I3 = $I3;
+{Script}.initClass($D, null, [{I1}, {I2}]);
+{Script}.initInterface($I3, [{I1}, {I2}]);
 ", new[] { "D", "I3" });
 		}
 
@@ -867,13 +909,15 @@ var $D = function() {
 	{Script}.makeGenericType({B}, [{Object}, {Int32}]).call(this);
 };
 $D.__typeName = 'D';
+global.D = $D;
 ////////////////////////////////////////////////////////////////////////////////
 // I2
 var $I2 = function() {
 };
 $I2.__typeName = 'I2';
-{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
-{Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
+global.I2 = $I2;
+{Script}.initClass($D, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
+{Script}.initInterface($I2, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
 
@@ -893,13 +937,15 @@ var $D = function() {
 	{Script}.makeGenericType({B}, [{C}, {Int32}]).call(this);
 };
 $D.__typeName = 'D';
+global.D = $D;
 ////////////////////////////////////////////////////////////////////////////////
 // I2
 var $I2 = function() {
 };
 $I2.__typeName = 'I2';
-{Script}.registerClass(global, 'D', $D, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
-{Script}.registerInterface(global, 'I2', $I2, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
+global.I2 = $I2;
+{Script}.initClass($D, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
+{Script}.initInterface($I2, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
 
@@ -955,7 +1001,8 @@ var $MyClass$2 = function(T1, T2) {
 	return $type;
 };
 $MyClass$2.__typeName = 'MyClass$2';
-{Script}.registerGenericClass(global, 'MyClass$2', $MyClass$2, 2);
+{Script}.initGenericClass($MyClass$2, 2);
+global.MyClass$2 = $MyClass$2;
 ", new[] { "MyClass" });
 		}
 
@@ -970,7 +1017,8 @@ public class D : B {}
 var $D = function() {
 };
 $D.__typeName = 'D';
-{Script}.registerClass(global, 'D', $D);
+global.D = $D;
+{Script}.initClass($D);
 ", new[] { "D" });
 		}
 
@@ -989,13 +1037,15 @@ public class C : I1, I2 {}
 var $C = function() {
 };
 $C.__typeName = 'C';
+global.C = $C;
 ////////////////////////////////////////////////////////////////////////////////
 // I3
 var $I3 = function() {
 };
 $I3.__typeName = 'I3';
-{Script}.registerClass(global, 'C', $C, null, [{I2}]);
-{Script}.registerInterface(global, 'I3', $I3, [{I2}]);
+global.I3 = $I3;
+{Script}.initClass($C, null, [{I2}]);
+{Script}.initInterface($I3, [{I2}]);
 ", new[] { "C", "I3" });
 		}
 
@@ -1022,7 +1072,8 @@ $D.$ctor = function() {
 $D.isInstanceOfType = function(obj) {
 	return obj.X;
 };
-{Script}.registerClass(global, 'D', $D);
+global.D = $D;
+{Script}.initClass($D);
 ", new[] { "D" });
 		}
 
@@ -1057,7 +1108,8 @@ var $D$1 = function(T) {
 	return $type;
 };
 $D$1.__typeName = 'D$1';
-{Script}.registerGenericClass(global, 'D$1', $D$1, 1);
+{Script}.initGenericClass($D$1, 1);
+global.D$1 = $D$1;
 ", new[] { "D" });
 		}
 

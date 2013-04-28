@@ -11,7 +11,8 @@ ss_ICollection.prototype = {
 };
 
 ss_ICollection.__typeName = 'ss.ICollection';
-ss.registerInterface(global, 'ss.ICollection', ss_ICollection);
+ss.ICollection = ss_ICollection;
+ss.initInterface(ss_ICollection);
 
 ss.count = function#? DEBUG ss$count##(obj) {
 	return obj.get_count ? obj.get_count() : obj.length;

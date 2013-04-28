@@ -9,4 +9,5 @@ ss_IEnumerator.prototype = {
 };
 
 ss_IEnumerator.__typeName = 'ss.IEnumerator';
-ss.registerInterface(global, 'ss.IEnumerator', ss_IEnumerator, [ss_IDisposable]);
+ss.IEnumerator = ss_IEnumerator;
+ss.initInterface(ss_IEnumerator, [ss_IDisposable]);

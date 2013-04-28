@@ -18,4 +18,5 @@ ss_AggregateException.prototype = {
 };
 
 ss_AggregateException.__typeName = 'ss.AggregateException';
-ss.registerClass(global, 'ss.AggregateException', ss_AggregateException, ss_Exception);
+ss.AggregateException = ss_AggregateException;
+ss.initClass(ss_AggregateException, ss_Exception);

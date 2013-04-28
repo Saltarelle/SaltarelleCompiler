@@ -1,21 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Type System Implementation
 
-ss.registerType = function#? DEBUG Type$registerType##(root, typeName, type) {
-	var ns = root;
-	var nameParts = typeName.split('.');
-
-	for (var i = 0; i < nameParts.length - 1; i++) {
-		var part = nameParts[i];
-		var nso = ns[part];
-		if (!nso) {
-			ns[part] = nso = {};
-		}
-		ns = nso;
-	}
-	ns[nameParts[nameParts.length - 1]] = type;
-};
-
 ss.__genericCache = {};
 
 ss._makeGenericTypeName = function#? DEBUG ss$_makeGenericTypeName##(genericType, typeArguments) {
@@ -37,7 +22,7 @@ ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstan
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.registerClass(null, name, instance, baseType(), interfaceTypes(), metadata);
+	ss.initClass(instance, baseType(), interfaceTypes(), metadata);
 };
 
 ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, baseInterfaces, metadata) {
@@ -46,7 +31,7 @@ ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfa
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.registerInterface(null, name, instance, baseInterfaces(), metadata);
+	ss.initInterface(instance, baseInterfaces(), metadata);
 };
 
 ss.isGenericTypeDefinition = function#? DEBUG ss$isGenericTypeDefinition##(type) {
@@ -79,10 +64,7 @@ ss._setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 	type.__metadata = metadata;
 }
 
-ss.registerClass = function#? DEBUG ss$registerClass##(root, name, ctor, baseType, interfaces, metadata) {
-	if (root)
-		ss.registerType(root, name, ctor);
-
+ss.initClass = function#? DEBUG ss$initClass##(ctor, baseType, interfaces, metadata) {
 	ctor.prototype.constructor = ctor;
 	ctor.__class = true;
 	ctor.__baseType = baseType || Object;
@@ -96,10 +78,7 @@ ss.registerClass = function#? DEBUG ss$registerClass##(root, name, ctor, baseTyp
 	}
 };
 
-ss.registerGenericClass = function#? DEBUG ss$registerGenericClass##(root, name, ctor, typeArgumentCount, metadata) {
-	if (root)
-		ss.registerType(root, name, ctor);
-
+ss.initGenericClass = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount, metadata) {
 	ctor.prototype.constructor = ctor;
 	ctor.__class = true;
 	ctor.__typeArgumentCount = typeArgumentCount;
@@ -109,10 +88,7 @@ ss.registerGenericClass = function#? DEBUG ss$registerGenericClass##(root, name,
 		ss._setMetadata(ctor, metadata);
 };
 
-ss.registerInterface = function#? DEBUG ss$createInterface##(root, name, ctor, baseInterfaces, metadata) {
-	if (root)
-		ss.registerType(root, name, ctor);
-
+ss.initInterface = function#? DEBUG ss$initInterface##(ctor, baseInterfaces, metadata) {
 	ctor.__interface = true;
 	if (baseInterfaces)
 		ctor.__interfaces = baseInterfaces;
@@ -120,10 +96,7 @@ ss.registerInterface = function#? DEBUG ss$createInterface##(root, name, ctor, b
 		ss._setMetadata(ctor, metadata);
 };
 
-ss.registerGenericInterface = function#? DEBUG ss$registerGenericClass##(root, name, ctor, typeArgumentCount, metadata) {
-	if (root)
-		ss.registerType(root, name, ctor);
-
+ss.initGenericInterface = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount, metadata) {
 	ctor.prototype.constructor = ctor;
 	ctor.__interface = true;;
 	ctor.__typeArgumentCount = typeArgumentCount;
@@ -132,10 +105,7 @@ ss.registerGenericInterface = function#? DEBUG ss$registerGenericClass##(root, n
 		ss._setMetadata(ctor, metadata);
 };
 
-ss.registerEnum = function#? DEBUG ss$registerEnum##(root, name, ctor, metadata) {
-	if (root)
-		ss.registerType(root, name, ctor);
-
+ss.initEnum = function#? DEBUG ss$initEnum##(ctor, metadata) {
 	for (var field in ctor.prototype)
 		ctor[field] = ctor.prototype[field];
 

@@ -8,4 +8,5 @@ ss_IEqualityComparer.prototype = {
 };
 
 ss_IEqualityComparer.__typeName = 'ss.IEqualityComparer';
-ss.registerInterface(global, 'ss.IEqualityComparer', ss_IEqualityComparer);
+ss.IEqualityComparer = ss_IEqualityComparer;
+ss.initInterface(ss_IEqualityComparer);

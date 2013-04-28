@@ -10,5 +10,6 @@ ss_EqualityComparer.prototype.getObjectHashCode = function#? DEBUG EqualityCompa
 	return ss.isValue(obj) ? ss.getHashCode(obj) : 0;
 };
 ss_EqualityComparer.__typeName = 'ss.EqualityComparer';
-ss.registerClass(global, 'ss.EqualityComparer', ss_EqualityComparer, null, [ss_IEqualityComparer]);
+ss.EqualityComparer = ss_EqualityComparer;
+ss.initClass(ss_EqualityComparer, null, [ss_IEqualityComparer]);
 ss_EqualityComparer.def = new ss_EqualityComparer();

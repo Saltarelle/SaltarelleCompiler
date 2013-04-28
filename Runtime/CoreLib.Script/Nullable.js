@@ -5,7 +5,8 @@ var ss_Nullable = function#? DEBUG Nullable$##() {
 };
 
 ss_Nullable.__typeName = 'ss.Nullable';
-ss.registerClass(global, 'ss.Nullable', ss_Nullable);
+ss.Nullable = ss_Nullable;
+ss.initClass(ss_Nullable);
 
 ss_Nullable.unbox = function#? DEBUG Nullable$unbox##(instance) {
 	if (!ss.isValue(instance))

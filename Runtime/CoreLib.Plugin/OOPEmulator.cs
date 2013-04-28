@@ -109,17 +109,16 @@ namespace CoreLib.Plugin {
 
 		private const string Prototype = "prototype";
 		private const string TypeName = "__typeName";
-		private const string RegisterClass = "registerClass";
-		private const string RegisterInterface = "registerInterface";
-		private const string RegisterEnum = "registerEnum";
-		private const string RegisterType = "registerType";
+		private const string InitClass = "initClass";
+		private const string InitInterface = "initInterface";
+		private const string InitEnum = "initEnum";
 		private const string RegisterGenericClassInstance = "registerGenericClassInstance";
 		private const string RegisterGenericInterfaceInstance = "registerGenericInterfaceInstance";
-		private const string RegisterGenericClass = "registerGenericClass";
-		private const string RegisterGenericInterface = "registerGenericInterface";
+		private const string InitGenericClass = "initGenericClass";
+		private const string InitGenericInterface = "initGenericInterface";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 
-		private static Tuple<string, string> Split(string name) {
+		private static Tuple<string, string> SplitIntoNamespaceAndName(string name) {
 			int pos = name.LastIndexOf('.');
 			if (pos == -1)
 				return Tuple.Create("", name);
@@ -129,7 +128,7 @@ namespace CoreLib.Plugin {
 
 		internal static IEnumerable<T> OrderByNamespace<T>(IEnumerable<T> source, Func<T, string> nameSelector) {
 			return    from s in source
-			           let t = Split(nameSelector(s))
+			           let t = SplitIntoNamespaceAndName(nameSelector(s))
 			       orderby t.Item1, t.Item2
 			        select s;
 		}
@@ -192,8 +191,8 @@ namespace CoreLib.Plugin {
 			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
 		}
 
-		private JsExpression CreateRegisterClassCall(ITypeDefinition type, string name, JsExpression ctor, JsExpression baseClass, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
+		private JsExpression CreateInitClassCall(ITypeDefinition type, JsExpression ctor, JsExpression baseClass, IList<JsExpression> interfaces) {
+			var args = new List<JsExpression> { ctor };
 			var metadata = GetMetadataDescriptor(type, false);
 			if (baseClass != null || interfaces.Count > 0 || metadata != null)
 				args.Add(baseClass ?? JsExpression.Null);
@@ -202,25 +201,25 @@ namespace CoreLib.Plugin {
 			if (metadata != null)
 				args.Add(metadata);
 
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterClass), args);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitClass), args);
 		}
 
-		private JsExpression CreateRegisterInterfaceCall(ITypeDefinition type, string name, JsExpression ctor, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
+		private JsExpression CreateInitInterfaceCall(ITypeDefinition type, JsExpression ctor, IList<JsExpression> interfaces) {
+			var args = new List<JsExpression> { ctor };
 			var metadata = GetMetadataDescriptor(type, false);
 			if (interfaces.Count > 0 || metadata != null)
 				args.Add(JsExpression.ArrayLiteral(interfaces));
 			if (metadata != null)
 				args.Add(metadata);
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterInterface), args);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitInterface), args);
 		}
 
-		private JsExpression CreateRegisterEnumCall(ITypeDefinition type, string name, JsExpression ctor) {
-			var args = new List<JsExpression> { GetRoot(type), JsExpression.String(name), ctor };
+		private JsExpression CreateInitEnumCall(ITypeDefinition type, JsExpression ctor) {
+			var args = new List<JsExpression> { ctor };
 			var metadata = GetMetadataDescriptor(type, false);
 			if (metadata != null)
 				args.Add(metadata);
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterEnum), args);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitEnum), args);
 		}
 
 		private IEnumerable<JsExpression> GetImplementedInterfaces(ITypeDefinition type) {
@@ -323,31 +322,47 @@ namespace CoreLib.Plugin {
 			return TopologicalSorter.TopologicalSort(backref.Keys, edges).Select(t => backref[t]);
 		}
 
-		private JsExpression MakeNestedMemberAccess(string full) {
+		private JsExpression MakeNestedMemberAccess(string full, JsExpression root = null) {
 			var parts = full.Split('.');
-			JsExpression result = JsExpression.Identifier(parts[0]);
-			for (int i = 1; i < parts.Length; i++) {
+			JsExpression result = root ?? JsExpression.Identifier(parts[0]);
+			for (int i = (root != null ? 0 : 1); i < parts.Length; i++) {
 				result = JsExpression.Member(result, parts[i]);
 			}
 			return result;
 		}
 
-		private JsExpression GetRoot(ITypeDefinition type, bool exportNonPublic = false) {
-			if (!exportNonPublic && !type.IsExternallyVisible())
-				return JsExpression.Null;
-			else
-				return JsExpression.Identifier(string.IsNullOrEmpty(MetadataUtils.GetModuleName(type)) ? "global" : "exports");
+		private string GetRoot(ITypeDefinition type) {
+			return string.IsNullOrEmpty(MetadataUtils.GetModuleName(type)) ? "global" : "exports";
+		}
+
+		private IEnumerable<string> EntireNamespaceHierarchy(string nmspace) {
+			do {
+				yield return nmspace;
+				nmspace = SplitIntoNamespaceAndName(nmspace).Item1;
+			} while (!string.IsNullOrEmpty(nmspace));
+		}
+
+		private IEnumerable<JsStatement> CreateNamespaces(JsExpression root, IEnumerable<string> requiredNamespaces) {
+			return requiredNamespaces.SelectMany(EntireNamespaceHierarchy)
+			                         .Distinct()
+			                         .OrderBy(ns => ns)
+			                         .Select(ns => {
+			                                           var access = MakeNestedMemberAccess(ns, root);
+			                                           return new JsExpressionStatement(JsExpression.Assign(access, JsExpression.LogicalOr(access, JsExpression.ObjectLiteral())));
+			                                       });
 		}
 
 		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
 			var result = new List<JsStatement>();
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
+			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();
 			foreach (var t in orderedTypes) {
 				try {
 					string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
 					bool isGlobal = string.IsNullOrEmpty(name);
 					bool isMixin  = MetadataUtils.IsMixin(t.CSharpTypeDefinition);
+					bool export   = t.CSharpTypeDefinition.IsExternallyVisible();
 
 					result.Add(new JsComment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
 
@@ -355,10 +370,12 @@ namespace CoreLib.Plugin {
 					if (t is JsClass) {
 						var c = (JsClass)t;
 						if (isGlobal) {
-							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(GetRoot(t.CSharpTypeDefinition, exportNonPublic: true), m.Name), m.Definition))));
+							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(JsExpression.Identifier(GetRoot(t.CSharpTypeDefinition)), m.Name), m.Definition))));
+							export = false;
 						}
 						else if (isMixin) {
 							result.AddRange(c.StaticMethods.Select(m => new JsExpressionStatement(JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition))));
+							export = false;
 						}
 						else if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
 							result.Add(GenerateResourcesClass(c));
@@ -377,11 +394,11 @@ namespace CoreLib.Plugin {
 									stmts[i] = replacer.Process(stmts[i]);
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(typeParameterNames, new JsBlockStatement(stmts))));
 								result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name))));
-								var args = new List<JsExpression> { GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
+								var args = new List<JsExpression> { typeRef, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
 								var metadata = GetMetadataDescriptor(t.CSharpTypeDefinition, false);
 								if (metadata != null)
 									args.Add(metadata);
-								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? RegisterGenericInterface : RegisterGenericClass), args)));
+								result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? InitGenericInterface : InitGenericClass), args)));
 							}
 							else {
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, unnamedCtor));
@@ -413,6 +430,19 @@ namespace CoreLib.Plugin {
 						}
 						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, Prototype), JsExpression.ObjectLiteral(values))));
 					}
+
+					if (export) {
+						string root = GetRoot(t.CSharpTypeDefinition);
+						var split = SplitIntoNamespaceAndName(name);
+						if (!string.IsNullOrEmpty(split.Item1)) {
+							HashSet<string> hs;
+							if (!exportedNamespacesByRoot.TryGetValue(root, out hs))
+								hs = exportedNamespacesByRoot[root] = new HashSet<string>();
+							hs.Add(split.Item1);
+						}
+
+						result.Add(new JsExpressionStatement(JsExpression.Assign(MakeNestedMemberAccess(name, JsExpression.Identifier(root)), typeRef)));
+					}
 				}
 				catch (Exception ex) {
 					_errorReporter.Region = t.CSharpTypeDefinition.Region;
@@ -420,10 +450,12 @@ namespace CoreLib.Plugin {
 				}
 			}
 
+			result.InsertRange(0, exportedNamespacesByRoot.OrderBy(x => x.Key).SelectMany(x => CreateNamespaces(JsExpression.Identifier(x.Key), x.Value)).ToList());
+
 			var typesToRegister = orderedTypes
 			                      .Where(c =>    !(c is JsClass && MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter))
 			                                  && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
-			                                  && (!MetadataUtils.IsResources(c.CSharpTypeDefinition) || c.CSharpTypeDefinition.IsExternallyVisible())	// Resources classes are only exported if they are public.
+			                                  && !MetadataUtils.IsResources(c.CSharpTypeDefinition)
 			                                  && !MetadataUtils.IsMixin(c.CSharpTypeDefinition))
 			                      .ToList();
 
@@ -432,23 +464,18 @@ namespace CoreLib.Plugin {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;
 			                                     if (c.CSharpTypeDefinition.Kind == TypeKind.Enum) {
-			                                         return CreateRegisterEnumCall(c.CSharpTypeDefinition, name, JsExpression.Identifier(_namer.GetTypeVariableName(name)));
+			                                         return CreateInitEnumCall(c.CSharpTypeDefinition, JsExpression.Identifier(_namer.GetTypeVariableName(name)));
 			                                     }
-			                                     if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
-			                                         return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterType), GetRoot(c.CSharpTypeDefinition), JsExpression.String(name), JsExpression.Identifier(_namer.GetTypeVariableName(name)));
-			                                     }
-			                                     if (c.CSharpTypeDefinition.Kind == TypeKind.Interface) {
-			                                         return CreateRegisterInterfaceCall(c.CSharpTypeDefinition,
-			                                                                            name,
-			                                                                            JsExpression.Identifier(_namer.GetTypeVariableName(name)),
-			                                                                            GetImplementedInterfaces(c.CSharpTypeDefinition.GetDefinition()).ToList());
+			                                     else if (c.CSharpTypeDefinition.Kind == TypeKind.Interface) {
+			                                         return CreateInitInterfaceCall(c.CSharpTypeDefinition,
+			                                                                        JsExpression.Identifier(_namer.GetTypeVariableName(name)),
+			                                                                        GetImplementedInterfaces(c.CSharpTypeDefinition.GetDefinition()).ToList());
 			                                     }
 			                                     else {
-			                                         return CreateRegisterClassCall(c.CSharpTypeDefinition,
-			                                                                        name, 
-			                                                                        JsExpression.Identifier(_namer.GetTypeVariableName(name)),
-			                                                                        GetBaseClass(c.CSharpTypeDefinition),
-			                                                                        GetImplementedInterfaces(c.CSharpTypeDefinition).ToList());
+			                                         return CreateInitClassCall(c.CSharpTypeDefinition,
+			                                                                    JsExpression.Identifier(_namer.GetTypeVariableName(name)),
+			                                                                    GetBaseClass(c.CSharpTypeDefinition),
+			                                                                    GetImplementedInterfaces(c.CSharpTypeDefinition).ToList());
 			                                     }
 			                                 }
 			                                 catch (Exception ex) {

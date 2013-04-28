@@ -40,4 +40,5 @@ ss_StringBuilder.prototype = {
 };
 
 ss_StringBuilder.__typeName = 'ss.StringBuilder';
-ss.registerClass(global, 'ss.StringBuilder', ss_StringBuilder);
+ss.StringBuilder = ss_StringBuilder;
+ss.initClass(ss_StringBuilder);

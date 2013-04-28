@@ -7,4 +7,5 @@ ss_IComparer.prototype = {
 };
 
 ss_IComparer.__typeName = 'ss.IComparer';
-ss.registerInterface(global, 'ss.IComparer', ss_IComparer);
+ss.IComparer = ss_IComparer;
+ss.initInterface(ss_IComparer);

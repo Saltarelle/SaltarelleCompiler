@@ -11,4 +11,5 @@ ss_JsErrorException.prototype = {
 	}
 };
 ss_JsErrorException.__typeName = 'ss.JsErrorException';
-ss.registerClass(global, 'ss.JsErrorException', ss_JsErrorException, ss_Exception);
+ss.JsErrorException = ss_JsErrorException;
+ss.initClass(ss_JsErrorException, ss_Exception);

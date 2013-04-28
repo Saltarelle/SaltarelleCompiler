@@ -7,4 +7,5 @@ ss_IEquatable.prototype = {
 };
 
 ss_IEquatable.__typeName = 'ss.IEquatable';
-ss.registerInterface(global, 'ss.IEquatable', ss_IEquatable);
+ss.IEquatable = ss_IEquatable;
+ss.initInterface(ss_IEquatable);

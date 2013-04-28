@@ -254,7 +254,8 @@ ss_Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
 };
 
 ss_Task.__typeName = 'ss.Task';
-ss.registerClass(global, 'ss.Task', ss_Task, null, [ss_IDisposable]);
+ss.Task = ss_Task;
+ss.initClass(ss_Task, null, [ss_IDisposable]);
 
 ////////////////////////////////////////////////////////////////////////////////
 // TaskStatus
@@ -262,4 +263,5 @@ var ss_TaskStatus = function() {
 };
 ss_TaskStatus.prototype = { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 };
 ss_TaskStatus.__typeName = 'ss.TaskStatus';
-ss.registerEnum(global, 'ss.TaskStatus', ss_TaskStatus, false);
+ss.TaskStatus = ss_TaskStatus;
+ss.initEnum(ss_TaskStatus);

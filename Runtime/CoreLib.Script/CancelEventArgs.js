@@ -7,4 +7,5 @@ var ss_CancelEventArgs = function#? DEBUG CancelEventArgs$##() {
 }
 
 ss_CancelEventArgs.__typeName = 'ss.CancelEventArgs';
-ss.registerClass(global, 'ss.CancelEventArgs', ss_CancelEventArgs, ss_EventArgs);
+ss.CancelEventArgs = ss_CancelEventArgs;
+ss.initClass(ss_CancelEventArgs, ss_EventArgs);

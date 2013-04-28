@@ -19,7 +19,8 @@ var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
 $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
-{Script}.registerEnum(global, 'MyEnum', $MyEnum);
+global.MyEnum = $MyEnum;
+{Script}.initEnum($MyEnum);
 ");
 		}
 
@@ -29,13 +30,16 @@ $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 @"namespace SomeNamespace.InnerNamespace {
 	public enum MyEnum { Value1, Value2, Value3 }
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"global.SomeNamespace = global.SomeNamespace || {};
+global.SomeNamespace.InnerNamespace = global.SomeNamespace.InnerNamespace || {};
+////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyEnum
 var $SomeNamespace_InnerNamespace_MyEnum = function() {
 };
 $SomeNamespace_InnerNamespace_MyEnum.__typeName = 'SomeNamespace.InnerNamespace.MyEnum';
 $SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
-{Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum);
+global.SomeNamespace.InnerNamespace.MyEnum = $SomeNamespace_InnerNamespace_MyEnum;
+{Script}.initEnum($SomeNamespace_InnerNamespace_MyEnum);
 ");
 		}
 
@@ -50,7 +54,8 @@ var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
 $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
-{Script}.registerEnum(global, 'MyEnum', $MyEnum, { enumFlags: true });
+global.MyEnum = $MyEnum;
+{Script}.initEnum($MyEnum, { enumFlags: true });
 ");
 		}
 
@@ -65,7 +70,8 @@ var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
 $MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
-{Script}.registerEnum(global, 'MyEnum', $MyEnum);
+global.MyEnum = $MyEnum;
+{Script}.initEnum($MyEnum);
 ");
 		}
 
@@ -80,7 +86,7 @@ var $$MyEnum = function() {
 };
 $$MyEnum.__typeName = '$MyEnum';
 $$MyEnum.prototype = { $value1: 0, $value2: 1, $value3: 2 };
-{Script}.registerEnum(null, '$MyEnum', $$MyEnum);
+{Script}.initEnum($$MyEnum);
 ");
 		}
 	}

@@ -12,5 +12,6 @@ ss_Comparer.create = function#? DEBUG Comparer$create##(f) {
 };
 
 ss_Comparer.__typeName = 'ss.Comparer';
-ss.registerClass(global, 'ss.Comparer', ss_Comparer, null, [ss_IComparer]);
+ss.Comparer = ss_Comparer;
+ss.initClass(ss_Comparer, null, [ss_IComparer]);
 ss_Comparer.def = new ss_Comparer(ss.compare);

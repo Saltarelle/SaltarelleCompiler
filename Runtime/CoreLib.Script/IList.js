@@ -11,7 +11,8 @@ ss_IList.prototype = {
 };
 
 ss_IList.__typeName = 'ss.IList';
-ss.registerInterface(global, 'ss.IList', ss_IList, [ss_ICollection, ss_IEnumerable]);
+ss.IList = ss_IList;
+ss.initInterface(ss_IList, [ss_ICollection, ss_IEnumerable]);
 
 ss.getItem = function#? DEBUG ss$getItem##(obj, index) {
 	return obj.get_item ? obj.get_item(index) : obj[index];

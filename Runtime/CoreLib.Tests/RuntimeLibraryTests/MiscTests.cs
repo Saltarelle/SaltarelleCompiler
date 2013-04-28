@@ -44,6 +44,7 @@ public class C {
 	}
 }",
 @"(function() {
+	global.Ф = global.Ф || {};
 	////////////////////////////////////////////////////////////////////////////////
 	// Ф.Класс
 	var $Ф_Класс = function() {
@@ -54,7 +55,8 @@ public class C {
 			var Щ = 'г';
 		}
 	};
-	ss.registerClass(global, 'Ф.Класс', $Ф_Класс);
+	global.Ф.Класс = $Ф_Класс;
+	ss.initClass($Ф_Класс);
 })();
 ");
 		}
@@ -128,7 +130,7 @@ class C<T1, T2> where T1 : class {
 		return $type;
 	};
 	$$C$2.__typeName = '$C$2';
-	ss.registerGenericClass(null, '$C$2', $$C$2, 2);
+	ss.initGenericClass($$C$2, 2);
 	////////////////////////////////////////////////////////////////////////////////
 	// I
 	var $$I = function() {
@@ -139,8 +141,8 @@ class C<T1, T2> where T1 : class {
 	var $$X = function() {
 	};
 	$$X.__typeName = '$X';
-	ss.registerInterface(null, '$I', $$I);
-	ss.registerClass(null, '$X', $$X);
+	ss.initInterface($$I);
+	ss.initClass($$X);
 })();
 ");
 		}

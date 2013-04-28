@@ -7,7 +7,8 @@ ss_IFormattable.prototype = {
 };
 
 ss_IFormattable.__typeName = 'ss.IFormattable';
-ss.registerInterface(global, 'ss.IFormattable', ss_IFormattable);
+ss.IFormattable = ss_IFormattable;
+ss.initInterface(ss_IFormattable);
 
 ss.format = function#? DEBUG ss$format##(obj, fmt) {
 	if (typeof(obj) === 'number')

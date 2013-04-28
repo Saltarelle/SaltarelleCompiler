@@ -7,4 +7,5 @@ ss_IComparable.prototype = {
 };
 
 ss_IComparable.__typeName = 'ss.IComparable';
-ss.registerInterface(global, 'ss.IComparable', ss_IComparable);
+ss.IComparable = ss_IComparable;
+ss.initInterface(ss_IComparable);

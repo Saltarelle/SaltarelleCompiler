@@ -14,4 +14,5 @@ ss_IDictionary.prototype = {
 };
 
 ss_IDictionary.__typeName = 'ss.IDictionary';
-ss.registerInterface(global, 'ss.IDictionary', ss_IDictionary, [ss_IEnumerable]);
+ss.IDictionary = ss_IDictionary;
+ss.initInterface(ss_IDictionary, [ss_IEnumerable]);

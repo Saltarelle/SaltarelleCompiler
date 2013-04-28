@@ -35,4 +35,5 @@ ss_TaskCompletionSource.prototype = {
 };
 
 ss_TaskCompletionSource.__typeName = 'ss.TaskCompletionSource';
-ss.registerClass(global, 'ss.TaskCompletionSource', ss_TaskCompletionSource);
+ss.TaskCompletionSource = ss_TaskCompletionSource;
+ss.initClass(ss_TaskCompletionSource);

@@ -54,12 +54,16 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"global.OuterNamespace = global.OuterNamespace || {};
+global.OuterNamespace.InnerNamespace = global.OuterNamespace.InnerNamespace || {};
+global.OuterNamespace.InnerNamespace2 = global.OuterNamespace.InnerNamespace2 || {};
+////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeEnum
 var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
 $OuterNamespace_InnerNamespace_SomeEnum.__typeName = 'OuterNamespace.InnerNamespace.SomeEnum';
 $OuterNamespace_InnerNamespace_SomeEnum.prototype = { value1: 1, value2: 2, value3: 3 };
+global.OuterNamespace.InnerNamespace.SomeEnum = $OuterNamespace_InnerNamespace_SomeEnum;
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
 var $OuterNamespace_InnerNamespace_SomeType = function(a) {
@@ -77,6 +81,7 @@ $OuterNamespace_InnerNamespace_SomeType.prototype = {
 $OuterNamespace_InnerNamespace_SomeType.staticMethod = function(d) {
 	d = 0;
 };
+global.OuterNamespace.InnerNamespace.SomeType = $OuterNamespace_InnerNamespace_SomeType;
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType2
 var $OuterNamespace_InnerNamespace_SomeType2 = function(a1) {
@@ -91,12 +96,14 @@ $OuterNamespace_InnerNamespace_SomeType2.prototype = {
 $OuterNamespace_InnerNamespace_SomeType2.otherStaticMethod = function(c1) {
 	c1 = 0;
 };
+global.OuterNamespace.InnerNamespace.SomeType2 = $OuterNamespace_InnerNamespace_SomeType2;
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherInterface
 var $OuterNamespace_InnerNamespace2_OtherInterface = function() {
 };
 $OuterNamespace_InnerNamespace2_OtherInterface.__typeName = 'OuterNamespace.InnerNamespace2.OtherInterface';
 $OuterNamespace_InnerNamespace2_OtherInterface.prototype = { interfaceMethod: null };
+global.OuterNamespace.InnerNamespace2.OtherInterface = $OuterNamespace_InnerNamespace2_OtherInterface;
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherType
 var $OuterNamespace_InnerNamespace2_OtherType = function(a2) {
@@ -109,11 +116,12 @@ $OuterNamespace_InnerNamespace2_OtherType.prototype = {
 		b2 = 0;
 	}
 };
-{Script}.registerEnum(global, 'OuterNamespace.InnerNamespace.SomeEnum', $OuterNamespace_InnerNamespace_SomeEnum);
-{Script}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType', $OuterNamespace_InnerNamespace_SomeType);
-{Script}.registerClass(global, 'OuterNamespace.InnerNamespace.SomeType2', $OuterNamespace_InnerNamespace_SomeType2);
-{Script}.registerInterface(global, 'OuterNamespace.InnerNamespace2.OtherInterface', $OuterNamespace_InnerNamespace2_OtherInterface);
-{Script}.registerClass(global, 'OuterNamespace.InnerNamespace2.OtherType', $OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
+global.OuterNamespace.InnerNamespace2.OtherType = $OuterNamespace_InnerNamespace2_OtherType;
+{Script}.initEnum($OuterNamespace_InnerNamespace_SomeEnum);
+{Script}.initClass($OuterNamespace_InnerNamespace_SomeType);
+{Script}.initClass($OuterNamespace_InnerNamespace_SomeType2);
+{Script}.initInterface($OuterNamespace_InnerNamespace2_OtherInterface);
+{Script}.initClass($OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
 var d1 = 0;
 var c2 = 0;
 ");
@@ -163,26 +171,30 @@ var $C1 = function() {
 	{C2}.call(this);
 };
 $C1.__typeName = 'C1';
+global.C1 = $C1;
 ////////////////////////////////////////////////////////////////////////////////
 // C2
 var $C2 = function() {
 	{C3}.call(this);
 };
 $C2.__typeName = 'C2';
+global.C2 = $C2;
 ////////////////////////////////////////////////////////////////////////////////
 // C3
 var $C3 = function() {
 };
 $C3.__typeName = 'C3';
+global.C3 = $C3;
 ////////////////////////////////////////////////////////////////////////////////
 // I1
 var $I1 = function() {
 };
 $I1.__typeName = 'I1';
-{Script}.registerClass(global, 'C3', $C3);
-{Script}.registerClass(global, 'C2', $C2, {C3});
-{Script}.registerInterface(global, 'I1', $I1);
-{Script}.registerClass(global, 'C1', $C1, {C2}, [{I1}]);
+global.I1 = $I1;
+{Script}.initClass($C3);
+{Script}.initClass($C2, {C3});
+{Script}.initInterface($I1);
+{Script}.initClass($C1, {C2}, [{I1}]);
 ");
 		}
 
@@ -200,19 +212,22 @@ var $A = function() {
 	{B}.call(this);
 };
 $A.__typeName = 'A';
+global.A = $A;
 ////////////////////////////////////////////////////////////////////////////////
 // B
 var $B = function() {
 };
 $B.__typeName = 'B';
+global.B = $B;
 ////////////////////////////////////////////////////////////////////////////////
 // I
 var $I = function() {
 };
 $I.__typeName = 'I';
-{Script}.registerClass(global, 'B', $B);
-{Script}.registerInterface(global, 'I', $I);
-{Script}.registerClass(global, 'A', $A, {B}, [{I}]);
+global.I = $I;
+{Script}.initClass($B);
+{Script}.initInterface($I);
+{Script}.initClass($A, {B}, [{I}]);
 ");
 		}
 
@@ -242,7 +257,8 @@ $MyClass.__typeName = 'MyClass';
 $MyClass.theEntryPoint = function() {
 	var x = 0;
 };
-{Script}.registerClass(global, 'MyClass', $MyClass);
+global.MyClass = $MyClass;
+{Script}.initClass($MyClass);
 var a = 0;
 {MyClass}.theEntryPoint();
 ", entryPoint: "MyClass.Main");
