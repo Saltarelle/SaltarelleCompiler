@@ -110,6 +110,21 @@ return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 		}
 
 		[Test]
+		public void UsingTypeWithNoScriptNameInModuleReturnsTheModuleVariable() {
+			var asm = Common.CreateMockAssembly(attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("main-module") });
+			var type = Common.CreateMockTypeDefinition("GlobalType", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("some-module") });
+			var actual = Process(new JsStatement[] {
+				new JsReturnStatement(new JsTypeReferenceExpression(type)), 
+			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
+
+			AssertCorrect(actual,
+@"require('mscorlib');
+var $somemodule = require('some-module');
+return $somemodule;
+");
+		}
+
+		[Test]
 		public void AccessingMemberOnTypeWithEmptyScriptNameInOwnAssemblyButWithDifferentModuleNameResultsInARequire() {
 			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("main-module") });
 			var actual = Process(new JsStatement[] {

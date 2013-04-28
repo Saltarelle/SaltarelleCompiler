@@ -210,6 +210,10 @@ namespace CoreLib.Plugin {
 				typeName = scriptNameAttr.Name;
 				nmspace = DetermineNamespace(typeDefinition);
 			}
+			else if (scriptNameAttr != null && string.IsNullOrEmpty(scriptNameAttr.Name) && !string.IsNullOrEmpty(MetadataUtils.GetModuleName(typeDefinition))) {
+				typeName = "";
+				nmspace = "";
+			}
 			else {
 				if (scriptNameAttr != null) {
 					Message(Messages._7006, typeDefinition);

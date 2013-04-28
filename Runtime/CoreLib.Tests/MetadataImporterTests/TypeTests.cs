@@ -1539,5 +1539,16 @@ public class DerivedClass : TestClass.InnerClass {}");
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
 		}
+
+		[Test]
+		public void ScriptNameForATypeCanBeNullIfTheTypeHasAModuleName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported, ModuleName(""mymodule""), ScriptName(null)]
+public class MyClass {
+}");
+
+			Assert.That(FindType("MyClass").Name, Is.EqualTo(""));
+		}
 	}
 }

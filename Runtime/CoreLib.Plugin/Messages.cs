@@ -8,7 +8,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7003 = Tuple.Create(7003, MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it is not static.");
 		public static readonly Tuple<int, MessageSeverity, string> _7004 = Tuple.Create(7004, MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it is generic.");
 		public static readonly Tuple<int, MessageSeverity, string> _7005 = Tuple.Create(7005, MessageSeverity.Error, "The type {0} cannot have a [ResourcesAttribute] because it contains members that are not const fields.");
-		public static readonly Tuple<int, MessageSeverity, string> _7006 = Tuple.Create(7006, MessageSeverity.Error, "{0}: The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier.");
+		public static readonly Tuple<int, MessageSeverity, string> _7006 = Tuple.Create(7006, MessageSeverity.Error, "{0}: The argument for [ScriptName], when applied to a type, must be a valid JavaScript identifier (but can be empty if the type is in a module).");
 		public static readonly Tuple<int, MessageSeverity, string> _7007 = Tuple.Create(7007, MessageSeverity.Error, "[IgnoreNamespace] or [ScriptNamespace] cannot be specified for the nested type {0}.");
 		public static readonly Tuple<int, MessageSeverity, string> _7009 = Tuple.Create(7009, MessageSeverity.Error, "The serializable type {0} must inherit from another serializable type, System.Object or System.Record.");
 		public static readonly Tuple<int, MessageSeverity, string> _7010 = Tuple.Create(7010, MessageSeverity.Error, "The serializable type {0} cannot implement the non-serializable interface {1}.");
