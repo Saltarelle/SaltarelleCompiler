@@ -25,6 +25,8 @@ namespace Saltarelle.Compiler.SCExe {
     -outscript:FILE     Specifies the output script file (default: base name of first file).
     -reference:A1[,An]  Imports metadata from the specified assemblies (short: -r).
     -reference:ALIAS=A  Imports metadata using specified extern alias (short: -r).
+    -resource:FILE[,ID[,ACC]]  Embed FILE as a resource with the name ID (default: file name).
+                        ACC is 'private' or 'public' (short: -res)
     -target:KIND        Specifies the format of the output assembly (short: -t)
                         KIND can be exe or library.
     -warn:0-4           Sets warning level, the default is 4 (short: -w).
@@ -117,6 +119,17 @@ namespace Saltarelle.Compiler.SCExe {
 			writer.WriteLine("Options can be of the form -option or /option");
 		} 
 
+		private static EmbeddedResource ParseResource(string arg) {
+			var arr = arg.Split(',');
+			string file = arr[0];
+			if (string.IsNullOrEmpty(file))
+				throw new OptionException("A resource file to embed must be specified", "resource");
+			string name = arr.Length < 2 || string.IsNullOrEmpty(arr[1]) ? Path.GetFileName(file) : arr[1];
+			bool isPublic = arr.Length < 3 || !string.Equals(arr[2], "private", StringComparison.OrdinalIgnoreCase);
+
+			return new EmbeddedResource(file, name, isPublic);
+		}
+
 		internal static CompilerOptions ParseOptions(string[] args, TextWriter infoWriter, TextWriter errorWriter) {
 			if (args.Length == 0) {
 				ShowHelp(infoWriter);
@@ -135,6 +148,7 @@ namespace Saltarelle.Compiler.SCExe {
 					{ "m|main=",       v => result.EntryPointClass = v },
 					{ "r|reference=",  v => HandleReferences(result, v) },
 					{ "debug",         f => result.MinimizeScript = f == null || f.EndsWith("-") },
+					{ "res|resource=", v => result.EmbeddedResources.Add(ParseResource(v)) },
 					{ "w|warn=",       (int v) => { if (v < 0 || v > 4) throw new OptionException("Warning level must be between 0 and 4", "/warn"); result.WarningLevel = v; } },
 					{ "nowarn=",       v => DisableWarnings(result, v) },
 					{ "warnaserror:",  v => HandleWarningsAsErrors(result, v) },

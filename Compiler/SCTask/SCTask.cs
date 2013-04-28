@@ -26,6 +26,7 @@ namespace Saltarelle.Compiler.SCTask {
 			public string TargetType { get; set; }
 			public string MainEntryPoint { get; set; }
 			public bool AlreadyCompiled { get; set; }
+			public ITaskItem[] Resources { get; set; }
 		}
 
 		private class Executor : MarshalByRefObject {
@@ -138,6 +139,11 @@ namespace Saltarelle.Compiler.SCTask {
 		public bool AlreadyCompiled {
 			get { return _options.AlreadyCompiled; }
 			set { _options.AlreadyCompiled = value; }
+		}
+
+		public ITaskItem[] Resources {
+			get { return _options.Resources; }
+			set { _options.Resources = value; }
 		}
 	}
 }

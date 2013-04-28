@@ -1,25 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Security;
-using System.Security.Policy;
 using System.Text;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using System.Linq;
 using Mono.CSharp;
-using Mono.Cecil;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
-using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
-using Saltarelle.Compiler.JSModel.TypeSystem;
 using ArrayType = ICSharpCode.NRefactory.TypeSystem.ArrayType;
 using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
@@ -78,8 +70,6 @@ namespace Saltarelle.Compiler.Driver {
 				WarningsAreErrors         = options.TreatWarningsAsErrors,
 				FatalCounter              = 100,
 				WarningLevel              = options.WarningLevel,
-				AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList(),
-				AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => Tuple.Create(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList(),
 				Encoding                  = Encoding.UTF8,
 				DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null,
 				OutputFile                = outputAssemblyPath,
@@ -90,6 +80,13 @@ namespace Saltarelle.Compiler.Driver {
 				StrongNameKeyFile         = options.KeyFile,
 			};
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(f, f, i + 1)));
+			foreach (var r in options.References) {
+				string resolvedPath = ResolveReference(r.Filename, allPaths, er);
+				if (r.Alias == null)
+					result.AssemblyReferences.Add(resolvedPath);
+				else
+					result.AssemblyReferencesAliases.Add(Tuple.Create(r.Alias, resolvedPath));
+			}
 			foreach (var c in options.DefineConstants)
 				result.AddConditionalSymbol(c);
 			foreach (var w in options.DisabledWarnings)
@@ -98,6 +95,8 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddWarningAsError(w);
 			foreach (var w in options.WarningsNotAsErrors)
 				result.AddWarningOnly(w);
+			if (options.EmbeddedResources.Count > 0)
+				result.Resources = options.EmbeddedResources.Select(r => new AssemblyResource(r.Filename, r.ResourceName, isPrivate: !r.IsPublic) { IsEmbeded = true }).ToList();
 
 			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
 				er.Region = DomRegion.Empty;
@@ -354,7 +353,7 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private static Assembly LoadPlugin(AssemblyDefinition def) {
-			foreach (var r in def.Modules.SelectMany(m => m.Resources).OfType<EmbeddedResource>()) {
+			foreach (var r in def.Modules.SelectMany(m => m.Resources).OfType<Mono.Cecil.EmbeddedResource>()) {
 				if (r.Name.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase)) {
 					var data = r.GetResourceData();
 					var asm = AssemblyDefinition.ReadAssembly(new MemoryStream(data));

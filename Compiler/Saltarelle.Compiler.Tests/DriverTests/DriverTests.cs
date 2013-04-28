@@ -1048,5 +1048,41 @@ public class C {
 				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
+
+		[Test]
+		public void CanEmbedResources() {
+			byte[] publicContent  = new byte[] { 0xB7, 0xF3, 0x36, 0x6F, 0xA3, 0x4B, 0x4B, 0x19, 0x83, 0x27, 0x1C, 0x02, 0x19, 0xCA, 0x2E, 0x2E };
+			byte[] privateContent = new byte[] { 0xCB, 0xDC, 0xDB, 0x54, 0x38, 0x9E, 0x42, 0x1A, 0xAA, 0x35, 0xD8, 0x95, 0x8D, 0x97, 0xF0, 0xCF };
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
+				File.WriteAllBytes(Path.GetFullPath("PublicResource.txt"), publicContent);
+				File.WriteAllBytes(Path.GetFullPath("PrivateResource.txt"), privateContent);
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+					EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("PublicResource.txt"), "The.Resource.Name", true), new EmbeddedResource(Path.GetFullPath("PrivateResource.txt"), "Secret.Name", false) }
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+
+				var asm = AssemblyDefinition.ReadAssembly("Test.dll");
+				var res1 = asm.MainModule.Resources.SingleOrDefault(r => r.Name == "The.Resource.Name") as Mono.Cecil.EmbeddedResource;
+				Assert.That(res1, Is.Not.Null, "Resource 1 not found");
+				Assert.That(res1.GetResourceData(), Is.EqualTo(publicContent));
+				Assert.That(res1.IsPublic, Is.True);
+				Assert.That(res1.IsPrivate, Is.False);
+
+				var res2 = asm.MainModule.Resources.SingleOrDefault(r => r.Name == "Secret.Name") as Mono.Cecil.EmbeddedResource;
+				Assert.That(res2, Is.Not.Null, "Resource 2 not found");
+				Assert.That(res2.GetResourceData(), Is.EqualTo(privateContent));
+				Assert.That(res2.IsPublic, Is.False);
+				Assert.That(res2.IsPrivate, Is.True);
+			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
+		}
 	}
 }

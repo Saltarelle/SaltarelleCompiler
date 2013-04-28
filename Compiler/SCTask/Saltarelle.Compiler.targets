@@ -12,6 +12,7 @@
                 $(AssemblyOriginatorKeyFile);
                 @(Compile);
                 @(ReferencePath);
+                @(EmbeddedResource);
                 @(CustomAdditionalCompileInputs)"
           Outputs="@(DocFileItem);
                    @(IntermediateScript);
@@ -38,6 +39,7 @@
 		        OutputAssembly="@(IntermediateAssembly)"
 		        OutputScript="@(IntermediateScript)"
 		        References="@(ReferencePath);@(ReferenceDependencyPaths)"
+		        Resources="@(EmbeddedResource)"
 		        Sources="@(Compile)"
 		        TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
 		        WarningLevel="$(WarningLevel)"

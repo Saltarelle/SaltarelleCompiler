@@ -240,6 +240,37 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		}
 
 		[Test]
+		public void EmbedResourcesWorks() {
+			ExpectSuccess(new[] { "/resource:thefile.txt", "/res:otherfile.txt", "File.cs" }, options => {
+				Assert.That(options.EmbeddedResources.Count, Is.EqualTo(2));
+				Assert.That(options.EmbeddedResources.Any(r => r.Filename == "thefile.txt" && r.ResourceName == "thefile.txt" && r.IsPublic));
+				Assert.That(options.EmbeddedResources.Any(r => r.Filename == "otherfile.txt" && r.ResourceName == "otherfile.txt" && r.IsPublic));
+			});
+			ExpectSuccess(new[] { "/resource:file\\with\\path.txt", "File.cs" }, options => {
+				var r = options.EmbeddedResources.Single();
+				Assert.That(r.Filename, Is.EqualTo(@"file\with\path.txt"));
+				Assert.That(r.ResourceName, Is.EqualTo("path.txt"));
+			});
+			ExpectSuccess(new[] { "/resource:filename.txt,some.name", "File.cs" }, options => {
+				var r = options.EmbeddedResources.Single();
+				Assert.That(r.Filename, Is.EqualTo(@"filename.txt"));
+				Assert.That(r.ResourceName, Is.EqualTo("some.name"));
+			});
+			ExpectSuccess(new[] { "/resource:filename.txt,some.name,public" }, options => {
+				var r = options.EmbeddedResources.Single();
+				Assert.That(r.Filename, Is.EqualTo(@"filename.txt"));
+				Assert.That(r.ResourceName, Is.EqualTo("some.name"));
+				Assert.That(r.IsPublic, Is.True);
+			});
+			ExpectSuccess(new[] { "/resource:filename.txt,some.name,private" }, options => {
+				var r = options.EmbeddedResources.Single();
+				Assert.That(r.Filename, Is.EqualTo(@"filename.txt"));
+				Assert.That(r.ResourceName, Is.EqualTo("some.name"));
+				Assert.That(r.IsPublic, Is.False);
+			});
+		}
+
+		[Test]
 		public void MainWorks() {
 			ExpectSuccess(new[] { "/m:SomeNamespace.SomeClass", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.EntryPointClass, Is.EqualTo("SomeNamespace.SomeClass"));
