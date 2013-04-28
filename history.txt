@@ -1,3 +1,4 @@
+Fixed error compiling with Visual Studio if VSCommands is installed (#151)
 Fixed issue causing generic types with different type arguments to (occasionally) be treated as the same type when used as a base type (#186).
 
 2.2.0

@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			try {
 				var er = new MockErrorReporter();
 				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, null);
+				bool result = d.Compile(opts);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 			}

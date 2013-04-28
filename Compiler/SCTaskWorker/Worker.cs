@@ -91,16 +91,17 @@ namespace Saltarelle.Compiler.SCTask {
 			return result;
 		}
 
-		public static bool DoWork(dynamic scTask, Func<AppDomain> appDomainInitializer) {
-			var options = GetOptions(scTask);
+		public static bool DoWork(dynamic taskOptions, TaskLoggingHelper log) {
+			var options = GetOptions(taskOptions);
 			if (options == null)
 				return false;
-			var driver = new CompilerDriver(new TaskErrorReporter(scTask.Log));
+
+			var driver = new CompilerDriver(new TaskErrorReporter(log));
 			try {
-				return driver.Compile(options, appDomainInitializer);
+				return driver.Compile(options);
 			}
 			catch (Exception ex) {
-				scTask.Log.LogErrorFromException(ex);
+				log.LogErrorFromException(ex);
 				return false;
 			}
 		}
