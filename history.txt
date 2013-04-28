@@ -1,3 +1,5 @@
+Fixed issue causing generic types with different type arguments to (occasionally) be treated as the same type when used as a base type (#186).
+
 2.2.0
 Added metadata for typed arrays.
 Added possibility to specify alternative inline code when a method is being invoked in non-expanded form, and used that to ensure all RTL methods can be invoked in non-expanded form (#177).

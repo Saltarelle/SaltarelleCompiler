@@ -108,6 +108,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private const string Prototype = "prototype";
+		private const string TypeName = "__typeName";
 		private const string RegisterClass = "registerClass";
 		private const string RegisterInterface = "registerInterface";
 		private const string RegisterEnum = "registerEnum";
@@ -375,6 +376,7 @@ namespace CoreLib.Plugin {
 								for (int i = 0; i < stmts.Count; i++)
 									stmts[i] = replacer.Process(stmts[i]);
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(typeParameterNames, new JsBlockStatement(stmts))));
+								result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name))));
 								var args = new List<JsExpression> { GetRoot(t.CSharpTypeDefinition), JsExpression.String(name), typeRef, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
 								var metadata = GetMetadataDescriptor(t.CSharpTypeDefinition, false);
 								if (metadata != null)
@@ -383,6 +385,7 @@ namespace CoreLib.Plugin {
 							}
 							else {
 								result.Add(new JsVariableDeclarationStatement(typeRef.Name, unnamedCtor));
+								result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name))));
 								AddClassMembers(c, typeRef, result);
 							}
 						}
@@ -390,6 +393,7 @@ namespace CoreLib.Plugin {
 					else if (t is JsEnum) {
 						var e = (JsEnum)t;
 						result.Add(new JsVariableDeclarationStatement(typeRef.Name, JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)));
+						result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(typeRef, TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(e.CSharpTypeDefinition).Name))));
 						var values = new List<JsObjectLiteralProperty>();
 						foreach (var v in e.CSharpTypeDefinition.Fields) {
 							if (v.ConstantValue != null) {

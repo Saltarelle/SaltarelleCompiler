@@ -22,4 +22,5 @@ ss_ArrayEnumerator.prototype = {
 	}
 };
 
+ss_ArrayEnumerator.__typeName = 'ss.ArrayEnumerator';
 ss.registerClass(global, 'ss.ArrayEnumerator', ss_ArrayEnumerator, null, [ss_IEnumerator, ss_IDisposable]);

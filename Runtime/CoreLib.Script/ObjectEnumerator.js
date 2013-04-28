@@ -24,4 +24,5 @@ ss_ObjectEnumerator.prototype = {
 	}
 };
 
+ss_ObjectEnumerator.__typeName = 'ss.ObjectEnumerator';
 ss.registerClass(global, 'ss.ObjectEnumerator', ss_ObjectEnumerator, null, [ss_IEnumerator, ss_IDisposable]);

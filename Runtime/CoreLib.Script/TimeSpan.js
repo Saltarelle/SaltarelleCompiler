@@ -44,5 +44,6 @@ ss_TimeSpan.prototype = {
 	}
 };
 
+ss_TimeSpan.__typeName = 'ss.TimeSpan';
 ss.registerClass(global, 'ss.TimeSpan', ss_TimeSpan, null, [ss_IComparable, ss_IEquatable]);
 ss_TimeSpan.__class = false;

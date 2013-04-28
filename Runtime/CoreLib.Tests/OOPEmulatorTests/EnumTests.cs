@@ -17,6 +17,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 // MyEnum
 var $MyEnum = function() {
 };
+$MyEnum.__typeName = 'MyEnum';
 $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 {Script}.registerEnum(global, 'MyEnum', $MyEnum);
 ");
@@ -32,6 +33,7 @@ $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 // SomeNamespace.InnerNamespace.MyEnum
 var $SomeNamespace_InnerNamespace_MyEnum = function() {
 };
+$SomeNamespace_InnerNamespace_MyEnum.__typeName = 'SomeNamespace.InnerNamespace.MyEnum';
 $SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 {Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum);
 ");
@@ -46,6 +48,7 @@ $SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3:
 // MyEnum
 var $MyEnum = function() {
 };
+$MyEnum.__typeName = 'MyEnum';
 $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 {Script}.registerEnum(global, 'MyEnum', $MyEnum, { enumFlags: true });
 ");
@@ -60,6 +63,7 @@ $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 // MyEnum
 var $MyEnum = function() {
 };
+$MyEnum.__typeName = 'MyEnum';
 $MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
 {Script}.registerEnum(global, 'MyEnum', $MyEnum);
 ");
@@ -74,6 +78,7 @@ $MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
 // MyEnum
 var $$MyEnum = function() {
 };
+$$MyEnum.__typeName = '$MyEnum';
 $$MyEnum.prototype = { $value1: 0, $value2: 1, $value3: 2 };
 {Script}.registerEnum(null, '$MyEnum', $$MyEnum);
 ");

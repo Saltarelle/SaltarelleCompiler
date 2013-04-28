@@ -66,4 +66,5 @@ ss_Random.prototype = {
 	}
 };
 
+ss_Random.__typeName = 'ss.Random';
 ss.registerClass(global, 'ss.Random', ss_Random);

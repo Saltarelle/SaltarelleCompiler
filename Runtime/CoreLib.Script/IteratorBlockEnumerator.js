@@ -31,4 +31,5 @@ ss_IteratorBlockEnumerator.prototype = {
 	}
 };
 
+ss_IteratorBlockEnumerator.__typeName = 'ss.IteratorBlockEnumerator';
 ss.registerClass(global, 'ss.IteratorBlockEnumerator', ss_IteratorBlockEnumerator, null, [ss_IEnumerator, ss_IDisposable]);

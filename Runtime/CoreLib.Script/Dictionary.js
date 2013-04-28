@@ -199,5 +199,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 	return $type;
 };
 
+ss_Dictionary$2.__typeName = 'ss.Dictionary$2';
 ss.registerGenericClass(global, 'ss.Dictionary$2', ss_Dictionary$2, 2);
+ss_$DictionaryCollection.__typeName = 'ss.$DictionaryCollection';
 ss.registerClass(global, 'ss.$DictionaryCollection', ss_$DictionaryCollection, null, [ss_IEnumerable, ss_ICollection]);

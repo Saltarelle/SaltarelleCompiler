@@ -10,6 +10,7 @@ ss_ICollection.prototype = {
 	remove: null
 };
 
+ss_ICollection.__typeName = 'ss.ICollection';
 ss.registerInterface(global, 'ss.ICollection', ss_ICollection);
 
 ss.count = function#? DEBUG ss$count##(obj) {

@@ -48,6 +48,7 @@ public class C {
 	// Ф.Класс
 	var $Ф_Класс = function() {
 	};
+	$Ф_Класс.__typeName = 'Ф.Класс';
 	$Ф_Класс.prototype = {
 		$я: function() {
 			var Щ = 'г';
@@ -126,15 +127,18 @@ class C<T1, T2> where T1 : class {
 		$type.$f22 = new Date(0);
 		return $type;
 	};
+	$$C$2.__typeName = '$C$2';
 	ss.registerGenericClass(null, '$C$2', $$C$2, 2);
 	////////////////////////////////////////////////////////////////////////////////
 	// I
 	var $$I = function() {
 	};
+	$$I.__typeName = '$I';
 	////////////////////////////////////////////////////////////////////////////////
 	// X
 	var $$X = function() {
 	};
+	$$X.__typeName = '$X';
 	ss.registerInterface(null, '$I', $$I);
 	ss.registerClass(null, '$X', $$X);
 })();

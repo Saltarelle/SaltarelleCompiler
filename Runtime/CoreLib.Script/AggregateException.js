@@ -16,4 +16,6 @@ ss_AggregateException.prototype = {
 		return this._innerExceptions;
 	}
 };
+
+ss_AggregateException.__typeName = 'ss.AggregateException';
 ss.registerClass(global, 'ss.AggregateException', ss_AggregateException, ss_Exception);

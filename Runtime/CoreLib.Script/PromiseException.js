@@ -10,4 +10,6 @@ ss_PromiseException.prototype = {
 		return this._arguments;
 	}
 };
+
+ss_PromiseException.__typeName = 'ss.PromiseException';
 ss.registerClass(global, 'ss.PromiseException', ss_PromiseException, ss_Exception);

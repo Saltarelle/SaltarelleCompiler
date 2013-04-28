@@ -6,6 +6,7 @@ var ss_CultureInfo = function#? DEBUG CultureInfo$##(name, numberFormat, dateFor
 	this.numberFormat = numberFormat;
 	this.dateFormat = dateFormat;
 };
+ss_CultureInfo.__typeName = 'ss.CultureInfo';
 ss.registerClass(global, 'ss.CultureInfo', ss_CultureInfo);
 
 ss_CultureInfo.InvariantCulture = new ss_CultureInfo('en-US',

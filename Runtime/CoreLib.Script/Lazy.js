@@ -13,5 +13,6 @@ ss_Lazy.prototype.value = function#? DEBUG Lazy$value##() {
 	}
 	return this._value;
 };
+ss_Lazy.__typeName = 'ss.Lazy';
 ss.registerClass(global, 'ss.Lazy', ss_Lazy);
 

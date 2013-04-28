@@ -9,5 +9,6 @@ ss_EqualityComparer.prototype.areEqual = function#? DEBUG EqualityComparer$areEq
 ss_EqualityComparer.prototype.getObjectHashCode = function#? DEBUG EqualityComparer$getObjectHashCode##(obj) {
 	return ss.isValue(obj) ? ss.getHashCode(obj) : 0;
 };
+ss_EqualityComparer.__typeName = 'ss.EqualityComparer';
 ss.registerClass(global, 'ss.EqualityComparer', ss_EqualityComparer, null, [ss_IEqualityComparer]);
 ss_EqualityComparer.def = new ss_EqualityComparer();

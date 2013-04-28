@@ -58,12 +58,14 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 // OuterNamespace.InnerNamespace.SomeEnum
 var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
+$OuterNamespace_InnerNamespace_SomeEnum.__typeName = 'OuterNamespace.InnerNamespace.SomeEnum';
 $OuterNamespace_InnerNamespace_SomeEnum.prototype = { value1: 1, value2: 2, value3: 3 };
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
 var $OuterNamespace_InnerNamespace_SomeType = function(a) {
 	a = 0;
 };
+$OuterNamespace_InnerNamespace_SomeType.__typeName = 'OuterNamespace.InnerNamespace.SomeType';
 $OuterNamespace_InnerNamespace_SomeType.prototype = {
 	method1: function(b) {
 		b = 0;
@@ -80,6 +82,7 @@ $OuterNamespace_InnerNamespace_SomeType.staticMethod = function(d) {
 var $OuterNamespace_InnerNamespace_SomeType2 = function(a1) {
 	a1 = 0;
 };
+$OuterNamespace_InnerNamespace_SomeType2.__typeName = 'OuterNamespace.InnerNamespace.SomeType2';
 $OuterNamespace_InnerNamespace_SomeType2.prototype = {
 	method1: function(b1) {
 		b1 = 0;
@@ -92,6 +95,7 @@ $OuterNamespace_InnerNamespace_SomeType2.otherStaticMethod = function(c1) {
 // OuterNamespace.InnerNamespace2.OtherInterface
 var $OuterNamespace_InnerNamespace2_OtherInterface = function() {
 };
+$OuterNamespace_InnerNamespace2_OtherInterface.__typeName = 'OuterNamespace.InnerNamespace2.OtherInterface';
 $OuterNamespace_InnerNamespace2_OtherInterface.prototype = { interfaceMethod: null };
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherType
@@ -99,6 +103,7 @@ var $OuterNamespace_InnerNamespace2_OtherType = function(a2) {
 	{SomeType2}.call(this, a2);
 	a2 = 0;
 };
+$OuterNamespace_InnerNamespace2_OtherType.__typeName = 'OuterNamespace.InnerNamespace2.OtherType';
 $OuterNamespace_InnerNamespace2_OtherType.prototype = {
 	method2: function(b2) {
 		b2 = 0;
@@ -157,19 +162,23 @@ public class C1 : C2, I1 {}
 var $C1 = function() {
 	{C2}.call(this);
 };
+$C1.__typeName = 'C1';
 ////////////////////////////////////////////////////////////////////////////////
 // C2
 var $C2 = function() {
 	{C3}.call(this);
 };
+$C2.__typeName = 'C2';
 ////////////////////////////////////////////////////////////////////////////////
 // C3
 var $C3 = function() {
 };
+$C3.__typeName = 'C3';
 ////////////////////////////////////////////////////////////////////////////////
 // I1
 var $I1 = function() {
 };
+$I1.__typeName = 'I1';
 {Script}.registerClass(global, 'C3', $C3);
 {Script}.registerClass(global, 'C2', $C2, {C3});
 {Script}.registerInterface(global, 'I1', $I1);
@@ -190,14 +199,17 @@ public class A : B<int>, I<int> {}
 var $A = function() {
 	{B}.call(this);
 };
+$A.__typeName = 'A';
 ////////////////////////////////////////////////////////////////////////////////
 // B
 var $B = function() {
 };
+$B.__typeName = 'B';
 ////////////////////////////////////////////////////////////////////////////////
 // I
 var $I = function() {
 };
+$I.__typeName = 'I';
 {Script}.registerClass(global, 'B', $B);
 {Script}.registerInterface(global, 'I', $I);
 {Script}.registerClass(global, 'A', $A, {B}, [{I}]);
@@ -226,6 +238,7 @@ var $I = function() {
 // MyClass
 var $MyClass = function() {
 };
+$MyClass.__typeName = 'MyClass';
 $MyClass.theEntryPoint = function() {
 	var x = 0;
 };

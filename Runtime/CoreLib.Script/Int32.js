@@ -3,6 +3,7 @@
 
 var ss_Int32 = function#? DEBUG Int32$##() { };
 
+ss_Int32.__typeName = 'ss.Int32';
 ss.registerClass(global, 'ss.Int32', ss_Int32, Object, [ ss_IEquatable, ss_IComparable, ss_IFormattable ]);
 ss_Int32.__class = false;
 
