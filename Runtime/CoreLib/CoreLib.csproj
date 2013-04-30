@@ -217,6 +217,7 @@
     <Compile Include="String.cs" />
     <Compile Include="Text\StringBuilder.cs" />
     <Compile Include="StringReplaceCallback.cs" />
+    <Compile Include="StringSplitOptions.cs" />
     <Compile Include="Type.cs" />
     <Compile Include="TypeOption.cs" />
     <Compile Include="UInt16.cs" />

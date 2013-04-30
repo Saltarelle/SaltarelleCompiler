@@ -416,6 +416,16 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.splitWithCharsAndSplitOptions({this}, {separator})")]
+		public string[] Split(char[] separator) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.splitWithCharsAndSplitOptions({this}, {separator}, {options})")]
+		public string[] Split(char[] separator, StringSplitOptions options) {
+			return null;
+		}
+
 		[InlineCode("{this}.split({$System.String}.fromCharCode({separator}), {limit})")]
 		public string[] Split(char separator, int limit) {
 			return null;

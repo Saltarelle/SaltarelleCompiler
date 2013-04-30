@@ -1,6 +1,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 // String Extensions
 
+ss.splitWithCharsAndSplitOptions = function#? DEBUG ss$splitWithCharsAndSplitOptions##(s, chars, options) {
+	var usedOption = options || 0;
+	var result = s.split(new RegExp("[" + String.fromCharCode.apply(null, chars) + "]"));
+	if(usedOption === 0)
+		return result;
+
+	var parts = [];
+	for (var i in result)
+		if(result[i].length > 0)
+			parts.push(result[i]);
+
+	return parts;
+};
+
 ss.compareStrings = function#? DEBUG ss$compareStrings##(s1, s2, ignoreCase) {
 	if (ignoreCase) {
 		if (s1) {

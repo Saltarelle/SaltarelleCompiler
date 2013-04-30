@@ -507,6 +507,16 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void SplitWithCharsWorks() {
+			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }),
+				new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }, StringSplitOptions.None),
+				new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries),
+				new[] { "Lorem", "Ipsum", "dolor", "sit", "amet" });
+		}
+
+		[Test]
 		public void StartsWithCharWorks() {
 			Assert.IsTrue("abc".StartsWith('a'));
 			Assert.IsFalse("abc".StartsWith('b'));
