@@ -48,6 +48,16 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}._netFormatNumber({this}, {format}, {provider})")]
+		public string ToString(string format, IFormatProvider provider) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}._netFormatNumber({this}, 'G', {provider})")]
+		public string ToString(IFormatProvider provider) {
+			return null;
+		}
+
 		[InlineCode("{$System.Script}.localeFormatNumber({this}, {format})")]
 		public string LocaleFormat(string format) {
 			return null;
@@ -115,7 +125,6 @@ namespace System {
 		public static bool IsNaN(float f) {
 			return false;
 		}
-
 
 		[InlineCode("{$System.Script}.compare({this}, {other})")]
 		public int CompareTo(float other) {

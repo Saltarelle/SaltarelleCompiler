@@ -205,6 +205,18 @@ if (typeof(window) == 'object') {
 
 #include "Math.js"
 
+#include "NumberFormatInfo.js"
+
+#include "DateTimeFormatInfo.js"
+
+#include "IFormatProvider.js"
+
+#include "Stopwatch.js"
+
+#include "Environment.js"
+
+#include "Convert.js"
+
 #include "Array.js"
 
 #include "Date.js"

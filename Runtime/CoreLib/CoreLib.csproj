@@ -166,6 +166,9 @@
     <Compile Include="Error.cs" />
     <Compile Include="JsDate.cs" />
     <Compile Include="NotSupportedException.cs" />
+    <Compile Include="SystemException.cs" />
+    <Compile Include="NullReferenceException.cs" />
+    <Compile Include="IndexOutOfRangeException.cs" />
     <Compile Include="ObjectEnumerator.cs" />
     <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
     <Compile Include="Properties\Version.cs" />
@@ -180,13 +183,14 @@
     <Compile Include="Nullable.cs" />
     <Compile Include="Diagnostics\ConditionalAttribute.cs" />
     <Compile Include="Diagnostics\SuppressMessageAttribute.cs" />
+    <Compile Include="Diagnostics\Stopwatch.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="ScriptMetadata.cs" />
     <Compile Include="Web\HttpUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Globalization\CultureInfo.cs" />
-    <Compile Include="Globalization\DateFormatInfo.cs" />
+    <Compile Include="Globalization\DateTimeFormatInfo.cs" />
     <Compile Include="Globalization\NumberFormatInfo.cs" />
     <Compile Include="Serialization\JsonStringifyCallback.cs" />
     <Compile Include="Serialization\JsonParseCallback.cs" />
@@ -227,6 +231,12 @@
     <Compile Include="String.cs" />
     <Compile Include="Text\StringBuilder.cs" />
     <Compile Include="StringReplaceCallback.cs" />
+    <Compile Include="IFormatProvider.cs" />
+    <Compile Include="StringSplitOptions.cs" />
+    <Compile Include="StringComparison.cs" />
+    <Compile Include="Environment.cs" />
+    <Compile Include="Convert.cs" />
+    <Compile Include="Console.cs" />
     <Compile Include="Type.cs" />
     <Compile Include="TypeOption.cs" />
     <Compile Include="UInt16.cs" />

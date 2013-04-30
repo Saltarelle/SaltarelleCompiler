@@ -507,6 +507,24 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void SplitWithCharsWorks() {
+			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }),
+				new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }, StringSplitOptions.None),
+				new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries),
+				new[] { "Lorem", "Ipsum", "dolor", "sit", "amet" });
+		}
+
+		[Test]
+		public void SplitWithStringsWorks()
+		{
+			Assert.AreEqual("a is b if b is c and c is d if d is e".Split(new[] { "is", "if" },
+				StringSplitOptions.None),
+				new[] { "a ", " b ", " b ", " c and c ", " d ", " d ", " e" });
+		}
+
+		[Test]
 		public void StartsWithCharWorks() {
 			Assert.IsTrue("abc".StartsWith('a'));
 			Assert.IsFalse("abc".StartsWith('b'));
@@ -707,6 +725,14 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(text.Contains("Lorem"));
 			Assert.IsFalse(text.Contains("lorem"));
 			Assert.IsTrue(text.Contains(text));
+		}
+
+		[Test]
+		public void ToCharArrayWorks()
+		{
+			string text = "Lorem sit dolor";
+			Assert.AreEqual(text.ToCharArray(),
+				new[] {"L", "o", "r", "e", "m", " ", "s", "i", "t", " ", "d", "o", "l", "o", "r"});
 		}
 	}
 }

@@ -68,3 +68,12 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 		return parts.join(' | ');
 	}
 };
+
+ss_Enum.getValues = function #? DEBUG Enum$getValues##(enumType) {
+  var parts = [];
+  var values = enumType.prototype;
+  for (var i in values) {
+    ss.add(parts, values[i]);
+  }
+  return parts;
+};

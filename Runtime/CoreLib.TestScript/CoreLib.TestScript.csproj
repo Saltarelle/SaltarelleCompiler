@@ -61,6 +61,12 @@
     <Compile Include="ActivatorTests.cs" />
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
+    <Compile Include="ConvertTests.cs" />
+    <Compile Include="StopwatchTests.cs" />
+    <Compile Include="CultureInfoTests.cs" />
+    <Compile Include="NumberFormatInfoTests.cs" />
+    <Compile Include="DateTimeFormatInfoTests.cs" />
+    <Compile Include="EnvironmentTests.cs" />
     <Compile Include="Collections\TypedArrays\ArrayBufferTests.cs" />
     <Compile Include="Collections\TypedArrays\DataViewTests.cs" />
     <Compile Include="Collections\TypedArrays\Uint8ClampedArrayTests.cs" />

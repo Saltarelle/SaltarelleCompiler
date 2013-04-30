@@ -15,6 +15,24 @@ namespace CoreLib.Tests.Core {
 	public class ArrayTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class ConvertTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class StopwatchTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class EnvironmentTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class CultureInfoTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class NumberFormatInfoTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class DateTimeFormatInfoTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class DelegateTests : CoreLibTestBase {}
 
 	[TestFixture]
