@@ -75,6 +75,12 @@ namespace Saltarelle.Compiler {
 			return attr != null ? ReadAttribute<TAttribute>(attr) : null;
 		}
 
+		public static IEnumerable<TAttribute> ReadAttributes<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
+			return attributes
+				.Where(a => a.AttributeType.FullName == typeof(TAttribute).FullName)
+				.Select(a => ReadAttribute<TAttribute>(a));
+		}
+
 		public static bool HasAttribute<TAttribute>(IEntity entity) where TAttribute : Attribute {
 			return HasAttribute<TAttribute>(entity.Attributes);
 		}

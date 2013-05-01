@@ -182,7 +182,7 @@ $mymodule.a;
 			var type = Common.CreateMockTypeDefinition("GlobalType", asm);
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
-			    new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))), 
+			    new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))),
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -215,6 +215,26 @@ $mymodule.a;
 	$module1.SomeNamespace.InnerNamespace.Type1.a + $module2.SomeNamespace.InnerNamespace.Type2.b;
 	$module1.SomeNamespace.Type3.c + $module3.Type4.d;
 	$module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
+	return exports;
+});
+");
+		}
+
+		[Test]
+		public void AsyncModuleWithAdditionalDependencyWorks()
+		{
+			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new AsyncModuleAttribute(), () => new AdditionalDependencyAttribute("my-additional-dep", "__unused") });
+			var type = Common.CreateMockTypeDefinition("GlobalType", asm);
+			var actual = Process(new JsStatement[] {
+				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
+				new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))), 
+			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+
+			AssertCorrect(actual,
+@"define(['mscorlib', 'my-additional-dep'], function($_, __unused) {
+	var exports = {};
+	$$GlobalType;
+	$$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 	return exports;
 });
 ");

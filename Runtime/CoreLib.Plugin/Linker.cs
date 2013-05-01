@@ -168,7 +168,11 @@ namespace CoreLib.Plugin {
 					body.Insert(0, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()));
 					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
 
-					var pairs = new[] { new KeyValuePair<string, string>("mscorlib", namer.GetVariableName("_", usedSymbols)) }.Concat(importer._moduleAliases.OrderBy(x => x.Key)).ToList();
+
+					var pairs = new[] { new KeyValuePair<string, string>("mscorlib", namer.GetVariableName("_", usedSymbols)) }
+						.Concat(importer._moduleAliases
+								.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly)).OrderBy(x => x.Key))
+						.ToList();
 
 					body = new List<JsStatement> {
 						new JsExpressionStatement(
