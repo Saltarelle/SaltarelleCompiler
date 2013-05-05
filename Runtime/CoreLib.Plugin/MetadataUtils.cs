@@ -419,7 +419,7 @@ namespace CoreLib.Plugin {
 			return JsExpression.ObjectLiteral(properties);
 		}
 
-		public static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
+		private static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType, MethodScriptSemantics semanticsIfAccessor) {
 			if (m is IMethod && ((IMethod)m).IsConstructor)
 				return ConstructConstructorInfo((IMethod)m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType);
 
@@ -429,7 +429,7 @@ namespace CoreLib.Plugin {
 
 			if (m is IMethod) {
 				var method = (IMethod)m;
-				var sem = metadataImporter.GetMethodSemantics(method);
+				var sem = semanticsIfAccessor ?? metadataImporter.GetMethodSemantics(method);
 				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument && sem.Type != MethodScriptSemantics.ImplType.InlineCode) {
 					errorReporter.Message(Messages._7201, m.FullName, "method");
 					return JsExpression.Null;
@@ -504,9 +504,9 @@ namespace CoreLib.Plugin {
 							return JsExpression.Null;
 						}
 						if (sem.GetMethod != null)
-							properties.Add(new JsObjectLiteralProperty("getter", ConstructMemberInfo(prop.Getter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
+							properties.Add(new JsObjectLiteralProperty("getter", ConstructMemberInfo(prop.Getter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.GetMethod)));
 						if (sem.SetMethod != null)
-							properties.Add(new JsObjectLiteralProperty("setter", ConstructMemberInfo(prop.Setter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
+							properties.Add(new JsObjectLiteralProperty("setter", ConstructMemberInfo(prop.Setter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.SetMethod)));
 						break;
 					case PropertyScriptSemantics.ImplType.Field:
 						if (prop.CanGet)
@@ -537,14 +537,47 @@ namespace CoreLib.Plugin {
 				}
 
 				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Event)));
-				properties.Add(new JsObjectLiteralProperty("adder", ConstructMemberInfo(evt.AddAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
-				properties.Add(new JsObjectLiteralProperty("remover", ConstructMemberInfo(evt.RemoveAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
+				properties.Add(new JsObjectLiteralProperty("adder", ConstructMemberInfo(evt.AddAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.AddMethod)));
+				properties.Add(new JsObjectLiteralProperty("remover", ConstructMemberInfo(evt.RemoveAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.RemoveMethod)));
 			}
 			else {
 				throw new ArgumentException("Invalid member " + m);
 			}
 
 			return JsExpression.ObjectLiteral(properties);
+		}
+
+		public static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
+			MethodScriptSemantics semanticsIfAccessor = null;
+			if (m is IMethod && ((IMethod)m).IsAccessor) {
+				var owner = ((IMethod)m).AccessorOwner;
+				if (owner is IProperty) {
+					var sem = metadataImporter.GetPropertySemantics((IProperty)owner);
+					if (sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods) {
+						if (ReferenceEquals(m, ((IProperty)owner).Getter))
+							semanticsIfAccessor = sem.GetMethod;
+						else if (ReferenceEquals(m, ((IProperty)owner).Setter))
+							semanticsIfAccessor = sem.SetMethod;
+						else
+							throw new ArgumentException("Invalid member " + m);
+					}
+				}
+				else if (owner is IEvent) {
+					var sem = metadataImporter.GetEventSemantics((IEvent)owner);
+					if (sem.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods) {
+						if (ReferenceEquals(m, ((IEvent)owner).AddAccessor))
+							semanticsIfAccessor = sem.AddMethod;
+						else if (ReferenceEquals(m, ((IEvent)owner).RemoveAccessor))
+							semanticsIfAccessor = sem.RemoveMethod;
+						else
+							throw new ArgumentException("Invalid member " + m);
+					}
+				}
+				else
+					throw new ArgumentException("Invalid owner " + owner);
+			}
+
+			return ConstructMemberInfo(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, semanticsIfAccessor);
 		}
 	}
 }
