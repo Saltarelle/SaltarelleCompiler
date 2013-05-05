@@ -1111,27 +1111,27 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public virtual void SetMethodSemantics(IMethod method, MethodScriptSemantics semantics) {
+		public void SetMethodSemantics(IMethod method, MethodScriptSemantics semantics) {
 			_methodSemantics[method] = semantics;
 			_ignoredMembers.Add(method);
 		}
 
-		public virtual void SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics) {
+		public void SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics) {
 			_constructorSemantics[method] = semantics;
 			_ignoredMembers.Add(method);
 		}
 
-		public virtual void SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics) {
+		public void SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics) {
 			_propertySemantics[property] = semantics;
 			_ignoredMembers.Add(property);
 		}
 
-		public virtual void SetFieldSemantics(IField field, FieldScriptSemantics semantics) {
+		public void SetFieldSemantics(IField field, FieldScriptSemantics semantics) {
 			_fieldSemantics[field] = semantics;
 			_ignoredMembers.Add(field);
 		}
 
-		public virtual void SetEventSemantics(IEvent evt,EventScriptSemantics semantics) {
+		public void SetEventSemantics(IEvent evt,EventScriptSemantics semantics) {
 			_eventSemantics[evt] = semantics;
 			_ignoredMembers.Add(evt);
 		}
