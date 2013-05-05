@@ -1,4 +1,3 @@
-
 Fixed issue with reflectable knockout properties (#189)
 Allow empty script name for types in modules (#181)
 Fixed error compiling with Visual Studio if VSCommands is installed (#151)

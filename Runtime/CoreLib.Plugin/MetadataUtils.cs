@@ -453,7 +453,7 @@ namespace CoreLib.Plugin {
 					}
 					var tokens = InlineCodeMethodCompiler.Tokenize(method, sem.LiteralCode, _ => {});
 
-					var compileResult = Compile(new CSharpInvocationResolveResult(new ThisResolveResult(method.DeclaringType), method, arguments), method.DeclaringTypeDefinition, method, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedNames);
+					var compileResult = Compile(CreateMethodInvocationResolveResult(method, method.IsStatic ? (ResolveResult)new TypeResolveResult(method.DeclaringType) : new ThisResolveResult(method.DeclaringType), arguments), method.DeclaringTypeDefinition, method, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedNames);
 					var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), new JsBlockStatement(compileResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(compileResult.Expression) })));
 
 					if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.TypeParameter && t.OwnerType == EntityType.Method)) {
@@ -545,6 +545,38 @@ namespace CoreLib.Plugin {
 			}
 
 			return JsExpression.ObjectLiteral(properties);
+		}
+
+		private static ResolveResult CreateMethodInvocationResolveResult(IMethod method, ResolveResult target, IList<ResolveResult> args) {
+			if (method.IsAccessor) {
+				var owner = ((IMethod)method).AccessorOwner;
+				var prop = owner as IProperty;
+				if (prop != null) {
+					if (ReferenceEquals(method, prop.Getter))
+						return args.Count == 0 ? new MemberResolveResult(target, owner) : new CSharpInvocationResolveResult(target, prop, args);
+					else if (ReferenceEquals(method, prop.Setter))
+						return new OperatorResolveResult(prop.ReturnType, ExpressionType.Assign, new[] { args.Count == 1 ? new MemberResolveResult(target, prop) : new CSharpInvocationResolveResult(target, prop, args.Take(args.Count - 1).ToList()), args[args.Count - 1] });
+					else
+						throw new ArgumentException("Invalid member " + method);
+				}
+				var evt = owner as IEvent;
+				if (evt != null) {
+					ExpressionType op;
+					if (ReferenceEquals(method, ((IEvent)owner).AddAccessor))
+						op = ExpressionType.AddAssign;
+					else if (ReferenceEquals(method, ((IEvent)owner).RemoveAccessor))
+						op = ExpressionType.SubtractAssign;
+					else
+						throw new ArgumentException("Invalid member " + method);
+
+					return new OperatorResolveResult(evt.ReturnType, op, new[] { new MemberResolveResult(target, evt), args[args.Count - 1] });
+				}
+
+				throw new ArgumentException("Invalid owner " + owner);
+			}
+			else {
+				return new CSharpInvocationResolveResult(target, method, args);
+			}
 		}
 
 		public static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
