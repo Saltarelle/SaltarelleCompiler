@@ -689,7 +689,7 @@ namespace CoreLib.Plugin {
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Getter, getterName.Item1, getterName.Item2, usedNames);
-				getter = GetMethodSemantics(property.Getter);
+				getter = GetMethodSemanticsInternal(property.Getter);
 			}
 			else {
 				getter = null;
@@ -701,7 +701,7 @@ namespace CoreLib.Plugin {
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.Setter, setterName.Item1, setterName.Item2, usedNames);
-				setter = GetMethodSemantics(property.Setter);
+				setter = GetMethodSemanticsInternal(property.Setter);
 			}
 			else {
 				setter = null;
@@ -756,7 +756,7 @@ namespace CoreLib.Plugin {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					else if (method.IsOverride && GetMethodSemanticsInternal((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						Message(Messages._7120, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -808,7 +808,7 @@ namespace CoreLib.Plugin {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
 					}
-					else if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					else if (method.IsOverride && GetMethodSemanticsInternal((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						Message(Messages._7127, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 						return;
@@ -876,7 +876,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					if (method.IsOverride && GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					if (method.IsOverride && GetMethodSemanticsInternal((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						if (nameSpecified) {
 							Message(Messages._7132, method);
 						}
@@ -884,13 +884,13 @@ namespace CoreLib.Plugin {
 							Message(Messages._7133, method);
 						}
 
-						var semantics = GetMethodSemantics((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition);
+						var semantics = GetMethodSemanticsInternal((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition);
 						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
 							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							semantics = semantics.WithEnumerateAsArray();
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
-							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemantics((IMethod)im.MemberDefinition).Name != semantics.Name);
+							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition).Name != semantics.Name);
 							if (errorMethod != null) {
 								Message(Messages._7134, method, errorMethod.FullName);
 							}
@@ -905,7 +905,7 @@ namespace CoreLib.Plugin {
 						}
 
 						var candidateNames = method.ImplementedInterfaceMembers
-						                           .Select(im => GetMethodSemantics((IMethod)im.MemberDefinition))
+						                           .Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition))
 						                           .Select(s => s.Type == MethodScriptSemantics.ImplType.NormalMethod ? s.Name : (s.Type == MethodScriptSemantics.ImplType.InlineCode ? s.GeneratedMethodName : null))
 						                           .Where(name => name != null)
 						                           .Distinct();
@@ -915,7 +915,7 @@ namespace CoreLib.Plugin {
 						}
 
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
-						var sem = method.ImplementedInterfaceMembers.Select(im => GetMethodSemantics((IMethod)im.MemberDefinition)).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						var sem = method.ImplementedInterfaceMembers.Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition)).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
 						if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
 							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
@@ -992,7 +992,7 @@ namespace CoreLib.Plugin {
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
-				adder = GetMethodSemantics(evt.AddAccessor);
+				adder = GetMethodSemanticsInternal(evt.AddAccessor);
 			}
 			else {
 				adder = null;
@@ -1004,7 +1004,7 @@ namespace CoreLib.Plugin {
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
-				remover = GetMethodSemantics(evt.RemoveAccessor);
+				remover = GetMethodSemanticsInternal(evt.RemoveAccessor);
 			}
 			else {
 				remover = null;
@@ -1151,7 +1151,7 @@ namespace CoreLib.Plugin {
 			return GetTypeSemanticsInternal(typeDefinition).Semantics;
 		}
 
-		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
+		private MethodScriptSemantics GetMethodSemanticsInternal(IMethod method) {
 			switch (method.DeclaringType.Kind) {
 				case TypeKind.Delegate:
 					return MethodScriptSemantics.NotUsableFromScript();
@@ -1161,6 +1161,12 @@ namespace CoreLib.Plugin {
 						throw new ArgumentException(string.Format("Semantics for method " + method + " were not imported"));
 					return result;
 			}
+		}
+
+		public MethodScriptSemantics GetMethodSemantics(IMethod method) {
+			if (method.IsAccessor)
+				throw new ArgumentException("GetMethodSemantics should not be called for the accessor " + method);
+			return GetMethodSemanticsInternal(method);
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethod method) {
