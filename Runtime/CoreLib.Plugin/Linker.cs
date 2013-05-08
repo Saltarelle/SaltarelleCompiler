@@ -164,14 +164,15 @@ namespace CoreLib.Plugin {
 				var usedSymbols = UsedSymbolsGatherer.Analyze(statements);
 				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols);
 				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
+				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly));
+
 				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
 					body.Insert(0, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()));
 					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
 
 
 					var pairs = new[] { new KeyValuePair<string, string>("mscorlib", namer.GetVariableName("_", usedSymbols)) }
-						.Concat(importer._moduleAliases
-								.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly)).OrderBy(x => x.Key))
+						.Concat(moduleDependencies.OrderBy(x => x.Key))
 						.ToList();
 
 					body = new List<JsStatement> {
@@ -187,16 +188,17 @@ namespace CoreLib.Plugin {
 						)
 					};
 				}
-				else if (importer._moduleAliases.Count > 0) {
+				else if (moduleDependencies.Any()) {
 					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
 					body.InsertRange(0, new[] { (JsStatement)new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib"))) }
-					                    .Concat(importer._moduleAliases.OrderBy(x => x.Key)
-					                                                   .Select(x => new JsVariableDeclarationStatement(
-					                                                                        x.Value,
-					                                                                        JsExpression.Invocation(
-					                                                                            JsExpression.Identifier("require"),
-					                                                                            JsExpression.String(x.Key))))
-					                                                   .ToList()));
+										.Concat(moduleDependencies
+											.OrderBy(x => x.Key).OrderBy(x => x.Key)
+												.Select(x => new JsVariableDeclarationStatement(
+													x.Value,
+													JsExpression.Invocation(
+														JsExpression.Identifier("require"),
+														JsExpression.String(x.Key))))
+												.ToList()));
 				}
 				else {
 					 body = new List<JsStatement> { new JsExpressionStatement(JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };

@@ -35,7 +35,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var otherAsm = Common.CreateMockAssembly();
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("GlobalType", otherAsm))),
-			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", otherAsm)), "x"), JsExpression.Number(1)))
+				new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", otherAsm)), "x"), JsExpression.Number(1)))
 			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -52,7 +52,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var type = Common.CreateMockTypeDefinition("GlobalType", asm);
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
-			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1)))
+				new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1)))
 			}, asm, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -68,7 +68,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var asm = Common.CreateMockAssembly();
 			var type = Common.CreateMockTypeDefinition("MyImportedType", asm, attributes: new Expression<Func<Attribute>>[] { () => new ImportedAttribute() });
 			var actual = Process(new JsStatement[] {
-			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(type), "x"), JsExpression.Number(1)))
+				new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(type), "x"), JsExpression.Number(1)))
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.FullName) });
 
 			AssertCorrect(actual,
@@ -84,7 +84,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var type = Common.CreateMockTypeDefinition("GlobalType", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("some-module") });
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
-			    new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("some-module") })), "x"), JsExpression.Number(1)))
+				new JsReturnStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("some-module") })), "x"), JsExpression.Number(1)))
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -182,7 +182,7 @@ $mymodule.a;
 			var type = Common.CreateMockTypeDefinition("GlobalType", asm);
 			var actual = Process(new JsStatement[] {
 				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
-			    new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))),
+				new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))),
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
@@ -221,22 +221,41 @@ $mymodule.a;
 		}
 
 		[Test]
-		public void AsyncModuleWithAdditionalDependencyWorks()
+		public void AsyncModuleWithAdditionalDependenciesWorks()
 		{
-			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new AsyncModuleAttribute(), () => new AdditionalDependencyAttribute("my-additional-dep", "__unused") });
+			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { 
+				() => new AsyncModuleAttribute(), 
+				() => new AdditionalDependencyAttribute("my-additional-dep", "__unused"),
+				() => new AdditionalDependencyAttribute("my-other-dep", "myDep2")});
 			var type = Common.CreateMockTypeDefinition("GlobalType", asm);
 			var actual = Process(new JsStatement[] {
-				new JsExpressionStatement(new JsTypeReferenceExpression(type)),
-				new JsExpressionStatement(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1))), 
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+				new JsReturnStatement(JsExpression.String("myModule"))
+			}, asm);
 
 			AssertCorrect(actual,
-@"define(['mscorlib', 'my-additional-dep'], function($_, __unused) {
+@"define(['mscorlib', 'my-additional-dep', 'my-other-dep'], function($_, __unused, myDep2) {
 	var exports = {};
-	$$GlobalType;
-	$$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
+	return 'myModule';
 	return exports;
 });
+");
+		}
+
+		[Test]
+		public void ModuleWithAdditionalDepenciesWorks() {
+			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] {
+				() => new AdditionalDependencyAttribute("my-additional-dep", "myDep"),
+				() => new AdditionalDependencyAttribute("my-other-dep", "myDep2")});
+			var type = Common.CreateMockTypeDefinition("GlobalType", asm);
+			var actual = Process(new JsStatement[] {
+				new JsReturnStatement(JsExpression.String("myModule"))
+			}, asm);
+
+			AssertCorrect(actual,
+@"require('mscorlib');
+var myDep = require('my-additional-dep');
+var myDep2 = require('my-other-dep');
+return 'myModule';
 ");
 		}
 
