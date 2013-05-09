@@ -43,6 +43,17 @@ namespace System.Text {
 		}
 
 		/// <summary>
+		/// Gets the length of the StringBuilder content.
+		/// </summary>
+		/// <returns>length of the StringBuilder content.</returns>
+		[IntrinsicProperty]
+		public int Length {
+			get {
+				return 0;
+			}
+		}
+
+		/// <summary>
 		/// Appends a boolean value to the end of the <see cref="StringBuilder"/> instance.
 		/// </summary>
 		/// <param name="b">The boolean value to append to the end of the StringBuilder instance.</param>

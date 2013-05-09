@@ -5,14 +5,14 @@ ss.formatNumber = function#? DEBUG ss$formatNumber##(num, format) {
 	if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
 		return num.toString();
 	}
-	return ss._netFormatNumber(num, format, false);
+	return ss._netFormatNumber(num, format, ss_CultureInfo.InvariantCulture.numberFormat);
 };
 
 ss.localeFormatNumber = function#? DEBUG ss$localeFormatNumber##(num, format) {
 	if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
 		return num.toLocaleString();
 	}
-	return ss._netFormatNumber(num, format, true);
+	return ss._netFormatNumber(num, format, ss_CultureInfo.CurrentCulture.numberFormat);
 };
 
 ss._commaFormatNumber = function#? DEBUG ss$_commaFormat##(number, groups, decimal, comma) {
@@ -71,8 +71,8 @@ ss._commaFormatNumber = function#? DEBUG ss$_commaFormat##(number, groups, decim
 	return decimalPart ? s + decimalPart : s;
 };
 
-ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, useLocale) {
-	var nf = useLocale ? ss_CultureInfo.CurrentCulture.numberFormat : ss_CultureInfo.InvariantCulture.numberFormat;
+ss._netFormatNumber = function#? DEBUG ss$_netFormatNumber##(num, format, numberFormat) {
+	var nf = numberFormat || ss_CultureInfo.InvariantCulture.numberFormat;
 
 	var s = '';    
 	var precision = -1;

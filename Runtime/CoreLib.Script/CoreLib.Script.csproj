@@ -61,12 +61,18 @@
     <Content Include="ArrayEnumerator.js" />
     <Content Include="CancelEventArgs.js" />
     <Content Include="CultureInfo.js" />
+    <Content Include="DateTimeFormatInfo.js" />
+    <Content Include="NumberFormatInfo.js" />
     <Content Include="EventArgs.js" />
     <Content Include="IDisposable.js" />
     <Content Include="IEnumerable.js" />
     <Content Include="IEnumerator.js" />
     <Content Include="StringBuilder.js" />
     <Content Include="TypeSystem.js" />
+    <Content Include="Stopwatch.js" />
+    <Content Include="Environment.js" />
+    <Content Include="Convert.js" />
+    <Content Include="IFormatProvider.js" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AggregateException.js" />

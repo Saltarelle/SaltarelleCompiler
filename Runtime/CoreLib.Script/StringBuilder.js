@@ -34,6 +34,10 @@ ss_StringBuilder.prototype = {
 		this.isEmpty = true;
 	},
 
+	length: function#? DEBUG StringBuilder$length##() {
+		return this.toString().length;
+	},
+
 	toString: function#? DEBUG StringBuilder$toString##() {
 		return this._parts.join('');
 	}
