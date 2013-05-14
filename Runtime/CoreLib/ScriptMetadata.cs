@@ -421,6 +421,26 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
+	/// When specified on an assembly with an AsyncModule attribute, the module will require this additional dependency in its AMD declaration
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple=true)]
+	[NonScriptable]
+	public sealed class AdditionalDependencyAttribute : Attribute {
+		public AdditionalDependencyAttribute(string moduleName)
+		{
+			ModuleName = moduleName;
+			InstanceName = moduleName;
+		}
+		public AdditionalDependencyAttribute(string moduleName, string instanceName)
+		{
+			ModuleName = moduleName;
+			InstanceName = instanceName;
+		}
+		public string ModuleName { get; private set; }
+		public string InstanceName { get; set; }
+	}
+
+	/// <summary>
 	/// Can be applied to a GetEnumerator() method to indicate that that array-style enumeration should be used.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]

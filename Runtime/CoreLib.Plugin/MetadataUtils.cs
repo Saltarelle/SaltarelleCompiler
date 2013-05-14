@@ -109,6 +109,12 @@ namespace CoreLib.Plugin {
 			return AttributeReader.HasAttribute<AsyncModuleAttribute>(assembly.AssemblyAttributes);
 		}
 
+		public static IEnumerable<KeyValuePair<string,string>> GetAdditionalDependencies(IAssembly assembly)
+		{
+			return AttributeReader.ReadAttributes<AdditionalDependencyAttribute>(assembly.AssemblyAttributes)
+				.Select(a => new KeyValuePair<string,string>(a.ModuleName, a.InstanceName));
+		}
+
 		public static string GetModuleName(IAssembly assembly) {
 			var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(assembly.AssemblyAttributes);
 			return (mna != null && !String.IsNullOrEmpty(mna.ModuleName) ? mna.ModuleName : null);
@@ -312,7 +318,7 @@ namespace CoreLib.Plugin {
 			                              errorReporter,
 			                              variables,
 			                              new Dictionary<LambdaResolveResult, NestedFunctionData>(),
-			                              t => { 
+			                              t => {
 			                                  string name = namer.GetVariableName(null, usedVariableNames);
 			                                  IVariable variable = new SimpleVariable(t, "temporary", DomRegion.Empty);
 			                                  variables[variable] = new VariableData(name, null, false);
