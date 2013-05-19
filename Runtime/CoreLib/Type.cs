@@ -80,6 +80,11 @@ namespace System {
 			return false;
 		}
 
+		[InlineCode("{$System.Script}.isSubclassOf({this}, {type})")]
+		public bool IsSubclassOf(Type type) {
+			return false;
+		}
+
 		public bool IsClass {
 			[InlineCode("{$System.Script}.isClass({this})")]
 			get { return false; }
