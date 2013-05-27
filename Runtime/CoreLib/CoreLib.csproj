@@ -93,6 +93,7 @@
     <Compile Include="Collections\TypedArrays\Uint8ClampedArray.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="Comparison.cs" />
+    <Compile Include="Guid.cs" />
     <Compile Include="IFormattable.cs" />
     <Compile Include="DayOfWeek.cs" />
     <Compile Include="TimeSpan.cs" />

@@ -64,4 +64,7 @@ namespace CoreLib.Tests.Core.SimpleTypes {
 
 	[TestFixture]
 	public class UInt64Tests : CoreLibTestBase {}
+
+    [TestFixture]
+    public class GuidTests : CoreLibTestBase { }
 }

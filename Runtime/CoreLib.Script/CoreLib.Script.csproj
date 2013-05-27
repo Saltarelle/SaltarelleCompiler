@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="Guid.js" />
     <Content Include="IFormattable.js" />
     <Content Include="IComparer.js" />
     <Content Include="Function.js" />
