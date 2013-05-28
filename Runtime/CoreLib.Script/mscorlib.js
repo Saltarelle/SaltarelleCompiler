@@ -283,6 +283,8 @@ if (typeof(window) == 'object') {
 
 #include "FormatException.js"
 
+#include "ArgumentNullException.js"
+
 if (global.ss) {
 	for (var n in ss) {
 		if (ss.hasOwnProperty(n))

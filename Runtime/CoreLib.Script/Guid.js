@@ -14,8 +14,22 @@ ss.initClass(ss_Guid, Object, [ ss_IEquatable, ss_IFormattable ]);
 ss_Guid.__class = false;
 
 
+
+ss_Guid.prototype = {
+    equals: function#? DEBUG  Guid$equals##(other) {
+            return ss.isInstanceOfType(other, ss_Guid) && other.valueOf() === this.valueOf();
+    },
+    equalsT: function#? DEBUG Guid$equalsT##(other) {
+                return this.equals(other);
+    },
+    toString: function#? DEBUG Guid$toString##() {
+        return this.valueOf();
+   }
+};
+
+
 ss_Guid.isInstanceOfType = function(instance) {
-    return typeof(instance) === 'string';
+    return typeof(instance) === 'ss_Guid';
 };
 
 ss_Guid.getDefaultValue = ss_Guid.createInstance = function() {
@@ -24,10 +38,10 @@ ss_Guid.getDefaultValue = ss_Guid.createInstance = function() {
 
 
 
-ss_Guid.parse = function(s) {
-    var guid = new ss_Guid(s);
-    //if(guid === UUID.empty)
-    //    throw new ss_FormatException("Unable to parse UUID");
+ss_Guid.parse = function (uuid) {
+    if (typeof variable === 'undefined')
+        throw new ss_ArgumentNullException('uuid');
+    var guid = new ss_Guid(uuid);
 };
 
 

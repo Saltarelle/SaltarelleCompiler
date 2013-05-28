@@ -16,7 +16,7 @@ namespace System {
         {
 		}
 
-        [InlineCode("{$System.Guid}.parse({s})")]
+        [InlineCode("{$System.Guid}.parse({uuid})")]
         public Guid(string s) { 
         } 
 
@@ -29,8 +29,8 @@ namespace System {
             return default(Guid);
         }
 
-        [InlineCode("{$System.Guid}.parse({s})")]
-        public static Guid Parse(string s)
+        [InlineCode("{$System.Guid}.parse({uuid})")]
+        public static Guid Parse(string uuid)
         {
             return Empty;
         }
