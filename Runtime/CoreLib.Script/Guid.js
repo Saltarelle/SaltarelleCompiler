@@ -2,7 +2,10 @@
 // Guid
 
 var ss_Guid = function (uuid) {
-    this.uuid = UUID.tryParse(uuid);
+    if (typeof variable === 'undefined')
+        this.uuid = UUID.empty;
+    else
+        this.uuid = UUID.parse(uuid);
 };
 
 ss_Guid.__typeName = 'ss.Guid';
@@ -22,7 +25,9 @@ ss_Guid.getDefaultValue = ss_Guid.createInstance = function() {
 
 
 ss_Guid.parse = function(s) {
-	return new ss_Guid(s);
+    var guid = new ss_Guid(s);
+    //if(guid === UUID.empty)
+    //    throw new ss_FormatException("Unable to parse UUID");
 };
 
 
@@ -154,7 +159,7 @@ ss_Guid.equalsT = function (that, other) {
           if ((/[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}/).test(ret))
               return ret;
           else
-              throw new Error("Unable to parse UUID");
+              throw new ss_FormatException("Unable to parse UUID");
       }
       , "createSequential": function () {
           var ret = new Date().valueOf().toString(16).replace("-", "")
