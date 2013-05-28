@@ -17,7 +17,7 @@ namespace System {
 		}
 
         [InlineCode("{$System.Guid}.parse({uuid})")]
-        public Guid(string s) { 
+        public Guid(string uuid) { 
         } 
 
 
