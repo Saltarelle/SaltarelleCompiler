@@ -11,15 +11,15 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
     public struct Guid : IEquatable<Guid>, IFormattable, IComparable<Guid>
     {
-       // [AlternateSignature]
+        [InlineCode("new {$System.Guid}()")]
         public Guid(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _)
         {
 		}
 
-        //[AlternateSignature]
-        //public Guid(string s)
-        //{
-        //}
+        [InlineCode("{$System.Guid}.parse({s})")]
+        public Guid(string s) { 
+        } 
+
 
         public static readonly Guid Empty = new Guid();
  
