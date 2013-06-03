@@ -3,9 +3,9 @@
 
 var ss_Guid = function (uuid) {
     if (typeof variable === 'undefined')
-        this.uuid = UUID.empty;
+        return UUID.empty;
     else
-        this.uuid = UUID.parse(uuid);
+        return UUID.parse(uuid);
 };
 
 ss_Guid.__typeName = 'ss.Guid';
@@ -29,7 +29,14 @@ ss_Guid.prototype = {
 
 
 ss_Guid.isInstanceOfType = function(instance) {
-    return typeof(instance) === 'ss_Guid';
+        if(typeof(instance) != 'string')
+            return false;
+        if(instance == UUID.empty)
+            return true;
+
+        var guid = UUID.tryParse(instance);
+        if(guid !=  UUID.empty)
+            return true;
 };
 
 ss_Guid.getDefaultValue = ss_Guid.createInstance = function() {
@@ -41,13 +48,12 @@ ss_Guid.getDefaultValue = ss_Guid.createInstance = function() {
 ss_Guid.parse = function (uuid) {
     if (typeof variable === 'undefined')
         throw new ss_ArgumentNullException('uuid');
-    var guid = new ss_Guid(uuid);
+    return UUID.parse(uuid);
 };
 
 
 ss_Guid.newGuid = function () {
-    var uuid = UUID.create();
-    return new ss_Guid(uuid);
+    return UUID.create();
 };
 
 ss_Guid.equalsT = function (that, other) {
