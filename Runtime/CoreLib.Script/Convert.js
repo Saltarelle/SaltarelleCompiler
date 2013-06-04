@@ -6,9 +6,6 @@ var ss_Convert = function Convert$() {
 
 ss_Convert.toSingle = function Convert$toSingle(value) {
   var typeName = typeof value;
-  if(typeName === "Object")
-    typeName = ss.getTypeFullName(value);
-
   if(typeName === "boolean") {
     return (value == true) ? 1.0 : 0.0;
   }

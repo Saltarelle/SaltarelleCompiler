@@ -104,6 +104,13 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.AreEqual(values.GetValue(0), TestEnum.FirstValue);
 			Assert.AreEqual(values.GetValue(1), TestEnum.SecondValue);
 			Assert.AreEqual(values.GetValue(2), TestEnum.ThirdValue);
+
+			values = Enum.GetValues(typeof(FlagsEnum));
+			Assert.AreEqual(values.Length, 4);
+			Assert.AreEqual(values.GetValue(0), FlagsEnum.None);
+			Assert.AreEqual(values.GetValue(1), FlagsEnum.FirstValue);
+			Assert.AreEqual(values.GetValue(2), FlagsEnum.SecondValue);
+			Assert.AreEqual(values.GetValue(3), FlagsEnum.ThirdValue);
 		}
 	}
 }

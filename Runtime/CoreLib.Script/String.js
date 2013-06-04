@@ -8,7 +8,7 @@ ss.splitWithCharsAndSplitOptions = function#? DEBUG ss$splitWithCharsAndSplitOpt
 		return result;
 
 	var parts = [];
-	for (var i in result)
+	for (var i = 0; i < result.length; i++)
 		if(result[i].length > 0)
 			parts.push(result[i]);
 

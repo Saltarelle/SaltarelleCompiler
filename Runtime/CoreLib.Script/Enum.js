@@ -72,8 +72,8 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 ss_Enum.getValues = function #? DEBUG Enum$getValues##(enumType) {
   var parts = [];
   var values = enumType.prototype;
-  for (var i in values)
-    ss.add(parts, ss.isFlags(enumType) ? i : values[i]);
-
+  for (var i in values) {
+    ss.add(parts, values[i]);
+  }
   return parts;
 };
