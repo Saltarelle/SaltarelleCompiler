@@ -517,6 +517,14 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void SplitWithStringsWorks()
+		{
+			Assert.AreEqual("a is b if b is c and c is d if d is e".Split(new[] { "is", "if" },
+				StringSplitOptions.None),
+				new[] { "a ", " b ", " b ", " c and c ", " d ", " d ", " e" });
+		}
+
+		[Test]
 		public void StartsWithCharWorks() {
 			Assert.IsTrue("abc".StartsWith('a'));
 			Assert.IsFalse("abc".StartsWith('b'));

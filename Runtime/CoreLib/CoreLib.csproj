@@ -156,6 +156,9 @@
     <Compile Include="Error.cs" />
     <Compile Include="JsDate.cs" />
     <Compile Include="NotSupportedException.cs" />
+    <Compile Include="SystemException.cs" />
+    <Compile Include="NullReferenceException.cs" />
+    <Compile Include="IndexOutOfRangeException.cs" />
     <Compile Include="ObjectEnumerator.cs" />
     <Compile Include="Diagnostics\SyntaxValidationAttribute.cs" />
     <Compile Include="Properties\Version.cs" />
@@ -220,6 +223,7 @@
     <Compile Include="StringReplaceCallback.cs" />
     <Compile Include="IFormatProvider.cs" />
     <Compile Include="StringSplitOptions.cs" />
+    <Compile Include="StringComparison.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="Convert.cs" />
     <Compile Include="Console.cs" />
