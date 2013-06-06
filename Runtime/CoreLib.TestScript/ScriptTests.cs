@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using QUnit;
 
@@ -43,6 +43,18 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void UndefinedWorks() {
 			Assert.IsTrue(Script.IsUndefined(Script.Undefined));
+		}
+
+		[Test]
+		public void TypeOfWorks() {
+			Assert.AreEqual(Script.TypeOf(Script.Undefined),"undefined");
+			Assert.AreEqual(Script.TypeOf(null),"object");
+			Assert.AreEqual(Script.TypeOf(true),"boolean");
+			Assert.AreEqual(Script.TypeOf(0),"number");
+			Assert.AreEqual(Script.TypeOf(double.MaxValue),"number");
+			Assert.AreEqual(Script.TypeOf("X"),"string");
+			Assert.AreEqual(Script.TypeOf(new Function("","")),"function");
+			Assert.AreEqual(Script.TypeOf(new {}),"object");         
 		}
 	}
 }
