@@ -726,5 +726,13 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsFalse(text.Contains("lorem"));
 			Assert.IsTrue(text.Contains(text));
 		}
+
+		[Test]
+		public void ToCharArrayWorks()
+		{
+			string text = "Lorem sit dolor";
+			Assert.AreEqual(text.ToCharArray(),
+				new[] {"L", "o", "r", "e", "m", " ", "s", "i", "t", " ", "d", "o", "l", "o", "r"});
+		}
 	}
 }

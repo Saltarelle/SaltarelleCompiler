@@ -605,5 +605,11 @@ namespace System {
 		{
 			return false;
 		}
+
+		[InlineCode("{this}.split('')")]
+		public char[] ToCharArray()
+		{
+			return null;
+		}
 	}
 }
