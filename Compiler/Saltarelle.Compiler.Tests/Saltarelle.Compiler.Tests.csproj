@@ -159,6 +159,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ikvm\reflect\IKVM.Reflection.csproj">
+      <Project>{4cb170ef-dfe6-4a56-9e1b-a85449e827a7}</Project>
+      <Name>IKVM.Reflection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JavaScriptParser\JavaScriptParser.csproj">
       <Project>{819223CA-D211-44C2-BC01-A2B955D4CA61}</Project>
       <Name>JavaScriptParser</Name>
@@ -166,10 +170,6 @@
     <ProjectReference Include="..\JSModel\JSModel.csproj">
       <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
       <Name>JSModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\cecil\Mono.Cecil.csproj">
-      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
-      <Name>Mono.Cecil %28Mono.Cecil\Mono.Cecil%29</Name>
     </ProjectReference>
     <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory.CSharp\ICSharpCode.NRefactory.CSharp.csproj">
       <Project>{53DCA265-3C3C-42F9-B647-F72BA678122B}</Project>

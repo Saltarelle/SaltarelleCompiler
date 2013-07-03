@@ -15,7 +15,9 @@ namespace Saltarelle.Compiler.Compiler {
 			this.name = name;
 			this.region = region;
 		}
-			
+
+		public SymbolKind SymbolKind { get { return SymbolKind.Variable; } }
+
 		public string Name {
 			get { return name; }
 		}

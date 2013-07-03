@@ -7,7 +7,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class QueryExpressionTests : MethodCompilerTestBase {
-		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => { var l = new CecilLoader() { IncludeInternalMembers = true }; return new[] { l.LoadAssemblyFile(typeof(object).Assembly.Location), l.LoadAssemblyFile(typeof(Enumerable).Assembly.Location) }; });
+		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => new[] { Common.LoadAssemblyFile(typeof(object).Assembly.Location), Common.LoadAssemblyFile(typeof(Enumerable).Assembly.Location) });
 
 		private void AssertCorrect(string csharp, string expected) {
 			AssertCorrect(@"

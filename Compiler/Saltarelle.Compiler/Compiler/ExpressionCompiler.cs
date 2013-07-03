@@ -910,7 +910,7 @@ namespace Saltarelle.Compiler.Compiler {
 					tokens = null;
 			}
 
-			if (tokens != null && target != null && !member.IsStatic && member.EntityType != EntityType.Constructor) {
+			if (tokens != null && target != null && !member.IsStatic && member.SymbolKind != SymbolKind.Constructor) {
 				int thisUseCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
 				if (thisUseCount > 1 && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(target)) {
 					// Create a temporary for {this}, if required.
@@ -1804,9 +1804,9 @@ namespace Saltarelle.Compiler.Compiler {
 				var delegateSemantics = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 				switch (methodSemantics.Type) {
 					case MethodScriptSemantics.ImplType.NormalMethod:
-						return PerformMethodGroupConversionOnNormalMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.IsExtensionMethodGroupConversion, mgrr.TargetResult, methodSemantics, delegateSemantics);
+						return PerformMethodGroupConversionOnNormalMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.Method.IsStatic && rr.Conversion.DelegateCapturesFirstArgument, mgrr.TargetResult, methodSemantics, delegateSemantics);
 					case MethodScriptSemantics.ImplType.InlineCode:
-						return PerformMethodGroupConversionOnInlineCodeMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.IsExtensionMethodGroupConversion, mgrr.TargetResult, methodSemantics, delegateSemantics);
+						return PerformMethodGroupConversionOnInlineCodeMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.Method.IsStatic && rr.Conversion.DelegateCapturesFirstArgument, mgrr.TargetResult, methodSemantics, delegateSemantics);
 					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument:
 						return PerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgument(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, mgrr.TargetResult, methodSemantics, delegateSemantics);
 					default:

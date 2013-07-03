@@ -490,7 +490,7 @@ namespace CoreLib.Plugin {
 			else if (ola != null || (isSerializable && GetTypeSemanticsInternal(source.DeclaringTypeDefinition).IsImported)) {
 				if (isSerializable) {
 					bool hasError = false;
-					var members = source.DeclaringTypeDefinition.Members.Where(m => m.EntityType == EntityType.Property || m.EntityType == EntityType.Field).ToDictionary(m => m.Name.ToLowerInvariant());
+					var members = source.DeclaringTypeDefinition.Members.Where(m => m.SymbolKind == SymbolKind.Property || m.SymbolKind == SymbolKind.Field).ToDictionary(m => m.Name.ToLowerInvariant());
 					var parameterToMemberMap = new List<IMember>();
 					foreach (var p in source.Parameters) {
 						IMember member;

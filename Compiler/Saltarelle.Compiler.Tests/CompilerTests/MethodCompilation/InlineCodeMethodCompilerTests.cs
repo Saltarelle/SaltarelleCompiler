@@ -102,7 +102,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: EntityType.TypeDefinition) }));
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: SymbolKind.TypeDefinition) }));
 		}
 
 		[Test]
@@ -111,7 +111,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.Method), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: EntityType.Method) }));
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.Method), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: SymbolKind.Method) }));
 		}
 
 		[Test]
@@ -120,7 +120,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: EntityType.Method) }));
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.Method) }));
 		}
 
 		[Test]

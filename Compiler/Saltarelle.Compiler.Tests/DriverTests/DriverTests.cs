@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using ICSharpCode.NRefactory;
-using Mono.Cecil;
+using IKVM.Reflection;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
 using System.Xml.XPath;
@@ -13,7 +12,13 @@ using System.Xml.XPath;
 namespace Saltarelle.Compiler.Tests.DriverTests {
 	[TestFixture]
 	public class DriverTests {
-		private void UsingFiles(Action a, params string[] files) {
+		private static void UsingAssembly(string path, Action<Assembly> action) {
+			using (var universe = new Universe()) {
+				action(universe.LoadFile(path));
+			}
+		}
+
+		private static void UsingFiles(Action a, params string[] files) {
 			try {
 				foreach (var f in files) {
 					var fn = Path.GetFullPath(f);
@@ -581,8 +586,9 @@ class Program {
 				string doc = File.ReadAllText(Path.GetFullPath("Test.xml"));
 				Assert.That(XDocument.Parse(doc).XPathSelectElement("/doc/assembly/name").Value, Is.EqualTo("MyOutputAssembly"));
 
-				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("MyOutputAssembly.dll"));
-				Assert.That(asm.Name.Name, Is.EqualTo("MyOutputAssembly"));
+				UsingAssembly(Path.GetFullPath("MyOutputAssembly.dll"), asm => {
+					Assert.That(asm.GetName().Name, Is.EqualTo("MyOutputAssembly"));
+				});
 			}, "File.cs", "MyOutputAssembly.dll", "Test.js", "Test.xml");
 		}
 
@@ -603,8 +609,9 @@ class Program {
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.dll")), Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.js")), Is.True);
 
-				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("FirstFile.dll"));
-				Assert.That(asm.Name.Name, Is.EqualTo("FirstFile"));
+				UsingAssembly(Path.GetFullPath("FirstFile.dll"), asm => {
+					Assert.That(asm.GetName().Name, Is.EqualTo("FirstFile"));
+				});
 			}, "FirstFile.cs", "SecondFile.cs", "FirstFile.dll", "FirstFile.js");
 		}
 
@@ -944,8 +951,9 @@ class Program {
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
-				var asm = AssemblyDefinition.ReadAssembly("File.dll");
-				Assert.That(asm.Name.PublicKeyToken, Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
+				UsingAssembly("File.dll", asm => {
+					Assert.That(asm.GetName().GetPublicKeyToken(), Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
+				});
 			}, "Key.snk", "File.cs", "File.dll", "File.js");
 		}
 
@@ -1020,14 +1028,16 @@ public class C {
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
-				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("Test.dll"));
-				Assert.That(asm.MainModule.Types.Any(t => t.Name == "char"));
-				Assert.That(asm.MainModule.Types.Any(t => t.FullName == "string.float.for"));
-				var c = asm.MainModule.Types.Single(t => t.Name == "C");
-				Assert.That(c.Properties.Any(p => p.Name == "int"));
-				Assert.That(c.Fields.Any(p => p.Name == "short"));
-				Assert.That(c.Methods.Any(p => p.Name == "double"));
-				Assert.That(c.Events.Any(p => p.Name == "if"));
+				UsingAssembly(Path.GetFullPath("Test.dll"), asm => {
+					var types = asm.GetTypes();
+					Assert.That(types.Any(t => t.Name == "char"));
+					Assert.That(types.Any(t => t.FullName == "string.float.for"));
+					var c = types.Single(t => t.Name == "C");
+					Assert.That(c.GetProperties().Any(p => p.Name == "int"));
+					Assert.That(c.GetFields().Any(p => p.Name == "short"));
+					Assert.That(c.GetMethods().Any(p => p.Name == "double"));
+					Assert.That(c.GetEvents().Any(p => p.Name == "if"));
+				});
 			}, "File1.cs", "Test.dll", "Test.js");	
 		}
 
@@ -1069,19 +1079,25 @@ public class C {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+				UsingAssembly("Test.dll", asm => {
+					using (var res1 = asm.GetManifestResourceStream("The.Resource.Name")) {
+						Assert.That(res1, Is.Not.Null, "Resource 1 not found");
+						using (var ms = new MemoryStream()) {
+							res1.CopyTo(ms);
+							Assert.That(ms.ToArray(), Is.EqualTo(publicContent));
+						}
+					}
+					Assert.That(asm.GetManifestResourceInfo("The.Resource.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Public));
 
-				var asm = AssemblyDefinition.ReadAssembly("Test.dll");
-				var res1 = asm.MainModule.Resources.SingleOrDefault(r => r.Name == "The.Resource.Name") as Mono.Cecil.EmbeddedResource;
-				Assert.That(res1, Is.Not.Null, "Resource 1 not found");
-				Assert.That(res1.GetResourceData(), Is.EqualTo(publicContent));
-				Assert.That(res1.IsPublic, Is.True);
-				Assert.That(res1.IsPrivate, Is.False);
-
-				var res2 = asm.MainModule.Resources.SingleOrDefault(r => r.Name == "Secret.Name") as Mono.Cecil.EmbeddedResource;
-				Assert.That(res2, Is.Not.Null, "Resource 2 not found");
-				Assert.That(res2.GetResourceData(), Is.EqualTo(privateContent));
-				Assert.That(res2.IsPublic, Is.False);
-				Assert.That(res2.IsPrivate, Is.True);
+					using (var res2 = asm.GetManifestResourceStream("Secret.Name")) {
+						Assert.That(res2, Is.Not.Null, "Resource 2 not found");
+						using (var ms = new MemoryStream()) {
+							res2.CopyTo(ms);
+							Assert.That(ms.ToArray(), Is.EqualTo(privateContent));
+						}
+					}
+					Assert.That(asm.GetManifestResourceInfo("Secret.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Private));
+				});
 			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
 		}
 	}

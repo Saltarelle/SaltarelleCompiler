@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
@@ -12,8 +11,6 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
-using ArrayType = ICSharpCode.NRefactory.TypeSystem.ArrayType;
-using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -202,15 +199,15 @@ namespace Saltarelle.Compiler.Driver {
 			return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
 		}
 
-		private static IEnumerable<Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> references) {
+		private static IEnumerable<System.Reflection.Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> references) {
 			return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
 			                        .Select(r => r.Item3)
 			                        .Where(a => a != null);
 		}
 
-		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
+		private static readonly System.Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
 
-		private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
+		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
 			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
 		}
 
@@ -352,47 +349,47 @@ namespace Saltarelle.Compiler.Driver {
 			return null;
 		}
 
-		private static Assembly LoadPlugin(AssemblyDefinition def) {
-			foreach (var r in def.Modules.SelectMany(m => m.Resources).OfType<Mono.Cecil.EmbeddedResource>()) {
-				if (r.Name.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase)) {
-					var data = r.GetResourceData();
-					var asm = AssemblyDefinition.ReadAssembly(new MemoryStream(data));
-
-					var result = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == asm.Name.Name);
-					if (result == null)
-						result = Assembly.Load(data);
-					return result;
+		private static System.Reflection.Assembly LoadPlugin(IKVM.Reflection.Assembly asm) {
+			foreach (var name in asm.GetManifestResourceNames()) {
+				if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) {
+					using (var strm = asm.GetManifestResourceStream(name))
+					using (var ms = new MemoryStream())
+					using (var uni = new IKVM.Reflection.Universe()) {
+						strm.CopyTo(ms);
+						ms.Position = 0;
+						string referenceName = uni.LoadAssembly(uni.OpenRawModule(ms, name)).GetName().Name;
+						var result = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == referenceName);
+						if (result == null)
+							result = System.Reflection.Assembly.Load(ms.ToArray());
+						return result;
+					}
 				}
 			}
+
 			return null;
 		}
 
-		private static IList<string> GetReferencedAssemblyNames(AssemblyDefinition asm) {
-			return asm.Modules.SelectMany(m => m.AssemblyReferences, (_, r) => r.Name).Distinct().ToList();
+		private static IEnumerable<string> GetReferencedAssemblyNames(IKVM.Reflection.Assembly asm) {
+			return asm.GetReferencedAssemblies().Select(r => r.Name);
 		}
 
-		private static IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
-			var loader = new CecilLoader { IncludeInternalMembers = true };
-			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
+		private static IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
+			var loader = new IkvmLoader { IncludeInternalMembers = true };
+			using (var universe = new IKVM.Reflection.Universe(IKVM.Reflection.UniverseOptions.DisablePseudoCustomAttributeRetrieval | IKVM.Reflection.UniverseOptions.SupressReferenceTypeIdentityConversion)) {
+				var assemblies = references.Select(universe.LoadFile).ToList();
+				var indirectReferences = assemblies.SelectMany(GetReferencedAssemblyNames).Distinct();
+				var directReferences = from a in assemblies select a.GetName().Name;
+				var missingReferences = indirectReferences.Except(directReferences).ToList();
 
-			var indirectReferences = (  from a in assemblies
-			                            from m in a.Modules
-			                            from r in m.AssemblyReferences
-			                          select r.Name)
-			                         .Distinct();
+				if (missingReferences.Count > 0) {
+					er.Region = DomRegion.Empty;
+					foreach (var r in missingReferences)
+						er.Message(Messages._7996, r);
+					return null;
+				}
 
-			var directReferences = from a in assemblies select a.Name.Name;
-
-			var missingReferences = indirectReferences.Except(directReferences).ToList();
-
-			if (missingReferences.Count > 0) {
-				er.Region = DomRegion.Empty;
-				foreach (var r in missingReferences)
-					er.Message(Messages._7996, r);
-				return null;
+				return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), (IList<string>)GetReferencedAssemblyNames(asm).ToList(), LoadPlugin(asm))).ToList();
 			}
-
-			return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), GetReferencedAssemblyNames(asm), LoadPlugin(asm))).ToList();
 		}
 	}
 }

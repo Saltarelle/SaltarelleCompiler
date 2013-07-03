@@ -29,7 +29,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			var parser = new CSharpParser();
 
 			using (var rdr = new StringReader(source)) {
-				var pf = new CSharpUnresolvedFile("File.cs");
+				var pf = new CSharpUnresolvedFile { FileName = "File.cs" };
 				var syntaxTree = parser.Parse(rdr, pf.FileName);
 				syntaxTree.AcceptVisitor(new TypeSystemConvertVisitor(pf));
 				project = project.AddOrUpdateFiles(pf);

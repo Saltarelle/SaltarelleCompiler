@@ -34,10 +34,6 @@ namespace Saltarelle.Compiler.Compiler {
 			HandleExpressionNode(namedExpression);
 		}
 
-		public override void VisitEmptyExpression(EmptyExpression emptyExpression) {
-			HandleExpressionNode(emptyExpression);
-		}
-
 		public override void VisitIsExpression(IsExpression isExpression) {
 			HandleExpressionNode(isExpression);
 		}

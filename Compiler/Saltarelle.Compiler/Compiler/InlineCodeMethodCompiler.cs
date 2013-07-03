@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Antlr.Runtime;
 using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 
@@ -46,12 +45,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 			for (int i = 0; i < method.DeclaringTypeDefinition.TypeParameterCount; i++) {
 				if (method.DeclaringTypeDefinition.TypeParameters[i].Name == text)
-					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: EntityType.TypeDefinition);
+					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: SymbolKind.TypeDefinition);
 			}
 
 			for (int i = 0; i < method.TypeParameters.Count; i++) {
 				if (method.TypeParameters[i].Name == text)
-					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: EntityType.Method);
+					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: SymbolKind.Method);
 			}
 
 			errorReporter("Unknown placeholder '{" + text + "}'");
@@ -157,7 +156,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						var l = token.OwnerType == EntityType.TypeDefinition ? method.DeclaringType.TypeArguments : method.TypeArguments;
+						var l = token.OwnerType == SymbolKind.TypeDefinition ? method.DeclaringType.TypeArguments : method.TypeArguments;
 						substitutions[s] = Tuple.Create(l != null ? resolveTypeArgument(l[token.Index]) : JsExpression.Null, false);
 						break;
 					}

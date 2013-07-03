@@ -15,6 +15,8 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class ExpressionTreeTests : MethodCompilerTestBase {
+		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
+
 		private static readonly Lazy<IUnresolvedAssembly> _expressionAssembly = new Lazy<IUnresolvedAssembly>(() => {
 			var c = PreparedCompilation.CreateCompilation(new[] { new MockSourceFile("File1.cs", @"
 using System.Collections.Generic;
@@ -266,11 +268,11 @@ namespace System.Linq.Expressions {
 	public class MemberBinding {}
 	public class ElementInit {}
 }
-			") }, new[] { new CecilLoader().LoadAssemblyFile(typeof(object).Assembly.Location) }, new string[0]);
+			") }, new[] { _mscorlibLazy.Value }, new string[0]);
 			return c.Compilation.MainAssembly.UnresolvedAssembly;
 		});
 
-		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => { var l = new CecilLoader(); return new[] { l.LoadAssemblyFile(typeof(object).Assembly.Location), _expressionAssembly.Value }; });
+		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => new[] { _mscorlibLazy.Value, _expressionAssembly.Value });
 
 		private void AssertCorrect(string csharp, string expected, IRuntimeLibrary runtimeLibrary = null, IMetadataImporter metadataImporter = null, string methodName = "M") {
 			base.AssertCorrect("using System; using System.Linq.Expressions; using System.Collections.Generic; class C { " + csharp + "}", expected, references: _referencesLazy.Value, methodName: methodName, metadataImporter: metadataImporter, addSkeleton: false, runtimeLibrary: runtimeLibrary);

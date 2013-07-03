@@ -462,7 +462,7 @@ namespace CoreLib.Plugin {
 					var compileResult = Compile(CreateMethodInvocationResolveResult(method, method.IsStatic ? (ResolveResult)new TypeResolveResult(method.DeclaringType) : new ThisResolveResult(method.DeclaringType), arguments), method.DeclaringTypeDefinition, method, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedNames);
 					var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), new JsBlockStatement(compileResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(compileResult.Expression) })));
 
-					if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.TypeParameter && t.OwnerType == EntityType.Method)) {
+					if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.TypeParameter && t.OwnerType == SymbolKind.Method)) {
 						definition = JsExpression.FunctionDefinition(method.TypeParameters.Select(namer.GetTypeParameterName), new JsReturnStatement(definition));
 						properties.Add(new JsObjectLiteralProperty("tpcount", JsExpression.Number(method.TypeParameters.Count)));
 					}

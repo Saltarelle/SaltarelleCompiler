@@ -28,7 +28,7 @@ namespace CoreLib.Plugin {
 			}
 
 			public JsExpression ResolveTypeParameter(ITypeParameter tp) {
-				if (_isGenericSpecialization && tp.OwnerType == EntityType.TypeDefinition)
+				if (_isGenericSpecialization && tp.OwnerType == SymbolKind.TypeDefinition)
 					return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
 				else
 					return _systemObject;

@@ -85,10 +85,10 @@ namespace Saltarelle.Compiler {
 		public static JsExpression ResolveTypeParameter(ITypeParameter tp, ITypeDefinition currentType, IMethod currentMethod, IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer) {
 			bool unusable = false;
 			switch (tp.OwnerType) {
-				case EntityType.TypeDefinition:
+				case SymbolKind.TypeDefinition:
 					unusable = metadataImporter.GetTypeSemantics(currentType).IgnoreGenericArguments;
 					break;
-				case EntityType.Method: {
+				case SymbolKind.Method: {
 					var sem = metadataImporter.GetMethodSemantics(currentMethod);
 					unusable = sem.Type != MethodScriptSemantics.ImplType.InlineCode && metadataImporter.GetMethodSemantics(currentMethod).IgnoreGenericArguments;
 					break;
@@ -98,7 +98,7 @@ namespace Saltarelle.Compiler {
 					return JsExpression.Null;
 			}
 			if (unusable) {
-				errorReporter.Message(Messages._7536, tp.Name, tp.OwnerType == EntityType.TypeDefinition ? "type" : "method", tp.OwnerType == EntityType.TypeDefinition ? currentType.FullName : currentMethod.FullName);
+				errorReporter.Message(Messages._7536, tp.Name, tp.OwnerType == SymbolKind.TypeDefinition ? "type" : "method", tp.OwnerType == SymbolKind.TypeDefinition ? currentType.FullName : currentMethod.FullName);
 				return JsExpression.Null;
 			}
 			return JsExpression.Identifier(namer.GetTypeParameterName(tp));

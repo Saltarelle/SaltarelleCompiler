@@ -38,6 +38,12 @@
     <Reference Include="ICSharpCode.NRefactory.CSharp">
       <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.NRefactory.IKVM">
+      <HintPath>..\..\Compiler\Saltarelle.Compiler\bin\ICSharpCode.NRefactory.IKVM.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Reflection">
+      <HintPath>..\..\Compiler\Saltarelle.Compiler\bin\IKVM.Reflection.dll</HintPath>
+    </Reference>
     <Reference Include="JavaScriptParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Compiler\JavaScriptParser\bin\JavaScriptParser.dll</HintPath>
