@@ -15,7 +15,7 @@ namespace System {
 	[ScriptName("Number")]
 	public struct Double : IComparable<Double>, IEquatable<Double>, IFormattable {
 		[InlineCode("0")]
-		public Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[ScriptName("MAX_VALUE")]

@@ -15,7 +15,7 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	public struct Int64 : IComparable<Int64>, IEquatable<Int64>, IFormattable {
 		[InlineCode("0")]
-		public Int64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Int64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[Obsolete("This number is not representable in Javascript", true)]

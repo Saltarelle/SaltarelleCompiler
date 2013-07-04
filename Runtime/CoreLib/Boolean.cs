@@ -14,7 +14,7 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	public struct Boolean : IComparable<Boolean>, IEquatable<Boolean> {
 		[InlineCode("false")]
-		public Boolean(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Boolean(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[InlineCode("{$System.Script}.compare({this}, {other})")]

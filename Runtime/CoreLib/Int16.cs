@@ -15,7 +15,7 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	public struct Int16 : IComparable<Int16>, IEquatable<Int16>, IFormattable {
 		[InlineCode("0")]
-		public Int16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Int16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[InlineConstant]

@@ -30,7 +30,7 @@ namespace System {
 		public const decimal MinusOne = -1;
 
 		[InlineCode("0")]
-		public Decimal(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Decimal(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[InlineCode("{d}")]

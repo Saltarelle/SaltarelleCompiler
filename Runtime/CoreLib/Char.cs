@@ -15,7 +15,7 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	public struct Char : IComparable<Char>, IEquatable<Char>, IFormattable {
 		[InlineCode("0")]
-		public Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Char(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[InlineConstant]

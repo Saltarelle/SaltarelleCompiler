@@ -26,7 +26,7 @@ namespace System
 		//public static readonly TimeSpan MaxValue = new TimeSpan(long.MaxValue);
 
 		[ScriptName("")]
-		public TimeSpan(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private TimeSpan(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[ScriptName("")]
