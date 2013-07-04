@@ -4,11 +4,16 @@
 var ss_StringBuilder = function#? DEBUG StringBuilder$##(s) {
 	this._parts = ss.isNullOrUndefined(s) || s === '' ? [] : [s];
 	this.isEmpty = this._parts.length == 0;
+	this.length = 0;
+	for (var i = 0; i < this._parts.length; i++) {
+	  this.length += this._parts[i].length;
+	}
 }
 ss_StringBuilder.prototype = {
 	append: function#? DEBUG StringBuilder$append##(s) {
 		if (!ss.isNullOrUndefined(s) && s !== '') {
 			ss.add(this._parts, s);
+	    this.length += s.length;
 			this.isEmpty = false;
 		}
 		return this;
@@ -32,6 +37,11 @@ ss_StringBuilder.prototype = {
 	clear: function#? DEBUG StringBuilder$clear##() {
 		this._parts = [];
 		this.isEmpty = true;
+		this.length = 0;
+	},
+
+	length: function#? DEBUG StringBuilder$length##() {
+		return this.length;
 	},
 
 	toString: function#? DEBUG StringBuilder$toString##() {

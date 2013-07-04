@@ -17,5 +17,9 @@ namespace System {
 		public static string ToString(Type enumType, Enum value) {
 			return null;
 		}
+
+		public static Array GetValues(Type enumType) {
+			return null;
+		}
 	}
 }

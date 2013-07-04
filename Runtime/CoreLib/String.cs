@@ -416,6 +416,22 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.splitWithCharsAndSplitOptions({this}, {separator})")]
+		public string[] Split(char[] separator) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.splitWithCharsAndSplitOptions({this}, {separator}, {options})")]
+		public string[] Split(char[] separator, StringSplitOptions options) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.splitWithStringsAndSplitOptions({this}, {separator}, {options})")]
+		public string[] Split(string[] separator, StringSplitOptions options)
+		{
+			return null;
+		}
+
 		[InlineCode("{this}.split({$System.String}.fromCharCode({separator}), {limit})")]
 		public string[] Split(char separator, int limit) {
 			return null;
@@ -588,6 +604,12 @@ namespace System {
 		public bool Contains(string value)
 		{
 			return false;
+		}
+
+		[InlineCode("{this}.split('')")]
+		public char[] ToCharArray()
+		{
+			return null;
 		}
 	}
 }

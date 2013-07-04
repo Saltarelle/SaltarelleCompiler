@@ -40,7 +40,7 @@ ss.localeFormatDate = function#? DEBUG ss$localeFormatDate##(date, format) {
 };
 
 ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) {
-	var dtf = useLocale ? ss_CultureInfo.CurrentCulture.dateFormat : ss_CultureInfo.InvariantCulture.dateFormat;
+	var dtf = useLocale ? ss_CultureInfo.CurrentCulture.dateTimeFormat : ss_CultureInfo.InvariantCulture.dateTimeFormat;
 
 	if (format.length == 1) {
 		switch (format) {
@@ -57,7 +57,7 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 			case 'G': format = dtf.shortDatePattern + ' ' + dtf.longTimePattern; break;
 
 			case 'R': case 'r':
-				dtf = ss_CultureInfo.InvariantCulture.dateFormat;
+				dtf = ss_CultureInfo.InvariantCulture.dateTimeFormat;
 				format = dtf.gmtDateTimePattern;
 				break;
 			case 'u': format = dtf.universalDateTimePattern; break;
