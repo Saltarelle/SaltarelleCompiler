@@ -29,13 +29,13 @@ ss_$DictionaryCollection.prototype = {
 		return this._dict._getEnumerator(this._isKeys ? function(e) { return e.key; } : function(e) { return e.value; });
 	},
 	add: function#? DEBUG $DictionaryCollection$add##(v) {
-		throw 'Collection is read-only';
+		throw new ss_InvalidOperationException('Collection is read-only');
 	},
 	clear: function#? DEBUG $DictionaryCollection$clear##() {
-		throw 'Collection is read-only';
+		throw new ss_InvalidOperationException('Collection is read-only');
 	},
 	remove: function#? DEBUG $DictionaryCollection$remove##() {
-		throw 'Collection is read-only';
+		throw new ss_InvalidOperationException('Collection is read-only');
 	}
 };
 
@@ -77,7 +77,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 				for (var i = 0; i < array.length; i++) {
 					if (this.comparer.areEqual(array[i].key, key)) {
 						if (add)
-							throw 'Key ' + key + ' already exists.';
+							throw new ss_ArgumentException('Key ' + key + ' already exists.');
 						array[i] = entry;
 						return;
 					}
@@ -113,7 +113,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		get_item: function(key) {
 			var v = this._get(key);
 			if (v === undefined)
-				throw 'Key ' + key + ' does not exist.';
+				throw new ss_KeyNotFoundException('Key ' + key + ' does not exist.');
 			return v;
 		},
 

@@ -23,6 +23,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="ArgumentException.js" />
+    <Content Include="ArgumentNullException.js" />
+    <Content Include="AmbiguousMatchException.js" />
+    <Content Include="ArgumentOutOfRangeException.js" />
+    <Content Include="InvalidCastException.js" />
+    <Content Include="NullReferenceException.js" />
+    <Content Include="KeyNotFoundException.js" />
+    <Content Include="InvalidOperationException.js" />
+    <Content Include="FormatException.js" />
     <Content Include="IFormattable.js" />
     <Content Include="IComparer.js" />
     <Content Include="Function.js" />

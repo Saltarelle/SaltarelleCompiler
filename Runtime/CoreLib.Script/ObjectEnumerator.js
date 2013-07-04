@@ -16,7 +16,7 @@ ss_ObjectEnumerator.prototype = {
 	},
 	current: function#? DEBUG ObjectEnumerator$current##() {
 		if (this._index < 0 || this._index >= this._keys.length)
-			throw 'Invalid operation';
+			throw new ss_InvalidOperationException('Invalid operation');
 		var k = this._keys[this._index];
 		return { key: k, value: this._object[k] };
 	},

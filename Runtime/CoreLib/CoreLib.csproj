@@ -55,6 +55,7 @@
     <Compile Include="Collections\Generic\Comparer.cs" />
     <Compile Include="Collections\Generic\IComparer.cs" />
     <Compile Include="Collections\Generic\EqualityComparer.cs" />
+    <Compile Include="Collections\Generic\KeyNotFoundException.cs" />
     <Compile Include="Collections\Generic\IteratorBlockEnumerable.cs" />
     <Compile Include="Collections\Generic\Dictionary.cs" />
     <Compile Include="Collections\Generic\IDictionary.cs" />
@@ -93,8 +94,16 @@
     <Compile Include="Collections\TypedArrays\Uint8ClampedArray.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="Comparison.cs" />
+    <Compile Include="ArgumentNullException.cs" />
+    <Compile Include="ArgumentException.cs" />
+    <Compile Include="ArgumentOutOfRangeException.cs" />
+    <Compile Include="InvalidCastException.cs" />
+    <Compile Include="NullReferenceException.cs" />
+    <Compile Include="InvalidOperationException.cs" />
+    <Compile Include="FormatException.cs" />
     <Compile Include="IFormattable.cs" />
     <Compile Include="DayOfWeek.cs" />
+    <Compile Include="Reflection\AmbiguousMatchException.cs" />
     <Compile Include="TimeSpan.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Linq\Expressions\BinaryExpression.cs" />

@@ -42,7 +42,7 @@ ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 			return value;
 		}
 	}
-	throw 'Invalid Enumeration Value';
+	throw new ss_ArgumentException('Invalid Enumeration Value');
 };
 
 ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
@@ -53,7 +53,7 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 				return i;
 			}
 		}
-		throw 'Invalid Enumeration Value';
+		throw new ss_ArgumentException('Invalid Enumeration Value');
 	}
 	else {
 		var parts = [];
@@ -63,7 +63,7 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 			}
 		}
 		if (!parts.length) {
-			throw 'Invalid Enumeration Value';
+			throw new ss_ArgumentException('Invalid Enumeration Value');
 		}
 		return parts.join(' | ');
 	}

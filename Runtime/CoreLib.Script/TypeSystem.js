@@ -242,14 +242,12 @@ ss.cast = function#? DEBUG ss$cast##(instance, type) {
 	else if (typeof(instance) === "undefined" || type === true || ss.isInstanceOfType(instance, type)) {
 		return instance;
 	}
-	throw 'Cannot cast object to type ' + ss.getTypeFullName(type);
+	throw new ss_InvalidCastException('Cannot cast object to type ' + ss.getTypeFullName(type));
 };
 
 ss.getInstanceType = function#? DEBUG ss$getInstanceType##(instance) {
-	if (instance === null)
-		throw 'Cannot get type of null';
-	if (typeof(instance) === "undefined")
-		throw 'Cannot get type of undefined';
+	if (!ss.isValue(instance))
+		throw new ss_NullReferenceException('Cannot get type of null');
 
 	var ctor = null;
 
@@ -369,7 +367,7 @@ ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAt
 		while (type) {
 			var r = result.filter(function(m) { return m.typeDef === type; });
 			if (r.length > 1)
-				throw 'Ambiguous match';
+				throw new ss_AmbiguousMatchException('Ambiguous match');
 			else if (r.length === 1)
 				return r[0];
 			type = type.__baseType;
@@ -382,9 +380,9 @@ ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAt
 
 ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 	if (mi.isStatic && !!target)
-		throw 'Cannot specify target for static method';
+		throw new ss_ArgumentException('Cannot specify target for static method');
 	else if (!mi.isStatic && !target)
-		throw 'Must specify target for instance method';
+		throw new ss_ArgumentException('Must specify target for instance method');
 
 	var method;
 	if (mi.fget) {
@@ -398,12 +396,12 @@ ss.midel = function#? DEBUG ss$midel##(mi, target, typeArguments) {
 
 		if (mi.tpcount) {
 			if (!typeArguments || typeArguments.length !== mi.tpcount)
-				throw 'Wrong number of type arguments';
+				throw new ss_ArgumentException('Wrong number of type arguments');
 			method = method.apply(null, typeArguments);
 		}
 		else {
 			if (typeArguments && typeArguments.length)
-				throw 'Cannot specify type arguments for non-generic method';
+				throw new ss_ArgumentException('Cannot specify type arguments for non-generic method');
 		}
 		if (mi.exp) {
 			var _m1 = method;
@@ -431,9 +429,9 @@ ss.invokeCI = function#? DEBUG ss$invokeCI##(ci, args) {
 
 ss.fieldAccess = function#? DEBUG ss$fieldAccess##(fi, obj) {
 	if (fi.isStatic && !!obj)
-		throw 'Cannot specify target for static field';
+		throw new ss_ArgumentException('Cannot specify target for static field');
 	else if (!fi.isStatic && !obj)
-		throw 'Must specify target for instance field';
+		throw new ss_ArgumentException('Must specify target for instance field');
 	obj = fi.isStatic ? fi.typeDef : obj;
 	if (arguments.length === 3)
 		obj[fi.sname] = arguments[2];

@@ -10,7 +10,7 @@ ss.initClass(ss_Nullable);
 
 ss_Nullable.unbox = function#? DEBUG Nullable$unbox##(instance) {
 	if (!ss.isValue(instance))
-		throw 'Instance is null';
+		throw new ss_InvalidOperationException('Nullable object must have a value.');
 	return instance;
 };
 

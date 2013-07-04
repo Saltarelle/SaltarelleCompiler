@@ -45,7 +45,7 @@ namespace CoreLib.TestScript {
 				int x = (int)b;
 				Assert.Fail("Unboxing null should have thrown an exception");
 			}
-			catch (Exception) {
+			catch (InvalidOperationException) {
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace CoreLib.TestScript {
 				int x = b.Value;
 				Assert.Fail("null.Value should have thrown an exception");
 			}
-			catch (Exception) {
+			catch (InvalidOperationException) {
 			}
 		}
 

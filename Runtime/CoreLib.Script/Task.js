@@ -32,7 +32,7 @@ ss_Task.prototype = {
 	},
 	start: function#? DEBUG Task$start##() {
 		if (this.status !== 0)
-			throw 'Task was already started.';
+			throw new ss_InvalidOperationException('Task was already started.');
 		var _this = this;
 		this.status = 3;
 		setTimeout(function() {
@@ -43,7 +43,7 @@ ss_Task.prototype = {
 				_this._complete(result);
 			}
 			catch (e) {
-				_this._fail(new ss_AggregateException([ss_Exception.wrap(e)]));
+				_this._fail(new ss_AggregateException(null, [ss_Exception.wrap(e)]));
 			}
 		}, 0);
 	},
@@ -89,11 +89,11 @@ ss_Task.prototype = {
 			case 5:
 				return this._result;
 			case 6:
-				throw 'Task was cancelled.';
+				throw new ss_InvalidOperationException('Task was cancelled.');
 			case 7:
 				throw this.exception;
 			default:
-				throw 'Task is not yet completed.';
+				throw new ss_InvalidOperationException('Task is not yet completed.');
 		}
 	},
 	dispose: function#? DEBUG Task$dispose##() {
@@ -146,10 +146,10 @@ ss_Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
 							cancelled = true;
 							break;
 						case 7:
-							ss.arrayAddRange(exceptions, t.exception.get_innerExceptions());
+							ss.arrayAddRange(exceptions, t.exception.innerExceptions);
 							break;
 						default:
-							throw 'Invalid task status ' + t.status;
+							throw new ss_InvalidOperationException('Invalid task status ' + t.status);
 					}
 					if (--remaining === 0) {
 						if (exceptions.length > 0)
@@ -168,7 +168,7 @@ ss_Task.whenAll = function#? DEBUG Task$whenAll##(tasks) {
 
 ss_Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
 	if (!tasks.length)
-		throw 'Must wait for at least one task';
+		throw new ss_ArgumentException('Must wait for at least one task', 'tasks');
 
 	var tcs = new ss_TaskCompletionSource();
 	for (var i = 0; i < tasks.length; i++) {
@@ -181,10 +181,10 @@ ss_Task.whenAny = function#? DEBUG Task$whenAny##(tasks) {
 					tcs.trySetCanceled();
 					break;
 				case 7:
-					tcs.trySetException(t.exception.get_innerExceptions());
+					tcs.trySetException(t.exception.innerExceptions);
 					break;
 				default:
-					throw 'Invalid task status ' + t.status;
+					throw new ss_InvalidOperationException('Invalid task status ' + t.status);
 			}
 		});
 	}

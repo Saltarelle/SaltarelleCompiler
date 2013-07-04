@@ -10,12 +10,19 @@ namespace System.Threading.Tasks {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public class PromiseException : Exception {
-		public PromiseException(object[] args) {
+		public PromiseException(object[] arguments) {
+		}
+
+		public PromiseException(object[] arguments, string message) {
+		}
+
+		public PromiseException(object[] arguments, string message, Exception innerException) {
 		}
 
 		/// <summary>
 		/// Arguments supplied to the promise onError() callback.
 		/// </summary>
+		[IntrinsicProperty]
 		public object[] Arguments { get { return null; } }
 	}
 }
