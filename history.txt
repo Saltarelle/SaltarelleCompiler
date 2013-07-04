@@ -1,3 +1,4 @@
+Fixed a few issues caused by 'dynamic' and 'object' not being treated as the same type when they should be (#202, #209)
 Added an AdditionalDependencyAttribute that can be used to specify additional dependencies to be imported by an assembly (thanks to Michael Busby)
 Fixed issue with reflectable knockout properties (#189)
 Allow empty script name for types in modules (#181)
