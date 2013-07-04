@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using QUnit;
 using System;
@@ -218,6 +218,7 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void IsAssignableFromWorks() {
+			Assert.IsTrue (typeof(IsAssignableFromTypes.C1).IsAssignableFrom(typeof(IsAssignableFromTypes.C1)));
 			Assert.IsFalse(typeof(IsAssignableFromTypes.C1).IsAssignableFrom(typeof(object)));
 			Assert.IsTrue (typeof(object).IsAssignableFrom(typeof(IsAssignableFromTypes.C1)));
 			Assert.IsFalse(typeof(IsAssignableFromTypes.I1).IsAssignableFrom(typeof(object)));
@@ -249,6 +250,32 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(typeof(E1).IsAssignableFrom(typeof(E2)));
 			Assert.IsFalse(typeof(int).IsAssignableFrom(typeof(E1)));
 			Assert.IsTrue (typeof(object).IsAssignableFrom(typeof(E1)));
+		}
+
+		class IsSubclassOfTypes {
+			public class C1 {}
+			[IncludeGenericArguments]
+			public class C2<T> {}
+			public class D1 : C1 {}
+			[IncludeGenericArguments]
+			public class D2<T> : C2<T> {}
+			public class D3 : C2<int> {}
+		}
+
+		[Test]
+		public void IsSubclassOfWorks() {
+			Assert.IsFalse(typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(IsSubclassOfTypes.C1)));
+			Assert.IsTrue (typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(object)));
+			Assert.IsFalse(typeof(object).IsSubclassOf(typeof(IsSubclassOfTypes.C1)));
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D1).IsSubclassOf(typeof(IsSubclassOfTypes.C1)));
+			Assert.IsFalse(typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(IsSubclassOfTypes.D1)));
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D1).IsSubclassOf(typeof(object)));
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D2<int>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)));
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D2<string>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)));
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<string>)));
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)));
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D2<>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<>)));
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<>)));
 		}
 
 		[Test]
