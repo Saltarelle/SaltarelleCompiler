@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		public void StringLiteralsAreCorrectlyEncoded() {
 			AssertCorrect(JsExpression.String("x"), "'x'");
 			AssertCorrect(JsExpression.String("\""), "'\"'");
-			AssertCorrect(JsExpression.String("'"), "'\\''");
+			AssertCorrect(JsExpression.String("'"), "\"'\"");
 			AssertCorrect(JsExpression.String("\r\n/\\"), "'\\r\\n/\\\\'");
 		}
 
@@ -51,6 +51,8 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect(JsExpression.Regexp("x"), "/x/");
 			AssertCorrect(JsExpression.Regexp("\""), "/\"/");
 			AssertCorrect(JsExpression.Regexp("/"), "/\\//");
+			AssertCorrect(JsExpression.Regexp("'"), "/'/");
+			AssertCorrect(JsExpression.Regexp("\""), "/\"/");
 			AssertCorrect(JsExpression.Regexp("\r\n/\\"), "/\\r\\n\\/\\\\/");
 			AssertCorrect(JsExpression.Regexp("x", "g"), "/x/g");
 		}

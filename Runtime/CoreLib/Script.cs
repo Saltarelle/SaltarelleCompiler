@@ -112,5 +112,13 @@ namespace System {
 		public static T Reinterpret<T>(object o) {
 			return default(T);
 		}
+
+		/// <summary>
+		/// Returns the result of Javascript 'typeof' operator. 
+		/// </summary>
+		[InlineCode("typeof {o}")]
+		public static string TypeOf(object o) {
+			return null; 
+		}
 	}
 }

@@ -173,14 +173,8 @@ ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 	if ((target == Object) || (target == type)) {
 		return true;
 	}
-	if (target.__class) {
-		var baseType = type.__baseType;
-		while (baseType) {
-			if (target == baseType) {
-				return true;
-			}
-			baseType = baseType.__baseType;
-		}
+	if (ss.isSubclassOf(type, target)) {
+		return true;
 	}
 	else if (target.__interface) {
 		var interfaces = ss.getInterfaces(type);
@@ -199,6 +193,19 @@ ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 	}
 	return false;
 };
+
+ss.isSubclassOf = function#? DEBUG ss$isSubclassOf##(target, type) {
+	if (target.__class) {
+		var baseType = target.__baseType;
+		while (baseType) {
+			if (type == baseType) {
+				return true;
+			}
+			baseType = baseType.__baseType;
+		}
+	}
+	return false;
+}
 
 ss.hasProperty = function#? DEBUG ss$hasProperty##(instance, name) {
 	return typeof(instance['get_' + name]) === 'function' || typeof(instance['set_' + name]) === 'function';
