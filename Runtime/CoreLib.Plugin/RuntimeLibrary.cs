@@ -41,6 +41,40 @@ namespace CoreLib.Plugin {
 			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation);
 		}
 
+		private MethodScriptSemantics GetMethodSemantics(IMethod m) {
+			if (m.IsAccessor) {
+				var prop = m.AccessorOwner as IProperty;
+				if (prop != null) {
+					var psem = _metadataImporter.GetPropertySemantics(prop);
+					if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
+						throw new InvalidOperationException("Property " + prop.Name + " should be implemented with get/set methods");
+					if (m.Equals(prop.Getter))
+						return psem.GetMethod;
+					else if (m.Equals(prop.Setter))
+						return psem.SetMethod;
+					else
+						throw new Exception(m + " is neither the getter nor the setter for " + prop);
+				}
+
+				var evt = m.AccessorOwner as IEvent;
+				if (evt != null) {
+					var esem = _metadataImporter.GetEventSemantics(evt);
+					if (esem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods)
+						throw new InvalidOperationException("Event " + prop.Name + " should be implemented with add/remove methods");
+					if (m.Equals(evt.AddAccessor))
+						return esem.AddMethod;
+					else if (m.Equals(evt.RemoveAccessor))
+						return esem.RemoveMethod;
+					else
+						throw new Exception(m + " is neither the adder nor the remover for " + evt);
+				}
+
+				throw new ArgumentException("Invalid accessor owner " + m.AccessorOwner + " on member " + m);
+			}
+			else
+				return _metadataImporter.GetMethodSemantics(m);
+		}
+
 		private JsTypeReferenceExpression CreateTypeReferenceExpression(ITypeDefinition td) {
 			return new JsTypeReferenceExpression(td);
 		}
@@ -414,7 +448,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
-			var impl = _metadataImporter.GetMethodSemantics(method);
+			var impl = GetMethodSemantics(method);
 
 			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
 			
@@ -436,7 +470,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression BindBaseCall(IMethod method, JsExpression @this, IRuntimeContext context) {
-			var impl = _metadataImporter.GetMethodSemantics(method);
+			var impl = GetMethodSemantics(method);
 
 			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
 			

@@ -226,5 +226,30 @@ public class C : B {
 			$B.prototype.f1(ss.Int32).call(this, 4, 8, 59, 12, 4);
 ");
 		}
+
+		[Test]
+		public void InvokingBaseAccessorWorks() {
+			SourceVerifier.AssertSourceCorrect(
+@"public class B {
+	public virtual event System.Action Evt;
+	public virtual int P { get; set; }
+}
+public class C : B {
+	public void M() {
+		System.Action a1 = null, a2 = null;
+		// BEGIN
+		base.Evt += a1;
+		base.Evt -= a2;
+		base.P    = 42;
+		int x = base.P;
+		// END
+	}
+}",
+@"			$B.prototype.add_evt.call(this, a1);
+			$B.prototype.remove_evt.call(this, a2);
+			$B.prototype.set_p.call(this, 42);
+			var x = $B.prototype.get_p.call(this);
+");
+		}
 	}
 }

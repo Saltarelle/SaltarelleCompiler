@@ -559,7 +559,7 @@ class C {
 	public void M() {
 		var c = new SomeClass();
 		// BEGIN
-		$c.Value = 1;
+		c.Value = 1;
 		// END
 	}
 }",
