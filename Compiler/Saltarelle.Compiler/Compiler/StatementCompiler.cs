@@ -84,7 +84,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, bool returnsIEnumerable, IType yieldType, string yieldResultVariable, IList<string> methodParameterNames) {
 			var body = new List<JsStatement>();
 			body.Add(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration(yieldResultVariable, null) }.Concat(sm.Variables)));
-			body.AddRange(sm.FinallyHandlers.Select(h => new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2))));
+			body.AddRange(sm.FinallyHandlers.Select(h => new JsVariableDeclarationStatement(h.Item1, h.Item2)));
 			body.Add(new JsReturnStatement(_runtimeLibrary.MakeEnumerator(yieldType,
 			                                                              JsExpression.FunctionDefinition(new string[0], sm.MainBlock),
 			                                                              JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Identifier(yieldResultVariable))),
@@ -100,7 +100,7 @@ namespace Saltarelle.Compiler.Compiler {
 				                    JsExpression.Member(
 				                        JsExpression.FunctionDefinition(methodParameterNames, new JsBlockStatement(body)),
 				                        "call"),
-				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(p => JsExpression.Identifier(p)))
+				                    new JsExpression[] { JsExpression.This }.Concat(methodParameterNames.Select(JsExpression.Identifier))
 				                )
 				            )
 				        ),
