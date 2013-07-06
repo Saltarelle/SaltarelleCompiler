@@ -101,6 +101,7 @@
     <Compile Include="NullReferenceException.cs" />
     <Compile Include="InvalidOperationException.cs" />
     <Compile Include="FormatException.cs" />
+    <Compile Include="Guid.cs" />
     <Compile Include="IFormattable.cs" />
     <Compile Include="DayOfWeek.cs" />
     <Compile Include="Reflection\AmbiguousMatchException.cs" />

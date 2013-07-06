@@ -46,4 +46,7 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class ScriptTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class GuidTests : CoreLibTestBase {}
 }

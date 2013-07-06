@@ -297,6 +297,8 @@ if (typeof(window) == 'object') {
 
 #include "CancelEventArgs.js"
 
+#include "Guid.js"
+
 if (global.ss) {
 	for (var n in ss) {
 		if (ss.hasOwnProperty(n))

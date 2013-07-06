@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="Guid.js" />
     <Content Include="ArgumentException.js" />
     <Content Include="ArgumentNullException.js" />
     <Content Include="AmbiguousMatchException.js" />
