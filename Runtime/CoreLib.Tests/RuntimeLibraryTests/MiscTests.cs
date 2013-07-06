@@ -44,6 +44,7 @@ public class C {
 	}
 }",
 @"(function() {
+	'use strict';
 	global.Ф = global.Ф || {};
 	////////////////////////////////////////////////////////////////////////////////
 	// Ф.Класс
@@ -95,6 +96,7 @@ class C<T1, T2> where T1 : class {
 	public static DateTime f22;
 }",
 @"(function() {
+	'use strict';
 	////////////////////////////////////////////////////////////////////////////////
 	// C
 	var $$C$2 = function(T1, T2) {

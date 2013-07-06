@@ -90,21 +90,5 @@ namespace System {
 		public static bool operator!=(Guid a, Guid b) {
 			return false;
 		}
-
-/*
-		[InlineCode("{$System.Guid}.newGuid()")]
-		public static Guid NewGuid() {
-			return default(Guid);
-		}
-
-		[InlineCode("{$System.Guid}.parse({uuid})")]
-		public static Guid Parse(string uuid) {
-			return Empty;
-		}
-
-		[InlineCode("{$System.Guid}.uuid)")]
-		public string ToString(string format) {
-			return null;
-		}*/
 	}
 }

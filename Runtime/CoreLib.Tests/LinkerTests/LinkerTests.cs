@@ -40,6 +40,7 @@ namespace CoreLib.Tests.LinkerTests {
 
 			AssertCorrect(actual,
 @"(function() {
+	'use strict';
 	$GlobalType;
 	return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 })();
@@ -57,6 +58,7 @@ namespace CoreLib.Tests.LinkerTests {
 
 			AssertCorrect(actual,
 @"(function() {
+	'use strict';
 	$$GlobalType;
 	return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 })();
@@ -73,6 +75,7 @@ namespace CoreLib.Tests.LinkerTests {
 
 			AssertCorrect(actual,
 @"(function() {
+	'use strict';
 	return $MyImportedType.x + 1;
 })();
 ");
@@ -88,7 +91,8 @@ namespace CoreLib.Tests.LinkerTests {
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $somemodule = require('some-module');
 $somemodule.$GlobalType;
 return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
@@ -104,6 +108,7 @@ return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 
 			AssertCorrect(actual,
 @"(function() {
+	'use strict';
 	exports.x;
 })();
 ");
@@ -118,7 +123,8 @@ return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $somemodule = require('some-module');
 return $somemodule;
 ");
@@ -132,7 +138,8 @@ return $somemodule;
 			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $mymodule = require('my-module');
 $mymodule.x;
 ");
@@ -146,6 +153,7 @@ $mymodule.x;
 
 			AssertCorrect(actual,
 @"(function() {
+	'use strict';
 	x;
 })();
 ");
@@ -165,7 +173,8 @@ $mymodule.x;
 			}, Common.CreateMockAssembly());
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $module1 = require('module1');
 var $module2 = require('module2');
 var $module3 = require('module3');
@@ -185,7 +194,8 @@ $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
 			}, Common.CreateMockAssembly(), metadata: md);
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $mymodule = require('mymodule');
 $mymodule.a;
 ");
@@ -202,6 +212,7 @@ $mymodule.a;
 
 			AssertCorrect(actual,
 @"define(['mscorlib'], function($_) {
+	'use strict';
 	var exports = {};
 	$$GlobalType;
 	$$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
@@ -226,6 +237,7 @@ $mymodule.a;
 
 			AssertCorrect(actual,
 @"define(['mscorlib', 'module1', 'module2', 'module3'], function($_, $module1, $module2, $module3) {
+	'use strict';
 	var exports = {};
 	$module1.SomeNamespace.InnerNamespace.Type1.a + $module2.SomeNamespace.InnerNamespace.Type2.b;
 	$module1.SomeNamespace.Type3.c + $module3.Type4.d;
@@ -249,6 +261,7 @@ $mymodule.a;
 
 			AssertCorrect(actual,
 @"define(['mscorlib', 'my-additional-dep', 'my-other-dep'], function($_, __unused, myDep2) {
+	'use strict';
 	var exports = {};
 	return 'myModule';
 	return exports;
@@ -267,7 +280,8 @@ $mymodule.a;
 			}, asm);
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var myDep = require('my-additional-dep');
 var myDep2 = require('my-other-dep');
 return 'myModule';
@@ -292,7 +306,8 @@ return 'myModule';
 			}, Common.CreateMockAssembly(), namer: new MockNamer(prefixWithDollar: false));
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var _2 = require('-');
 var _ = require('+');
 var mymodule2 = require('mymodule');
@@ -350,7 +365,8 @@ for (var y = 0, z; w < 1; w++) {
 			}, Common.CreateMockAssembly());
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $mymodule = require('my-module');
 C1.a;
 $mymodule.C2.b;
@@ -387,7 +403,8 @@ C4.d;
 			}, Common.CreateMockAssembly(), metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $mymodule = require('my-module');
 var $othermodule = require('other-module');
 var $thirdmodule = require('third-module');
@@ -416,7 +433,8 @@ C2_D4.j;
 			}, Common.CreateMockAssembly(), metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $mymodule = require('my-module');
 $mymodule.C1.a;
 $mymodule.C2.b;
@@ -437,7 +455,8 @@ $mymodule.C2.b;
 			}, Common.CreateMockAssembly(), metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
 
 			AssertCorrect(actual,
-@"require('mscorlib');
+@"'use strict';
+require('mscorlib');
 var $othermodule = require('other-module');
 $othermodule.C1.a;
 C2.b;

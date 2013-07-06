@@ -1,9 +1,9 @@
-//! Script# Core Runtime
-//! More information at http://projects.nikhilk.net/ScriptSharp
-//!
+// SaltarelleCompiler Runtime (http://www.saltarelle-compiler.com)
+// Modified version of Script# Core Runtime (http://projects.nikhilk.net/ScriptSharp)
+
 if (typeof(global) === "undefined")
 	global = window;
-
+(function(global) {
 var ss = {};
 
 ss.isUndefined = function#? DEBUG ss$isUndefined##(o) {
@@ -308,3 +308,4 @@ if (global.ss) {
 else {
 	global.ss = ss;
 }
+})(global);

@@ -1,3 +1,4 @@
+Use strict mode in generated assemblies as well as in mscorlib (#194)
 Implemented type System.Guid, using a string as the backing store (thanks to Valeriob)
 Added many standard .net exception types
 Fixed a few issues caused by 'dynamic' and 'object' not being treated as the same type when they should be (#202, #209)

@@ -167,9 +167,8 @@ namespace CoreLib.Plugin {
 				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly));
 
 				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
-					body.Insert(0, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()));
+					body.InsertRange(0, new[] { JsStatement.UseStrict, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()) });
 					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
-
 
 					var pairs = new[] { new KeyValuePair<string, string>("mscorlib", namer.GetVariableName("_", usedSymbols)) }
 						.Concat(moduleDependencies.OrderBy(x => x.Key))
@@ -190,7 +189,7 @@ namespace CoreLib.Plugin {
 				}
 				else if (moduleDependencies.Any()) {
 					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
-					body.InsertRange(0, new[] { (JsStatement)new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib"))) }
+					body.InsertRange(0, new[] { JsStatement.UseStrict, (JsStatement)new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib"))) }
 										.Concat(moduleDependencies
 											.OrderBy(x => x.Key).OrderBy(x => x.Key)
 												.Select(x => new JsVariableDeclarationStatement(
@@ -201,7 +200,8 @@ namespace CoreLib.Plugin {
 												.ToList()));
 				}
 				else {
-					 body = new List<JsStatement> { new JsExpressionStatement(JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };
+					body.Insert(0, JsStatement.UseStrict);
+					body = new List<JsStatement> { new JsExpressionStatement(JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };
 				}
 
 				return body;

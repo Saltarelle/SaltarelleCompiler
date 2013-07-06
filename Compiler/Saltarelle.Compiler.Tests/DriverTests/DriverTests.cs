@@ -292,10 +292,10 @@ public class C1 {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				var content = File.ReadAllText(Path.GetFullPath("Test.js")).Replace("\r\n", "\n");
 				Assert.That(content.Contains("Class1"), Is.False);
 				Assert.That(content.Contains("someVariable"), Is.False);
-				Assert.That(new System.Text.RegularExpressions.Regex("(?<!var) ").IsMatch(content), Is.False);
+				Assert.That(new System.Text.RegularExpressions.Regex("(?<!var|use) ").IsMatch(content), Is.False);
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
