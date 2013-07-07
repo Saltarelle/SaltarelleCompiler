@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 			ParameterNames = parameterNames.AsReadOnly();
 			if (ParameterNames.Any(n => !n.IsValidJavaScriptIdentifier()))
 				throw new ArgumentException("parameterNames");
-			Body = JsBlockStatement.MakeBlock(body);
+			Body = JsStatement.EnsureBlock(body);
 			Name = name;
 		}
 

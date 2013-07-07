@@ -576,8 +576,8 @@ namespace CoreLib.Plugin {
 		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
 			var scriptType = TypeOf(type, context);
 
-			JsExpression getterDefinition = JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(accessor));
-			JsExpression setterDefinition = JsExpression.FunctionDefinition(new[] { "$" }, new JsExpressionStatement(JsExpression.Assign(accessor, JsExpression.Identifier("$"))));
+			JsExpression getterDefinition = JsExpression.FunctionDefinition(new string[0], JsStatement.Return(accessor));
+			JsExpression setterDefinition = JsExpression.FunctionDefinition(new[] { "$" }, JsExpression.Assign(accessor, JsExpression.Identifier("$")));
 			if (UsesThisVisitor.Analyze(accessor)) {
 				getterDefinition = JsExpression.Invocation(JsExpression.Member(getterDefinition, "bind"), JsExpression.This);
 				setterDefinition = JsExpression.Invocation(JsExpression.Member(setterDefinition, "bind"), JsExpression.This);

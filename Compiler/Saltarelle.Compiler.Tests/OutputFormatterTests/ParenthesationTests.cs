@@ -474,14 +474,14 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void FunctionIsParenthesizedWhenInvokedDirectly() {
 			AssertCorrect(JsExpression.Invocation(
-			                  JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement, null)
+			                  JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock, null)
 			              ),
 			              "(function() {\r\n})()");
 		 }
 
 		[Test]
 		public void ExpressionStatementsContainingOnlyAFunctionDefinitionParenthesizesThatDefinition() {
-			AssertCorrect(new JsExpressionStatement(JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement)), "(function() {\r\n});\r\n");
+			AssertCorrect((JsStatement)JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock), "(function() {\r\n});\r\n");
 		}
 
 		[Test]

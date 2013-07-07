@@ -6,6 +6,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 	public class JsGotoStatement : JsStatement {
 		public string TargetLabel { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Goto")]
 		public JsGotoStatement(string targetLabel) {
 			Require.ValidJavaScriptIdentifier(targetLabel, "targetLabel", allowNull: false);
 			TargetLabel = targetLabel;

@@ -9,14 +9,17 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 	public class JsVariableDeclarationStatement : JsStatement {
 		public ReadOnlyCollection<JsVariableDeclaration> Declarations { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Var")]
 		public JsVariableDeclarationStatement(IEnumerable<JsVariableDeclaration> declarations) {
 			if (declarations == null) throw new ArgumentNullException("declarations");
 			Declarations = declarations.AsReadOnly();
 		}
 
+		[Obsolete("Use factory method JsStatement.Var")]
 		public JsVariableDeclarationStatement(params JsVariableDeclaration[] declarations) : this((IEnumerable<JsVariableDeclaration>)declarations) {
 		}
 
+		[Obsolete("Use factory method JsStatement.Var")]
 		public JsVariableDeclarationStatement(string name, JsExpression initializer) : this(new JsVariableDeclaration(name, initializer)) {
 		}
 

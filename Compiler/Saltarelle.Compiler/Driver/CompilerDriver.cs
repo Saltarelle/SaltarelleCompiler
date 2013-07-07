@@ -289,7 +289,7 @@ namespace Saltarelle.Compiler.Driver {
 				}
 
 				if (options.MinimizeScript) {
-					js = ((JsBlockStatement)Minifier.Process(new JsBlockStatement(js))).Statements;
+					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
 				string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));

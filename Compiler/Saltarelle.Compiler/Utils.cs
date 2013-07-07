@@ -65,7 +65,7 @@ namespace Saltarelle.Compiler {
 			for (int i = 0; i < expressions.Count; i++) {
 				if (ExpressionOrderer.DoesOrderMatter(expressions[i], newExpressions)) {
 					var temp = createTemporaryVariable();
-					statementList.Add(new JsVariableDeclarationStatement(temp, expressions[i]));
+					statementList.Add(JsStatement.Var(temp, expressions[i]));
 					expressions[i] = JsExpression.Identifier(temp);
 				}
 			}
@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler {
 			if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(expression)) {
 				CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressionsThatMustBeEvaluatedBefore, expression, createTemporaryVariable);
 				var temp = createTemporaryVariable();
-				statementList.Add(new JsVariableDeclarationStatement(temp, expression));
+				statementList.Add(JsStatement.Var(temp, expression));
 				return JsExpression.Identifier(temp);
 			}
 			else

@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Compiler {
 			for (int i = 0; i < rr.Parameters.Count; i++) {
 				var temp = _createTemporaryVariable(rr.Parameters[i].Type);
 				_allParameters[rr.Parameters[i]] = temp;
-				_additionalStatements.Add(new JsVariableDeclarationStatement(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(rr.Parameters[i].Type), JsExpression.String(rr.Parameters[i].Name) })));
+				_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(rr.Parameters[i].Type), JsExpression.String(rr.Parameters[i].Name) })));
 				parameters[i] = JsExpression.Identifier(temp);
 			}
 

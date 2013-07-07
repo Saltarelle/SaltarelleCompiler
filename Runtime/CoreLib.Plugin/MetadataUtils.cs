@@ -343,7 +343,7 @@ namespace CoreLib.Plugin {
 			var initializerStatements = attr.NamedArguments.Select(a => new OperatorResolveResult(a.Key.ReturnType, ExpressionType.Assign, new MemberResolveResult(new InitializedObjectResolveResult(attr.AttributeType), a.Key), a.Value)).ToList<ResolveResult>();
 			var constructorResult = CompileConstructorInvocation(attr.Constructor, initializerStatements, currentType, null, attr.PositionalArguments, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, null, null);
 			if (constructorResult.AdditionalStatements.Count > 0) {
-				return JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(constructorResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(constructorResult.Expression) }))));
+				return JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(constructorResult.AdditionalStatements.Concat(new[] { JsStatement.Return(constructorResult.Expression) }))));
 			}
 			else {
 				return constructorResult.Expression;
@@ -419,7 +419,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 				var compileResult = CompileConstructorInvocation(constructor, initializerStatements, constructor.DeclaringTypeDefinition, constructor, constructorParameters, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, variables, usedNames);
-				var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), new JsBlockStatement(compileResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(compileResult.Expression) })));
+				var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), JsStatement.Block(compileResult.AdditionalStatements.Concat(new[] { JsStatement.Return(compileResult.Expression) })));
 				properties.Add(new JsObjectLiteralProperty("def", definition));
 			}
 			return JsExpression.ObjectLiteral(properties);
@@ -460,10 +460,10 @@ namespace CoreLib.Plugin {
 					var tokens = InlineCodeMethodCompiler.Tokenize(method, sem.LiteralCode, _ => {});
 
 					var compileResult = Compile(CreateMethodInvocationResolveResult(method, method.IsStatic ? (ResolveResult)new TypeResolveResult(method.DeclaringType) : new ThisResolveResult(method.DeclaringType), arguments), method.DeclaringTypeDefinition, method, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedNames);
-					var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), new JsBlockStatement(compileResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(compileResult.Expression) })));
+					var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), JsStatement.Block(compileResult.AdditionalStatements.Concat(new[] { JsStatement.Return(compileResult.Expression) })));
 
 					if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.TypeParameter && t.OwnerType == SymbolKind.Method)) {
-						definition = JsExpression.FunctionDefinition(method.TypeParameters.Select(namer.GetTypeParameterName), new JsReturnStatement(definition));
+						definition = JsExpression.FunctionDefinition(method.TypeParameters.Select(namer.GetTypeParameterName), JsStatement.Return(definition));
 						properties.Add(new JsObjectLiteralProperty("tpcount", JsExpression.Number(method.TypeParameters.Count)));
 					}
 					properties.Add(new JsObjectLiteralProperty("def", definition));

@@ -26,32 +26,32 @@ namespace Saltarelle.Compiler.Tests.MinificationTests
 
 			public JsStatement Process(JsBlockStatement stmt) {
 				stmt = (JsBlockStatement)VisitStatement(stmt, null);
-				return new JsBlockStatement(MakePrefix(new Minifier.Function()).Concat(stmt.Statements));
+				return JsStatement.Block(MakePrefix(new Minifier.Function()).Concat(stmt.Statements));
 			}
 
 			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
 				var body = (JsBlockStatement)VisitStatement(expression.Body, null);
-				return new JsFunctionDefinitionExpression(expression.ParameterNames, new JsBlockStatement(MakePrefix(expression).Concat(body.Statements)), expression.Name);
+				return JsExpression.FunctionDefinition(expression.ParameterNames, JsStatement.Block(MakePrefix(expression).Concat(body.Statements)), expression.Name);
 			}
 
 			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
 				var body = (JsBlockStatement)VisitStatement(statement.Body, null);
-				return new JsFunctionStatement(statement.Name, statement.ParameterNames, new JsBlockStatement(MakePrefix(statement).Concat(body.Statements)));
+				return JsStatement.Function(statement.Name, statement.ParameterNames, JsStatement.Block(MakePrefix(statement).Concat(body.Statements)));
 			}
 
 			private IEnumerable<JsStatement> MakePrefix(Minifier.Function function) {
 				var result = new List<JsStatement>();
 				if (_locals != null)
-					result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("locals"), _locals[function].OrderBy(x => x).Select(JsExpression.Identifier))));
+					result.Add(JsExpression.Invocation(JsExpression.Identifier("locals"), _locals[function].OrderBy(x => x).Select(JsExpression.Identifier)));
 				if (_globals != null)
-					result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("globals"), _globals[function].OrderBy(x => x).Select(JsExpression.Identifier))));
+					result.Add(JsExpression.Invocation(JsExpression.Identifier("globals"), _globals[function].OrderBy(x => x).Select(JsExpression.Identifier)));
 				return result;
 			}
 		}
 
 		[Test]
 		public void GatheringIsCorrect() {
-			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(@"
+			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(@"
 {
 	var a;
 	(function() {
@@ -148,7 +148,7 @@ namespace Saltarelle.Compiler.Tests.MinificationTests
 
 		[Test]
 		public void MinimizingIdentifiersWorks() {
-			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(@"
+			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(@"
 {
 	var variable1;
 	(function() {

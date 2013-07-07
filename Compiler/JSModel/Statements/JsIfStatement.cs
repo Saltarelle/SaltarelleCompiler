@@ -11,12 +11,13 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// </summary>
 		public JsBlockStatement Else { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.If")]
 		public JsIfStatement(JsExpression test, JsStatement then, JsStatement @else) {
 			if (test == null) throw new ArgumentNullException("test");
 			if (then == null) throw new ArgumentNullException("then");
 			Test = test;
-			Then = JsBlockStatement.MakeBlock(then);
-			Else = JsBlockStatement.MakeBlock(@else);
+			Then = EnsureBlock(then);
+			Else = EnsureBlock(@else);
 		}
 
 		[System.Diagnostics.DebuggerStepThrough]

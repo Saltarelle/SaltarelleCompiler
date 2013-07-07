@@ -48,22 +48,22 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		public override JsStatement VisitForStatement(JsForStatement statement, object data) {
 			var body = VisitLoopBody(statement.Body, data);
-			return ReferenceEquals(body, statement.Body) ? statement : new JsForStatement(statement.InitStatement, statement.ConditionExpression, statement.IteratorExpression, body);
+			return ReferenceEquals(body, statement.Body) ? statement : JsStatement.For(statement.InitStatement, statement.ConditionExpression, statement.IteratorExpression, body);
 		}
 
 		public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, object data) {
 			var body = VisitLoopBody(statement.Body, data);
-			return ReferenceEquals(body, statement.Body) ? statement : new JsForEachInStatement(statement.LoopVariableName, statement.ObjectToIterateOver, body, statement.IsLoopVariableDeclared);
+			return ReferenceEquals(body, statement.Body) ? statement : JsStatement.ForIn(statement.LoopVariableName, statement.ObjectToIterateOver, body, statement.IsLoopVariableDeclared);
 		}
 
 		public override JsStatement VisitWhileStatement(JsWhileStatement statement, object data) {
 			var body = VisitLoopBody(statement.Body, data);
-			return ReferenceEquals(body, statement.Body) ? statement : new JsWhileStatement(statement.Condition, body);
+			return ReferenceEquals(body, statement.Body) ? statement : JsStatement.While(statement.Condition, body);
 		}
 
 		public override JsStatement VisitDoWhileStatement(JsDoWhileStatement statement, object data) {
 			var body = VisitLoopBody(statement.Body, data);
-			return ReferenceEquals(body, statement.Body) ? statement : new JsDoWhileStatement(statement.Condition, body);
+			return ReferenceEquals(body, statement.Body) ? statement : JsStatement.DoWhile(statement.Condition, body);
 		}
 
 		public override JsStatement VisitSwitchStatement(JsSwitchStatement statement, object data) {
@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				_breakStack = _breakStack.Push(null);
 				_continueStack = _continueStack.Push(null);
 				var sections = VisitSwitchSections(statement.Sections, data);
-				return ReferenceEquals(sections, statement.Sections) ? statement : new JsSwitchStatement(statement.Expression, sections);
+				return ReferenceEquals(sections, statement.Sections) ? statement : JsStatement.Switch(statement.Expression, sections);
 			}
 			finally {
 				_breakStack = oldBreak;
@@ -127,7 +127,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		public override JsStatement VisitReturnStatement(JsReturnStatement statement, object data) {
 			if (_makeSetResult != null)
-				return new JsBlockStatement(new JsStatement[] { new JsExpressionStatement(_makeSetResult(statement.Value)), new JsReturnStatement() }, mergeWithParent: true);
+				return JsStatement.BlockMerged(_makeSetResult(statement.Value), JsStatement.Return());
 			else
 				return statement;
 		}

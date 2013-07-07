@@ -6,6 +6,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 	public class JsComment : JsStatement {
 		public string Text { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Comment")]
 		public JsComment(string text) {
 			Text = text;
 		}

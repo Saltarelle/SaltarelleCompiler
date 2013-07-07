@@ -10,6 +10,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public JsExpression Awaiter { get; private set; }
 		public string OnCompletedMethodName { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Await")]
 		public JsAwaitStatement(JsExpression awaiter, string onCompletedMethodName) {
 			if (awaiter == null)
 				throw new ArgumentException("awaiter");

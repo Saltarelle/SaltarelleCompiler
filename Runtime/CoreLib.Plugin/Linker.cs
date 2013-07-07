@@ -167,32 +167,30 @@ namespace CoreLib.Plugin {
 				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly));
 
 				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
-					body.InsertRange(0, new[] { JsStatement.UseStrict, new JsVariableDeclarationStatement("exports", JsExpression.ObjectLiteral()) });
-					body.Add(new JsReturnStatement(JsExpression.Identifier("exports")));
+					body.InsertRange(0, new[] { JsStatement.UseStrict, JsStatement.Var("exports", JsExpression.ObjectLiteral()) });
+					body.Add(JsStatement.Return(JsExpression.Identifier("exports")));
 
 					var pairs = new[] { new KeyValuePair<string, string>("mscorlib", namer.GetVariableName("_", usedSymbols)) }
 						.Concat(moduleDependencies.OrderBy(x => x.Key))
 						.ToList();
 
 					body = new List<JsStatement> {
-						new JsExpressionStatement(
-							JsExpression.Invocation(
-								JsExpression.Identifier("define"),
-								JsExpression.ArrayLiteral(pairs.Select(p => JsExpression.String(p.Key))),
-								JsExpression.FunctionDefinition(
-									pairs.Select(p => p.Value),
-									new JsBlockStatement(body)
-								)
-							)
-						)
-					};
+					           JsExpression.Invocation(
+					               JsExpression.Identifier("define"),
+					               JsExpression.ArrayLiteral(pairs.Select(p => JsExpression.String(p.Key))),
+					               JsExpression.FunctionDefinition(
+					                   pairs.Select(p => p.Value),
+					                   JsStatement.Block(body)
+					               )
+					           )
+					       };
 				}
 				else if (moduleDependencies.Any()) {
 					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
-					body.InsertRange(0, new[] { JsStatement.UseStrict, (JsStatement)new JsExpressionStatement(JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib"))) }
+					body.InsertRange(0, new[] { JsStatement.UseStrict, JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib")) }
 										.Concat(moduleDependencies
 											.OrderBy(x => x.Key).OrderBy(x => x.Key)
-												.Select(x => new JsVariableDeclarationStatement(
+												.Select(x => JsStatement.Var(
 													x.Value,
 													JsExpression.Invocation(
 														JsExpression.Identifier("require"),
@@ -201,7 +199,7 @@ namespace CoreLib.Plugin {
 				}
 				else {
 					body.Insert(0, JsStatement.UseStrict);
-					body = new List<JsStatement> { new JsExpressionStatement(JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(body)))) };
+					body = new List<JsStatement> { JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(body))) };
 				}
 
 				return body;

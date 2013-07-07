@@ -9,7 +9,8 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// </summary>
 		public JsExpression Value { get; private set; }
 
-		public JsReturnStatement(JsExpression value = null) {
+		[Obsolete("Use factory method JsStatement.Return")]
+		public JsReturnStatement(JsExpression value) {
 			Value = value;
 		}
 

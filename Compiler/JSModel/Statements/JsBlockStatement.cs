@@ -13,29 +13,24 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// </summary>
 		public bool MergeWithParent { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Block")]
 		public JsBlockStatement(IEnumerable<JsStatement> statements, bool mergeWithParent = false) {
 			if (statements == null) throw new ArgumentNullException("statements");
 			Statements = statements.AsReadOnly();
 			MergeWithParent = mergeWithParent;
 		}
 
+		[Obsolete("Use factory method JsStatement.Block")]
 		public JsBlockStatement(params JsStatement[] statements) : this((IEnumerable<JsStatement>)statements) {
 		}
 
-		/// <summary>
-		/// Convert a statement to a block statement. Returns null if the input is null.
-		/// </summary>
+		[Obsolete("Use JsStatement.EnsureBlock")]
 		public static JsBlockStatement MakeBlock(JsStatement content) {
-			if (content == null)
-				return null;
-			else if (content is JsBlockStatement)
-				return (JsBlockStatement)content;
-			else
-				return new JsBlockStatement(content);
+			return EnsureBlock(content);
 		}
 
-		private static readonly JsBlockStatement _emptyStatement = new JsBlockStatement(new JsStatement[0]);
-		public static JsBlockStatement EmptyStatement { get { return _emptyStatement; } }
+		[Obsolete("Use JsStatement.EmptyBlock")]
+		public static JsBlockStatement EmptyStatement { get { return EmptyBlock; } }
 
 		[System.Diagnostics.DebuggerStepThrough]
 		public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {

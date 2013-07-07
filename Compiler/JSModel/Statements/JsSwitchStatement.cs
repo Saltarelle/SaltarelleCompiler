@@ -8,9 +8,10 @@ using Saltarelle.Compiler.JSModel.ExtensionMethods;
 namespace Saltarelle.Compiler.JSModel.Statements {
 	[Serializable]
 	public class JsSwitchStatement : JsStatement {
-		public JsExpression Expression { get; private set; }
+		public new JsExpression Expression { get; private set; }
 		public ReadOnlyCollection<JsSwitchSection> Sections { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Switch")]
 		public JsSwitchStatement(JsExpression expression, IEnumerable<JsSwitchSection> sections) {
 			if (expression == null) throw new ArgumentNullException("test");
 			if (sections == null) throw new ArgumentNullException("sections");
@@ -21,6 +22,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 			if (Sections.SelectMany(c => c.Values).Count(v => v == null) > 1) throw new ArgumentException("Can only have one default clause", "sections");
 		}
 
+		[Obsolete("Use factory method JsStatement.Switch")]
 		public JsSwitchStatement(JsExpression expression, params JsSwitchSection[] clauses) : this(expression, (IEnumerable<JsSwitchSection>)clauses) {
 		}
 

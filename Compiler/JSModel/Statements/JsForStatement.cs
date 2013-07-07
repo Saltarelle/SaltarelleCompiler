@@ -14,6 +14,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public JsExpression IteratorExpression { get; private set; }
 		public JsBlockStatement Body { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.For")]
 		public JsForStatement(JsStatement initStatement, JsExpression conditionExpression, JsExpression iteratorExpression, JsStatement body) {
 			if (initStatement == null) throw new ArgumentNullException("initStatement");
 			if (!(initStatement is JsEmptyStatement || initStatement is JsVariableDeclarationStatement || initStatement is JsExpressionStatement)) throw new ArgumentException("initStatement must be a VariableDeclarationStatement or an ExpressionStatement.", "initStatement");
@@ -22,7 +23,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 			InitStatement       = initStatement;
 			ConditionExpression = conditionExpression;
 			IteratorExpression  = iteratorExpression;
-			Body                = JsBlockStatement.MakeBlock(body);
+			Body                = EnsureBlock(body);
 		}
 
 		[System.Diagnostics.DebuggerStepThrough]

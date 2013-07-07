@@ -4,6 +4,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 namespace Saltarelle.Compiler.JSModel.Statements {
 	[Serializable]
 	public class JsEmptyStatement : JsStatement {
+		[Obsolete("Use factory method JsStatement.Empty")]
 		public JsEmptyStatement() {
 		}
 
