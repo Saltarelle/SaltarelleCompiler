@@ -134,10 +134,13 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetCastTarget(IType type, IRuntimeContext context) {
-			if (type.Kind == TypeKind.Enum)
-				return CreateTypeReferenceExpression(type.GetDefinition().EnumUnderlyingType.GetDefinition());
-
 			var def = type.GetDefinition();
+
+			if (type.Kind == TypeKind.Enum) {
+				var underlying = MetadataUtils.IsNamedValues(def) ? _compilation.FindType(KnownTypeCode.String) : def.EnumUnderlyingType;
+				return CreateTypeReferenceExpression(underlying.GetDefinition());
+			}
+
 			if (def != null) {
 				if (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def)))
 					return null;

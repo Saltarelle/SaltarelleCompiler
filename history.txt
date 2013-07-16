@@ -1,3 +1,4 @@
+Casts to [NamedValues] enums are now treated as casts to string (#214)
 Use strict mode in generated assemblies as well as in mscorlib (#194)
 Implemented type System.Guid, using a string as the backing store (thanks to Valeriob)
 Added many standard .net exception types

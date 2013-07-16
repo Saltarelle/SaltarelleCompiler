@@ -148,5 +148,23 @@ class C<T1, T2> where T1 : class {
 })();
 ");
 		}
+
+		[Test]
+		public void CastToNamedValuesEnumIsCastToString() {
+			SourceVerifier.AssertSourceCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[NamedValues] enum E {}
+class C {
+	public void M(object o) {
+		// BEGIN
+		E e = (E)o;
+		// END
+	}
+}
+",
+@"			var e = ss.cast(o, String);
+");
+		}
 	}
 }
