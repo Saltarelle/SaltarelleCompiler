@@ -279,7 +279,7 @@ namespace CoreLib.Plugin {
 					if (!typeDefinition.IsStatic) {
 						Message(Messages._7012, typeDefinition);
 					}
-					else if (typeDefinition.Members.Any(m => !(m is IMethod) || ((IMethod)m).IsConstructor)) {
+					else if (typeDefinition.Members.Any(m => !AttributeReader.HasAttribute<CompilerGeneratedAttribute>(m) && (!(m is IMethod) || ((IMethod)m).IsConstructor))) {
 						Message(Messages._7013, typeDefinition);
 					}
 					else if (typeDefinition.TypeParameterCount > 0) {
