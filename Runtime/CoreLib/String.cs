@@ -196,7 +196,7 @@ namespace System {
 		/// Determines if the strings are equal.
 		/// </summary>
 		/// <returns>true if the string s1 = s2; false otherwise.</returns>
-		[InlineCode("{$System.Script}.compareStrings({s1}, {s2}, {ignoreCase}) === 0)")]
+		[InlineCode("{$System.Script}.compareStrings({s1}, {s2}, {ignoreCase}) === 0")]
 		public static bool Equals(string s1, string s2, bool ignoreCase) {
 			return false;
 		}

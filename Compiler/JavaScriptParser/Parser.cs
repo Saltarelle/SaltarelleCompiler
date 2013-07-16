@@ -10,19 +10,19 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace JavaScriptParser {
 	public static class Parser {
-		public static JsExpression ParseExpression(string source) {
-			var lex = new ES3Lexer(new ANTLRStringStream(source));
-   			CommonTokenStream tokens = new CommonTokenStream(lex);
+		public static JsExpression ParseExpression(string source, bool allowCustomKeywords = false) {
+			var lex = new ES3Lexer(new ANTLRStringStream(source)) { AllowCustomKeywords = allowCustomKeywords };
+			var tokens = new CommonTokenStream(lex);
 			var parser = new ES3Parser(tokens);
 
-			var r = parser.expression();
+			var r = parser.expressionOnly();
 			var tree = new ES3Walker(new CommonTreeNodeStream(r.Tree));
 			return tree.expression();
 		}
 
-		public static JsStatement ParseStatement(string source) {
-			var lex = new ES3Lexer(new ANTLRStringStream(source.Trim()));
-   			CommonTokenStream tokens = new CommonTokenStream(lex);
+		public static JsStatement ParseStatement(string source, bool allowCustomKeywords = false) {
+			var lex = new ES3Lexer(new ANTLRStringStream(source.Trim())) { AllowCustomKeywords = allowCustomKeywords };
+			var tokens = new CommonTokenStream(lex);
 			var parser = new ES3Parser(tokens);
 
 			var r = parser.sourceElement();
@@ -32,7 +32,7 @@ namespace JavaScriptParser {
 
 		public static IList<JsStatement> ParseProgram(string source) {
 			var lex = new ES3Lexer(new ANTLRStringStream(source));
-   			CommonTokenStream tokens = new CommonTokenStream(lex);
+   			var tokens = new CommonTokenStream(lex);
 			var parser = new ES3Parser(tokens);
 
 			var r = parser.program();

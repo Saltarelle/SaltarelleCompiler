@@ -960,7 +960,7 @@ class C1<T1> {
 	[IncludeGenericArguments(true)]
 	class C2<T2> {
 		[InlineCode(""_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"")]
-		public void SomeMethod<T3, T4>(int x, string y) {}
+		public object SomeMethod<T3, T4>(int x, string y) { return null; }
 	}
 }");
 
@@ -968,6 +968,26 @@ class C1<T1> {
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
 			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
+			Assert.That(impl.GeneratedMethodName, Is.Null);
+		}
+
+		[Test]
+		public void InlineCodeForVoidMethodCanContainMultipleStatements() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[IncludeGenericArguments(true)]
+class C1<T1> {
+	[IncludeGenericArguments(true)]
+	class C2<T2> {
+		[InlineCode(""if ({T1}) {T2}; else {T3}; var $$ = {T4} + {x} + {y} + {this};"")]
+		public void SomeMethod<T3, T4>(int x, string y) { return null; }
+	}
+}");
+
+			var impl = FindMethod("C1`1+C2`1.SomeMethod");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("if ({T1}) {T2}; else {T3}; var $$ = {T4} + {x} + {y} + {this};"));
+			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("if ({T1}) {T2}; else {T3}; var $$ = {T4} + {x} + {y} + {this};"));
 			Assert.That(impl.GeneratedMethodName, Is.Null);
 		}
 

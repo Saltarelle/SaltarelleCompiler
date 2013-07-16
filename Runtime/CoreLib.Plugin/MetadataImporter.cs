@@ -419,13 +419,21 @@ namespace CoreLib.Plugin {
 
 		private bool ValidateInlineCode(IMethod method, IEntity errorEntity, string code, Tuple<int, MessageSeverity, string> errorTemplate) {
 			var typeErrors = new List<string>();
-			var errors = InlineCodeMethodCompiler.ValidateLiteralCode(method, code, n => {
+			IList<string> errors;
+			Func<string, JsExpression> resolveType = n => {
 				var type = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation);
 				if (type.Kind == TypeKind.Unknown) {
 					typeErrors.Add("Unknown type '" + n + "' specified in inline implementation");
 				}
 				return JsExpression.Null;
-			}, t => JsExpression.Null);
+			};
+			
+			if (method.ReturnType.Kind == TypeKind.Void && !method.IsConstructor) {
+				errors = InlineCodeMethodCompiler.ValidateStatementListLiteralCode(method, code, resolveType, t => JsExpression.Null);
+			}
+			else {
+				errors = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, code, resolveType, t => JsExpression.Null);
+			}
 			if (errors.Count > 0 || typeErrors.Count > 0) {
 				Message(errorTemplate, errorEntity, string.Join(", ", errors.Concat(typeErrors)));
 				return false;

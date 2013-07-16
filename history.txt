@@ -1,3 +1,5 @@
+Allow statements (any number of them) in inline code for methods returning void (#149)
+Enabled the use of JS reserved words as member names in inline code (#204)
 Fixed problem using anonymous methods in [Mixin] classes (#216)
 Casts to [NamedValues] enums are now treated as casts to string (#214)
 Use strict mode in generated assemblies as well as in mscorlib (#194)

@@ -1122,7 +1122,13 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.Message(Messages._7525, string.Format("The {0} can only be invoked with its params parameter expanded", method.IsConstructor ? "constructor " + method.DeclaringType.FullName : ("method " + method.FullName)));
 				return JsExpression.Null;
 			}
-			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s));
+			if (method.ReturnType.Kind == TypeKind.Void && !method.IsConstructor) {
+				_additionalStatements.AddRange(InlineCodeMethodCompiler.CompileStatementListInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s)));
+				return JsExpression.Null;
+			}
+			else {
+				return InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s));
+			}
 		}
 
 		private string GetMemberNameForJsonConstructor(IMember member) {
@@ -1698,16 +1704,33 @@ namespace Saltarelle.Compiler.Compiler {
 			if (delegateSemantics.ExpandParams)
 				arguments.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Length)));
 
-			var body = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method,
-			                                                                      tokens,
-			                                                                      method.IsStatic ? null : jsTarget,
-			                                                                      arguments,
-			                                                                      ResolveTypeForInlineCode,
-			                                                                      t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this),
-			                                                                      s => _errorReporter.Message(Messages._7525, s));
-			var result = (JsExpression)JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body : JsStatement.Return(body));
+			bool usesThis;
+			JsExpression result;
+			if (method.ReturnType.IsKnownType(KnownTypeCode.Void)) {
+				var list = InlineCodeMethodCompiler.CompileStatementListInlineCodeMethodInvocation(method,
+				                                                                                   tokens,
+				                                                                                   method.IsStatic ? null : jsTarget,
+				                                                                                   arguments,
+				                                                                                   ResolveTypeForInlineCode,
+				                                                                                   t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this),
+				                                                                                   s => _errorReporter.Message(Messages._7525, s));
+				var body = JsStatement.Block(list);
+				result = JsExpression.FunctionDefinition(parameters, body);
+				usesThis = UsesThisVisitor.Analyze(body);
+			}
+			else {
+				var body = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method,
+				                                                                                tokens,
+				                                                                                method.IsStatic ? null : jsTarget,
+				                                                                                arguments,
+				                                                                                ResolveTypeForInlineCode,
+				                                                                                t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this),
+				                                                                                s => _errorReporter.Message(Messages._7525, s));
+				result = JsExpression.FunctionDefinition(parameters, JsStatement.Return(body));
+				usesThis = UsesThisVisitor.Analyze(body);
+			}
 
-			if (UsesThisVisitor.Analyze(body))
+			if (usesThis)
 				result = _runtimeLibrary.Bind(result, JsExpression.This, this);
 			if (delegateSemantics.BindThisToFirstParameter)
 				result = _runtimeLibrary.BindFirstParameterToThis(result, this);

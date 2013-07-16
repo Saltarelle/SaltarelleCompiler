@@ -132,6 +132,7 @@ public statement returns [JsStatement result]
 	| x=throwStatement
 	| x=tryStatement
 	| x=functionDeclaration
+	| x=debuggerStatement
 	| x=gotoStatement
 	| x=yieldStatement
 	| x=awaitStatement
@@ -232,6 +233,10 @@ catchClause returns [JsCatchClause result]
 	
 finallyClause returns [JsStatement result]
 	: ^( FINALLY b=block ) { $result = b; }
+	;
+
+debuggerStatement returns [JsStatement result]
+	: DEBUGGER { $result = JsStatement.Debugger; }
 	;
 
 gotoStatement returns [JsStatement result]

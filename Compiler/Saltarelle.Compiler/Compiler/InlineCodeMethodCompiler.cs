@@ -7,6 +7,7 @@ using Antlr.Runtime;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Compiler {
 	public static class InlineCodeMethodCompiler {
@@ -109,7 +110,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		public static JsExpression CompileInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
+		private static Tuple<string, Dictionary<string, Tuple<JsExpression, bool>>> PrepareInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
 			var text = new StringBuilder();
 			var substitutions = new Dictionary<string, Tuple<JsExpression, bool>>();
 			bool hasErrors = false;
@@ -194,17 +195,70 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			if (hasErrors)
-				return JsExpression.Number(0);
+			return hasErrors ? null : Tuple.Create(text.ToString(), substitutions);
+		}
 
+		public static JsExpression CompileExpressionInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
+			var textAndSubstitution = PrepareInlineCodeMethodInvocation(method, tokens, @this, arguments, resolveType, resolveTypeArgument, errorReporter);
+			if (textAndSubstitution == null)
+				return JsExpression.Number(0);
 			try {
-				var expr = JavaScriptParser.Parser.ParseExpression(text.ToString());
-				return new Substituter(substitutions, errorReporter).Process(expr);
+				var expr = JavaScriptParser.Parser.ParseExpression(textAndSubstitution.Item1);
+				return new Substituter(textAndSubstitution.Item2, errorReporter).Process(expr);
 			}
 			catch (RecognitionException) {
 				errorReporter("syntax error in inline code");
 				return JsExpression.Number(0);
 			}
+		}
+
+		public static IList<JsStatement> CompileStatementListInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
+			var textAndSubstitution = PrepareInlineCodeMethodInvocation(method, tokens, @this, arguments, resolveType, resolveTypeArgument, errorReporter);
+			if (textAndSubstitution == null)
+				return new List<JsStatement> { JsStatement.Empty };
+			try {
+				var stmts = JavaScriptParser.Parser.ParseProgram(textAndSubstitution.Item1);
+				return new Substituter(textAndSubstitution.Item2, errorReporter).Process(stmts);
+			}
+			catch (RecognitionException) {
+				errorReporter("syntax error in inline code");
+				return new List<JsStatement> { JsStatement.Empty };
+			}
+		}
+
+
+		public static IList<string> ValidateExpressionLiteralCode(IMethod method, string literalCode, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument) {
+			var errors = new List<string>();
+
+			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
+			if (tokens == null)
+				return errors;
+
+			CompileExpressionInlineCodeMethodInvocation(method,
+			                                            tokens,
+			                                            method.IsStatic || method.IsConstructor ? null : JsExpression.Null,
+			                                            method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
+			                                            resolveType,
+			                                            resolveTypeArgument,
+			                                            errors.Add);
+			return errors;
+		}
+
+		public static IList<string> ValidateStatementListLiteralCode(IMethod method, string literalCode, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument) {
+			var errors = new List<string>();
+
+			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
+			if (tokens == null)
+				return errors;
+
+			CompileStatementListInlineCodeMethodInvocation(method,
+			                                               tokens,
+			                                               method.IsStatic || method.IsConstructor ? null : JsExpression.Null,
+			                                               method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
+			                                               resolveType,
+			                                               resolveTypeArgument,
+			                                               errors.Add);
+			return errors;
 		}
 
 		private class Substituter : RewriterVisitorBase<object> {
@@ -264,23 +318,10 @@ namespace Saltarelle.Compiler.Compiler {
 			public JsExpression Process(JsExpression expr) {
 				return VisitExpression(expr, null);
 			}
-		}
 
-		public static IList<string> ValidateLiteralCode(IMethod method, string literalCode, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument) {
-			var errors = new List<string>();
-
-			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
-			if (tokens == null)
-				return errors;
-
-			CompileInlineCodeMethodInvocation(method,
-			                                  tokens,
-			                                  method.IsStatic || method.IsConstructor ? null : JsExpression.Null,
-			                                  method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
-			                                  resolveType,
-			                                  resolveTypeArgument,
-			                                  errors.Add);
-			return errors;
+			public IList<JsStatement> Process(IList<JsStatement> stmts) {
+				return VisitStatements(stmts, null);
+			}
 		}
 	}
 }

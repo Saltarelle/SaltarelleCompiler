@@ -168,5 +168,10 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public static JsStatement UseStrict {
 			get { return _useStrict; }
 		}
+
+		private static readonly JsExpressionStatement _debugger = JsExpression.Identifier("debugger");
+		public static JsStatement Debugger {
+			get { return _debugger; }
+		}
 	}
 }

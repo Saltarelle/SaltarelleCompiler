@@ -195,7 +195,7 @@ namespace CoreLib.Plugin {
 				@this = context.EnsureCanBeEvaluatedMultipleTimes(@this, new JsExpression[0]);
 			return JsExpression.LogicalAnd(
 			           ReferenceNotEquals(@this, JsExpression.Null, context),
-			           InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
+			           InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {

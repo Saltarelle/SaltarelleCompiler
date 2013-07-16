@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 	public class StateMachineRewriterTestBase {
 		protected void AssertCorrect(string orig, string expected, MethodType methodType = MethodType.Normal) {
 			int tempIndex = 0, stateIndex = 0, loopLabelIndex = 0;
-			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(orig));
+			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(orig, allowCustomKeywords: true));
 			JsBlockStatement result;
 			if (methodType == MethodType.Iterator) {
 				int finallyHandlerIndex = 0;

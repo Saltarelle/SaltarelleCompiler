@@ -597,7 +597,7 @@ namespace System {
 		/// The number of days in <paramref name="month"/> for the specified <paramref name="year"/>.For example, if <paramref name="month"/> equals 2 for February, the return value is 28 or 29 depending upon whether <paramref name="year"/> is a leap year.
 		/// </returns>
 		/// <param name="year">The year. </param><param name="month">The month (a number ranging from 1 to 12). </param>
-		[InlineCode("new Date({year}, {month}, -1).getDate() + 1)")]
+		[InlineCode("new Date({year}, {month}, -1).getDate() + 1")]
 		public static int DaysInMonth(int year, int month) {
 			return 0;
 		}

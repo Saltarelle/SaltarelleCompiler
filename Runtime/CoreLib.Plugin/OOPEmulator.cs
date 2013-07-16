@@ -267,7 +267,7 @@ namespace CoreLib.Plugin {
 					var tokens = InlineCodeMethodCompiler.Tokenize(method, typeCheckCode, errors.Add);
 					if (errors.Count == 0) {
 						var context = new DefaultRuntimeContext(c.CSharpTypeDefinition, _metadataImporter, _errorReporter, _namer);
-						var result = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, JsExpression.Identifier("obj"), new JsExpression[0],
+						var result = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, JsExpression.Identifier("obj"), new JsExpression[0],
 						                 n => {
 						                     var type = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation);
 						                     if (type.Kind == TypeKind.Unknown) {

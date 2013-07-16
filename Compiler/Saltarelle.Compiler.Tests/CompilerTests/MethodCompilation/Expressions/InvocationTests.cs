@@ -546,7 +546,25 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingMethodImplementedAsInlineCodeWorks() {
+		public void InvokingMethodImplementedAsInlineCodeExpressionWorks() {
+			AssertCorrect(
+@"class X<T1> { public class Y<T2> { public int F<T3>(T1 x, T2 y, T3 z) { return 0; } } }
+public void M() {
+	X<int>.Y<byte> o = null;
+	int a = 0;
+	byte b = 0;
+	string c = null;
+	// BEGIN
+	int x = o.F(a, b, c);
+	// END
+}",
+@"	var $x = _({sm_Object})._({ga_Int32})._({ga_Byte})._({ga_String})._($o)._($a)._($b)._($c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({$System.Object})._({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+
+		[Test]
+		public void InvokingVoidMethodImplementedAsInlineCodeWithMultipleStatementsWorks() {
 			AssertCorrect(
 @"class X<T1> { public class Y<T2> { public void F<T3>(T1 x, T2 y, T3 z) {} } }
 public void M() {
@@ -558,8 +576,14 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_({sm_Object})._({ga_Int32})._({ga_Byte})._({ga_String})._($o)._($a)._($b)._($c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({$System.Object})._({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+@"	if ({ga_Int32}) {
+		{ga_Byte};
+	}
+	else {
+		{ga_String};
+	}
+	var $$ = _($o)._($a)._($b)._($c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("if ({T1}) {T2}; else {T3}; var $$ = _({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -678,7 +702,7 @@ public void M() {
 ",
 @"	var $tmp1 = this.$X();
 	_($tmp1)._($tmp1)._(this.$F1())._($a);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({this})._({a})._({b}))") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({this})._({a})._({b})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
