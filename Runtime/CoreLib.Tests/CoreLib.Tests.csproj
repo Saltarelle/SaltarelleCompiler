@@ -131,6 +131,7 @@
     <Compile Include="SourceVerifier.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
     <Compile Include="CoreLibTestBase.cs" />
+    <Compile Include="StructureTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

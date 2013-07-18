@@ -1533,7 +1533,7 @@ public class DerivedClass : TestClass.InnerClass {}");
 		public void TypeCheckCodeInSerializableAttributeForImportedSerializableTypeIsAnError() {
 			Prepare(@"[System.Serializable(TypeCheckCode = ""{this} == 0""), System.Runtime.CompilerServices.Imported] public class C1 {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7158 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("SerializableAttribute")));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7159 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("SerializableAttribute")));
 		}
 
 		[Test]

@@ -84,7 +84,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7156 = Tuple.Create(7156, MessageSeverity.Error, "The property {0} must be implemented as an auto-property because it implements the property {1} from a serializable interface.");
 		public static readonly Tuple<int, MessageSeverity, string> _7157 = Tuple.Create(7157, MessageSeverity.Error, "The inline code for the type check for type {0} contained errors: {1}.");
 		public static readonly Tuple<int, MessageSeverity, string> _7158 = Tuple.Create(7158, MessageSeverity.Error, "Cannot specify both ObeysTypeSystem and TypeCheckCode on the [ImportedAttribute] for the type {0}.");
-		public static readonly Tuple<int, MessageSeverity, string> _7159 = Tuple.Create(7158, MessageSeverity.Error, "Cannot specify TypeCheckCode on the [SerializableAttribute] for the type {0} because it is imported. Specify the code on the [ImportedAttribute] instead.");
+		public static readonly Tuple<int, MessageSeverity, string> _7159 = Tuple.Create(7159, MessageSeverity.Error, "Cannot specify TypeCheckCode on the [SerializableAttribute] for the type {0} because it is imported. Specify the code on the [ImportedAttribute] instead.");
 		public static readonly Tuple<int, MessageSeverity, string> _7160 = Tuple.Create(7160, MessageSeverity.Error, "The field {0} cannot have a [NoInlineAttribute] because it is not constant.");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7200 = Tuple.Create(7200, MessageSeverity.Error, "This constructor for the type {0} cannot be used with reflection because it has a special implementation.");
