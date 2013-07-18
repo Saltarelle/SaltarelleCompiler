@@ -232,6 +232,19 @@ global.I = $I;
 		}
 
 		[Test]
+		public void BaseTypesAreRegisteredBeforeDerivedTypesGeneric2() {
+			var output = Process(@"
+public abstract class Base {}
+public abstract class EBase : Base { }
+public abstract class GenericBase<T> : EBase { }
+public sealed class C : GenericBase<object> {}");
+			
+			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("{Script}.initClass")).ToList();
+
+			Assert.That(actual, Is.EqualTo(new[] { "{Script}.initClass($Base);", "{Script}.initClass($EBase, {Base});", "{Script}.initClass($C, {Script}.makeGenericType({GenericBase}, [{Object}]));" }));
+		}
+
+		[Test]
 		public void ByNamespaceComparerOrdersTypesCorrectly() {
 			var orig = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
 			var rnd = new Random(42);

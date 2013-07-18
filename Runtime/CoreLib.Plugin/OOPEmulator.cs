@@ -450,14 +450,14 @@ namespace CoreLib.Plugin {
 
 			result.InsertRange(0, exportedNamespacesByRoot.OrderBy(x => x.Key).SelectMany(x => CreateNamespaces(JsExpression.Identifier(x.Key), x.Value)).ToList());
 
-			var typesToRegister = orderedTypes
+			var typesToRegister = TopologicalSortTypesByInheritance(orderedTypes)
 			                      .Where(c =>    !(c is JsClass && MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter))
 			                                  && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
 			                                  && !MetadataUtils.IsResources(c.CSharpTypeDefinition)
 			                                  && !MetadataUtils.IsMixin(c.CSharpTypeDefinition))
 			                      .ToList();
 
-			result.AddRange(TopologicalSortTypesByInheritance(typesToRegister)
+			result.AddRange(typesToRegister
 			                .Select(c => {
 			                                 try {
 			                                     string name = _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name;

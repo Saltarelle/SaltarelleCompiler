@@ -1,3 +1,4 @@
+Fixed problem with base types not being initialized before derived types in certain cases including generic types in the chain (#222)
 Custom class attributes no longer need to qualify nested classes (#224)
 Fixed issues with double and float constants misbehaving in minified scripts (#208)
 NoInlineAttribute can now be applied to const fields to prevent them from being inlined in minified scripts.
