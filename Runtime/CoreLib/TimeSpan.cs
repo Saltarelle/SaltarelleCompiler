@@ -1,12 +1,6 @@
-// TimeSpan.cs
-// Script#/Libraries/CoreLib
-// This source code is subject to terms and conditions of the Apache License, Version 2.0.
-//
-
 using System.Runtime.CompilerServices;
 
-namespace System
-{
+namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public struct TimeSpan : IComparable<TimeSpan>, IEquatable<TimeSpan> {
@@ -25,23 +19,21 @@ namespace System
 		//public static readonly TimeSpan MinValue = new TimeSpan(long.MinValue);
 		//public static readonly TimeSpan MaxValue = new TimeSpan(long.MaxValue);
 
-		[ScriptName("")]
 		private TimeSpan(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		[ScriptName("")]
 		public TimeSpan(long ticks) {
 		}
 
-		[InlineCode("{$System.TimeSpan}.fromValues(0, {hours}, {minutes}, {seconds}, 0)")]
+		[InlineCode("new {$System.TimeSpan}(((({hours} * 60 + {minutes}) * 60) + {seconds}) * 10000000)")]
 		public TimeSpan(int hours, int minutes, int seconds) {
 		}
 
-		[InlineCode("{$System.TimeSpan}.fromValues({days}, {hours}, {minutes}, {seconds}, 0)")]
+		[InlineCode("new {$System.TimeSpan}((((({days} * 24 + {hours}) * 60 + {minutes}) * 60) + {seconds}) * 10000000)")]
 		public TimeSpan(int days, int hours, int minutes, int seconds) {
 		}
 
-		[InlineCode("{$System.TimeSpan}.fromValues({days}, {hours}, {minutes}, {seconds}, {milliseconds})")]
+		[InlineCode("new {$System.TimeSpan}(((((({days} * 24 + {hours}) * 60 + {minutes}) * 60) + {seconds}) * 1000 + {milliseconds}) * 10000)")]
 		public TimeSpan(int days, int hours, int minutes, int seconds, int milliseconds) {
 		}
 
@@ -100,6 +92,31 @@ namespace System
 			get { return 0; }
 		}
 
+		[InlineCode("new {$System.TimeSpan}({this}.ticks + {ts}.ticks)")]
+		public TimeSpan Add(TimeSpan ts) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({this}.ticks - {ts}.ticks)")]
+		public TimeSpan Subtract(TimeSpan ts) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({$System.Math}.abs({this}.ticks))")]
+		public TimeSpan Duration() {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}(-{this}.ticks)")]
+		public TimeSpan Negate() {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("{t1}.compareTo({t2})")]
+		public static int Compare(TimeSpan t1, TimeSpan t2) {
+			return 0;
+		}
+
 		public int CompareTo(TimeSpan other) {
 			return 0;
 		}
@@ -108,12 +125,88 @@ namespace System
 			return false;
 		}
 
-		public string ToString(string format) {
-			return null;
+		[InlineCode("{t1}.ticks === {t2}.ticks")]
+		public static bool Equals(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("new {$System.TimeSpan}({value} * 864000000000)")]
+		public static TimeSpan FromDays(double value) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({value} * 36000000000)")]
+		public static TimeSpan FromHours(double value) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({value} * 10000)")]
+		public static TimeSpan FromMilliseconds(double value) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({value} * 600000000)")]
+		public static TimeSpan FromMinutes(double value) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({value} * 10000000)")]
+		public static TimeSpan FromSeconds(double value) {
+			return default(TimeSpan);
 		}
 
 		[InlineCode("new {$System.TimeSpan}({value})")]
 		public static TimeSpan FromTicks(long value) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({t1}.ticks + {t2}.ticks)")]
+		public static TimeSpan operator+(TimeSpan t1, TimeSpan t2) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({t1}.ticks - {t2}.ticks)")]
+		public static TimeSpan operator-(TimeSpan t1, TimeSpan t2) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("{t1}.ticks === {t2}.ticks")]
+		public static bool operator==(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("{t1}.ticks !== {t2}.ticks")]
+		public static bool operator!=(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("{t1}.ticks > {t2}.ticks")]
+		public static bool operator>(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("{t1}.ticks >= {t2}.ticks")]
+		public static bool operator>=(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("{t1}.ticks < {t2}.ticks")]
+		public static bool operator<(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("{t1}.ticks <= {t2}.ticks")]
+		public static bool operator<=(TimeSpan t1, TimeSpan t2) {
+			return false;
+		}
+
+		[InlineCode("new {$System.TimeSpan}(-{ts}.ticks)")]
+		public static TimeSpan operator-(TimeSpan ts) {
+			return default(TimeSpan);
+		}
+
+		[InlineCode("new {$System.TimeSpan}({ts}.ticks)")]
+		public static TimeSpan operator+(TimeSpan ts) {
 			return default(TimeSpan);
 		}
 	}
