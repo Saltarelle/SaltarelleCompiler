@@ -6,12 +6,25 @@ using QUnit;
 namespace CoreLib.TestScript {
 	[TestFixture]
 	public class NullableTests {
+		private bool IsOfType<T>(object value) {
+			return value is T;
+		}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			int? a = 3, b = null;
-			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable");
-			Assert.IsTrue((object)a is int?);
-			Assert.IsFalse((object)b is int?);
+			Assert.AreEqual(typeof(Nullable<>).FullName, "ss.Nullable$1", "Open FullName");
+			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable$1[ss.Int32]", "Instantiated FullName");
+			Assert.IsTrue(typeof(Nullable<>).IsGenericTypeDefinition, "IsGenericTypeDefinition");
+			Assert.AreEqual(typeof(int?).GetGenericTypeDefinition(), typeof(Nullable<>), "GetGenericTypeDefinition");
+			Assert.IsTrue(typeof(int?).GetGenericArguments()[0] == typeof(int), "GenericArguments");
+			Assert.IsTrue((object)a is int?, "is int? #1");
+			Assert.IsFalse((object)b is int?, "is int? #2");
+
+			Assert.IsTrue (IsOfType<int?>(3), "IsOfType #1");
+			Assert.IsFalse(IsOfType<int?>(3.14), "IsOfType #2");
+			Assert.IsTrue (IsOfType<TimeSpan?>(new TimeSpan(1)), "IsOfType #3");
+			Assert.IsFalse(IsOfType<TimeSpan?>(3.14), "IsOfType #4");
 		}
 
 		[Test]

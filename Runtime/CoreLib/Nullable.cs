@@ -1,15 +1,8 @@
-// Nullable.cs
-// Script#/Libraries/CoreLib
-// This source code is subject to terms and conditions of the Apache License, Version 2.0.
-//
-
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace System {
-	[IncludeGenericArguments(false)]
+	[IncludeGenericArguments(true)]
 	[ScriptNamespace("ss")]
-	[ScriptName("Nullable")]
 	[Imported(ObeysTypeSystem = true)]
 	public struct Nullable<T> where T : struct {
 		[InlineCode("{value}")]
@@ -24,7 +17,7 @@ namespace System {
 		}
 
 		public T Value {
-			[InlineCode("{$System.Nullable`1}.unbox({this})")]
+			[InlineCode("{$System.Script}.unbox({this})")]
 			get {
 				return default(T);
 			}
