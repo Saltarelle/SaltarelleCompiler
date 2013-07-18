@@ -73,5 +73,10 @@ namespace System.Text.RegularExpressions {
 		public bool Test(string s) {
 			return false;
 		}
+
+		[InlineCode("{$System.Script}.regexpEscape({s})")]
+		public static string Escape(string s) {
+			return null;
+		}
 	}
 }

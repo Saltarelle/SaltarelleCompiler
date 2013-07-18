@@ -9,6 +9,6 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
 	public interface IFormatProvider {
-		Object GetFormat(Type formatType);
+		object GetFormat(Type formatType);
 	}
 }

@@ -60,14 +60,12 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void CharArrayConstructorWorks()
-		{
+		public void CharArrayConstructorWorks() {
 			Assert.AreEqual(new string(new[]{'a', 'b', 'C'}), "abC");
 		}
 
 		[Test]
-		public void CharArrayWithStartIndexAndLengthConstructorWorks()
-		{
+		public void CharArrayWithStartIndexAndLengthConstructorWorks() {
 			Assert.AreEqual(new string(new[]{'a', 'b', 'c', 'D'}, 1, 2), "bc");
 		}
 
@@ -266,8 +264,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void IndexOfCharWithStartIndexAndCountWorks()
-		{
+		public void IndexOfCharWithStartIndexAndCountWorks() {
 			Assert.AreEqual("xxxxxabcxxx".IndexOf('c', 3, 8), 7);
 			Assert.AreEqual("xxxxxabcxxx".IndexOf('c', 3, 5), 7);
 			Assert.AreEqual("xxxxxabcxxx".IndexOf('c', 3, 4), -1);
@@ -280,8 +277,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void IndexOfStringWithStartIndexAndCountWorks()
-		{
+		public void IndexOfStringWithStartIndexAndCountWorks() {
 			Assert.AreEqual("xxxxxabcxxx".IndexOf("abc", 3, 8), 5);
 			Assert.AreEqual("xxxxxabcxxx".IndexOf("abc", 3, 5), 5);
 			Assert.AreEqual("xxxxxabcxxx".IndexOf("abc", 3, 4), -1);
@@ -350,16 +346,14 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void LastIndexOfCharWithStartIndexAndCountWorks()
-		{
+		public void LastIndexOfCharWithStartIndexAndCountWorks() {
 			Assert.AreEqual("abcabc".LastIndexOf('b', 3, 3), 1);
 			Assert.AreEqual("abcabc".LastIndexOf('b', 3, 2), -1);
 			Assert.AreEqual("abcabc".LastIndexOf('d', 3, 3), -1);
 		}
 
 		[Test]
-		public void LastIndexOfStringWithStartIndexAndCountWorks()
-		{
+		public void LastIndexOfStringWithStartIndexAndCountWorks() {
 			Assert.AreEqual("xbcxxxbc".LastIndexOf("bc", 3, 3), 1);
 			Assert.AreEqual("xbcxxxbc".LastIndexOf("bc", 3, 2), -1);
 			Assert.AreEqual("xbcxxxbc".LastIndexOf("bd", 3, 3), -1);
@@ -397,15 +391,14 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue("abcd".LocaleCompare("abce") < 0);
 		}
 
-		/* Seems to be a bug in HtmlUnit, 'x'.toLocaleString() returns [object String]'. Test passes in Chrome.
-		Test]
+		[Test]
 		public void LocaleFormatWorks() {
 			Assert.AreEqual(string.LocaleFormat("x"), "x");
 			Assert.AreEqual(string.LocaleFormat("x{0}", "a"), "xa");
 			Assert.AreEqual(string.LocaleFormat("x{0}{1}", "a", "b"), "xab");
 			Assert.AreEqual(string.LocaleFormat("x{0}{1}{2}", "a", "b", "c"), "xabc");
 			Assert.AreEqual(string.LocaleFormat("x{0}{1}{2}{3}", "a", "b", "c", "d"), "xabcd");
-		}*/
+		}
 
 		[Test]
 		public void MatchWorks() {
@@ -450,8 +443,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ReplaceCharWorks()
-		{
+		public void ReplaceCharWorks() {
 			Assert.AreEqual("abcabcabc".Replace('a', 'x'), "xbcxbcxbc");
 		}
 
@@ -508,20 +500,15 @@ namespace CoreLib.TestScript.SimpleTypes {
 
 		[Test]
 		public void SplitWithCharsWorks() {
-			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }),
-				new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
-			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }, StringSplitOptions.None),
-				new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
-			Assert.AreEqual("Lorem Ipsum, dolor sit amet".Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries),
-				new[] { "Lorem", "Ipsum", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor[sit amet".Split(new[] { ',', ' ', '[' }), new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor[sit amet".Split(new[] { ',', ' ', '[' }, StringSplitOptions.None), new[] { "Lorem", "Ipsum", "", "dolor", "sit", "amet" });
+			Assert.AreEqual("Lorem Ipsum, dolor[sit amet".Split(new[] { ',', ' ', '[' }, StringSplitOptions.RemoveEmptyEntries), new[] { "Lorem", "Ipsum", "dolor", "sit", "amet" });
 		}
 
 		[Test]
-		public void SplitWithStringsWorks()
-		{
-			Assert.AreEqual("a is b if b is c and c is d if d is e".Split(new[] { "is", "if" },
-				StringSplitOptions.None),
-				new[] { "a ", " b ", " b ", " c and c ", " d ", " d ", " e" });
+		public void SplitWithStringsWorks() {
+			Assert.AreEqual("a is b if b is c and c isifis d if d is e".Split(new[] { "is", "if" }, StringSplitOptions.None), new[] { "a ", " b ", " b ", " c and c ", "", "", " d ", " d ", " e" });
+			Assert.AreEqual("a is b if b is c and c isifis d if d is e".Split(new[] { "is", "if" }, StringSplitOptions.RemoveEmptyEntries), new[] { "a ", " b ", " b ", " c and c ", " d ", " d ", " e" });
 		}
 
 		[Test]
@@ -597,20 +584,17 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void TrimCharsWorks()
-		{
+		public void TrimCharsWorks() {
 			Assert.AreEqual(",., aa, aa,... ".Trim(',', '.', ' '), "aa, aa");
 		}
 
 		[Test]
-		public void TrimStartCharsWorks()
-		{
+		public void TrimStartCharsWorks() {
 			Assert.AreEqual(",., aa, aa,... ".TrimStart(',', '.', ' '), "aa, aa,... ");
 		}
 
 		[Test]
-		public void TrimEndCharsWorks()
-		{
+		public void TrimEndCharsWorks() {
 			Assert.AreEqual(",., aa, aa,... ".TrimEnd(',', '.', ' '), ",., aa, aa");
 		}
 
@@ -704,8 +688,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void JoinWorks()
-		{
+		public void JoinWorks() {
 			Assert.AreEqual(string.Join(", ", new[] { "a", "ab", "abc", "abcd" }), "a, ab, abc, abcd");
 			Assert.AreEqual(string.Join(", ", new[] { "a", "ab", "abc", "abcd" }, 1, 2), "ab, abc");
 
@@ -719,8 +702,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ContainsWorks()
-		{
+		public void ContainsWorks() {
 			string text = "Lorem ipsum dolor sit amet";
 			Assert.IsTrue(text.Contains("Lorem"));
 			Assert.IsFalse(text.Contains("lorem"));
@@ -728,11 +710,9 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ToCharArrayWorks()
-		{
+		public void ToCharArrayWorks() {
 			string text = "Lorem sit dolor";
-			Assert.AreEqual(text.ToCharArray(),
-				new[] {"L", "o", "r", "e", "m", " ", "s", "i", "t", " ", "d", "o", "l", "o", "r"});
+			Assert.AreEqual(text.ToCharArray(), new[] {'L', 'o', 'r', 'e', 'm', ' ', 's', 'i', 't', ' ', 'd', 'o', 'l', 'o', 'r'});
 		}
 	}
 }

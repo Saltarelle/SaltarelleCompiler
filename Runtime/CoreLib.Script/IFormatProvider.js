@@ -6,5 +6,6 @@ ss_IFormatProvider.prototype = {
 	getFormat: null
 };
 
+ss_IFormatProvider.__typeName = 'ss.IFormatProvider';
 ss.IFormatProvider = ss_IFormatProvider;
 ss.initInterface(ss_IFormatProvider);

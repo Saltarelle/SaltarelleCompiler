@@ -10,11 +10,9 @@ namespace System.Globalization {
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class NumberFormatInfo : IFormatProvider {
-
 		private NumberFormatInfo() {
 		}
 
-		[PreserveCase]
 		[IntrinsicProperty]
 		public static NumberFormatInfo InvariantInfo {
 			get {
@@ -183,8 +181,7 @@ namespace System.Globalization {
 			}
 		}
 
-		public object GetFormat(Type formatType)
-		{
+		public object GetFormat(Type formatType) {
 			return null;
 		}
 	}

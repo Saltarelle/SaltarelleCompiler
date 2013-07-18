@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using QUnit;
 
 namespace CoreLib.TestScript {
@@ -7,9 +8,10 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			var format = NumberFormatInfo.InvariantInfo;
-			Assert.AreEqual(typeof (NumberFormatInfo).FullName, "ss.NumberFormatInfo");
-			Assert.IsTrue(typeof (NumberFormatInfo).IsClass);
+			Assert.AreEqual(typeof(NumberFormatInfo).FullName, "ss.NumberFormatInfo");
+			Assert.IsTrue(typeof(NumberFormatInfo).IsClass);
 			Assert.IsTrue(format is NumberFormatInfo);
+			Assert.AreEqual(typeof(NumberFormatInfo).GetInterfaces(), new[] { typeof(IFormatProvider) });
 		}
 
 		[Test]

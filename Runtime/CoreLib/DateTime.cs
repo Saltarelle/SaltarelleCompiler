@@ -220,8 +220,8 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.parseExactDate({value}, {format}, {culture})")]
-		public static DateTime? ParseExact(string value, string format, CultureInfo culture) {
+		[InlineCode("{$System.Script}.parseExactDate({value}, {format}, {provider})")]
+		public static DateTime? ParseExact(string value, string format, IFormatProvider provider) {
 			return null;
 		}
 
@@ -230,8 +230,8 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.parseExactDateUTC({value}, {format}, {culture})")]
-		public static DateTime? ParseExactUtc(string value, string format, CultureInfo culture) {
+		[InlineCode("{$System.Script}.parseExactDateUTC({value}, {format}, {provider})")]
+		public static DateTime? ParseExactUtc(string value, string format, IFormatProvider provider) {
 			return null;
 		}
 

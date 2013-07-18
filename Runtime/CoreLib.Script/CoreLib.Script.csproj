@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="RegExp.js" />
     <Content Include="Guid.js" />
     <Content Include="ArgumentException.js" />
     <Content Include="ArgumentNullException.js" />
@@ -80,8 +81,6 @@
     <Content Include="StringBuilder.js" />
     <Content Include="TypeSystem.js" />
     <Content Include="Stopwatch.js" />
-    <Content Include="Environment.js" />
-    <Content Include="Convert.js" />
     <Content Include="IFormatProvider.js" />
   </ItemGroup>
   <ItemGroup>

@@ -2,41 +2,43 @@
 // NumberFormatInfo
 
 var ss_NumberFormatInfo = function#? DEBUG NumberFormatInfo$##() {
-    this.naNSymbol = 'NaN';
-    this.negativeSign = '-';
-    this.positiveSign = '+';
-    this.negativeInfinitySymbol = '-Infinity';
-    this.positiveInfinitySymbol = 'Infinity';
-
-    this.percentSymbol = '%';
-    this.percentGroupSizes = [3];
-    this.percentDecimalDigits = 2;
-    this.percentDecimalSeparator = '.';
-    this.percentGroupSeparator = ',';
-    this.percentPositivePattern = 0;
-    this.percentNegativePattern = 0;
-
-    this.currencySymbol = '$';
-    this.currencyGroupSizes = [3];
-    this.currencyDecimalDigits = 2;
-    this.currencyDecimalSeparator = '.';
-    this.currencyGroupSeparator = ',';
-    this.currencyNegativePattern = 0;
-    this.currencyPositivePattern = 0;
-
-    this.numberGroupSizes = [3];
-    this.numberDecimalDigits = 2;
-    this.numberDecimalSeparator = '.';
-    this.numberGroupSeparator = ',';
 };
 ss_NumberFormatInfo.prototype = {
-    getFormat:  function#? DEBUG NumberFormatInfo$getFormat##(type) {
-        return (ss.getTypeFullName(type) === 'ss.NumberFormatInfo') ? this : null;
-    }
+	getFormat:  function#? DEBUG NumberFormatInfo$getFormat##(type) {
+		return (type === ss_NumberFormatInfo) ? this : null;
+	}
 };
 
 ss_NumberFormatInfo.__typeName = 'ss.NumberFormatInfo';
 ss.NumberFormatInfo = ss_NumberFormatInfo;
-ss.initClass(ss_NumberFormatInfo);
+ss.initClass(ss_NumberFormatInfo, null, [ss_IFormatProvider]);
 
-ss_NumberFormatInfo.InvariantInfo = new ss_NumberFormatInfo();
+ss_NumberFormatInfo.invariantInfo = new ss_NumberFormatInfo();
+ss.shallowCopy({
+	naNSymbol: 'NaN',
+	negativeSign: '-',
+	positiveSign: '+',
+	negativeInfinitySymbol: '-Infinity',
+	positiveInfinitySymbol: 'Infinity',
+
+	percentSymbol: '%',
+	percentGroupSizes: [3],
+	percentDecimalDigits: 2,
+	percentDecimalSeparator: '.',
+	percentGroupSeparator: ',',
+	percentPositivePattern: 0,
+	percentNegativePattern: 0,
+
+	currencySymbol: '$',
+	currencyGroupSizes: [3],
+	currencyDecimalDigits: 2,
+	currencyDecimalSeparator: '.',
+	currencyGroupSeparator: ',',
+	currencyNegativePattern: 0,
+	currencyPositivePattern: 0,
+
+	numberGroupSizes: [3],
+	numberDecimalDigits: 2,
+	numberDecimalSeparator: '.',
+	numberGroupSeparator: ','
+}, ss_NumberFormatInfo.invariantInfo);

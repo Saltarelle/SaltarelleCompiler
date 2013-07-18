@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using QUnit;
 
 namespace CoreLib.TestScript {
@@ -9,6 +10,7 @@ namespace CoreLib.TestScript {
 			var format = DateTimeFormatInfo.InvariantInfo;
 			Assert.AreEqual(typeof (DateTimeFormatInfo).FullName, "ss.DateTimeFormatInfo");
 			Assert.IsTrue(typeof (DateTimeFormatInfo).IsClass);
+			Assert.AreEqual(typeof(DateTimeFormatInfo).GetInterfaces(), new[] { typeof(IFormatProvider) });
 			Assert.IsTrue(format is DateTimeFormatInfo);
 		}
 

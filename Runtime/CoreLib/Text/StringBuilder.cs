@@ -17,7 +17,6 @@ namespace System.Text {
 		/// <summary>
 		/// Initializes a new instance of the <see cref="StringBuilder"/> class.
 		/// </summary>
-		[ScriptName("")]
 		public StringBuilder() {
 		}
 
@@ -27,7 +26,6 @@ namespace System.Text {
 		/// <param name="initialText">
 		/// The string that is used to initialize the value of the instance.
 		/// </param>
-		[ScriptName("")]
 		public StringBuilder(string initialText) {
 		}
 
@@ -35,8 +33,8 @@ namespace System.Text {
 		/// Gets whether the <see cref="StringBuilder"/> object has any content.
 		/// </summary>
 		/// <returns>true if the StringBuilder instance contains no text; otherwise, false.</returns>
-		[IntrinsicProperty]
 		public bool IsEmpty {
+			[InlineCode("{this}.length === 0")]
 			get {
 				return false;
 			}

@@ -10,11 +10,9 @@ namespace System.Globalization {
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class DateTimeFormatInfo : IFormatProvider {
-
 		private DateTimeFormatInfo() {
 		}
 
-		[PreserveCase]
 		[IntrinsicProperty]
 		public static DateTimeFormatInfo InvariantInfo {
 			get {

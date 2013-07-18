@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using QUnit;
 
 namespace CoreLib.TestScript {
@@ -9,6 +10,7 @@ namespace CoreLib.TestScript {
 			var culture = CultureInfo.InvariantCulture;
 			Assert.AreEqual(typeof(CultureInfo).FullName, "ss.CultureInfo");
 			Assert.IsTrue(typeof(CultureInfo).IsClass);
+			Assert.AreEqual(typeof(CultureInfo).GetInterfaces(), new[] { typeof(IFormatProvider) });
 			Assert.IsTrue(culture is CultureInfo);
 		}
 

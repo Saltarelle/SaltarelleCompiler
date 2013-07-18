@@ -9,11 +9,7 @@ namespace System.Diagnostics {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public class Stopwatch {
-		[ScriptName("")]
-		public Stopwatch() {
-		}
-
-		public static readonly long Frequency = 10000000;
+		public static readonly long Frequency = 0;
 		public static readonly bool IsHighResolution = false;
 
 		public static Stopwatch StartNew() {
@@ -21,14 +17,17 @@ namespace System.Diagnostics {
 		}
 
 		public TimeSpan Elapsed {
+			[ScriptName("timeSpan")]
 			get { return default(TimeSpan); }
 		}
 
 		public long ElapsedMilliseconds {
+			[ScriptName("milliseconds")]
 			get { return 0; }
 		}
 
 		public long ElapsedTicks {
+			[ScriptName("ticks")]
 			get { return 0; }
 		}
 
@@ -47,6 +46,10 @@ namespace System.Diagnostics {
 		}
 
 		public void Restart() {
+		}
+
+		public static long GetTimestamp() {
+			return 0;
 		}
 	}
 }

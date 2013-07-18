@@ -16,10 +16,8 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class String : IComparable<String>, IEquatable<String> {
-		[ScriptName("")]
 		public String() {}
 
-		[ScriptName("")]
 		public String(String other) {}
 
 		[InlineCode("{$System.Script}.stringFromChar({$System.String}.fromCharCode({ch}), {count})")]
@@ -334,7 +332,7 @@ namespace System {
 			return 0;
 		}
 
-		[ExpandParams]
+		[InlineCode("{$System.Script}.localeFormatString({format}, {*values})")]
 		public static string LocaleFormat(string format, params object[] values) {
 			return null;
 		}
@@ -416,19 +414,18 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.splitWithCharsAndSplitOptions({this}, {separator})")]
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}))")]
 		public string[] Split(char[] separator) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.splitWithCharsAndSplitOptions({this}, {separator}, {options})")]
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), {options})")]
 		public string[] Split(char[] separator, StringSplitOptions options) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.splitWithStringsAndSplitOptions({this}, {separator}, {options})")]
-		public string[] Split(string[] separator, StringSplitOptions options)
-		{
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}, {options})")]
+		public string[] Split(string[] separator, StringSplitOptions options) {
 			return null;
 		}
 
@@ -606,9 +603,8 @@ namespace System {
 			return false;
 		}
 
-		[InlineCode("{this}.split('')")]
-		public char[] ToCharArray()
-		{
+		[InlineCode("{this}.split('').map(function(s) {{ return s.charCodeAt(0); }})")]
+		public char[] ToCharArray() {
 			return null;
 		}
 	}

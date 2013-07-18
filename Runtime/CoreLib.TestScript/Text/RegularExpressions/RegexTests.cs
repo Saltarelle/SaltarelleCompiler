@@ -75,5 +75,11 @@ namespace CoreLib.TestScript.Text.RegularExpressions {
 			Assert.IsTrue(new Regex("a|b").Test("xaybz"));
 			Assert.IsFalse(new Regex("c").Test("xaybz"));
 		}
+
+		[Test]
+		public static void EscapeWorks() {
+			var escaped = Regex.Escape(@"[-/\^$*+?.()|[]{}]");
+			Assert.AreEqual(escaped, @"\[\-\/\\\^\$\*\+\?\.\(\)\|\[\]\{\}\]");
+		}
 	}
 }

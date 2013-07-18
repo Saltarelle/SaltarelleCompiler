@@ -12,7 +12,6 @@ namespace System.Globalization {
 		private CultureInfo() {
 		}
 
-		[PreserveCase]
 		[IntrinsicProperty]
 		public static CultureInfo CurrentCulture {
 			get {
@@ -27,7 +26,6 @@ namespace System.Globalization {
 			}
 		}
 
-		[PreserveCase]
 		[IntrinsicProperty]
 		public static CultureInfo InvariantCulture {
 			get {

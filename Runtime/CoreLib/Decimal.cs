@@ -88,12 +88,12 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}._netFormatNumber({this}, {format}, {provider})")]
+		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider})")]
 		public string ToString(string format, IFormatProvider provider) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}._netFormatNumber({this}, 'G', {provider})")]
+		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G', {provider})")]
 		public string ToString(IFormatProvider provider) {
 			return null;
 		}
