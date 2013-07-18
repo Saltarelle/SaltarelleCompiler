@@ -1,3 +1,4 @@
+Custom class attributes no longer need to qualify nested classes (#224)
 Fixed issues with double and float constants misbehaving in minified scripts (#208)
 NoInlineAttribute can now be applied to const fields to prevent them from being inlined in minified scripts.
 BREAKING CHANGE: double.MinValue now returns the value expected in .net (approx -1.7e-308) instead of the one in JS (Number.MIN_VALUE = 5e-324). JsMinValue exists to return Number.MIN_VALUE.
