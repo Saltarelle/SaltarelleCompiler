@@ -16,11 +16,13 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
 	public struct Decimal : IComparable<Decimal>, IEquatable<Decimal>, IFormattable {
-		[ScriptName("MAX_VALUE")]
-		public const decimal MaxValue = 0;
+		[Obsolete("This number is not representable in Javascript", true)]
+		[NonScriptable]
+		public const decimal MaxValue = 79228162514264337593543950335m;
 
-		[ScriptName("MIN_VALUE")]
-		public const decimal MinValue = 0;
+		[Obsolete("This number is not representable in Javascript", true)]
+		[NonScriptable]
+		public const decimal MinValue = -79228162514264337593543950335m;
 
 		[InlineConstant]
 		public const decimal Zero = 0;

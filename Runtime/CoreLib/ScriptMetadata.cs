@@ -467,8 +467,16 @@ namespace System.Runtime.CompilerServices {
 		public ReflectableAttribute() {
 			Reflectable = true;
 		}
+
 		public ReflectableAttribute(bool reflectable) {
 			Reflectable = reflectable;
 		}
+	}
+
+	/// <summary>
+	/// Can be applied to a constant field to ensure that it will never be inlined, even in minified scripts.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field)]
+	public sealed class NoInlineAttribute : Attribute {
 	}
 }

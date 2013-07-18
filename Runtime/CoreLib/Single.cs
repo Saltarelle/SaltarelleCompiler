@@ -20,19 +20,22 @@ namespace System {
 		private Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		[ScriptName("MAX_VALUE")]
-		public const float MaxValue = 0;
+		[InlineConstant]
+		public const float MaxValue = (float)3.40282346638528859e+38;
 
-		[ScriptName("MIN_VALUE")]
-		public const float MinValue = 0;
+		[InlineConstant]
+		public const float MinValue = (float)-3.40282346638528859e+38;
 
-		[PreserveCase]
+		[InlineConstant]
+		public const float Epsilon = (float)1.40129846432482E-45;
+
+		[PreserveCase, NoInline]
 		public const float NaN = 0;
 
-		[ScriptName("NEGATIVE_INFINITY")]
+		[ScriptName("NEGATIVE_INFINITY"), NoInline]
 		public const float NegativeInfinity = 0;
 
-		[ScriptName("POSITIVE_INFINITY")]
+		[ScriptName("POSITIVE_INFINITY"), NoInline]
 		public const float PositiveInfinity = 0;
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]

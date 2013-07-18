@@ -1,3 +1,6 @@
+Fixed issues with double and float constants misbehaving in minified scripts (#208)
+NoInlineAttribute can now be applied to const fields to prevent them from being inlined in minified scripts.
+BREAKING CHANGE: double.MinValue now returns the value expected in .net (approx -1.7e-308) instead of the one in JS (Number.MIN_VALUE = 5e-324). JsMinValue exists to return Number.MIN_VALUE.
 Allow statements (any number of them) in inline code for methods returning void (#149)
 Enabled the use of JS reserved words as member names in inline code (#204)
 Fixed problem using anonymous methods in [Mixin] classes (#216)

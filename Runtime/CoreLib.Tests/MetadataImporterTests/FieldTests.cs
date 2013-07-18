@@ -359,5 +359,22 @@ public enum E {
 			Assert.That(f2.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
 			Assert.That(f2.Name, Is.EqualTo("Renamed"));
 		}
+
+		[Test]
+		public void NoInlineAttributeCausesConstantToNotBeInlinedInMinimizedScript() {
+			Prepare("public class C { [System.Runtime.CompilerServices.NoInline] public const int X = 0; }", minimizeNames: true);
+
+			var f1 = FindField("C.X");
+			Assert.That(f1.Type, Is.EqualTo(FieldScriptSemantics.ImplType.Field));
+			Assert.That(f1.Name, Is.EqualTo("x"));
+		}
+
+		[Test]
+		public void NoInlineAttributeCannotBeAppliedToNonConstField() {
+			Prepare("public class C1 { [System.Runtime.CompilerServices.NoInline] public static int X1 = 0; }", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Code == 7160 && m.FormattedMessage.Contains("C1.X1") && m.FormattedMessage.Contains("NoInlineAttribute")));
+		}
 	}
 }

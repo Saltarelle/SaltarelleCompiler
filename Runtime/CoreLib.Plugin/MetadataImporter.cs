@@ -1043,6 +1043,10 @@ namespace CoreLib.Plugin {
 					usedNames[name] = true;
 				}
 
+				if (AttributeReader.HasAttribute<NoInlineAttribute>(field) && !field.IsConst) {
+					Message(Messages._7160, field);
+				}
+
 				if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).IsNamedValues) {
 					string value = preferredName;
 					if (!nameSpecified) {	// This code handles the feature that it is possible to specify an invalid ScriptName for a member of a NamedValues enum, in which case that value has to be use as the constant value.
@@ -1057,7 +1061,7 @@ namespace CoreLib.Plugin {
 					// Fields of enums that are imported and have an explicit [ScriptName] are treated as normal fields.
 					_fieldSemantics[field] = FieldScriptSemantics.Field(name);
 				}
-				else if (name == null || (field.IsConst && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames))) {
+				else if (name == null || (field.IsConst && !AttributeReader.HasAttribute<NoInlineAttribute>(field) && (field.DeclaringType.Kind == TypeKind.Enum || _minimizeNames))) {
 					object value = Saltarelle.Compiler.JSModel.Utils.ConvertToDoubleOrStringOrBoolean(field.ConstantValue);
 					if (value is bool)
 						_fieldSemantics[field] = FieldScriptSemantics.BooleanConstant((bool)value, name);
