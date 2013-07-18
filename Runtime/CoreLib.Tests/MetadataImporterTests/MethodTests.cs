@@ -1864,5 +1864,13 @@ class C1 {
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("EnumerateAsArrayAttribute") && m.Contains("GetEnumerator")));
 		}
+
+		[Test]
+		public void DoSomething() {
+			Prepare(@"
+interface I { [System.Runtime.CompilerServices.NonScriptable] void M(); }
+class B : I { public abstract void M() {} }
+class D : B { public override void M() {} }");
+		}
 	}
 }

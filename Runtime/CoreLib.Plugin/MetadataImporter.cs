@@ -893,7 +893,7 @@ namespace CoreLib.Plugin {
 						if (eaa != null)
 							semantics = semantics.WithEnumerateAsArray();
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
-							var errorMethod = method.ImplementedInterfaceMembers.FirstOrDefault(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition).Name != semantics.Name);
+							var errorMethod = interfaceImplementations.FirstOrDefault(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition).Name != semantics.Name);
 							if (errorMethod != null) {
 								Message(Messages._7134, method, errorMethod.FullName);
 							}
@@ -907,18 +907,18 @@ namespace CoreLib.Plugin {
 							Message(Messages._7135, method);
 						}
 
-						var candidateNames = method.ImplementedInterfaceMembers
-						                           .Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition))
-						                           .Select(s => s.Type == MethodScriptSemantics.ImplType.NormalMethod ? s.Name : (s.Type == MethodScriptSemantics.ImplType.InlineCode ? s.GeneratedMethodName : null))
-						                           .Where(name => name != null)
-						                           .Distinct();
+						var candidateNames = interfaceImplementations
+						                     .Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition))
+						                     .Select(s => s.Type == MethodScriptSemantics.ImplType.NormalMethod ? s.Name : (s.Type == MethodScriptSemantics.ImplType.InlineCode ? s.GeneratedMethodName : null))
+						                     .Where(name => name != null)
+						                     .Distinct();
 
 						if (candidateNames.Count() > 1) {
 							Message(Messages._7136, method);
 						}
 
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
-						var sem = method.ImplementedInterfaceMembers.Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition)).FirstOrDefault(x => x.Type != MethodScriptSemantics.ImplType.NotUsableFromScript) ?? MethodScriptSemantics.NotUsableFromScript();
+						var sem = interfaceImplementations.Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition)).FirstOrDefault() ?? MethodScriptSemantics.NotUsableFromScript();
 						if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
 							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
