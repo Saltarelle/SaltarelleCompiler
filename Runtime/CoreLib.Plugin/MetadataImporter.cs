@@ -30,25 +30,25 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
-		private Dictionary<ITypeDefinition, DelegateScriptSemantics> _delegateSemantics;
-		private Dictionary<ITypeDefinition, HashSet<string>> _instanceMemberNamesByType;
-		private Dictionary<ITypeDefinition, HashSet<string>> _staticMemberNamesByType;
-		private Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
-		private Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
-		private Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
-		private Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
-		private Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
-		private Dictionary<IProperty, string> _propertyBackingFieldNames;
-		private Dictionary<IEvent, string> _eventBackingFieldNames;
-		private Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
-		private Dictionary<Tuple<IAssembly, string>, int> _internalTypeCountPerAssemblyAndNamespace;
-		private HashSet<IMember> _ignoredMembers;
-		private IErrorReporter _errorReporter;
-		private IType _systemObject;
-		private ICompilation _compilation;
+		private readonly Dictionary<ITypeDefinition, TypeSemantics> _typeSemantics;
+		private readonly Dictionary<ITypeDefinition, DelegateScriptSemantics> _delegateSemantics;
+		private readonly Dictionary<ITypeDefinition, HashSet<string>> _instanceMemberNamesByType;
+		private readonly Dictionary<ITypeDefinition, HashSet<string>> _staticMemberNamesByType;
+		private readonly Dictionary<IMethod, MethodScriptSemantics> _methodSemantics;
+		private readonly Dictionary<IProperty, PropertyScriptSemantics> _propertySemantics;
+		private readonly Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
+		private readonly Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
+		private readonly Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
+		private readonly Dictionary<IProperty, string> _propertyBackingFieldNames;
+		private readonly Dictionary<IEvent, string> _eventBackingFieldNames;
+		private readonly Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
+		private readonly Dictionary<Tuple<IAssembly, string>, int> _internalTypeCountPerAssemblyAndNamespace;
+		private readonly HashSet<IMember> _ignoredMembers;
+		private readonly IErrorReporter _errorReporter;
+		private readonly IType _systemObject;
+		private readonly ICompilation _compilation;
 
-		private bool _minimizeNames;
+		private readonly bool _minimizeNames;
 
 		public MetadataImporter(IErrorReporter errorReporter, ICompilation compilation, CompilerOptions options) {
 			_errorReporter = errorReporter;
@@ -352,7 +352,7 @@ namespace CoreLib.Plugin {
 				for (int j = i + 1; j < baseMembersByType.Count; j++) {
 					var b2 = baseMembersByType[j];
 					if (!b.Type.GetAllBaseTypeDefinitions().Contains(b2.Type) && !b2.Type.GetAllBaseTypeDefinitions().Contains(b.Type)) {
-						foreach (var dup in b.MemberNames.Where(x => b2.MemberNames.Contains(x))) {
+						foreach (var dup in b.MemberNames.Where(b2.MemberNames.Contains)) {
 							Message(Messages._7018, typeDefinition, b.Type.FullName, b2.Type.FullName, dup);
 						}
 					}
@@ -572,12 +572,7 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else if (preferredName == "") {
-				if (property.IsIndexer) {
-					Message(Messages._7104, property);
-				}
-				else {
-					Message(Messages._7105, property);
-				}
+				Message(property.IsIndexer ? Messages._7104 : Messages._7105, property);
 				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
 			}
