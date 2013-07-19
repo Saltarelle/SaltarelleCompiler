@@ -4,6 +4,7 @@
 if (typeof(global) === "undefined")
 	global = window;
 (function(global) {
+"use strict";
 var ss = {};
 
 ss.isUndefined = function#? DEBUG ss$isUndefined##(o) {
