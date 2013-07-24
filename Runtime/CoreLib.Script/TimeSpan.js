@@ -9,6 +9,8 @@ ss_TimeSpan.getDefaultValue = ss_TimeSpan.createInstance = function#? DEBUG Time
 	return new ss_TimeSpan(0);
 };
 
+ss_TimeSpan.zero = new ss_TimeSpan(0);
+
 ss_TimeSpan.prototype = {
 	compareTo: function#? DEBUG TimeSpan$compareTo##(other) {
 		return this.ticks < other.ticks ? -1 : (this.ticks > other.ticks ? 1 : 0);

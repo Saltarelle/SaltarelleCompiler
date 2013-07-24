@@ -33,6 +33,13 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.AreEqual(ts.Ticks, 0);
 		}
 
+        [Test]
+        public void ZeroWorks()
+        {
+            var ts = TimeSpan.Zero;
+            Assert.AreEqual(ts.Ticks, 0);
+        }
+
 		[Test]
 		public void CreatingInstanceReturnsTimeSpanWithZeroValue() {
 			var ts = Activator.CreateInstance<TimeSpan>();
