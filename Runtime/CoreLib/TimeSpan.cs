@@ -15,7 +15,7 @@ namespace System {
 		[InlineConstant]
 		public const long TicksPerDay = 864000000000L;
 
-	    public static readonly TimeSpan Zero = default(TimeSpan);
+		public static TimeSpan Zero { [InlineCode("new {$System.TimeSpan}(0)")] get { return default(TimeSpan); } }
 		//TODO
 		//public static readonly TimeSpan MinValue = new TimeSpan(long.MinValue);
 		//public static readonly TimeSpan MaxValue = new TimeSpan(long.MaxValue);
