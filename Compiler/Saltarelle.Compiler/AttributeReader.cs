@@ -45,7 +45,7 @@ namespace Saltarelle.Compiler {
 			var ctorArgs = new object[attr.PositionalArguments.Count];
 			for (int i = 0; i < attr.PositionalArguments.Count; i++) {
 				var arg = attr.PositionalArguments[i];
-				ctorArgTypes[i] = Type.GetType(arg.Type.FullName);
+				ctorArgTypes[i] = FindType(arg.Type.FullName);
 				ctorArgs[i]     = ChangeType(arg.ConstantValue, ctorArgTypes[i]);
 			}
 			var ctor = typeof(TAttribute).GetConstructor(ctorArgTypes);

@@ -1,3 +1,4 @@
+Added [DefaultMemberReflectabilityAttribute] to specify which members are reflectable by default (#180)
 Added types Stopwatch and IFormatProvider, and added some overloads of String.Split (thanks to Marcel F)
 typeof(int?).GetGenericArguments() now returns int as in .net. Also improved the use of nullables as type arguments (#192)
 Added missing TimeSpan members (#215)

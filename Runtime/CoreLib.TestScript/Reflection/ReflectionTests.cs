@@ -3,6 +3,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using QUnit;
 
+#pragma warning disable 169, 649
+
 namespace CoreLib.TestScript.Reflection {
 	[TestFixture]
 	public class ReflectionTests {
@@ -247,6 +249,102 @@ namespace CoreLib.TestScript.Reflection {
 			[PreserveName] public string s;
 			[PreserveName] public string v;
 			[Reflectable] public string this[int x, string s] { [InlineCode("{this}.v + ' ' + {x} + ' ' + {s}")] get { return null; } [InlineCode("(function(t, x, s) {{ t.x = x; t.s = s; t.v = {value}; }})({this}, {x}, {s})")] set {} }
+		}
+
+		[DefaultMemberReflectability(MemberReflectability.None)]
+		public class C25 {
+			public int A1;
+			[Reflectable] public int B1;
+			[Reflectable(true)] public int C1;
+			[Reflectable(false)] public int D1;
+			internal int A2;
+			[Reflectable] internal int B2;
+			[Reflectable(true)] internal int C2;
+			[Reflectable(false)] internal int D2;
+			protected int A3;
+			[Reflectable] protected int B3;
+			[Reflectable(true)] protected int C3;
+			[Reflectable(false)] protected int D3;
+			protected internal int A4;
+			[Reflectable] protected internal int B4;
+			[Reflectable(true)] protected internal int C4;
+			[Reflectable(false)] protected internal int D4;
+			private int A5;
+			[Reflectable] private int B5;
+			[Reflectable(true)] private int C5;
+			[Reflectable(false)] private int D5;
+		}
+
+		[DefaultMemberReflectability(MemberReflectability.PublicAndProtected)]
+		public class C26 {
+			public int A1;
+			[Reflectable] public int B1;
+			[Reflectable(true)] public int C1;
+			[Reflectable(false)] public int D1;
+			internal int A2;
+			[Reflectable] internal int B2;
+			[Reflectable(true)] internal int C2;
+			[Reflectable(false)] internal int D2;
+			protected int A3;
+			[Reflectable] protected int B3;
+			[Reflectable(true)] protected int C3;
+			[Reflectable(false)] protected int D3;
+			protected internal int A4;
+			[Reflectable] protected internal int B4;
+			[Reflectable(true)] protected internal int C4;
+			[Reflectable(false)] protected internal int D4;
+			private int A5;
+			[Reflectable] private int B5;
+			[Reflectable(true)] private int C5;
+			[Reflectable(false)] private int D5;
+		}
+
+		[DefaultMemberReflectability(MemberReflectability.NonPrivate)]
+		public class C27 {
+			public int A1;
+			[Reflectable] public int B1;
+			[Reflectable(true)] public int C1;
+			[Reflectable(false)] public int D1;
+			internal int A2;
+			[Reflectable] internal int B2;
+			[Reflectable(true)] internal int C2;
+			[Reflectable(false)] internal int D2;
+			protected int A3;
+			[Reflectable] protected int B3;
+			[Reflectable(true)] protected int C3;
+			[Reflectable(false)] protected int D3;
+			protected internal int A4;
+			[Reflectable] protected internal int B4;
+			[Reflectable(true)] protected internal int C4;
+			[Reflectable(false)] protected internal int D4;
+			private int A5;
+			[Reflectable] private int B5;
+			[Reflectable(true)] private int C5;
+			[Reflectable(false)] private int D5;
+		}
+
+		[DefaultMemberReflectability(MemberReflectability.All)]
+		public class C28 {
+			public int A1;
+			[Reflectable] public int B1;
+			[Reflectable(true)] public int C1;
+			[Reflectable(false)] public int D1;
+			internal int A2;
+			[Reflectable] internal int B2;
+			[Reflectable(true)] internal int C2;
+			[Reflectable(false)] internal int D2;
+			protected int A3;
+			[Reflectable] protected int B3;
+			[Reflectable(true)] protected int C3;
+			[Reflectable(false)] protected int D3;
+			protected internal int A4;
+			[Reflectable] protected internal int B4;
+			[Reflectable(true)] protected internal int C4;
+			[Reflectable(false)] protected internal int D4;
+			private int A5;
+			[Reflectable] private int B5;
+			[Reflectable(true)] private int C5;
+			[Reflectable(false)] private int D5;
 		}
 
 		[Test]
@@ -1441,6 +1539,98 @@ namespace CoreLib.TestScript.Reflection {
 			TestMemberAttribute(typeof(C18).GetEvent("E").RemoveMethod, 9);
 
 			Assert.AreEqual(typeof(C2).GetMethod("M1").GetCustomAttributes().Length, 0);
+		}
+
+		[Test]
+		public void MembersReflectableAttributeWorks() {
+			var c25 = typeof(C25);
+			var c26 = typeof(C26);
+			var c27 = typeof(C27);
+			var c28 = typeof(C28);
+
+			Assert.IsNull   (c25.GetField("A1"), "C25.A1");
+			Assert.IsNotNull(c25.GetField("B1"), "C25.B1");
+			Assert.IsNotNull(c25.GetField("C1"), "C25.C1");
+			Assert.IsNull   (c25.GetField("D1"), "C25.D1");
+			Assert.IsNull   (c25.GetField("A2"), "C25.A2");
+			Assert.IsNotNull(c25.GetField("B2"), "C25.B2");
+			Assert.IsNotNull(c25.GetField("C2"), "C25.C2");
+			Assert.IsNull   (c25.GetField("D2"), "C25.D2");
+			Assert.IsNull   (c25.GetField("A3"), "C25.A3");
+			Assert.IsNotNull(c25.GetField("B3"), "C25.B3");
+			Assert.IsNotNull(c25.GetField("C3"), "C25.C3");
+			Assert.IsNull   (c25.GetField("D3"), "C25.D3");
+			Assert.IsNull   (c25.GetField("A4"), "C25.A4");
+			Assert.IsNotNull(c25.GetField("B4"), "C25.B4");
+			Assert.IsNotNull(c25.GetField("C4"), "C25.C4");
+			Assert.IsNull   (c25.GetField("D4"), "C25.D4");
+			Assert.IsNull   (c25.GetField("A5"), "C25.A5");
+			Assert.IsNotNull(c25.GetField("B5"), "C25.B5");
+			Assert.IsNotNull(c25.GetField("C5"), "C25.C5");
+			Assert.IsNull   (c25.GetField("D5"), "C25.D5");
+
+			Assert.IsNotNull(c26.GetField("A1"), "C26.A1");
+			Assert.IsNotNull(c26.GetField("B1"), "C26.B1");
+			Assert.IsNotNull(c26.GetField("C1"), "C26.C1");
+			Assert.IsNull   (c26.GetField("D1"), "C26.D1");
+			Assert.IsNull   (c26.GetField("A2"), "C26.A2");
+			Assert.IsNotNull(c26.GetField("B2"), "C26.B2");
+			Assert.IsNotNull(c26.GetField("C2"), "C26.C2");
+			Assert.IsNull   (c26.GetField("D2"), "C26.D2");
+			Assert.IsNotNull(c26.GetField("A3"), "C26.A3");
+			Assert.IsNotNull(c26.GetField("B3"), "C26.B3");
+			Assert.IsNotNull(c26.GetField("C3"), "C26.C3");
+			Assert.IsNull   (c26.GetField("D3"), "C26.D3");
+			Assert.IsNotNull(c26.GetField("A4"), "C26.A4");
+			Assert.IsNotNull(c26.GetField("B4"), "C26.B4");
+			Assert.IsNotNull(c26.GetField("C4"), "C26.C4");
+			Assert.IsNull   (c26.GetField("D4"), "C26.D4");
+			Assert.IsNull   (c26.GetField("A5"), "C26.A5");
+			Assert.IsNotNull(c26.GetField("B5"), "C26.B5");
+			Assert.IsNotNull(c26.GetField("C5"), "C26.C5");
+			Assert.IsNull   (c26.GetField("D5"), "C26.D5");
+
+			Assert.IsNotNull(c27.GetField("A1"), "C27.A1");
+			Assert.IsNotNull(c27.GetField("B1"), "C27.B1");
+			Assert.IsNotNull(c27.GetField("C1"), "C27.C1");
+			Assert.IsNull   (c27.GetField("D1"), "C27.D1");
+			Assert.IsNotNull(c27.GetField("A2"), "C27.A2");
+			Assert.IsNotNull(c27.GetField("B2"), "C27.B2");
+			Assert.IsNotNull(c27.GetField("C2"), "C27.C2");
+			Assert.IsNull   (c27.GetField("D2"), "C27.D2");
+			Assert.IsNotNull(c27.GetField("A3"), "C27.A3");
+			Assert.IsNotNull(c27.GetField("B3"), "C27.B3");
+			Assert.IsNotNull(c27.GetField("C3"), "C27.C3");
+			Assert.IsNull   (c27.GetField("D3"), "C27.D3");
+			Assert.IsNotNull(c27.GetField("A4"), "C27.A4");
+			Assert.IsNotNull(c27.GetField("B4"), "C27.B4");
+			Assert.IsNotNull(c27.GetField("C4"), "C27.C4");
+			Assert.IsNull   (c27.GetField("D4"), "C27.D4");
+			Assert.IsNull   (c27.GetField("A5"), "C27.A5");
+			Assert.IsNotNull(c27.GetField("B5"), "C27.B5");
+			Assert.IsNotNull(c27.GetField("C5"), "C27.C5");
+			Assert.IsNull   (c27.GetField("D5"), "C27.D5");
+
+			Assert.IsNotNull(c28.GetField("A1"), "C28.A1");
+			Assert.IsNotNull(c28.GetField("B1"), "C28.B1");
+			Assert.IsNotNull(c28.GetField("C1"), "C28.C1");
+			Assert.IsNull   (c28.GetField("D1"), "C28.D1");
+			Assert.IsNotNull(c28.GetField("A2"), "C28.A2");
+			Assert.IsNotNull(c28.GetField("B2"), "C28.B2");
+			Assert.IsNotNull(c28.GetField("C2"), "C28.C2");
+			Assert.IsNull   (c28.GetField("D2"), "C28.D2");
+			Assert.IsNotNull(c28.GetField("A3"), "C28.A3");
+			Assert.IsNotNull(c28.GetField("B3"), "C28.B3");
+			Assert.IsNotNull(c28.GetField("C3"), "C28.C3");
+			Assert.IsNull   (c28.GetField("D3"), "C28.D3");
+			Assert.IsNotNull(c28.GetField("A4"), "C28.A4");
+			Assert.IsNotNull(c28.GetField("B4"), "C28.B4");
+			Assert.IsNotNull(c28.GetField("C4"), "C28.C4");
+			Assert.IsNull   (c28.GetField("D4"), "C28.D4");
+			Assert.IsNotNull(c28.GetField("A5"), "C28.A5");
+			Assert.IsNotNull(c28.GetField("B5"), "C28.B5");
+			Assert.IsNotNull(c28.GetField("C5"), "C28.C5");
+			Assert.IsNull   (c28.GetField("D5"), "C28.D5");
 		}
 	}
 }
