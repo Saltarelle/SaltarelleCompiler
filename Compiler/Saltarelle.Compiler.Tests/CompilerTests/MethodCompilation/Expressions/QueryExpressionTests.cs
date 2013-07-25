@@ -262,6 +262,29 @@ void M() {
 ");
 		}
 
+		[Test, Ignore("NRefactory bug")]
+		public void JoinWithTypeCast() {
+			AssertCorrect(@"
+class CI { public int keyi, valuei; }
+class CJ { public int keyj, valuej; }
+
+void M() {
+	CI[] arr1;
+	object[] arr2;
+	// BEGIN
+	var result = from i in arr1 join CJ j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
+	// END
+}",
+@"	var $result = $arr1.$Join($arr2.$Cast(), function($i) {
+		return $i.$keyi;
+	}, function($j) {
+		return $j.$keyj;
+	}, function($i2, $j2) {
+		return $i2.$valuei + $j2.$valuej;
+	});
+");
+		}
+
 		[Test]
 		public void JoinFollowedBySelect() {
 			AssertCorrect(@"
