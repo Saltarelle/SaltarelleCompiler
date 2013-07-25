@@ -410,7 +410,8 @@ namespace System {
 			return null;
 		}
 
-		public string[] Split(string separator, int limit) {
+		[ScriptName("split")]
+		public string[] JsSplit(string separator, int limit) {
 			return null;
 		}
 
@@ -419,18 +420,33 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), {options})")]
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), {limit})")]
+		public string[] Split(char[] separator, int limit) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), {limit}, {options})")]
+		public string[] Split(char[] separator, int limit, StringSplitOptions options) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), null, {options})")]
 		public string[] Split(char[] separator, StringSplitOptions options) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netSplit({this}, {separator}, {options})")]
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}, null, {options})")]
 		public string[] Split(string[] separator, StringSplitOptions options) {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}, {limit}, {options})")]
+		public string[] Split(string[] separator, int limit, StringSplitOptions options) {
+			return null;
+		}
+
 		[InlineCode("{this}.split({$System.String}.fromCharCode({separator}), {limit})")]
-		public string[] Split(char separator, int limit) {
+		public string[] JsSplit(char separator, int limit) {
 			return null;
 		}
 
@@ -438,7 +454,8 @@ namespace System {
 			return null;
 		}
 
-		public string[] Split(Regex regex, int limit) {
+		[ScriptName("split")]
+		public string[] JsSplit(Regex regex, int limit) {
 			return null;
 		}
 

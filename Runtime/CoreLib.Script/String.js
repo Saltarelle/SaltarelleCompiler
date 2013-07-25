@@ -1,10 +1,24 @@
 ///////////////////////////////////////////////////////////////////////////////
 // String Extensions
-ss.netSplit = function#? DEBUG ss$netSplit##(s, strings, options) {
-	var result = s.split(new RegExp(strings.map(ss.regexpEscape).join('|')));
-	if (options === 1)
-		result = result.filter(function (s) { return s.length > 0; });
-	return result;
+ss.netSplit = function#? DEBUG ss$netSplit##(s, strings, limit, options) {
+	var re = new RegExp(strings.map(ss.regexpEscape).join('|'), 'g'), res = [], m, i;
+	for (i = 0;; i = re.lastIndex) {
+		if (m = re.exec(s)) {
+			if (options !== 1 || m.index > i) {
+				if (res.length === limit - 1) {
+					res.push(s.substr(i));
+					return res;
+				}
+				else
+					res.push(s.substring(i, m.index));
+			}
+		}
+		else {
+			if (options !== 1 || i !== s.length)
+				res.push(s.substr(i));
+			return res;
+		}
+	}
 };
 
 ss.compareStrings = function#? DEBUG ss$compareStrings##(s1, s2, ignoreCase) {
