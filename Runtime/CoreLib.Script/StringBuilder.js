@@ -5,7 +5,10 @@ var ss_StringBuilder = function#? DEBUG StringBuilder$##(s) {
 	this._parts = (ss.isValue(s) && s != '') ? [s] : [];
 	this.length = ss.isValue(s) ? s.length : 0;
 }
-ss_StringBuilder.prototype = {
+
+ss_StringBuilder.__typeName = 'ss.StringBuilder';
+ss.StringBuilder = ss_StringBuilder;
+ss.initClass(ss_StringBuilder, {
 	append: function#? DEBUG StringBuilder$append##(o) {
 		if (ss.isValue(o)) {
 			var s = o.toString();
@@ -37,8 +40,4 @@ ss_StringBuilder.prototype = {
 	toString: function#? DEBUG StringBuilder$toString##() {
 		return this._parts.join('');
 	}
-};
-
-ss_StringBuilder.__typeName = 'ss.StringBuilder';
-ss.StringBuilder = ss_StringBuilder;
-ss.initClass(ss_StringBuilder);
+});

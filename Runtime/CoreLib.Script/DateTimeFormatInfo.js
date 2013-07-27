@@ -3,15 +3,14 @@
 
 var ss_DateTimeFormatInfo = function#? DEBUG DateTimeFormatInfo$##() {
 };
-ss_DateTimeFormatInfo.prototype = {
-	getFormat: function#? DEBUG DateTimeFormatInfo$getFormat##(type) {
-		return type === ss_DateTimeFormatInfo ? this : null;
-	}
-};
 
 ss_DateTimeFormatInfo.__typeName = 'ss.DateTimeFormatInfo';
 ss.DateTimeFormatInfo = ss_DateTimeFormatInfo;
-ss.initClass(ss_DateTimeFormatInfo, null, [ss_IFormatProvider]);
+ss.initClass(ss_DateTimeFormatInfo, {
+	getFormat: function#? DEBUG DateTimeFormatInfo$getFormat##(type) {
+		return type === ss_DateTimeFormatInfo ? this : null;
+	}
+}, null, [ss_IFormatProvider]);
 
 ss_DateTimeFormatInfo.invariantInfo = new ss_DateTimeFormatInfo();
 ss.shallowCopy({

@@ -9,7 +9,9 @@ ss_TimeSpan.getDefaultValue = ss_TimeSpan.createInstance = function#? DEBUG Time
 	return new ss_TimeSpan(0);
 };
 
-ss_TimeSpan.prototype = {
+ss_TimeSpan.__typeName = 'ss.TimeSpan';
+ss.TimeSpan = ss_TimeSpan;
+ss.initClass(ss_TimeSpan, {
 	compareTo: function#? DEBUG TimeSpan$compareTo##(other) {
 		return this.ticks < other.ticks ? -1 : (this.ticks > other.ticks ? 1 : 0);
 	},
@@ -38,9 +40,5 @@ ss_TimeSpan.prototype = {
 			result += '.' + d(ticks, 7);
 		return result;
 	}
-};
-
-ss_TimeSpan.__typeName = 'ss.TimeSpan';
-ss.TimeSpan = ss_TimeSpan;
-ss.initClass(ss_TimeSpan, null, [ss_IComparable, ss_IEquatable]);
+}, null, [ss_IComparable, ss_IEquatable]);
 ss_TimeSpan.__class = false;

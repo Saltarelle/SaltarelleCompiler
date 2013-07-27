@@ -5,7 +5,10 @@ var ss_TaskCompletionSource = function#? DEBUG TaskCompletionSource$##() {
 	this.task = new ss_Task();
 	this.task.status = 3;
 };
-ss_TaskCompletionSource.prototype = {
+
+ss_TaskCompletionSource.__typeName = 'ss.TaskCompletionSource';
+ss.TaskCompletionSource = ss_TaskCompletionSource;
+ss.initClass(ss_TaskCompletionSource, {
 	setCanceled: function#? DEBUG TaskCompletionSource$setCanceled##() {
 		if (!this.task._cancel())
 			throw new ss_InvalidOperationException('Task was already completed.');
@@ -32,8 +35,4 @@ ss_TaskCompletionSource.prototype = {
 		}
 		return this.task._fail(exception);
 	}
-};
-
-ss_TaskCompletionSource.__typeName = 'ss.TaskCompletionSource';
-ss.TaskCompletionSource = ss_TaskCompletionSource;
-ss.initClass(ss_TaskCompletionSource);
+});

@@ -3,15 +3,14 @@
 
 var ss_NumberFormatInfo = function#? DEBUG NumberFormatInfo$##() {
 };
-ss_NumberFormatInfo.prototype = {
-	getFormat:  function#? DEBUG NumberFormatInfo$getFormat##(type) {
-		return (type === ss_NumberFormatInfo) ? this : null;
-	}
-};
 
 ss_NumberFormatInfo.__typeName = 'ss.NumberFormatInfo';
 ss.NumberFormatInfo = ss_NumberFormatInfo;
-ss.initClass(ss_NumberFormatInfo, null, [ss_IFormatProvider]);
+ss.initClass(ss_NumberFormatInfo, {
+	getFormat:  function#? DEBUG NumberFormatInfo$getFormat##(type) {
+		return (type === ss_NumberFormatInfo) ? this : null;
+	}
+}, null, [ss_IFormatProvider]);
 
 ss_NumberFormatInfo.invariantInfo = new ss_NumberFormatInfo();
 ss.shallowCopy({

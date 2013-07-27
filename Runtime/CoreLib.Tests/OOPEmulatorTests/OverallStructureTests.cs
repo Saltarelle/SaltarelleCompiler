@@ -62,7 +62,7 @@ global.OuterNamespace.InnerNamespace2 = global.OuterNamespace.InnerNamespace2 ||
 var $OuterNamespace_InnerNamespace_SomeEnum = function() {
 };
 $OuterNamespace_InnerNamespace_SomeEnum.__typeName = 'OuterNamespace.InnerNamespace.SomeEnum';
-$OuterNamespace_InnerNamespace_SomeEnum.prototype = { value1: 1, value2: 2, value3: 3 };
+var $OuterNamespace_InnerNamespace_SomeEnum$$members = { value1: 1, value2: 2, value3: 3 };
 global.OuterNamespace.InnerNamespace.SomeEnum = $OuterNamespace_InnerNamespace_SomeEnum;
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeType
@@ -70,7 +70,7 @@ var $OuterNamespace_InnerNamespace_SomeType = function(a) {
 	a = 0;
 };
 $OuterNamespace_InnerNamespace_SomeType.__typeName = 'OuterNamespace.InnerNamespace.SomeType';
-$OuterNamespace_InnerNamespace_SomeType.prototype = {
+var $OuterNamespace_InnerNamespace_SomeType$$members = {
 	method1: function(b) {
 		b = 0;
 	},
@@ -88,7 +88,7 @@ var $OuterNamespace_InnerNamespace_SomeType2 = function(a1) {
 	a1 = 0;
 };
 $OuterNamespace_InnerNamespace_SomeType2.__typeName = 'OuterNamespace.InnerNamespace.SomeType2';
-$OuterNamespace_InnerNamespace_SomeType2.prototype = {
+var $OuterNamespace_InnerNamespace_SomeType2$$members = {
 	method1: function(b1) {
 		b1 = 0;
 	}
@@ -102,7 +102,7 @@ global.OuterNamespace.InnerNamespace.SomeType2 = $OuterNamespace_InnerNamespace_
 var $OuterNamespace_InnerNamespace2_OtherInterface = function() {
 };
 $OuterNamespace_InnerNamespace2_OtherInterface.__typeName = 'OuterNamespace.InnerNamespace2.OtherInterface';
-$OuterNamespace_InnerNamespace2_OtherInterface.prototype = { interfaceMethod: null };
+var $OuterNamespace_InnerNamespace2_OtherInterface$$members = { interfaceMethod: null };
 global.OuterNamespace.InnerNamespace2.OtherInterface = $OuterNamespace_InnerNamespace2_OtherInterface;
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace2.OtherType
@@ -111,17 +111,17 @@ var $OuterNamespace_InnerNamespace2_OtherType = function(a2) {
 	a2 = 0;
 };
 $OuterNamespace_InnerNamespace2_OtherType.__typeName = 'OuterNamespace.InnerNamespace2.OtherType';
-$OuterNamespace_InnerNamespace2_OtherType.prototype = {
+var $OuterNamespace_InnerNamespace2_OtherType$$members = {
 	method2: function(b2) {
 		b2 = 0;
 	}
 };
 global.OuterNamespace.InnerNamespace2.OtherType = $OuterNamespace_InnerNamespace2_OtherType;
-{Script}.initEnum($OuterNamespace_InnerNamespace_SomeEnum);
-{Script}.initClass($OuterNamespace_InnerNamespace_SomeType);
-{Script}.initClass($OuterNamespace_InnerNamespace_SomeType2);
-{Script}.initInterface($OuterNamespace_InnerNamespace2_OtherInterface);
-{Script}.initClass($OuterNamespace_InnerNamespace2_OtherType, {SomeType2});
+{Script}.initEnum($OuterNamespace_InnerNamespace_SomeEnum, $OuterNamespace_InnerNamespace_SomeEnum$$members);
+{Script}.initClass($OuterNamespace_InnerNamespace_SomeType, $OuterNamespace_InnerNamespace_SomeType$$members);
+{Script}.initClass($OuterNamespace_InnerNamespace_SomeType2, $OuterNamespace_InnerNamespace_SomeType2$$members);
+{Script}.initInterface($OuterNamespace_InnerNamespace2_OtherInterface, $OuterNamespace_InnerNamespace2_OtherInterface$$members);
+{Script}.initClass($OuterNamespace_InnerNamespace2_OtherType, $OuterNamespace_InnerNamespace2_OtherType$$members, {SomeType2});
 var d1 = 0;
 var c2 = 0;
 ");
@@ -191,10 +191,10 @@ var $I1 = function() {
 };
 $I1.__typeName = 'I1';
 global.I1 = $I1;
-{Script}.initClass($C3);
-{Script}.initClass($C2, {C3});
-{Script}.initInterface($I1);
-{Script}.initClass($C1, {C2}, [{I1}]);
+{Script}.initClass($C3, {});
+{Script}.initClass($C2, {}, {C3});
+{Script}.initInterface($I1, {});
+{Script}.initClass($C1, {}, {C2}, [{I1}]);
 ");
 		}
 
@@ -225,9 +225,9 @@ var $I = function() {
 };
 $I.__typeName = 'I';
 global.I = $I;
-{Script}.initClass($B);
-{Script}.initInterface($I);
-{Script}.initClass($A, {B}, [{I}]);
+{Script}.initClass($B, {});
+{Script}.initInterface($I, {});
+{Script}.initClass($A, {}, {B}, [{I}]);
 ");
 		}
 
@@ -241,7 +241,7 @@ public sealed class C : GenericBase<object> {}");
 			
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("{Script}.initClass")).ToList();
 
-			Assert.That(actual, Is.EqualTo(new[] { "{Script}.initClass($Base);", "{Script}.initClass($EBase, {Base});", "{Script}.initClass($C, {Script}.makeGenericType({GenericBase}, [{Object}]));" }));
+			Assert.That(actual, Is.EqualTo(new[] { "{Script}.initClass($Base, {});", "{Script}.initClass($EBase, {}, {Base});", "{Script}.initClass($C, {}, {Script}.makeGenericType({GenericBase}, [{Object}]));" }));
 		}
 
 		[Test]
@@ -271,7 +271,7 @@ $MyClass.theEntryPoint = function() {
 	var x = 0;
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass);
+{Script}.initClass($MyClass, {});
 var a = 0;
 {MyClass}.theEntryPoint();
 ", entryPoint: "MyClass.Main");

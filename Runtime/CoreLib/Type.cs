@@ -80,7 +80,7 @@ namespace System {
 			return false;
 		}
 
-		[InlineCode("{$System.Script}.isSubclassOf({this}, {type})")]
+		[InlineCode("{this}.prototype instanceof {type}")]
 		public bool IsSubclassOf(Type type) {
 			return false;
 		}

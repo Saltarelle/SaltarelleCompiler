@@ -6,4 +6,4 @@ var ss_KeyNotFoundException = function#? DEBUG KeyNotFoundException$##(message, 
 };
 ss_KeyNotFoundException.__typeName = 'ss.KeyNotFoundException';
 ss.KeyNotFoundException = ss_KeyNotFoundException;
-ss.initClass(ss_KeyNotFoundException, ss_Exception);
+ss.initClass(ss_KeyNotFoundException, {}, ss_Exception);

@@ -5,7 +5,9 @@ var ss_ArrayEnumerator = function#? DEBUG ArrayEnumerator$##(array) {
 	this._array = array;
 	this._index = -1;
 };
-ss_ArrayEnumerator.prototype = {
+ss_ArrayEnumerator.__typeName = 'ss.ArrayEnumerator';
+ss.ArrayEnumerator = ss_ArrayEnumerator;
+ss.initClass(ss_ArrayEnumerator, {
 	moveNext: function#? DEBUG ArrayEnumerator$moveNext##() {
 		this._index++;
 		return (this._index < this._array.length);
@@ -20,8 +22,4 @@ ss_ArrayEnumerator.prototype = {
 	},
 	dispose: function#? DEBUG ArrayEnumerator$dispose##() {
 	}
-};
-
-ss_ArrayEnumerator.__typeName = 'ss.ArrayEnumerator';
-ss.ArrayEnumerator = ss_ArrayEnumerator;
-ss.initClass(ss_ArrayEnumerator, null, [ss_IEnumerator, ss_IDisposable]);
+}, null, [ss_IEnumerator, ss_IDisposable]);

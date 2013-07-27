@@ -18,9 +18,9 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
-$MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
+var $MyEnum$$members = { value1: 0, value2: 1, value3: 2 };
 global.MyEnum = $MyEnum;
-{Script}.initEnum($MyEnum);
+{Script}.initEnum($MyEnum, $MyEnum$$members);
 ");
 		}
 
@@ -37,9 +37,9 @@ global.SomeNamespace.InnerNamespace = global.SomeNamespace.InnerNamespace || {};
 var $SomeNamespace_InnerNamespace_MyEnum = function() {
 };
 $SomeNamespace_InnerNamespace_MyEnum.__typeName = 'SomeNamespace.InnerNamespace.MyEnum';
-$SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
+var $SomeNamespace_InnerNamespace_MyEnum$$members = { value1: 0, value2: 1, value3: 2 };
 global.SomeNamespace.InnerNamespace.MyEnum = $SomeNamespace_InnerNamespace_MyEnum;
-{Script}.initEnum($SomeNamespace_InnerNamespace_MyEnum);
+{Script}.initEnum($SomeNamespace_InnerNamespace_MyEnum, $SomeNamespace_InnerNamespace_MyEnum$$members);
 ");
 		}
 
@@ -53,9 +53,10 @@ global.SomeNamespace.InnerNamespace.MyEnum = $SomeNamespace_InnerNamespace_MyEnu
 var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
-$MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
+var $MyEnum$$members = { value1: 0, value2: 1, value3: 2 };
 global.MyEnum = $MyEnum;
-{Script}.initEnum($MyEnum, { enumFlags: true });
+{Script}.initEnum($MyEnum, $MyEnum$$members);
+{Script}.setMetadata($MyEnum, { enumFlags: true });
 ");
 		}
 
@@ -69,9 +70,9 @@ global.MyEnum = $MyEnum;
 var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
-$MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
+var $MyEnum$$members = { value1: 'value1', value2: 'value2', value3: 'value3' };
 global.MyEnum = $MyEnum;
-{Script}.initEnum($MyEnum);
+{Script}.initEnum($MyEnum, $MyEnum$$members);
 ");
 		}
 
@@ -85,8 +86,8 @@ global.MyEnum = $MyEnum;
 var $$MyEnum = function() {
 };
 $$MyEnum.__typeName = '$MyEnum';
-$$MyEnum.prototype = { $value1: 0, $value2: 1, $value3: 2 };
-{Script}.initEnum($$MyEnum);
+var $$MyEnum$$members = { $value1: 0, $value2: 1, $value3: 2 };
+{Script}.initEnum($$MyEnum, $$MyEnum$$members);
 ");
 		}
 	}

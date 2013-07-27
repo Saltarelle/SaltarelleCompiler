@@ -264,18 +264,18 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void IsSubclassOfWorks() {
-			Assert.IsFalse(typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(IsSubclassOfTypes.C1)));
-			Assert.IsTrue (typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(object)));
-			Assert.IsFalse(typeof(object).IsSubclassOf(typeof(IsSubclassOfTypes.C1)));
-			Assert.IsTrue (typeof(IsSubclassOfTypes.D1).IsSubclassOf(typeof(IsSubclassOfTypes.C1)));
-			Assert.IsFalse(typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(IsSubclassOfTypes.D1)));
-			Assert.IsTrue (typeof(IsSubclassOfTypes.D1).IsSubclassOf(typeof(object)));
-			Assert.IsTrue (typeof(IsSubclassOfTypes.D2<int>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)));
-			Assert.IsFalse(typeof(IsSubclassOfTypes.D2<string>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)));
-			Assert.IsFalse(typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<string>)));
-			Assert.IsTrue (typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)));
-			Assert.IsFalse(typeof(IsSubclassOfTypes.D2<>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<>)));
-			Assert.IsFalse(typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<>)));
+			Assert.IsFalse(typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(IsSubclassOfTypes.C1)), "#1");
+			Assert.IsTrue (typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(object)), "#2");
+			Assert.IsFalse(typeof(object).IsSubclassOf(typeof(IsSubclassOfTypes.C1)), "#3");
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D1).IsSubclassOf(typeof(IsSubclassOfTypes.C1)), "#4");
+			Assert.IsFalse(typeof(IsSubclassOfTypes.C1).IsSubclassOf(typeof(IsSubclassOfTypes.D1)), "#5");
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D1).IsSubclassOf(typeof(object)), "#6");
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D2<int>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)), "#7");
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D2<string>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)), "#8");
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<string>)), "#9");
+			Assert.IsTrue (typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<int>)), "#10");
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D2<>).IsSubclassOf(typeof(IsSubclassOfTypes.C2<>)), "#11");
+			Assert.IsFalse(typeof(IsSubclassOfTypes.D3).IsSubclassOf(typeof(IsSubclassOfTypes.C2<>)), "#12");
 		}
 
 		[Test]
@@ -479,7 +479,7 @@ namespace CoreLib.TestScript.Reflection {
 
 		public class ConstructingInstanceWithNamedConstructorTypes {
 			public class D {
-				public string GetMessage() { return "The message " + f; }
+				public virtual string GetMessage() { return "The message " + f; }
 			
 				private string f;
 			
@@ -488,13 +488,36 @@ namespace CoreLib.TestScript.Reflection {
 					f = "from ctor";
 				}
 			}
+
+			public class E : D {
+				public override string GetMessage() { return base.GetMessage() + g; }
+			
+				private string g;
+			
+				[ScriptName("myCtor")]
+				public E() {
+					g = " and derived ctor";
+				}
+			}
 		}
 
 		[Test]
 		public void ConstructingInstanceWithNamedConstructorWorks() {
 			var d = new ConstructingInstanceWithNamedConstructorTypes.D();
 			Assert.AreEqual(d.GetType(), typeof(ConstructingInstanceWithNamedConstructorTypes.D));
+			Assert.IsTrue((object)d is ConstructingInstanceWithNamedConstructorTypes.D);
 			Assert.AreEqual(d.GetMessage(), "The message from ctor");
+		}
+
+		[Test]
+		public void ConstructingInstanceWithNamedConstructorWorks2() {
+			var d = new ConstructingInstanceWithNamedConstructorTypes.E();
+			var t = d.GetType();
+			Assert.AreEqual(t, typeof(ConstructingInstanceWithNamedConstructorTypes.E), "#1");
+			Assert.AreEqual(t.BaseType, typeof(ConstructingInstanceWithNamedConstructorTypes.D), "#2");
+			Assert.IsTrue((object)d is ConstructingInstanceWithNamedConstructorTypes.E, "#3");
+			Assert.IsTrue((object)d is ConstructingInstanceWithNamedConstructorTypes.D, "#4");
+			Assert.AreEqual(d.GetMessage(), "The message from ctor and derived ctor");
 		}
 
 		public class BaseMethodInvocationTypes {
