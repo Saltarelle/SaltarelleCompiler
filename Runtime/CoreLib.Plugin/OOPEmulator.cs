@@ -160,11 +160,26 @@ namespace CoreLib.Plugin {
 			return method.TypeParameterNames.Count == 0 ? method.Definition : JsExpression.FunctionDefinition(method.TypeParameterNames, JsStatement.Return(method.Definition));
 		}
 
+		private static int ConvertVarianceToInt(VarianceModifier variance) {
+			switch (variance)
+			{
+				case VarianceModifier.Covariant:
+					return 1;
+				case VarianceModifier.Contravariant:
+					return 2;
+				default:
+					return 0;
+			}
+		}
+
 		private JsExpression GetMetadataDescriptor(ITypeDefinition type, bool isGenericSpecialization) {
 			var properties = new List<JsObjectLiteralProperty>();
 			var scriptableAttributes = type.Attributes.Where(a => !a.IsConditionallyRemoved && _metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
 			if (scriptableAttributes.Count != 0) {
 				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, type, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
+			}
+			if (type.Kind == TypeKind.Interface && MetadataUtils.IsJsGeneric(type, _metadataImporter) && type.TypeParameters != null && type.TypeParameters.Any(typeParameter => typeParameter.Variance != VarianceModifier.Invariant)) {
+				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
 			}
 			if (type.Kind == TypeKind.Class) {
 				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter))

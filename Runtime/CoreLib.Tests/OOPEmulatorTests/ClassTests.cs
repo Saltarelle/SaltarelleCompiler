@@ -1142,5 +1142,31 @@ global.D$1 = $D$1;
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
 		}
+
+	    [Test]
+	    public void VarianceWorks()
+	    {
+            AssertCorrect(
+@"public interface IMyInterface<T1, out T2, in T3> {
+	void M1(int x);
+	void M2(int y);
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// IMyInterface
+var $IMyInterface$3 = function(T1, T2, T3) {
+	var $type = function() {
+	};
+	$type.prototype = { m1: null, m2: null };
+	{Script}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2, T3], function() {
+		return [];
+	}, { variance: [0, 1, 2] });
+	return $type;
+};
+$IMyInterface$3.__typeName = 'IMyInterface$3';
+{Script}.initGenericInterface($IMyInterface$3, 3, { variance: [0, 1, 2] });
+global.IMyInterface$3 = $IMyInterface$3;
+", new[] { "IMyInterface" });
+        }
 	}
 }

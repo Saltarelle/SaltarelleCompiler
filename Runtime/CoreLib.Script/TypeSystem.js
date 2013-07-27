@@ -169,6 +169,35 @@ ss.isInstanceOfType = function#? DEBUG ss$isInstanceOfType##(instance, type) {
 	return ss.isAssignableFrom(type, ss.getInstanceType(instance));
 };
 
+ss.__checkVariantGenericInterfaceAssignability = function(target, type, varianceCount) {
+	if (type.__genericTypeDefinition == target.__genericTypeDefinition && type.__typeArguments.length == varianceCount) {
+		var foundMismatch = false;
+		for (var j = 0; j < target.__typeArguments.length; j++) {
+			if (target.__metadata.variance[j] == 1) {
+				if (target.__typeArguments[j] != type.__typeArguments[j] && !ss.isAssignableFrom(target.__typeArguments[j], type.__typeArguments[j])) {
+					foundMismatch = true;
+					break;
+				}
+			} else if (target.__metadata.variance[j] == 2) {
+				if (target.__typeArguments[j] != type.__typeArguments[j] && !ss.isAssignableFrom(type.__typeArguments[j], target.__typeArguments[j])) {
+					foundMismatch = true;
+					break;
+				}
+			} else {
+				if (target.__typeArguments[j] != type.__typeArguments[j]) {
+					foundMismatch = true;
+					break;
+				}
+			}
+		}
+		if (!foundMismatch) {
+			return true;
+		}
+	}
+
+	return false;
+};
+
 ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 	if ((target == Object) || (target == type)) {
 		return true;
@@ -177,9 +206,41 @@ ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 		return true;
 	}
 	else if (target.__interface) {
+		var hasVariance = false;
+		if (target.__genericTypeDefinition) {
+			var varianceCount = 0;
+			if (target.__metadata && target.__metadata.variance) {
+				varianceCount = target.__metadata.variance.length;
+			}
+			if (target.__typeArguments.length == varianceCount) {
+				for (var j = 0; j < varianceCount; j++) {
+					if (target.__metadata.variance[j] == 1 || target.__metadata.variance[j] == 2) {
+						hasVariance = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (hasVariance && type.__interface) {
+			if (ss.__checkVariantGenericInterfaceAssignability(target, type, varianceCount)) {
+				return true;
+			}
+		}
+
 		var interfaces = ss.getInterfaces(type);
-		if (interfaces && ss.contains(interfaces, target)) {
-			return true;
+		if (interfaces && interfaces.length > 0) {
+			if (ss.contains(interfaces, target)) {
+				return true;
+			}
+
+			if (hasVariance) {
+				for (var i = 0; i < interfaces.length; i++) {
+					if (ss.__checkVariantGenericInterfaceAssignability(target, interfaces[i], varianceCount)) {
+						return true;
+					}
+				}
+			}
 		}
 
 		var baseType = ss.getBaseType(type);
