@@ -209,7 +209,7 @@ ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 		var hasVariance = false;
 		if (target.__genericTypeDefinition) {
 			var varianceCount = 0;
-			if (target.__metadata.variance) {
+			if (target.__metadata && target.__metadata.variance) {
 				varianceCount = target.__metadata.variance.length;
 			}
 			if (target.__typeArguments.length == varianceCount) {
