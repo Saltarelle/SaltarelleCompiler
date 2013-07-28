@@ -17,6 +17,7 @@ namespace System.Collections.Generic {
 		/// <param name="x">The first object to compare.</param><param name="y">The second object to compare.</param>
 		public abstract int Compare(T x, T y);
 
+		[InlineCode("new {$System.Collections.Generic.Comparer`1}({comparison})")]
 		public static Comparer<T> Create(Comparison<T> comparison) { return null; }
 	}
 }

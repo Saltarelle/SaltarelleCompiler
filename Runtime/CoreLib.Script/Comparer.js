@@ -5,10 +5,6 @@ var ss_Comparer = function#? DEBUG Comparer$##(f) {
 	this.f = f;
 };
 
-ss_Comparer.create = function#? DEBUG Comparer$create##(f) {
-	return new ss_Comparer(f);
-};
-
 ss_Comparer.__typeName = 'ss.Comparer';
 ss.Comparer = ss_Comparer;
 ss.initClass(ss_Comparer, {
