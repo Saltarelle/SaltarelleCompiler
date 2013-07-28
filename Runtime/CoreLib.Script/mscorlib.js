@@ -285,6 +285,8 @@ if (typeof(window) == 'object') {
 
 #include "FormatException.js"
 
+#include "DivideByZeroException.js"
+
 #include "InvalidCastException.js"
 
 #include "InvalidOperationException.js"

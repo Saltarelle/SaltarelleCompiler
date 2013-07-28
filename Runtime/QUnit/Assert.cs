@@ -112,7 +112,35 @@ namespace QUnit {
 		}
 
 		[ScriptName("throws")]
+		public static void Throws(Action block) {
+		}
+
+		[InlineCode("throws({block}, function() {{ return {$System.Script}.isInstanceOfType(arguments[0], {expected}); }})")]
+		public static void Throws(Action block, Type expected) {
+		}
+
+		[InlineCode("throws({block}, function() {{ return {$System.Script}.isInstanceOfType(arguments[0], {TExpected}); }})")]
+		public static void Throws<TExpected>(Action block) where TExpected : Exception {
+		}
+
+		[ScriptName("throws")]
+		public static void Throws(Action block, Regex expected) {
+		}
+
+		[ScriptName("throws")]
+		public static void Throws(Action block, Func<object, bool> expected) {
+		}
+
+		[ScriptName("throws")]
+		public static void Throws(Action block, string message) {
+		}
+
+		[InlineCode("throws({block}, function() {{ return {$System.Script}.isInstanceOfType(arguments[0], {expected}); }}, {message})")]
 		public static void Throws(Action block, Type expected, string message) {
+		}
+
+		[InlineCode("throws({block}, function() {{ return {$System.Script}.isInstanceOfType(arguments[0], {TExpected}); }}, {message})")]
+		public static void Throws<TExpected>(Action block, string message) where TExpected : Exception {
 		}
 
 		[ScriptName("throws")]
@@ -121,14 +149,6 @@ namespace QUnit {
 
 		[ScriptName("throws")]
 		public static void Throws(Action block, Func<object, bool> expected, string message) {
-		}
-
-		[ScriptName("throws")]
-		public static void Throws(Action block) {
-		}
-
-		[ScriptName("throws")]
-		public static void Throws(Action block, string message) {
 		}
 	}
 }
