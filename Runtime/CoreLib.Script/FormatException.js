@@ -6,4 +6,4 @@ var ss_FormatException = function#? DEBUG FormatException$##(message, innerExcep
 };
 ss_FormatException.__typeName = 'ss.FormatException';
 ss.FormatException = ss_FormatException;
-ss.initClass(ss_FormatException, ss_Exception);
+ss.initClass(ss_FormatException, {}, ss_Exception);

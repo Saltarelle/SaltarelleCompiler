@@ -7,4 +7,4 @@ var ss_JsErrorException = function#? DEBUG JsErrorException$##(error, message, i
 };
 ss_JsErrorException.__typeName = 'ss.JsErrorException';
 ss.JsErrorException = ss_JsErrorException;
-ss.initClass(ss_JsErrorException, ss_Exception);
+ss.initClass(ss_JsErrorException, {}, ss_Exception);

@@ -16,22 +16,22 @@ ss.makeGenericType = function#? DEBUG ss$makeGenericType##(genericType, typeArgu
 	return ss.__genericCache[name] || genericType.apply(null, typeArguments);
 };
 
-ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(instance, genericType, typeArguments, baseType, interfaceTypes, metadata) {
+ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(instance, genericType, typeArguments, members, baseType, interfaceTypes) {
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
 	ss.__genericCache[name] = instance;
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.initClass(instance, baseType(), interfaceTypes(), metadata);
+	ss.initClass(instance, members, baseType(), interfaceTypes());
 };
 
-ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, baseInterfaces, metadata) {
+ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, members, baseInterfaces) {
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
 	ss.__genericCache[name] = instance;
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.initInterface(instance, baseInterfaces(), metadata);
+	ss.initInterface(instance, members, baseInterfaces());
 };
 
 ss.isGenericTypeDefinition = function#? DEBUG ss$isGenericTypeDefinition##(type) {
@@ -50,7 +50,7 @@ ss.getGenericArguments = function#? DEBUG ss$getGenericArguments##(type) {
 	return type.__typeArguments || null;
 };
 
-ss._setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
+ss.setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 	if (metadata.members) {
 		for (var i = 0; i < metadata.members.length; i++) {
 			var m = metadata.members[i];
@@ -62,73 +62,97 @@ ss._setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 		}
 	}
 	type.__metadata = metadata;
+	if (metadata.variance) {
+		type.isAssignableFrom = function(source) {
+			var check = function(target, type) {
+				if (type.__genericTypeDefinition === target.__genericTypeDefinition && type.__typeArguments.length == target.__typeArguments.length) {
+					for (var i = 0; i < target.__typeArguments.length; i++) {
+						var v = target.__metadata.variance[i], t = target.__typeArguments[i], s = type.__typeArguments[i];
+						switch (v) {
+							case 1: if (!ss.isAssignableFrom(t, s)) return false; break;
+							case 2: if (!ss.isAssignableFrom(s, t)) return false; break;
+							default: if (s !== t) return false;
+						}
+					}
+					return true;
+				}
+				return false;
+			};
+
+			if (source.__interface && check(this, source))
+				return true;
+			var ifs = ss.getInterfaces(source);
+			for (var i = 0; i < ifs.length; i++) {
+				if (ifs[i] === this || check(this, ifs[i]))
+					return true;
+			}
+			return false;
+		};
+	}
 }
 
-ss.initClass = function#? DEBUG ss$initClass##(ctor, baseType, interfaces, metadata) {
-	ctor.prototype.constructor = ctor;
+ss.initClass = function#? DEBUG ss$initClass##(ctor, members, baseType, interfaces) {
 	ctor.__class = true;
-	ctor.__baseType = baseType || Object;
+	if (baseType && baseType !== Object) {
+		var f = function(){};
+		f.prototype = baseType.prototype;
+		ctor.prototype = new f();
+		ctor.prototype.constructor = ctor;
+	}
+	ss.shallowCopy(members, ctor.prototype);
 	if (interfaces)
 		ctor.__interfaces = interfaces;
-	if (metadata)
-		ss._setMetadata(ctor, metadata);
-
-	if (baseType) {
-		ss.setupBase(ctor);
-	}
 };
 
-ss.initGenericClass = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount, metadata) {
-	ctor.prototype.constructor = ctor;
+ss.initGenericClass = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount) {
 	ctor.__class = true;
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
-	ctor.__baseType = Object;
-	if (metadata)
-		ss._setMetadata(ctor, metadata);
 };
 
-ss.initInterface = function#? DEBUG ss$initInterface##(ctor, baseInterfaces, metadata) {
+ss.initInterface = function#? DEBUG ss$initInterface##(ctor, members, baseInterfaces) {
 	ctor.__interface = true;
 	if (baseInterfaces)
 		ctor.__interfaces = baseInterfaces;
-	if (metadata)
-		ss._setMetadata(ctor, metadata);
+	ss.shallowCopy(members, ctor.prototype);
+	ctor.isAssignableFrom = function(type) { return ss.contains(ss.getInterfaces(type), this); };
 };
 
-ss.initGenericInterface = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount, metadata) {
-	ctor.prototype.constructor = ctor;
+ss.initGenericInterface = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount) {
 	ctor.__interface = true;;
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
-	if (metadata)
-		ss._setMetadata(ctor, metadata);
 };
 
-ss.initEnum = function#? DEBUG ss$initEnum##(ctor, metadata) {
-	for (var field in ctor.prototype)
-		ctor[field] = ctor.prototype[field];
+ss.initEnum = function#? DEBUG ss$initEnum##(ctor, members) {
+	ss.shallowCopy(members, ctor.prototype);
 
 	ctor.__enum = true;
-	if (metadata)
-		ss._setMetadata(ctor, metadata);
 	ctor.getDefaultValue = ctor.createInstance = function() { return 0; };
 	ctor.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
 };
 
-ss.setupBase = function#? DEBUG Type$setupBase##(type) {
-	var baseType = type.__baseType;
-
-	for (var memberName in baseType.prototype) {
-		var memberValue = baseType.prototype[memberName];
-		if (!type.prototype[memberName]) {
-			type.prototype[memberName] = memberValue;
-		}
-	}
-};
-
 ss.getBaseType = function#? DEBUG ss$getBaseType##(type) {
-	return type.__baseType || (type === Object ? null : Object);
+	if (type === Object || type.__interface) {
+		return null;
+	}
+	else if (Object.getPrototypeOf) {
+		return Object.getPrototypeOf(type.prototype).constructor;
+	}
+	else {
+		var p = type.prototype;
+		if (Object.prototype.hasOwnProperty.call(p, 'constructor')) {
+			try {
+				var ownValue = p.constructor;
+				delete p.constructor;
+				return p.constructor;
+			}
+			finally {
+				p.constructor = ownValue;
+			}
+		}
+		return p.constructor;
+	}
 };
 
 ss.getTypeFullName = function#? DEBUG ss$getTypeFullName##(type) {
@@ -162,111 +186,12 @@ ss.isInstanceOfType = function#? DEBUG ss$isInstanceOfType##(instance, type) {
 	if (typeof(type.isInstanceOfType) === 'function')
 		return type.isInstanceOfType(instance);
 
-	if ((type == Object) || (instance instanceof type)) {
-		return true;
-	}
-
 	return ss.isAssignableFrom(type, ss.getInstanceType(instance));
 };
 
-ss.__checkVariantGenericInterfaceAssignability = function(target, type, varianceCount) {
-	if (type.__genericTypeDefinition == target.__genericTypeDefinition && type.__typeArguments.length == varianceCount) {
-		var foundMismatch = false;
-		for (var j = 0; j < target.__typeArguments.length; j++) {
-			if (target.__metadata.variance[j] == 1) {
-				if (target.__typeArguments[j] != type.__typeArguments[j] && !ss.isAssignableFrom(target.__typeArguments[j], type.__typeArguments[j])) {
-					foundMismatch = true;
-					break;
-				}
-			} else if (target.__metadata.variance[j] == 2) {
-				if (target.__typeArguments[j] != type.__typeArguments[j] && !ss.isAssignableFrom(type.__typeArguments[j], target.__typeArguments[j])) {
-					foundMismatch = true;
-					break;
-				}
-			} else {
-				if (target.__typeArguments[j] != type.__typeArguments[j]) {
-					foundMismatch = true;
-					break;
-				}
-			}
-		}
-		if (!foundMismatch) {
-			return true;
-		}
-	}
-
-	return false;
-};
-
 ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
-	if ((target == Object) || (target == type)) {
-		return true;
-	}
-	if (ss.isSubclassOf(type, target)) {
-		return true;
-	}
-	else if (target.__interface) {
-		var hasVariance = false;
-		if (target.__genericTypeDefinition) {
-			var varianceCount = 0;
-			if (target.__metadata && target.__metadata.variance) {
-				varianceCount = target.__metadata.variance.length;
-			}
-			if (target.__typeArguments.length == varianceCount) {
-				for (var j = 0; j < varianceCount; j++) {
-					if (target.__metadata.variance[j] == 1 || target.__metadata.variance[j] == 2) {
-						hasVariance = true;
-						break;
-					}
-				}
-			}
-		}
-
-		if (hasVariance && type.__interface) {
-			if (ss.__checkVariantGenericInterfaceAssignability(target, type, varianceCount)) {
-				return true;
-			}
-		}
-
-		var interfaces = ss.getInterfaces(type);
-		if (interfaces && interfaces.length > 0) {
-			if (ss.contains(interfaces, target)) {
-				return true;
-			}
-
-			if (hasVariance) {
-				for (var i = 0; i < interfaces.length; i++) {
-					if (ss.__checkVariantGenericInterfaceAssignability(target, interfaces[i], varianceCount)) {
-						return true;
-					}
-				}
-			}
-		}
-
-		var baseType = ss.getBaseType(type);
-		while (baseType) {
-			interfaces = ss.getInterfaces(baseType);
-			if (interfaces && ss.contains(interfaces, target)) {
-				return true;
-			}
-			baseType = ss.getBaseType(baseType);
-		}
-	}
-	return false;
+	return target === type || (typeof(target.isAssignableFrom) === 'function' && target.isAssignableFrom(type)) || type.prototype instanceof target;
 };
-
-ss.isSubclassOf = function#? DEBUG ss$isSubclassOf##(target, type) {
-	if (target.__class) {
-		var baseType = target.__baseType;
-		while (baseType) {
-			if (type == baseType) {
-				return true;
-			}
-			baseType = baseType.__baseType;
-		}
-	}
-	return false;
-}
 
 ss.hasProperty = function#? DEBUG ss$hasProperty##(instance, name) {
 	return typeof(instance['get_' + name]) === 'function' || typeof(instance['set_' + name]) === 'function';
@@ -300,9 +225,8 @@ ss.safeCast = function#? DEBUG ss$safeCast##(instance, type) {
 ss.cast = function#? DEBUG ss$cast##(instance, type) {
 	if (instance === null || type === false)
 		return null;
-	else if (typeof(instance) === "undefined" || type === true || ss.isInstanceOfType(instance, type)) {
+	else if (typeof(instance) === "undefined" || type === true || ss.isInstanceOfType(instance, type))
 		return instance;
-	}
 	throw new ss_InvalidCastException('Cannot cast object to type ' + ss.getTypeFullName(type));
 };
 
@@ -310,26 +234,21 @@ ss.getInstanceType = function#? DEBUG ss$getInstanceType##(instance) {
 	if (!ss.isValue(instance))
 		throw new ss_NullReferenceException('Cannot get type of null');
 
-	var ctor = null;
-
 	// NOTE: We have to catch exceptions because the constructor
 	//       cannot be looked up on native COM objects
 	try {
-		ctor = instance.constructor;
+		return instance.constructor;
 	}
 	catch (ex) {
+		return Object;
 	}
-	return ctor || Object;
 };
 
 ss.getType = function#? DEBUG ss$getType##(typeName) {
-	if (!typeName) {
+	if (!typeName)
 		return null;
-	}
 
-	if (!ss.__typeCache) {
-		ss.__typeCache = {};
-	}
+	ss.__typeCache = ss.__typeCache || {};
 
 	var type = ss.__typeCache[typeName];
 	if (!type) {
@@ -384,7 +303,12 @@ ss.applyConstructor = function#? DEBUG ss$applyConstructor##(constructor, args) 
 };
 
 ss.getAttributes = function#? DEBUG ss$getAttributes##(type, attrType, inherit) {
-	var result = inherit && type.__baseType ? ss.getAttributes(type.__baseType, attrType, true).filter(function(a) { var t = ss.getInstanceType(a); return !t.__metadata || !t.__metadata.attrNoInherit; }) : [];
+	var result = [];
+	if (inherit) {
+		var b = ss.getBaseType(type);
+		if (b)
+			result = ss.getAttributes(b, attrType, true).filter(function(a) { var t = ss.getInstanceType(a); return !t.__metadata || !t.__metadata.attrNoInherit; });
+	}
 	if (type.__metadata && type.__metadata.attr) {
 		for (var i = 0; i < type.__metadata.attr.length; i++) {
 			var a = type.__metadata.attr[i];
@@ -400,7 +324,12 @@ ss.getAttributes = function#? DEBUG ss$getAttributes##(type, attrType, inherit) 
 };
 
 ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAttr, name, params) {
-	var result = type.__baseType && ((bindingAttr & 72) == 72 || (bindingAttr & 6) == 4) ? ss.getMembers(type.__baseType, memberTypes & ~1, bindingAttr & (bindingAttr & 64 ? 255 : 247) & (bindingAttr & 2 ? 251 : 255), name, params) : [];
+	var result = [];
+	if ((bindingAttr & 72) == 72 || (bindingAttr & 6) == 4) {
+		var b = ss.getBaseType(type);
+		if (b)
+			result = ss.getMembers(b, memberTypes & ~1, bindingAttr & (bindingAttr & 64 ? 255 : 247) & (bindingAttr & 2 ? 251 : 255), name, params);
+	}
 
 	var f = function(m) {
 		if ((memberTypes & m.type) && (((bindingAttr & 4) && !m.isStatic) || ((bindingAttr & 8) && m.isStatic)) && (!name || m.name === name)) {
@@ -431,7 +360,7 @@ ss.getMembers = function#? DEBUG ss$getAttributes##(type, memberTypes, bindingAt
 				throw new ss_AmbiguousMatchException('Ambiguous match');
 			else if (r.length === 1)
 				return r[0];
-			type = type.__baseType;
+			type = ss.getBaseType(type);
 		}
 		return null;
 	}

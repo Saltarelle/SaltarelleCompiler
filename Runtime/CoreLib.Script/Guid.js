@@ -10,7 +10,7 @@ ss_Guid.$rng = new ss_Random();
 
 ss_Guid.__typeName = 'ss.Guid';
 ss.Guid = ss_Guid;
-ss.initClass(ss_Guid, Object, [ ss_IEquatable, ss_IComparable ]);
+ss.initClass(ss_Guid, {}, Object, [ ss_IEquatable, ss_IComparable ]);
 ss_Guid.__class = false;
 
 ss_Guid.isInstanceOfType = function#? DEBUG Guid$isInstanceOfType##(instance) {

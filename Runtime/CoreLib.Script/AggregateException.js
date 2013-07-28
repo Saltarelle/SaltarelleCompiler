@@ -8,4 +8,4 @@ var ss_AggregateException = function#? DEBUG AggregateException$##(message, inne
 
 ss_AggregateException.__typeName = 'ss.AggregateException';
 ss.AggregateException = ss_AggregateException;
-ss.initClass(ss_AggregateException, ss_Exception);
+ss.initClass(ss_AggregateException, {}, ss_Exception);

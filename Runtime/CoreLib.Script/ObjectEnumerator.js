@@ -6,7 +6,10 @@ var ss_ObjectEnumerator = function#? DEBUG ObjectEnumerator$##(o) {
 	this._index = -1;
 	this._object = o;
 };
-ss_ObjectEnumerator.prototype = {
+
+ss_ObjectEnumerator.__typeName = 'ss.ObjectEnumerator';
+ss.ObjectEnumerator = ss_ObjectEnumerator;
+ss.initClass(ss_ObjectEnumerator, {
 	moveNext: function#? DEBUG ObjectEnumerator$moveNext##() {
 		this._index++;
 		return (this._index < this._keys.length);
@@ -22,8 +25,4 @@ ss_ObjectEnumerator.prototype = {
 	},
 	dispose: function#? DEBUG ObjectEnumerator$dispose##() {
 	}
-};
-
-ss_ObjectEnumerator.__typeName = 'ss.ObjectEnumerator';
-ss.ObjectEnumerator = ss_ObjectEnumerator;
-ss.initClass(ss_ObjectEnumerator, null, [ss_IEnumerator, ss_IDisposable]);
+}, null, [ss_IEnumerator, ss_IDisposable]);

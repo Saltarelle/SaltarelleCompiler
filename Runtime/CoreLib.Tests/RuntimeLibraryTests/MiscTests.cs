@@ -51,13 +51,12 @@ public class C {
 	var $Ф_Класс = function() {
 	};
 	$Ф_Класс.__typeName = 'Ф.Класс';
-	$Ф_Класс.prototype = {
+	global.Ф.Класс = $Ф_Класс;
+	ss.initClass($Ф_Класс, {
 		$я: function() {
 			var Щ = 'г';
 		}
-	};
-	global.Ф.Класс = $Ф_Класс;
-	ss.initClass($Ф_Класс);
+	});
 })();
 ");
 		}
@@ -102,7 +101,7 @@ class C<T1, T2> where T1 : class {
 	var $$C$2 = function(T1, T2) {
 		var $type = function() {
 		};
-		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
+		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], {}, function() {
 			return null;
 		}, function() {
 			return [];
@@ -143,8 +142,8 @@ class C<T1, T2> where T1 : class {
 	var $$X = function() {
 	};
 	$$X.__typeName = '$X';
-	ss.initInterface($$I);
-	ss.initClass($$X);
+	ss.initInterface($$I, {});
+	ss.initClass($$X, {});
 })();
 ");
 		}

@@ -2,17 +2,10 @@
 // IList
 
 var ss_IList = function#? DEBUG IList$##() { };
-ss_IList.prototype = {
-	get_item: null,
-	set_item: null,
-	indexOf: null,
-	insert: null,
-	removeAt: null
-};
 
 ss_IList.__typeName = 'ss.IList';
 ss.IList = ss_IList;
-ss.initInterface(ss_IList, [ss_ICollection, ss_IEnumerable]);
+ss.initInterface(ss_IList, { get_item: null, set_item: null, indexOf: null, insert: null, removeAt: null }, [ss_ICollection, ss_IEnumerable]);
 
 ss.getItem = function#? DEBUG ss$getItem##(obj, index) {
 	return obj.get_item ? obj.get_item(index) : obj[index];
