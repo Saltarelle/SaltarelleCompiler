@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
 			for (int i = 0; i < s.Length; i++) {
 				switch (s[i]) {
 					case '\b': sb.Append("\\b"); break;
-					case '\f': sb.Append("\\b"); break;
+					case '\f': sb.Append("\\f"); break;
 					case '\n': sb.Append("\\n"); break;
 					case '\0': sb.Append("\\0"); break;
 					case '\r': sb.Append("\\r"); break;
@@ -65,7 +65,7 @@ namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
 			for (int i = 0; i < s.Length; i++) {
 				switch (s[i]) {
 					case '\b': sb.Append("\\b"); break;
-					case '\f': sb.Append("\\b"); break;
+					case '\f': sb.Append("\\f"); break;
 					case '\n': sb.Append("\\n"); break;
 					case '\0': sb.Append("\\0"); break;
 					case '\r': sb.Append("\\r"); break;
