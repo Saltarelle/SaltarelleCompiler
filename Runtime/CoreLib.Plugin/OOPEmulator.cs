@@ -118,7 +118,6 @@ namespace CoreLib.Plugin {
 		private const string InitGenericInterface = "initGenericInterface";
 		private const string SetMetadata = "setMetadata";
 		private const string InstantiatedGenericTypeVariableName = "$type";
-		private const string MembersSuffix = "$$members";
 
 		private static Tuple<string, string> SplitIntoNamespaceAndName(string name) {
 			int pos = name.LastIndexOf('.');
@@ -193,8 +192,12 @@ namespace CoreLib.Plugin {
 			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
 		}
 
+		private JsExpression CreateInstanceMembers(JsClass c) {
+			return JsExpression.ObjectLiteral(c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null)));
+		}
+
 		private JsExpression CreateInitClassCall(JsClass type, string ctorName, JsExpression baseClass, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), type.InstanceMethods.Count > 0 ? (JsExpression)JsExpression.Identifier(ctorName + MembersSuffix) : JsExpression.ObjectLiteral() };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), CreateInstanceMembers(type) };
 			if (baseClass != null || interfaces.Count > 0)
 				args.Add(baseClass ?? JsExpression.Null);
 			if (interfaces.Count > 0)
@@ -204,14 +207,31 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression CreateInitInterfaceCall(JsClass type, string ctorName, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), type.InstanceMethods.Count > 0 ? (JsExpression)JsExpression.Identifier(ctorName + MembersSuffix) : JsExpression.ObjectLiteral() };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), CreateInstanceMembers(type) };
 			if (interfaces.Count > 0)
 				args.Add(JsExpression.ArrayLiteral(interfaces));
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitInterface), args);
 		}
 
-		private JsExpression CreateInitEnumCall(ITypeDefinition type, string ctorName) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), JsExpression.Identifier(ctorName + MembersSuffix) };
+		private JsExpression CreateInitEnumCall(JsEnum type, string ctorName) {
+			var values = new List<JsObjectLiteralProperty>();
+			foreach (var v in type.CSharpTypeDefinition.Fields) {
+				if (v.ConstantValue != null) {
+					var sem = _metadataImporter.GetFieldSemantics(v);
+					if (sem.Type == FieldScriptSemantics.ImplType.Field) {
+						values.Add(new JsObjectLiteralProperty(sem.Name, JsExpression.Number(Convert.ToDouble(v.ConstantValue))));
+					}
+					else if (sem.Type == FieldScriptSemantics.ImplType.Constant && sem.Name != null) {
+						values.Add(new JsObjectLiteralProperty(sem.Name, sem.Value is string ? JsExpression.String((string)sem.Value) : JsExpression.Number(Convert.ToDouble(sem.Value))));
+					}
+				}
+				else {
+					_errorReporter.Region = v.Region;
+					_errorReporter.InternalError("Enum field " + v.FullName + " is not constant.");
+				}
+			}
+
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), JsExpression.ObjectLiteral(values) };
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitEnum), args);
 		}
 
@@ -231,10 +251,6 @@ namespace CoreLib.Plugin {
 		}
 
 		private void AddClassMembers(JsClass c, string typevarName, List<JsStatement> stmts) {
-			if (c.InstanceMethods.Count > 0) {
-				stmts.Add(JsStatement.Var(typevarName + MembersSuffix, JsExpression.ObjectLiteral(c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null)))));
-			}
-
 			if (c.NamedConstructors.Count > 0)
 				stmts.AddRange(c.NamedConstructors.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), m.Definition)));
 
@@ -289,7 +305,7 @@ namespace CoreLib.Plugin {
 			if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
 				var args = new List<JsExpression> { JsExpression.Identifier(typevarName),
 				                                    new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))),
-				                                    c.InstanceMethods.Count > 0 ? (JsExpression)JsExpression.Identifier(typevarName + MembersSuffix) : JsExpression.ObjectLiteral()
+				                                    CreateInstanceMembers(c),
 				                                  };
 				if (c.CSharpTypeDefinition.Kind == TypeKind.Class)
 					args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(GetBaseClass(c.CSharpTypeDefinition) ?? JsExpression.Null)));
@@ -407,23 +423,6 @@ namespace CoreLib.Plugin {
 						var e = (JsEnum)t;
 						result.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock)));
 						result.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(e.CSharpTypeDefinition).Name)));
-						var values = new List<JsObjectLiteralProperty>();
-						foreach (var v in e.CSharpTypeDefinition.Fields) {
-							if (v.ConstantValue != null) {
-								var sem = _metadataImporter.GetFieldSemantics(v);
-								if (sem.Type == FieldScriptSemantics.ImplType.Field) {
-									values.Add(new JsObjectLiteralProperty(sem.Name, JsExpression.Number(Convert.ToDouble(v.ConstantValue))));
-								}
-								else if (sem.Type == FieldScriptSemantics.ImplType.Constant && sem.Name != null) {
-									values.Add(new JsObjectLiteralProperty(sem.Name, sem.Value is string ? JsExpression.String((string)sem.Value) : JsExpression.Number(Convert.ToDouble(sem.Value))));
-								}
-							}
-							else {
-								_errorReporter.Region = v.Region;
-								_errorReporter.InternalError("Enum field " + v.FullName + " is not constant.");
-							}
-						}
-						result.Add(JsStatement.Var(typevarName + MembersSuffix, JsExpression.ObjectLiteral(values)));
 					}
 
 					if (export) {
@@ -459,7 +458,7 @@ namespace CoreLib.Plugin {
 					string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
 					string typevarName = _namer.GetTypeVariableName(name);
 					if (t.CSharpTypeDefinition.Kind == TypeKind.Enum) {
-						result.Add(CreateInitEnumCall(t.CSharpTypeDefinition, typevarName));
+						result.Add(CreateInitEnumCall((JsEnum)t, typevarName));
 					}
 					else {
 						var c = (JsClass)t;

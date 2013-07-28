@@ -51,13 +51,12 @@ public class C {
 	var $Ф_Класс = function() {
 	};
 	$Ф_Класс.__typeName = 'Ф.Класс';
-	var $Ф_Класс$$members = {
+	global.Ф.Класс = $Ф_Класс;
+	ss.initClass($Ф_Класс, {
 		$я: function() {
 			var Щ = 'г';
 		}
-	};
-	global.Ф.Класс = $Ф_Класс;
-	ss.initClass($Ф_Класс, $Ф_Класс$$members);
+	});
 })();
 ");
 		}
