@@ -259,60 +259,70 @@ namespace System {
 
 		#region Script# reflection
 
-		[InlineCode("{instance}['add_' + {name}]({handler})")]
-		public static void AddHandler(object instance, string name, Delegate handler) {
-		}
-
-		[InlineCode("delete {instance}[{name}]")]
+		[Obsolete("Use Script.Delete() instead", true)]
 		public static void DeleteField(object instance, string name) {
 		}
 
-		[InlineCode("{instance}[{name}]")]
+		[Obsolete("Use ((dynamic)instance)[name]", true)]
 		public static object GetField(object instance, string name) {
 			return null;
 		}
 
-		[InlineCode("{instance}['get_' + {name}]()")]
+		[Obsolete("Use some other way of achieving the same goal (eg. `dynamic`, or C# reflection)", true)]
+		public static void AddHandler(object instance, string name, Delegate handler) {
+		}
+
+		[Obsolete("Use some other way of achieving the same goal (eg. `dynamic`, or C# reflection)", true)]
 		public static object GetProperty(object instance, string name) {
 			return null;
 		}
 
-		[ScriptAlias("typeof")]
+		[Obsolete("Use Script.TypeOf()", true)]
 		public static string GetScriptType(object instance) {
 			return null;
 		}
 
-		[InlineCode("({name} in {instance})")]
+		[Obsolete("Use Script.In()", true)]
 		public static bool HasField(object instance, string name) {
 			return false;
 		}
 
-		[InlineCode("(typeof({instance}[{name}]) === 'function')")]
+		[Obsolete("Use some other way of achieving the same goal (eg. `dynamic`, Script.HasMember, or C# reflection)", true)]
 		public static bool HasMethod(object instance, string name) {
 			return false;
 		}
 
-		[InlineCode("{$System.Script}.hasProperty({instance}, {name})")]
+		[Obsolete("Use some other way of achieving the same goal (eg. `dynamic`, Script.HasMember, or C# reflection)", true)]
 		public static bool HasProperty(object instance, string name) {
 			return false;
 		}
 
-		[InlineCode("{instance}[{name}]({*args})")]
-		[Obsolete("Script# allows the instance parameter to be null, which is not supported by Saltarelle. Ensure that you are not using a null instance argument. It is recommended to modify your code to use 'dynamic' instead.")]
+		[Obsolete("Use Script.InvokeMethod(), but beware that the instance parameter to be null, which is not supported by Saltarelle. Ensure that you are not using a null instance argument. It is recommended to modify your code to use 'dynamic' instead.", true)]
 		public static object InvokeMethod(object instance, string name, params object[] args) {
 			return null;
 		}
 
-		[InlineCode("{instance}['remove_' + {name}]({handler})")]
+		[Obsolete("Use some other way of achieving the same goal (eg. `dynamic`, Script.HasMember, or C# reflection)", true)]
 		public static void RemoveHandler(object instance, string name, Delegate handler) {
 		}
 
-		[InlineCode("{instance}[{name}] = {value}")]
+		[Obsolete("Use ((dynamic)instance)[name] = value", true)]
 		public static void SetField(object instance, string name, object value) {
 		}
 
-		[InlineCode("{instance}['set_' + {name}]({value})")]
+		[Obsolete("Use some other way of achieving the same goal (eg. `dynamic`, Script.HasMember, or C# reflection)", true)]
 		public static void SetProperty(object instance, string name, object value) {
+		}
+
+		[Obsolete("Use Activator.CreateInstance() instead", true)]
+		public static object CreateInstance(Type type, params object[] arguments) {
+			return null;
+		}
+
+		[Obsolete("Use Activator.CreateInstance<T>() instead", true)]
+		[IncludeGenericArguments]
+		public static T CreateInstance<T>(params object[] arguments) where T : class {
+			return null;
 		}
 
 		#endregion
@@ -325,17 +335,6 @@ namespace System {
 			get {
 				return null;
 			}
-		}
-
-		[Obsolete("Use Activator.CreateInstance() instead", true)]
-		public static object CreateInstance(Type type, params object[] arguments) {
-			return null;
-		}
-
-		[Obsolete("Use Activator.CreateInstance<T>() instead", true)]
-		[IncludeGenericArguments]
-		public static T CreateInstance<T>(params object[] arguments) where T : class {
-			return null;
 		}
 
 		[EditorBrowsable(EditorBrowsableState.Never)]

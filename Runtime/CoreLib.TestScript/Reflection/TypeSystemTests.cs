@@ -838,7 +838,7 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void CastingUndefinedToOtherTypeShouldReturnUndefined() {
-			Assert.AreEqual(Type.GetScriptType((C)Script.Undefined), "undefined");
+			Assert.AreEqual(Script.TypeOf((C)Script.Undefined), "undefined");
 		}
 
 		[Test]
@@ -860,6 +860,11 @@ namespace CoreLib.TestScript.Reflection {
 			object o2 = new { x = 1, y = 2 };
 			Assert.IsFalse(typeof(DS2).IsInstanceOfType(o1), "o1 should not be of type");
 			Assert.IsTrue (typeof(DS2).IsInstanceOfType(o2), "o2 should be of type");
+		}
+
+		[Test]
+		public void StaticGetTypeMethodWorks() {
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests"), typeof(TypeSystemTests));
 		}
 	}
 }

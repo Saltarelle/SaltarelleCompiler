@@ -25,7 +25,7 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void ConstantsWorks() {
 			Assert.IsTrue(Stopwatch.Frequency > 1000, "Frequency");
-			Assert.AreEqual(Type.GetScriptType(Stopwatch.IsHighResolution), "boolean", "IsHighResolution");
+			Assert.AreEqual(Script.TypeOf(Stopwatch.IsHighResolution), "boolean", "IsHighResolution");
 		}
 
 		[Test]

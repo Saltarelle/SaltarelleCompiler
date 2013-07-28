@@ -120,5 +120,26 @@ namespace System {
 		public static string TypeOf(object o) {
 			return null; 
 		}
+
+		/// <summary>
+		/// Generate <c>delete obj[member]</c>.
+		/// </summary>
+		[InlineCode("delete {obj}[{member}]")]
+		public static bool Delete(object obj, string member) {
+			return false;
+		}
+
+		/// <summary>
+		/// Generate <c>member in obj</c>.
+		/// </summary>
+		[InlineCode("{member} in {obj}")]
+		public static bool In(object obj, string member) {
+			return false;
+		}
+
+		[InlineCode("{instance}[{name}]({*args})")]
+		public static object InvokeMethod(object instance, string name, params object[] args) {
+			return null;
+		}
 	}
 }

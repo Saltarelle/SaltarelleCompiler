@@ -193,10 +193,6 @@ ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
 	return target === type || (typeof(target.isAssignableFrom) === 'function' && target.isAssignableFrom(type)) || type.prototype instanceof target;
 };
 
-ss.hasProperty = function#? DEBUG ss$hasProperty##(instance, name) {
-	return typeof(instance['get_' + name]) === 'function' || typeof(instance['set_' + name]) === 'function';
-};
-
 ss.isClass = function#? DEBUG Type$isClass##(type) {
 	return (type.__class == true || type === Array || type === Function || type === RegExp || type === String || type === Error || type === Object);
 };
