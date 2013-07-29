@@ -1,3 +1,34 @@
+2.3.0
+Integer division by zero will now throw DivideByZeroException.
+Removed (actually: obsoleted as errors) the Script# reflection methods. Some of the functionality can now be found in the Script class, but some was just removed.
+Type system now supports interface variance (eg. IMyInterface<in T1, out T2>).
+Use real prototype inheritance instead of the homegrown __baseType hack.
+Ensured .NET semantics for String.Split methods that take a limit argument (#229). The JS semantics can be found in methods called JsSplit. This might cause compilation errors, but it will not silently break any code.
+Fixed TimeSpan.Zero (#227)
+Added [DefaultMemberReflectabilityAttribute] to specify which members are reflectable by default (#180)
+Added types Stopwatch and IFormatProvider, and added some overloads of String.Split (thanks to Marcel F)
+typeof(int?).GetGenericArguments() now returns int as in .net. Also improved the use of nullables as type arguments (#192)
+Added missing TimeSpan members (#215)
+Fixed internal error when overriding virtual members that implement [NonScriptable] interface members (#218)
+Fixed problem with base types not being initialized before derived types in certain cases including generic types in the chain (#222)
+Custom class attributes no longer need to qualify nested classes (#224)
+Fixed issues with double and float constants misbehaving in minified scripts (#208)
+NoInlineAttribute can now be applied to const fields to prevent them from being inlined in minified scripts.
+BREAKING CHANGE: double.MinValue now returns the value expected in .net (approx -1.7e-308) instead of the one in JS (Number.MIN_VALUE = 5e-324). JsMinValue exists to return Number.MIN_VALUE.
+Allow statements (any number of them) in inline code for methods returning void (#149)
+Enabled the use of JS reserved words as member names in inline code (#204)
+Fixed problem using anonymous methods in [Mixin] classes (#216)
+Casts to [NamedValues] enums are now treated as casts to string (#214)
+Use strict mode in generated assemblies as well as in mscorlib (#194)
+Implemented type System.Guid, using a string as the backing store (thanks to Valeriob)
+Added many standard .net exception types
+Fixed a few issues caused by 'dynamic' and 'object' not being treated as the same type when they should be (#202, #209)
+Added an AdditionalDependencyAttribute that can be used to specify additional dependencies to be imported by an assembly (thanks to Michael Busby)
+Fixed issue with reflectable knockout properties (#189)
+Allow empty script name for types in modules (#181)
+Fixed error compiling with Visual Studio if VSCommands is installed (#151)
+Fixed issue causing generic types with different type arguments to (occasionally) be treated as the same type when used as a base type (#186).
+
 2.2.0
 Added metadata for typed arrays.
 Added possibility to specify alternative inline code when a method is being invoked in non-expanded form, and used that to ensure all RTL methods can be invoked in non-expanded form (#177).

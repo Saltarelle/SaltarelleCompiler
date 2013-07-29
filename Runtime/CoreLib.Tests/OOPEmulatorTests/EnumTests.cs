@@ -17,8 +17,9 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 // MyEnum
 var $MyEnum = function() {
 };
-$MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
-{Script}.registerEnum(global, 'MyEnum', $MyEnum);
+$MyEnum.__typeName = 'MyEnum';
+global.MyEnum = $MyEnum;
+{Script}.initEnum($MyEnum, { value1: 0, value2: 1, value3: 2 });
 ");
 		}
 
@@ -28,12 +29,15 @@ $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 @"namespace SomeNamespace.InnerNamespace {
 	public enum MyEnum { Value1, Value2, Value3 }
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"global.SomeNamespace = global.SomeNamespace || {};
+global.SomeNamespace.InnerNamespace = global.SomeNamespace.InnerNamespace || {};
+////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyEnum
 var $SomeNamespace_InnerNamespace_MyEnum = function() {
 };
-$SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
-{Script}.registerEnum(global, 'SomeNamespace.InnerNamespace.MyEnum', $SomeNamespace_InnerNamespace_MyEnum);
+$SomeNamespace_InnerNamespace_MyEnum.__typeName = 'SomeNamespace.InnerNamespace.MyEnum';
+global.SomeNamespace.InnerNamespace.MyEnum = $SomeNamespace_InnerNamespace_MyEnum;
+{Script}.initEnum($SomeNamespace_InnerNamespace_MyEnum, { value1: 0, value2: 1, value3: 2 });
 ");
 		}
 
@@ -46,8 +50,10 @@ $SomeNamespace_InnerNamespace_MyEnum.prototype = { value1: 0, value2: 1, value3:
 // MyEnum
 var $MyEnum = function() {
 };
-$MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
-{Script}.registerEnum(global, 'MyEnum', $MyEnum, { enumFlags: true });
+$MyEnum.__typeName = 'MyEnum';
+global.MyEnum = $MyEnum;
+{Script}.initEnum($MyEnum, { value1: 0, value2: 1, value3: 2 });
+{Script}.setMetadata($MyEnum, { enumFlags: true });
 ");
 		}
 
@@ -60,8 +66,9 @@ $MyEnum.prototype = { value1: 0, value2: 1, value3: 2 };
 // MyEnum
 var $MyEnum = function() {
 };
-$MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
-{Script}.registerEnum(global, 'MyEnum', $MyEnum);
+$MyEnum.__typeName = 'MyEnum';
+global.MyEnum = $MyEnum;
+{Script}.initEnum($MyEnum, { value1: 'value1', value2: 'value2', value3: 'value3' });
 ");
 		}
 
@@ -74,8 +81,8 @@ $MyEnum.prototype = { value1: 'value1', value2: 'value2', value3: 'value3' };
 // MyEnum
 var $$MyEnum = function() {
 };
-$$MyEnum.prototype = { $value1: 0, $value2: 1, $value3: 2 };
-{Script}.registerEnum(null, '$MyEnum', $$MyEnum);
+$$MyEnum.__typeName = '$MyEnum';
+{Script}.initEnum($$MyEnum, { $value1: 0, $value2: 1, $value3: 2 });
 ");
 		}
 	}

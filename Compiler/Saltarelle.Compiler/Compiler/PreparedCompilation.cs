@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler.Compiler {
 			                                            var syntaxTree = CreateParser(defineConstants).Parse(rdr, f.Filename);
 			                                            var expandResult = new QueryExpressionExpander().ExpandQueryExpressions(syntaxTree);
 			                                            syntaxTree = (expandResult != null ? (SyntaxTree)expandResult.AstNode : syntaxTree);
-			                                            return new ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile(f.Filename, new UsingScope()));
+			                                            return new ParsedSourceFile(syntaxTree, new CSharpUnresolvedFile { FileName = f.Filename });
 			                                        }
 			                                    }).ToList();
 

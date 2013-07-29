@@ -3,11 +3,14 @@ using ICSharpCode.NRefactory.CSharp.Resolver;
 using ICSharpCode.NRefactory.Semantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor, IResolveResultVisitor<object, object> {
+	public abstract class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor, IResolveResultVisitor<object, object> {
 		private CSharpAstResolver _resolver;
 
-		public CombinedAstAndResolveResultVisitor(CSharpAstResolver resolver) {
+		protected CombinedAstAndResolveResultVisitor(CSharpAstResolver resolver) {
 			_resolver = resolver;
+		}
+
+		public override void VisitPreProcessorDirective(PreProcessorDirective preProcessorDirective) {
 		}
 
 		public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
@@ -32,10 +35,6 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitNamedExpression(NamedExpression namedExpression) {
 			HandleExpressionNode(namedExpression);
-		}
-
-		public override void VisitEmptyExpression(EmptyExpression emptyExpression) {
-			HandleExpressionNode(emptyExpression);
 		}
 
 		public override void VisitIsExpression(IsExpression isExpression) {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -10,11 +11,11 @@ namespace System {
 		public AggregateException() {
 		}
 
-		[AlternateSignature]
+		[InlineCode("new {$System.AggregateException}(null, {innerExceptions})")]
 		public AggregateException(IEnumerable<Exception> innerExceptions) {
 		}
 
-		[AlternateSignature]
+		[InlineCode("new {$System.AggregateException}(null, {innerExceptions})")]
 		public AggregateException(params Exception[] innerExceptions) {
 		}
 
@@ -30,6 +31,7 @@ namespace System {
 		public AggregateException(string message, params Exception[] innerExceptions) {
 		}
 
-		public Exception[] InnerExceptions { get { return null; } }
+		[IntrinsicProperty]
+		public ReadOnlyCollection<Exception> InnerExceptions { get { return null; } }
 	}
 }

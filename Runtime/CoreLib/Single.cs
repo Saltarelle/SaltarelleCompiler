@@ -17,22 +17,25 @@ namespace System {
 	[ScriptName("Number")]
 	public struct Single : IComparable<Single>, IEquatable<Single>, IFormattable {
 		[InlineCode("0")]
-		public Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		[ScriptName("MAX_VALUE")]
-		public const float MaxValue = 0;
+		[InlineConstant]
+		public const float MaxValue = (float)3.40282346638528859e+38;
 
-		[ScriptName("MIN_VALUE")]
-		public const float MinValue = 0;
+		[InlineConstant]
+		public const float MinValue = (float)-3.40282346638528859e+38;
 
-		[PreserveCase]
+		[InlineConstant]
+		public const float Epsilon = (float)1.40129846432482E-45;
+
+		[PreserveCase, NoInline]
 		public const float NaN = 0;
 
-		[ScriptName("NEGATIVE_INFINITY")]
+		[ScriptName("NEGATIVE_INFINITY"), NoInline]
 		public const float NegativeInfinity = 0;
 
-		[ScriptName("POSITIVE_INFINITY")]
+		[ScriptName("POSITIVE_INFINITY"), NoInline]
 		public const float PositiveInfinity = 0;
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
@@ -42,6 +45,16 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string ToString(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider})")]
+		public string ToString(string format, IFormatProvider provider) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G', {provider})")]
+		public string ToString(IFormatProvider provider) {
 			return null;
 		}
 
@@ -112,7 +125,6 @@ namespace System {
 		public static bool IsNaN(float f) {
 			return false;
 		}
-
 
 		[InlineCode("{$System.Script}.compare({this}, {other})")]
 		public int CompareTo(float other) {

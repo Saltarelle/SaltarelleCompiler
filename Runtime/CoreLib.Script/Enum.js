@@ -3,7 +3,9 @@
 
 var ss_Enum = function#? DEBUG Enum$##() {
 };
-ss.registerClass(global, 'ss.Enum', ss_Enum);
+ss_Enum.__typeName = 'ss.Enum';
+ss.Enum = ss_Enum;
+ss.initClass(ss_Enum, {});
 
 ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 	var values = enumType.prototype;
@@ -40,7 +42,7 @@ ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 			return value;
 		}
 	}
-	throw 'Invalid Enumeration Value';
+	throw new ss_ArgumentException('Invalid Enumeration Value');
 };
 
 ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
@@ -51,7 +53,7 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 				return i;
 			}
 		}
-		throw 'Invalid Enumeration Value';
+		throw new ss_ArgumentException('Invalid Enumeration Value');
 	}
 	else {
 		var parts = [];
@@ -61,8 +63,18 @@ ss_Enum.toString = function #? DEBUG Enum$toString##(enumType, value) {
 			}
 		}
 		if (!parts.length) {
-			throw 'Invalid Enumeration Value';
+			throw new ss_ArgumentException('Invalid Enumeration Value');
 		}
 		return parts.join(' | ');
 	}
+};
+
+ss_Enum.getValues = function#? DEBUG Enum$getValues##(enumType) {
+	var parts = [];
+	var values = enumType.prototype;
+	for (var i in values) {
+		if (values.hasOwnProperty(i))
+			parts.push(values[i]);
+	}
+	return parts;
 };

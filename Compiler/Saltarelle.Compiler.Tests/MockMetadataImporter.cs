@@ -78,6 +78,8 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		MethodScriptSemantics IMetadataImporter.GetMethodSemantics(IMethod method) {
+			if (method.IsAccessor)
+				throw new ArgumentException("GetMethodSemantics should not be called on the accessor " + method);
 			return GetMethodSemantics(method);
 		}
 

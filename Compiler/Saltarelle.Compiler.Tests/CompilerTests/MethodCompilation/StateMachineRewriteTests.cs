@@ -127,7 +127,7 @@ public System.Collections.IEnumerator M() {
 }",
 @"function() {
 	var $result, $state = 0;
-	$finally = function() {
+	var $finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({ga_Object}, function() {
@@ -188,7 +188,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 }",
 @"function($x) {
 	var $result, $state = 0;
-	$finally = function() {
+	var $finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({ga_Int32}, function() {
@@ -251,7 +251,7 @@ public System.Collections.IEnumerable M() {
 	return $MakeEnumerable({ga_Object}, function() {
 		return (function() {
 			var $result, $state = 0;
-			$finally = function() {
+			var $finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({ga_Object}, function() {
@@ -316,7 +316,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 	return $MakeEnumerable({ga_Int32}, function() {
 		return (function($x, $y) {
 			var $result, $state = 0;
-			$finally = function() {
+			var $finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({ga_Int32}, function() {

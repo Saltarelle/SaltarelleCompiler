@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		public void StringLiteralsAreCorrectlyEncoded() {
 			AssertCorrect(JsExpression.String("x"), "'x'");
 			AssertCorrect(JsExpression.String("\""), "'\"'");
-			AssertCorrect(JsExpression.String("'"), "'\\''");
+			AssertCorrect(JsExpression.String("'"), "\"'\"");
 			AssertCorrect(JsExpression.String("\r\n/\\"), "'\\r\\n/\\\\'");
 		}
 
@@ -51,6 +51,8 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect(JsExpression.Regexp("x"), "/x/");
 			AssertCorrect(JsExpression.Regexp("\""), "/\"/");
 			AssertCorrect(JsExpression.Regexp("/"), "/\\//");
+			AssertCorrect(JsExpression.Regexp("'"), "/'/");
+			AssertCorrect(JsExpression.Regexp("\""), "/\"/");
 			AssertCorrect(JsExpression.Regexp("\r\n/\\"), "/\\r\\n\\/\\\\/");
 			AssertCorrect(JsExpression.Regexp("x", "g"), "/x/g");
 		}
@@ -93,7 +95,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ObjectLiteralWithFunctionValuesAreOutputOnMultipleLines() {
 			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
-			                                                              new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], new JsReturnStatement())),
+			                                                              new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], JsStatement.Return())),
 			                                                              new JsObjectLiteralProperty("z", JsExpression.Number(3))),
 @"{
 	x: 1,
@@ -116,9 +118,9 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void FunctionDefinitionExpressionIsCorrectlyOutput() {
-			AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null)), "function() {\n\treturn null;\n}");
-			AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, new JsReturnStatement(JsExpression.Null)), "function(a, b) {\n\treturn null;\n}");
-			AssertCorrect(JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Null), name: "myFunction"), "function myFunction() {\n\treturn null;\n}");
+			AssertCorrect(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Null)), "function() {\n\treturn null;\n}");
+			AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, JsStatement.Return(JsExpression.Null)), "function(a, b) {\n\treturn null;\n}");
+			AssertCorrect(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Null), name: "myFunction"), "function myFunction() {\n\treturn null;\n}");
 		}
 
 		[Test]
@@ -197,85 +199,85 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void CommentsAreCorrectlyOutput() {
-			AssertCorrect(new JsComment("Line 1"), "//Line 1\n");
-			AssertCorrect(new JsComment(" With spaces "), "// With spaces \n");
-			AssertCorrect(new JsComment(" With\n Multiple\n Lines"), "// With\n// Multiple\n// Lines\n");
+			AssertCorrect(JsStatement.Comment("Line 1"), "//Line 1\n");
+			AssertCorrect(JsStatement.Comment(" With spaces "), "// With spaces \n");
+			AssertCorrect(JsStatement.Comment(" With\n Multiple\n Lines"), "// With\n// Multiple\n// Lines\n");
 		}
 
 		[Test]
 		public void BlockStatementsAreCorrectlyOutput() {
-			AssertCorrect(new JsBlockStatement(new JsStatement[0]), "{\n}\n");
-			AssertCorrect(new JsBlockStatement(new[] { new JsComment("X") }), "{\n\t//X\n}\n");
-			AssertCorrect(new JsBlockStatement(new[] { new JsComment("X"), new JsComment("Y") }), "{\n\t//X\n\t//Y\n}\n");
+			AssertCorrect(JsStatement.Block(new JsStatement[0]), "{\n}\n");
+			AssertCorrect(JsStatement.Block(new[] { JsStatement.Comment("X") }), "{\n\t//X\n}\n");
+			AssertCorrect(JsStatement.Block(new[] { JsStatement.Comment("X"), JsStatement.Comment("Y") }), "{\n\t//X\n\t//Y\n}\n");
 		}
 
 		[Test]
 		public void VariableDeclarationStatementsAreCorrectlyOutput() {
-			AssertCorrect(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", null) }), "var i;\n");
-			AssertCorrect(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", null), new JsVariableDeclaration("j", null) }), "var i, j;\n");
-			AssertCorrect(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", JsExpression.Number(0)) }), "var i = 0;\n");
-			AssertCorrect(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", JsExpression.Number(1)) }), "var i = 0, j = 1;\n");
-			AssertCorrect(new JsVariableDeclarationStatement(new[] { new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", null) }), "var i = 0, j;\n");
+			AssertCorrect(JsStatement.Var(new[] { JsStatement.Declaration("i", null) }), "var i;\n");
+			AssertCorrect(JsStatement.Var(new[] { JsStatement.Declaration("i", null), JsStatement.Declaration("j", null) }), "var i, j;\n");
+			AssertCorrect(JsStatement.Var(new[] { JsStatement.Declaration("i", JsExpression.Number(0)) }), "var i = 0;\n");
+			AssertCorrect(JsStatement.Var(new[] { JsStatement.Declaration("i", JsExpression.Number(0)), JsStatement.Declaration("j", JsExpression.Number(1)) }), "var i = 0, j = 1;\n");
+			AssertCorrect(JsStatement.Var(new[] { JsStatement.Declaration("i", JsExpression.Number(0)), JsStatement.Declaration("j", null) }), "var i = 0, j;\n");
 		}
 
 		[Test]
 		public void ExpressionStatementsAreCorrectlyOutput() {
-			AssertCorrect(new JsExpressionStatement(JsExpression.This), "this;\n");
+			AssertCorrect((JsStatement)JsExpression.This, "this;\n");
 		}
 
 		[Test]
 		public void ForStatementsAreCorrectlyOutput() {
-			AssertCorrect(new JsForStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("i", JsExpression.Number(0))),
-			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
-			                                                      JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
-			                                                      JsBlockStatement.EmptyStatement),
+			AssertCorrect(JsStatement.For(JsStatement.Var(JsStatement.Declaration("i", JsExpression.Number(0))),
+			                              JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
+			                              JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
+			                              JsStatement.EmptyBlock),
 			              "for (var i = 0; i < 10; i++) {\n}\n");
 
-			AssertCorrect(new JsForStatement(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), 
-			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
-			                                                      JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
-			                                                      JsBlockStatement.EmptyStatement),
+			AssertCorrect(JsStatement.For(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)),
+			                              JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
+			                              JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")),
+			                              JsStatement.EmptyBlock),
 			              "for (i = 0; i < 10; i++) {\n}\n");
 
-			AssertCorrect(new JsForStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("i", JsExpression.Number(0)), new JsVariableDeclaration("j", JsExpression.Number(1))),
-			                                                      JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
-			                                                      JsExpression.Comma(JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")), JsExpression.PostfixPlusPlus(JsExpression.Identifier("j"))),
-			                                                      JsBlockStatement.EmptyStatement),
+			AssertCorrect(JsStatement.For(JsStatement.Var(JsStatement.Declaration("i", JsExpression.Number(0)), JsStatement.Declaration("j", JsExpression.Number(1))),
+			                              JsExpression.Lesser(JsExpression.Identifier("i"), JsExpression.Number(10)),
+			                              JsExpression.Comma(JsExpression.PostfixPlusPlus(JsExpression.Identifier("i")), JsExpression.PostfixPlusPlus(JsExpression.Identifier("j"))),
+			                              JsStatement.EmptyBlock),
 			              "for (var i = 0, j = 1; i < 10; i++, j++) {\n}\n");
 
-			AssertCorrect(new JsForStatement(new JsEmptyStatement(), null, null, JsBlockStatement.EmptyStatement),
+			AssertCorrect(JsStatement.For(JsStatement.Empty, null, null, JsStatement.EmptyBlock),
 			              "for (;;) {\n}\n");
 		}
 
 		[Test]
-		public void ForEachInStatementsAreCorrectlyOutput() {
-			AssertCorrect(new JsForEachInStatement("x", JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement, true),
+		public void ForInStatementsAreCorrectlyOutput() {
+			AssertCorrect(JsStatement.ForIn("x", JsExpression.Identifier("o"), JsStatement.EmptyBlock, true),
 			              "for (var x in o) {\n}\n");
 
-			AssertCorrect(new JsForEachInStatement("x", JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement, false),
+			AssertCorrect(JsStatement.ForIn("x", JsExpression.Identifier("o"), JsStatement.EmptyBlock, false),
 			              "for (x in o) {\n}\n");
 		}
 
 		[Test]
 		public void EmptyStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsEmptyStatement(), ";\n");
+			AssertCorrect(JsStatement.Empty, ";\n");
 		}
 
 		[Test]
 		public void IfStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsIfStatement(JsExpression.True, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), null),
+			AssertCorrect(JsStatement.If(JsExpression.True, JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)), null),
 			              "if (true) {\n\ti = 0;\n}\n");
-			AssertCorrect(new JsIfStatement(JsExpression.True, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1)))),
+			AssertCorrect(JsStatement.If(JsExpression.True, JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1))),
 			              "if (true) {\n\ti = 0;\n}\nelse {\n\ti = 1;\n}\n");
 		}
 
 		[Test]
 		public void IfAndElseIfStatementsAreChained() {
-			AssertCorrect(new JsIfStatement(JsExpression.True, new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))), null),
+			AssertCorrect(JsStatement.If(JsExpression.True, JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)), null),
 			              "if (true) {\n\ti = 0;\n}\n");
-			AssertCorrect(new JsIfStatement(JsExpression.Identifier("a"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0))),
-			                  new JsIfStatement(JsExpression.Identifier("b"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1))),
-			                  new JsIfStatement(JsExpression.Identifier("c"), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2))), new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3)))))),
+			AssertCorrect(JsStatement.If(JsExpression.Identifier("a"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)),
+			                             JsStatement.If(JsExpression.Identifier("b"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1)),
+			                             JsStatement.If(JsExpression.Identifier("c"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2)), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3))))),
 @"if (a) {
 	i = 0;
 }
@@ -293,55 +295,55 @@ else {
 
 		[Test]
 		public void BreakStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsBreakStatement(), "break;\n");
-			AssertCorrect(new JsBreakStatement("someLabel"), "break someLabel;\n");
+			AssertCorrect(JsStatement.Break(), "break;\n");
+			AssertCorrect(JsStatement.Break("someLabel"), "break someLabel;\n");
 		}
 
 		[Test]
 		public void ContinueStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsContinueStatement(), "continue;\n");
-			AssertCorrect(new JsContinueStatement("someLabel"), "continue someLabel;\n");
+			AssertCorrect(JsStatement.Continue(), "continue;\n");
+			AssertCorrect(JsStatement.Continue("someLabel"), "continue someLabel;\n");
 		}
 
 		[Test]
 		public void DoWhileStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsDoWhileStatement(JsExpression.True, new JsBlockStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("x", JsExpression.Number(0))))),
+			AssertCorrect(JsStatement.DoWhile(JsExpression.True, JsStatement.Block(JsStatement.Var("x", JsExpression.Number(0)))),
 			              "do {\n\tvar x = 0;\n} while (true);\n");
 		}
 
 		[Test]
 		public void WhileStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsWhileStatement(JsExpression.True, new JsBlockStatement(new JsVariableDeclarationStatement(new JsVariableDeclaration("x", JsExpression.Number(0))))),
+			AssertCorrect(JsStatement.While(JsExpression.True, JsStatement.Block(JsStatement.Var("x", JsExpression.Number(0)))),
 			              "while (true) {\n\tvar x = 0;\n}\n");
 		}
 
 		[Test]
 		public void ReturnStatementWithOrWithoutExpressionIsCorrectlyOutput() {
-			AssertCorrect(new JsReturnStatement(null), "return;\n");
-			AssertCorrect(new JsReturnStatement(JsExpression.Identifier("x")), "return x;\n");
+			AssertCorrect(JsStatement.Return(null), "return;\n");
+			AssertCorrect(JsStatement.Return(JsExpression.Identifier("x")), "return x;\n");
 		}
 
 		[Test]
 		public void TryCatchFinallyStatementWithCatchOrFinallyOrBothIsCorrectlyOutput() {
-			AssertCorrect(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), new JsExpressionStatement(JsExpression.Identifier("z"))),
+			AssertCorrect(JsStatement.Try(JsExpression.Identifier("x"), JsStatement.Catch("e", JsExpression.Identifier("y")), JsExpression.Identifier("z")),
 			              "try {\n\tx;\n}\ncatch (e) {\n\ty;\n}\nfinally {\n\tz;\n}\n");
-			AssertCorrect(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), new JsCatchClause("e", new JsExpressionStatement(JsExpression.Identifier("y"))), null),
+			AssertCorrect(JsStatement.Try(JsExpression.Identifier("x"), JsStatement.Catch("e", JsExpression.Identifier("y")), null),
 			              "try {\n\tx;\n}\ncatch (e) {\n\ty;\n}\n");
-			AssertCorrect(new JsTryStatement(new JsExpressionStatement(JsExpression.Identifier("x")), null, new JsExpressionStatement(JsExpression.Identifier("z"))),
+			AssertCorrect(JsStatement.Try(JsExpression.Identifier("x"), null, JsExpression.Identifier("z")),
 			              "try {\n\tx;\n}\nfinally {\n\tz;\n}\n");
 		}
 
 		[Test]
 		public void ThrowStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsThrowStatement(JsExpression.Identifier("x")), "throw x;\n");
+			AssertCorrect(JsStatement.Throw(JsExpression.Identifier("x")), "throw x;\n");
 		}
 
 		[Test]
 		public void SwitchStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsSwitchStatement(JsExpression.Identifier("x"),
-			                  new JsSwitchSection(new[] { JsExpression.Number(0) }, new JsExpressionStatement(JsExpression.Identifier("a"))),
-			                  new JsSwitchSection(new[] { JsExpression.Number(1), JsExpression.Number(2) }, new JsExpressionStatement(JsExpression.Identifier("b"))),
-			                  new JsSwitchSection(new[] { null, JsExpression.Number(3) }, new JsExpressionStatement(JsExpression.Identifier("c")))
+			AssertCorrect(JsStatement.Switch(JsExpression.Identifier("x"),
+			                  JsStatement.SwitchSection(new[] { JsExpression.Number(0) }, JsExpression.Identifier("a")),
+			                  JsStatement.SwitchSection(new[] { JsExpression.Number(1), JsExpression.Number(2) }, JsExpression.Identifier("b")),
+			                  JsStatement.SwitchSection(new[] { null, JsExpression.Number(3) }, JsExpression.Identifier("c"))
 			              ),
 @"switch (x) {
 	case 0: {
@@ -362,17 +364,17 @@ else {
 
 		[Test]
 		public void FunctionDefinitionStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsFunctionStatement("f", new[] { "a", "b", "c" }, new JsExpressionStatement(JsExpression.Identifier("x"))), "function f(a, b, c) {\n\tx;\n}\n");
+			AssertCorrect(JsStatement.Function("f", new[] { "a", "b", "c" }, JsExpression.Identifier("x")), "function f(a, b, c) {\n\tx;\n}\n");
 		}
 
 		[Test]
 		public void WithStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsWithStatement(JsExpression.Identifier("o"), JsBlockStatement.EmptyStatement), "with (o) {\n}\n");
+			AssertCorrect(JsStatement.With(JsExpression.Identifier("o"), JsStatement.EmptyBlock), "with (o) {\n}\n");
 		}
 
 		[Test]
 		public void LabelledStatementIsCorrectlyOutput() {
-			AssertCorrect(new JsBlockStatement(new JsLabelledStatement("lbl", new JsExpressionStatement(JsExpression.Identifier("X")))),
+			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl", JsExpression.Identifier("X"))),
 			              "{\n\tlbl:\n\tX;\n}\n");
 		}
 	}

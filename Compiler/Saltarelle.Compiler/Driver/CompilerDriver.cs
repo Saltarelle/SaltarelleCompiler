@@ -1,27 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Security;
-using System.Security.Policy;
 using System.Text;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
 using System.Linq;
 using Mono.CSharp;
-using Mono.Cecil;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
-using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
-using Saltarelle.Compiler.JSModel.TypeSystem;
-using ArrayType = ICSharpCode.NRefactory.TypeSystem.ArrayType;
-using AssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -78,8 +67,6 @@ namespace Saltarelle.Compiler.Driver {
 				WarningsAreErrors         = options.TreatWarningsAsErrors,
 				FatalCounter              = 100,
 				WarningLevel              = options.WarningLevel,
-				AssemblyReferences        = options.References.Where(r => r.Alias == null).Select(r => ResolveReference(r.Filename, allPaths, er)).ToList(),
-				AssemblyReferencesAliases = options.References.Where(r => r.Alias != null).Select(r => Tuple.Create(r.Alias, ResolveReference(r.Filename, allPaths, er))).ToList(),
 				Encoding                  = Encoding.UTF8,
 				DocumentationFile         = !string.IsNullOrEmpty(options.DocumentationFile) ? outputDocFilePath : null,
 				OutputFile                = outputAssemblyPath,
@@ -90,6 +77,13 @@ namespace Saltarelle.Compiler.Driver {
 				StrongNameKeyFile         = options.KeyFile,
 			};
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(f, f, i + 1)));
+			foreach (var r in options.References) {
+				string resolvedPath = ResolveReference(r.Filename, allPaths, er);
+				if (r.Alias == null)
+					result.AssemblyReferences.Add(resolvedPath);
+				else
+					result.AssemblyReferencesAliases.Add(Tuple.Create(r.Alias, resolvedPath));
+			}
 			foreach (var c in options.DefineConstants)
 				result.AddConditionalSymbol(c);
 			foreach (var w in options.DisabledWarnings)
@@ -98,6 +92,8 @@ namespace Saltarelle.Compiler.Driver {
 				result.AddWarningAsError(w);
 			foreach (var w in options.WarningsNotAsErrors)
 				result.AddWarningOnly(w);
+			if (options.EmbeddedResources.Count > 0)
+				result.Resources = options.EmbeddedResources.Select(r => new AssemblyResource(r.Filename, r.ResourceName, isPrivate: !r.IsPublic) { IsEmbeded = true }).ToList();
 
 			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
 				er.Region = DomRegion.Empty;
@@ -139,7 +135,7 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		public class ErrorReporterWrapper : MarshalByRefObject, IErrorReporter {
+		public class ErrorReporterWrapper : IErrorReporter {
 			private readonly IErrorReporter _er;
 			private readonly TextWriter _actualConsoleOut;
 
@@ -187,245 +183,213 @@ namespace Saltarelle.Compiler.Driver {
 			_errorReporter = errorReporter;
 		}
 
-		private class Executor : MarshalByRefObject {
-			private bool IsEntryPointCandidate(IMethod m) {
-				if (m.Name != "Main" || !m.IsStatic || m.DeclaringTypeDefinition.TypeParameterCount > 0 || m.TypeParameters.Count > 0)	// Must be a static, non-generic Main
+		private bool IsEntryPointCandidate(IMethod m) {
+			if (m.Name != "Main" || !m.IsStatic || m.DeclaringTypeDefinition.TypeParameterCount > 0 || m.TypeParameters.Count > 0)	// Must be a static, non-generic Main
+				return false;
+			if (!m.ReturnType.IsKnownType(KnownTypeCode.Void) && !m.ReturnType.IsKnownType(KnownTypeCode.Int32))	// Must return void or int.
+				return false;
+			if (m.Parameters.Count == 0)	// Can have 0 parameters.
+				return true;
+			if (m.Parameters.Count > 1)	// May not have more than 1 parameter.
+				return false;
+			if (m.Parameters[0].IsRef || m.Parameters[0].IsOut)	// The single parameter must not be ref or out.
+				return false;
+
+			var at = m.Parameters[0].Type as ArrayType;
+			return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
+		}
+
+		private static IEnumerable<System.Reflection.Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> references) {
+			return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
+			                        .Select(r => r.Item3)
+			                        .Where(a => a != null);
+		}
+
+		private static readonly System.Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
+
+		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
+			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
+		}
+
+		public bool Compile(CompilerOptions options) {
+			string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
+			var actualOut = Console.Out;
+			var er = new ErrorReporterWrapper(_errorReporter, actualOut);
+			try {
+				Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
+
+				// Compile the assembly
+				var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile, er);
+				if (er.HasErrors)
 					return false;
-				if (!m.ReturnType.IsKnownType(KnownTypeCode.Void) && !m.ReturnType.IsKnownType(KnownTypeCode.Int32))	// Must return void or int.
-					return false;
-				if (m.Parameters.Count == 0)	// Can have 0 parameters.
-					return true;
-				if (m.Parameters.Count > 1)	// May not have more than 1 parameter.
-					return false;
-				if (m.Parameters[0].IsRef || m.Parameters[0].IsOut)	// The single parameter must not be ref or out.
-					return false;
 
-				var at = m.Parameters[0].Type as ArrayType;
-				return at != null && at.Dimensions == 1 && at.ElementType.IsKnownType(KnownTypeCode.String);	// The single parameter must be a one-dimensional array of strings.
-			}
-
-			private static IEnumerable<Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> references) {
-				return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
-				                        .Select(r => r.Item3)
-				                        .Where(a => a != null);
-			}
-
-			private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
-
-			private static void RegisterPlugin(IWindsorContainer container, Assembly plugin) {
-				container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
-			}
-
-			public bool Compile(CompilerOptions options, ErrorReporterWrapper er) {
-				string intermediateAssemblyFile = Path.GetTempFileName(), intermediateDocFile = Path.GetTempFileName();
-				try {
+				if (!options.AlreadyCompiled) {
 					// Compile the assembly
-					var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile, er);
+					var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
+					var d = new Mono.CSharp.Driver(ctx);
+					d.Compile();
 					if (er.HasErrors)
 						return false;
+				}
 
-					if (!options.AlreadyCompiled) {
-						// Compile the assembly
-						var ctx = new CompilerContext(settings, new ConvertingReportPrinter(er));
-						var d = new Mono.CSharp.Driver(ctx);
-						d.Compile();
-						if (er.HasErrors)
-							return false;
-					}
+				var references = LoadReferences(settings.AssemblyReferences, er);
+				if (references == null)
+					return false;
 
-					var references = LoadReferences(settings.AssemblyReferences, er);
-					if (references == null)
-						return false;
+				PreparedCompilation compilation = PreparedCompilation.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
 
-					PreparedCompilation compilation = PreparedCompilation.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
+				IMethod entryPoint = FindEntryPoint(options, er, compilation);
 
-					IMethod entryPoint = FindEntryPoint(options, er, compilation);
+				var container = new WindsorContainer();
+				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
+					RegisterPlugin(container, plugin);
 
-					var container = new WindsorContainer();
-					foreach (var plugin in TopologicalSortPlugins(references).Reverse())
-						RegisterPlugin(container, plugin);
+				// Compile the script
+				container.Register(Component.For<IErrorReporter>().Instance(er),
+				                   Component.For<CompilerOptions>().Instance(options),
+				                   Component.For<ICompilation>().Instance(compilation.Compilation),
+				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
+				                  );
 
-					// Compile the script
-					container.Register(Component.For<IErrorReporter>().Instance(er),
-					                   Component.For<CompilerOptions>().Instance(options),
-					                   Component.For<ICompilation>().Instance(compilation.Compilation),
-					                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
-					                  );
+				container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());
 
-					container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());
+				var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
 
-					var compiledTypes = container.Resolve<ICompiler>().Compile(compilation);
+				foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())
+					compiledTypes = rewriter.Rewrite(compiledTypes);
 
-					foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())
-						compiledTypes = rewriter.Rewrite(compiledTypes);
+				var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
+				js = container.Resolve<ILinker>().Process(js);
 
-					var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
-					js = container.Resolve<ILinker>().Process(js);
+				if (er.HasErrors)
+					return false;
 
-					if (er.HasErrors)
-						return false;
+				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
+				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
 
-					string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
-					string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
-
-					if (!options.AlreadyCompiled) {
-						try {
-							File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
-						}
-						catch (IOException ex) {
-							er.Region = DomRegion.Empty;
-							er.Message(Messages._7950, ex.Message);
-							return false;
-						}
-						if (!string.IsNullOrEmpty(options.DocumentationFile)) {
-							try {
-								File.Copy(intermediateDocFile, options.DocumentationFile, true);
-							}
-							catch (IOException ex) {
-								er.Region = DomRegion.Empty;
-								er.Message(Messages._7952, ex.Message);
-								return false;
-							}
-						}
-					}
-
-					if (options.MinimizeScript) {
-						js = ((JsBlockStatement)Minifier.Process(new JsBlockStatement(js))).Statements;
-					}
-
-					string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
+				if (!options.AlreadyCompiled) {
 					try {
-						File.WriteAllText(outputScriptPath, script, settings.Encoding);
+						File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 					}
 					catch (IOException ex) {
 						er.Region = DomRegion.Empty;
-						er.Message(Messages._7951, ex.Message);
+						er.Message(Messages._7950, ex.Message);
 						return false;
 					}
-					return true;
+					if (!string.IsNullOrEmpty(options.DocumentationFile)) {
+						try {
+							File.Copy(intermediateDocFile, options.DocumentationFile, true);
+						}
+						catch (IOException ex) {
+							er.Region = DomRegion.Empty;
+							er.Message(Messages._7952, ex.Message);
+							return false;
+						}
+					}
 				}
-				catch (Exception ex) {
+
+				if (options.MinimizeScript) {
+					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
+				}
+
+				string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
+				try {
+					File.WriteAllText(outputScriptPath, script, settings.Encoding);
+				}
+				catch (IOException ex) {
 					er.Region = DomRegion.Empty;
-					er.InternalError(ex.ToString());
+					er.Message(Messages._7951, ex.Message);
 					return false;
 				}
-				finally {
-					if (!options.AlreadyCompiled) {
-						try { File.Delete(intermediateAssemblyFile); } catch {}
-						try { File.Delete(intermediateDocFile); } catch {}
-					}
-				}
-			}
-
-			private IMethod FindEntryPoint(CompilerOptions options, ErrorReporterWrapper er, PreparedCompilation compilation) {
-				if (options.HasEntryPoint) {
-					List<IMethod> candidates;
-					if (!string.IsNullOrEmpty(options.EntryPointClass)) {
-						var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
-						if (t == null) {
-							er.Region = DomRegion.Empty;
-							er.Message(Messages._7950, "Could not find the entry point class " + options.EntryPointClass + ".");
-							return null;
-						}
-						candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
-					}
-					else {
-						candidates =
-							compilation.Compilation.MainAssembly.GetAllTypeDefinitions()
-							           .SelectMany(t => t.Methods)
-							           .Where(IsEntryPointCandidate)
-							           .ToList();
-					}
-					if (candidates.Count != 1) {
-						er.Region = DomRegion.Empty;
-						er.Message(Messages._7950, "Could not find a unique entry point.");
-						return null;
-					}
-					return candidates[0];
-				}
-
-				return null;
-			}
-		}
-
-		/// <param name="options">Compile options</param>
-		/// <param name="createAppDomain">If not null, a function that should return a new app domain which is setup correctly to perform a compilation.</param>
-		public bool Compile(CompilerOptions options, Func<AppDomain> createAppDomain) {
-			try {
-				AppDomain ad = null;
-				var actualOut = Console.Out;
-				try {
-					Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
-
-					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
-
-					Executor executor;
-					if (createAppDomain != null) {
-						ad = createAppDomain();
-						executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
-					}
-					else {
-						executor = new Executor();
-					}
-					return executor.Compile(options, er);
-				}
-				finally {
-					if (ad != null) {
-						AppDomain.Unload(ad);
-					}
-					if (actualOut != null) {
-						Console.SetOut(actualOut);
-					}
-				}
+				return true;
 			}
 			catch (Exception ex) {
-				_errorReporter.Region = new DomRegion();
-				_errorReporter.InternalError(ex);
+				er.Region = DomRegion.Empty;
+				er.InternalError(ex.ToString());
 				return false;
+			}
+			finally {
+				if (!options.AlreadyCompiled) {
+					try { File.Delete(intermediateAssemblyFile); } catch {}
+					try { File.Delete(intermediateDocFile); } catch {}
+				}
+				if (actualOut != null) {
+					Console.SetOut(actualOut);
+				}
 			}
 		}
 
-		private static Assembly LoadPlugin(AssemblyDefinition def) {
-			foreach (var r in def.Modules.SelectMany(m => m.Resources).OfType<EmbeddedResource>()) {
-				if (r.Name.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase)) {
-					var data = r.GetResourceData();
-					var asm = AssemblyDefinition.ReadAssembly(new MemoryStream(data));
-
-					var result = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == asm.Name.Name);
-					if (result == null)
-						result = Assembly.Load(data);
-					return result;
+		private IMethod FindEntryPoint(CompilerOptions options, ErrorReporterWrapper er, PreparedCompilation compilation) {
+			if (options.HasEntryPoint) {
+				List<IMethod> candidates;
+				if (!string.IsNullOrEmpty(options.EntryPointClass)) {
+					var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
+					if (t == null) {
+						er.Region = DomRegion.Empty;
+						er.Message(Messages._7950, "Could not find the entry point class " + options.EntryPointClass + ".");
+						return null;
+					}
+					candidates = t.Methods.Where(IsEntryPointCandidate).ToList();
 				}
+				else {
+					candidates =
+						compilation.Compilation.MainAssembly.GetAllTypeDefinitions()
+						           .SelectMany(t => t.Methods)
+						           .Where(IsEntryPointCandidate)
+						           .ToList();
+				}
+				if (candidates.Count != 1) {
+					er.Region = DomRegion.Empty;
+					er.Message(Messages._7950, "Could not find a unique entry point.");
+					return null;
+				}
+				return candidates[0];
 			}
+
 			return null;
 		}
 
-		private static IList<string> GetReferencedAssemblyNames(AssemblyDefinition asm) {
-			return asm.Modules.SelectMany(m => m.AssemblyReferences, (_, r) => r.Name).Distinct().ToList();
-		}
-
-		private static IList<Tuple<IUnresolvedAssembly, IList<string>, Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
-			var loader = new CecilLoader { IncludeInternalMembers = true };
-			var assemblies = references.Select(r => AssemblyDefinition.ReadAssembly(r)).ToList(); // Shouldn't result in errors because mcs would have caught it.
-
-			var indirectReferences = (  from a in assemblies
-			                            from m in a.Modules
-			                            from r in m.AssemblyReferences
-			                          select r.Name)
-			                         .Distinct();
-
-			var directReferences = from a in assemblies select a.Name.Name;
-
-			var missingReferences = indirectReferences.Except(directReferences).ToList();
-
-			if (missingReferences.Count > 0) {
-				er.Region = DomRegion.Empty;
-				foreach (var r in missingReferences)
-					er.Message(Messages._7996, r);
-				return null;
+		private static System.Reflection.Assembly LoadPlugin(IKVM.Reflection.Assembly asm) {
+			foreach (var name in asm.GetManifestResourceNames()) {
+				if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) {
+					using (var strm = asm.GetManifestResourceStream(name))
+					using (var ms = new MemoryStream())
+					using (var uni = new IKVM.Reflection.Universe()) {
+						strm.CopyTo(ms);
+						ms.Position = 0;
+						string referenceName = uni.LoadAssembly(uni.OpenRawModule(ms, name)).GetName().Name;
+						var result = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == referenceName);
+						if (result == null)
+							result = System.Reflection.Assembly.Load(ms.ToArray());
+						return result;
+					}
+				}
 			}
 
-			return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), GetReferencedAssemblyNames(asm), LoadPlugin(asm))).ToList();
+			return null;
+		}
+
+		private static IEnumerable<string> GetReferencedAssemblyNames(IKVM.Reflection.Assembly asm) {
+			return asm.GetReferencedAssemblies().Select(r => r.Name);
+		}
+
+		private static IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
+			var loader = new IkvmLoader { IncludeInternalMembers = true };
+			using (var universe = new IKVM.Reflection.Universe(IKVM.Reflection.UniverseOptions.DisablePseudoCustomAttributeRetrieval | IKVM.Reflection.UniverseOptions.SupressReferenceTypeIdentityConversion)) {
+				var assemblies = references.Select(universe.LoadFile).ToList();
+				var indirectReferences = assemblies.SelectMany(GetReferencedAssemblyNames).Distinct();
+				var directReferences = from a in assemblies select a.GetName().Name;
+				var missingReferences = indirectReferences.Except(directReferences).ToList();
+
+				if (missingReferences.Count > 0) {
+					er.Region = DomRegion.Empty;
+					foreach (var r in missingReferences)
+						er.Message(Messages._7996, r);
+					return null;
+				}
+
+				return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), (IList<string>)GetReferencedAssemblyNames(asm).ToList(), LoadPlugin(asm))).ToList();
+			}
 		}
 	}
 }

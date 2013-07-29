@@ -18,11 +18,11 @@ namespace Saltarelle.Compiler.Tests {
 			var t3 = Common.CreateMockTypeDefinition("Type", asm);
 
 			var ast = new JsStatement[] {
-				new JsIfStatement(JsExpression.Member(new JsTypeReferenceExpression(t1), "X"), new JsBlockStatement(
-					new JsExpressionStatement(JsExpression.Add(new JsTypeReferenceExpression(t2), new JsTypeReferenceExpression(t3)))
+				JsStatement.If(JsExpression.Member(new JsTypeReferenceExpression(t1), "X"), JsStatement.Block(
+					JsExpression.Add(new JsTypeReferenceExpression(t2), new JsTypeReferenceExpression(t3))
 				),
 				null),
-				new JsExpressionStatement(JsExpression.Add(JsExpression.Number(1), new JsTypeReferenceExpression(t1))),
+				JsExpression.Add(JsExpression.Number(1), new JsTypeReferenceExpression(t1)),
 			};
 			
 			var refs = TypeReferenceFinder.Analyze(ast);

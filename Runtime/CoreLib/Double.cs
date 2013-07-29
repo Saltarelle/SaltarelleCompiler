@@ -15,22 +15,27 @@ namespace System {
 	[ScriptName("Number")]
 	public struct Double : IComparable<Double>, IEquatable<Double>, IFormattable {
 		[InlineCode("0")]
-		public Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
-		[ScriptName("MAX_VALUE")]
+		[ScriptName("MAX_VALUE"), NoInline]
 		public const double MaxValue = 0;
 
-		[ScriptName("MIN_VALUE")]
-		public const double MinValue = 0;
+		public static double MinValue { [InlineCode("-{$System.Double}.MAX_VALUE")] get { return 0; } }
 
-		[PreserveCase]
+		[ScriptName("MIN_VALUE"), NoInline]
+		public const double JsMinValue = 0;
+
+		[InlineConstant]
+		public const double Epsilon = 4.94065645841247E-324;
+
+		[PreserveCase, NoInline]
 		public const double NaN = 0;
 
-		[ScriptName("NEGATIVE_INFINITY")]
+		[ScriptName("NEGATIVE_INFINITY"), NoInline]
 		public const double NegativeInfinity = 0;
 
-		[ScriptName("POSITIVE_INFINITY")]
+		[ScriptName("POSITIVE_INFINITY"), NoInline]
 		public const double PositiveInfinity = 0;
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
@@ -40,6 +45,16 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string ToString(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider})")]
+		public string ToString(string format, IFormatProvider provider) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G', {provider})")]
+		public string ToString(IFormatProvider provider) {
 			return null;
 		}
 

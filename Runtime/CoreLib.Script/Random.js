@@ -32,7 +32,9 @@ var ss_Random = function#? DEBUG Random$##(seed) {
 	}
 };
 
-ss_Random.prototype = {
+ss_Random.__typeName = 'ss.Random';
+ss.Random = ss_Random;
+ss.initClass(ss_Random, {
 	next: function#? DEBUG Random$next##() {
 		return this.sample() * 2147483648 | 0;
 	},
@@ -64,6 +66,4 @@ ss_Random.prototype = {
 
 		return retVal * (1.0 / 2147483648);
 	}
-};
-
-ss.registerClass(global, 'ss.Random', ss_Random);
+});

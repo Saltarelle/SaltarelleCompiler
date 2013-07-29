@@ -15,7 +15,7 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	public struct Byte : IComparable<Byte>, IEquatable<Byte>, IFormattable {
 		[InlineCode("0")]
-		public Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Byte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[InlineConstant]

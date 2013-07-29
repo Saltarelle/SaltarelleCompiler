@@ -65,7 +65,7 @@ namespace Saltarelle.Compiler {
 			for (int i = 0; i < expressions.Count; i++) {
 				if (ExpressionOrderer.DoesOrderMatter(expressions[i], newExpressions)) {
 					var temp = createTemporaryVariable();
-					statementList.Add(new JsVariableDeclarationStatement(temp, expressions[i]));
+					statementList.Add(JsStatement.Var(temp, expressions[i]));
 					expressions[i] = JsExpression.Identifier(temp);
 				}
 			}
@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler {
 			if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(expression)) {
 				CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressionsThatMustBeEvaluatedBefore, expression, createTemporaryVariable);
 				var temp = createTemporaryVariable();
-				statementList.Add(new JsVariableDeclarationStatement(temp, expression));
+				statementList.Add(JsStatement.Var(temp, expression));
 				return JsExpression.Identifier(temp);
 			}
 			else
@@ -85,10 +85,10 @@ namespace Saltarelle.Compiler {
 		public static JsExpression ResolveTypeParameter(ITypeParameter tp, ITypeDefinition currentType, IMethod currentMethod, IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer) {
 			bool unusable = false;
 			switch (tp.OwnerType) {
-				case EntityType.TypeDefinition:
+				case SymbolKind.TypeDefinition:
 					unusable = metadataImporter.GetTypeSemantics(currentType).IgnoreGenericArguments;
 					break;
-				case EntityType.Method: {
+				case SymbolKind.Method: {
 					var sem = metadataImporter.GetMethodSemantics(currentMethod);
 					unusable = sem.Type != MethodScriptSemantics.ImplType.InlineCode && metadataImporter.GetMethodSemantics(currentMethod).IgnoreGenericArguments;
 					break;
@@ -98,7 +98,7 @@ namespace Saltarelle.Compiler {
 					return JsExpression.Null;
 			}
 			if (unusable) {
-				errorReporter.Message(Messages._7536, tp.Name, tp.OwnerType == EntityType.TypeDefinition ? "type" : "method", tp.OwnerType == EntityType.TypeDefinition ? currentType.FullName : currentMethod.FullName);
+				errorReporter.Message(Messages._7536, tp.Name, tp.OwnerType == SymbolKind.TypeDefinition ? "type" : "method", tp.OwnerType == SymbolKind.TypeDefinition ? currentType.FullName : currentMethod.FullName);
 				return JsExpression.Null;
 			}
 			return JsExpression.Identifier(namer.GetTypeParameterName(tp));

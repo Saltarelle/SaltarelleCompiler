@@ -23,6 +23,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="DivideByZeroException.js" />
+    <Content Include="RegExp.js" />
+    <Content Include="Guid.js" />
+    <Content Include="ArgumentException.js" />
+    <Content Include="ArgumentNullException.js" />
+    <Content Include="AmbiguousMatchException.js" />
+    <Content Include="ArgumentOutOfRangeException.js" />
+    <Content Include="InvalidCastException.js" />
+    <Content Include="NullReferenceException.js" />
+    <Content Include="KeyNotFoundException.js" />
+    <Content Include="InvalidOperationException.js" />
+    <Content Include="FormatException.js" />
     <Content Include="IFormattable.js" />
     <Content Include="IComparer.js" />
     <Content Include="Function.js" />
@@ -61,12 +73,16 @@
     <Content Include="ArrayEnumerator.js" />
     <Content Include="CancelEventArgs.js" />
     <Content Include="CultureInfo.js" />
+    <Content Include="DateTimeFormatInfo.js" />
+    <Content Include="NumberFormatInfo.js" />
     <Content Include="EventArgs.js" />
     <Content Include="IDisposable.js" />
     <Content Include="IEnumerable.js" />
     <Content Include="IEnumerator.js" />
     <Content Include="StringBuilder.js" />
     <Content Include="TypeSystem.js" />
+    <Content Include="Stopwatch.js" />
+    <Content Include="IFormatProvider.js" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AggregateException.js" />

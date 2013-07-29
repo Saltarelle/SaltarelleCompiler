@@ -41,8 +41,8 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private readonly EntityType _ownerType;
-		public EntityType OwnerType {
+		private readonly SymbolKind _ownerType;
+		public SymbolKind OwnerType {
 			get {
 				if (Type != TokenType.TypeParameter)
 					throw new InvalidOperationException();
@@ -50,7 +50,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public InlineCodeToken(TokenType type, string text = null, int index = -1, EntityType ownerType = default(EntityType), bool isExpandedParamArray = false) {
+		public InlineCodeToken(TokenType type, string text = null, int index = -1, SymbolKind ownerType = default(SymbolKind), bool isExpandedParamArray = false) {
 			Type   = type;
 			_text  = text;
 			_index = index;

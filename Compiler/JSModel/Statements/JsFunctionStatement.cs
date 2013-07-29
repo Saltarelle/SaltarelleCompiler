@@ -12,6 +12,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public ReadOnlyCollection<string> ParameterNames { get; private set; }
 		public JsBlockStatement Body { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Function")]
 		public JsFunctionStatement(string name, IEnumerable<string> parameterNames, JsStatement body) {
 			if (!name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");
 			if (parameterNames == null) throw new ArgumentNullException("parameterNames");
@@ -20,7 +21,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 			ParameterNames = parameterNames.AsReadOnly();
 			if (ParameterNames.Any(n => !n.IsValidJavaScriptIdentifier()))
 				throw new ArgumentException("parameterNames");
-			Body = JsBlockStatement.MakeBlock(body);
+			Body = EnsureBlock(body);
 			Name = name;
 		}
 

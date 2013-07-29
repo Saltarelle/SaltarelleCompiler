@@ -109,6 +109,12 @@ namespace CoreLib.Plugin {
 			return AttributeReader.HasAttribute<AsyncModuleAttribute>(assembly.AssemblyAttributes);
 		}
 
+		public static IEnumerable<KeyValuePair<string,string>> GetAdditionalDependencies(IAssembly assembly)
+		{
+			return AttributeReader.ReadAttributes<AdditionalDependencyAttribute>(assembly.AssemblyAttributes)
+				.Select(a => new KeyValuePair<string,string>(a.ModuleName, a.InstanceName));
+		}
+
 		public static string GetModuleName(IAssembly assembly) {
 			var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(assembly.AssemblyAttributes);
 			return (mna != null && !String.IsNullOrEmpty(mna.ModuleName) ? mna.ModuleName : null);
@@ -298,8 +304,41 @@ namespace CoreLib.Plugin {
 			return type.TypeParameterCount > 0 && !metadataImporter.GetTypeSemantics(type).IgnoreGenericArguments;
 		}
 
+		private static bool IsMemberReflectable(IMember member, MemberReflectability reflectability) {
+			switch (reflectability) {
+				case MemberReflectability.None:
+					return false;
+				case MemberReflectability.PublicAndProtected:
+					return !member.IsPrivate && !member.IsInternal;
+				case MemberReflectability.NonPrivate:
+					return !member.IsPrivate;
+				case MemberReflectability.All:
+					return true;
+				default:
+					throw new ArgumentException("reflectability");
+			}
+		}
+
 		public static bool IsReflectable(IMember member, IMetadataImporter metadataImporter) {
-			return member.Attributes.Any(a => a.AttributeType.FullName == typeof(ReflectableAttribute).FullName || metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType);
+			var ra = AttributeReader.ReadAttribute<ReflectableAttribute>(member);
+			if (ra != null)
+				return ra.Reflectable;
+			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
+				return true;	// Any scriptable attribute will cause reflectability (unless [Reflectable(false)] was specified.
+
+			if (member.DeclaringType.Kind != TypeKind.Anonymous) {
+				var tdr = AttributeReader.ReadAttribute<DefaultMemberReflectabilityAttribute>(member.DeclaringTypeDefinition);
+				if (tdr != null) {
+					return IsMemberReflectable(member, tdr.DefaultReflectability);
+				}
+
+				var adr = AttributeReader.ReadAttribute<DefaultMemberReflectabilityAttribute>(member.ParentAssembly.AssemblyAttributes);
+				if (adr != null) {
+					return IsMemberReflectable(member, adr.DefaultReflectability);
+				}
+			}
+
+			return false;
 		}
 
 		private static ExpressionCompileResult Compile(ResolveResult rr, ITypeDefinition currentType, IMethod currentMethod, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, bool returnValueIsImportant, Dictionary<IVariable, VariableData> variables, ISet<string> usedVariableNames) {
@@ -312,7 +351,7 @@ namespace CoreLib.Plugin {
 			                              errorReporter,
 			                              variables,
 			                              new Dictionary<LambdaResolveResult, NestedFunctionData>(),
-			                              t => { 
+			                              t => {
 			                                  string name = namer.GetVariableName(null, usedVariableNames);
 			                                  IVariable variable = new SimpleVariable(t, "temporary", DomRegion.Empty);
 			                                  variables[variable] = new VariableData(name, null, false);
@@ -337,7 +376,7 @@ namespace CoreLib.Plugin {
 			var initializerStatements = attr.NamedArguments.Select(a => new OperatorResolveResult(a.Key.ReturnType, ExpressionType.Assign, new MemberResolveResult(new InitializedObjectResolveResult(attr.AttributeType), a.Key), a.Value)).ToList<ResolveResult>();
 			var constructorResult = CompileConstructorInvocation(attr.Constructor, initializerStatements, currentType, null, attr.PositionalArguments, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, null, null);
 			if (constructorResult.AdditionalStatements.Count > 0) {
-				return JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], new JsBlockStatement(constructorResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(constructorResult.Expression) }))));
+				return JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(constructorResult.AdditionalStatements.Concat(new[] { JsStatement.Return(constructorResult.Expression) }))));
 			}
 			else {
 				return constructorResult.Expression;
@@ -413,13 +452,13 @@ namespace CoreLib.Plugin {
 					}
 				}
 				var compileResult = CompileConstructorInvocation(constructor, initializerStatements, constructor.DeclaringTypeDefinition, constructor, constructorParameters, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, variables, usedNames);
-				var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), new JsBlockStatement(compileResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(compileResult.Expression) })));
+				var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), JsStatement.Block(compileResult.AdditionalStatements.Concat(new[] { JsStatement.Return(compileResult.Expression) })));
 				properties.Add(new JsObjectLiteralProperty("def", definition));
 			}
 			return JsExpression.ObjectLiteral(properties);
 		}
 
-		public static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
+		private static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType, MethodScriptSemantics semanticsIfAccessor) {
 			if (m is IMethod && ((IMethod)m).IsConstructor)
 				return ConstructConstructorInfo((IMethod)m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType);
 
@@ -429,7 +468,7 @@ namespace CoreLib.Plugin {
 
 			if (m is IMethod) {
 				var method = (IMethod)m;
-				var sem = metadataImporter.GetMethodSemantics(method);
+				var sem = semanticsIfAccessor ?? metadataImporter.GetMethodSemantics(method);
 				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod && sem.Type != MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument && sem.Type != MethodScriptSemantics.ImplType.InlineCode) {
 					errorReporter.Message(Messages._7201, m.FullName, "method");
 					return JsExpression.Null;
@@ -453,11 +492,11 @@ namespace CoreLib.Plugin {
 					}
 					var tokens = InlineCodeMethodCompiler.Tokenize(method, sem.LiteralCode, _ => {});
 
-					var compileResult = Compile(new CSharpInvocationResolveResult(new ThisResolveResult(method.DeclaringType), method, arguments), method.DeclaringTypeDefinition, method, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedNames);
-					var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), new JsBlockStatement(compileResult.AdditionalStatements.Concat(new[] { new JsReturnStatement(compileResult.Expression) })));
+					var compileResult = Compile(CreateMethodInvocationResolveResult(method, method.IsStatic ? (ResolveResult)new TypeResolveResult(method.DeclaringType) : new ThisResolveResult(method.DeclaringType), arguments), method.DeclaringTypeDefinition, method, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedNames);
+					var definition = JsExpression.FunctionDefinition(parameters.Select(p => variables[p].Name), JsStatement.Block(compileResult.AdditionalStatements.Concat(new[] { JsStatement.Return(compileResult.Expression) })));
 
-					if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.TypeParameter && t.OwnerType == EntityType.Method)) {
-						definition = JsExpression.FunctionDefinition(method.TypeParameters.Select(namer.GetTypeParameterName), new JsReturnStatement(definition));
+					if (tokens.Any(t => t.Type == InlineCodeToken.TokenType.TypeParameter && t.OwnerType == SymbolKind.Method)) {
+						definition = JsExpression.FunctionDefinition(method.TypeParameters.Select(namer.GetTypeParameterName), JsStatement.Return(definition));
 						properties.Add(new JsObjectLiteralProperty("tpcount", JsExpression.Number(method.TypeParameters.Count)));
 					}
 					properties.Add(new JsObjectLiteralProperty("def", definition));
@@ -504,9 +543,9 @@ namespace CoreLib.Plugin {
 							return JsExpression.Null;
 						}
 						if (sem.GetMethod != null)
-							properties.Add(new JsObjectLiteralProperty("getter", ConstructMemberInfo(prop.Getter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
+							properties.Add(new JsObjectLiteralProperty("getter", ConstructMemberInfo(prop.Getter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.GetMethod)));
 						if (sem.SetMethod != null)
-							properties.Add(new JsObjectLiteralProperty("setter", ConstructMemberInfo(prop.Setter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
+							properties.Add(new JsObjectLiteralProperty("setter", ConstructMemberInfo(prop.Setter, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.SetMethod)));
 						break;
 					case PropertyScriptSemantics.ImplType.Field:
 						if (prop.CanGet)
@@ -537,14 +576,79 @@ namespace CoreLib.Plugin {
 				}
 
 				properties.Add(new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Event)));
-				properties.Add(new JsObjectLiteralProperty("adder", ConstructMemberInfo(evt.AddAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
-				properties.Add(new JsObjectLiteralProperty("remover", ConstructMemberInfo(evt.RemoveAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType)));
+				properties.Add(new JsObjectLiteralProperty("adder", ConstructMemberInfo(evt.AddAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.AddMethod)));
+				properties.Add(new JsObjectLiteralProperty("remover", ConstructMemberInfo(evt.RemoveAccessor, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, sem.RemoveMethod)));
 			}
 			else {
 				throw new ArgumentException("Invalid member " + m);
 			}
 
 			return JsExpression.ObjectLiteral(properties);
+		}
+
+		private static ResolveResult CreateMethodInvocationResolveResult(IMethod method, ResolveResult target, IList<ResolveResult> args) {
+			if (method.IsAccessor) {
+				var owner = ((IMethod)method).AccessorOwner;
+				var prop = owner as IProperty;
+				if (prop != null) {
+					if (ReferenceEquals(method, prop.Getter))
+						return args.Count == 0 ? new MemberResolveResult(target, owner) : new CSharpInvocationResolveResult(target, prop, args);
+					else if (ReferenceEquals(method, prop.Setter))
+						return new OperatorResolveResult(prop.ReturnType, ExpressionType.Assign, new[] { args.Count == 1 ? new MemberResolveResult(target, prop) : new CSharpInvocationResolveResult(target, prop, args.Take(args.Count - 1).ToList()), args[args.Count - 1] });
+					else
+						throw new ArgumentException("Invalid member " + method);
+				}
+				var evt = owner as IEvent;
+				if (evt != null) {
+					ExpressionType op;
+					if (ReferenceEquals(method, ((IEvent)owner).AddAccessor))
+						op = ExpressionType.AddAssign;
+					else if (ReferenceEquals(method, ((IEvent)owner).RemoveAccessor))
+						op = ExpressionType.SubtractAssign;
+					else
+						throw new ArgumentException("Invalid member " + method);
+
+					return new OperatorResolveResult(evt.ReturnType, op, new[] { new MemberResolveResult(target, evt), args[args.Count - 1] });
+				}
+
+				throw new ArgumentException("Invalid owner " + owner);
+			}
+			else {
+				return new CSharpInvocationResolveResult(target, method, args);
+			}
+		}
+
+		public static JsExpression ConstructMemberInfo(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
+			MethodScriptSemantics semanticsIfAccessor = null;
+			if (m is IMethod && ((IMethod)m).IsAccessor) {
+				var owner = ((IMethod)m).AccessorOwner;
+				if (owner is IProperty) {
+					var sem = metadataImporter.GetPropertySemantics((IProperty)owner);
+					if (sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods) {
+						if (ReferenceEquals(m, ((IProperty)owner).Getter))
+							semanticsIfAccessor = sem.GetMethod;
+						else if (ReferenceEquals(m, ((IProperty)owner).Setter))
+							semanticsIfAccessor = sem.SetMethod;
+						else
+							throw new ArgumentException("Invalid member " + m);
+					}
+				}
+				else if (owner is IEvent) {
+					var sem = metadataImporter.GetEventSemantics((IEvent)owner);
+					if (sem.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods) {
+						if (ReferenceEquals(m, ((IEvent)owner).AddAccessor))
+							semanticsIfAccessor = sem.AddMethod;
+						else if (ReferenceEquals(m, ((IEvent)owner).RemoveAccessor))
+							semanticsIfAccessor = sem.RemoveMethod;
+						else
+							throw new ArgumentException("Invalid member " + m);
+					}
+				}
+				else
+					throw new ArgumentException("Invalid owner " + owner);
+			}
+
+			return ConstructMemberInfo(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, semanticsIfAccessor);
 		}
 	}
 }

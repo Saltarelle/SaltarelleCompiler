@@ -107,6 +107,14 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 			return OutputFormatter.Format(this, allowIntermediates: true);
 		}
 
+		public static implicit operator JsStatement(JsExpression expr) {
+			return JsStatement.Expression(expr);
+		}
+
+		public static implicit operator JsExpressionStatement(JsExpression expr) {
+			return JsStatement.Expression(expr);
+		}
+
 		protected JsExpression(ExpressionNodeType nodeType) {
 			NodeType = nodeType;
 		}

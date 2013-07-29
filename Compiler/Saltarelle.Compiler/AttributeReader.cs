@@ -45,7 +45,7 @@ namespace Saltarelle.Compiler {
 			var ctorArgs = new object[attr.PositionalArguments.Count];
 			for (int i = 0; i < attr.PositionalArguments.Count; i++) {
 				var arg = attr.PositionalArguments[i];
-				ctorArgTypes[i] = Type.GetType(arg.Type.FullName);
+				ctorArgTypes[i] = FindType(arg.Type.FullName);
 				ctorArgs[i]     = ChangeType(arg.ConstantValue, ctorArgTypes[i]);
 			}
 			var ctor = typeof(TAttribute).GetConstructor(ctorArgTypes);
@@ -73,6 +73,12 @@ namespace Saltarelle.Compiler {
 		public static TAttribute ReadAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
 			var attr = attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(TAttribute).FullName);
 			return attr != null ? ReadAttribute<TAttribute>(attr) : null;
+		}
+
+		public static IEnumerable<TAttribute> ReadAttributes<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
+			return attributes
+				.Where(a => a.AttributeType.FullName == typeof(TAttribute).FullName)
+				.Select(a => ReadAttribute<TAttribute>(a));
 		}
 
 		public static bool HasAttribute<TAttribute>(IEntity entity) where TAttribute : Attribute {

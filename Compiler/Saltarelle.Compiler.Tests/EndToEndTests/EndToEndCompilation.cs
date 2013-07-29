@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Mono.Cecil;
 using NUnit.Framework;
 using System.Xml.XPath;
 using Saltarelle.Compiler.Driver;
@@ -47,7 +46,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			try {
 				var er = new MockErrorReporter();
 				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, null);
+				bool result = d.Compile(opts);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 			}

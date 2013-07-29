@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler;
@@ -155,6 +156,44 @@ public class C1 {
 ", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7202 && m.FormattedMessage.Contains("C1.E") && m.FormattedMessage.Contains("event") && m.FormattedMessage.Contains("remove accessor") && m.FormattedMessage.Contains("reflection")));
+		}
+
+		private static readonly Regex _typerefRe = new Regex(@"{([a-zA-Z0-9]+)}");
+		private string RemoveTypeReferences(string source) {
+			return _typerefRe.Replace(source, "$1");
+		}
+
+		[Test]
+		public void DefaultMemberReflectabilityAttributeCanBeSpecifiedOnAssemblyButCanBeOverriddenOnTypes() {
+			string s = Process(@"
+using System.Runtime.CompilerServices;
+[assembly: DefaultMemberReflectability(MemberReflectability.PublicAndProtected)]
+public class C1 {
+	public int P1 { get; set; }
+	[Reflectable]
+	public int P2 { get; set; }
+	[Reflectable(false)]
+	public int P3 { get; set; }
+	private int P4 { get; set; }
+}
+[DefaultMemberReflectability(MemberReflectability.None)]
+public class C2 {
+	public int P1 { get; set; }
+	[Reflectable]
+	public int P2 { get; set; }
+}");
+			var c1 = (JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)JavaScriptParser.Parser.ParseStatement(RemoveTypeReferences(s.Replace("\r\n", "\n").Split('\n').Single(l => l.StartsWith("{Script}.setMetadata($C1"))))).Expression).Arguments[1];
+			var c2 = (JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)JavaScriptParser.Parser.ParseStatement(RemoveTypeReferences(s.Replace("\r\n", "\n").Split('\n').Single(l => l.StartsWith("{Script}.setMetadata($C2"))))).Expression).Arguments[1];
+
+			var c1Members = ((JsArrayLiteralExpression)c1.Values.Single(p => p.Name == "members").Value).Elements.Cast<JsObjectLiteralExpression>().ToList();
+			Assert.That( c1Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P1")));
+			Assert.That( c1Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P2")));
+			Assert.That(!c1Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P3")));
+			Assert.That(!c1Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P4")));
+
+			var c2Members = ((JsArrayLiteralExpression)c2.Values.Single(p => p.Name == "members").Value).Elements.Cast<JsObjectLiteralExpression>().ToList();
+			Assert.That(!c2Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P1")));
+			Assert.That( c2Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P2")));
 		}
 	}
 }

@@ -2,15 +2,10 @@
 // ICollection
 
 var ss_ICollection = function#? DEBUG ICollection$##() { };
-ss_ICollection.prototype = {
-	get_count: null,
-	add: null,
-	clear: null,
-	contains: null,
-	remove: null
-};
 
-ss.registerInterface(global, 'ss.ICollection', ss_ICollection);
+ss_ICollection.__typeName = 'ss.ICollection';
+ss.ICollection = ss_ICollection;
+ss.initInterface(ss_ICollection, { get_count: null, add: null, clear: null, contains: null, remove: null });
 
 ss.count = function#? DEBUG ss$count##(obj) {
 	return obj.get_count ? obj.get_count() : obj.length;

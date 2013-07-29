@@ -2,8 +2,7 @@
 // IComparer
 
 var ss_IComparer = function#? DEBUG IComparer$##() { };
-ss_IComparer.prototype = {
-	compare: null
-};
 
-ss.registerInterface(global, 'ss.IComparer', ss_IComparer);
+ss_IComparer.__typeName = 'ss.IComparer';
+ss.IComparer = ss_IComparer;
+ss.initInterface(ss_IComparer, { compare: null });

@@ -118,7 +118,7 @@ public program returns [IList<JsStatement> result]
 public statement returns [JsStatement result]
 	: (x=block
 	| x=variableDeclaration
-	| e=expression { x = new JsExpressionStatement(e); }
+	| e=expression { x = e; }
 	| x=ifStatement
 	| x=doStatement
 	| x=whileStatement
@@ -132,42 +132,43 @@ public statement returns [JsStatement result]
 	| x=throwStatement
 	| x=tryStatement
 	| x=functionDeclaration
+	| x=debuggerStatement
 	| x=gotoStatement
 	| x=yieldStatement
 	| x=awaitStatement
-	| SEMIC { x = new JsEmptyStatement(); } )
+	| SEMIC { x = JsStatement.Empty; } )
 	{ $result = x; }
 	;
 
 block returns [JsStatement result]
 @init { var stmts = new List<JsStatement>(); }
 	: ^( BLOCK (s=statement { stmts.Add(s); })* )
-	{ $result = new JsBlockStatement(stmts); }
+	{ $result = JsStatement.Block(stmts); }
 	;
 
 variableDeclaration returns [JsStatement result]
 @init { var vars = new List<JsVariableDeclaration>(); }
-	: ^( VAR ( i=Identifier { vars.Add(new JsVariableDeclaration(i.Text, null)); } | ^( ASSIGN i=Identifier x=expr { vars.Add(new JsVariableDeclaration(i.Text, x)); } ) )+ ) { $result = new JsVariableDeclarationStatement(vars); }
+	: ^( VAR ( i=Identifier { vars.Add(JsStatement.Declaration(i.Text, null)); } | ^( ASSIGN i=Identifier x=expr { vars.Add(JsStatement.Declaration(i.Text, x)); } ) )+ ) { $result = JsStatement.Var(vars); }
 	;
 
 ifStatement returns [JsStatement result]
-	: ^( IF x=expression a=statement b=statement? ) { $result = new JsIfStatement(x, a, b); }
+	: ^( IF x=expression a=statement b=statement? ) { $result = JsStatement.If(x, a, b); }
 	;
 
 doStatement returns [JsStatement result]
-	: ^( DO s=statement x=expression ) { $result = new JsDoWhileStatement(x, s); }
+	: ^( DO s=statement x=expression ) { $result = JsStatement.DoWhile(x, s); }
 	;
 
 whileStatement returns [JsStatement result]
-	: ^( WHILE x=expression s=statement ) { $result = new JsWhileStatement(x, s); }
+	: ^( WHILE x=expression s=statement ) { $result = JsStatement.While(x, s); }
 	;
 
 forStatement returns [JsStatement result]
 	: ^(
 	FOR 
 	(
-		  ( ^( FORSTEP { JsStatement init = null; } ( x=exprOptClause { init = x != null ? (JsStatement)new JsExpressionStatement(x) : new JsEmptyStatement(); } | d=variableDeclaration { init = d; } ) x=exprOptClause y=exprOptClause ) s=statement { $result = new JsForStatement(init, x, y, s); } )
-		| ( ^( FORITER { bool isDeclared = false; } ( ^( EXPR i=Identifier ) | ^( VAR i=Identifier { isDeclared = true; } ) ) x=exprClause ) s=statement { $result = new JsForEachInStatement(i.Text, x, s, isDeclared); } )
+		  ( ^( FORSTEP { JsStatement init = null; } ( x=exprOptClause { init = x != null ? (JsStatement)x : JsStatement.Empty; } | d=variableDeclaration { init = d; } ) x=exprOptClause y=exprOptClause ) s=statement { $result = JsStatement.For(init, x, y, s); } )
+		| ( ^( FORITER { bool isDeclared = false; } ( ^( EXPR i=Identifier ) | ^( VAR i=Identifier { isDeclared = true; } ) ) x=exprClause ) s=statement { $result = JsStatement.ForIn(i.Text, x, s, isDeclared); } )
 	)
 	);
 
@@ -180,23 +181,23 @@ exprClause returns [JsExpression result]
 	;
 
 continueStatement returns [JsStatement result]
-	: ^( CONTINUE i=Identifier? ) { $result = new JsContinueStatement(i != null ? i.Text : null); }
+	: ^( CONTINUE i=Identifier? ) { $result = JsStatement.Continue(i != null ? i.Text : null); }
 	;
 
 breakStatement returns [JsStatement result]
-	: ^( BREAK i=Identifier? ) { $result = new JsBreakStatement(i != null ? i.Text : null); }
+	: ^( BREAK i=Identifier? ) { $result = JsStatement.Break(i != null ? i.Text : null); }
 	;
 
 returnStatement returns [JsStatement result]
-	: ^( RETURN x= expression? ) { $result = new JsReturnStatement(x); }
+	: ^( RETURN x= expression? ) { $result = JsStatement.Return(x); }
 	;
 
 withStatement returns [JsStatement result]
-	: ^( WITH x=expression s=statement ) { $result = new JsWithStatement(x, s); }
+	: ^( WITH x=expression s=statement ) { $result = JsStatement.With(x, s); }
 	;
 
 labelledStatement returns [JsStatement result]
-	: ^( LABELLED Identifier s=statement ) { $result = new JsLabelledStatement($Identifier.Text, s); }
+	: ^( LABELLED Identifier s=statement ) { $result = JsStatement.Label($Identifier.Text, s); }
 	;
 
 switchStatement returns [JsStatement result]
@@ -205,8 +206,8 @@ switchStatement returns [JsStatement result]
 	     ((
 			d=defaultClause { values.Add(null); stmts = d; }
 		  | c=caseClause { values.Add(c.Item1); stmts = c.Item2; }
-         ) { if (stmts != null) { sections.Add(new JsSwitchSection(values, stmts.Count == 1 ? JsBlockStatement.MakeBlock(stmts[0]) : new JsBlockStatement(stmts))); values = new List<JsExpression>(); } } )*
-	   ) { if (values.Count > 0) { sections.Add(new JsSwitchSection(values, JsBlockStatement.EmptyStatement)); } $result = new JsSwitchStatement(x, sections); }
+         ) { if (stmts != null) { sections.Add(JsStatement.SwitchSection(values, stmts.Count == 1 ? JsStatement.EnsureBlock(stmts[0]) : JsStatement.Block(stmts))); values = new List<JsExpression>(); } } )*
+	   ) { if (values.Count > 0) { sections.Add(JsStatement.SwitchSection(values, JsStatement.EmptyBlock)); } $result = JsStatement.Switch(x, sections); }
 	;
 
 defaultClause returns [List<JsStatement> result]
@@ -219,31 +220,35 @@ caseClause returns [Tuple<JsExpression, List<JsStatement>> result]
 	;
 
 throwStatement returns [JsStatement result]
-	: ^( THROW x=expression ) { $result = new JsThrowStatement(x); }
+	: ^( THROW x=expression ) { $result = JsStatement.Throw(x); }
 	;
 
 tryStatement returns [JsStatement result]
-	: ^( TRY a=block b=catchClause? c=finallyClause? ) { $result = new JsTryStatement(a, b, c); }
+	: ^( TRY a=block b=catchClause? c=finallyClause? ) { $result = JsStatement.Try(a, b, c); }
 	;
 	
 catchClause returns [JsCatchClause result]
-	: ^( CATCH Identifier b=block ) { $result = new JsCatchClause($Identifier.Text, b); }
+	: ^( CATCH Identifier b=block ) { $result = JsStatement.Catch($Identifier.Text, b); }
 	;
 	
 finallyClause returns [JsStatement result]
 	: ^( FINALLY b=block ) { $result = b; }
 	;
 
+debuggerStatement returns [JsStatement result]
+	: DEBUGGER { $result = JsStatement.Debugger; }
+	;
+
 gotoStatement returns [JsStatement result]
-	: ^( GOTO Identifier ) { $result = new JsGotoStatement($Identifier.Text); }
+	: ^( GOTO Identifier ) { $result = JsStatement.Goto($Identifier.Text); }
 	;
 
 yieldStatement returns [JsStatement result]
-	: ^( YIELD x=expression? ) { $result = new JsYieldStatement(x); }
+	: ^( YIELD x=expression? ) { $result = JsStatement.Yield(x); }
 	;
 
 awaitStatement returns [JsStatement result]
-	: ^( AWAIT x=expression y=Identifier ) { $result = new JsAwaitStatement(x, y.Text); }
+	: ^( AWAIT x=expression y=Identifier ) { $result = JsStatement.Await(x, y.Text); }
 	;
 
 public expression returns [JsExpression result]
@@ -344,7 +349,7 @@ functionExpression returns [JsExpression result]
 
 functionDeclaration returns [JsStatement result]
 @init { var parms = new List<string>(); }
-	: ^( FUNCTIONDECLARATION i=Identifier ^( ARGS (p=Identifier { parms.Add(p.Text); })* ) b=block ) { $result = new JsFunctionStatement(i.Text, parms, b); }
+	: ^( FUNCTIONDECLARATION i=Identifier ^( ARGS (p=Identifier { parms.Add(p.Text); })* ) b=block ) { $result = JsStatement.Function(i.Text, parms, b); }
 	;
 
 callExpression returns [JsExpression result]

@@ -2,11 +2,10 @@
 // IFormattable
 
 var ss_IFormattable = function#? DEBUG IFormattable$##() { };
-ss_IFormattable.prototype = {
-	format: null
-};
 
-ss.registerInterface(global, 'ss.IFormattable', ss_IFormattable);
+ss_IFormattable.__typeName = 'ss.IFormattable';
+ss.IFormattable = ss_IFormattable;
+ss.initInterface(ss_IFormattable, { format: null });
 
 ss.format = function#? DEBUG ss$format##(obj, fmt) {
 	if (typeof(obj) === 'number')

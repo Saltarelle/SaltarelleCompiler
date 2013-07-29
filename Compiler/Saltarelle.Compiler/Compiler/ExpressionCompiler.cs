@@ -75,7 +75,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var impl = _metadataImporter.GetConstructorSemantics(method);
 			if (impl.SkipInInitializer) {
 				if (currentIsStaticMethod)
-					return new[] { new JsVariableDeclarationStatement(_thisAlias, JsExpression.ObjectLiteral()) };
+					return new[] { JsStatement.Var(_thisAlias, JsExpression.ObjectLiteral()) };
 				else
 					return EmptyList<JsStatement>.Instance;
 			}
@@ -83,10 +83,10 @@ namespace Saltarelle.Compiler.Compiler {
 			_additionalStatements = new List<JsStatement>();
 
 			if (currentIsStaticMethod) {
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_thisAlias, CompileConstructorInvocation(impl, method, argumentsForCall, argumentToParameterMap, initializerStatements)));
+				_additionalStatements.Add(JsStatement.Var(_thisAlias, CompileConstructorInvocation(impl, method, argumentsForCall, argumentToParameterMap, initializerStatements)));
 			}
 			else if (impl.Type == ConstructorScriptSemantics.ImplType.Json) {
-				_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements), CompileThis(), this)));
+				_additionalStatements.Add(_runtimeLibrary.ShallowCopy(CompileJsonConstructorCall(method, impl, argumentsForCall, argumentToParameterMap, initializerStatements), CompileThis(), this));
 			}
 			else {
 				string literalCode   = GetActualInlineCode(impl, argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult);
@@ -96,19 +96,19 @@ namespace Saltarelle.Compiler.Compiler {
 
 				switch (impl.Type) {
 					case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
-						_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, jsType, impl.ExpandParams, true)));
+						_additionalStatements.Add(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, jsType, impl.ExpandParams, true));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.NamedConstructor:
-						_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, JsExpression.Member(jsType, impl.Name), impl.ExpandParams, true)));
+						_additionalStatements.Add(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, JsExpression.Member(jsType, impl.Name), impl.ExpandParams, true));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.StaticMethod:
-						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, JsExpression.Member(jsType, impl.Name), impl.ExpandParams, false), thisAndArguments[0], this)));
+						_additionalStatements.Add(_runtimeLibrary.ShallowCopy(CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, JsExpression.Member(jsType, impl.Name), impl.ExpandParams, false), thisAndArguments[0], this));
 						break;
 
 					case ConstructorScriptSemantics.ImplType.InlineCode:
-						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.ShallowCopy(CompileInlineCodeMethodInvocation(method, literalCode, null, thisAndArguments.Skip(1).ToList()), thisAndArguments[0], this)));
+						_additionalStatements.Add(_runtimeLibrary.ShallowCopy(CompileInlineCodeMethodInvocation(method, literalCode, null, thisAndArguments.Skip(1).ToList()), thisAndArguments[0], this));
 						break;
 
 					default:
@@ -162,7 +162,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (needsTemporary) {
 				var temp = _createTemporaryVariable(rr.Type);
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, result.Expression));
+				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, result.Expression));
 				return JsExpression.Identifier(_variables[temp].Name);
 			}
 			else {
@@ -245,8 +245,8 @@ namespace Saltarelle.Compiler.Compiler {
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(target.Type);
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, access));
-					_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand))));
+					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
+					_additionalStatements.Add(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
@@ -268,8 +268,8 @@ namespace Saltarelle.Compiler.Compiler {
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, access));
-					_additionalStatements.Add(new JsExpressionStatement(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand))));
+					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
+					_additionalStatements.Add(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
@@ -301,8 +301,8 @@ namespace Saltarelle.Compiler.Compiler {
 				else {
 					if (returnValueIsImportant && returnValueBeforeChange) {
 						var temp = _createTemporaryVariable(target.Type);
-						_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsTarget));
-						_additionalStatements.Add( new JsExpressionStatement(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand))));
+						_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, jsTarget));
+						_additionalStatements.Add(JsExpression.Assign(jsTarget, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
 						return JsExpression.Identifier(_variables[temp].Name);
 					}
 					else {
@@ -354,14 +354,14 @@ namespace Saltarelle.Compiler.Compiler {
 										// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
 										CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(thisAndArguments, valueToReturn);
 										var temp = _createTemporaryVariable(target.Type);
-										_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, valueToReturn));
+										_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, valueToReturn));
 										valueToReturn = JsExpression.Identifier(_variables[temp].Name);
 									}
 
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
 									thisAndArguments.Add(newValue);
-									_additionalStatements.Add(new JsExpressionStatement(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall)));
+									_additionalStatements.Add(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall));
 									return valueToReturn;
 								}
 								else {
@@ -434,13 +434,13 @@ namespace Saltarelle.Compiler.Compiler {
 							// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
 							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, valueToReturn);
 							var temp = _createTemporaryVariable(target.Type);
-							_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, valueToReturn));
+							_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, valueToReturn));
 							valueToReturn = JsExpression.Identifier(_variables[temp].Name);
 						}
 
 						var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
-						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), newValue, this)));
+						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), newValue, this));
 						return valueToReturn;
 					}
 					else {
@@ -474,10 +474,10 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (trueResult.AdditionalStatements.Count > 0 || falseResult.AdditionalStatements.Count > 0) {
 				var temp = _createTemporaryVariable(truePath.Type);
-				var trueBlock  = new JsBlockStatement(trueResult.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), trueResult.Expression))  }));
-				var falseBlock = new JsBlockStatement(falseResult.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), falseResult.Expression)) }));
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, null));
-				_additionalStatements.Add(new JsIfStatement(jsTest, trueBlock, falseBlock));
+				var trueBlock  = JsStatement.Block(trueResult.AdditionalStatements.Concat(new JsStatement[] { JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), trueResult.Expression) }));
+				var falseBlock = JsStatement.Block(falseResult.AdditionalStatements.Concat(new JsStatement[] { JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), falseResult.Expression) }));
+				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, null));
+				_additionalStatements.Add(JsStatement.If(jsTest, trueBlock, falseBlock));
 				return JsExpression.Identifier(_variables[temp].Name);
 			}
 			else {
@@ -497,9 +497,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				var temp = _createTemporaryVariable(resultType);
-				var nullBlock  = new JsBlockStatement(jsRight.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), jsRight.Expression))  }));
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsLeft));
-				_additionalStatements.Add(new JsIfStatement(_runtimeLibrary.ReferenceEquals(JsExpression.Identifier(_variables[temp].Name), JsExpression.Null, this), nullBlock, null));
+				var nullBlock  = JsStatement.Block(jsRight.AdditionalStatements.Concat(new JsStatement[] { JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), jsRight.Expression) }));
+				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, jsLeft));
+				_additionalStatements.Add(JsStatement.If(_runtimeLibrary.ReferenceEquals(JsExpression.Identifier(_variables[temp].Name), JsExpression.Null, this), nullBlock, null));
 				return JsExpression.Identifier(_variables[temp].Name);
 			}
 		}
@@ -539,12 +539,12 @@ namespace Saltarelle.Compiler.Compiler {
 			var jsRight = CloneAndCompile(right, true);
 			if (jsRight.AdditionalStatements.Count > 0) {
 				var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Boolean));
-				var ifBlock = new JsBlockStatement(jsRight.AdditionalStatements.Concat(new[] { new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), jsRight.Expression))  }));
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, jsLeft));
+				var ifBlock = JsStatement.Block(jsRight.AdditionalStatements.Concat(new JsStatement[] { JsExpression.Assign(JsExpression.Identifier(_variables[temp].Name), jsRight.Expression) }));
+				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, jsLeft));
 				JsExpression test = JsExpression.Identifier(_variables[temp].Name);
 				if (!isAndAlso)
 					test = JsExpression.LogicalNot(test);
-				_additionalStatements.Add(new JsIfStatement(test, ifBlock, null));
+				_additionalStatements.Add(JsStatement.If(test, ifBlock, null));
 				return JsExpression.Identifier(_variables[temp].Name);
 			}
 			else {
@@ -896,7 +896,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			var temp = _createTemporaryVariable(SpecialType.UnknownType);
-			_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, expressions[index]));
+			_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, expressions[index]));
 			expressions[index] = JsExpression.Identifier(_variables[temp].Name);
 		}
 
@@ -910,17 +910,17 @@ namespace Saltarelle.Compiler.Compiler {
 					tokens = null;
 			}
 
-			if (tokens != null && target != null && !member.IsStatic && member.EntityType != EntityType.Constructor) {
+			if (tokens != null && target != null && !member.IsStatic && member.SymbolKind != SymbolKind.Constructor) {
 				int thisUseCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
 				if (thisUseCount > 1 && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(target)) {
 					// Create a temporary for {this}, if required.
 					var temp = _createTemporaryVariable(member.DeclaringType);
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, expressions[0]));
+					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, expressions[0]));
 					expressions[0] = JsExpression.Identifier(_variables[temp].Name);
 				}
 				else if (thisUseCount == 0 && DoesJsExpressionHaveSideEffects.Analyze(target)) {
 					// Ensure that 'this' is evaluated if required, even if not used by the inline code.
-					_additionalStatements.Add(new JsExpressionStatement(target));
+					_additionalStatements.Add(target);
 					expressions[0] = JsExpression.Null;
 				}
 			}
@@ -955,7 +955,7 @@ namespace Saltarelle.Compiler.Compiler {
 						if (result.AdditionalStatements.Count > 0 || DoesJsExpressionHaveSideEffects.Analyze(result.Expression)) {
 							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, result);
 							_additionalStatements.AddRange(result.AdditionalStatements);
-							_additionalStatements.Add(new JsExpressionStatement(result.Expression));
+							_additionalStatements.Add(result.Expression);
 						}
 						expressions.Add(JsExpression.Null);	// Will be ignored later, anyway
 					}
@@ -1122,7 +1122,13 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.Message(Messages._7525, string.Format("The {0} can only be invoked with its params parameter expanded", method.IsConstructor ? "constructor " + method.DeclaringType.FullName : ("method " + method.FullName)));
 				return JsExpression.Null;
 			}
-			return InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s));
+			if (method.ReturnType.Kind == TypeKind.Void && !method.IsConstructor) {
+				_additionalStatements.AddRange(InlineCodeMethodCompiler.CompileStatementListInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s)));
+				return JsExpression.Null;
+			}
+			else {
+				return InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, @this, arguments, ResolveTypeForInlineCode, t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this), s => _errorReporter.Message(Messages._7525, s));
+			}
 		}
 
 		private string GetMemberNameForJsonConstructor(IMember member) {
@@ -1208,10 +1214,10 @@ namespace Saltarelle.Compiler.Compiler {
 				var obj = _createTemporaryVariable(objectType);
 				var oldObjectBeingInitialized = _objectBeingInitialized;
 				_objectBeingInitialized = obj;
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[_objectBeingInitialized].Name, objectBeingInitialized));
+				_additionalStatements.Add(JsStatement.Var(_variables[_objectBeingInitialized].Name, objectBeingInitialized));
 				foreach (var init in initializerStatements) {
 					var js = VisitResolveResult(init, false);
-					_additionalStatements.Add(new JsExpressionStatement(js));
+					_additionalStatements.Add(js);
 				}
 				_objectBeingInitialized = oldObjectBeingInitialized;
 
@@ -1387,8 +1393,8 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
-				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body.Expression) : (JsStatement)new JsReturnStatement(body.Expression);
-				var jsBody = new JsBlockStatement(MethodCompiler.PrepareParameters(rr.Parameters, _variables, expandParams: semantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
+				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body.Expression : JsStatement.Return(body.Expression);
+				var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(rr.Parameters, _variables, expandParams: semantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Where((p, i) => i != rr.Parameters.Count - 1 || !semantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
 			}
 
@@ -1484,7 +1490,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				if (rr.InitializerElements != null && rr.InitializerElements.Count > 0) {
 					var temp = _createTemporaryVariable(rr.Type);
-					_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, result));
+					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, result));
 					result = JsExpression.Identifier(_variables[temp].Name);
 
 					var expressions = new List<JsExpression>();
@@ -1500,7 +1506,7 @@ namespace Saltarelle.Compiler.Compiler {
 							remainder /= arg;
 						}
 
-						_additionalStatements.Add(new JsExpressionStatement(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, expressions[i], this)));
+						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, expressions[i], this));
 					}
 				}
 
@@ -1642,7 +1648,7 @@ namespace Saltarelle.Compiler.Compiler {
 						parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
 					body = CompileMethodInvocation(methodSemantics, method, new[] { _runtimeLibrary.InstantiateType(method.DeclaringType, this), jsTarget }.Concat(parameters.Select(JsExpression.Identifier)).ToList(), false);
 				}
-				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body : JsStatement.Return(body));
 				if (UsesThisVisitor.Analyze(body))
 					result = _runtimeLibrary.Bind(result, JsExpression.This, this);
 			}
@@ -1698,16 +1704,33 @@ namespace Saltarelle.Compiler.Compiler {
 			if (delegateSemantics.ExpandParams)
 				arguments.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Length)));
 
-			var body = InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method,
-			                                                                      tokens,
-			                                                                      method.IsStatic ? null : jsTarget,
-			                                                                      arguments,
-			                                                                      ResolveTypeForInlineCode,
-			                                                                      t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this),
-			                                                                      s => _errorReporter.Message(Messages._7525, s));
-			var result = (JsExpression)JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+			bool usesThis;
+			JsExpression result;
+			if (method.ReturnType.IsKnownType(KnownTypeCode.Void)) {
+				var list = InlineCodeMethodCompiler.CompileStatementListInlineCodeMethodInvocation(method,
+				                                                                                   tokens,
+				                                                                                   method.IsStatic ? null : jsTarget,
+				                                                                                   arguments,
+				                                                                                   ResolveTypeForInlineCode,
+				                                                                                   t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this),
+				                                                                                   s => _errorReporter.Message(Messages._7525, s));
+				var body = JsStatement.Block(list);
+				result = JsExpression.FunctionDefinition(parameters, body);
+				usesThis = UsesThisVisitor.Analyze(body);
+			}
+			else {
+				var body = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method,
+				                                                                                tokens,
+				                                                                                method.IsStatic ? null : jsTarget,
+				                                                                                arguments,
+				                                                                                ResolveTypeForInlineCode,
+				                                                                                t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, this),
+				                                                                                s => _errorReporter.Message(Messages._7525, s));
+				result = JsExpression.FunctionDefinition(parameters, JsStatement.Return(body));
+				usesThis = UsesThisVisitor.Analyze(body);
+			}
 
-			if (UsesThisVisitor.Analyze(body))
+			if (usesThis)
 				result = _runtimeLibrary.Bind(result, JsExpression.This, this);
 			if (delegateSemantics.BindThisToFirstParameter)
 				result = _runtimeLibrary.BindFirstParameterToThis(result, this);
@@ -1723,7 +1746,7 @@ namespace Saltarelle.Compiler.Compiler {
 			JsExpression result;
 			if (methodSemantics.ExpandParams) {
 				var body = JsExpression.Invocation(JsExpression.Member(JsExpression.Member(_runtimeLibrary.InstantiateType(method.DeclaringType, this), methodSemantics.Name), "apply"), JsExpression.Null, JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(JsExpression.This), "concat"), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"))));
-				result = JsExpression.FunctionDefinition(new string[0], method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+				result = JsExpression.FunctionDefinition(new string[0], method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body : JsStatement.Return(body));
 			}
 			else {
 				var parameters = new string[method.Parameters.Count];
@@ -1731,7 +1754,7 @@ namespace Saltarelle.Compiler.Compiler {
 					parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
 
 				var body = JsExpression.Invocation(JsExpression.Member(_runtimeLibrary.InstantiateType(method.DeclaringType, this), methodSemantics.Name), new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
-				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)new JsExpressionStatement(body) : new JsReturnStatement(body));
+				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body : JsStatement.Return(body));
 			}
 
 			result = _runtimeLibrary.Bind(result, InnerCompile(target, false), this);
@@ -1758,7 +1781,7 @@ namespace Saltarelle.Compiler.Compiler {
 					                                                         if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(a[i])) {
 					                                                             var temp = _createTemporaryVariable(rr.Type);
 					                                                             c._additionalStatements = c._additionalStatements ?? new List<JsStatement>();
-					                                                             c._additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, a[i]));
+					                                                             c._additionalStatements.Add(JsStatement.Var(_variables[temp].Name, a[i]));
 					                                                             a[i] = JsExpression.Identifier(_variables[temp].Name);
 					                                                         }
 					                                                     }
@@ -1804,9 +1827,9 @@ namespace Saltarelle.Compiler.Compiler {
 				var delegateSemantics = _metadataImporter.GetDelegateSemantics(rr.Type.GetDefinition());
 				switch (methodSemantics.Type) {
 					case MethodScriptSemantics.ImplType.NormalMethod:
-						return PerformMethodGroupConversionOnNormalMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.IsExtensionMethodGroupConversion, mgrr.TargetResult, methodSemantics, delegateSemantics);
+						return PerformMethodGroupConversionOnNormalMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.Method.IsStatic && rr.Conversion.DelegateCapturesFirstArgument, mgrr.TargetResult, methodSemantics, delegateSemantics);
 					case MethodScriptSemantics.ImplType.InlineCode:
-						return PerformMethodGroupConversionOnInlineCodeMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.IsExtensionMethodGroupConversion, mgrr.TargetResult, methodSemantics, delegateSemantics);
+						return PerformMethodGroupConversionOnInlineCodeMethod(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, rr.Conversion.Method.IsStatic && rr.Conversion.DelegateCapturesFirstArgument, mgrr.TargetResult, methodSemantics, delegateSemantics);
 					case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument:
 						return PerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgument(rr.Conversion.Method, rr.Type, rr.Conversion.Method.IsOverridable && !rr.Conversion.IsVirtualMethodLookup, mgrr.TargetResult, methodSemantics, delegateSemantics);
 					default:
@@ -1909,7 +1932,7 @@ namespace Saltarelle.Compiler.Compiler {
 				operand = InnerCompile(((DynamicMemberResolveResult)((DynamicInvocationResolveResult)rr.GetAwaiterInvocation).Target).Target, false);
 				operand = JsExpression.Invocation(JsExpression.Member(operand, "getAwaiter"));
 				var temp = _createTemporaryVariable(SpecialType.Dynamic);
-				_additionalStatements.Add(new JsVariableDeclarationStatement(_variables[temp].Name, operand));
+				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, operand));
 				operand = JsExpression.Identifier(_variables[temp].Name);
 			}
 			else {
@@ -1917,7 +1940,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			if (rr.GetAwaiterInvocation.Type.Kind == TypeKind.Dynamic) {
-				_additionalStatements.Add(new JsAwaitStatement(operand, "onCompleted"));
+				_additionalStatements.Add(JsStatement.Await(operand, "onCompleted"));
 				return JsExpression.Invocation(JsExpression.Member(operand, "getResult"));
 			}
 			else {
@@ -1929,7 +1952,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Null;
 				}
 	
-				_additionalStatements.Add(new JsAwaitStatement(operand, onCompletedMethodImpl.Name));
+				_additionalStatements.Add(JsStatement.Await(operand, onCompletedMethodImpl.Name));
 				return CompileMethodInvocation(getResultMethodImpl, rr.GetResultMethod, new[] { operand }, false);
 			}
 		}

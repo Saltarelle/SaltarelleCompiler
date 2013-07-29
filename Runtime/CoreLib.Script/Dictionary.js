@@ -4,40 +4,6 @@ var ss_$DictionaryCollection = function#? DEBUG $DictionaryCollection$##(dict, i
 	this._dict = dict;
 	this._isKeys = isKeys;
 };
-ss_$DictionaryCollection.prototype = {
-	get_count: function#? DEBUG $DictionaryCollection$get_count##() {
-		return this._dict.get_count();
-	},
-	contains: function#? DEBUG $DictionaryCollection$contains##(v) {
-		if (this._isKeys) {
-			return this._dict.containsKey(v);
-		}
-		else {
-			for (var e in this._dict.buckets) {
-				if (this._dict.buckets.hasOwnProperty(e)) {
-					var bucket = this._dict.buckets[e];
-					for (var i = 0; i < bucket.length; i++) {
-						if (this._dict.comparer.areEqual(bucket[i].value, v))
-							return true;
-					}
-				}
-			}
-			return false;
-		}
-	},
-	getEnumerator: function#? DEBUG $DictionaryCollection$getEnumerator##(v) {
-		return this._dict._getEnumerator(this._isKeys ? function(e) { return e.key; } : function(e) { return e.value; });
-	},
-	add: function#? DEBUG $DictionaryCollection$add##(v) {
-		throw 'Collection is read-only';
-	},
-	clear: function#? DEBUG $DictionaryCollection$clear##() {
-		throw 'Collection is read-only';
-	},
-	remove: function#? DEBUG $DictionaryCollection$remove##() {
-		throw 'Collection is read-only';
-	}
-};
 
 var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 	var $type = function(o, cmp) {
@@ -68,7 +34,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		}
 	};
 
-	$type.prototype = {
+	ss.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], {
 		_setOrAdd: function(key, value, add) {
 			var hash = this.comparer.getObjectHashCode(key);
 			var entry = { key: key, value: value };
@@ -77,7 +43,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 				for (var i = 0; i < array.length; i++) {
 					if (this.comparer.areEqual(array[i].key, key)) {
 						if (add)
-							throw 'Key ' + key + ' already exists.';
+							throw new ss_ArgumentException('Key ' + key + ' already exists.');
 						array[i] = entry;
 						return;
 					}
@@ -113,7 +79,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		get_item: function(key) {
 			var v = this._get(key);
 			if (v === undefined)
-				throw 'Key ' + key + ' does not exist.';
+				throw new ss_KeyNotFoundException('Key ' + key + ' does not exist.');
 			return v;
 		},
 
@@ -193,11 +159,46 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		getEnumerator: function() {
 			return this._getEnumerator(function(e) { return e; });
 		}
-	};
-
-	ss.registerGenericClassInstance($type, ss_Dictionary$2, [TKey, TValue], function() { return null; }, function() { return [ ss_IDictionary, ss_IEnumerable ]; });
+	}, function() { return null; }, function() { return [ ss_IDictionary, ss_IEnumerable ]; });
 	return $type;
 };
 
-ss.registerGenericClass(global, 'ss.Dictionary$2', ss_Dictionary$2, 2);
-ss.registerClass(global, 'ss.$DictionaryCollection', ss_$DictionaryCollection, null, [ss_IEnumerable, ss_ICollection]);
+ss_Dictionary$2.__typeName = 'ss.Dictionary$2';
+ss.Dictionary$2 = ss_Dictionary$2;
+ss.initGenericClass(ss_Dictionary$2, 2);
+ss_$DictionaryCollection.__typeName = 'ss.$DictionaryCollection';
+ss.$DictionaryCollection = ss_$DictionaryCollection;
+ss.initClass(ss_$DictionaryCollection, {
+	get_count: function#? DEBUG $DictionaryCollection$get_count##() {
+		return this._dict.get_count();
+	},
+	contains: function#? DEBUG $DictionaryCollection$contains##(v) {
+		if (this._isKeys) {
+			return this._dict.containsKey(v);
+		}
+		else {
+			for (var e in this._dict.buckets) {
+				if (this._dict.buckets.hasOwnProperty(e)) {
+					var bucket = this._dict.buckets[e];
+					for (var i = 0; i < bucket.length; i++) {
+						if (this._dict.comparer.areEqual(bucket[i].value, v))
+							return true;
+					}
+				}
+			}
+			return false;
+		}
+	},
+	getEnumerator: function#? DEBUG $DictionaryCollection$getEnumerator##(v) {
+		return this._dict._getEnumerator(this._isKeys ? function(e) { return e.key; } : function(e) { return e.value; });
+	},
+	add: function#? DEBUG $DictionaryCollection$add##(v) {
+		throw new ss_InvalidOperationException('Collection is read-only');
+	},
+	clear: function#? DEBUG $DictionaryCollection$clear##() {
+		throw new ss_InvalidOperationException('Collection is read-only');
+	},
+	remove: function#? DEBUG $DictionaryCollection$remove##() {
+		throw new ss_InvalidOperationException('Collection is read-only');
+	}
+}, null, [ss_IEnumerable, ss_ICollection]);

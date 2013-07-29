@@ -43,8 +43,6 @@ namespace CoreLib.TestScript.SimpleTypes {
 
 		[Test]
 		public void ConstantsWork() {
-			Assert.AreEqual(decimal.MinValue, 5e-324);
-			Assert.IsTrue(decimal.MaxValue > (decimal)(object)1.79e+308);
 			Assert.AreEqual(decimal.One, 1);
 			Assert.AreEqual(decimal.Zero, 0);
 			Assert.AreEqual(decimal.MinusOne, -1);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Antlr.Runtime;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -10,25 +11,25 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 	[TestFixture]
 	public class JavaScriptParserTests {
-		private T ParseExpression<T>(string source) where T : JsExpression {
-			var expr = JavaScriptParser.Parser.ParseExpression("(" + source + ")");
+		private T ParseExpression<T>(string source, bool allowCustomKeywords = false) where T : JsExpression {
+			var expr = JavaScriptParser.Parser.ParseExpression("(" + source + ")", allowCustomKeywords);
 			Assert.That(expr, Is.InstanceOf<T>());
 			return (T)expr;
 		}
 
-		private T ParseStatement<T>(string source) where T : JsStatement {
-			var stmt = JavaScriptParser.Parser.ParseStatement(source);
+		private T ParseStatement<T>(string source, bool allowCustomKeywords = false) where T : JsStatement {
+			var stmt = JavaScriptParser.Parser.ParseStatement(source, allowCustomKeywords);
 			Assert.That(stmt, Is.InstanceOf<T>());
 			return (T)stmt;
 		}
 
-		private void RoundtripExpression(string source, string expected = null) {
-			var expr = JavaScriptParser.Parser.ParseExpression(source);
+		private void RoundtripExpression(string source, string expected = null, bool allowCustomKeywords = false) {
+			var expr = JavaScriptParser.Parser.ParseExpression(source, allowCustomKeywords);
 			Assert.That(OutputFormatter.Format(expr).Replace("\r\n", "\n"), Is.EqualTo((expected ?? source).Replace("\r\n", "\n")));
 		}
 
-		private void RoundtripStatement(string source, string expected = null) {
-			var stmt = JavaScriptParser.Parser.ParseStatement(source);
+		private void RoundtripStatement(string source, string expected = null, bool allowCustomKeywords = false) {
+			var stmt = JavaScriptParser.Parser.ParseStatement(source, allowCustomKeywords);
 			Assert.That(OutputFormatter.Format(stmt).Replace("\r\n", "\n"), Is.EqualTo((expected ?? source).Replace("\r\n", "\n")));
 		}
 
@@ -482,28 +483,61 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 
 		[Test]
 		public void GotoStatement() {
-			var stmt = ParseStatement<JsGotoStatement>("goto lbl;");
+			var stmt = ParseStatement<JsGotoStatement>("goto lbl;", allowCustomKeywords: true);
 			Assert.That(stmt.TargetLabel, Is.EqualTo("lbl"));
 		}
 
 		[Test]
 		public void YieldReturnStatement() {
-			var stmt = ParseStatement<JsYieldStatement>("yield return a;");
+			var stmt = ParseStatement<JsYieldStatement>("yield return a;", allowCustomKeywords: true);
 			Assert.That(OutputFormatter.Format(stmt.Value), Is.EqualTo("a"));
 		}
 
 		[Test]
 		public void YieldBreakStatement() {
-			var stmt = ParseStatement<JsYieldStatement>("yield break;");
+			var stmt = ParseStatement<JsYieldStatement>("yield break;", allowCustomKeywords: true);
 			Assert.That(stmt.Value, Is.Null);
 		}
 
 		[Test]
 		public void AwaitWorks() {
-			var stmt = ParseStatement<JsAwaitStatement>("await a:b;");
+			var stmt = ParseStatement<JsAwaitStatement>("await a:b;", allowCustomKeywords: true);
 			Assert.That(stmt.Awaiter, Is.InstanceOf<JsIdentifierExpression>());
 			Assert.That(((JsIdentifierExpression)stmt.Awaiter).Name, Is.EqualTo("a"));
 			Assert.That(stmt.OnCompletedMethodName, Is.EqualTo("b"));
+		}
+
+		[Test]
+		public void DebuggerWorks() {
+			RoundtripStatement("debugger;\n");
+		}
+
+		[Test]
+		public void KeywordAsMemberNameWorks() {
+			RoundtripStatement("var x = y.for;\n");
+			RoundtripStatement("var x = y.for.while;\n");
+			RoundtripStatement("var x = y.interface;\n");
+		}
+
+		[Test]
+		public void KeywordAsObjectLiteralPropertyWorks() {
+			RoundtripStatement("var x = { for: 1 };\n");
+			RoundtripStatement("var x = { interface: 1 };\n");
+		}
+
+		[Test]
+		public void CustomKeywordsAreNotRecognizedIfTheAllowCustomKeywordsPropertyIsFalse() {
+			RoundtripStatement("var await = yield;\n");
+		}
+
+		[Test]
+		public void SpuriousInputInExpressionThrowsRecognitionException() {
+			try {
+				JavaScriptParser.Parser.ParseExpression("a.b c");
+				Assert.Fail("Parsing should throw");
+			}
+			catch (RecognitionException) {
+			}
 		}
 	}
 }

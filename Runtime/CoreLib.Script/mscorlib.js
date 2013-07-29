@@ -1,9 +1,10 @@
-//! Script# Core Runtime
-//! More information at http://projects.nikhilk.net/ScriptSharp
-//!
+// SaltarelleCompiler Runtime (http://www.saltarelle-compiler.com)
+// Modified version of Script# Core Runtime (http://projects.nikhilk.net/ScriptSharp)
+
 if (typeof(global) === "undefined")
 	global = window;
-
+(function(global) {
+"use strict";
 var ss = {};
 
 ss.isUndefined = function#? DEBUG ss$isUndefined##(o) {
@@ -57,7 +58,7 @@ ss.isArrayOrTypedArray = function#? DEBUG ss$isArray##(obj) {
 
 ss.getHashCode = function#? DEBUG ss$getHashCode##(obj) {
 	if (!ss.isValue(obj))
-		throw 'Cannot get hash code of null';
+		throw new ss_NullReferenceException('Cannot get hash code of null');
 	else if (typeof(obj.getHashCode) === 'function')
 		return obj.getHashCode();
 	else if (typeof(obj) === 'boolean') {
@@ -88,7 +89,7 @@ ss.defaultHashCode = function#? DEBUG ss$defaultHashCode##(obj) {
 
 ss.equals = function#? DEBUG ss$equals##(a, b) {
 	if (!ss.isValue(a))
-		throw 'Object is null';
+		throw new ss_NullReferenceException('Object is null');
 	else if (typeof(a.equals) === 'function')
 		return a.equals(b);
 	if (ss.isDate(a) && ss.isDate(b))
@@ -103,7 +104,7 @@ ss.equals = function#? DEBUG ss$equals##(a, b) {
 
 ss.compare = function#? DEBUG ss$compare##(a, b) {
 	if (!ss.isValue(a))
-		throw 'Object is null';
+		throw new ss_NullReferenceException('Object is null');
 	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
 		return a < b ? -1 : (a > b ? 1 : 0);
 	else if (ss.isDate(a))
@@ -114,7 +115,7 @@ ss.compare = function#? DEBUG ss$compare##(a, b) {
 
 ss.equalsT = function#? DEBUG ss$equalsT##(a, b) {
 	if (!ss.isValue(a))
-		throw 'Object is null';
+		throw new ss_NullReferenceException('Object is null');
 	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
 		return a === b;
 	else if (ss.isDate(a))
@@ -145,7 +146,6 @@ if (typeof(window) == 'object') {
 		window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
 	}
 	window.Element.__typeName = 'Element';
-	window.Element.__baseType = Object;
 	
 	if (!window.XMLHttpRequest) {
 		window.XMLHttpRequest = function() {
@@ -205,11 +205,21 @@ if (typeof(window) == 'object') {
 
 #include "Math.js"
 
+#include "IFormatProvider.js"
+
+#include "NumberFormatInfo.js"
+
+#include "DateTimeFormatInfo.js"
+
+#include "Stopwatch.js"
+
 #include "Array.js"
 
 #include "Date.js"
 
 #include "Function.js"
+
+#include "RegExp.js"
 
 #include "Debug.js"
 
@@ -267,6 +277,26 @@ if (typeof(window) == 'object') {
 
 #include "JsErrorException.js"
 
+#include "ArgumentException.js"
+
+#include "ArgumentNullException.js"
+
+#include "ArgumentOutOfRangeException.js"
+
+#include "FormatException.js"
+
+#include "DivideByZeroException.js"
+
+#include "InvalidCastException.js"
+
+#include "InvalidOperationException.js"
+
+#include "NullReferenceException.js"
+
+#include "KeyNotFoundException.js"
+
+#include "AmbiguousMatchException.js"
+
 #include "IteratorBlockEnumerable.js"
 
 #include "IteratorBlockEnumerator.js"
@@ -279,6 +309,8 @@ if (typeof(window) == 'object') {
 
 #include "CancelEventArgs.js"
 
+#include "Guid.js"
+
 if (global.ss) {
 	for (var n in ss) {
 		if (ss.hasOwnProperty(n))
@@ -288,3 +320,4 @@ if (global.ss) {
 else {
 	global.ss = ss;
 }
+})(global);

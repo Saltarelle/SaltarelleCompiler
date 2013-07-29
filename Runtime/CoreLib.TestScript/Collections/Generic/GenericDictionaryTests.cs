@@ -179,7 +179,7 @@ namespace CoreLib.TestScript.Collections.Generic {
 				var x = d[10];
 				Assert.IsTrue(false);
 			}
-			catch (Exception) {
+			catch (KeyNotFoundException) {
 			}
 		}
 
@@ -200,7 +200,7 @@ namespace CoreLib.TestScript.Collections.Generic {
 				d.Add(2, "b");
 				Assert.IsTrue(false);
 			}
-			catch (Exception) {
+			catch (ArgumentException) {
 			}
 		}
 

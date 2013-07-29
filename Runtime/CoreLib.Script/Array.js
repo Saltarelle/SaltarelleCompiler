@@ -1,21 +1,26 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Array Extensions
 
-ss.arrayGet2 = function#? DEBUG ss$arrayGet2##(arr, indices) {
+ss._flatIndex = function#? DEBUG ss$_flatIndex##(arr, indices) {
 	if (indices.length != (arr._sizes ? arr._sizes.length : 1))
-		throw 'Invalid number of indices';
+		throw new ss_ArgumentException('Invalid number of indices');
 
 	if (indices[0] < 0 || indices[0] >= (arr._sizes ? arr._sizes[0] : arr.length))
-		throw 'Index 0 out of range';
+		throw new ss_ArgumentException('Index 0 out of range');
 
 	var idx = indices[0];
 	if (arr._sizes) {
 		for (var i = 1; i < arr._sizes.length; i++) {
 			if (indices[i] < 0 || indices[i] >= arr._sizes[i])
-				throw 'Index ' + i + ' out of range';
+				throw new ss_ArgumentException('Index ' + i + ' out of range');
 			idx = idx * arr._sizes[i] + indices[i];
 		}
 	}
+	return idx;
+};
+
+ss.arrayGet2 = function#? DEBUG ss$arrayGet2##(arr, indices) {
+	var idx = ss._flatIndex(arr, indices);
 	var r = arr[idx];
 	return typeof r !== 'undefined' ? r : arr._defvalue;
 };
@@ -25,20 +30,7 @@ ss.arrayGet = function#? DEBUG ss$arrayGet##(arr) {
 }
 
 ss.arraySet2 = function#? DEBUG ss$arraySet2##(arr, value, indices) {
-	if (indices.length != (arr._sizes ? arr._sizes.length : 1))
-		throw 'Invalid number of indices';
-
-	if (indices[0] < 0 || indices[0] >= (arr._sizes ? arr._sizes[0] : arr.length))
-		throw 'Index 0 out of range';
-
-	var idx = indices[0];
-	if (arr._sizes) {
-		for (var i = 1; i < arr._sizes.length; i++) {
-			if (indices[i] < 0 || indices[i] >= arr._sizes[i])
-				throw 'Index ' + i + ' out of range';
-			idx = idx * arr._sizes[i] + indices[i];
-		}
-	}
+	var idx = ss._flatIndex(arr, indices);
 	arr[idx] = value;
 };
 
@@ -52,7 +44,7 @@ ss.arrayRank = function#? DEBUG ss$arrayRank##(arr) {
 
 ss.arrayLength = function#? DEBUG ss$arrayLength##(arr, dimension) {
 	if (dimension >= (arr._sizes ? arr._sizes.length : 1))
-		throw 'Invalid dimension';
+		throw new ss_ArgumentException('Invalid dimension');
 	return arr._sizes ? arr._sizes[dimension] : arr.length;
 };
 
@@ -94,13 +86,13 @@ ss.arrayClone = function#? DEBUG ss$arrayClone##(arr) {
 ss.arrayPeekFront = function#? DEBUG ss$arrayPeekFront##(arr) {
 	if (arr.length)
 		return arr[0];
-	throw 'Array is empty';
+	throw new ss_InvalidOperationException('Array is empty');
 };
 
 ss.arrayPeekBack = function#? DEBUG ss$arrayPeekBack##(arr) {
 	if (arr.length)
 		return arr[arr.length - 1];
-	throw 'Array is empty';
+	throw new ss_InvalidOperationException('Array is empty');
 };
 
 if (!Array.prototype.every) {
@@ -209,6 +201,9 @@ if (!Array.prototype.some) {
 }
 
 ss.arrayFromEnumerable = function#? DEBUG ss$arrayFromEnumerable##(enm) {
+	if (!ss.isValue(enm))
+		return null;
+
 	var e = ss.getEnumerator(enm), r = [];
 	try {
 		while (e.moveNext())

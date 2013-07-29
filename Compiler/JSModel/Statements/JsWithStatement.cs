@@ -7,6 +7,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public JsExpression Object { get; private set; }
 		public JsStatement Body { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.With")]
 		public JsWithStatement(JsExpression @object, JsStatement body) {
 			if (@object == null) throw new ArgumentNullException("object");
 			if (body == null) throw new ArgumentNullException("body");

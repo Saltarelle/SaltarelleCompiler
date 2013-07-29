@@ -16,11 +16,13 @@ namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
 	public struct Decimal : IComparable<Decimal>, IEquatable<Decimal>, IFormattable {
-		[ScriptName("MAX_VALUE")]
-		public const decimal MaxValue = 0;
+		[Obsolete("This number is not representable in Javascript", true)]
+		[NonScriptable]
+		public const decimal MaxValue = 79228162514264337593543950335m;
 
-		[ScriptName("MIN_VALUE")]
-		public const decimal MinValue = 0;
+		[Obsolete("This number is not representable in Javascript", true)]
+		[NonScriptable]
+		public const decimal MinValue = -79228162514264337593543950335m;
 
 		[InlineConstant]
 		public const decimal Zero = 0;
@@ -30,7 +32,7 @@ namespace System {
 		public const decimal MinusOne = -1;
 
 		[InlineCode("0")]
-		public Decimal(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
+		private Decimal(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
 
 		[InlineCode("{d}")]
@@ -83,6 +85,16 @@ namespace System {
 
 		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string ToString(string format) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider})")]
+		public string ToString(string format, IFormatProvider provider) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G', {provider})")]
+		public string ToString(IFormatProvider provider) {
 			return null;
 		}
 

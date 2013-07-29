@@ -71,7 +71,7 @@
     <Compile Include="Statements\JsFunctionStatement.cs" />
     <Compile Include="Statements\JsSwitchSection.cs" />
     <Compile Include="Statements\JsGotoStatement.cs" />
-    <Compile Include="Statements\JsLabelStatement.cs" />
+    <Compile Include="Statements\JsLabelledStatement.cs" />
     <Compile Include="Statements\JsYieldStatement.cs" />
     <Compile Include="IFreezable.cs" />
     <Compile Include="Require.cs" />

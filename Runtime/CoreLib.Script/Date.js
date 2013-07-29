@@ -40,7 +40,7 @@ ss.localeFormatDate = function#? DEBUG ss$localeFormatDate##(date, format) {
 };
 
 ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) {
-	var dtf = useLocale ? ss_CultureInfo.CurrentCulture.dateFormat : ss_CultureInfo.InvariantCulture.dateFormat;
+	var dtf = useLocale ? ss_CultureInfo.currentCulture.dateTimeFormat : ss_CultureInfo.invariantCulture.dateTimeFormat;
 
 	if (format.length == 1) {
 		switch (format) {
@@ -57,7 +57,7 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 			case 'G': format = dtf.shortDatePattern + ' ' + dtf.longTimePattern; break;
 
 			case 'R': case 'r':
-				dtf = ss_CultureInfo.InvariantCulture.dateFormat;
+				dtf = ss_CultureInfo.InvariantCulture.dateTimeFormat;
 				format = dtf.gmtDateTimePattern;
 				break;
 			case 'u': format = dtf.universalDateTimePattern; break;
@@ -193,9 +193,9 @@ ss._netFormatDate = function#? DEBUG ss$_netFormatDate##(dt, format, useLocale) 
 	return sb.toString();
 };
 
-ss._parseExactDate = function#? DEBUG ss$_parseExactDate##(val, format, culture, utc) {
-	culture = culture || ss_CultureInfo.CurrentCulture;
-	var AM = culture.amDesignator, PM = culture.pmDesignator;
+ss._parseExactDate = function#? DEBUG ss$_parseExactDate##(val, format, provider, utc) {
+	provider = (provider && provider.getFormat(ss_DateTimeFormatInfo)) || ss_CultureInfo.currentCulture.dateTimeFormat;
+	var AM = provider.amDesignator, PM = provider.pmDesignator;
 
 	var _isInteger = function(val) {
 		var digits="1234567890";
@@ -352,10 +352,10 @@ ss._parseExactDate = function#? DEBUG ss$_parseExactDate##(val, format, culture,
 		return new Date(year, month - 1, date, hh, mm, _ss);
 };
 
-ss.parseExactDate = function#? DEBUG ss$parseExactDate##(val, format, culture) {
-	return ss._parseExactDate(val, format, culture, false);
+ss.parseExactDate = function#? DEBUG ss$parseExactDate##(val, format, provider) {
+	return ss._parseExactDate(val, format, provider, false);
 };
 
-ss.parseExactDateUTC = function#? DEBUG ss$parseExactDateUTC##(val, format, culture) {
-	return ss._parseExactDate(val, format, culture, true);
+ss.parseExactDateUTC = function#? DEBUG ss$parseExactDateUTC##(val, format, provider) {
+	return ss._parseExactDate(val, format, provider, true);
 };

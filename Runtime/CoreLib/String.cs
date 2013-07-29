@@ -16,10 +16,8 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class String : IComparable<String>, IEquatable<String> {
-		[ScriptName("")]
 		public String() {}
 
-		[ScriptName("")]
 		public String(String other) {}
 
 		[InlineCode("{$System.Script}.stringFromChar({$System.String}.fromCharCode({ch}), {count})")]
@@ -196,7 +194,7 @@ namespace System {
 		/// Determines if the strings are equal.
 		/// </summary>
 		/// <returns>true if the string s1 = s2; false otherwise.</returns>
-		[InlineCode("{$System.Script}.compareStrings({s1}, {s2}, {ignoreCase}) === 0)")]
+		[InlineCode("{$System.Script}.compareStrings({s1}, {s2}, {ignoreCase}) === 0")]
 		public static bool Equals(string s1, string s2, bool ignoreCase) {
 			return false;
 		}
@@ -334,7 +332,7 @@ namespace System {
 			return 0;
 		}
 
-		[ExpandParams]
+		[InlineCode("{$System.Script}.localeFormatString({format}, {*values})")]
 		public static string LocaleFormat(string format, params object[] values) {
 			return null;
 		}
@@ -412,12 +410,43 @@ namespace System {
 			return null;
 		}
 
-		public string[] Split(string separator, int limit) {
+		[ScriptName("split")]
+		public string[] JsSplit(string separator, int limit) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}))")]
+		public string[] Split(char[] separator) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), {limit})")]
+		public string[] Split(char[] separator, int limit) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), {limit}, {options})")]
+		public string[] Split(char[] separator, int limit, StringSplitOptions options) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}.map(function(i) {{ return {$System.String}.fromCharCode(i); }}), null, {options})")]
+		public string[] Split(char[] separator, StringSplitOptions options) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}, null, {options})")]
+		public string[] Split(string[] separator, StringSplitOptions options) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.netSplit({this}, {separator}, {limit}, {options})")]
+		public string[] Split(string[] separator, int limit, StringSplitOptions options) {
 			return null;
 		}
 
 		[InlineCode("{this}.split({$System.String}.fromCharCode({separator}), {limit})")]
-		public string[] Split(char separator, int limit) {
+		public string[] JsSplit(char separator, int limit) {
 			return null;
 		}
 
@@ -425,7 +454,8 @@ namespace System {
 			return null;
 		}
 
-		public string[] Split(Regex regex, int limit) {
+		[ScriptName("split")]
+		public string[] JsSplit(Regex regex, int limit) {
 			return null;
 		}
 
@@ -588,6 +618,11 @@ namespace System {
 		public bool Contains(string value)
 		{
 			return false;
+		}
+
+		[InlineCode("{this}.split('').map(function(s) {{ return s.charCodeAt(0); }})")]
+		public char[] ToCharArray() {
+			return null;
 		}
 	}
 }

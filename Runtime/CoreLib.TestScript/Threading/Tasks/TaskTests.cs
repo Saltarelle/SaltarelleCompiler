@@ -660,7 +660,7 @@ namespace CoreLib.TestScript.Threading.Tasks {
 				Assert.IsTrue(task == t, "Callback parameter should be correct");
 
 				Assert.IsTrue(t.Exception is AggregateException, "Exception for the aggregate task should be null");
-				Assert.AreEqual(t.Exception.InnerExceptions.Length, 2, "Should be 2 inner exceptions");
+				Assert.AreEqual(t.Exception.InnerExceptions.Count, 2, "Should be 2 inner exceptions");
 				Assert.IsTrue(t.Exception.InnerExceptions.Contains(ex1), "ex1 should be propagated");
 				Assert.IsTrue(t.Exception.InnerExceptions.Contains(ex2), "ex2 should be propagated");
 				Assert.AreEqual(t.Status, TaskStatus.Faulted, "Aggregate task should be faulted");
@@ -883,7 +883,7 @@ namespace CoreLib.TestScript.Threading.Tasks {
 
 				Assert.IsTrue(task == t, "Callback parameter should be correct");
 
-				Assert.AreEqual(t.Exception.InnerExceptions.Length, 1, "There should be one inner exception");
+				Assert.AreEqual(t.Exception.InnerExceptions.Count, 1, "There should be one inner exception");
 				Assert.IsTrue(t.Exception.InnerExceptions[0] == ex, "Exception for the aggregate task should be correct");
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Aggregate task should have faulted");
 
@@ -1010,7 +1010,7 @@ namespace CoreLib.TestScript.Threading.Tasks {
 				Assert.IsTrue(taskRun, "Task should be run before continuation");
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should be faulted");
 				Assert.IsTrue((object)task.Exception is AggregateException, "Exception should be correct");
-				Assert.AreEqual(task.Exception.InnerExceptions.Length, 1, "There should be one inner exception");
+				Assert.AreEqual(task.Exception.InnerExceptions.Count, 1, "There should be one inner exception");
 				Assert.IsTrue(task.Exception.InnerExceptions[0] == ex, "InnerException should be correct");
 				continuationRun = true;
 			});

@@ -9,6 +9,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// </summary>
 		public JsExpression Value { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Yield")]
 		public JsYieldStatement(JsExpression value) {
 			this.Value = value;
 		}

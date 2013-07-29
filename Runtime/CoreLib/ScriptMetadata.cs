@@ -421,6 +421,26 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
+	/// When specified on an assembly with an AsyncModule attribute, the module will require this additional dependency in its AMD declaration
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple=true)]
+	[NonScriptable]
+	public sealed class AdditionalDependencyAttribute : Attribute {
+		public AdditionalDependencyAttribute(string moduleName)
+		{
+			ModuleName = moduleName;
+			InstanceName = moduleName;
+		}
+		public AdditionalDependencyAttribute(string moduleName, string instanceName)
+		{
+			ModuleName = moduleName;
+			InstanceName = instanceName;
+		}
+		public string ModuleName { get; private set; }
+		public string InstanceName { get; set; }
+	}
+
+	/// <summary>
 	/// Can be applied to a GetEnumerator() method to indicate that that array-style enumeration should be used.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
@@ -437,7 +457,7 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
-	/// Can be applied to a member to indicate that metadata for the member should be included in the compiled script.
+	/// Can be applied to a member to indicate that metadata for the member should (or should not) be included in the compiled script. By default members are reflectable if they have at least one scriptable attribute. The default reflectability can be changed with the [<see cref="DefaultMemberReflectabilityAttribute"/>].
 	/// </summary>
 	[AttributeUsage(AttributeTargets.All)]
 	[NonScriptable]
@@ -447,8 +467,56 @@ namespace System.Runtime.CompilerServices {
 		public ReflectableAttribute() {
 			Reflectable = true;
 		}
+
 		public ReflectableAttribute(bool reflectable) {
 			Reflectable = reflectable;
 		}
+	}
+
+	/// <summary>
+	/// This enum defines the possibilities for default member reflectability.
+	/// </summary>
+	[NonScriptable]
+	public enum MemberReflectability {
+		/// <summary>
+		/// Members are not reflectable (unless they are decorated either with any script-usable attributes or a [ReflectableAttribute])
+		/// </summary>
+		None,
+
+		/// <summary>
+		/// Public and protected members are reflectable, private/internal members are only reflectable if are decorated either with any script-usable attributes or a [ReflectableAttribute].
+		/// Members are reflectable even when their enclosing type is not publicly visible.
+		/// </summary>
+		PublicAndProtected,
+
+		/// <summary>
+		/// Public, protected and internal members are reflectable, private members are only reflectable if are decorated either with any script-usable attributes or a [ReflectableAttribute].
+		/// </summary>
+		NonPrivate,
+
+		/// <summary>
+		/// All members are reflectable by default (can be overridden with [Reflectable(false)]).
+		/// </summary>
+		All
+	}
+
+	/// <summary>
+	/// This attribute can be applied to an assembly or a type to indicate whether members are reflectable by default.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Interface | AttributeTargets.Class | AttributeTargets.Struct)]
+	[NonScriptable]
+	public sealed class DefaultMemberReflectabilityAttribute : Attribute {
+		public MemberReflectability DefaultReflectability { get; private set; }
+
+		public DefaultMemberReflectabilityAttribute(MemberReflectability defaultReflectability) {
+			DefaultReflectability = defaultReflectability;
+		}
+	}
+
+	/// <summary>
+	/// Can be applied to a constant field to ensure that it will never be inlined, even in minified scripts.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field)]
+	public sealed class NoInlineAttribute : Attribute {
 	}
 }

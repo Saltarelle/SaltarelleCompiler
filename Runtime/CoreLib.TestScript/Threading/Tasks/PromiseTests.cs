@@ -133,7 +133,7 @@ namespace CoreLib.TestScript.Threading.Tasks {
 				Assert.AreEqual(task.Status, TaskStatus.Faulted, "Task should have faulted after the promise was rejected.");
 				Assert.IsTrue(continuationRun, "Continuation should have been run after promise was rejected.");
 				Assert.IsTrue((object)task.Exception is AggregateException, "Exception should be an AggregateException");
-				Assert.AreEqual(task.Exception.InnerExceptions.Length, 1, "Exception should have one inner exception");
+				Assert.AreEqual(task.Exception.InnerExceptions.Count, 1, "Exception should have one inner exception");
 				Assert.IsTrue(task.Exception.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
 				Assert.AreEqual(((PromiseException)task.Exception.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 
@@ -180,7 +180,7 @@ namespace CoreLib.TestScript.Threading.Tasks {
 				Assert.Fail("Await should throw");
 			}
 			catch (AggregateException ex) {
-				Assert.AreEqual(ex.InnerExceptions.Length, 1, "Exception should have one inner exception");
+				Assert.AreEqual(ex.InnerExceptions.Count, 1, "Exception should have one inner exception");
 				Assert.IsTrue(ex.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
 				Assert.AreEqual(((PromiseException)ex.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 			}

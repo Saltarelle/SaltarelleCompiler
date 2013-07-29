@@ -44,16 +44,19 @@ public class C {
 	}
 }",
 @"(function() {
+	'use strict';
+	global.Ф = global.Ф || {};
 	////////////////////////////////////////////////////////////////////////////////
 	// Ф.Класс
 	var $Ф_Класс = function() {
 	};
-	$Ф_Класс.prototype = {
+	$Ф_Класс.__typeName = 'Ф.Класс';
+	global.Ф.Класс = $Ф_Класс;
+	ss.initClass($Ф_Класс, {
 		$я: function() {
 			var Щ = 'г';
 		}
-	};
-	ss.registerClass(global, 'Ф.Класс', $Ф_Класс);
+	});
 })();
 ");
 		}
@@ -92,12 +95,13 @@ class C<T1, T2> where T1 : class {
 	public static DateTime f22;
 }",
 @"(function() {
+	'use strict';
 	////////////////////////////////////////////////////////////////////////////////
 	// C
 	var $$C$2 = function(T1, T2) {
 		var $type = function() {
 		};
-		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], function() {
+		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], {}, function() {
 			return null;
 		}, function() {
 			return [];
@@ -126,18 +130,39 @@ class C<T1, T2> where T1 : class {
 		$type.$f22 = new Date(0);
 		return $type;
 	};
-	ss.registerGenericClass(null, '$C$2', $$C$2, 2);
+	$$C$2.__typeName = '$C$2';
+	ss.initGenericClass($$C$2, 2);
 	////////////////////////////////////////////////////////////////////////////////
 	// I
 	var $$I = function() {
 	};
+	$$I.__typeName = '$I';
 	////////////////////////////////////////////////////////////////////////////////
 	// X
 	var $$X = function() {
 	};
-	ss.registerInterface(null, '$I', $$I);
-	ss.registerClass(null, '$X', $$X);
+	$$X.__typeName = '$X';
+	ss.initInterface($$I, {});
+	ss.initClass($$X, {});
 })();
+");
+		}
+
+		[Test]
+		public void CastToNamedValuesEnumIsCastToString() {
+			SourceVerifier.AssertSourceCorrect(
+@"using System;
+using System.Runtime.CompilerServices;
+[NamedValues] enum E {}
+class C {
+	public void M(object o) {
+		// BEGIN
+		E e = (E)o;
+		// END
+	}
+}
+",
+@"			var e = ss.cast(o, String);
 ");
 		}
 	}

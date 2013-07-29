@@ -19,19 +19,19 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 	public class StateMachineRewriterTestBase {
 		protected void AssertCorrect(string orig, string expected, MethodType methodType = MethodType.Normal) {
 			int tempIndex = 0, stateIndex = 0, loopLabelIndex = 0;
-			var stmt = JsBlockStatement.MakeBlock(JavaScriptParser.Parser.ParseStatement(orig));
+			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(orig, allowCustomKeywords: true));
 			JsBlockStatement result;
 			if (methodType == MethodType.Iterator) {
 				int finallyHandlerIndex = 0;
 				result = StateMachineRewriter.RewriteIteratorBlock(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), () => string.Format("$finally" + (++finallyHandlerIndex).ToString(CultureInfo.InvariantCulture)), v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v), sm => {
 					var body = new List<JsStatement>();
 					if (sm.Variables.Count > 0)
-						body.Add(new JsVariableDeclarationStatement(sm.Variables));
-					body.AddRange(sm.FinallyHandlers.Select(h => new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2))));
+						body.Add(JsStatement.Var(sm.Variables));
+					body.AddRange(sm.FinallyHandlers.Select(h => (JsStatement)JsExpression.Assign(JsExpression.Identifier(h.Item1), h.Item2)));
 					if (sm.Disposer != null)
-						body.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier("dispose"), new JsFunctionDefinitionExpression(new string[0], sm.Disposer))));
+						body.Add(JsExpression.Assign(JsExpression.Identifier("dispose"), JsExpression.FunctionDefinition(new string[0], sm.Disposer)));
 					body.Add(sm.MainBlock);
-					return new JsBlockStatement(body);
+					return JsStatement.Block(body);
 				});
 			}
 			else if (methodType == MethodType.AsyncTask || methodType == MethodType.AsyncVoid) {
@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 				                                                 () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)),
 				                                                 "$sm",
 				                                                 "$doFinally",
-				                                                 methodType == MethodType.AsyncTask ? new JsVariableDeclaration("$tcs", JsExpression.New(JsExpression.Identifier("TaskCompletionSource"))) : null,
+				                                                 methodType == MethodType.AsyncTask ? JsStatement.Declaration("$tcs", JsExpression.New(JsExpression.Identifier("TaskCompletionSource"))) : null,
 				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set result in async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "setResult"), expr ?? JsExpression.String("<<null>>")); },
 				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set exception in async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "setException"), expr); },
 				                                                 ()   => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not get task async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "getTask")); },

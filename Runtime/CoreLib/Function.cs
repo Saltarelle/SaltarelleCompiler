@@ -23,6 +23,24 @@ namespace System {
 		}
 
 		/// <summary>
+		/// Creates a new function with the specified implementation, and the
+		/// set of named parameters.
+		/// </summary>
+		/// <param name="parameters">List of comma separated argument names</param>
+		/// <param name="body">The function body</param>
+		public Function(string parameters, string body) {
+		}
+
+		/// <summary>
+		/// Creates a new function with the specified implementation, and the
+		/// set of named parameters.
+		/// </summary>
+		/// <param name="parameters">Argument names</param>
+		/// <param name="body">The function body</param>
+		public Function(string[] parameters, string body) {
+		}
+
+		/// <summary>
 		/// Gets the number of parameters expected by the function.
 		/// </summary>
 		[IntrinsicProperty]

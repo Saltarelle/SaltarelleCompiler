@@ -25,7 +25,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 		}
 
 		private JsFunctionDefinitionExpression CreateFunction(params ITypeDefinition[] referencedTypes) {
-			return JsExpression.FunctionDefinition(new string[0], new JsExpressionStatement(JsExpression.ArrayLiteral(referencedTypes.Select(t => new JsTypeReferenceExpression(t)))));
+			return JsExpression.FunctionDefinition(new string[0], JsExpression.ArrayLiteral(referencedTypes.Select(t => new JsTypeReferenceExpression(t))));
 		}
 
 		private string[] SplitLines(string s) {

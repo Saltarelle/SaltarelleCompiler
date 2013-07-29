@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages-manual\antlr\Antlr3.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="FluentAssertions">
       <HintPath>..\packages\FluentAssertions.1.7.1\Lib\net40\FluentAssertions.dll</HintPath>
     </Reference>
@@ -159,6 +163,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ikvm\reflect\IKVM.Reflection.csproj">
+      <Project>{4cb170ef-dfe6-4a56-9e1b-a85449e827a7}</Project>
+      <Name>IKVM.Reflection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JavaScriptParser\JavaScriptParser.csproj">
       <Project>{819223CA-D211-44C2-BC01-A2B955D4CA61}</Project>
       <Name>JavaScriptParser</Name>
@@ -166,10 +174,6 @@
     <ProjectReference Include="..\JSModel\JSModel.csproj">
       <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
       <Name>JSModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\cecil\Mono.Cecil.csproj">
-      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
-      <Name>Mono.Cecil %28Mono.Cecil\Mono.Cecil%29</Name>
     </ProjectReference>
     <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory.CSharp\ICSharpCode.NRefactory.CSharp.csproj">
       <Project>{53DCA265-3C3C-42F9-B647-F72BA678122B}</Project>

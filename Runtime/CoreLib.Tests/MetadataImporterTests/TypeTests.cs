@@ -898,7 +898,7 @@ static class C1 {
 
 		[Test]
 		public void GlobalMethodsAttributeCannotBeAppliedToNonStaticClass() {
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] class C1 { static int i; }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] class C1 { static int M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("must be static"));
 		}
@@ -1314,6 +1314,23 @@ public static class C<T> {
 		}
 
 		[Test]
+		public void ClassWithMixinAttributeCanContainCompilerGeneratedNonMethodMembers() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	[CompilerGenerated] public static int F1;
+}");
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Mixin(""$.fn"")]
+public static class C {
+	[CompilerGenerated] public static int P { get; set; }
+}");
+		}
+
+		[Test]
 		public void CannotImplementTwoInterfacesWithTheSameMethodName() {
 			Prepare(@"
 public interface I1 { void SomeMethod(); }
@@ -1516,7 +1533,7 @@ public class DerivedClass : TestClass.InnerClass {}");
 		public void TypeCheckCodeInSerializableAttributeForImportedSerializableTypeIsAnError() {
 			Prepare(@"[System.Serializable(TypeCheckCode = ""{this} == 0""), System.Runtime.CompilerServices.Imported] public class C1 {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7158 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("SerializableAttribute")));
+			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7159 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("SerializableAttribute")));
 		}
 
 		[Test]
@@ -1538,6 +1555,17 @@ public class DerivedClass : TestClass.InnerClass {}");
 			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{{this} == 1"")] public class C1<T> {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
+		}
+
+		[Test]
+		public void ScriptNameForATypeCanBeNullIfTheTypeHasAModuleName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+[Imported, ModuleName(""mymodule""), ScriptName(null)]
+public class MyClass {
+}");
+
+			Assert.That(FindType("MyClass").Name, Is.EqualTo(""));
 		}
 	}
 }

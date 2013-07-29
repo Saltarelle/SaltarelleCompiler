@@ -6,7 +6,10 @@ var ss_ObjectEnumerator = function#? DEBUG ObjectEnumerator$##(o) {
 	this._index = -1;
 	this._object = o;
 };
-ss_ObjectEnumerator.prototype = {
+
+ss_ObjectEnumerator.__typeName = 'ss.ObjectEnumerator';
+ss.ObjectEnumerator = ss_ObjectEnumerator;
+ss.initClass(ss_ObjectEnumerator, {
 	moveNext: function#? DEBUG ObjectEnumerator$moveNext##() {
 		this._index++;
 		return (this._index < this._keys.length);
@@ -16,12 +19,10 @@ ss_ObjectEnumerator.prototype = {
 	},
 	current: function#? DEBUG ObjectEnumerator$current##() {
 		if (this._index < 0 || this._index >= this._keys.length)
-			throw 'Invalid operation';
+			throw new ss_InvalidOperationException('Invalid operation');
 		var k = this._keys[this._index];
 		return { key: k, value: this._object[k] };
 	},
 	dispose: function#? DEBUG ObjectEnumerator$dispose##() {
 	}
-};
-
-ss.registerClass(global, 'ss.ObjectEnumerator', ss_ObjectEnumerator, null, [ss_IEnumerator, ss_IDisposable]);
+}, null, [ss_IEnumerator, ss_IDisposable]);

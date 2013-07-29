@@ -13,6 +13,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public JsExpression ObjectToIterateOver { get; private set; }
 		public JsBlockStatement Body { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.ForIn")]
 		public JsForEachInStatement(string loopVariableName, JsExpression objectToIterateOver, JsStatement body, bool isLoopVariableDeclared = true) {
 			if (loopVariableName == null) throw new ArgumentNullException("loopVariableName");
 			if (!loopVariableName.IsValidJavaScriptIdentifier()) throw new ArgumentException("loopVariableName");
@@ -21,7 +22,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 
 			LoopVariableName       = loopVariableName;
 			ObjectToIterateOver    = objectToIterateOver;
-			Body                   = JsBlockStatement.MakeBlock(body);
+			Body                   = EnsureBlock(body);
 			IsLoopVariableDeclared = isLoopVariableDeclared;
 		}
 

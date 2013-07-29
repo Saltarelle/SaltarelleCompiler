@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			public override JsStatement VisitReturnStatement(JsReturnStatement statement, object data) {
-				return new JsReturnStatement(_identifier);
+				return JsStatement.Return(_identifier);
 			}
 
 			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
@@ -172,17 +172,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
 					if (body.Count == 0 || !(body[body.Count - 1] is JsReturnStatement))
-						body.Add(new JsReturnStatement());
+						body.Add(JsStatement.Return());
 					body = StaticMethodConstructorReturnPatcher.Process(body, _namer.ThisAlias).AsReadOnly();
 				}
 
-				var compiled = JsExpression.FunctionDefinition(constructor.Parameters.Where((p, i) => i != constructor.Parameters.Count - 1 || !impl.ExpandParams).Select(p => variables[p].Name), new JsBlockStatement(body));
+				var compiled = JsExpression.FunctionDefinition(constructor.Parameters.Where((p, i) => i != constructor.Parameters.Count - 1 || !impl.ExpandParams).Select(p => variables[p].Name), JsStatement.Block(body));
 				return _statementCompiler.StateMachineRewriteNormalMethod(compiled);
 			}
 			catch (Exception ex) {
 				_errorReporter.Region = region;
 				_errorReporter.InternalError(ex);
-				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
 		}
 
@@ -219,19 +219,19 @@ namespace Saltarelle.Compiler.Compiler {
 				CreateCompilationContext(null, null, property.DeclaringTypeDefinition, null);
 				if (property.IsStatic) {
 					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), _statementCompiler);
-					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(jsType, backingFieldName)));
+					return JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Member(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, new JsReturnStatement(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName)));
+					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, JsStatement.Return(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName)));
 				}
 				else {
-					return JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(JsExpression.Member(JsExpression.This, backingFieldName)));
+					return JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Member(JsExpression.This, backingFieldName)));
 				}
 			}
 			catch (Exception ex) {
 				_errorReporter.Region = property.Getter.Region;
 				_errorReporter.InternalError(ex);
-				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
 		}
 
@@ -242,19 +242,19 @@ namespace Saltarelle.Compiler.Compiler {
 
 				if (property.IsStatic) {
 					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.DeclaringTypeDefinition), _statementCompiler);
-					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName))));
+					return JsExpression.FunctionDefinition(new[] { valueName }, JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName)));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName))));
+					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName)));
 				}
 				else {
-					return JsExpression.FunctionDefinition(new[] { valueName }, new JsExpressionStatement(JsExpression.Assign(JsExpression.Member(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName))));
+					return JsExpression.FunctionDefinition(new[] { valueName }, JsExpression.Assign(JsExpression.Member(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName)));
 				}
 			}
 			catch (Exception ex) {
 				_errorReporter.Region = property.Setter.Region;
 				_errorReporter.InternalError(ex);
-				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
 		}
 
@@ -280,12 +280,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var bfAccessor = JsExpression.Member(target, backingFieldName);
 				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.AddAccessor.Region, bfAccessor, JsExpression.Identifier(valueName));
-				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
+				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsExpression.Assign(bfAccessor, combineCall)));
 			}
 			catch (Exception ex) {
 				_errorReporter.Region = @event.Region;
 				_errorReporter.InternalError(ex);
-				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
 		}
 
@@ -311,12 +311,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var bfAccessor = JsExpression.Member(target, backingFieldName);
 				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.RemoveAccessor.Region, bfAccessor, JsExpression.Identifier(valueName));
-				return JsExpression.FunctionDefinition(args, new JsBlockStatement(new JsExpressionStatement(JsExpression.Assign(bfAccessor, combineCall))));
+				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsExpression.Assign(bfAccessor, combineCall)));
 			}
 			catch (Exception ex) {
 				_errorReporter.Region = @event.Region;
 				_errorReporter.InternalError(ex);
-				return JsExpression.FunctionDefinition(new string[0], JsBlockStatement.EmptyStatement);
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
 		}
 
@@ -324,12 +324,12 @@ namespace Saltarelle.Compiler.Compiler {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
 				result = result ?? new List<JsStatement>();
-				result.Add(new JsVariableDeclarationStatement(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
+				result.Add(JsStatement.Var(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
 			}
 			foreach (var p in parameters) {
 				if (!p.IsOut && !p.IsRef && variables[p].UseByRefSemantics) {
 					result = result ?? new List<JsStatement>();
-					result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(variables[p].Name), JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", JsExpression.Identifier(variables[p].Name))))));
+					result.Add(JsExpression.Assign(JsExpression.Identifier(variables[p].Name), JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", JsExpression.Identifier(variables[p].Name)))));
 				}
 			}
 			return result ?? new List<JsStatement>();

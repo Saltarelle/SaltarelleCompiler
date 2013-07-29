@@ -44,8 +44,10 @@ namespace CoreLib.TestScript.SimpleTypes {
 		[Test]
 		public void ConstantsWork() {
 			double zero = 0;
-			Assert.AreEqual(double.MinValue, 5e-324, "MinValue should be correct");
+			Assert.IsTrue(double.MinValue < (double)(object)-1.7e+308, "MinValue should be correct");
 			Assert.IsTrue(double.MaxValue > (double)(object)1.7e+308, "MaxValue should be correct");
+			Assert.AreEqual(double.JsMinValue, 5e-324, "MinValue should be correct");
+			Assert.AreEqual(double.Epsilon, 4.94065645841247E-324, "MinValue should be correct");
 			Assert.IsTrue(double.IsNaN(double.NaN), "NaN should be correct");
 			Assert.AreStrictEqual(double.PositiveInfinity, 1 / zero, "PositiveInfinity should be correct");
 			Assert.AreStrictEqual(double.NegativeInfinity, -1 / zero, "NegativeInfinity should be correct");

@@ -161,7 +161,7 @@ namespace Saltarelle.Compiler.JSModel.Minification
 			public override JsVariableDeclaration VisitVariableDeclaration(JsVariableDeclaration declaration, Tuple<Dictionary<string, string>, HashSet<string>> data) {
 				string newName;
 				if (data.Item1.TryGetValue(declaration.Name, out newName))
-					return new JsVariableDeclaration(newName, declaration.Initializer != null ? VisitExpression(declaration.Initializer, data) : null);
+					return JsStatement.Declaration(newName, declaration.Initializer != null ? VisitExpression(declaration.Initializer, data) : null);
 				else
 					return base.VisitVariableDeclaration(declaration, data);
 			}
@@ -169,7 +169,7 @@ namespace Saltarelle.Compiler.JSModel.Minification
 			public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, Tuple<Dictionary<string, string>, HashSet<string>> data) {
 				string newName;
 				if (data.Item1.TryGetValue(statement.LoopVariableName, out newName))
-					return new JsForEachInStatement(newName, VisitExpression(statement.ObjectToIterateOver, data), VisitStatement(statement.Body, data), statement.IsLoopVariableDeclared);
+					return JsStatement.ForIn(newName, VisitExpression(statement.ObjectToIterateOver, data), VisitStatement(statement.Body, data), statement.IsLoopVariableDeclared);
 				else
 					return base.VisitForEachInStatement(statement, data);
 			}
@@ -179,7 +179,7 @@ namespace Saltarelle.Compiler.JSModel.Minification
 				var usedNames = new HashSet<string>(data.Item1.Values.Concat(data.Item2));
 				string newName = _generateName(clause.Identifier, usedNames);
 				newData.Add(clause.Identifier, newName);
-				return new JsCatchClause(newName, VisitStatement(clause.Body, Tuple.Create(newData, data.Item2)));
+				return JsStatement.Catch(newName, VisitStatement(clause.Body, Tuple.Create(newData, data.Item2)));
 			}
 
 			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, Tuple<Dictionary<string, string>, HashSet<string>> data) {
@@ -189,7 +189,7 @@ namespace Saltarelle.Compiler.JSModel.Minification
 
 			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, Tuple<Dictionary<string, string>, HashSet<string>> data) {
 				var newData = BuildMap(data.Item1, statement);
-				return new JsFunctionStatement(statement.Name, statement.ParameterNames.Select(p => { string s; newData.Item1.TryGetValue(p, out s); return s ?? p; }), VisitStatement(statement.Body, newData));
+				return JsStatement.Function(statement.Name, statement.ParameterNames.Select(p => { string s; newData.Item1.TryGetValue(p, out s); return s ?? p; }), VisitStatement(statement.Body, newData));
 			}
 
 			public static JsStatement Process(JsStatement statement, Dictionary<Function, HashSet<string>> locals, Dictionary<Function, HashSet<string>> globals, Func<string, HashSet<string>, string> generateName) {

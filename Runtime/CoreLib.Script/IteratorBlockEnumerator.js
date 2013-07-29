@@ -8,7 +8,9 @@ var ss_IteratorBlockEnumerator = function#? DEBUG IteratorBlockEnumerator$##(mov
 	this._this = $this;
 };
 
-ss_IteratorBlockEnumerator.prototype = {
+ss_IteratorBlockEnumerator.__typeName = 'ss.IteratorBlockEnumerator';
+ss.IteratorBlockEnumerator = ss_IteratorBlockEnumerator;
+ss.initClass(ss_IteratorBlockEnumerator, {
 	moveNext: function#? DEBUG IteratorBlockEnumerator$moveNext##() {
 		try {
 			return this._moveNext.call(this._this);
@@ -29,6 +31,4 @@ ss_IteratorBlockEnumerator.prototype = {
 		if (this._dispose)
 			this._dispose.call(this._this);
 	}
-};
-
-ss.registerClass(global, 'ss.IteratorBlockEnumerator', ss_IteratorBlockEnumerator, null, [ss_IEnumerator, ss_IDisposable]);
+}, null, [ss_IEnumerator, ss_IDisposable]);

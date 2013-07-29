@@ -26,7 +26,7 @@ if (!ss.Debug.writeln) {
 
 ss.Debug._fail = function#? DEBUG Debug$_fail##(message) {
 	ss.Debug.writeln(message);
-	eval('debugger;');
+	debugger;
 };
 
 ss.Debug.assert = function#? DEBUG Debug$assert##(condition, message) {

@@ -6,15 +6,12 @@
 using System.Runtime.CompilerServices;
 
 namespace System.Globalization {
-
-	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-	public sealed class CultureInfo {
-
+	[ScriptNamespace("ss")]
+	public sealed class CultureInfo : IFormatProvider {
 		private CultureInfo() {
 		}
 
-		[PreserveCase]
 		[IntrinsicProperty]
 		public static CultureInfo CurrentCulture {
 			get {
@@ -23,13 +20,12 @@ namespace System.Globalization {
 		}
 
 		[IntrinsicProperty]
-		public DateFormatInfo DateFormat {
+		public DateTimeFormatInfo DateTimeFormat {
 			get {
 				return null;
 			}
 		}
 
-		[PreserveCase]
 		[IntrinsicProperty]
 		public static CultureInfo InvariantCulture {
 			get {
@@ -49,6 +45,10 @@ namespace System.Globalization {
 			get {
 				return null;
 			}
+		}
+
+		public object GetFormat(Type formatType) {
+			return null;
 		}
 	}
 }

@@ -10,6 +10,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// </summary>
 		public string TargetLabel { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Break")]
 		public JsBreakStatement(string targetLabel = null) {
 			if (targetLabel != null && !targetLabel.IsValidJavaScriptIdentifier()) throw new ArgumentException("targetLabel");
 			TargetLabel = targetLabel;

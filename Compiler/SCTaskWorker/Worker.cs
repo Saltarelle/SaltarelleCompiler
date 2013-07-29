@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Framework;
@@ -24,22 +25,22 @@ namespace Saltarelle.Compiler.SCTask {
 			return true;
 		}
 
-		private static CompilerOptions GetOptions(dynamic scTask) {
+		private static CompilerOptions GetOptions(dynamic taskOptions) {
 			var result = new CompilerOptions();
 
-			result.KeyContainer          =  scTask.KeyContainer;
-			result.KeyFile               =  scTask.KeyFile;
-			result.MinimizeScript        = !scTask.EmitDebugInformation;
-			result.DocumentationFile     =  scTask.DocumentationFile;
-			result.OutputAssemblyPath    =  scTask.OutputAssembly;
-			result.OutputScriptPath      =  scTask.OutputScript;
-			result.TreatWarningsAsErrors =  scTask.TreatWarningsAsErrors;
-			result.WarningLevel          =  scTask.WarningLevel;
-			result.AlreadyCompiled       =  scTask.AlreadyCompiled;
+			result.KeyContainer          =  taskOptions.KeyContainer;
+			result.KeyFile               =  taskOptions.KeyFile;
+			result.MinimizeScript        = !taskOptions.EmitDebugInformation;
+			result.DocumentationFile     =  taskOptions.DocumentationFile;
+			result.OutputAssemblyPath    =  taskOptions.OutputAssembly;
+			result.OutputScriptPath      =  taskOptions.OutputScript;
+			result.TreatWarningsAsErrors =  taskOptions.TreatWarningsAsErrors;
+			result.WarningLevel          =  taskOptions.WarningLevel;
+			result.AlreadyCompiled       =  taskOptions.AlreadyCompiled;
 
-			result.EntryPointClass = scTask.MainEntryPoint;
-			if (!string.IsNullOrEmpty(scTask.TargetType)) {
-				switch ((string)scTask.TargetType.ToLowerInvariant()) {
+			result.EntryPointClass = taskOptions.MainEntryPoint;
+			if (!string.IsNullOrEmpty(taskOptions.TargetType)) {
+				switch ((string)taskOptions.TargetType.ToLowerInvariant()) {
 					case "exe":
 					case "winexe":
 						result.HasEntryPoint = true;
@@ -49,7 +50,7 @@ namespace Saltarelle.Compiler.SCTask {
 						result.HasEntryPoint = false;
 						break;
 					default:
-						scTask.Log.LogError("Invalid target type (must be exe, winexe, library or module).");
+						taskOptions.Log.LogError("Invalid target type (must be exe, winexe, library or module).");
 						return null;
 				}
 			}
@@ -57,50 +58,59 @@ namespace Saltarelle.Compiler.SCTask {
 				result.HasEntryPoint = false;
 			}
 
-			if (scTask.WarningLevel < 0 || scTask.WarningLevel > 4) {
-				scTask.Log.LogError("Warning level must be between 0 and 4.");
+			if (taskOptions.WarningLevel < 0 || taskOptions.WarningLevel > 4) {
+				taskOptions.Log.LogError("Warning level must be between 0 and 4.");
 				return null;
 			}
 
-			if (scTask.AdditionalLibPaths != null)
-				result.AdditionalLibPaths.AddRange(scTask.AdditionalLibPaths);
+			if (taskOptions.AdditionalLibPaths != null)
+				result.AdditionalLibPaths.AddRange(taskOptions.AdditionalLibPaths);
 
-			if (scTask.DefineConstants != null)
-				result.DefineConstants.AddRange(((string)scTask.DefineConstants).Split(';').Select(s => s.Trim()).Where(s => s != ""));
+			if (taskOptions.DefineConstants != null)
+				result.DefineConstants.AddRange(((string)taskOptions.DefineConstants).Split(';').Select(s => s.Trim()).Where(s => s != ""));
 
-			if (!HandleIntegerList(scTask, result.DisabledWarnings, scTask.DisabledWarnings, "DisabledWarnings"))
+			if (!HandleIntegerList(taskOptions, result.DisabledWarnings, taskOptions.DisabledWarnings, "DisabledWarnings"))
 				return null;
-			if (!HandleIntegerList(scTask, result.WarningsAsErrors, scTask.WarningsAsErrors, "WarningsAsErrors"))
+			if (!HandleIntegerList(taskOptions, result.WarningsAsErrors, taskOptions.WarningsAsErrors, "WarningsAsErrors"))
 				return null;
-			if (!HandleIntegerList(scTask, result.WarningsNotAsErrors, scTask.WarningsNotAsErrors, "WarningsNotAsErrors"))
+			if (!HandleIntegerList(taskOptions, result.WarningsNotAsErrors, taskOptions.WarningsNotAsErrors, "WarningsNotAsErrors"))
 				return null;
 
-			if (scTask.References != null) {
-				foreach (ITaskItem r in scTask.References) {
+			if (taskOptions.References != null) {
+				foreach (ITaskItem r in taskOptions.References) {
 					string alias = r.GetMetadata("Aliases");
 					result.References.Add(new Reference(r.ItemSpec, !string.IsNullOrWhiteSpace(alias) ? alias : null));
 				}
 			}
 
-			if (scTask.Sources != null) {
-				foreach (ITaskItem s in scTask.Sources) {
+			if (taskOptions.Sources != null) {
+				foreach (ITaskItem s in taskOptions.Sources) {
 					result.SourceFiles.Add(s.ItemSpec);
+				}
+			}
+
+			if (taskOptions.Resources != null) {
+				foreach (ITaskItem r in taskOptions.Resources) {
+					string name = r.GetMetadata("LogicalName");
+					string access = r.GetMetadata("Access");
+					result.EmbeddedResources.Add(new EmbeddedResource(r.ItemSpec, !string.IsNullOrWhiteSpace(name) ? name : Path.GetFileName(r.ItemSpec), !string.Equals(access, "private", StringComparison.OrdinalIgnoreCase)));
 				}
 			}
 
 			return result;
 		}
 
-		public static bool DoWork(dynamic scTask, Func<AppDomain> appDomainInitializer) {
-			var options = GetOptions(scTask);
+		public static bool DoWork(dynamic taskOptions, TaskLoggingHelper log) {
+			var options = GetOptions(taskOptions);
 			if (options == null)
 				return false;
-			var driver = new CompilerDriver(new TaskErrorReporter(scTask.Log));
+
+			var driver = new CompilerDriver(new TaskErrorReporter(log));
 			try {
-				return driver.Compile(options, appDomainInitializer);
+				return driver.Compile(options);
 			}
 			catch (Exception ex) {
-				scTask.Log.LogErrorFromException(ex);
+				log.LogErrorFromException(ex);
 				return false;
 			}
 		}

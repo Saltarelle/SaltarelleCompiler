@@ -96,5 +96,21 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.AreEqual((TestEnum)(object)0, 0);
 			Assert.Throws(() => { var _ = (TestEnum)(object)0.5; });
 		}
+
+		[Test]
+		public void GetValuesWorks() {
+			Array values = Enum.GetValues(typeof(TestEnum));
+			Assert.AreEqual(values.Length, 3);
+			Assert.AreEqual(values.GetValue(0), TestEnum.FirstValue);
+			Assert.AreEqual(values.GetValue(1), TestEnum.SecondValue);
+			Assert.AreEqual(values.GetValue(2), TestEnum.ThirdValue);
+
+			values = Enum.GetValues(typeof(FlagsEnum));
+			Assert.AreEqual(values.Length, 4);
+			Assert.AreEqual(values.GetValue(0), FlagsEnum.None);
+			Assert.AreEqual(values.GetValue(1), FlagsEnum.FirstValue);
+			Assert.AreEqual(values.GetValue(2), FlagsEnum.SecondValue);
+			Assert.AreEqual(values.GetValue(3), FlagsEnum.ThirdValue);
+		}
 	}
 }

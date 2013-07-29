@@ -200,6 +200,12 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void IntegerDivisionByZeroThrowsDivideByZeroException() {
+			int a = 17, b = 0;
+			Assert.Throws<DivideByZeroException>(() => { var x = a / b; });
+		}
+
+		[Test]
 		public void DoublesAreTruncatedWhenConvertedToIntegers() {
 			double d1 = 4.5;
 			double? d2 = null;

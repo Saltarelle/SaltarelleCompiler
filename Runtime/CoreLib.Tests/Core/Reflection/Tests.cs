@@ -13,7 +13,4 @@ namespace CoreLib.Tests.Core.Reflection {
 
 	[TestFixture]
 	public class ReflectionTests : CoreLibTestBase {}
-
-	[TestFixture]
-	public class TypeUtilityMethodsTests : CoreLibTestBase {}
 }

@@ -41,6 +41,40 @@ namespace CoreLib.Plugin {
 			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation);
 		}
 
+		private MethodScriptSemantics GetMethodSemantics(IMethod m) {
+			if (m.IsAccessor) {
+				var prop = m.AccessorOwner as IProperty;
+				if (prop != null) {
+					var psem = _metadataImporter.GetPropertySemantics(prop);
+					if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
+						throw new InvalidOperationException("Property " + prop.Name + " should be implemented with get/set methods");
+					if (m.Equals(prop.Getter))
+						return psem.GetMethod;
+					else if (m.Equals(prop.Setter))
+						return psem.SetMethod;
+					else
+						throw new Exception(m + " is neither the getter nor the setter for " + prop);
+				}
+
+				var evt = m.AccessorOwner as IEvent;
+				if (evt != null) {
+					var esem = _metadataImporter.GetEventSemantics(evt);
+					if (esem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods)
+						throw new InvalidOperationException("Event " + prop.Name + " should be implemented with add/remove methods");
+					if (m.Equals(evt.AddAccessor))
+						return esem.AddMethod;
+					else if (m.Equals(evt.RemoveAccessor))
+						return esem.RemoveMethod;
+					else
+						throw new Exception(m + " is neither the adder nor the remover for " + evt);
+				}
+
+				throw new ArgumentException("Invalid accessor owner " + m.AccessorOwner + " on member " + m);
+			}
+			else
+				return _metadataImporter.GetMethodSemantics(m);
+		}
+
 		private JsTypeReferenceExpression CreateTypeReferenceExpression(ITypeDefinition td) {
 			return new JsTypeReferenceExpression(td);
 		}
@@ -100,10 +134,13 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetCastTarget(IType type, IRuntimeContext context) {
-			if (type.Kind == TypeKind.Enum)
-				return CreateTypeReferenceExpression(type.GetDefinition().EnumUnderlyingType.GetDefinition());
-
 			var def = type.GetDefinition();
+
+			if (type.Kind == TypeKind.Enum) {
+				var underlying = MetadataUtils.IsNamedValues(def) ? _compilation.FindType(KnownTypeCode.String) : def.EnumUnderlyingType;
+				return CreateTypeReferenceExpression(underlying.GetDefinition());
+			}
+
 			if (def != null) {
 				if (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def)))
 					return null;
@@ -158,7 +195,7 @@ namespace CoreLib.Plugin {
 				@this = context.EnsureCanBeEvaluatedMultipleTimes(@this, new JsExpression[0]);
 			return JsExpression.LogicalAnd(
 			           ReferenceNotEquals(@this, JsExpression.Null, context),
-			           InlineCodeMethodCompiler.CompileInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
+			           InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
 		}
 
 		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
@@ -337,7 +374,7 @@ namespace CoreLib.Plugin {
 			if (expression.NodeType == ExpressionNodeType.LogicalNot)
 				return expression;	// This is a little hacky. The problem we want to solve is that 'bool b = myDynamic' should compile to !!myDynamic, but the actual call is unbox(convert(myDynamic, bool)), where convert() will return the !!. Anyway, in JS, the !expression will never be null anyway.
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "unbox"), expression);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "unbox"), expression);
 		}
 
 		public JsExpression LiftedBooleanAnd(JsExpression a, JsExpression b, IRuntimeContext context) {
@@ -414,7 +451,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
-			var impl = _metadataImporter.GetMethodSemantics(method);
+			var impl = GetMethodSemantics(method);
 
 			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
 			
@@ -436,7 +473,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression BindBaseCall(IMethod method, JsExpression @this, IRuntimeContext context) {
-			var impl = _metadataImporter.GetMethodSemantics(method);
+			var impl = GetMethodSemantics(method);
 
 			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
 			
@@ -542,8 +579,8 @@ namespace CoreLib.Plugin {
 		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
 			var scriptType = TypeOf(type, context);
 
-			JsExpression getterDefinition = JsExpression.FunctionDefinition(new string[0], new JsReturnStatement(accessor));
-			JsExpression setterDefinition = JsExpression.FunctionDefinition(new[] { "$" }, new JsExpressionStatement(JsExpression.Assign(accessor, JsExpression.Identifier("$"))));
+			JsExpression getterDefinition = JsExpression.FunctionDefinition(new string[0], JsStatement.Return(accessor));
+			JsExpression setterDefinition = JsExpression.FunctionDefinition(new[] { "$" }, JsExpression.Assign(accessor, JsExpression.Identifier("$")));
 			if (UsesThisVisitor.Analyze(accessor)) {
 				getterDefinition = JsExpression.Invocation(JsExpression.Member(getterDefinition, "bind"), JsExpression.This);
 				setterDefinition = JsExpression.Invocation(JsExpression.Member(setterDefinition, "bind"), JsExpression.This);

@@ -401,6 +401,26 @@ public void M() {
 		}
 
 		[Test]
+		public void CanPerformMethodGroupConversionOnInlineCodeMethodWithoutReturnValueWithMultipleStatements() {
+			AssertCorrect(
+@"private int i;
+public void F<T>(int a, int b) {}
+public void M() {
+	// BEGIN
+	Action<int, int> f = F<string>;
+	// END
+}
+",
+@"	var $f = function($tmp1, $tmp2) {
+		if ($tmp1) {
+			$tmp2;
+		}
+		var $$ = {ga_String};
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("if ({a}) {b}; var $$ = {T}") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
 		public void CanPerformMethodGroupConversionOnInlineCodeMethodThatUsesThis() {
 			AssertCorrect(
 @"private int i;
@@ -483,9 +503,9 @@ public void M() {
 	// END
 }",
 @"	var $f = $Bind(function($tmp1, $tmp2) {
-		_(this)._($tmp1)._($tmp2)._(Array.prototype.slice.call(arguments, 2));
+		_(this)._($tmp1)._($tmp2)._(Array.prototype.slice.call(arguments, 2))._({ga_String});
 	}, this);
-", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({b})._({c})_({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({b})._({c})._({T})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]

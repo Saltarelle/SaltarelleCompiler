@@ -9,20 +9,21 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// <summary>
 		/// Can be null if the catch is not specified (but then there must be a finally).
 		/// </summary>
-		public JsCatchClause Catch { get; private set; }
+		public new JsCatchClause Catch { get; private set; }
 
 		/// <summary>
 		/// Can be null if the finally is not specified (but then there must be a catch).
 		/// </summary>
 		public JsBlockStatement Finally { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Try")]
 		public JsTryStatement(JsStatement guardedStatement, JsCatchClause catchClause, JsStatement @finally) {
 			if (guardedStatement == null) throw new ArgumentException("guardedStatement");
 			if (catchClause == null && @finally == null) throw new ArgumentException("Either catchClause or finally (or both) must be specified");
 
-			GuardedStatement = JsBlockStatement.MakeBlock(guardedStatement);
+			GuardedStatement = EnsureBlock(guardedStatement);
 			Catch            = catchClause;
-			Finally          = JsBlockStatement.MakeBlock(@finally);
+			Finally          = EnsureBlock(@finally);
 		}
 
 		[System.Diagnostics.DebuggerStepThrough]

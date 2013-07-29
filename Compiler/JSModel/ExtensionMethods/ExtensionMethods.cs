@@ -31,23 +31,53 @@ namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
 			return !string.IsNullOrEmpty(s) && s.Split('.').All(IsValidJavaScriptIdentifier);
 		}
 
-		public static string EscapeJavascriptStringLiteral(this string s, bool isRegexp = false) {
+		public static string EscapeJavascriptRegexStringLiteral(this string s) {
 			var sb = new StringBuilder();
+			sb.Append('/');
 			for (int i = 0; i < s.Length; i++) {
 				switch (s[i]) {
 					case '\b': sb.Append("\\b"); break;
-					case '\f': sb.Append("\\b"); break;
+					case '\f': sb.Append("\\f"); break;
 					case '\n': sb.Append("\\n"); break;
 					case '\0': sb.Append("\\0"); break;
 					case '\r': sb.Append("\\r"); break;
 					case '\t': sb.Append("\\t"); break;
 					case '\v': sb.Append("\\v"); break;
-					case '\'': sb.Append("\\\'"); break;
 					case '\\': sb.Append("\\\\"); break;
-					case '/':  sb.Append(isRegexp ? "\\/" : "/"); break;
+					case '/':  sb.Append("\\/"); break;
 					default:   sb.Append(s[i]); break;
 				}
 			}
+			sb.Append('/');
+			return sb.ToString();
+		}
+
+		public static string EscapeJavascriptQuotedStringLiteral(this string s) {
+			int n = 0;
+			for (int i = 0; i < s.Length; i++) {
+				     if(s[i]=='\'') n++;
+				else if(s[i]=='\"') n--;
+			}
+			bool singlequoted = n<1;
+		
+			var sb = new StringBuilder();
+			sb.Append( singlequoted ? '\'' : '\"' );
+			for (int i = 0; i < s.Length; i++) {
+				switch (s[i]) {
+					case '\b': sb.Append("\\b"); break;
+					case '\f': sb.Append("\\f"); break;
+					case '\n': sb.Append("\\n"); break;
+					case '\0': sb.Append("\\0"); break;
+					case '\r': sb.Append("\\r"); break;
+					case '\t': sb.Append("\\t"); break;
+					case '\v': sb.Append("\\v"); break;
+					case '\\': sb.Append("\\\\"); break;
+					case '\'': sb.Append( singlequoted  ? "\\\'" : "\'" ); break;
+					case '\"': sb.Append( !singlequoted ? "\\\"" : "\"" ); break;
+					default:   sb.Append(s[i]); break;
+				}
+			}
+			sb.Append( singlequoted ? '\'' : '\"' );
 			return sb.ToString();
 		}
 

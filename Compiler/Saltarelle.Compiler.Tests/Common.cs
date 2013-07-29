@@ -9,11 +9,17 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Moq;
 
 namespace Saltarelle.Compiler.Tests {
-	internal class Common {
+	internal static class Common {
 		public static readonly string MscorlibPath = Path.GetFullPath(@"../../../Runtime/CoreLib/bin/mscorlib.dll");
 
-		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => new CecilLoader() { IncludeInternalMembers = true }.LoadAssemblyFile(MscorlibPath));
+		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => LoadAssemblyFile(MscorlibPath));
 		internal static IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
+
+		public static IAssemblyReference LoadAssemblyFile(string path) {
+			var l = AssemblyLoader.Create(AssemblyLoaderBackend.IKVM);
+			l.IncludeInternalMembers = true;
+			return l.LoadAssemblyFile(path);
+		}
 
 		public static Mock<ITypeDefinition> CreateTypeMock(string fullName) {
 			int dot = fullName.LastIndexOf(".", StringComparison.InvariantCulture);

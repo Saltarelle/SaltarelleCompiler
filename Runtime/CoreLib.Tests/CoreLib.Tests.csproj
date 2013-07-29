@@ -38,6 +38,12 @@
     <Reference Include="ICSharpCode.NRefactory.CSharp">
       <HintPath>..\..\Compiler\NRefactory\bin\ICSharpCode.NRefactory.CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.NRefactory.IKVM">
+      <HintPath>..\..\Compiler\Saltarelle.Compiler\bin\ICSharpCode.NRefactory.IKVM.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Reflection">
+      <HintPath>..\..\Compiler\Saltarelle.Compiler\bin\IKVM.Reflection.dll</HintPath>
+    </Reference>
     <Reference Include="JavaScriptParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Compiler\JavaScriptParser\bin\JavaScriptParser.dll</HintPath>
@@ -80,6 +86,7 @@
     <Compile Include="Core\Collections\Generic\Tests.cs" />
     <Compile Include="Core\Collections\ObjectModel\Tests.cs" />
     <Compile Include="Core\Collections\Tests.cs" />
+    <Compile Include="Core\Exceptions\Tests.cs" />
     <Compile Include="Core\Tests.cs" />
     <Compile Include="Core\Linq\Expressions\Tests.cs" />
     <Compile Include="Core\Reflection\Tests.cs" />
@@ -124,6 +131,7 @@
     <Compile Include="SourceVerifier.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptSharpCompatibilityTests.cs" />
     <Compile Include="CoreLibTestBase.cs" />
+    <Compile Include="StructureTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
