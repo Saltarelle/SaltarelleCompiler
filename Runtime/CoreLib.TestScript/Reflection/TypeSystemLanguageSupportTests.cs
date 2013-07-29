@@ -18,14 +18,16 @@ namespace CoreLib.TestScript.Reflection {
 		[IncludeGenericArguments]
 		public interface I5<T1> : I2<T1> {}
 		[IncludeGenericArguments]
-		public interface I6<out T> { }
+		public interface I6<out T> {}
 		[IncludeGenericArguments]
-		public interface I7<in T> { }
+		public interface I7<in T> {}
 		[IncludeGenericArguments]
-		public interface I8<out T1, in T2> : I6<T1>, I7<T2> { }
+		public interface I8<out T1, in T2> : I6<T1>, I7<T2> {}
 		[IncludeGenericArguments]
-		public interface I9<T1, out T2> { }
-		public class D1 : C1, I1 {}
+		public interface I9<T1, out T2> {}
+		[IncludeGenericArguments]
+		public interface I10<out T1, in T2> : I8<T1,T2> {}
+		public class D1 : C1, I1 { }
 		[IncludeGenericArguments]
 		public class D2<T> : C2<T>, I2<T>, I1 {
 		}
@@ -38,21 +40,23 @@ namespace CoreLib.TestScript.Reflection {
 		public class X2 : X1 {
 		}
 		[IncludeGenericArguments]
-		public class Y1<T> : I6<T> { }
+		public class Y1<T> : I6<T> {}
 		public class Y1X1 : Y1<X1> {}
 		public class Y1X2 : Y1<X2> {}
 		[IncludeGenericArguments]
-		public class Y2<T> : I7<T> { }
+		public class Y2<T> : I7<T> {}
 		public class Y2X1 : Y2<X1> {}
 		public class Y2X2 : Y2<X2> {}
 		[IncludeGenericArguments]
-		public class Y3<T1, T2> : I8<T1, T2> { }
+		public class Y3<T1, T2> : I8<T1, T2> {}
 		public class Y3X1X1 : Y3<X1, X1> {}
 		public class Y3X1X2 : Y3<X1, X2> {}
 		public class Y3X2X1 : Y3<X2, X1> {}
 		public class Y3X2X2 : Y3<X2, X2> {}
 		[IncludeGenericArguments]
-		public class Y4<T1, T2> : I9<T1, T2> { }
+		public class Y4<T1, T2> : I9<T1, T2> {}
+		public class Y5<T1, T2> : I6<I8<T1, T2>> {}
+		public class Y6<T1, T2> : I7<I8<T1, T2>> {}
 		public enum E1 {}
 		public enum E2 {}
 
@@ -177,7 +181,55 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse((object)new Y4<string, X2>() is I9<object, X2>, "#87");
 			Assert.IsFalse((object)new Y4<object, X2>() is I9<string, X2>, "#88");
 			Assert.IsTrue ((object)new Y4<object, X2>() is I9<object, X2>, "#89");
-			Assert.IsFalse((object)null is object, "#90");
+			Assert.IsTrue ((object)new Y5<X1, X1>() is I6<I6<X1>>, "#90");
+			Assert.IsTrue ((object)new Y5<X1, X1>() is I6<I7<X1>>, "#91");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I6<X2>>, "#92");
+			Assert.IsTrue ((object)new Y5<X1, X1>() is I6<I7<X2>>, "#93");
+			Assert.IsTrue ((object)new Y5<X1, X1>() is I6<I8<X1, X1>>, "#94");
+			Assert.IsTrue ((object)new Y5<X1, X1>() is I6<I8<X1, X2>>, "#95");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I8<X2, X1>>, "#96");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I8<X2, X2>>, "#97");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I10<X1, X1>>, "#98");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I10<X1, X2>>, "#99");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I10<X2, X1>>, "#100");
+			Assert.IsFalse((object)new Y5<X1, X1>() is I6<I10<X2, X2>>, "#101");
+			Assert.IsTrue((object)new Y5<X2, X2>() is I6<I6<X1>>, "#102");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I7<X1>>, "#103");
+			Assert.IsTrue ((object)new Y5<X2, X2>() is I6<I6<X2>>, "#104");
+			Assert.IsTrue ((object)new Y5<X2, X2>() is I6<I7<X2>>, "#105");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I8<X1, X1>>, "#106");
+			Assert.IsTrue ((object)new Y5<X2, X2>() is I6<I8<X1, X2>>, "#107");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I8<X2, X1>>, "#108");
+			Assert.IsTrue ((object)new Y5<X2, X2>() is I6<I8<X2, X2>>, "#109");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I10<X1, X1>>, "#110");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I10<X1, X2>>, "#111");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I10<X2, X1>>, "#112");
+			Assert.IsFalse((object)new Y5<X2, X2>() is I6<I10<X2, X2>>, "#113");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I6<X1>>, "#114");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I7<X1>>, "#115");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I6<X2>>, "#116");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I7<X2>>, "#117");
+			Assert.IsTrue ((object)new Y6<X1, X1>() is I7<I8<X1, X1>>, "#118");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I8<X1, X2>>, "#119");
+			Assert.IsTrue ((object)new Y6<X1, X1>() is I7<I8<X2, X1>>, "#120");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I8<X2, X2>>, "#121");
+			Assert.IsTrue ((object)new Y6<X1, X1>() is I7<I10<X1, X1>>, "#122");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I10<X1, X2>>, "#123");
+			Assert.IsTrue ((object)new Y6<X1, X1>() is I7<I10<X2, X1>>, "#124");
+			Assert.IsFalse((object)new Y6<X1, X1>() is I7<I10<X2, X2>>, "#125");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I6<X1>>, "#126");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I7<X1>>, "#127");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I6<X2>>, "#128");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I7<X2>>, "#129");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I8<X1, X1>>, "#130");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I8<X1, X2>>, "#131");
+			Assert.IsTrue ((object)new Y6<X2, X2>() is I7<I8<X2, X1>>, "#132");
+			Assert.IsTrue ((object)new Y6<X2, X2>() is I7<I8<X2, X2>>, "#133");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I10<X1, X1>>, "#134");
+			Assert.IsFalse((object)new Y6<X2, X2>() is I7<I10<X1, X2>>, "#135");
+			Assert.IsTrue ((object)new Y6<X2, X2>() is I7<I10<X2, X1>>, "#136");
+			Assert.IsTrue ((object)new Y6<X2, X2>() is I7<I10<X2, X2>>, "#137");
+			Assert.IsFalse((object)null is object, "#138");
 		}
 
 		[Test]
@@ -271,7 +323,55 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(((object)new Y4<string, X2>() as I9<object, X2>) != null, "#87");
 			Assert.IsFalse(((object)new Y4<object, X2>() as I9<string, X2>) != null, "#88");
 			Assert.IsTrue (((object)new Y4<object, X2>() as I9<object, X2>) != null, "#89");
-			Assert.IsFalse(((object)null as object) != null, "#90");
+			Assert.IsTrue (((object)new Y5<X1, X1>() as I6<I6<X1>>) != null, "#90");
+			Assert.IsTrue (((object)new Y5<X1, X1>() as I6<I7<X1>>) != null, "#91");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I6<X2>>) != null, "#92");
+			Assert.IsTrue (((object)new Y5<X1, X1>() as I6<I7<X2>>) != null, "#93");
+			Assert.IsTrue (((object)new Y5<X1, X1>() as I6<I8<X1, X1>>) != null, "#94");
+			Assert.IsTrue (((object)new Y5<X1, X1>() as I6<I8<X1, X2>>) != null, "#95");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I8<X2, X1>>) != null, "#96");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I8<X2, X2>>) != null, "#97");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I10<X1, X1>>) != null, "#98");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I10<X1, X2>>) != null, "#99");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I10<X2, X1>>) != null, "#100");
+			Assert.IsFalse(((object)new Y5<X1, X1>() as I6<I10<X2, X2>>) != null, "#101");
+			Assert.IsTrue (((object)new Y5<X2, X2>() as I6<I6<X1>>) != null, "#102");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I7<X1>>) != null, "#103");
+			Assert.IsTrue (((object)new Y5<X2, X2>() as I6<I6<X2>>) != null, "#104");
+			Assert.IsTrue (((object)new Y5<X2, X2>() as I6<I7<X2>>) != null, "#105");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I8<X1, X1>>) != null, "#106");
+			Assert.IsTrue (((object)new Y5<X2, X2>() as I6<I8<X1, X2>>) != null, "#107");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I8<X2, X1>>) != null, "#108");
+			Assert.IsTrue (((object)new Y5<X2, X2>() as I6<I8<X2, X2>>) != null, "#109");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I10<X1, X1>>) != null, "#110");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I10<X1, X2>>) != null, "#111");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I10<X2, X1>>) != null, "#112");
+			Assert.IsFalse(((object)new Y5<X2, X2>() as I6<I10<X2, X2>>) != null, "#113");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I6<X1>>) != null, "#114");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I7<X1>>) != null, "#115");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I6<X2>>) != null, "#116");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I7<X2>>) != null, "#117");
+			Assert.IsTrue (((object)new Y6<X1, X1>() as I7<I8<X1, X1>>) != null, "#118");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I8<X1, X2>>) != null, "#119");
+			Assert.IsTrue (((object)new Y6<X1, X1>() as I7<I8<X2, X1>>) != null, "#120");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I8<X2, X2>>) != null, "#121");
+			Assert.IsTrue (((object)new Y6<X1, X1>() as I7<I10<X1, X1>>) != null, "#122");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I10<X1, X2>>) != null, "#123");
+			Assert.IsTrue (((object)new Y6<X1, X1>() as I7<I10<X2, X1>>) != null, "#124");
+			Assert.IsFalse(((object)new Y6<X1, X1>() as I7<I10<X2, X2>>) != null, "#125");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I6<X1>>) != null, "#126");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I7<X1>>) != null, "#127");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I6<X2>>) != null, "#128");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I7<X2>>) != null, "#129");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I8<X1, X1>>) != null, "#130");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I8<X1, X2>>) != null, "#131");
+			Assert.IsTrue (((object)new Y6<X2, X2>() as I7<I8<X2, X1>>) != null, "#132");
+			Assert.IsTrue (((object)new Y6<X2, X2>() as I7<I8<X2, X2>>) != null, "#133");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I10<X1, X1>>) != null, "#134");
+			Assert.IsFalse(((object)new Y6<X2, X2>() as I7<I10<X1, X2>>) != null, "#135");
+			Assert.IsTrue (((object)new Y6<X2, X2>() as I7<I10<X2, X1>>) != null, "#136");
+			Assert.IsTrue (((object)new Y6<X2, X2>() as I7<I10<X2, X2>>) != null, "#137");
+			Assert.IsFalse(((object)null as object) != null, "#138");
 		}
 
 		[Test]
@@ -365,7 +465,55 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(CanConvert<I9<object, X2>>(new Y4<string, X2>()), "#87");
 			Assert.IsFalse(CanConvert<I9<string, X2>>(new Y4<object, X2>()), "#88");
 			Assert.IsTrue (CanConvert<I9<object, X2>>(new Y4<object, X2>()), "#89");
-			Assert.IsTrue (CanConvert<object>(null), "#90");
+			Assert.IsTrue (CanConvert<I6<I6<X1>>>(new Y5<X1, X1>()), "#90");
+			Assert.IsTrue (CanConvert<I6<I7<X1>>>(new Y5<X1, X1>()), "#91");
+			Assert.IsFalse(CanConvert<I6<I6<X2>>>(new Y5<X1, X1>()), "#92");
+			Assert.IsTrue (CanConvert<I6<I7<X2>>>(new Y5<X1, X1>()), "#93");
+			Assert.IsTrue (CanConvert<I6<I8<X1, X1>>>(new Y5<X1, X1>()), "#94");
+			Assert.IsTrue (CanConvert<I6<I8<X1, X2>>>(new Y5<X1, X1>()), "#95");
+			Assert.IsFalse(CanConvert<I6<I8<X2, X1>>>(new Y5<X1, X1>()), "#96");
+			Assert.IsFalse(CanConvert<I6<I8<X2, X2>>>(new Y5<X1, X1>()), "#97");
+			Assert.IsFalse(CanConvert<I6<I10<X1, X1>>>(new Y5<X1, X1>()), "#98");
+			Assert.IsFalse(CanConvert<I6<I10<X1, X2>>>(new Y5<X1, X1>()), "#99");
+			Assert.IsFalse(CanConvert<I6<I10<X2, X1>>>(new Y5<X1, X1>()), "#100");
+			Assert.IsFalse(CanConvert<I6<I10<X2, X2>>>(new Y5<X1, X1>()), "#101");
+			Assert.IsTrue (CanConvert<I6<I6<X1>>>(new Y5<X2, X2>()), "#102");
+			Assert.IsFalse(CanConvert<I6<I7<X1>>>(new Y5<X2, X2>()), "#103");
+			Assert.IsTrue (CanConvert<I6<I6<X2>>>(new Y5<X2, X2>()), "#104");
+			Assert.IsTrue (CanConvert<I6<I7<X2>>>(new Y5<X2, X2>()), "#105");
+			Assert.IsFalse(CanConvert<I6<I8<X1, X1>>>(new Y5<X2, X2>()), "#106");
+			Assert.IsTrue (CanConvert<I6<I8<X1, X2>>>(new Y5<X2, X2>()), "#107");
+			Assert.IsFalse(CanConvert<I6<I8<X2, X1>>>(new Y5<X2, X2>()), "#108");
+			Assert.IsTrue (CanConvert<I6<I8<X2, X2>>>(new Y5<X2, X2>()), "#109");
+			Assert.IsFalse(CanConvert<I6<I10<X1, X1>>>(new Y5<X2, X2>()), "#110");
+			Assert.IsFalse(CanConvert<I6<I10<X1, X2>>>(new Y5<X2, X2>()), "#111");
+			Assert.IsFalse(CanConvert<I6<I10<X2, X1>>>(new Y5<X2, X2>()), "#112");
+			Assert.IsFalse(CanConvert<I6<I10<X2, X2>>>(new Y5<X2, X2>()), "#113");
+			Assert.IsFalse(CanConvert<I7<I6<X1>>>(new Y6<X1, X1>()), "#114");
+			Assert.IsFalse(CanConvert<I7<I7<X1>>>(new Y6<X1, X1>()), "#115");
+			Assert.IsFalse(CanConvert<I7<I6<X2>>>(new Y6<X1, X1>()), "#116");
+			Assert.IsFalse(CanConvert<I7<I7<X2>>>(new Y6<X1, X1>()), "#117");
+			Assert.IsTrue (CanConvert<I7<I8<X1, X1>>>(new Y6<X1, X1>()), "#118");
+			Assert.IsFalse(CanConvert<I7<I8<X1, X2>>>(new Y6<X1, X1>()), "#119");
+			Assert.IsTrue (CanConvert<I7<I8<X2, X1>>>(new Y6<X1, X1>()), "#120");
+			Assert.IsFalse(CanConvert<I7<I8<X2, X2>>>(new Y6<X1, X1>()), "#121");
+			Assert.IsTrue (CanConvert<I7<I10<X1, X1>>>(new Y6<X1, X1>()), "#122");
+			Assert.IsFalse(CanConvert<I7<I10<X1, X2>>>(new Y6<X1, X1>()), "#123");
+			Assert.IsTrue (CanConvert<I7<I10<X2, X1>>>(new Y6<X1, X1>()), "#124");
+			Assert.IsFalse(CanConvert<I7<I10<X2, X2>>>(new Y6<X1, X1>()), "#125");
+			Assert.IsFalse(CanConvert<I7<I6<X1>>>(new Y6<X2, X2>()), "#126");
+			Assert.IsFalse(CanConvert<I7<I7<X1>>>(new Y6<X2, X2>()), "#127");
+			Assert.IsFalse(CanConvert<I7<I6<X2>>>(new Y6<X2, X2>()), "#128");
+			Assert.IsFalse(CanConvert<I7<I7<X2>>>(new Y6<X2, X2>()), "#129");
+			Assert.IsFalse(CanConvert<I7<I8<X1, X1>>>(new Y6<X2, X2>()), "#130");
+			Assert.IsFalse(CanConvert<I7<I8<X1, X2>>>(new Y6<X2, X2>()), "#131");
+			Assert.IsTrue (CanConvert<I7<I8<X2, X1>>>(new Y6<X2, X2>()), "#132");
+			Assert.IsTrue (CanConvert<I7<I8<X2, X2>>>(new Y6<X2, X2>()), "#133");
+			Assert.IsFalse(CanConvert<I7<I10<X1, X1>>>(new Y6<X2, X2>()), "#134");
+			Assert.IsFalse(CanConvert<I7<I10<X1, X2>>>(new Y6<X2, X2>()), "#135");
+			Assert.IsTrue (CanConvert<I7<I10<X2, X1>>>(new Y6<X2, X2>()), "#136");
+			Assert.IsTrue (CanConvert<I7<I10<X2, X2>>>(new Y6<X2, X2>()), "#137");
+			Assert.IsFalse((object)null is object, "#138");
 		}
 
 		[Test]

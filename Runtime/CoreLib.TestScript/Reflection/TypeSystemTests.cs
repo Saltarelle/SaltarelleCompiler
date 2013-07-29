@@ -203,14 +203,16 @@ namespace CoreLib.TestScript.Reflection {
 			[IncludeGenericArguments]
 			public interface I5<T1> : I2<T1> {}
 			[IncludeGenericArguments]
-			public interface I6<out T> { }
+			public interface I6<out T> {}
 			[IncludeGenericArguments]
-			public interface I7<in T> { }
+			public interface I7<in T> {}
 			[IncludeGenericArguments]
-			public interface I8<out T1, in T2> : I6<T1>, I7<T2> { }
+			public interface I8<out T1, in T2> : I6<T1>, I7<T2> {}
 			[IncludeGenericArguments]
-			public interface I9<T1, out T2> { }
-			public class D1 : C1, I1 {}
+			public interface I9<T1, out T2> {}
+			[IncludeGenericArguments]
+			public interface I10<out T1, in T2> : I8<T1, T2> {}
+			public class D1 : C1, I1 { }
 			[IncludeGenericArguments]
 			public class D2<T> : C2<T>, I2<T>, I1 {
 			}
@@ -223,21 +225,23 @@ namespace CoreLib.TestScript.Reflection {
 			public class X2 : X1 {
 			}
 			[IncludeGenericArguments]
-			public class Y1<T> : I6<T> { }
+			public class Y1<T> : I6<T> {}
 			public class Y1X1 : Y1<X1> {}
 			public class Y1X2 : Y1<X2> {}
 			[IncludeGenericArguments]
-			public class Y2<T> : I7<T> { }
+			public class Y2<T> : I7<T> {}
 			public class Y2X1 : Y2<X1> {}
 			public class Y2X2 : Y2<X2> {}
 			[IncludeGenericArguments]
-			public class Y3<T1, T2> : I8<T1, T2> { }
+			public class Y3<T1, T2> : I8<T1, T2> {}
 			public class Y3X1X1 : Y3<X1, X1> {}
 			public class Y3X1X2 : Y3<X1, X2> {}
 			public class Y3X2X1 : Y3<X2, X1> {}
 			public class Y3X2X2 : Y3<X2, X2> {}
 			[IncludeGenericArguments]
-			public class Y4<T1, T2> : I9<T1, T2> { }
+			public class Y4<T1, T2> : I9<T1, T2> {}
+			public class Y5<T1, T2> : I6<I8<T1, T2>> {}
+			public class Y6<T1, T2> : I7<I8<T1, T2>> {}
 		}
 
 		[Test]
@@ -384,6 +388,54 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(typeof(IsAssignableFromTypes.I9<object, IsAssignableFromTypes.X2>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y4<string, IsAssignableFromTypes.X2>)), "#140");
 			Assert.IsFalse(typeof(IsAssignableFromTypes.I9<string, IsAssignableFromTypes.X2>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y4<object, IsAssignableFromTypes.X2>)), "#141");
 			Assert.IsTrue (typeof(IsAssignableFromTypes.I9<object, IsAssignableFromTypes.X2>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y4<object, IsAssignableFromTypes.X2>)), "#142");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#143");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#144");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#145");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#146");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#147");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#148");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#149");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#150");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#151");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#152");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#153");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#154");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#155");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#156");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#157");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#158");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#159");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#160");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#161");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#162");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#163");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#164");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#165");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#166");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#167");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#168");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#169");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#170");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#171");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#172");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#173");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#174");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#175");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#176");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#177");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>)), "#178");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#179");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#180");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#181");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#182");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#183");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#184");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#185");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#186");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#187");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#188");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#189");
+			Assert.IsTrue (typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#190");
 		}
 
 		class IsSubclassOfTypes {
@@ -577,7 +629,55 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(typeof(IsAssignableFromTypes.I9<object, IsAssignableFromTypes.X2>).IsInstanceOfType(new IsAssignableFromTypes.Y4<string, IsAssignableFromTypes.X2>()), "#112");
 			Assert.IsFalse(typeof(IsAssignableFromTypes.I9<string, IsAssignableFromTypes.X2>).IsInstanceOfType(new IsAssignableFromTypes.Y4<object, IsAssignableFromTypes.X2>()), "#113");
 			Assert.IsTrue (typeof(IsAssignableFromTypes.I9<object, IsAssignableFromTypes.X2>).IsInstanceOfType(new IsAssignableFromTypes.Y4<object, IsAssignableFromTypes.X2>()), "#114");
-			Assert.IsFalse(typeof(object).IsInstanceOfType(null), "#115");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#115");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#116");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#117");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#118");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#119");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#120");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#121");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#122");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#123");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#124");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#125");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#126");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#127");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#128");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#129");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#130");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#131");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#132");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#133");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#134");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#135");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#136");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#137");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I6<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y5<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#138");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#139");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#140");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#141");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#142");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#143");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#144");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#145");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#146");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#147");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#148");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#149");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>()), "#150");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#151");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#152");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I6<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#153");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I7<IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#154");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#155");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#156");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#157");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I8<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#158");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#159");
+			Assert.IsFalse(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X1, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#160");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#161");
+			Assert.IsTrue(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#162");
+			Assert.IsFalse(typeof(object).IsInstanceOfType(null), "#163");
 		}
 
 		public class BaseUnnamedConstructorWithoutArgumentsTypes {
