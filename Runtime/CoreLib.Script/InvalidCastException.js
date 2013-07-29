@@ -6,4 +6,4 @@ var ss_InvalidCastException = function#? DEBUG InvalidCastException$##(message, 
 };
 ss_InvalidCastException.__typeName = 'ss.InvalidCastException';
 ss.InvalidCastException = ss_InvalidCastException;
-ss.initClass(ss_InvalidCastException, ss_Exception);
+ss.initClass(ss_InvalidCastException, {}, ss_Exception);

@@ -146,7 +146,6 @@ if (typeof(window) == 'object') {
 		window.Element.isInstanceOfType = function(instance) { return instance && typeof instance.constructor === 'undefined' && typeof instance.tagName === 'string'; };
 	}
 	window.Element.__typeName = 'Element';
-	window.Element.__baseType = Object;
 	
 	if (!window.XMLHttpRequest) {
 		window.XMLHttpRequest = function() {
@@ -285,6 +284,8 @@ if (typeof(window) == 'object') {
 #include "ArgumentOutOfRangeException.js"
 
 #include "FormatException.js"
+
+#include "DivideByZeroException.js"
 
 #include "InvalidCastException.js"
 

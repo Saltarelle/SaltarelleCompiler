@@ -1,3 +1,7 @@
+Integer division by zero will now throw DivideByZeroException.
+Removed (actually: obsoleted as errors) the Script# reflection methods. Some of the functionality can now be found in the Script class, but some was just removed.
+Type system now supports interface variance (eg. IMyInterface<in T1, out T2>).
+Use real prototype inheritance instead of the homegrown __baseType hack.
 Ensured .NET semantics for String.Split methods that take a limit argument (#229). The JS semantics can be found in methods called JsSplit. This might cause compilation errors, but it will not silently break any code.
 Fixed TimeSpan.Zero (#227)
 Added [DefaultMemberReflectabilityAttribute] to specify which members are reflectable by default (#180)

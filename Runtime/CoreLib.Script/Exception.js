@@ -5,18 +5,17 @@ var ss_Exception = function#? DEBUG Exception$##(message, innerException) {
 	this._message = message || 'An error occurred.';
 	this._innerException = innerException || null;
 }
+
 ss_Exception.__typeName = 'ss.Exception';
 ss.Exception = ss_Exception;
-ss.initClass(ss_Exception);
-
-ss_Exception.prototype = {
+ss.initClass(ss_Exception, {
 	get_message: function#? DEBUG Exception$get_message##() {
 		return this._message;
 	},
 	get_innerException: function#? DEBUG Exception$get_innerException##() {
 		return this._innerException;
 	}
-};
+});
 
 ss_Exception.wrap = function#? DEBUG Exception$wrap##(o) {
 	if (ss.isInstanceOfType(o, ss_Exception)) {

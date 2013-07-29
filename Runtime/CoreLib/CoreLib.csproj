@@ -97,6 +97,8 @@
     <Compile Include="ArgumentNullException.cs" />
     <Compile Include="ArgumentException.cs" />
     <Compile Include="ArgumentOutOfRangeException.cs" />
+    <Compile Include="DivideByZeroException.cs" />
+    <Compile Include="Diagnostics\Debugger.cs" />
     <Compile Include="InvalidCastException.cs" />
     <Compile Include="InvalidOperationException.cs" />
     <Compile Include="FormatException.cs" />

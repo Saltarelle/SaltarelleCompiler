@@ -13,7 +13,7 @@ var ss_Nullable$1 = function#? DEBUG Nullable$1$##(T) {
 	$type.isInstanceOfType = function(instance) {
 		return ss.isInstanceOfType(instance, T);
 	};
-	ss.registerGenericClassInstance($type, ss_Nullable$1, [T], function() { return null; }, function() { return []; });
+	ss.registerGenericClassInstance($type, ss_Nullable$1, [T], {}, function() { return null; }, function() { return []; });
 	return $type;
 };
 

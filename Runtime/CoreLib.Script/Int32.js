@@ -5,7 +5,7 @@ var ss_Int32 = function#? DEBUG Int32$##() { };
 
 ss_Int32.__typeName = 'ss.Int32';
 ss.Int32 = ss_Int32;
-ss.initClass(ss_Int32, Object, [ ss_IEquatable, ss_IComparable, ss_IFormattable ]);
+ss.initClass(ss_Int32, {}, Object, [ ss_IEquatable, ss_IComparable, ss_IFormattable ]);
 ss_Int32.__class = false;
 
 ss_Int32.isInstanceOfType = function#? DEBUG Int32$isInstanceOfType##(instance) {
@@ -17,7 +17,9 @@ ss_Int32.getDefaultValue = ss_Int32.createInstance = function#? DEBUG Int32$getD
 };
 
 ss_Int32.div = function#? DEBUG Int32$div##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? (a / b) | 0 : null;
+	if (!ss.isValue(a) || !ss.isValue(b)) return null;
+	if (b === 0) throw new ss_DivideByZeroException();
+	return a / b | 0;
 };
 
 ss_Int32.trunc = function#? DEBUG Int32$trunc##(n) {

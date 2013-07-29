@@ -182,8 +182,8 @@ public class C2 {
 	[Reflectable]
 	public int P2 { get; set; }
 }");
-			var c1 = (JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)JavaScriptParser.Parser.ParseStatement(RemoveTypeReferences(s.Replace("\r\n", "\n").Split('\n').Single(l => l.StartsWith("{Script}.initClass($C1"))))).Expression).Arguments[3];
-			var c2 = (JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)JavaScriptParser.Parser.ParseStatement(RemoveTypeReferences(s.Replace("\r\n", "\n").Split('\n').Single(l => l.StartsWith("{Script}.initClass($C2"))))).Expression).Arguments[3];
+			var c1 = (JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)JavaScriptParser.Parser.ParseStatement(RemoveTypeReferences(s.Replace("\r\n", "\n").Split('\n').Single(l => l.StartsWith("{Script}.setMetadata($C1"))))).Expression).Arguments[1];
+			var c2 = (JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)JavaScriptParser.Parser.ParseStatement(RemoveTypeReferences(s.Replace("\r\n", "\n").Split('\n').Single(l => l.StartsWith("{Script}.setMetadata($C2"))))).Expression).Arguments[1];
 
 			var c1Members = ((JsArrayLiteralExpression)c1.Values.Single(p => p.Name == "members").Value).Elements.Cast<JsObjectLiteralExpression>().ToList();
 			Assert.That( c1Members.Any(m => m.Values.Any(v => v.Name == "name" && ((JsConstantExpression)v.Value).StringValue == "P1")));
