@@ -262,7 +262,7 @@ void M() {
 ");
 		}
 
-		[Test, Ignore("NRefactory bug")]
+		[Test]
 		public void JoinWithTypeCast() {
 			AssertCorrect(@"
 class CI { public int keyi, valuei; }
