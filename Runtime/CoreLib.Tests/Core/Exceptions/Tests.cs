@@ -39,6 +39,9 @@ namespace CoreLib.Tests.Core.Exceptions {
 	public class KeyNotFoundExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class NotImplementedExceptionTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class NotSupportedExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
