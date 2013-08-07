@@ -59,7 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Antlr3 Include="ParserImpl\ES3.g3">
-      <OutputFiles>ParserImpl\ES3.cs;ParserImpl\ES3.cs</OutputFiles>
+      <OutputFiles>ParserImpl\ES3Lexer.cs;ParserImpl\ES3Parser.cs</OutputFiles>
     </Antlr3>
     <Antlr3 Include="ParserImpl\ES3Walker.g3">
       <OutputFiles>ParserImpl\ES3Walker.cs</OutputFiles>

@@ -269,6 +269,8 @@ if (typeof(window) == 'object') {
 
 #include "Exception.js"
 
+#include "NotImplementedException.js"
+
 #include "NotSupportedException.js"
 
 #include "AggregateException.js"

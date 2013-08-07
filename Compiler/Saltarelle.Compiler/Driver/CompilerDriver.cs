@@ -374,7 +374,6 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private static IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> LoadReferences(IEnumerable<string> references, IErrorReporter er) {
-			var loader = new IkvmLoader { IncludeInternalMembers = true };
 			using (var universe = new IKVM.Reflection.Universe(IKVM.Reflection.UniverseOptions.DisablePseudoCustomAttributeRetrieval | IKVM.Reflection.UniverseOptions.SupressReferenceTypeIdentityConversion)) {
 				var assemblies = references.Select(universe.LoadFile).ToList();
 				var indirectReferences = assemblies.SelectMany(GetReferencedAssemblyNames).Distinct();
@@ -388,7 +387,7 @@ namespace Saltarelle.Compiler.Driver {
 					return null;
 				}
 
-				return assemblies.Select(asm => Tuple.Create(loader.LoadAssembly(asm), (IList<string>)GetReferencedAssemblyNames(asm).ToList(), LoadPlugin(asm))).ToList();
+				return assemblies.Select(asm => Tuple.Create(new IkvmLoader { IncludeInternalMembers = true }.LoadAssembly(asm), (IList<string>)GetReferencedAssemblyNames(asm).ToList(), LoadPlugin(asm))).ToList();
 			}
 		}
 	}
