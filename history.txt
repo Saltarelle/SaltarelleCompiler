@@ -1,3 +1,4 @@
+2.3.1
 Added type NotImplementedException
 Fixed problem with assembly-level attributes on imported assemblies (#232).
 
