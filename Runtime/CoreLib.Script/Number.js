@@ -160,6 +160,11 @@ ss.netFormatNumber = function#? DEBUG ss$netFormatNumber##(num, format, numberFo
 				s = ss.formatString(nf.percentPositivePattern, s);
 			}
 			break;
+		case '0':
+			s = num + "";
+			while (s.length < format.length)
+				s = "0" + s;
+			break;
 	}
 
 	return s;

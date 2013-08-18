@@ -214,6 +214,10 @@ namespace System.Collections.Generic {
 		public void Sort(Func<T, T, int> callback) {
 		}
 
+		[InlineCode("{this}.sort({comparer}.compare)")]
+		public void Sort(IComparer<T> comparer) {
+		}
+
 		[InlineCode("{$System.Array}.prototype.slice.call({this})")]
 		public T[] ToArray() {
 			return null;

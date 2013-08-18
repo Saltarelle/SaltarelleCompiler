@@ -184,5 +184,9 @@ namespace System.Globalization {
 		public object GetFormat(Type formatType) {
 			return null;
 		}
+
+		public static NumberFormatInfo GetInstance(IFormatProvider formatProvider) {
+ 			return null;
+ 		}
 	}
 }
