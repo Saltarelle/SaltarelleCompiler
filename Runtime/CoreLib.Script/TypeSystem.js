@@ -166,6 +166,13 @@ ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
 	return nsIndex > 0 ? fullName.substr(nsIndex + 1) : fullName;
 };
 
+ss.getTypeNamespace = function#? DEBUG ss$getTypeNamespace##(type) {
+	var fullName = ss.getTypeFullName(type);
+	var bIndex = fullName.indexOf('[');
+	var nsIndex = fullName.lastIndexOf('.', bIndex >= 0 ? bIndex : fullName.length);
+	return nsIndex > 0 ? fullName.substr(0, nsIndex) : "";
+};
+
 ss.getInterfaces = function#? DEBUG ss$getInterfaces##(type) {
 	if (type.__interfaces)
 		return type.__interfaces;

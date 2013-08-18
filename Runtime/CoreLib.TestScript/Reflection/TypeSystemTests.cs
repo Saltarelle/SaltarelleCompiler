@@ -66,6 +66,12 @@ namespace CoreLib.TestScript.Reflection {
 		public void FullNamePropertyReturnsTheNameWithTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests");
 		}
+		
+		[Test]
+		public void NamespacePropertyReturnsTheNamespaceWithoutTheName() {
+			Assert.AreEqual(typeof(TypeSystemTests).Namespace, "CoreLib.TestScript.Reflection");
+			Assert.AreEqual(typeof(DS2).Namespace, "CoreLib.TestScript.Reflection");
+		}
 
 		[Test]
 		public void InstantiatingClassWithConstructorThatNeedsToBeAppliedWorks() {
@@ -486,6 +492,13 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(typeof(I1).IsEnum);
 			Assert.IsFalse(typeof(IG<>).IsEnum);
 			Assert.IsFalse(typeof(IG<int>).IsEnum);
+		}
+		
+		[Test]
+		public void IsArrayWorks() {
+			Assert.IsTrue(typeof(object[]).IsArray);
+			Assert.IsTrue(typeof(int[]).IsArray);
+			Assert.IsFalse(typeof(C).IsArray);
 		}
 
 		[Test]
