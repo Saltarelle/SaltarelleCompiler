@@ -1,3 +1,5 @@
+Fixed a few issues causing internal errors when using generics (#235, 236)
+
 2.3.1
 Added type NotImplementedException
 Fixed problem with assembly-level attributes on imported assemblies (#232).
