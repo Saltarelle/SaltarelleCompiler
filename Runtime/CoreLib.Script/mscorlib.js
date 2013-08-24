@@ -45,7 +45,7 @@ ss.isDate = function#? DEBUG ss$isDate##(obj) {
 };
 
 ss.isArray = function#? DEBUG ss$isArray##(obj) {
-	return Object.prototype.toString.call(obj) === '[object Array]' || ss.getTypeName(obj) === 'Array';
+    return Object.prototype.toString.call(obj) === '[object Array]';
 };
 
 ss.isTypedArrayType = function#? DEBUG ss$isTypedArrayType##(type) {

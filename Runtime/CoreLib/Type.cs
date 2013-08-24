@@ -113,7 +113,7 @@ namespace System {
 		}
 		
 		public bool IsArray {
-			[InlineCode("{$System.Script}.isArray({this})")]
+			[InlineCode("{this} === global.Array")]
 			get { return false; }
 		}
 

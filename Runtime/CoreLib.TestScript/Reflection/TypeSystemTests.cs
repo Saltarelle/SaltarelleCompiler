@@ -496,9 +496,13 @@ namespace CoreLib.TestScript.Reflection {
 		
 		[Test]
 		public void IsArrayWorks() {
+			var array = new int[5];
+			Assert.IsTrue(array.GetType().IsArray);
 			Assert.IsTrue(typeof(object[]).IsArray);
 			Assert.IsTrue(typeof(int[]).IsArray);
 			Assert.IsFalse(typeof(C).IsArray);
+			//TODO Assert.IsFalse(typeof(List<int>).IsArray);
+			//TODO Assert.IsFalse(typeof(Array).IsArray);
 		}
 
 		[Test]
