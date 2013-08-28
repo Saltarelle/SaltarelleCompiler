@@ -4,6 +4,13 @@ using QUnit;
 namespace CoreLib.TestScript.SimpleTypes {
 	[TestFixture]
 	public class ObjectTests {
+		private class C1 {
+			public override string ToString() {
+				return "test";
+			}
+		}
+		private class C2 : C1 {}
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue(new object() is object);
@@ -54,6 +61,13 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsFalse(ReferenceEquals(o1, n));
 			Assert.IsFalse(ReferenceEquals(o1, Script.Undefined));
 			Assert.IsTrue (ReferenceEquals(o1, o1));
+		}
+
+		[Test]
+		public void ToStringOverride() {
+			object c1 = new C1(), c2 = new C2();
+			Assert.AreEqual(c1.ToString(), "test", "#1");
+			Assert.AreEqual(c2.ToString(), "test", "#1");
 		}
 	}
 }
