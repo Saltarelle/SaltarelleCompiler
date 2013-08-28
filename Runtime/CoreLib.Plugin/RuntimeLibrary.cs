@@ -394,17 +394,14 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression Default(IType type, IRuntimeContext context) {
-			if (type.IsReferenceType == true || type.Kind == TypeKind.Dynamic) {
+			if (type.IsReferenceType == true || type.Kind == TypeKind.Dynamic || type.IsKnownType(KnownTypeCode.NullableOfT)) {
 				return JsExpression.Null;
-			}
-			else if (type is ITypeParameter) {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetScriptType, context));
 			}
 			else if (type.Kind == TypeKind.Enum) {
 				return JsExpression.Number(0);
 			}
-			else {
-				switch (type.GetDefinition().KnownTypeCode) {
+			else if (type is ITypeDefinition) {
+				switch (((ITypeDefinition)type).KnownTypeCode) {
 					case KnownTypeCode.Boolean:
 						return JsExpression.False;
 					case KnownTypeCode.NullableOfT:
@@ -424,10 +421,9 @@ namespace CoreLib.Plugin {
 					case KnownTypeCode.Single:
 					case KnownTypeCode.Double:
 						return JsExpression.Number(0);
-					default:
-						return JsExpression.Invocation(JsExpression.Member(InstantiateType(type, context), "getDefaultValue"));
 				}
 			}
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetScriptType, context));
 		}
 
 		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size, IRuntimeContext context) {
