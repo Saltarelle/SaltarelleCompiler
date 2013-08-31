@@ -131,6 +131,7 @@
     <Compile Include="CompilerTests\MethodCompilation\Statements\WhileStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\YieldStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\VariableGatheringTests.cs" />
+    <Compile Include="AnalyzerTests\AnalyzerTests.cs" />
     <Compile Include="DriverTests\DriverTests.cs" />
     <Compile Include="EndToEndTests\EndToEndCompilation.cs" />
     <Compile Include="ExeTests\CommandLineArgumentTests.cs" />

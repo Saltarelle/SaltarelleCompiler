@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using FluentAssertions;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Analyzers;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
-namespace Saltarelle.Compiler.Tests.MinificationTests {
+namespace Saltarelle.Compiler.Tests.AnalyzerTests {
 	[TestFixture]
-	public class MinifierTests {
+	public class AnalyzerTests {
 		private class OutputRewriter : RewriterVisitorBase<object> {
 			private readonly Dictionary<JsDeclarationScope, HashSet<string>> _locals;
 			private readonly Dictionary<JsDeclarationScope, HashSet<string>> _globals;
@@ -47,91 +49,144 @@ namespace Saltarelle.Compiler.Tests.MinificationTests {
 		}
 
 		[Test]
-		public void EncodeNumberWorks() {
-			Assert.That(Enumerable.Range(0, 160).Select(Minifier.EncodeNumber).ToList(), Is.EqualTo(new[] {
-				"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-				"ba", "bb", "bc", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bk", "bl", "bm", "bn", "bo", "bp", "bq", "br", "bs", "bt", "bu", "bv", "bw", "bx", "by", "bz", "bA", "bB", "bC", "bD", "bE", "bF", "bG", "bH", "bI", "bJ", "bK", "bL", "bM", "bN", "bO", "bP", "bQ", "bR", "bS", "bT", "bU", "bV", "bW", "bX", "bY", "bZ",
-				"ca", "cb", "cc", "cd", "ce", "cf", "cg", "ch", "ci", "cj", "ck", "cl", "cm", "cn", "co", "cp", "cq", "cr", "cs", "ct", "cu", "cv", "cw", "cx", "cy", "cz", "cA", "cB", "cC", "cD", "cE", "cF", "cG", "cH", "cI", "cJ", "cK", "cL", "cM", "cN", "cO", "cP", "cQ", "cR", "cS", "cT", "cU", "cV", "cW", "cX", "cY", "cZ",
-				"da", "db", "dc", "dd"
-			}));
-
-			Enumerable.Range(0, 1000000).Select(Minifier.EncodeNumber).Should().OnlyHaveUniqueItems();
-		}
-
-		[Test]
-		public void GenerateNameGeneratesUniqueValidNames() {
-			var usedNames = new HashSet<string>();
-			for (int i = 0; i < 1000; i++) {
-				var newName = Minifier.GenerateName("x", usedNames);
-				Assert.That(newName.IsValidJavaScriptIdentifier(), Is.True);
-				Assert.That(usedNames.Contains(newName), Is.False);
-				Assert.That(JSModel.Utils.IsJavaScriptReservedWord(newName), Is.False);
-				usedNames.Add(newName);
-			}
-		}
-
-		[Test]
-		public void MinimizingIdentifiersWorks() {
+		public void GatheringIsCorrect() {
 			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(@"
 {
-	var variable1;
+	var a;
 	(function() {
-		var variable2;
-		a;
+		var b;
+		c;
 		function d(p1, p2) {
 			e;
 			b;
-			p1;
-			variable1;
-			var variable3;
+			var f;
 		}
-		for (var variable4 = 1;;) {
-			for (var variable5 in d) {
+		for (var g = 1;;) {
+			for (var h in x) {
 			}
-			for (f in x) {
+			for (i in x) {
 			}
 		}
 	});
 	try {
-		ex;
 	}
 	catch (ex) {
 		(function() {
-			a;
 			ex;
 		});
 	}
 	j;
 }"));
-			var result = Minifier.Process(stmt);
+			var locals = LocalVariableGatherer.Analyze(stmt);
+			var globals = ImplicitGlobalsGatherer.Analyze(stmt, locals, reportGlobalsAsUsedInAllParentScopes: true);
+			var result = new OutputRewriter(locals, globals).Process(stmt);
+
 			string actual = OutputFormatter.Format(result);
+
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(
 @"{
-	var c;
+	locals(a);
+	globals(c, d, e, i, j, x);
+	var a;
 	(function() {
-		var g;
-		a;
-		function d(a, d) {
+		locals(b, g, h);
+		globals(c, d, e, i, x);
+		var b;
+		c;
+		function d(p1, p2) {
+			locals(f, p1, p2);
+			globals(e);
 			e;
 			b;
-			a;
-			c;
 			var f;
 		}
-		for (var h = 1;;) {
-			for (var i in d) {
+		for (var g = 1;;) {
+			for (var h in x) {
 			}
-			for (f in x) {
+			for (i in x) {
 			}
 		}
 	});
 	try {
-		ex;
 	}
-	catch (g) {
+	catch (ex) {
 		(function() {
-			a;
-			g;
+			locals();
+			globals();
+			ex;
+		});
+	}
+	j;
+}
+".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void ImplicitGlobalsGathererWithNoReportInAllParentScopes() {
+			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(@"
+{
+	var a;
+	(function() {
+		var b;
+		c;
+		function d(p1, p2) {
+			e;
+			b;
+			var f;
+		}
+		for (var g = 1;;) {
+			for (var h in x) {
+			}
+			for (i in x) {
+			}
+		}
+	});
+	try {
+	}
+	catch (ex) {
+		(function() {
+			ex;
+		});
+	}
+	j;
+}"));
+			var locals = LocalVariableGatherer.Analyze(stmt);
+			var globals = ImplicitGlobalsGatherer.Analyze(stmt, locals, reportGlobalsAsUsedInAllParentScopes: false);
+			var result = new OutputRewriter(locals, globals).Process(stmt);
+
+			string actual = OutputFormatter.Format(result);
+
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(
+@"{
+	locals(a);
+	globals(j);
+	var a;
+	(function() {
+		locals(b, g, h);
+		globals(c, d, i, x);
+		var b;
+		c;
+		function d(p1, p2) {
+			locals(f, p1, p2);
+			globals(e);
+			e;
+			b;
+			var f;
+		}
+		for (var g = 1;;) {
+			for (var h in x) {
+			}
+			for (i in x) {
+			}
+		}
+	});
+	try {
+	}
+	catch (ex) {
+		(function() {
+			locals();
+			globals();
+			ex;
 		});
 	}
 	j;

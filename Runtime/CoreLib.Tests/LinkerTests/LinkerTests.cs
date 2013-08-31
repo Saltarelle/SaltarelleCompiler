@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -320,34 +320,6 @@ var mymodule;
 		}
 
 		[Test]
-		public void UsedSymbolsGathererWorks() {
-			var program = JavaScriptParser.Parser.ParseProgram(@"
-function a(b, c) {
-	function d(e) {
-		var f = g, h = i + j;
-		for (var k in l) {
-		}
-		for (m in a) {}
-		var n = function o(p, q) {
-			r;
-		}
-	}
-}
-s + (t * -u);
-try {
-}
-catch (v) {
-}
-for (w = 0, x; w < 1; w++) {
-}
-for (var y = 0, z; w < 1; w++) {
-}
-");
-			var actual = Linker.UsedSymbolsGatherer.Analyze(program);
-			Assert.That(actual, Is.EquivalentTo(new[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" }));
-		}
-
-		[Test]
 		public void ModuleNameAttributeCanBeSpecifiedOnType() {
 			var c1 = Common.CreateMockTypeDefinition("C1", Common.CreateMockAssembly());
 			var c2 = Common.CreateMockTypeDefinition("C2", Common.CreateMockAssembly(), attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") });
@@ -458,6 +430,130 @@ var $othermodule = require('other-module');
 $othermodule.C1.a;
 C2.b;
 C3.c;
+");
+		}
+
+		[Test]
+		public void ClassWithSameNameAsVariable1() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsStatement.Var("y", JsExpression.Number(0)),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Identifier("x")),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"), JsExpression.Identifier("y"))
+				)),
+				JsExpression.FunctionDefinition(new[] { "x" }, JsStatement.Block(
+					JsStatement.Var("y", JsExpression.Number(0)),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Identifier("x")),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"), JsExpression.Identifier("y"))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	function f(x1) {
+		var y1 = 0;
+		x.a + x1;
+		y.a + y1;
+	}
+	(function(x1) {
+		var y1 = 0;
+		x.a + x1;
+		y.a + y1;
+	});
+})();
+");
+		}
+
+		[Test]
+		public void ClassWithSameNameAsVariable2() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsStatement.Var("y", JsExpression.Number(0)),
+					JsExpression.FunctionDefinition(new string[0],
+						JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"))
+					),
+					JsExpression.FunctionDefinition(new string[0], JsStatement.Block(
+						JsStatement.Var("z", JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))
+					))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	function f(x1) {
+		var y1 = 0;
+		(function() {
+			x.a + y.a;
+		});
+		(function() {
+			var z = x1 + y1;
+		});
+	}
+})();
+");
+		}
+
+		[Test]
+		public void RenamedVariableClashWithOtherVariable() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsExpression.FunctionDefinition(new string[0],
+						JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a")
+					),
+					JsExpression.FunctionDefinition(new string[0], JsStatement.Block(
+						JsStatement.Var("x1", null),
+						JsExpression.Add(JsExpression.Identifier("x"), JsExpression.Identifier("x1"))
+					))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	function f(x2) {
+		(function() {
+			x.a;
+		});
+		(function() {
+			var x1;
+			x2 + x1;
+		});
+	}
+})();
+");
+		}
+
+		[Test]
+		public void RenamedVariableClashWithImplicitGlobal() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsExpression.FunctionDefinition(new string[0],
+						JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a")
+					),
+					JsExpression.FunctionDefinition(new string[0], JsStatement.Block(
+						JsExpression.Add(JsExpression.Identifier("x"), JsExpression.Identifier("x1"))
+					))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	function f(x2) {
+		(function() {
+			x.a;
+		});
+		(function() {
+			x2 + x1;
+		});
+	}
+})();
 ");
 		}
 	}
