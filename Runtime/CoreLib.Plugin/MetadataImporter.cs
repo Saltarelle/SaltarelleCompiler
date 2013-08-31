@@ -597,8 +597,23 @@ namespace CoreLib.Plugin {
 					}
 				}
 
-				usedNames[preferredName] = true;
-				_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
+				if (property.IsIndexer) {
+					if (property.DeclaringType.Kind == TypeKind.Interface) {
+						Message(Messages._7161, property.Region);
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.Getter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null, property.Setter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null);
+					}
+					else if (property.Parameters.Count == 1) {
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.Getter != null ? MethodScriptSemantics.NativeIndexer() : null, property.Setter != null ? MethodScriptSemantics.NativeIndexer() : null);
+					}
+					else {
+						Message(Messages._7116, property.Region);
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.Getter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null, property.Setter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null);
+					}
+				}
+				else {
+					usedNames[preferredName] = true;
+					_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
+				}
 				return;
 			}
 

@@ -42,7 +42,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7113 = Tuple.Create(7113, MessageSeverity.Error, "The property {0} cannot have an [IntrinsicPropertyAttribute] because it is overridable.");
 		public static readonly Tuple<int, MessageSeverity, string> _7114 = Tuple.Create(7114, MessageSeverity.Error, "The indexer cannot be decorated with an [IntrinsicPropertyAttribute] because it implements an interface member.");
 		public static readonly Tuple<int, MessageSeverity, string> _7115 = Tuple.Create(7115, MessageSeverity.Error, "The property {0} cannot have an [IntrinsicPropertyAttribute] because it implements an interface member.");
-		public static readonly Tuple<int, MessageSeverity, string> _7116 = Tuple.Create(7116, MessageSeverity.Error, "The indexer must have exactly one parameter in order to have an [IntrinsicPropertyAttribute].");
+		public static readonly Tuple<int, MessageSeverity, string> _7116 = Tuple.Create(7116, MessageSeverity.Error, "Indexers with an [IntrinsicPropertyAttribute], and indexers on [Serializable] types, must have exactly one parameter.");
 		public static readonly Tuple<int, MessageSeverity, string> _7117 = Tuple.Create(7117, MessageSeverity.Error, "The method {0} cannot have an [IntrinsicOperatorAttribute] because it is not an operator method.");
 		public static readonly Tuple<int, MessageSeverity, string> _7118 = Tuple.Create(7118, MessageSeverity.Error, "The [IntrinsicOperatorAttribute] cannot be applied to the operator {0} because it is a conversion operator.");
 		public static readonly Tuple<int, MessageSeverity, string> _7119 = Tuple.Create(7119, MessageSeverity.Error, "The method {0} cannot have a [ScriptSkipAttribute] because it is an interface method.");
@@ -86,6 +86,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7158 = Tuple.Create(7158, MessageSeverity.Error, "Cannot specify both ObeysTypeSystem and TypeCheckCode on the [ImportedAttribute] for the type {0}.");
 		public static readonly Tuple<int, MessageSeverity, string> _7159 = Tuple.Create(7159, MessageSeverity.Error, "Cannot specify TypeCheckCode on the [SerializableAttribute] for the type {0} because it is imported. Specify the code on the [ImportedAttribute] instead.");
 		public static readonly Tuple<int, MessageSeverity, string> _7160 = Tuple.Create(7160, MessageSeverity.Error, "The field {0} cannot have a [NoInlineAttribute] because it is not constant.");
+		public static readonly Tuple<int, MessageSeverity, string> _7161 = Tuple.Create(7161, MessageSeverity.Error, "The interface {0} cannot declare indexers because it is serializable.");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7200 = Tuple.Create(7200, MessageSeverity.Error, "This constructor for the type {0} cannot be used with reflection because it has a special implementation.");
 		public static readonly Tuple<int, MessageSeverity, string> _7201 = Tuple.Create(7201, MessageSeverity.Error, "The {1} {0} cannot be used with reflection because it has a special implementation.");
