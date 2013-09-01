@@ -303,6 +303,8 @@ if (typeof(window) == 'object') {
 
 #include "IteratorBlockEnumerator.js"
 
+#include "Convert.js"
+
 #include "Lazy.js"
 
 #include "Task.js"

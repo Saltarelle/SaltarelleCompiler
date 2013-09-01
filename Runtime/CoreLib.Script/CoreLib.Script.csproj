@@ -74,6 +74,7 @@
     <Content Include="ArrayEnumerator.js" />
     <Content Include="CancelEventArgs.js" />
     <Content Include="CultureInfo.js" />
+    <Content Include="Convert.js" />
     <Content Include="DateTimeFormatInfo.js" />
     <Content Include="NumberFormatInfo.js" />
     <Content Include="EventArgs.js" />
