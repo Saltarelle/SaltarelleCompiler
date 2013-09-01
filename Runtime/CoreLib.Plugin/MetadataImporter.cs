@@ -256,7 +256,7 @@ namespace CoreLib.Plugin {
 					Message(Messages._7009, typeDefinition);
 				}
 				foreach (var i in typeDefinition.DirectBaseTypes.Where(b => b.Kind == TypeKind.Interface && !GetTypeSemanticsInternal(b.GetDefinition()).IsSerializable)) {
-					Message(Messages._7010, typeDefinition, i);
+					Message(Messages._7010, typeDefinition, i.FullName);
 				}
 				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
 					Message(Messages._7011, typeDefinition);
