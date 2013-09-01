@@ -18,7 +18,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
 
 		private static readonly Lazy<IUnresolvedAssembly> _expressionAssembly = new Lazy<IUnresolvedAssembly>(() => {
-			var c = PreparedCompilation.CreateCompilation(new[] { new MockSourceFile("File1.cs", @"
+			var c = PreparedCompilation.CreateCompilation("x", new[] { new MockSourceFile("File1.cs", @"
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;

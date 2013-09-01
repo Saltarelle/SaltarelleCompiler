@@ -11,7 +11,7 @@ ss_TimeSpan.getDefaultValue = ss_TimeSpan.createInstance = function#? DEBUG Time
 
 ss_TimeSpan.__typeName = 'ss.TimeSpan';
 ss.TimeSpan = ss_TimeSpan;
-ss.initClass(ss_TimeSpan, {
+ss.initClass(ss_TimeSpan, ss, {
 	compareTo: function#? DEBUG TimeSpan$compareTo##(other) {
 		return this.ticks < other.ticks ? -1 : (this.ticks > other.ticks ? 1 : 0);
 	},

@@ -13,4 +13,4 @@ var ss_ArgumentNullException = function#? DEBUG ArgumentNullException$##(paramNa
 
 ss_ArgumentNullException.__typeName = 'ss.ArgumentNullException';
 ss.ArgumentNullException = ss_ArgumentNullException;
-ss.initClass(ss_ArgumentNullException, {}, ss_ArgumentException);
+ss.initClass(ss_ArgumentNullException, ss, {}, ss_ArgumentException);

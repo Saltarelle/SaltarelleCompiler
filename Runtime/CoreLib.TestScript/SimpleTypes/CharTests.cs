@@ -122,5 +122,19 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue('0'.CompareTo('0') == 0);
 			Assert.IsTrue('1'.CompareTo('1') == 0);
 		}
+
+		[Test]
+		public void IsLowerWorks() {
+			Assert.IsTrue (char.IsLower('a'), "#1");
+			Assert.IsFalse(char.IsLower('A'), "#2");
+			Assert.IsFalse(char.IsLower('3'), "#3");
+		}
+
+		[Test]
+		public void IsUpperWorks() {
+			Assert.IsTrue (char.IsUpper('A'), "#1");
+			Assert.IsFalse(char.IsUpper('a'), "#2");
+			Assert.IsFalse(char.IsUpper('3'), "#3");
+		}
 	}
 }

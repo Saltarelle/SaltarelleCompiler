@@ -7,7 +7,7 @@ var ss_ArrayEnumerator = function#? DEBUG ArrayEnumerator$##(array) {
 };
 ss_ArrayEnumerator.__typeName = 'ss.ArrayEnumerator';
 ss.ArrayEnumerator = ss_ArrayEnumerator;
-ss.initClass(ss_ArrayEnumerator, {
+ss.initClass(ss_ArrayEnumerator, ss, {
 	moveNext: function#? DEBUG ArrayEnumerator$moveNext##() {
 		this._index++;
 		return (this._index < this._array.length);

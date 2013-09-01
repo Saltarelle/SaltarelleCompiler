@@ -64,6 +64,26 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 		}
 
 		[Test]
+		public void AssemblyNameIsCorrectInTheGeneratedScript() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"using System.Collections; public class C1 { public JsDictionary M() { return null; } }");
+				File.WriteAllText(Path.GetFullPath("File2.cs"), @"using System.Collections; public class C2 { public JsDictionary M() { return null; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs"), Path.GetFullPath("File2.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.Assembly.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True);
+				var text = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(text.Contains("ss.initAssembly($asm, 'Test.Assembly')"));    // Verify that the symbol was passed to the script compiler.
+			}, "File1.cs", "File2.cs", "Test.Assembly.dll", "Test.js");
+		}
+
+		[Test]
 		public void CompileErrorsAreReportedAndCauseFilesNotToBeGenerated() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"public class C1 { public void M() { var x = y; } }");

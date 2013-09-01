@@ -5,7 +5,7 @@ var ss_EqualityComparer = function#? DEBUG EqualityComparer$##() {
 };
 ss_EqualityComparer.__typeName = 'ss.EqualityComparer';
 ss.EqualityComparer = ss_EqualityComparer;
-ss.initClass(ss_EqualityComparer, {
+ss.initClass(ss_EqualityComparer, ss, {
 	areEqual: function#? DEBUG EqualityComparer$areEqual##(x, y) {
 		return ss.staticEquals(x, y);
 	},

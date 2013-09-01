@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CoreLib.Plugin;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
@@ -6,21 +7,32 @@ using System.Linq;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.Tests;
 using CompilerOptions = Saltarelle.Compiler.CompilerOptions;
 
 namespace CoreLib.Tests {
 	public static class SourceVerifier {
+		private class MockLinker : ILinker {
+			public IList<JsStatement> Process(IList<JsStatement> statements) {
+				throw new NotImplementedException();
+			}
+
+			public JsExpression CurrentAssemblyExpression { get { return JsExpression.Identifier("$asm"); } }
+		}
+
 		public static Tuple<string, MockErrorReporter> Compile(string source, bool expectErrors = false) {
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var er = new MockErrorReporter(!expectErrors);
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
-			var compilation = PreparedCompilation.CreateCompilation(new[] { sourceFile }, references, null);;
+			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null);;
 			var md = new MetadataImporter(er, compilation.Compilation, new CompilerOptions());
-			var rtl = new CoreLib.Plugin.RuntimeLibrary(md, er, compilation.Compilation, n);
+			var rtl = new RuntimeLibrary(md, er, compilation.Compilation, n);
+			var l = new MockLinker();
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
-			var compiler = new Saltarelle.Compiler.Compiler.Compiler(md, n, rtl, er);
+			var compiler = new Compiler(md, n, rtl, er);
 
 			var compiledTypes = compiler.Compile(compilation);
 
@@ -31,7 +43,7 @@ namespace CoreLib.Tests {
 
 			Assert.That(er.AllMessages, Is.Empty, "Compile should not generate errors");
 
-			var js = new OOPEmulator(compilation.Compilation, md, rtl, n, er).Process(compiledTypes, null);
+			var js = new OOPEmulator(compilation.Compilation, md, rtl, n, l, er).Process(compiledTypes, null);
 			js = new Linker(md, n, compilation.Compilation).Process(js);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));

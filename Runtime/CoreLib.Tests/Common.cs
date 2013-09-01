@@ -29,6 +29,7 @@ namespace CoreLib.Tests {
 		public static IAssembly CreateMockAssembly(IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
 			var result = new Mock<IAssembly>(MockBehavior.Strict);
 			result.SetupGet(_ => _.AssemblyAttributes).Returns(CreateMockAttributes(attributes));
+			result.SetupGet(_ => _.AssemblyName).Returns("The.AssemblyName");
 			return result.Object;
 		}
 		

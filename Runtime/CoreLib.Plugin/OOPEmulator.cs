@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -118,6 +119,7 @@ namespace CoreLib.Plugin {
 		private const string InitGenericInterface = "initGenericInterface";
 		private const string SetMetadata = "setMetadata";
 		private const string InstantiatedGenericTypeVariableName = "$type";
+		private const string InitAssembly = "initAssembly";
 
 		private static Tuple<string, string> SplitIntoNamespaceAndName(string name) {
 			int pos = name.LastIndexOf('.');
@@ -140,11 +142,12 @@ namespace CoreLib.Plugin {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly INamer _namer;
+		private readonly ILinker _linker;
 		private readonly IErrorReporter _errorReporter;
 		private readonly IRuntimeContext _defaultReflectionRuntimeContext;
 		private readonly IRuntimeContext _genericSpecializationReflectionRuntimeContext;
 
-		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, IErrorReporter errorReporter) {
+		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, ILinker linker, IErrorReporter errorReporter) {
 			_compilation = compilation;
 			_systemScript = new JsTypeReferenceExpression(compilation.FindType(new FullTypeName("System.Script")).GetDefinition());
 			_systemObject = new JsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Object).GetDefinition());
@@ -152,6 +155,7 @@ namespace CoreLib.Plugin {
 			_metadataImporter = metadataImporter;
 			_runtimeLibrary = runtimeLibrary;
 			_namer = namer;
+			_linker = linker;
 			_errorReporter = errorReporter;
 			_defaultReflectionRuntimeContext = new ReflectionRuntimeContext(false, _systemObject, _namer);
 			_genericSpecializationReflectionRuntimeContext = new ReflectionRuntimeContext(true, _systemObject, _namer);
@@ -211,7 +215,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression CreateInitClassCall(JsClass type, string ctorName, JsExpression baseClass, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), CreateInstanceMembers(type) };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type) };
 			if (baseClass != null || interfaces.Count > 0)
 				args.Add(baseClass ?? JsExpression.Null);
 			if (interfaces.Count > 0)
@@ -221,7 +225,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression CreateInitInterfaceCall(JsClass type, string ctorName, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), CreateInstanceMembers(type) };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type) };
 			if (interfaces.Count > 0)
 				args.Add(JsExpression.ArrayLiteral(interfaces));
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitInterface), args);
@@ -245,7 +249,7 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), JsExpression.ObjectLiteral(values) };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, JsExpression.ObjectLiteral(values) };
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitEnum), args);
 		}
 
@@ -383,6 +387,7 @@ namespace CoreLib.Plugin {
 
 		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
 			var result = new List<JsStatement>();
+			result.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), _linker.CurrentAssemblyExpression, JsExpression.String(_compilation.MainAssembly.AssemblyName)));
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
 			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();
@@ -423,7 +428,7 @@ namespace CoreLib.Plugin {
 									stmts[i] = replacer.Process(stmts[i]);
 								result.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))));
 								result.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
-								var args = new List<JsExpression> { JsExpression.Identifier(typevarName), JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
+								var args = new List<JsExpression> { JsExpression.Identifier(typevarName), _linker.CurrentAssemblyExpression, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
 								result.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? InitGenericInterface : InitGenericClass), args));
 							}
 							else {

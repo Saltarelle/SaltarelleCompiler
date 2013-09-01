@@ -33,6 +33,13 @@ namespace System {
 			}
 		}
 
+		public string AssemblyQualifiedName {
+			[InlineCode("{$System.Script}.getTypeQName({this})")]
+			get {
+				return null;
+			}
+		}
+
 		public string Name {
 			[InlineCode("{$System.Script}.getTypeName({this})")]
 			get {
@@ -42,6 +49,13 @@ namespace System {
 		
 		public string Namespace {
 			[InlineCode("{$System.Script}.getTypeNamespace({this})")]
+			get {
+				return null;
+			}
+		}
+
+		public Assembly Assembly {
+			[InlineCode("{$System.Script}.getTypeAssembly({this})")]
 			get {
 				return null;
 			}
@@ -113,7 +127,7 @@ namespace System {
 		}
 		
 		public bool IsArray {
-			[InlineCode("{this} === global.Array")]
+			[InlineCode("{this} === {$System.Array}")]
 			get { return false; }
 		}
 

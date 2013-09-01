@@ -10,7 +10,7 @@ var ss_IteratorBlockEnumerator = function#? DEBUG IteratorBlockEnumerator$##(mov
 
 ss_IteratorBlockEnumerator.__typeName = 'ss.IteratorBlockEnumerator';
 ss.IteratorBlockEnumerator = ss_IteratorBlockEnumerator;
-ss.initClass(ss_IteratorBlockEnumerator, {
+ss.initClass(ss_IteratorBlockEnumerator, ss, {
 	moveNext: function#? DEBUG IteratorBlockEnumerator$moveNext##() {
 		try {
 			return this._moveNext.call(this._this);

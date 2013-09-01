@@ -17,5 +17,10 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="statements">Statements to process.</param>
 		IList<JsStatement> Process(IList<JsStatement> statements);
+
+		/// <summary>
+		/// Returns an expression that can be used to instruct the linker to insert a reference to the current assembly.
+		/// </summary>
+		JsExpression CurrentAssemblyExpression { get; }
 	}
 }

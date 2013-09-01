@@ -9,6 +9,9 @@ namespace CoreLib.Tests.Core {
 	public class ActivatorTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class AppDomainTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class ArgumentsTests : CoreLibTestBase {}
 
 	[TestFixture]

@@ -8,7 +8,7 @@ var ss_Exception = function#? DEBUG Exception$##(message, innerException) {
 
 ss_Exception.__typeName = 'ss.Exception';
 ss.Exception = ss_Exception;
-ss.initClass(ss_Exception, {
+ss.initClass(ss_Exception, ss, {
 	get_message: function#? DEBUG Exception$get_message##() {
 		return this._message;
 	},

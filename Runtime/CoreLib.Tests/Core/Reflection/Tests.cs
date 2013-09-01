@@ -6,6 +6,9 @@ using NUnit.Framework;
 
 namespace CoreLib.Tests.Core.Reflection {
 	[TestFixture]
+	public class AssemblyTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class AttributeTests : CoreLibTestBase {}
 
 	[TestFixture]

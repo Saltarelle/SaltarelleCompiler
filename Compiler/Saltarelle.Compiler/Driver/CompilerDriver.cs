@@ -205,7 +205,7 @@ namespace Saltarelle.Compiler.Driver {
 			                        .Where(a => a != null);
 		}
 
-		private static readonly System.Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
+		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
 
 		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
 			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
@@ -236,7 +236,7 @@ namespace Saltarelle.Compiler.Driver {
 				if (references == null)
 					return false;
 
-				PreparedCompilation compilation = PreparedCompilation.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
+				PreparedCompilation compilation = PreparedCompilation.CreateCompilation(settings.AssemblyName, options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
 
 				IMethod entryPoint = FindEntryPoint(options, er, compilation);
 

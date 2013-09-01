@@ -8,4 +8,4 @@ var ss_ArgumentException = function#? DEBUG ArgumentException$##(message, paramN
 
 ss_ArgumentException.__typeName = 'ss.ArgumentException';
 ss.ArgumentException = ss_ArgumentException;
-ss.initClass(ss_ArgumentException, {}, ss_Exception);
+ss.initClass(ss_ArgumentException, ss, {}, ss_Exception);

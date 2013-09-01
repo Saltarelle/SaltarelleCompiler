@@ -5,14 +5,19 @@ if (typeof(global) === "undefined")
 	global = window;
 (function(global) {
 "use strict";
-var ss = {};
 
-ss.isUndefined = function#? DEBUG ss$isUndefined##(o) {
-	return (o === undefined);
+var ss = { __assemblies: [] };
+
+ss.initAssembly = function#? DEBUG assembly##(obj, name) {
+	obj.name = name;
+	obj.toString = function() { return this.name; };
+	obj.__types = {};
+	ss.__assemblies.push(obj);
 };
+ss.initAssembly(ss, 'mscorlib');
 
-ss.isNull = function#? DEBUG ss$isNull##(o) {
-	return (o === null);
+ss.getAssemblies = function#? DEBUG ss$getAssemblies##() {
+	return ss.__assemblies.slice(0);
 };
 
 ss.isNullOrUndefined = function#? DEBUG ss$isNullOrUndefined##(o) {
@@ -90,7 +95,7 @@ ss.defaultHashCode = function#? DEBUG ss$defaultHashCode##(obj) {
 ss.equals = function#? DEBUG ss$equals##(a, b) {
 	if (!ss.isValue(a))
 		throw new ss_NullReferenceException('Object is null');
-	else if (typeof(a.equals) === 'function')
+	else if (a !== ss && typeof(a.equals) === 'function')
 		return a.equals(b);
 	if (ss.isDate(a) && ss.isDate(b))
 		return a.valueOf() === b.valueOf();
@@ -136,6 +141,16 @@ ss.shallowCopy = function#? DEBUG ss$shallowCopy##(source, target) {
 		if (source.hasOwnProperty(p))
 			target[p] = source[p];
 	}
+};
+
+ss.isLower = function#? DEBUG ss$isLower##(c) {
+	var s = String.fromCharCode(c);
+	return s === s.toLowerCase() && s !== s.toUpperCase();
+};
+
+ss.isUpper = function#? DEBUG ss$isUpper##(c) {
+	var s = String.fromCharCode(c);
+	return s !== s.toLowerCase() && s === s.toUpperCase();
 };
 
 if (typeof(window) == 'object') {

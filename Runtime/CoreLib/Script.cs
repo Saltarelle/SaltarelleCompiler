@@ -42,6 +42,7 @@ namespace System {
 		/// </summary>
 		/// <param name="o">The object to test against null.</param>
 		/// <returns>true if the object is null; false otherwise.</returns>
+		[InlineCode("{o} === null")]
 		public static bool IsNull(object o) {
 			return false;
 		}
@@ -64,6 +65,7 @@ namespace System {
 		/// </summary>
 		/// <param name="o">The object to test against undefined.</param>
 		/// <returns>true if the object is undefined; false otherwise.</returns>
+		[InlineCode("typeof {o} === 'undefined'")]
 		public static bool IsUndefined(object o) {
 			return false;
 		}

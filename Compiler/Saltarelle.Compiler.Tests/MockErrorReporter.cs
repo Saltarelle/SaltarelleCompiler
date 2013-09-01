@@ -77,7 +77,7 @@ namespace Saltarelle.Compiler.Tests {
 				try {
 					new BinaryFormatter().Serialize(new MemoryStream(), a);
 				}
-				catch (Exception ex) {
+				catch (Exception) {
 					throw new Exception("Error serializing argument " + a);
 				}
 			}

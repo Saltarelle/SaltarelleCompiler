@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler;
@@ -16,6 +17,12 @@ namespace CoreLib.Plugin {
 	/// This reference importer assumes that root namespaces and types are global objects.
 	/// </summary>
 	public class Linker : ILinker {
+		private const string CurrentAssemblyIdentifier = "__current_assembly_417c2c52e265424297fcbcb4fa402581__";	// If this is ever changed, it needs to be synced with Assembly.GetExecutingAssembly
+
+		internal static JsExpression CurrentAssemblyExpressionStatic { get { return JsExpression.Identifier(CurrentAssemblyIdentifier); } }
+
+		public JsExpression CurrentAssemblyExpression { get { return CurrentAssemblyExpressionStatic; } }
+
 		private class IntroducedNamesGatherer : RewriterVisitorBase<IList<string>> {
 			private readonly Dictionary<JsDeclarationScope, IList<string>> _result = new Dictionary<JsDeclarationScope, IList<string>>();
 			private readonly IMetadataImporter _metadataImporter;
@@ -162,6 +169,7 @@ namespace CoreLib.Plugin {
 			private readonly IAssembly _mainAssembly;
 			private readonly HashSet<string> _usedSymbols;
 			private readonly string _mainModuleName;
+			private readonly JsExpression _currentAssembly;
 
 			private readonly Dictionary<string, string> _moduleAliases;
 
@@ -226,12 +234,20 @@ namespace CoreLib.Plugin {
 				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols) {
+			public override JsExpression VisitIdentifierExpression(JsIdentifierExpression expression, object data) {
+				if (expression.Name == CurrentAssemblyIdentifier)
+					return _currentAssembly;
+				else
+					return expression;
+			}
+
+			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols, JsExpression currentAssembly) {
 				_metadataImporter = metadataImporter;
 				_namer            = namer;
 				_mainModuleName   = MetadataUtils.GetModuleName(mainAssembly);
 				_mainAssembly     = mainAssembly;
 				_usedSymbols      = usedSymbols;
+				_currentAssembly  = currentAssembly;
 				_moduleAliases    = new Dictionary<string, string>();
 			}
 
@@ -252,8 +268,10 @@ namespace CoreLib.Plugin {
 
 				statements = IdentifierRenamer.Process(statements, renameMap).ToList();
 
-				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols);
-				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
+				bool isModule = MetadataUtils.GetModuleName(compilation.MainAssembly) != null || MetadataUtils.IsAsyncModule(compilation.MainAssembly);
+				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols, JsExpression.Identifier(isModule ? "exports" : "$asm"));
+
+				var body = (!isModule ? new[] { JsStatement.Var("$asm", JsExpression.ObjectLiteral()) } : new JsStatement[0]).Concat(statements.Select(s => importer.VisitStatement(s, null))).ToList();
 				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly));
 
 				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly)) {

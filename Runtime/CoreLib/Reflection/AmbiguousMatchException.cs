@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace System {
+namespace System.Reflection {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public class AmbiguousMatchException : Exception {

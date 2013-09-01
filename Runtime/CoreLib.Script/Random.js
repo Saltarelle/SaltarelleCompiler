@@ -34,7 +34,7 @@ var ss_Random = function#? DEBUG Random$##(seed) {
 
 ss_Random.__typeName = 'ss.Random';
 ss.Random = ss_Random;
-ss.initClass(ss_Random, {
+ss.initClass(ss_Random, ss, {
 	next: function#? DEBUG Random$next##() {
 		return this.sample() * 2147483648 | 0;
 	},

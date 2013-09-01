@@ -57,6 +57,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 @"global.OuterNamespace = global.OuterNamespace || {};
 global.OuterNamespace.InnerNamespace = global.OuterNamespace.InnerNamespace || {};
 global.OuterNamespace.InnerNamespace2 = global.OuterNamespace.InnerNamespace2 || {};
+{Script}.initAssembly($asm, 'x');
 ////////////////////////////////////////////////////////////////////////////////
 // OuterNamespace.InnerNamespace.SomeEnum
 var $OuterNamespace_InnerNamespace_SomeEnum = function() {
@@ -97,8 +98,8 @@ var $OuterNamespace_InnerNamespace2_OtherType = function(a2) {
 };
 $OuterNamespace_InnerNamespace2_OtherType.__typeName = 'OuterNamespace.InnerNamespace2.OtherType';
 global.OuterNamespace.InnerNamespace2.OtherType = $OuterNamespace_InnerNamespace2_OtherType;
-{Script}.initEnum($OuterNamespace_InnerNamespace_SomeEnum, { value1: 1, value2: 2, value3: 3 });
-{Script}.initClass($OuterNamespace_InnerNamespace_SomeType, {
+{Script}.initEnum($OuterNamespace_InnerNamespace_SomeEnum, $asm, { value1: 1, value2: 2, value3: 3 });
+{Script}.initClass($OuterNamespace_InnerNamespace_SomeType, $asm, {
 	method1: function(b) {
 		b = 0;
 	},
@@ -106,13 +107,13 @@ global.OuterNamespace.InnerNamespace2.OtherType = $OuterNamespace_InnerNamespace
 		c = 0;
 	}
 });
-{Script}.initClass($OuterNamespace_InnerNamespace_SomeType2, {
+{Script}.initClass($OuterNamespace_InnerNamespace_SomeType2, $asm, {
 	method1: function(b1) {
 		b1 = 0;
 	}
 });
-{Script}.initInterface($OuterNamespace_InnerNamespace2_OtherInterface, { interfaceMethod: null });
-{Script}.initClass($OuterNamespace_InnerNamespace2_OtherType, {
+{Script}.initInterface($OuterNamespace_InnerNamespace2_OtherInterface, $asm, { interfaceMethod: null });
+{Script}.initClass($OuterNamespace_InnerNamespace2_OtherType, $asm, {
 	method2: function(b2) {
 		b2 = 0;
 	}
@@ -160,7 +161,8 @@ public interface I1 {}
 public class C2 : C3 {}
 public class C1 : C2, I1 {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // C1
 var $C1 = function() {
 	{C2}.call(this);
@@ -186,10 +188,10 @@ var $I1 = function() {
 };
 $I1.__typeName = 'I1';
 global.I1 = $I1;
-{Script}.initClass($C3, {});
-{Script}.initClass($C2, {}, {C3});
-{Script}.initInterface($I1, {});
-{Script}.initClass($C1, {}, {C2}, [{I1}]);
+{Script}.initClass($C3, $asm, {});
+{Script}.initClass($C2, $asm, {}, {C3});
+{Script}.initInterface($I1, $asm, {});
+{Script}.initClass($C1, $asm, {}, {C2}, [{I1}]);
 ");
 		}
 
@@ -201,7 +203,8 @@ global.I1 = $I1;
 [IncludeGenericArguments(false)] public interface I<T> {}
 public class A : B<int>, I<int> {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // A
 var $A = function() {
 	{B}.call(this);
@@ -220,9 +223,9 @@ var $I = function() {
 };
 $I.__typeName = 'I';
 global.I = $I;
-{Script}.initClass($B, {});
-{Script}.initInterface($I, {});
-{Script}.initClass($A, {}, {B}, [{I}]);
+{Script}.initClass($B, $asm, {});
+{Script}.initInterface($I, $asm, {});
+{Script}.initClass($A, $asm, {}, {B}, [{I}]);
 ");
 		}
 
@@ -236,7 +239,7 @@ public sealed class C : GenericBase<object> {}");
 			
 			var actual = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Where(l => l.StartsWith("{Script}.initClass")).ToList();
 
-			Assert.That(actual, Is.EqualTo(new[] { "{Script}.initClass($Base, {});", "{Script}.initClass($EBase, {}, {Base});", "{Script}.initClass($C, {}, {Script}.makeGenericType({GenericBase}, [{Object}]));" }));
+			Assert.That(actual, Is.EqualTo(new[] { "{Script}.initClass($Base, $asm, {});", "{Script}.initClass($EBase, $asm, {}, {Base});", "{Script}.initClass($C, $asm, {}, {Script}.makeGenericType({GenericBase}, [{Object}]));" }));
 		}
 
 		[Test]
@@ -257,7 +260,8 @@ public sealed class C : GenericBase<object> {}");
 	static MyClass() { int a = 0; }
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -266,7 +270,7 @@ $MyClass.theEntryPoint = function() {
 	var x = 0;
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {});
+{Script}.initClass($MyClass, $asm, {});
 var a = 0;
 {MyClass}.theEntryPoint();
 ", entryPoint: "MyClass.Main");

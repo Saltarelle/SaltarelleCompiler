@@ -68,6 +68,24 @@ namespace CoreLib.TestScript.Reflection {
 		}
 		
 		[Test]
+		public void AssemblyQualifiedNameReturnsTheNameWithTheNamespaceAndAssemblyName() {
+			Assert.AreEqual(typeof(TypeSystemTests).AssemblyQualifiedName, "CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<>).AssemblyQualifiedName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1, CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<int>).AssemblyQualifiedName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[[ss.Int32, mscorlib]], CoreLib.TestScript");
+		}
+
+		[Test]
+		public void AssemblyPropertyWorks() {
+			Assert.AreEqual(typeof(B).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(I1).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(IG<>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(IG<int>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<int>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(E1).Assembly.FullName, "CoreLib.TestScript");
+		}
+
+		[Test]
 		public void NamespacePropertyReturnsTheNamespaceWithoutTheName() {
 			Assert.AreEqual(typeof(TypeSystemTests).Namespace, "CoreLib.TestScript.Reflection");
 			Assert.AreEqual(typeof(DS2).Namespace, "CoreLib.TestScript.Reflection");
@@ -85,8 +103,8 @@ namespace CoreLib.TestScript.Reflection {
 		[Test]
 		public void NamePropertyRemovesTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).Name, "TypeSystemTests", "non-generic");
-			Assert.AreEqual(typeof(G<int, string>).Name, "TypeSystemTests$G$2[ss.Int32,String]", "generic");
-			Assert.AreEqual(typeof(G<BX<double>, string>).Name, "TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[Number],String]", "nested generic");
+			Assert.AreEqual(typeof(G<int, string>).Name, "TypeSystemTests$G$2[[ss.Int32, mscorlib],[String]]", "generic");
+			Assert.AreEqual(typeof(G<BX<double>, string>).Name, "TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[[Number]], CoreLib.TestScript],[String]]", "nested generic");
 		}
 
 		[Test]
@@ -118,12 +136,12 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void TypeOfInstantiatedGenericClassWorks() {
-			Assert.AreEqual(typeof(G<int,C>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[ss.Int32,CoreLib.TestScript.Reflection.TypeSystemTests$C]");
+			Assert.AreEqual(typeof(G<int,C>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript]]");
 		}
 
 		[Test]
 		public void TypeOfInstantiatedGenericInterfaceWorks() {
-			Assert.AreEqual(typeof(IG<int>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[ss.Int32]");
+			Assert.AreEqual(typeof(IG<int>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[ss.Int32, mscorlib]]");
 		}
 
 		[Test]
@@ -139,18 +157,18 @@ namespace CoreLib.TestScript.Reflection {
 		public void AccessingAStaticMemberInAGenericClassWorks() {
 			Assert.AreEqual(G<int,C>.field, "ss.Int32 CoreLib.TestScript.Reflection.TypeSystemTests$C");
 			Assert.AreEqual(G<C,int>.field, "CoreLib.TestScript.Reflection.TypeSystemTests$C ss.Int32");
-			Assert.AreEqual(G<G<C,int>,G<string,C>>.field, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$C,ss.Int32] CoreLib.TestScript.Reflection.TypeSystemTests$G$2[String,CoreLib.TestScript.Reflection.TypeSystemTests$C]");
+			Assert.AreEqual(G<G<C,int>,G<string,C>>.field, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript],[ss.Int32, mscorlib]] CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[String],[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript]]");
 		}
 
 		[Test]
 		public void TypeOfNestedGenericClassWorks() {
-			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[ss.Int32,CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$C,CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[String]]]");
+			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript],[CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[String]], CoreLib.TestScript]], CoreLib.TestScript]]");
 		}
 
 		[Test]
 		public void BaseTypeAndImplementedInterfacesForGenericTypeWorks() {
-			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).BaseType.FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[ss.Int32,CoreLib.TestScript.Reflection.TypeSystemTests$C]]");
-			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).GetInterfaces()[0].FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$C,CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[String]],String]]");
+			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).BaseType.FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript]], CoreLib.TestScript]]");
+			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).GetInterfaces()[0].FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript],[CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[String]], CoreLib.TestScript]], CoreLib.TestScript],[String]], CoreLib.TestScript]]");
 		}
 
 		[Test]

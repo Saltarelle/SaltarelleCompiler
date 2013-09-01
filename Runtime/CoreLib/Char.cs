@@ -78,5 +78,15 @@ namespace System {
 		public bool Equals(char other) {
 			return false;
 		}
+
+		[InlineCode("{$System.Script}.isLower({ch})")]
+		public static bool IsLower(char ch) {
+			return false;
+		}
+
+		[InlineCode("{$System.Script}.isUpper({ch})")]
+		public static bool IsUpper(char ch) {
+			return false;
+		}
 	}
 }

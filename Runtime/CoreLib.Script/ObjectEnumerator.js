@@ -9,7 +9,7 @@ var ss_ObjectEnumerator = function#? DEBUG ObjectEnumerator$##(o) {
 
 ss_ObjectEnumerator.__typeName = 'ss.ObjectEnumerator';
 ss.ObjectEnumerator = ss_ObjectEnumerator;
-ss.initClass(ss_ObjectEnumerator, {
+ss.initClass(ss_ObjectEnumerator, ss, {
 	moveNext: function#? DEBUG ObjectEnumerator$moveNext##() {
 		this._index++;
 		return (this._index < this._keys.length);
