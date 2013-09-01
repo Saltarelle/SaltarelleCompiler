@@ -39,6 +39,13 @@ namespace System {
 				return null;
 			}
 		}
+		
+		public string Namespace {
+			[InlineCode("{$System.Script}.getTypeNamespace({this})")]
+			get {
+				return null;
+			}
+		}
 
 		[InlineCode("{$System.Script}.getType({typeName})")]
 		public static Type GetType(string typeName) {
@@ -102,6 +109,11 @@ namespace System {
 
 		public bool IsInterface {
 			[InlineCode("{$System.Script}.isInterface({this})")]
+			get { return false; }
+		}
+		
+		public bool IsArray {
+			[InlineCode("{this} === global.Array")]
 			get { return false; }
 		}
 
