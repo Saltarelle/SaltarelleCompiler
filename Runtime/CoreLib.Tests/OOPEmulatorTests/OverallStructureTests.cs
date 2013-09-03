@@ -277,6 +277,28 @@ var a = 0;
 		}
 
 		[Test]
+		public void AssemblyAttributesAreAssignedBeforeStaticInitializerStatements() {
+			AssertCorrect(
+@"[assembly: MyAttribute(42)]
+public class MyAttribute : System.Attribute {
+	public MyAttribute(int x) {}
+	static MyAttribute() { int a = 0; }
+}
+",
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
+// MyAttribute
+var $MyAttribute = function(x) {
+};
+$MyAttribute.__typeName = 'MyAttribute';
+global.MyAttribute = $MyAttribute;
+{Script}.initClass($MyAttribute, $asm, {});
+$asm.attr = [new {MyAttribute}(42)];
+var a = 0;
+");
+		}
+
+		[Test]
 		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
 			var er = new MockErrorReporter();
 			Process(

@@ -42,5 +42,25 @@ namespace System.Reflection {
 		public static Assembly GetExecutingAssembly() {
 			return null;
 		}
+
+		[InlineCode("{this}.attr")]
+		public object[] GetCustomAttributes() {
+			return null;
+		}
+
+		[InlineCode("{this}.attr.filter(function(a) {{ return {$System.Script}.isInstanceOfType(a, {attributeType}); }})")]
+		public object[] GetCustomAttributes(Type attributeType) {
+			return null;
+		}
+
+		[InlineCode("{this}.attr")]
+		public object[] GetCustomAttributes(bool inherit) {
+			return null;
+		}
+
+		[InlineCode("{this}.attr.filter(function(a) {{ return {$System.Script}.isInstanceOfType(a, {attributeType}); }})")]
+		public object[] GetCustomAttributes(Type attributeType, bool inherit) {
+			return null;
+		}
 	}
 }

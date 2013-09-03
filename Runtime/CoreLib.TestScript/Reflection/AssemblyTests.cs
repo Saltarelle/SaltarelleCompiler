@@ -4,9 +4,35 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using QUnit;
 
+[assembly: CoreLib.TestScript.Reflection.AssemblyTests.A1(41, P = 10)]
+[assembly: CoreLib.TestScript.Reflection.AssemblyTests.A2(64, P = 23)]
+[assembly: CoreLib.TestScript.Reflection.AssemblyTests.A3(15, P = 45)]
+
 namespace CoreLib.TestScript.Reflection {
 	[TestFixture]
 	public class AssemblyTests {
+		[NonScriptable]
+		public class A1Attribute : Attribute {
+			public int X { get; private set; }
+			public int P { get; set; }
+			public A1Attribute() {}
+			public A1Attribute(int x) { X = x; }
+		}
+
+		public class A2Attribute : Attribute {
+			public int X { get; private set; }
+			public int P { get; set; }
+			public A2Attribute() {}
+			public A2Attribute(int x) { X = x; }
+		}
+
+		public class A3Attribute : Attribute {
+			public int X { get; private set; }
+			public int P { get; set; }
+			public A3Attribute() {}
+			public A3Attribute(int x) { X = x; }
+		}
+
 		class C {}
 
 		private Assembly ImportedModuleTestCase {
@@ -104,6 +130,29 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsTrue(typeof(C).Assembly.CreateInstance(typeof(C).FullName) is C, "#1");
 			Assert.AreEqual(typeof(int).Assembly.CreateInstance(typeof(int).FullName), 0, "#2");
 			Assert.IsTrue(typeof(C).Assembly.CreateInstance("NonExistentType") == null, "#3");
+		}
+
+		[Test]
+		public void GetCustomAttributesWorks() {
+			var asm = Assembly.GetExecutingAssembly();
+			foreach (var a in new[] { asm.GetCustomAttributes(), asm.GetCustomAttributes(true), asm.GetCustomAttributes(false) }) {
+				Assert.IsFalse(a.Some(x => x.GetType().Name == "A1Attribute"));
+				var a2 = a.Filter(x => x is A2Attribute);
+				Assert.AreEqual(a2.Length, 1);
+				Assert.IsTrue(((A2Attribute)a2[0]).X == 64);
+				Assert.IsTrue(((A2Attribute)a2[0]).P == 23);
+
+				var a3 = a.Filter(x => x is A3Attribute);
+				Assert.AreEqual(a3.Length, 1);
+				Assert.IsTrue(((A3Attribute)a3[0]).X == 15);
+				Assert.IsTrue(((A3Attribute)a3[0]).P == 45);
+			}
+
+			foreach (var a in new[] { asm.GetCustomAttributes(typeof(A2Attribute)), asm.GetCustomAttributes(typeof(A2Attribute), true), asm.GetCustomAttributes(typeof(A2Attribute), false) }) {
+				Assert.AreEqual(a.Length, 1);
+				Assert.IsTrue(((A2Attribute)a[0]).X == 64);
+				Assert.IsTrue(((A2Attribute)a[0]).P == 23);
+			}
 		}
 	}
 }
