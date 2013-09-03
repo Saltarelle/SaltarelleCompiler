@@ -1208,5 +1208,77 @@ class C {
 @"			var x = Object;
 ");
 		}
+
+		[Test]
+		public void UseOfTypeIsWithNonScriptableTypeIsAnError() {
+			var result = SourceVerifier.Compile(@"
+[System.Runtime.CompilerServices.NonScriptable] class X1 {}
+
+public class C {
+	public static void M(object o) {
+		var x = o is X1;
+	}
+}", expectErrors: true);
+			Assert.That(result.Item2.AllMessages.Any(m => m.Code == 7522 && m.FormattedMessage.Contains("X1")));
+
+			result = SourceVerifier.Compile(@"
+class G<T> {}
+[System.Runtime.CompilerServices.NonScriptable] class X1 {}
+
+public class C {
+	public static void M(object o) {
+		var x = o is G<X1>;
+	}
+}", expectErrors: true);
+			Assert.That(result.Item2.AllMessages.Any(m => m.Code == 7522 && m.FormattedMessage.Contains("X1")));
+		}
+
+		[Test]
+		public void UseOfTypeAsWithNonScriptableTypeIsAnError() {
+			var result = SourceVerifier.Compile(@"
+[System.Runtime.CompilerServices.NonScriptable] class X1 {}
+
+public class C {
+	public static void M(object o) {
+		var x = o as X1;
+	}
+}", expectErrors: true);
+			Assert.That(result.Item2.AllMessages.Any(m => m.Code == 7522 && m.FormattedMessage.Contains("X1")));
+
+			result = SourceVerifier.Compile(@"
+class G<T> {}
+[System.Runtime.CompilerServices.NonScriptable] class X1 {}
+
+public class C {
+	public static void M(object o) {
+		var x = o as G<X1>;
+	}
+}", expectErrors: true);
+			Assert.That(result.Item2.AllMessages.Any(m => m.Code == 7522 && m.FormattedMessage.Contains("X1")));
+		}
+
+		[Test]
+		public void UseOfCastWithNonScriptableTypeIsAnError() {
+			var result = SourceVerifier.Compile(@"
+[System.Runtime.CompilerServices.NonScriptable] class X1 {}
+
+public class C {
+	public static void M(object o) {
+		var x = (X1)o;
+	}
+}", expectErrors: true);
+			Assert.That(result.Item2.AllMessages.Any(m => m.Code == 7522 && m.FormattedMessage.Contains("X1")));
+
+			result = SourceVerifier.Compile(@"
+class G<T> {}
+[System.Runtime.CompilerServices.NonScriptable] class X1 {}
+
+public class C {
+	public static void M(object o) {
+		var x = (G<X1>)o;
+	}
+}", expectErrors: true);
+			Assert.That(result.Item2.AllMessages.Any(m => m.Code == 7522 && m.FormattedMessage.Contains("X1")));
+		}
 	}
 }

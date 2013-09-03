@@ -84,6 +84,12 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetTypeDefinitionScriptType(ITypeDefinition type, TypeContext context) {
+			var sem = _metadataImporter.GetTypeSemantics(type);
+			if (sem.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+				_errorReporter.Message(Saltarelle.Compiler.Messages._7522, type.FullName);
+				return JsExpression.Null;
+			}
+
 			if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
@@ -160,7 +166,9 @@ namespace CoreLib.Plugin {
 			else if (ss is JsTypeReferenceExpression && st is JsTypeReferenceExpression) {
 				var ts = ((JsTypeReferenceExpression)ss).Type;
 				var tt = ((JsTypeReferenceExpression)st).Type;
-				if (_metadataImporter.GetTypeSemantics(ts).Name == _metadataImporter.GetTypeSemantics(tt).Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
+				var sems = _metadataImporter.GetTypeSemantics(ts);
+				var semt = _metadataImporter.GetTypeSemantics(tt);
+				if (sems.Type == TypeScriptSemantics.ImplType.NormalType && semt.Type == TypeScriptSemantics.ImplType.NormalType && sems.Name == semt.Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
 					return null;	// The types are the same in script, so no runtime conversion is required.
 			}
 
