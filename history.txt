@@ -1,3 +1,4 @@
+Fixed issue comparing a nullable type parameter to null (#247)
 Added basic Assembly and AppDomain classes (#210)
 [Serializable] types can now declare indexers, as long as they have one parameter (#233)
 Fixed problem when a name imported by the linker clashed with a variable name (eg. when importing a class named 'd3') (#94, #245)

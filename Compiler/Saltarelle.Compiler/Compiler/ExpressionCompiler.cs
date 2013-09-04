@@ -552,6 +552,27 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private bool CanDoSimpleComparisonForEquals(ResolveResult a, ResolveResult b) {
+			if (a.Type.IsKnownType(KnownTypeCode.NullableOfT) || b.Type.IsKnownType(KnownTypeCode.NullableOfT)) {
+				// in an expression such as myNullableInt == 3, an implicit nullable conversion is performed on the non-nullable value, but we can know for sure that it will never be null.
+				var ca = a as ConversionResolveResult;
+				if (ca != null) {
+					if (ca.Conversion.IsNullableConversion && ca.Conversion.IsImplicit)
+						a = ca.Input;
+				}
+
+				var cb = b as ConversionResolveResult;
+				if (cb != null) {
+					if (cb.Conversion.IsNullableConversion && cb.Conversion.IsImplicit)
+						b = cb.Input;
+				}
+			}
+
+			bool aCanBeNull = a.Type.IsReferenceType != false || a.Type.IsKnownType(KnownTypeCode.NullableOfT);
+			bool bCanBeNull = b.Type.IsReferenceType != false || b.Type.IsKnownType(KnownTypeCode.NullableOfT);
+			return !aCanBeNull || !bCanBeNull;
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			if (rr.UserDefinedOperatorMethod != null) {
 				var impl = _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod);
@@ -712,7 +733,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, rr.IsLiftedOperator);
 
 				case ExpressionType.Equal:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => rr.Operands[0].Type.IsReferenceType == false || rr.Operands[1].Type.IsReferenceType == false ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false);
 
 				case ExpressionType.LeftShift:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, rr.IsLiftedOperator);
@@ -731,7 +752,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, rr.IsLiftedOperator);
 
 				case ExpressionType.NotEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => rr.Operands[0].Type.IsReferenceType == false || rr.Operands[1].Type.IsReferenceType == false ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
 
 				case ExpressionType.Or:
 					if (IsNullableBooleanType(rr.Operands[0].Type))
