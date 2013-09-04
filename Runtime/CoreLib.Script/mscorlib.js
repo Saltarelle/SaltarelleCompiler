@@ -6,18 +6,22 @@ if (typeof(global) === "undefined")
 (function(global) {
 "use strict";
 
-var ss = { __assemblies: [] };
+var ss = { __assemblies: {} };
 
 ss.initAssembly = function#? DEBUG assembly##(obj, name) {
 	obj.name = name;
 	obj.toString = function() { return this.name; };
 	obj.__types = {};
-	ss.__assemblies.push(obj);
+	ss.__assemblies[name] = obj;
 };
 ss.initAssembly(ss, 'mscorlib');
 
+ss.load = function#? DEBUG ss$load##(name) {
+	return ss.__assemblies[name] || require(name);
+};
+
 ss.getAssemblies = function#? DEBUG ss$getAssemblies##() {
-	return ss.__assemblies.slice(0);
+	return Object.keys(ss.__assemblies).map(function(n) { return ss.__assemblies[n]; });
 };
 
 ss.isNullOrUndefined = function#? DEBUG ss$isNullOrUndefined##(o) {

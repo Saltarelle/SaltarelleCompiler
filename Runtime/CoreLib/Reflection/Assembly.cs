@@ -18,7 +18,7 @@ namespace System.Reflection {
 			return null;
 		}
 
-		[InlineCode("require({assemblyString})")]
+		[InlineCode("{$System.Script}.load({assemblyString})")]
 		public static Assembly Load(string assemblyString) {
 			return null;
 		}

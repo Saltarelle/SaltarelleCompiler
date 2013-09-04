@@ -154,5 +154,11 @@ namespace CoreLib.TestScript.Reflection {
 				Assert.IsTrue(((A2Attribute)a[0]).P == 23);
 			}
 		}
+
+		[Test]
+		public void LoadCanReturnReferenceToLoadedAssembly() {
+			Assert.IsTrue(Assembly.Load("CoreLib.TestScript") == Assembly.GetExecutingAssembly(), "TestScripts");
+			Assert.IsTrue(Assembly.Load("mscorlib") == typeof(int).Assembly, "mscorlib");
+		}
 	}
 }

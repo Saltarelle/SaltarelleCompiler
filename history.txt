@@ -1,3 +1,4 @@
+BREAKING CHANGE: Type.GetType("TypeName, AssemblyName") will now only scan loaded assemblies. Additional assemblies can be loaded using Assembly.Load(). Type.GetType("TypeName") works like before.
 Fixed issue comparing a nullable type parameter to null (#247)
 Added basic Assembly and AppDomain classes (#210)
 [Serializable] types can now declare indexers, as long as they have one parameter (#233)

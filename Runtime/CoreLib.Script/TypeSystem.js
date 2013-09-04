@@ -318,23 +318,9 @@ ss.getType = function#? DEBUG ss$getType##(typeName) {
 	if (!typeName)
 		return null;
 
-	ss.__typeCache = ss.__typeCache || {};
-
-	var type = ss.__typeCache[typeName];
-	if (!type) {
-		var arr = typeName.split(',');
-		var type = (arr.length > 1 ? require(arr[1].trim) : global);
-
-		var parts = arr[0].trim().split('.');
-		for (var i = 0; i < parts.length; i++) {
-			type = type[parts[i]];
-			if (!type)
-				break;
-		}
-
-		ss.__typeCache[typeName] = type || null;
-	}
-	return type;
+	var arr = typeName.split(',');
+	var module = (arr.length > 1 ? ss.__assemblies[arr[1].trim()] : global);
+	return module ? ss.getAssemblyType(module, arr[0].trim()) : null;
 };
 
 ss.getDefaultValue = function#? DEBUG ss$getDefaultValue##(type) {

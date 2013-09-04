@@ -999,7 +999,11 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void StaticGetTypeMethodWorks() {
-			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests"), typeof(TypeSystemTests));
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests"), typeof(TypeSystemTests), "#1");
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript"), typeof(TypeSystemTests), "#2");
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests, mscorlib"), null, "#3");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2, mscorlib"), typeof(Dictionary<,>), "#4");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2, NotLoaded.Assembly"), null, "#5");
 		}
 	}
 }
