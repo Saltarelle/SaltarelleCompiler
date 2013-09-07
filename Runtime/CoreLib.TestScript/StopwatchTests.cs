@@ -61,7 +61,7 @@ namespace CoreLib.TestScript {
 			}
 			watch.Stop();
 			Assert.IsTrue(hasIncreased, "Times should increase inside the loop");
-			Assert.IsTrue(watch.ElapsedMilliseconds > 150 && watch.ElapsedMilliseconds < 250, "ElapsedMilliseconds");
+			Assert.IsTrue(watch.ElapsedMilliseconds > 150, "ElapsedMilliseconds");
 			Assert.IsTrue(watch.Elapsed == new TimeSpan(0, 0, 0, 0, (int)watch.ElapsedMilliseconds), "Elapsed");
 			var value = (double)watch.ElapsedTicks / Stopwatch.Frequency;
 			Assert.IsTrue(value > 0.15 && value < 0.25, "Ticks");
