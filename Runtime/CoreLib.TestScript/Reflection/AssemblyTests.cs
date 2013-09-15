@@ -160,5 +160,40 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsTrue(Assembly.Load("CoreLib.TestScript") == Assembly.GetExecutingAssembly(), "TestScripts");
 			Assert.IsTrue(Assembly.Load("mscorlib") == typeof(int).Assembly, "mscorlib");
 		}
+
+		[Test]
+		public void GetManifestResourceNamesWorks() {
+			var names = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+			names.Sort((a, b) => a.CompareTo(b));
+			Assert.AreEqual(names, new[] { "CoreLib.TestScript.Reflection.Resource1.bin", "CoreLib.TestScript.Reflection.Resource2.bin" });
+		}
+
+		[Test]
+		public void GetManifestResourceDataAsBase64WithoutTypeWorks() {
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceDataAsBase64("CoreLib.TestScript.Reflection.Resource1.bin"), "AAECAwQFBgc=", "#1");
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceDataAsBase64("CoreLib.TestScript.Reflection.Resource2.bin"), "EBESExQV", "#2");
+			Assert.IsTrue(Script.IsNull(Assembly.GetExecutingAssembly().GetManifestResourceDataAsBase64("NonExistent")), "#3");
+		}
+
+		[Test]
+		public void GetManifestResourceDataAsBase64WithTypeWorks() {
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceDataAsBase64(typeof(AssemblyTests), "Resource1.bin"), "AAECAwQFBgc=", "#1");
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceDataAsBase64(typeof(AssemblyTests), "Resource2.bin"), "EBESExQV", "#2");
+			Assert.IsTrue(Script.IsNull(Assembly.GetExecutingAssembly().GetManifestResourceDataAsBase64(typeof(AssemblyTests), "NonExistent")), "#3");
+		}
+
+		[Test]
+		public void GetManifestResourceDataWithoutTypeWorks() {
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceData("CoreLib.TestScript.Reflection.Resource1.bin"), new[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 }, "#1");
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceData("CoreLib.TestScript.Reflection.Resource2.bin"), new[] { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15 }, "#2");
+			Assert.IsTrue(Script.IsNull(Assembly.GetExecutingAssembly().GetManifestResourceData("NonExistent")), "#3");
+		}
+
+		[Test]
+		public void GetManifestResourceDataWithTypeWorks() {
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceData(typeof(AssemblyTests), "Resource1.bin"), new[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 }, "#1");
+			Assert.AreEqual(Assembly.GetExecutingAssembly().GetManifestResourceData(typeof(AssemblyTests), "Resource2.bin"), new[] { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15 }, "#2");
+			Assert.IsTrue(Script.IsNull(Assembly.GetExecutingAssembly().GetManifestResourceData(typeof(AssemblyTests), "NonExistent")), "#3");
+		}
 	}
 }

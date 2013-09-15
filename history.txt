@@ -1,3 +1,4 @@
+Added possibility to embed resources in the generated script (Assembly.GetManifestResourceNames, Assembly.GetManifestResourceData).
 Added Environment.NewLine
 Added methods Convert.FromBase64String and Convert.ToBase64String
 BREAKING CHANGE: Type.GetType("TypeName, AssemblyName") will now only scan loaded assemblies. Additional assemblies can be loaded using Assembly.Load(). Type.GetType("TypeName") works like before.

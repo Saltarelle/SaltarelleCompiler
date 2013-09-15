@@ -1,20 +1,34 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
-using Moq;
 using NUnit.Framework;
-using Saltarelle.Compiler.Compiler;
-using Saltarelle.Compiler.JSModel.Expressions;
-using Saltarelle.Compiler.JSModel.Statements;
-using Saltarelle.Compiler.JSModel.TypeSystem;
-using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.OOPEmulatorTests {
 	[TestFixture]
 	public class OverallStructureTests : OOPEmulatorTestBase {
+		private class Resource : IAssemblyResource {
+			public string Name { get; private set; }
+			public AssemblyResourceType Type { get; private set; }
+			public string LinkedFileName { get; private set; }
+			public bool IsPublic { get; private set; }
+			private readonly byte[] _data;
+
+			public Resource(AssemblyResourceType type, string name, bool isPublic, string linkedFileName = null, byte[] data = null) {
+				_data = data;
+				Type = type;
+				Name = name;
+				IsPublic = isPublic;
+				LinkedFileName = linkedFileName;
+			}
+
+			public Stream GetResourceStream() {
+				return new MemoryStream(_data);
+			}
+		}
+
 		[Test]
 		public void TheOverallStructureIsCorrect() {
 			AssertCorrect(
@@ -321,6 +335,17 @@ var a = 0;
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7801 && (string)m.Args[0] == "MyClass.Main"));
+		}
+
+		[Test]
+		public void BothPublicAndPrivateEmbeddedResourcesAreIncludedInTheInitAssemblyCallButThisExcludesPluginDllsAndLinkedResources() {
+			AssertCorrect("",
+			              "{Script}.initAssembly($asm, 'x', { 'Resource.Name': 'LQYHBA==', 'Some.Private.Resource': 'BQMH' });\n",
+			              resources: new[] { new Resource(AssemblyResourceType.Embedded, "Resource.Name", true, data: new byte[] { 45, 6, 7, 4 }),
+			                                 new Resource(AssemblyResourceType.Linked, "Other.Resource", true, linkedFileName: "some-file.txt"),
+			                                 new Resource(AssemblyResourceType.Embedded, "Some.Private.Resource", false, data: new byte[] { 5, 3, 7 }),
+			                                 new Resource(AssemblyResourceType.Embedded, "Namespace.Plugin.dll", true, data: new byte[] { 5, 3, 7 }),
+			                                 new Resource(AssemblyResourceType.Embedded, "Plugin.dll", true, data: new byte[] { 5, 3, 7 }) });
 		}
 	}
 }

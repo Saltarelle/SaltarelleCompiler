@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using ICSharpCode.NRefactory;
@@ -386,9 +387,29 @@ namespace CoreLib.Plugin {
 			                                       });
 		}
 
+		private IEnumerable<IAssemblyResource> GetIncludedResources() {
+			return _compilation.MainAssembly.Resources.Where(r => r.Type == AssemblyResourceType.Embedded && !r.Name.EndsWith("Plugin.dll"));
+		}
+
+		private static byte[] ReadResource(IAssemblyResource r) {
+			using (var ms = new MemoryStream())
+			using (var s = r.GetResourceStream()) {
+				s.CopyTo(ms);
+				return ms.ToArray();
+			}
+		}
+
+		public JsStatement MakeInitAssemblyCall() {
+			var args = new List<JsExpression> { _linker.CurrentAssemblyExpression, JsExpression.String(_compilation.MainAssembly.AssemblyName) };
+			var includedResources = GetIncludedResources().ToList();
+			if (includedResources.Count > 0)
+				args.Add(JsExpression.ObjectLiteral(includedResources.Select(r => new JsObjectLiteralProperty(r.Name, JsExpression.String(Convert.ToBase64String(ReadResource(r)))))));
+
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), args);
+		}
+
 		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
-			var result = new List<JsStatement>();
-			result.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), _linker.CurrentAssemblyExpression, JsExpression.String(_compilation.MainAssembly.AssemblyName)));
+			var result = new List<JsStatement> { MakeInitAssemblyCall() };
 
 			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
 			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();

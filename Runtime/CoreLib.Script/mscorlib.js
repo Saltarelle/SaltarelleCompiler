@@ -8,10 +8,14 @@ if (typeof(global) === "undefined")
 
 var ss = { __assemblies: {} };
 
-ss.initAssembly = function#? DEBUG assembly##(obj, name) {
+ss.initAssembly = function#? DEBUG assembly##(obj, name, res) {
+	res = res || {};
 	obj.name = name;
 	obj.toString = function() { return this.name; };
 	obj.__types = {};
+	obj.getResourceNames = function() { return Object.keys(res); };
+	obj.getResourceDataBase64 = function(name) { return res[name] || null; };
+	obj.getResourceData = function(name) { var r = res[name]; return r ? ss.dec64(r) : null; };
 	ss.__assemblies[name] = obj;
 };
 ss.initAssembly(ss, 'mscorlib');

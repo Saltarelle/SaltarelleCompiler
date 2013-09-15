@@ -62,5 +62,30 @@ namespace System.Reflection {
 		public object[] GetCustomAttributes(Type attributeType, bool inherit) {
 			return null;
 		}
+
+		[InlineCode("{this}.getResourceNames()")]
+		public string[] GetManifestResourceNames() {
+			return null;
+		}
+
+		[InlineCode("{this}.getResourceDataBase64({name})")]
+		public string GetManifestResourceDataAsBase64(string name) {
+			return null;
+		}
+
+		[InlineCode("{this}.getResourceDataBase64({$System.Script}.getTypeNamespace({type}) + '.' + {name})")]
+		public string GetManifestResourceDataAsBase64(Type type, string name) {
+			return null;
+		}
+
+		[InlineCode("{this}.getResourceData({name})")]
+		public byte[] GetManifestResourceData(string name) {
+			return null;
+		}
+
+		[InlineCode("{this}.getResourceData({$System.Script}.getTypeNamespace({type}) + '.' + {name})")]
+		public byte[] GetManifestResourceData(Type type, string name) {
+			return null;
+		}
 	}
 }

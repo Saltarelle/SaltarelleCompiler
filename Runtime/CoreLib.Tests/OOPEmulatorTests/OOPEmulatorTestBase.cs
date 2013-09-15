@@ -21,13 +21,13 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			public JsExpression CurrentAssemblyExpression { get { return JsExpression.Identifier("$asm"); } }
 		}
 
-		protected string Process(string source, string[] typeNames = null, string entryPoint = null, IErrorReporter errorReporter = null) {
+		protected string Process(string source, string[] typeNames = null, string entryPoint = null, IEnumerable<IAssemblyResource> resources = null, IErrorReporter errorReporter = null) {
 			bool assertNoErrors = errorReporter == null;
 			errorReporter = errorReporter ?? new MockErrorReporter(true);
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
-			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null);;
+			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null, resources);
 			var md = new MetadataImporter(errorReporter, compilation.Compilation, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation, n);
 			var l = new MockLinker();
@@ -51,8 +51,8 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			return string.Join("", rewritten.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
 		}
 
-		protected void AssertCorrect(string source, string expected, string[] typeNames = null, string entryPoint = null) {
-			string actual = Process(source, typeNames, entryPoint);
+		protected void AssertCorrect(string source, string expected, string[] typeNames = null, string entryPoint = null, IEnumerable<IAssemblyResource> resources = null) {
+			string actual = Process(source, typeNames, entryPoint, resources);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:" + Environment.NewLine + expected + Environment.NewLine + Environment.NewLine + "Actual:" + Environment.NewLine + actual);
 		}
 	}
