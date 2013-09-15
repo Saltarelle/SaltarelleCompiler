@@ -30,6 +30,9 @@ namespace CoreLib.Tests.Core {
 	public class DelegateTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class EnvironmentTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class ExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
