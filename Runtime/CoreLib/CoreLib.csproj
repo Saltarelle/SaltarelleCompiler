@@ -98,6 +98,8 @@
     <Compile Include="ArgumentException.cs" />
     <Compile Include="ArgumentOutOfRangeException.cs" />
     <Compile Include="AppDomain.cs" />
+    <Compile Include="Convert.cs" />
+    <Compile Include="Base64FormattingOptions.cs" />
     <Compile Include="NotImplementedException.cs" />
     <Compile Include="DivideByZeroException.cs" />
     <Compile Include="Diagnostics\Debugger.cs" />

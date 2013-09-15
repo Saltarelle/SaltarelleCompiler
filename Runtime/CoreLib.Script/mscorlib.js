@@ -20,6 +20,29 @@ ss.load = function#? DEBUG ss$load##(name) {
 	return ss.__assemblies[name] || require(name);
 };
 
+var enc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', dec;
+ss.enc64 = function#? Debug ss$enc64##(a, b) {
+	var s = '', i;
+	for (i = 0; i < a.length; i += 3) {
+		var c1 = a[i], c2 = a[i+1], c3 = a[i+2];
+		s += (b && i && !(i%57) ? '\n' : '') + enc[c1 >> 2] + enc[((c1 & 3) << 4) | (c2 >> 4)] + (i < a.length - 1 ? enc[((c2 & 15) << 2) | (c3 >> 6)] : '=') + (i < a.length - 2 ? enc[c3 & 63] : '=');
+	}
+	return s;
+};
+
+ss.dec64 = function#? Debug ss$dec64##(s) {
+	s = s.replace(/\s/g, '');
+	dec = dec || (function() { var o = {'=':-1}; for (var i = 0; i < 64; i++) o[enc[i]] = i; return o; })();
+	var a = Array(Math.max(s.length * 3 / 4 - 2, 0)), i;
+	for (i = 0; i < s.length; i += 4) {
+		var j = i * 3 / 4, c1 = dec[s[i]], c2 = dec[s[i+1]], c3 = dec[s[i+2]], c4 = dec[s[i+3]];
+		a[j] = (c1 << 2) | (c2 >> 4);
+		if (c3 >= 0) a[j+1] = ((c2 & 15) << 4) | (c3 >> 2);
+		if (c4 >= 0) a[j+2] = ((c3 & 3) << 6) | c4;
+	}
+	return a;
+};
+
 ss.getAssemblies = function#? DEBUG ss$getAssemblies##() {
 	return Object.keys(ss.__assemblies).map(function(n) { return ss.__assemblies[n]; });
 };

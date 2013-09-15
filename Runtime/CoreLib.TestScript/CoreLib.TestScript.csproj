@@ -62,6 +62,7 @@
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
     <Compile Include="AppDomainTests.cs" />
+    <Compile Include="ConvertTests.cs" />
     <Compile Include="Exceptions\NotImplementedExceptionTests.cs" />
     <Compile Include="Exceptions\DivideByZeroExceptionTests.cs" />
     <Compile Include="Reflection\AssemblyTests.cs" />
