@@ -18,13 +18,10 @@ namespace CoreLib.Tests.Core {
 	public class ArrayTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class StopwatchTests : CoreLibTestBase {}
+	public class ConvertTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class CultureInfoTests : CoreLibTestBase {}
-
-	[TestFixture]
-	public class NumberFormatInfoTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class DateTimeFormatInfoTests : CoreLibTestBase {}
@@ -34,6 +31,9 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class ExceptionTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class GuidTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class IComparableTests : CoreLibTestBase {}
@@ -57,11 +57,14 @@ namespace CoreLib.Tests.Core {
 	public class NullableTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class NumberFormatInfoTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class RandomTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class ScriptTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class GuidTests : CoreLibTestBase {}
+	public class StopwatchTests : CoreLibTestBase {}
 }
