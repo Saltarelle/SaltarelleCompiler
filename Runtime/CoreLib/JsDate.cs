@@ -129,6 +129,16 @@ namespace System {
 			}
 		}
 
+		[InlineCode("{$System.Script}.toUTC({this})")]
+		public JsDate ToUniversalTime() {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.fromUTC({this})")]
+		public JsDate ToLocalTime() {
+			return null;
+		}
+
 		[InlineCode("{$System.Script}.formatDate({this}, {format})")]
 		public string Format(string format) {
 			return null;
