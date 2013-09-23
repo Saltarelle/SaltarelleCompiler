@@ -225,6 +225,11 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void FormatCanUseEscapedBraces() {
+			Assert.AreEqual(string.Format("{{0}}"), "{0}");
+		}
+
+		[Test]
 		public void FromCharCodeWorks() {
 			Assert.AreEqual(string.FromCharCode(), "");
 			Assert.AreEqual(string.FromCharCode('a'), "a");

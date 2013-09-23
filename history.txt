@@ -1,3 +1,4 @@
+Support escaped braces ({{, }}) in format strings (#252)
 Added possibility to embed resources in the generated script (Assembly.GetManifestResourceNames, Assembly.GetManifestResourceData).
 Added Environment.NewLine
 Added methods Convert.FromBase64String and Convert.ToBase64String

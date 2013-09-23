@@ -54,11 +54,13 @@ ss.endsWithString = function#? DEBUG ss$endsWithString##(s, suffix) {
 
 ss._formatString = function#? DEBUG ss$_formatString##(format, values, useLocale) {
 	if (!ss._formatRE) {
-		ss._formatRE = /(\{[^\}^\{]+\})/g;
+		ss._formatRE = /\{\{|\}\}|\{[^\}\{]+\}/g;
 	}
 
 	return format.replace(ss._formatRE,
-						  function(str, m) {
+						  function(m) {
+							  if (m === '{{' || m === '}}')
+								  return m.charAt(0);
 							  var index = parseInt(m.substr(1));
 							  var value = values[index + 1];
 							  if (ss.isNullOrUndefined(value)) {
