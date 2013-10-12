@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Analyzers;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -14,52 +17,149 @@ namespace CoreLib.Plugin {
 	/// This reference importer assumes that root namespaces and types are global objects.
 	/// </summary>
 	public class Linker : ILinker {
-		internal class UsedSymbolsGatherer : RewriterVisitorBase<object> {
-			private readonly HashSet<string> _result = new HashSet<string>();
+		private const string CurrentAssemblyIdentifier = "__current_assembly_417c2c52e265424297fcbcb4fa402581__";	// If this is ever changed, it needs to be synced with Assembly.GetExecutingAssembly
 
-			private UsedSymbolsGatherer() {
+		internal static JsExpression CurrentAssemblyExpressionStatic { get { return JsExpression.Identifier(CurrentAssemblyIdentifier); } }
+
+		public JsExpression CurrentAssemblyExpression { get { return CurrentAssemblyExpressionStatic; } }
+
+		private class IntroducedNamesGatherer : RewriterVisitorBase<IList<string>> {
+			private readonly Dictionary<JsDeclarationScope, IList<string>> _result = new Dictionary<JsDeclarationScope, IList<string>>();
+			private readonly IMetadataImporter _metadataImporter;
+			private readonly IAssembly _mainAssembly;
+			private readonly string _mainModuleName;
+
+			private IntroducedNamesGatherer(IMetadataImporter metadataImporter, IAssembly mainAssembly) {
+				_metadataImporter = metadataImporter;
+				_mainAssembly = mainAssembly;
+				_mainModuleName = MetadataUtils.GetModuleName(_mainAssembly);
 			}
 
-			public override JsVariableDeclaration VisitVariableDeclaration(JsVariableDeclaration declaration, object data) {
-				_result.Add(declaration.Name);
-				return base.VisitVariableDeclaration(declaration, data);
+			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, IList<string> data) {
+				return base.VisitFunctionDefinitionExpression(expression, _result[expression] = new List<string>());
 			}
 
-			public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, object data) {
-				_result.Add(statement.LoopVariableName);
-				return base.VisitForEachInStatement(statement, data);
+			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, IList<string> data) {
+				return base.VisitFunctionStatement(statement, _result[statement] = new List<string>());
 			}
 
-			public override JsCatchClause VisitCatchClause(JsCatchClause clause, object data) {
-				_result.Add(clause.Identifier);
-				return base.VisitCatchClause(clause, data);
+			public override JsCatchClause VisitCatchClause(JsCatchClause clause, IList<string> data) {
+				return base.VisitCatchClause(clause, _result[clause] = new List<string>());
 			}
 
-			public override JsStatement VisitFunctionStatement(JsFunctionStatement statement, object data) {
-				_result.Add(statement.Name);
-				foreach (var p in statement.ParameterNames)
-					_result.Add(p);
-				return base.VisitFunctionStatement(statement, data);
+			public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, IList<string> data) {
+				var sem = _metadataImporter.GetTypeSemantics(expression.Type);
+				if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
+					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
+
+				if (!IsLocalReference(expression.Type, _mainAssembly, _mainModuleName)) {	// Types in our own assembly will not clash with anything because we use the type variable (or the 'exports' object in case of global methods).
+					string moduleName = GetTypeModuleName(expression.Type);
+					if (moduleName == null) {	// Imported modules will never clash with anything because we handle that elsewhere
+						var parts = sem.Name.Split('.');
+						data.Add(parts[0]);
+					}
+				}
+
+				return expression;
 			}
 
-			public override JsExpression VisitIdentifierExpression(JsIdentifierExpression expression, object data) {
-				_result.Add(expression.Name);
-				return base.VisitIdentifierExpression(expression, data);
+			public override JsExpression VisitMemberAccessExpression(JsMemberAccessExpression expression, IList<string> data) {
+				if (expression.Target is JsTypeReferenceExpression) {
+					var type = ((JsTypeReferenceExpression)expression.Target).Type;
+					var sem = _metadataImporter.GetTypeSemantics(type);
+					if (string.IsNullOrEmpty(sem.Name) && GetTypeModuleName(type) == null)	// Handle types marked with [GlobalMethods] that are not from modules.
+						data.Add(expression.MemberName);
+				}
+				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			public override JsExpression VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, object data) {
-				if (expression.Name != null)
-					_result.Add(expression.Name);
-				foreach (var p in expression.ParameterNames)
-					_result.Add(p);
-				return base.VisitFunctionDefinitionExpression(expression, data);
+			public static IDictionary<JsDeclarationScope, IList<string>> Analyze(IEnumerable<JsStatement> statements, IMetadataImporter metadataImporter, IAssembly mainAssembly) {
+				var obj = new IntroducedNamesGatherer(metadataImporter, mainAssembly);
+				var root = new List<string>();
+				obj._result[JsDeclarationScope.Root] = root;
+				foreach (var statement in statements)
+					obj.VisitStatement(statement, root);
+				return obj._result;
+			}
+		}
+
+		private class RenameMapBuilder {
+			private readonly Dictionary<JsDeclarationScope, HashSet<string>> _locals;
+			private readonly Dictionary<JsDeclarationScope, HashSet<string>> _globals;
+			private readonly IDictionary<JsDeclarationScope, IList<string>> _introducedNames;
+			private readonly Dictionary<JsDeclarationScope, HashSet<string>> _allVisibleLocals = new Dictionary<JsDeclarationScope, HashSet<string>>();
+			private readonly Dictionary<JsDeclarationScope, HashSet<string>> _usedNames = new Dictionary<JsDeclarationScope, HashSet<string>>();
+			private readonly Dictionary<JsDeclarationScope, IDictionary<string, string>> _result = new Dictionary<JsDeclarationScope, IDictionary<string, string>>();
+			private readonly IDictionary<JsDeclarationScope, DeclarationScopeHierarchy> _hierarchy;
+			private readonly INamer _namer;
+
+			private RenameMapBuilder(IList<JsStatement> statements, Dictionary<JsDeclarationScope, HashSet<string>> locals, Dictionary<JsDeclarationScope, HashSet<string>> globals, IDictionary<JsDeclarationScope, IList<string>> introducedNames, INamer namer) {
+				_locals = locals;
+				_globals = globals;
+				_introducedNames = introducedNames;
+				_namer = namer;
+				_hierarchy = DeclarationScopeNestingAnalyzer.Analyze(statements);
+				foreach (var s in _hierarchy.Keys)
+					_result[s] = new Dictionary<string, string>();
+				FillAllVisibleLocals(JsDeclarationScope.Root);
+				FillUsedNames(JsDeclarationScope.Root);
+				Analyze(JsDeclarationScope.Root);
 			}
 
-			public static HashSet<string> Analyze(IEnumerable<JsStatement> statements) {
-				var o = new UsedSymbolsGatherer();
-				foreach (var s in statements)
-					o.VisitStatement(s, null);
-				return o._result;
+			private void FillAllVisibleLocals(JsDeclarationScope scope) {
+				var hier = _hierarchy[scope];
+				_allVisibleLocals[scope] = new HashSet<string>(hier.ParentScope != null ? _allVisibleLocals[hier.ParentScope] : (IEnumerable<string>)new string[0]);
+				_allVisibleLocals[scope].UnionWith(_locals[scope]);
+				foreach (var c in hier.ChildScopes)
+					FillAllVisibleLocals(c);
+			}
+
+			private void FillUsedNames(JsDeclarationScope scope) {
+				var hier = _hierarchy[scope];
+				var set = new HashSet<string>();
+				foreach (var c in hier.ChildScopes) {
+					FillUsedNames(c);
+					set.UnionWith(_usedNames[c]);
+				}
+				set.UnionWith(_locals[scope]);
+				set.UnionWith(_globals[scope]);
+				_usedNames[scope] = set;
+			}
+
+			private JsDeclarationScope FindDeclaringScope(string name, JsDeclarationScope scope) {
+				for (;;) {
+					if (_locals[scope].Contains(name))
+						return scope;
+					scope = _hierarchy[scope].ParentScope;
+				}
+			}
+
+			private string FindNewName(string name, JsDeclarationScope scope) {
+				var usedNames = _usedNames[scope];
+				return _namer.GetVariableName(name, usedNames);
+			}
+
+			private void AddRename(string oldName, string newName, JsDeclarationScope scope) {
+				_result[scope][oldName] = newName;
+				_usedNames[scope].Add(newName);
+				foreach (var c in _hierarchy[scope].ChildScopes)
+					AddRename(oldName, newName, c);
+			}
+
+			private void Analyze(JsDeclarationScope scope) {
+				var allVisibleLocals = _allVisibleLocals[scope];
+				var introducedNames = _introducedNames[scope];
+				foreach (var toRename in introducedNames.Where(allVisibleLocals.Contains)) {
+					var declaringScope = FindDeclaringScope(toRename, scope);
+					var newName = FindNewName(toRename, declaringScope);
+					AddRename(toRename, newName, declaringScope);
+				}
+				foreach (var c in _hierarchy[scope].ChildScopes)
+					Analyze(c);
+			}
+
+			public static IDictionary<JsDeclarationScope, IDictionary<string, string>> BuildMap(IList<JsStatement> statements, Dictionary<JsDeclarationScope, HashSet<string>> locals, Dictionary<JsDeclarationScope, HashSet<string>> globals, IDictionary<JsDeclarationScope, IList<string>> introducedNames, INamer namer) {
+				return new RenameMapBuilder(statements, locals, globals, introducedNames, namer)._result;
 			}
 		}
 
@@ -69,26 +169,9 @@ namespace CoreLib.Plugin {
 			private readonly IAssembly _mainAssembly;
 			private readonly HashSet<string> _usedSymbols;
 			private readonly string _mainModuleName;
+			private readonly JsExpression _currentAssembly;
 
 			private readonly Dictionary<string, string> _moduleAliases;
-
-			private readonly Dictionary<ITypeDefinition, string> _typeModuleNames = new Dictionary<ITypeDefinition, string>();
-			private string GetTypeModuleName(ITypeDefinition type) {
-				string result;
-				if (!_typeModuleNames.TryGetValue(type, out result)) {
-					_typeModuleNames[type] = result = MetadataUtils.GetModuleName(type);
-				}
-				return result;
-			}
-
-			private bool IsLocalReference(ITypeDefinition type) {
-				if (MetadataUtils.IsImported(type))	// Imported types must always be referenced the hard way...
-					return false;
-				if (!type.ParentAssembly.Equals(_mainAssembly))	// ...so must types from other assemblies...
-					return false;
-				var typeModule = GetTypeModuleName(type);
-				return string.IsNullOrEmpty(_mainModuleName) && string.IsNullOrEmpty(typeModule) || _mainModuleName == typeModule;	// ...and types with a [ModuleName] that differs from that of the assembly.
-			}
 
 			private string GetModuleAlias(string moduleName) {
 				string result;
@@ -115,7 +198,7 @@ namespace CoreLib.Plugin {
 				if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
 					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
 
-				if (IsLocalReference(expression.Type)) {
+				if (IsLocalReference(expression.Type, _mainAssembly, _mainModuleName)) {
 					if (string.IsNullOrEmpty(sem.Name))
 						return JsExpression.Identifier("exports");	// Referencing a [GlobalMethods] type. Since it was not handled in the member expression, we must be in a module, which means that the function should exist on the exports object.
 
@@ -151,19 +234,44 @@ namespace CoreLib.Plugin {
 				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols) {
+			public override JsExpression VisitIdentifierExpression(JsIdentifierExpression expression, object data) {
+				if (expression.Name == CurrentAssemblyIdentifier)
+					return _currentAssembly;
+				else
+					return expression;
+			}
+
+			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAssembly mainAssembly, HashSet<string> usedSymbols, JsExpression currentAssembly) {
 				_metadataImporter = metadataImporter;
 				_namer            = namer;
 				_mainModuleName   = MetadataUtils.GetModuleName(mainAssembly);
 				_mainAssembly     = mainAssembly;
 				_usedSymbols      = usedSymbols;
+				_currentAssembly  = currentAssembly;
 				_moduleAliases    = new Dictionary<string, string>();
 			}
 
 			public static IList<JsStatement> Process(IMetadataImporter metadataImporter, INamer namer, ICompilation compilation, IList<JsStatement> statements) {
-				var usedSymbols = UsedSymbolsGatherer.Analyze(statements);
-				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols);
-				var body = statements.Select(s => importer.VisitStatement(s, null)).ToList();
+				var locals = LocalVariableGatherer.Analyze(statements);
+				var globals = ImplicitGlobalsGatherer.Analyze(statements, locals, reportGlobalsAsUsedInAllParentScopes: false);
+				var introducedNames = IntroducedNamesGatherer.Analyze(statements, metadataImporter, compilation.MainAssembly);
+				var renameMap = RenameMapBuilder.BuildMap(statements, locals, globals, introducedNames, namer);
+
+				var usedSymbols = new HashSet<string>();
+				foreach (var sym in         locals.Values.SelectMany(v => v)            // Declared locals.
+				                    .Concat(globals.Values.SelectMany(v => v))          // Implicitly declared globals.
+				                    .Concat(renameMap.Values.SelectMany(v => v.Values)) // Locals created during preparing rename.
+				                    .Concat(introducedNames.Values.SelectMany(v => v))  // All global types used.
+				) {
+					usedSymbols.Add(sym);
+				}
+
+				statements = IdentifierRenamer.Process(statements, renameMap).ToList();
+
+				bool isModule = MetadataUtils.GetModuleName(compilation.MainAssembly) != null || MetadataUtils.IsAsyncModule(compilation.MainAssembly);
+				var importer = new ImportVisitor(metadataImporter, namer, compilation.MainAssembly, usedSymbols, JsExpression.Identifier(isModule ? "exports" : "$asm"));
+
+				var body = (!isModule ? new[] { JsStatement.Var("$asm", JsExpression.ObjectLiteral()) } : new JsStatement[0]).Concat(statements.Select(s => importer.VisitStatement(s, null))).ToList();
 				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly));
 
 				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly)) {
@@ -205,6 +313,25 @@ namespace CoreLib.Plugin {
 				return body;
 			}
 		}
+
+		private static readonly Dictionary<ITypeDefinition, string> _typeModuleNames = new Dictionary<ITypeDefinition, string>();
+		private static string GetTypeModuleName(ITypeDefinition type) {
+			string result;
+			if (!_typeModuleNames.TryGetValue(type, out result)) {
+				_typeModuleNames[type] = result = MetadataUtils.GetModuleName(type);
+			}
+			return result;
+		}
+
+		private static bool IsLocalReference(ITypeDefinition type, IAssembly mainAssembly, string mainModuleName) {
+			if (MetadataUtils.IsImported(type))	// Imported types must always be referenced the hard way...
+				return false;
+			if (!type.ParentAssembly.Equals(mainAssembly))	// ...so must types from other assemblies...
+				return false;
+			var typeModule = GetTypeModuleName(type);
+			return string.IsNullOrEmpty(mainModuleName) && string.IsNullOrEmpty(typeModule) || mainModuleName == typeModule;	// ...and types with a [ModuleName] that differs from that of the assembly.
+		}
+
 
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;

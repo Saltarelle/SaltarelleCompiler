@@ -6,4 +6,4 @@ var ss_DivideByZeroException = function#? DEBUG DivideByZeroException$##(message
 };
 ss_DivideByZeroException.__typeName = 'ss.DivideByZeroException';
 ss.DivideByZeroException = ss_DivideByZeroException;
-ss.initClass(ss_DivideByZeroException, {}, ss_Exception);
+ss.initClass(ss_DivideByZeroException, ss, {}, ss_Exception);

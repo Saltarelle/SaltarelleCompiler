@@ -7,7 +7,7 @@ var ss_Lazy = function#? DEBUG Lazy$##(valueFactory) {
 };
 ss_Lazy.__typeName = 'ss.Lazy';
 ss.Lazy = ss_Lazy;
-ss.initClass(ss_Lazy, {
+ss.initClass(ss_Lazy, ss, {
 	value: function#? DEBUG Lazy$value##() {
 		if (!this.isValueCreated) {
 			this._value = this._valueFactory();

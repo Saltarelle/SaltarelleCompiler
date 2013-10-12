@@ -165,7 +165,7 @@ ss_Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
 
 ss_Task.__typeName = 'ss.Task';
 ss.Task = ss_Task;
-ss.initClass(ss_Task, {
+ss.initClass(ss_Task, ss, {
 	continueWith: function#? DEBUG Task$continueWith##(continuation) {
 		var tcs = new ss_TaskCompletionSource();
 		var _this = this;
@@ -261,4 +261,4 @@ var ss_TaskStatus = function() {
 };
 ss_TaskStatus.__typeName = 'ss.TaskStatus';
 ss.TaskStatus = ss_TaskStatus;
-ss.initEnum(ss_TaskStatus, { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 });
+ss.initEnum(ss_TaskStatus, ss, { created: 0, running: 3, ranToCompletion: 5, canceled: 6, faulted: 7 });

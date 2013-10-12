@@ -104,6 +104,39 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void UtcNowWorks() {
+			var utc   = JsDate.UtcNow;
+			var local = JsDate.Now;
+			Assert.IsTrue(Math.Abs(new JsDate(local.GetUtcFullYear(), local.GetUtcMonth(), local.GetUtcDate(), local.GetUtcHours(), local.GetUtcMinutes(), local.GetUtcSeconds(), local.GetUtcMilliseconds()) - utc) < 1000);
+		}
+
+		[Test]
+		public void ToUniversalWorks() {
+			var dt = new JsDate(2011, 7, 12, 13, 42, 56, 345);
+			var utc = dt.ToUniversalTime();
+			Assert.AreEqual(dt.GetUtcFullYear(), utc.GetFullYear());
+			Assert.AreEqual(dt.GetUtcMonth(), utc.GetMonth());
+			Assert.AreEqual(dt.GetUtcDate(), utc.GetDate());
+			Assert.AreEqual(dt.GetUtcHours(), utc.GetHours());
+			Assert.AreEqual(dt.GetUtcMinutes(), utc.GetMinutes());
+			Assert.AreEqual(dt.GetUtcSeconds(), utc.GetSeconds());
+			Assert.AreEqual(dt.GetUtcMilliseconds(), utc.GetMilliseconds());
+		}
+
+		[Test]
+		public void ToLocalWorks() {
+			var utc = new JsDate(2011, 7, 12, 13, 42, 56, 345);
+			var dt = utc.ToLocalTime();
+			Assert.AreEqual(dt.GetUtcFullYear(), utc.GetFullYear());
+			Assert.AreEqual(dt.GetUtcMonth(), utc.GetMonth());
+			Assert.AreEqual(dt.GetUtcDate(), utc.GetDate());
+			Assert.AreEqual(dt.GetUtcHours(), utc.GetHours());
+			Assert.AreEqual(dt.GetUtcMinutes(), utc.GetMinutes());
+			Assert.AreEqual(dt.GetUtcSeconds(), utc.GetSeconds());
+			Assert.AreEqual(dt.GetUtcMilliseconds(), utc.GetMilliseconds());
+		}
+
+		[Test]
 		public void TodayWorks() {
 			var dt = JsDate.Today;
 			Assert.IsTrue(dt.GetFullYear() > 2011);

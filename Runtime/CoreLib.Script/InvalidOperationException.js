@@ -6,4 +6,4 @@ var ss_InvalidOperationException = function#? DEBUG InvalidOperationException$##
 };
 ss_InvalidOperationException.__typeName = 'ss.InvalidOperationException';
 ss.InvalidOperationException = ss_InvalidOperationException;
-ss.initClass(ss_InvalidOperationException, {}, ss_Exception);
+ss.initClass(ss_InvalidOperationException, ss, {}, ss_Exception);

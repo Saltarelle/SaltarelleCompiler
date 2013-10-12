@@ -8,7 +8,7 @@ var ss_PromiseException = function#? DEBUG PromiseException##(args, message, inn
 
 ss_PromiseException.__typeName = 'ss.PromiseException';
 ss.PromiseException = ss_PromiseException;
-ss.initClass(ss_PromiseException, {
+ss.initClass(ss_PromiseException, ss, {
 	get_arguments: function#? DEBUG PromiseException$get_arguments##() {
 		return this._arguments;
 	}

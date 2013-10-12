@@ -165,10 +165,10 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 
 ss_Dictionary$2.__typeName = 'ss.Dictionary$2';
 ss.Dictionary$2 = ss_Dictionary$2;
-ss.initGenericClass(ss_Dictionary$2, 2);
+ss.initGenericClass(ss_Dictionary$2, ss, 2);
 ss_$DictionaryCollection.__typeName = 'ss.$DictionaryCollection';
 ss.$DictionaryCollection = ss_$DictionaryCollection;
-ss.initClass(ss_$DictionaryCollection, {
+ss.initClass(ss_$DictionaryCollection, ss, {
 	get_count: function#? DEBUG $DictionaryCollection$get_count##() {
 		return this._dict.get_count();
 	},

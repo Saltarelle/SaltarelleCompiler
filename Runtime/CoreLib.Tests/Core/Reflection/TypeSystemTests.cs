@@ -174,5 +174,39 @@ public class C {
 @"			var b = !!d;
 ");
 		}
+
+		[Test]
+		public void DefaultValueOfNullable() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+
+public class C {
+	private void M() {
+		// BEGIN
+		decimal? v1 = default(decimal?);
+		decimal? v2 = null;
+		// END
+	}
+}",
+@"			var v1 = null;
+			var v2 = null;
+");
+		}
+
+		[Test]
+		public void DefaultValueOfStruct() {
+			SourceVerifier.AssertSourceCorrect(@"
+using System;
+
+public class C {
+	private void M() {
+		// BEGIN
+		var v = default(TimeSpan);
+		// END
+	}
+}",
+@"			var v = ss.getDefaultValue(ss.TimeSpan);
+");
+		}
 	}
 }

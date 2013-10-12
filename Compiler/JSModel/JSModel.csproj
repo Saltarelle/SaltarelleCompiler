@@ -46,10 +46,16 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="Analyzers\DeclarationScopeHierarchy.cs" />
     <Compile Include="CodeBuilder.cs" />
+    <Compile Include="Analyzers\DeclarationScopeNestingAnalyzer.cs" />
     <Compile Include="Expressions\JsThisExpression.cs" />
     <Compile Include="Expressions\JsTypeReferenceException.cs" />
     <Compile Include="ExtensionMethods\ExtensionMethods.cs" />
+    <Compile Include="IdentifierRenamer.cs" />
+    <Compile Include="Analyzers\ImplicitGlobalsGatherer.cs" />
+    <Compile Include="JsDeclarationScope.cs" />
+    <Compile Include="Analyzers\LocalVariableGatherer.cs" />
     <Compile Include="Minification\Minifier.cs" />
     <Compile Include="StateMachineRewrite\ContainsBreakVisitor.cs" />
     <Compile Include="StateMachineRewrite\UsesThisVisitor.cs" />

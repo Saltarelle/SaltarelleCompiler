@@ -35,7 +35,8 @@ public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
@@ -57,7 +58,7 @@ $MyClass.s2 = function(g) {
 	g = 0;
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {
+{Script}.initClass($MyClass, $asm, {
 	m1: function(d) {
 		d = 0;
 	},
@@ -93,7 +94,8 @@ public class MyClass<T> : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
@@ -115,7 +117,7 @@ $MyClass.s2 = function(g) {
 	g = 0;
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {
+{Script}.initClass($MyClass, $asm, {
 	m1: function(d) {
 		d = 0;
 	},
@@ -148,7 +150,8 @@ public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
@@ -170,7 +173,7 @@ $MyClass.s2 = function(g) {
 	g = 0;
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {}, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
+{Script}.initClass($MyClass, $asm, {}, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 $MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
 var h = 0;
 var i = 0;
@@ -190,7 +193,8 @@ public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	{TheBaseClass}.call(this);
@@ -198,7 +202,7 @@ var $MyClass = function(x) {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {}, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
+{Script}.initClass($MyClass, $asm, {}, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -214,14 +218,15 @@ public class MyClass : Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {}, null, [{Interface1}, {Interface2}, {Interface3}]);
+{Script}.initClass($MyClass, $asm, {}, null, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "MyClass" });
 		}
 
@@ -235,7 +240,8 @@ public class MyClass : TheBaseClass {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	{TheBaseClass}.call(this);
@@ -243,7 +249,7 @@ var $MyClass = function(x) {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {}, {TheBaseClass});
+{Script}.initClass($MyClass, $asm, {}, {TheBaseClass});
 ", new[] { "MyClass" });
 		}
 
@@ -253,14 +259,15 @@ global.MyClass = $MyClass;
 @"public class MyClass {
 	public MyClass(int x) { x = 0; }
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {});
+{Script}.initClass($MyClass, $asm, {});
 ", new[] { "MyClass" });
 		}
 
@@ -274,6 +281,7 @@ global.MyClass = $MyClass;
 }",
 @"global.SomeNamespace = global.SomeNamespace || {};
 global.SomeNamespace.InnerNamespace = global.SomeNamespace.InnerNamespace || {};
+{Script}.initAssembly($asm, 'x');
 ////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
 var $SomeNamespace_InnerNamespace_MyClass = function(x) {
@@ -281,7 +289,7 @@ var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 };
 $SomeNamespace_InnerNamespace_MyClass.__typeName = 'SomeNamespace.InnerNamespace.MyClass';
 global.SomeNamespace.InnerNamespace.MyClass = $SomeNamespace_InnerNamespace_MyClass;
-{Script}.initClass($SomeNamespace_InnerNamespace_MyClass, {});
+{Script}.initClass($SomeNamespace_InnerNamespace_MyClass, $asm, {});
 ");
 		}
 
@@ -296,13 +304,14 @@ public interface IMyInterface : Interface1, Interface2, Interface3 {
 	public void M2();
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface = function() {
 };
 $IMyInterface.__typeName = 'IMyInterface';
 global.IMyInterface = $IMyInterface;
-{Script}.initInterface($IMyInterface, { m1: null, m2: null }, [{Interface1}, {Interface2}, {Interface3}]);
+{Script}.initInterface($IMyInterface, $asm, { m1: null, m2: null }, [{Interface1}, {Interface2}, {Interface3}]);
 ", new[] { "IMyInterface" });
 		}
 
@@ -315,7 +324,8 @@ public class MyClass {
 	public void M1() {}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -323,7 +333,7 @@ $MyClass.__typeName = 'MyClass';
 $MyClass.someName = function(x) {
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {
+{Script}.initClass($MyClass, $asm, {
 	m1: function() {
 	}
 });
@@ -353,7 +363,8 @@ public class MyClass<T1, T2> : TheBaseClass<T1>, Interface1, Interface2<T2, int>
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass$2 = function(T1, T2) {
 	var $type = function() {
@@ -392,7 +403,7 @@ var $MyClass$2 = function(T1, T2) {
 	return $type;
 };
 $MyClass$2.__typeName = 'MyClass$2';
-{Script}.initGenericClass($MyClass$2, 2);
+{Script}.initGenericClass($MyClass$2, $asm, 2);
 global.MyClass$2 = $MyClass$2;
 ", new[] { "MyClass" });
 		}
@@ -408,7 +419,8 @@ public interface IMyInterface<T1, T2> : Interface1, Interface2<T2, int>, Interfa
 	void M2(int y);
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface$2 = function(T1, T2) {
 	var $type = function() {
@@ -419,7 +431,7 @@ var $IMyInterface$2 = function(T1, T2) {
 	return $type;
 };
 $IMyInterface$2.__typeName = 'IMyInterface$2';
-{Script}.initGenericInterface($IMyInterface$2, 2);
+{Script}.initGenericInterface($IMyInterface$2, $asm, 2);
 global.IMyInterface$2 = $IMyInterface$2;
 ", new[] { "IMyInterface" });
 		}
@@ -433,13 +445,14 @@ global.IMyInterface$2 = $IMyInterface$2;
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {
+{Script}.initClass($MyClass, $asm, {
 	m1: function(T1, T2) {
 		return function(a) {
 			var x = 0;
@@ -459,13 +472,14 @@ global.MyClass = $MyClass;
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {
+{Script}.initClass($MyClass, $asm, {
 	m1: function(a) {
 		var x = 0;
 	}
@@ -482,7 +496,8 @@ global.MyClass = $MyClass;
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -493,7 +508,7 @@ $MyClass.m1 = function(T1, T2) {
 	};
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {});
+{Script}.initClass($MyClass, $asm, {});
 ", new[] { "MyClass" });
 		}
 
@@ -507,7 +522,8 @@ global.MyClass = $MyClass;
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -516,7 +532,7 @@ $MyClass.m1 = function(a) {
 	var x = 0;
 };
 global.MyClass = $MyClass;
-{Script}.initClass($MyClass, {});
+{Script}.initClass($MyClass, $asm, {});
 ", new[] { "MyClass" });
 		}
 
@@ -532,7 +548,8 @@ public static class MyClass {
 		int d = 0;
 	}
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 global.s1 = function(a) {
 	a = 0;
@@ -558,7 +575,8 @@ public static class MyClass {
 		int d = 0;
 	}
 }",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 exports.s1 = function(a) {
 	a = 0;
@@ -581,7 +599,8 @@ public static class MyClass {
 	public const object Field3 = null;
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = { field1: 'the value', field2: 42, field3: null };
 global.MyClass = $MyClass;
@@ -596,7 +615,8 @@ public static class MyClass {
 	public static int Method1(int x) { x = 0; }
 	public static int Method2(int y) { y = 0; }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 $.fn.method1 = function(x) {
 	x = 0;
@@ -623,7 +643,8 @@ internal interface GenericInterface<T1> {}
 	public const object Field3 = null;
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // GenericClass
 var $$GenericClass$1 = function(T1) {
 	var $type = function() {
@@ -636,7 +657,7 @@ var $$GenericClass$1 = function(T1) {
 	return $type;
 };
 $$GenericClass$1.__typeName = '$GenericClass$1';
-{Script}.initGenericClass($$GenericClass$1, 1);
+{Script}.initGenericClass($$GenericClass$1, $asm, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
 var $$GenericInterface$1 = function(T1) {
@@ -648,7 +669,7 @@ var $$GenericInterface$1 = function(T1) {
 	return $type;
 };
 $$GenericInterface$1.__typeName = '$GenericInterface$1';
-{Script}.initGenericInterface($$GenericInterface$1, 1);
+{Script}.initGenericInterface($$GenericInterface$1, $asm, 1);
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
 var $$Interface = function() {
@@ -667,9 +688,9 @@ $$Outer$Inner.__typeName = '$Outer$Inner';
 ////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
-{Script}.initInterface($$Interface, {});
-{Script}.initClass($$Outer, {});
-{Script}.initClass($$Outer$Inner, {});
+{Script}.initInterface($$Interface, $asm, {});
+{Script}.initClass($$Outer, $asm, {});
+{Script}.initClass($$Outer$Inner, $asm, {});
 ");
 		}
 
@@ -678,13 +699,14 @@ var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
 			AssertCorrect(
 @"public class C { abstract void M(); }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // C
 var $C = function() {
 };
 $C.__typeName = 'C';
 global.C = $C;
-{Script}.initClass($C, { $m: null });
+{Script}.initClass($C, $asm, { $m: null });
 ");
 		}
 
@@ -702,7 +724,8 @@ public interface GenericInterface<T1> {}
 	public const object Field3 = null;
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // GenericClass
 var $GenericClass$1 = function(T1) {
 	var $type = function() {
@@ -715,7 +738,7 @@ var $GenericClass$1 = function(T1) {
 	return $type;
 };
 $GenericClass$1.__typeName = 'GenericClass$1';
-{Script}.initGenericClass($GenericClass$1, 1);
+{Script}.initGenericClass($GenericClass$1, $asm, 1);
 exports.GenericClass$1 = $GenericClass$1;
 ////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
@@ -728,7 +751,7 @@ var $GenericInterface$1 = function(T1) {
 	return $type;
 };
 $GenericInterface$1.__typeName = 'GenericInterface$1';
-{Script}.initGenericInterface($GenericInterface$1, 1);
+{Script}.initGenericInterface($GenericInterface$1, $asm, 1);
 exports.GenericInterface$1 = $GenericInterface$1;
 ////////////////////////////////////////////////////////////////////////////////
 // Interface
@@ -746,8 +769,8 @@ exports.NormalClass = $NormalClass;
 // ResourceClass
 var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
 exports.ResourceClass = $ResourceClass;
-{Script}.initInterface($Interface, {});
-{Script}.initClass($NormalClass, {});
+{Script}.initInterface($Interface, $asm, {});
+{Script}.initClass($NormalClass, $asm, {});
 ");
 		}
 
@@ -758,7 +781,8 @@ using System;
 [Serializable] public class B {}
 [Serializable] public class D : B {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
@@ -771,7 +795,7 @@ $D.$ctor = function() {
 	return $this;
 };
 global.D = $D;
-{Script}.initClass($D, {}, {B});
+{Script}.initClass($D, $asm, {}, {B});
 ", new[] { "D" });
 		}
 
@@ -783,7 +807,8 @@ using System;
 [Serializable] public interface I2 : I1 {}
 [Serializable] public class C : I1 {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // C
 var $C = function() {
 };
@@ -808,9 +833,9 @@ var $I2 = function() {
 };
 $I2.__typeName = 'I2';
 global.I2 = $I2;
-{Script}.initInterface($I1, {});
-{Script}.initClass($C, {}, null, [{I1}]);
-{Script}.initInterface($I2, {}, [{I1}]);
+{Script}.initInterface($I1, $asm, {});
+{Script}.initClass($C, $asm, {}, null, [{I1}]);
+{Script}.initInterface($I2, $asm, {}, [{I1}]);
 ");
 		}
 
@@ -821,14 +846,15 @@ using System.Runtime.CompilerServices;
 [Imported] public class B {}
 public class D : B {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{B}.call(this);
 };
 $D.__typeName = 'D';
 global.D = $D;
-{Script}.initClass($D, {}, {B});
+{Script}.initClass($D, $asm, {}, {B});
 ", new [] { "D", "I3" });
 		}
 
@@ -841,7 +867,8 @@ public interface I2 {}
 public interface I3 : I1, I2 {}
 public class D : I1, I2 {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
@@ -853,8 +880,8 @@ var $I3 = function() {
 };
 $I3.__typeName = 'I3';
 global.I3 = $I3;
-{Script}.initClass($D, {}, null, [{I2}]);
-{Script}.initInterface($I3, {}, [{I2}]);
+{Script}.initClass($D, $asm, {}, null, [{I2}]);
+{Script}.initInterface($I3, $asm, {}, [{I2}]);
 ", new [] { "D", "I3" });
 		}
 
@@ -867,7 +894,8 @@ public interface I2 {}
 public interface I3 : I1, I2 {}
 public class D : I1, I2 {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
@@ -879,8 +907,8 @@ var $I3 = function() {
 };
 $I3.__typeName = 'I3';
 global.I3 = $I3;
-{Script}.initClass($D, {}, null, [{I1}, {I2}]);
-{Script}.initInterface($I3, {}, [{I1}, {I2}]);
+{Script}.initClass($D, $asm, {}, null, [{I1}, {I2}]);
+{Script}.initInterface($I3, $asm, {}, [{I1}, {I2}]);
 ", new[] { "D", "I3" });
 		}
 
@@ -894,7 +922,8 @@ public class B<T1, T2> {}
 public class D : B<C, int>, I<string, C> {}
 public interface I2 : I<C, int> {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{Script}.makeGenericType({B}, [{Object}, {Int32}]).call(this);
@@ -907,8 +936,8 @@ var $I2 = function() {
 };
 $I2.__typeName = 'I2';
 global.I2 = $I2;
-{Script}.initClass($D, {}, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
-{Script}.initInterface($I2, {}, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
+{Script}.initClass($D, $asm, {}, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
+{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
 
@@ -922,7 +951,8 @@ public class B<T1, T2> {}
 public class D : B<C, int>, I<string, C> {}
 public interface I2 : I<C, int> {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{Script}.makeGenericType({B}, [{C}, {Int32}]).call(this);
@@ -935,8 +965,8 @@ var $I2 = function() {
 };
 $I2.__typeName = 'I2';
 global.I2 = $I2;
-{Script}.initClass($D, {}, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
-{Script}.initInterface($I2, {}, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
+{Script}.initClass($D, $asm, {}, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
+{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
 ", new[] { "D", "I2" });
 		}
 
@@ -972,7 +1002,8 @@ public class MyClass<T1, T2> {
 	}
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass$2 = function(T1, T2) {
 	var $type = function() {
@@ -992,7 +1023,7 @@ var $MyClass$2 = function(T1, T2) {
 	return $type;
 };
 $MyClass$2.__typeName = 'MyClass$2';
-{Script}.initGenericClass($MyClass$2, 2);
+{Script}.initGenericClass($MyClass$2, $asm, 2);
 global.MyClass$2 = $MyClass$2;
 ", new[] { "MyClass" });
 		}
@@ -1003,13 +1034,14 @@ global.MyClass$2 = $MyClass$2;
 @"[System.Runtime.CompilerServices.Imported, System.Serializable] public class B {}
 public class D : B {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
 $D.__typeName = 'D';
 global.D = $D;
-{Script}.initClass($D, {});
+{Script}.initClass($D, $asm, {});
 ", new[] { "D" });
 		}
 
@@ -1023,7 +1055,8 @@ using System.Runtime.CompilerServices;
 [Serializable] public interface I3 : I1, I2 {}
 public class C : I1, I2 {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // C
 var $C = function() {
 };
@@ -1035,8 +1068,8 @@ var $I3 = function() {
 };
 $I3.__typeName = 'I3';
 global.I3 = $I3;
-{Script}.initClass($C, {}, null, [{I2}]);
-{Script}.initInterface($I3, {}, [{I2}]);
+{Script}.initClass($C, $asm, {}, null, [{I2}]);
+{Script}.initInterface($I3, $asm, {}, [{I2}]);
 ", new[] { "C", "I3" });
 		}
 
@@ -1048,7 +1081,8 @@ using System.Runtime.CompilerServices;
 [Serializable] public class C {}
 [Serializable(TypeCheckCode = ""{this}.X"")] public class D : B {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
@@ -1064,7 +1098,7 @@ $D.isInstanceOfType = function(obj) {
 	return obj.X;
 };
 global.D = $D;
-{Script}.initClass($D, {});
+{Script}.initClass($D, $asm, {});
 ", new[] { "D" });
 		}
 
@@ -1076,7 +1110,8 @@ using System.Runtime.CompilerServices;
 [Serializable] public class C {}
 [Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : B {}
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // D
 var $D$1 = function(T) {
 	var $type = function() {
@@ -1099,7 +1134,7 @@ var $D$1 = function(T) {
 	return $type;
 };
 $D$1.__typeName = 'D$1';
-{Script}.initGenericClass($D$1, 1);
+{Script}.initGenericClass($D$1, $asm, 1);
 global.D$1 = $D$1;
 ", new[] { "D" });
 		}
@@ -1142,7 +1177,8 @@ global.D$1 = $D$1;
 	void M2(int y);
 }
 ",
-@"////////////////////////////////////////////////////////////////////////////////
+@"{Script}.initAssembly($asm, 'x');
+////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface$3 = function(T1, T2, T3) {
 	var $type = function() {
@@ -1154,7 +1190,7 @@ var $IMyInterface$3 = function(T1, T2, T3) {
 	return $type;
 };
 $IMyInterface$3.__typeName = 'IMyInterface$3';
-{Script}.initGenericInterface($IMyInterface$3, 3);
+{Script}.initGenericInterface($IMyInterface$3, $asm, 3);
 global.IMyInterface$3 = $IMyInterface$3;
 {Script}.setMetadata($IMyInterface$3, { variance: [0, 1, 2] });
 ", new[] { "IMyInterface" });

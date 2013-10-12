@@ -66,6 +66,30 @@ namespace CoreLib.TestScript.Reflection {
 		public void FullNamePropertyReturnsTheNameWithTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests");
 		}
+		
+		[Test]
+		public void AssemblyQualifiedNameReturnsTheNameWithTheNamespaceAndAssemblyName() {
+			Assert.AreEqual(typeof(TypeSystemTests).AssemblyQualifiedName, "CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<>).AssemblyQualifiedName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1, CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<int>).AssemblyQualifiedName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[[ss.Int32, mscorlib]], CoreLib.TestScript");
+		}
+
+		[Test]
+		public void AssemblyPropertyWorks() {
+			Assert.AreEqual(typeof(B).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(I1).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(IG<>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(IG<int>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(BX<int>).Assembly.FullName, "CoreLib.TestScript");
+			Assert.AreEqual(typeof(E1).Assembly.FullName, "CoreLib.TestScript");
+		}
+
+		[Test]
+		public void NamespacePropertyReturnsTheNamespaceWithoutTheName() {
+			Assert.AreEqual(typeof(TypeSystemTests).Namespace, "CoreLib.TestScript.Reflection");
+			Assert.AreEqual(typeof(DS2).Namespace, "CoreLib.TestScript.Reflection");
+		}
 
 		[Test]
 		public void InstantiatingClassWithConstructorThatNeedsToBeAppliedWorks() {
@@ -79,8 +103,8 @@ namespace CoreLib.TestScript.Reflection {
 		[Test]
 		public void NamePropertyRemovesTheNamespace() {
 			Assert.AreEqual(typeof(TypeSystemTests).Name, "TypeSystemTests", "non-generic");
-			Assert.AreEqual(typeof(G<int, string>).Name, "TypeSystemTests$G$2[ss.Int32,String]", "generic");
-			Assert.AreEqual(typeof(G<BX<double>, string>).Name, "TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[Number],String]", "nested generic");
+			Assert.AreEqual(typeof(G<int, string>).Name, "TypeSystemTests$G$2[[ss.Int32, mscorlib],[String]]", "generic");
+			Assert.AreEqual(typeof(G<BX<double>, string>).Name, "TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[[Number]], CoreLib.TestScript],[String]]", "nested generic");
 		}
 
 		[Test]
@@ -112,12 +136,12 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void TypeOfInstantiatedGenericClassWorks() {
-			Assert.AreEqual(typeof(G<int,C>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[ss.Int32,CoreLib.TestScript.Reflection.TypeSystemTests$C]");
+			Assert.AreEqual(typeof(G<int,C>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript]]");
 		}
 
 		[Test]
 		public void TypeOfInstantiatedGenericInterfaceWorks() {
-			Assert.AreEqual(typeof(IG<int>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[ss.Int32]");
+			Assert.AreEqual(typeof(IG<int>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[ss.Int32, mscorlib]]");
 		}
 
 		[Test]
@@ -133,18 +157,18 @@ namespace CoreLib.TestScript.Reflection {
 		public void AccessingAStaticMemberInAGenericClassWorks() {
 			Assert.AreEqual(G<int,C>.field, "ss.Int32 CoreLib.TestScript.Reflection.TypeSystemTests$C");
 			Assert.AreEqual(G<C,int>.field, "CoreLib.TestScript.Reflection.TypeSystemTests$C ss.Int32");
-			Assert.AreEqual(G<G<C,int>,G<string,C>>.field, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$C,ss.Int32] CoreLib.TestScript.Reflection.TypeSystemTests$G$2[String,CoreLib.TestScript.Reflection.TypeSystemTests$C]");
+			Assert.AreEqual(G<G<C,int>,G<string,C>>.field, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript],[ss.Int32, mscorlib]] CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[String],[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript]]");
 		}
 
 		[Test]
 		public void TypeOfNestedGenericClassWorks() {
-			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[ss.Int32,CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$C,CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[String]]]");
+			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript],[CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[String]], CoreLib.TestScript]], CoreLib.TestScript]]");
 		}
 
 		[Test]
 		public void BaseTypeAndImplementedInterfacesForGenericTypeWorks() {
-			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).BaseType.FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[ss.Int32,CoreLib.TestScript.Reflection.TypeSystemTests$C]]");
-			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).GetInterfaces()[0].FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[CoreLib.TestScript.Reflection.TypeSystemTests$C,CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[String]],String]]");
+			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).BaseType.FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$BX$1[[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript]], CoreLib.TestScript]]");
+			Assert.AreEqual(typeof(G<int,G<C,IG<string>>>).GetInterfaces()[0].FullName, "CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$G$2[[CoreLib.TestScript.Reflection.TypeSystemTests$C, CoreLib.TestScript],[CoreLib.TestScript.Reflection.TypeSystemTests$IG$1[[String]], CoreLib.TestScript]], CoreLib.TestScript],[String]], CoreLib.TestScript]]");
 		}
 
 		[Test]
@@ -486,6 +510,17 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsFalse(typeof(I1).IsEnum);
 			Assert.IsFalse(typeof(IG<>).IsEnum);
 			Assert.IsFalse(typeof(IG<int>).IsEnum);
+		}
+		
+		[Test]
+		public void IsArrayWorks() {
+			var array = new int[5];
+			Assert.IsTrue(array.GetType().IsArray);
+			Assert.IsTrue(typeof(object[]).IsArray);
+			Assert.IsTrue(typeof(int[]).IsArray);
+			Assert.IsFalse(typeof(C).IsArray);
+			//TODO Assert.IsFalse(typeof(List<int>).IsArray);
+			//TODO Assert.IsFalse(typeof(Array).IsArray);
 		}
 
 		[Test]
@@ -964,7 +999,87 @@ namespace CoreLib.TestScript.Reflection {
 
 		[Test]
 		public void StaticGetTypeMethodWorks() {
-			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests"), typeof(TypeSystemTests));
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests"), typeof(TypeSystemTests), "#1");
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript"), typeof(TypeSystemTests), "#2");
+			Assert.AreEqual(Type.GetType("CoreLib.TestScript.Reflection.TypeSystemTests, mscorlib"), null, "#3");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2, mscorlib"), typeof(Dictionary<,>), "#4");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2, NotLoaded.Assembly"), null, "#5");
+		}
+
+		[NamedValues]
+		public enum NamedValuesEnum {
+			FirstValue,
+			SecondValue,
+		}
+
+		[NamedValues]
+		public enum ImportedNamedValuesEnum {
+			FirstValue,
+			SecondValue,
+		}
+
+		private bool DoesItThrow(Action a) {
+			try {
+				a();
+				return false;
+			}
+			catch (Exception) {
+				return true;
+			}
+		}
+
+		private bool IsOfType<T>(object o) {
+			return o is T;
+		}
+
+		private T GetDefault<T>() {
+			return default(T);
+		}
+
+		[Test]
+		public void CastingToNamedValuesEnumCastsToString() {
+			Assert.IsTrue ((object)NamedValuesEnum.FirstValue is NamedValuesEnum, "#1");
+			Assert.IsTrue ((object)"firstValue" is NamedValuesEnum, "#2");
+			Assert.IsFalse((object)(int)0 is NamedValuesEnum, "#3");
+			#pragma warning disable 219
+			Assert.IsFalse(DoesItThrow(() => { var x = (NamedValuesEnum)(object)"firstValue"; }), "#4");
+			Assert.IsTrue (DoesItThrow(() => { var x = (NamedValuesEnum)(object)0; }), "#5");
+			#pragma warning restore 219
+
+			Assert.IsNotNull((object)NamedValuesEnum.FirstValue as NamedValuesEnum?, "#6");
+			Assert.IsNotNull((object)"firstValue" as NamedValuesEnum?, "#7");
+			Assert.IsNull   ((object)(int)0 as NamedValuesEnum?, "#8");
+
+			Assert.IsTrue (IsOfType<NamedValuesEnum>((object)NamedValuesEnum.FirstValue), "#9");
+			Assert.IsTrue (IsOfType<NamedValuesEnum>("firstValue"), "#10");
+			Assert.IsFalse(IsOfType<NamedValuesEnum>(0), "#11");
+		}
+
+		[Test]
+		public void CastingToImportedNamedValuesEnumCastsToString() {
+			Assert.IsTrue ((object)ImportedNamedValuesEnum.FirstValue is ImportedNamedValuesEnum, "#1");
+			Assert.IsTrue ((object)"firstValue" is ImportedNamedValuesEnum, "#2");
+			Assert.IsFalse((object)(int)0 is ImportedNamedValuesEnum, "#3");
+			#pragma warning disable 219
+			Assert.IsFalse(DoesItThrow(() => { var x = (ImportedNamedValuesEnum)(object)"firstValue"; }), "#4");
+			Assert.IsTrue (DoesItThrow(() => { var x = (ImportedNamedValuesEnum)(object)0; }), "#5");
+			#pragma warning restore 219
+
+			Assert.IsNotNull((object)ImportedNamedValuesEnum.FirstValue as ImportedNamedValuesEnum?, "#6");
+			Assert.IsNotNull((object)"firstValue" as ImportedNamedValuesEnum?, "#7");
+			Assert.IsNull   ((object)(int)0 as ImportedNamedValuesEnum?, "#8");
+		}
+
+		[Test]
+		public void DefaultValueOfNamedValuesEnumIsNull() {
+			Assert.IsNull(default(NamedValuesEnum), "#1");
+			Assert.IsNull(GetDefault<NamedValuesEnum>(), "#2");
+		}
+
+		[Test]
+		public void DefaultValueOfImportedNamedValuesEnumIsNull() {
+			Assert.IsNull(default(ImportedNamedValuesEnum), "#1");
+			Assert.IsNull(GetDefault<ImportedNamedValuesEnum>(), "#2");
 		}
 	}
 }

@@ -33,8 +33,29 @@ namespace System {
 			}
 		}
 
+		public string AssemblyQualifiedName {
+			[InlineCode("{$System.Script}.getTypeQName({this})")]
+			get {
+				return null;
+			}
+		}
+
 		public string Name {
 			[InlineCode("{$System.Script}.getTypeName({this})")]
+			get {
+				return null;
+			}
+		}
+		
+		public string Namespace {
+			[InlineCode("{$System.Script}.getTypeNamespace({this})")]
+			get {
+				return null;
+			}
+		}
+
+		public Assembly Assembly {
+			[InlineCode("{$System.Script}.getTypeAssembly({this})")]
 			get {
 				return null;
 			}
@@ -102,6 +123,11 @@ namespace System {
 
 		public bool IsInterface {
 			[InlineCode("{$System.Script}.isInterface({this})")]
+			get { return false; }
+		}
+		
+		public bool IsArray {
+			[InlineCode("{this} === {$System.Array}")]
 			get { return false; }
 		}
 

@@ -394,9 +394,13 @@ namespace CoreLib.Plugin {
 			return JsExpression.ObjectLiteral(properties);
 		}
 
+		public static IEnumerable<IAttribute> GetScriptableAttributes(IEnumerable<IAttribute> attributes, IMetadataImporter metadataImporter) {
+			return attributes.Where(a => !a.IsConditionallyRemoved && metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType);
+		}
+
 		private static List<JsObjectLiteralProperty> GetCommonMemberInfoProperties(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
 			var result = new List<JsObjectLiteralProperty>();
-			var attr = m.Attributes.Where(a => !a.IsConditionallyRemoved && metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType).ToList();
+			var attr = GetScriptableAttributes(m.Attributes, metadataImporter).ToList();
 			if (attr.Count > 0)
 				result.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(attr.Select(a => ConstructAttribute(a, m.DeclaringTypeDefinition, compilation, metadataImporter, namer, runtimeLibrary, errorReporter)))));
 			if (includeDeclaringType)

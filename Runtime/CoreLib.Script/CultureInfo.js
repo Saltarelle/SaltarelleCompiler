@@ -9,7 +9,7 @@ var ss_CultureInfo = function#? DEBUG CultureInfo$##(name, numberFormat, dateTim
 
 ss_CultureInfo.__typeName = 'ss.CultureInfo';
 ss.CultureInfo = ss_CultureInfo;
-ss.initClass(ss_CultureInfo, {
+ss.initClass(ss_CultureInfo, ss, {
 	getFormat:  function#? DEBUG CultureInfo$getFormat##(type) {
 		switch (type) {
 			case ss_NumberFormatInfo: return this.numberFormat;

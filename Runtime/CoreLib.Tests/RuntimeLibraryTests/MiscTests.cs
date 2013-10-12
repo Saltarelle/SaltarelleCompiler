@@ -45,14 +45,16 @@ public class C {
 }",
 @"(function() {
 	'use strict';
+	var $asm = {};
 	global.Ф = global.Ф || {};
+	ss.initAssembly($asm, 'x');
 	////////////////////////////////////////////////////////////////////////////////
 	// Ф.Класс
 	var $Ф_Класс = function() {
 	};
 	$Ф_Класс.__typeName = 'Ф.Класс';
 	global.Ф.Класс = $Ф_Класс;
-	ss.initClass($Ф_Класс, {
+	ss.initClass($Ф_Класс, $asm, {
 		$я: function() {
 			var Щ = 'г';
 		}
@@ -96,6 +98,8 @@ class C<T1, T2> where T1 : class {
 }",
 @"(function() {
 	'use strict';
+	var $asm = {};
+	ss.initAssembly($asm, 'x');
 	////////////////////////////////////////////////////////////////////////////////
 	// C
 	var $$C$2 = function(T1, T2) {
@@ -131,7 +135,7 @@ class C<T1, T2> where T1 : class {
 		return $type;
 	};
 	$$C$2.__typeName = '$C$2';
-	ss.initGenericClass($$C$2, 2);
+	ss.initGenericClass($$C$2, $asm, 2);
 	////////////////////////////////////////////////////////////////////////////////
 	// I
 	var $$I = function() {
@@ -142,8 +146,8 @@ class C<T1, T2> where T1 : class {
 	var $$X = function() {
 	};
 	$$X.__typeName = '$X';
-	ss.initInterface($$I, {});
-	ss.initClass($$X, {});
+	ss.initInterface($$I, $asm, {});
+	ss.initClass($$X, $asm, {});
 })();
 ");
 		}

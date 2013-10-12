@@ -8,7 +8,7 @@ var ss_TaskCompletionSource = function#? DEBUG TaskCompletionSource$##() {
 
 ss_TaskCompletionSource.__typeName = 'ss.TaskCompletionSource';
 ss.TaskCompletionSource = ss_TaskCompletionSource;
-ss.initClass(ss_TaskCompletionSource, {
+ss.initClass(ss_TaskCompletionSource, ss, {
 	setCanceled: function#? DEBUG TaskCompletionSource$setCanceled##() {
 		if (!this.task._cancel())
 			throw new ss_InvalidOperationException('Task was already completed.');

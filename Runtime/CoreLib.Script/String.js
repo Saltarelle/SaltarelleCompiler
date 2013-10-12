@@ -54,28 +54,30 @@ ss.endsWithString = function#? DEBUG ss$endsWithString##(s, suffix) {
 
 ss._formatString = function#? DEBUG ss$_formatString##(format, values, useLocale) {
 	if (!ss._formatRE) {
-		ss._formatRE = /(\{[^\}^\{]+\})/g;
+		ss._formatRE = /\{\{|\}\}|\{[^\}\{]+\}/g;
 	}
 
 	return format.replace(ss._formatRE,
-						  function(str, m) {
-							  var index = parseInt(m.substr(1));
-							  var value = values[index + 1];
-							  if (ss.isNullOrUndefined(value)) {
-								  return '';
-							  }
-							  if (ss.isInstanceOfType(value, ss_IFormattable)) {
-								  var formatSpec = null;
-								  var formatIndex = m.indexOf(':');
-								  if (formatIndex > 0) {
-									  formatSpec = m.substring(formatIndex + 1, m.length - 1);
-								  }
-								  return ss.format(value, formatSpec);
-							  }
-							  else {
-								  return useLocale ? value.toLocaleString() : value.toString();
-							  }
-						  });
+		function(m) {
+			if (m === '{{' || m === '}}')
+				return m.charAt(0);
+			var index = parseInt(m.substr(1));
+			var value = values[index + 1];
+			if (ss.isNullOrUndefined(value)) {
+				return '';
+			}
+			if (ss.isInstanceOfType(value, ss_IFormattable)) {
+				var formatSpec = null;
+				var formatIndex = m.indexOf(':');
+				if (formatIndex > 0) {
+					formatSpec = m.substring(formatIndex + 1, m.length - 1);
+				}
+				return ss.format(value, formatSpec);
+			}
+			else {
+				return useLocale ? value.toLocaleString() : value.toString();
+			}
+		});
 };
 
 ss.formatString = function#? DEBUG String$format##(format) {

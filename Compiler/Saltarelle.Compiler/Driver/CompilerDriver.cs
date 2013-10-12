@@ -14,6 +14,24 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
+		private class Resource : IAssemblyResource {
+			public string Name { get; private set; }
+			public AssemblyResourceType Type { get { return AssemblyResourceType.Embedded; } }
+			public string LinkedFileName { get { return null; } }
+			public bool IsPublic { get; private set; }
+			private readonly string _filename;
+
+			public Stream GetResourceStream() {
+				return File.OpenRead(_filename);
+			}
+
+			public Resource(string name, string filename, bool isPublic) {
+				Name      = name;
+				_filename = filename;
+				IsPublic  = isPublic;
+			}
+		}
+
 		private readonly IErrorReporter _errorReporter;
 
 		private static string GetAssemblyName(CompilerOptions options) {
@@ -205,10 +223,14 @@ namespace Saltarelle.Compiler.Driver {
 			                        .Where(a => a != null);
 		}
 
-		private static readonly System.Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
+		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
 
 		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
 			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
+		}
+
+		private static IEnumerable<IAssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
+			return resources.Select(r => new Resource(r.ResourceName, r.Filename, r.IsPublic));
 		}
 
 		public bool Compile(CompilerOptions options) {
@@ -218,7 +240,6 @@ namespace Saltarelle.Compiler.Driver {
 			try {
 				Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
 
-				// Compile the assembly
 				var settings = MapSettings(options, intermediateAssemblyFile, intermediateDocFile, er);
 				if (er.HasErrors)
 					return false;
@@ -236,7 +257,7 @@ namespace Saltarelle.Compiler.Driver {
 				if (references == null)
 					return false;
 
-				PreparedCompilation compilation = PreparedCompilation.CreateCompilation(options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants);
+				PreparedCompilation compilation = PreparedCompilation.CreateCompilation(settings.AssemblyName, options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants, LoadResources(options.EmbeddedResources));
 
 				IMethod entryPoint = FindEntryPoint(options, er, compilation);
 
@@ -244,7 +265,6 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
 					RegisterPlugin(container, plugin);
 
-				// Compile the script
 				container.Register(Component.For<IErrorReporter>().Instance(er),
 				                   Component.For<CompilerOptions>().Instance(options),
 				                   Component.For<ICompilation>().Instance(compilation.Compilation),

@@ -6,4 +6,4 @@ var ss_NotSupportedException = function#? DEBUG NotSupportedException$##(message
 };
 ss_NotSupportedException.__typeName = 'ss.NotSupportedException';
 ss.NotSupportedException = ss_NotSupportedException;
-ss.initClass(ss_NotSupportedException, {}, ss_Exception);
+ss.initClass(ss_NotSupportedException, ss, {}, ss_Exception);

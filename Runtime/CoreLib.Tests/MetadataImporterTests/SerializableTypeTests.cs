@@ -215,6 +215,41 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
+		public void IndexersOnSerializableTypesUseNativeIndexerSemantics() {
+			TestBothKinds(@"int this[int x] { get { return 0; } set {}", () => {
+				Assert.That(FindIndexer("C1", 1).Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(FindIndexer("C1", 1).GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
+				Assert.That(FindIndexer("C1", 1).SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
+			});
+		}
+
+		[Test]
+		public void IndexerOnSerializableTypeMustHaveExactlyOneArgument() {
+			Prepare(
+@"[System.Serializable]
+class C1 {
+	public int this[int x, int y] { set {} }
+}
+", expectErrors: true);
+
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("Serializable") && AllErrorTexts[0].Contains("indexer") && AllErrorTexts[0].Contains("exactly one parameter"));
+		}
+
+		[Test]
+		public void SerializableInterfaceCannotDeclareIndexer() {
+			Prepare(
+@"[System.Serializable]
+interface I1 {
+	public int this[int x] { set {} }
+}
+", expectErrors: true);
+
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7161 && AllErrorTexts[0].Contains("serializable") && AllErrorTexts[0].Contains("indexer"));
+		}
+
+		[Test]
 		public void InstancePropertiesOnSerializableTypesCanHaveInlineCode() {
 			TestBothKinds(@"int Prop1 { [InlineCode(""_({this}).X"")] get; [InlineCode(""_({this})._({value})"")] set; } int Prop2 { [InlineCode(""_({this}).X2"")] get { return 0; } } int Prop3 { [InlineCode(""_({this})._({value}).X2"")] set {} }", () => {
 				var prop1 = FindProperty("C1.Prop1");
@@ -231,6 +266,30 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(prop2.SetMethod, Is.Null);
 
 				var prop3 = FindProperty("C1.Prop3");
+				Assert.That(prop3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(prop3.GetMethod, Is.Null);
+				Assert.That(prop3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop3.SetMethod.LiteralCode, Is.EqualTo("_({this})._({value}).X2"));
+			});
+		}
+
+		[Test]
+		public void IndexersOnSerializableTypesCanHaveInlineCode() {
+			TestBothKinds(@"int this[int a] { [InlineCode(""_({this}).X"")] get; [InlineCode(""_({this})._({value})"")] set; } int this[int a, int b] { [InlineCode(""_({this}).X2"")] get { return 0; } } int this[int a, int b, int c] { [InlineCode(""_({this})._({value}).X2"")] set {} }", () => {
+				var prop1 = FindIndexer("C1", 1);
+				Assert.That(prop1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(prop1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop1.GetMethod.LiteralCode, Is.EqualTo("_({this}).X"));
+				Assert.That(prop1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop1.SetMethod.LiteralCode, Is.EqualTo("_({this})._({value})"));
+
+				var prop2 = FindIndexer("C1", 2);
+				Assert.That(prop2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+				Assert.That(prop2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+				Assert.That(prop2.GetMethod.LiteralCode, Is.EqualTo("_({this}).X2"));
+				Assert.That(prop2.SetMethod, Is.Null);
+
+				var prop3 = FindIndexer("C1", 3);
 				Assert.That(prop3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 				Assert.That(prop3.GetMethod, Is.Null);
 				Assert.That(prop3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));

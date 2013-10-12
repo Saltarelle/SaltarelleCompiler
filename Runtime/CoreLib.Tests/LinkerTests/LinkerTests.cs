@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -41,6 +41,7 @@ namespace CoreLib.Tests.LinkerTests {
 			AssertCorrect(actual,
 @"(function() {
 	'use strict';
+	var $asm = {};
 	$GlobalType;
 	return $Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 })();
@@ -59,6 +60,7 @@ namespace CoreLib.Tests.LinkerTests {
 			AssertCorrect(actual,
 @"(function() {
 	'use strict';
+	var $asm = {};
 	$$GlobalType;
 	return $$Global_$NestedNamespace_$InnerNamespace_$Type.x + 1;
 })();
@@ -76,6 +78,7 @@ namespace CoreLib.Tests.LinkerTests {
 			AssertCorrect(actual,
 @"(function() {
 	'use strict';
+	var $asm = {};
 	return $MyImportedType.x + 1;
 })();
 ");
@@ -154,6 +157,7 @@ $mymodule.x;
 			AssertCorrect(actual,
 @"(function() {
 	'use strict';
+	var $asm = {};
 	x;
 })();
 ");
@@ -178,6 +182,7 @@ require('mscorlib');
 var $module1 = require('module1');
 var $module2 = require('module2');
 var $module3 = require('module3');
+var $asm = {};
 $module1.SomeNamespace.InnerNamespace.Type1.a + $module2.SomeNamespace.InnerNamespace.Type2.b;
 $module1.SomeNamespace.Type3.c + $module3.Type4.d;
 $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
@@ -197,6 +202,7 @@ $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
 @"'use strict';
 require('mscorlib');
 var $mymodule = require('mymodule');
+var $asm = {};
 $mymodule.a;
 ");
 		}
@@ -281,6 +287,7 @@ $mymodule.a;
 require('mscorlib');
 var myDep = require('my-additional-dep');
 var myDep2 = require('my-other-dep');
+var $asm = {};
 'myModule';
 ");
 		}
@@ -310,6 +317,7 @@ var _ = require('+');
 var mymodule2 = require('mymodule');
 var mymodule4 = require('mymodule-');
 var mymodule3 = require('mymodule+');
+var $asm = {};
 mymodule2.Type1.a;
 mymodule3.Type2.b;
 mymodule4.Type3.c;
@@ -317,34 +325,6 @@ _.Type4.d;
 _2.Type5.e;
 var mymodule;
 ");
-		}
-
-		[Test]
-		public void UsedSymbolsGathererWorks() {
-			var program = JavaScriptParser.Parser.ParseProgram(@"
-function a(b, c) {
-	function d(e) {
-		var f = g, h = i + j;
-		for (var k in l) {
-		}
-		for (m in a) {}
-		var n = function o(p, q) {
-			r;
-		}
-	}
-}
-s + (t * -u);
-try {
-}
-catch (v) {
-}
-for (w = 0, x; w < 1; w++) {
-}
-for (var y = 0, z; w < 1; w++) {
-}
-");
-			var actual = Linker.UsedSymbolsGatherer.Analyze(program);
-			Assert.That(actual, Is.EquivalentTo(new[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" }));
 		}
 
 		[Test]
@@ -365,6 +345,7 @@ for (var y = 0, z; w < 1; w++) {
 @"'use strict';
 require('mscorlib');
 var $mymodule = require('my-module');
+var $asm = {};
 C1.a;
 $mymodule.C2.b;
 C3.c;
@@ -405,6 +386,7 @@ require('mscorlib');
 var $mymodule = require('my-module');
 var $othermodule = require('other-module');
 var $thirdmodule = require('third-module');
+var $asm = {};
 $mymodule.C1.a;
 C1_D1.b;
 $othermodule.C1_D2.c;
@@ -433,6 +415,7 @@ C2_D4.j;
 @"'use strict';
 require('mscorlib');
 var $mymodule = require('my-module');
+var $asm = {};
 $mymodule.C1.a;
 $mymodule.C2.b;
 ");
@@ -455,9 +438,183 @@ $mymodule.C2.b;
 @"'use strict';
 require('mscorlib');
 var $othermodule = require('other-module');
+var $asm = {};
 $othermodule.C1.a;
 C2.b;
 C3.c;
+");
+		}
+
+		[Test]
+		public void ClassWithSameNameAsVariable1() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsStatement.Var("y", JsExpression.Number(0)),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Identifier("x")),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"), JsExpression.Identifier("y"))
+				)),
+				JsExpression.FunctionDefinition(new[] { "x" }, JsStatement.Block(
+					JsStatement.Var("y", JsExpression.Number(0)),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Identifier("x")),
+					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"), JsExpression.Identifier("y"))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	var $asm = {};
+	function f(x1) {
+		var y1 = 0;
+		x.a + x1;
+		y.a + y1;
+	}
+	(function(x1) {
+		var y1 = 0;
+		x.a + x1;
+		y.a + y1;
+	});
+})();
+");
+		}
+
+		[Test]
+		public void ClassWithSameNameAsVariable2() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsStatement.Var("y", JsExpression.Number(0)),
+					JsExpression.FunctionDefinition(new string[0],
+						JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"))
+					),
+					JsExpression.FunctionDefinition(new string[0], JsStatement.Block(
+						JsStatement.Var("z", JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))
+					))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	var $asm = {};
+	function f(x1) {
+		var y1 = 0;
+		(function() {
+			x.a + y.a;
+		});
+		(function() {
+			var z = x1 + y1;
+		});
+	}
+})();
+");
+		}
+
+		[Test]
+		public void RenamedVariableClashWithOtherVariable() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsExpression.FunctionDefinition(new string[0],
+						JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a")
+					),
+					JsExpression.FunctionDefinition(new string[0], JsStatement.Block(
+						JsStatement.Var("x1", null),
+						JsExpression.Add(JsExpression.Identifier("x"), JsExpression.Identifier("x1"))
+					))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	var $asm = {};
+	function f(x2) {
+		(function() {
+			x.a;
+		});
+		(function() {
+			var x1;
+			x2 + x1;
+		});
+	}
+})();
+");
+		}
+
+		[Test]
+		public void RenamedVariableClashWithImplicitGlobal() {
+			var someAsm = Common.CreateMockAssembly();
+			var actual = Process(new JsStatement[] {
+				JsStatement.Function("f", new[] { "x" }, JsStatement.Block(
+					JsExpression.FunctionDefinition(new string[0],
+						JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a")
+					),
+					JsExpression.FunctionDefinition(new string[0], JsStatement.Block(
+						JsExpression.Add(JsExpression.Identifier("x"), JsExpression.Identifier("x1"))
+					))
+				))
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	var $asm = {};
+	function f(x2) {
+		(function() {
+			x.a;
+		});
+		(function() {
+			x2 + x1;
+		});
+	}
+})();
+");
+		}
+
+		[Test]
+		public void CurrentAssemblyReferenceWorksInNonModule() {
+			var actual = Process(new JsStatement[] {
+				JsExpression.Member(Linker.CurrentAssemblyExpressionStatic, "a")
+			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	var $asm = {};
+	$asm.a;
+})();
+");
+		}
+
+		[Test]
+		public void CurrentAssemblyReferenceWorksInModule() {
+			var actual = Process(new JsStatement[] {
+				JsExpression.Member(Linker.CurrentAssemblyExpressionStatic, "a")
+			}, Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") }), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"(function() {
+	'use strict';
+	exports.a;
+})();
+");
+		}
+
+		[Test]
+		public void CurrentAssemblyReferenceWorksInAsyncModule() {
+			var actual = Process(new JsStatement[] {
+				JsExpression.Member(Linker.CurrentAssemblyExpressionStatic, "a")
+			}, Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new AsyncModuleAttribute() }), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+
+			AssertCorrect(actual,
+@"define(['mscorlib'], function(_) {
+	'use strict';
+	var exports = {};
+	exports.a;
+	return exports;
+});
 ");
 		}
 	}

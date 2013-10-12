@@ -61,8 +61,12 @@
     <Compile Include="ActivatorTests.cs" />
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
+    <Compile Include="AppDomainTests.cs" />
+    <Compile Include="ConvertTests.cs" />
+    <Compile Include="EnvironmentTests.cs" />
     <Compile Include="Exceptions\NotImplementedExceptionTests.cs" />
     <Compile Include="Exceptions\DivideByZeroExceptionTests.cs" />
+    <Compile Include="Reflection\AssemblyTests.cs" />
     <Compile Include="StopwatchTests.cs" />
     <Compile Include="CultureInfoTests.cs" />
     <Compile Include="NumberFormatInfoTests.cs" />
@@ -165,7 +169,10 @@
       <Name>QUnit</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Reflection\Resource2.bin" />
+    <EmbeddedResource Include="Reflection\Resource1.bin" />
+  </ItemGroup>
   <Import Project="..\..\bin\Saltarelle.Compiler.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

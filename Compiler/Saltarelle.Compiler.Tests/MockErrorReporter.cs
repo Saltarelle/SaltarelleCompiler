@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -71,6 +73,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
 			var msg = new Message(severity, code, Region, message, args);
+			foreach (var a in args) {
+				try {
+					new BinaryFormatter().Serialize(new MemoryStream(), a);
+				}
+				catch (Exception) {
+					throw new Exception("Error serializing argument " + a);
+				}
+			}
 			string s = msg.ToString();	// Ensure this does not throw an exception
 			AllMessages.Add(msg);
 			if (_logToConsole)

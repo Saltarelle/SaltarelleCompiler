@@ -6,4 +6,4 @@ var ss_AmbiguousMatchException = function#? DEBUG AmbiguousMatchException$##(mes
 };
 ss_AmbiguousMatchException.__typeName = 'ss.AmbiguousMatchException';
 ss.AmbiguousMatchException = ss_AmbiguousMatchException;
-ss.initClass(ss_AmbiguousMatchException, {}, ss_Exception);
+ss.initClass(ss_AmbiguousMatchException, ss, {}, ss_Exception);

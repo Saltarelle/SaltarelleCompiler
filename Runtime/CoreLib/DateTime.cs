@@ -105,6 +105,15 @@ namespace System {
 		/// </summary>
 		public static DateTime UtcNow { [InlineCode("{$System.Script}.utcNow()")] get { return default(DateTime); } }
 
+		[InlineCode("{$System.Script}.toUTC({this})")]
+		public DateTime ToUniversalTime() {
+			return default(DateTime);
+		}
+
+		[InlineCode("{$System.Script}.fromUTC({this})")]
+		public DateTime ToLocalTime() {
+			return default(DateTime);
+		}
 
 		/// <summary>
 		/// Gets the current date.

@@ -5,7 +5,7 @@ var ss_Enum = function#? DEBUG Enum$##() {
 };
 ss_Enum.__typeName = 'ss.Enum';
 ss.Enum = ss_Enum;
-ss.initClass(ss_Enum, {});
+ss.initClass(ss_Enum, ss, {});
 
 ss_Enum.parse = function#? DEBUG Enum$parse##(enumType, s) {
 	var values = enumType.prototype;

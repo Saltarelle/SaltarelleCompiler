@@ -256,7 +256,7 @@ namespace CoreLib.Plugin {
 					Message(Messages._7009, typeDefinition);
 				}
 				foreach (var i in typeDefinition.DirectBaseTypes.Where(b => b.Kind == TypeKind.Interface && !GetTypeSemanticsInternal(b.GetDefinition()).IsSerializable)) {
-					Message(Messages._7010, typeDefinition, i);
+					Message(Messages._7010, typeDefinition, i.FullName);
 				}
 				if (typeDefinition.Events.Any(evt => !evt.IsStatic)) {
 					Message(Messages._7011, typeDefinition);
@@ -597,8 +597,23 @@ namespace CoreLib.Plugin {
 					}
 				}
 
-				usedNames[preferredName] = true;
-				_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
+				if (property.IsIndexer) {
+					if (property.DeclaringType.Kind == TypeKind.Interface) {
+						Message(Messages._7161, property.Region);
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.Getter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null, property.Setter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null);
+					}
+					else if (property.Parameters.Count == 1) {
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.Getter != null ? MethodScriptSemantics.NativeIndexer() : null, property.Setter != null ? MethodScriptSemantics.NativeIndexer() : null);
+					}
+					else {
+						Message(Messages._7116, property.Region);
+						_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.Getter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null, property.Setter != null ? MethodScriptSemantics.NormalMethod("X", generateCode: false) : null);
+					}
+				}
+				else {
+					usedNames[preferredName] = true;
+					_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
+				}
 				return;
 			}
 

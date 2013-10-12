@@ -6,4 +6,4 @@ var ss_NullReferenceException = function#? DEBUG NullReferenceException$##(messa
 };
 ss_NullReferenceException.__typeName = 'ss.NullReferenceException';
 ss.NullReferenceException = ss_NullReferenceException;
-ss.initClass(ss_NullReferenceException, {}, ss_Exception);
+ss.initClass(ss_NullReferenceException, ss, {}, ss_Exception);

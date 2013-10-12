@@ -520,8 +520,8 @@ namespace CoreLib.TestScript.Reflection {
 		public void GetTypeWorksOnObjects() {
 			Action a = () => {};
 			Assert.AreEqual(new C1().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C1");
-			Assert.AreEqual(new C2<int>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[ss.Int32]");
-			Assert.AreEqual(new C2<string>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[String]");
+			Assert.AreEqual(new C2<int>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[[ss.Int32, mscorlib]]");
+			Assert.AreEqual(new C2<string>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[[String]]");
 			Assert.AreEqual((1).GetType().FullName, "Number");
 			Assert.AreEqual("X".GetType().FullName, "String");
 			Assert.AreEqual(a.GetType().FullName, "Function");

@@ -23,7 +23,7 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7518 = Tuple.Create(7518, MessageSeverity.Error, "Cannot use the field {0} in an anonymous object initializer.");
 		public static readonly Message _7519 = Tuple.Create(7519, MessageSeverity.Error, "Cannot create an instance of the type {0} because it is marked as not usable from script.");
 		public static readonly Message _7520 = Tuple.Create(7520, MessageSeverity.Error, "Cannot use the type {0} in as a type argument for the class {1} because it is marked as not usable from script.");
-		public static readonly Message _7522 = Tuple.Create(7522, MessageSeverity.Error, "Cannot use the type {0} in a typeof expression because it is marked as not usable from script.");
+		public static readonly Message _7522 = Tuple.Create(7522, MessageSeverity.Error, "Cannot use the type {0} in an expression because it is marked as not usable from script.");
 		public static readonly Message _7523 = Tuple.Create(7523, MessageSeverity.Error, "Cannot perform method group conversion on {0} because {1}.");
 		public static readonly Message _7524 = Tuple.Create(7524, MessageSeverity.Error, "Cannot convert the method '{0}' to the delegate type '{1}' because the method and delegate type differ in whether they expand their param array.");
 		public static readonly Message _7525 = Tuple.Create(7525, MessageSeverity.Error, "Error in inline code compilation: {0}.");

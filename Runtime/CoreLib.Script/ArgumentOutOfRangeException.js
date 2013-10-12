@@ -14,4 +14,4 @@ var ss_ArgumentOutOfRangeException = function#? DEBUG ArgumentOutOfRangeExceptio
 
 ss_ArgumentOutOfRangeException.__typeName = 'ss.ArgumentOutOfRangeException';
 ss.ArgumentOutOfRangeException = ss_ArgumentOutOfRangeException;
-ss.initClass(ss_ArgumentOutOfRangeException, {}, ss_ArgumentException);
+ss.initClass(ss_ArgumentOutOfRangeException, ss, {}, ss_ArgumentException);

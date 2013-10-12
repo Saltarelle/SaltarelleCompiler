@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			if (methodCompiled != null)
 				compiler.MethodCompiled += methodCompiled;
 
-			var c = PreparedCompilation.CreateCompilation(sourceFiles, references ?? new[] { Common.Mscorlib }, defineConstants);
+			var c = PreparedCompilation.CreateCompilation("x", sourceFiles, references ?? new[] { Common.Mscorlib }, defineConstants);
 			CompiledTypes = compiler.Compile(c).AsReadOnly();
 			if (defaultErrorHandling) {
 				((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");

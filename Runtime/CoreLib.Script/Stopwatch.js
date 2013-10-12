@@ -31,7 +31,7 @@ else {
 
 ss_Stopwatch.__typeName = 'ss.Stopwatch';
 ss.Stopwatch = ss_Stopwatch;
-ss.initClass(ss_Stopwatch, {
+ss.initClass(ss_Stopwatch, ss, {
 	reset: function#? DEBUG Stopwatch$reset##() {
 		this._stopTime = this._startTime = ss_Stopwatch.getTimestamp();
 		this.isRunning = false;

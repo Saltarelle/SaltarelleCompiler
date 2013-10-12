@@ -8,7 +8,7 @@ var ss_StringBuilder = function#? DEBUG StringBuilder$##(s) {
 
 ss_StringBuilder.__typeName = 'ss.StringBuilder';
 ss.StringBuilder = ss_StringBuilder;
-ss.initClass(ss_StringBuilder, {
+ss.initClass(ss_StringBuilder, ss, {
 	append: function#? DEBUG StringBuilder$append##(o) {
 		if (ss.isValue(o)) {
 			var s = o.toString();

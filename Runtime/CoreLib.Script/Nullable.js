@@ -19,7 +19,7 @@ var ss_Nullable$1 = function#? DEBUG Nullable$1$##(T) {
 
 ss_Nullable$1.__typeName = 'ss.Nullable$1';
 ss.Nullable$1 = ss_Nullable$1;
-ss.initGenericClass(ss_Nullable$1, 1);
+ss.initGenericClass(ss_Nullable$1, ss, 1);
 
 ss_Nullable$1.eq = function#? DEBUG Nullable$eq##(a, b) {
 	return !ss.isValue(a) ? !ss.isValue(b) : (a === b);

@@ -36,8 +36,12 @@ namespace Saltarelle.Compiler.Compiler {
 			return parser;
 		}
 
-		public static PreparedCompilation CreateCompilation(IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references, IList<string> defineConstants) {
-			IProjectContent project = new CSharpProjectContent();
+		public static PreparedCompilation CreateCompilation(string assemblyName, IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references, IList<string> defineConstants) {
+			return CreateCompilation(assemblyName, sourceFiles, references, defineConstants, null);
+		}
+
+		public static PreparedCompilation CreateCompilation(string assemblyName, IEnumerable<ISourceFile> sourceFiles, IEnumerable<IAssemblyReference> references, IList<string> defineConstants, IEnumerable<IAssemblyResource> resources) {
+			IProjectContent project = new CSharpProjectContent().SetAssemblyName(assemblyName);
 
 			var files = sourceFiles.Select(f => { 
 			                                        using (var rdr = f.Open()) {
@@ -54,6 +58,11 @@ namespace Saltarelle.Compiler.Compiler {
 				project = project.AddOrUpdateFiles(f.ParsedFile);
 			}
 			project = project.AddAssemblyReferences(references);
+			if (resources != null) {
+				var reslist = resources.ToList();
+				if (reslist.Count > 0)
+					project = project.AddResources(reslist);
+			}
 
 			return new PreparedCompilation(project.CreateCompilation(), files);
 		}

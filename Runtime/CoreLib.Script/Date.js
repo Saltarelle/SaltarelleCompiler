@@ -3,6 +3,14 @@
 
 ss.utcNow = function#? DEBUG ss$utcNow##() {
 	var d = new Date();
+	return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(), d.getUTCMilliseconds());
+};
+
+ss.toUTC = function#? DEBUG ss$toUniversalTime##(d) {
+	return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(), d.getUTCMilliseconds());
+};
+
+ss.fromUTC = function#? DEBUG ss$toLocalTime##(d) {
 	return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()));
 };
 

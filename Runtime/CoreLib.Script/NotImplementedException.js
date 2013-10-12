@@ -6,4 +6,4 @@ var ss_NotImplementedException = function#? DEBUG NotImplementedException$##(mes
 };
 ss_NotImplementedException.__typeName = 'ss.NotImplementedException';
 ss.NotImplementedException = ss_NotImplementedException;
-ss.initClass(ss_NotImplementedException, {}, ss_Exception);
+ss.initClass(ss_NotImplementedException, ss, {}, ss_Exception);
