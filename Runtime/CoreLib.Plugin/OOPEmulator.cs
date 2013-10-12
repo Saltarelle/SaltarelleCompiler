@@ -252,6 +252,8 @@ namespace CoreLib.Plugin {
 			}
 
 			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, JsExpression.ObjectLiteral(values) };
+			if (MetadataUtils.IsNamedValues(type.CSharpTypeDefinition))
+				args.Add(JsExpression.True);
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitEnum), args);
 		}
 

@@ -1,3 +1,4 @@
+Fixed issue causing [NamedValues] enums not to work correctly when used as generic arguments (#256)
 Corrected DateTime.UtcNow and added DateTime.ToLocalTime and DateTime.ToUniversal (#250)
 Support escaped braces ({{, }}) in format strings (#252)
 Added possibility to embed resources in the generated script (Assembly.GetManifestResourceNames, Assembly.GetManifestResourceData).

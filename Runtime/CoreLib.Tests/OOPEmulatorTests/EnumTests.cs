@@ -72,7 +72,7 @@ var $MyEnum = function() {
 };
 $MyEnum.__typeName = 'MyEnum';
 global.MyEnum = $MyEnum;
-{Script}.initEnum($MyEnum, $asm, { value1: 'value1', value2: 'value2', value3: 'value3' });
+{Script}.initEnum($MyEnum, $asm, { value1: 'value1', value2: 'value2', value3: 'value3' }, true);
 ");
 		}
 

@@ -1005,5 +1005,81 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.AreEqual(Type.GetType("ss.Dictionary$2, mscorlib"), typeof(Dictionary<,>), "#4");
 			Assert.AreEqual(Type.GetType("ss.Dictionary$2, NotLoaded.Assembly"), null, "#5");
 		}
+
+		[NamedValues]
+		public enum NamedValuesEnum {
+			FirstValue,
+			SecondValue,
+		}
+
+		[NamedValues]
+		public enum ImportedNamedValuesEnum {
+			FirstValue,
+			SecondValue,
+		}
+
+		private bool DoesItThrow(Action a) {
+			try {
+				a();
+				return false;
+			}
+			catch (Exception) {
+				return true;
+			}
+		}
+
+		private bool IsOfType<T>(object o) {
+			return o is T;
+		}
+
+		private T GetDefault<T>() {
+			return default(T);
+		}
+
+		[Test]
+		public void CastingToNamedValuesEnumCastsToString() {
+			Assert.IsTrue ((object)NamedValuesEnum.FirstValue is NamedValuesEnum, "#1");
+			Assert.IsTrue ((object)"firstValue" is NamedValuesEnum, "#2");
+			Assert.IsFalse((object)(int)0 is NamedValuesEnum, "#3");
+			#pragma warning disable 219
+			Assert.IsFalse(DoesItThrow(() => { var x = (NamedValuesEnum)(object)"firstValue"; }), "#4");
+			Assert.IsTrue (DoesItThrow(() => { var x = (NamedValuesEnum)(object)0; }), "#5");
+			#pragma warning restore 219
+
+			Assert.IsNotNull((object)NamedValuesEnum.FirstValue as NamedValuesEnum?, "#6");
+			Assert.IsNotNull((object)"firstValue" as NamedValuesEnum?, "#7");
+			Assert.IsNull   ((object)(int)0 as NamedValuesEnum?, "#8");
+
+			Assert.IsTrue (IsOfType<NamedValuesEnum>((object)NamedValuesEnum.FirstValue), "#9");
+			Assert.IsTrue (IsOfType<NamedValuesEnum>("firstValue"), "#10");
+			Assert.IsFalse(IsOfType<NamedValuesEnum>(0), "#11");
+		}
+
+		[Test]
+		public void CastingToImportedNamedValuesEnumCastsToString() {
+			Assert.IsTrue ((object)ImportedNamedValuesEnum.FirstValue is ImportedNamedValuesEnum, "#1");
+			Assert.IsTrue ((object)"firstValue" is ImportedNamedValuesEnum, "#2");
+			Assert.IsFalse((object)(int)0 is ImportedNamedValuesEnum, "#3");
+			#pragma warning disable 219
+			Assert.IsFalse(DoesItThrow(() => { var x = (ImportedNamedValuesEnum)(object)"firstValue"; }), "#4");
+			Assert.IsTrue (DoesItThrow(() => { var x = (ImportedNamedValuesEnum)(object)0; }), "#5");
+			#pragma warning restore 219
+
+			Assert.IsNotNull((object)ImportedNamedValuesEnum.FirstValue as ImportedNamedValuesEnum?, "#6");
+			Assert.IsNotNull((object)"firstValue" as ImportedNamedValuesEnum?, "#7");
+			Assert.IsNull   ((object)(int)0 as ImportedNamedValuesEnum?, "#8");
+		}
+
+		[Test]
+		public void DefaultValueOfNamedValuesEnumIsNull() {
+			Assert.IsNull(default(NamedValuesEnum), "#1");
+			Assert.IsNull(GetDefault<NamedValuesEnum>(), "#2");
+		}
+
+		[Test]
+		public void DefaultValueOfImportedNamedValuesEnumIsNull() {
+			Assert.IsNull(default(ImportedNamedValuesEnum), "#1");
+			Assert.IsNull(GetDefault<ImportedNamedValuesEnum>(), "#2");
+		}
 	}
 }

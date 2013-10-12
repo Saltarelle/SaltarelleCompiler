@@ -134,13 +134,13 @@ ss.initGenericInterface = function#? DEBUG ss$initGenericClass##(ctor, asm, type
 	ctor.__isGenericTypeDefinition = true;
 };
 
-ss.initEnum = function#? DEBUG ss$initEnum##(ctor, asm, members) {
+ss.initEnum = function#? DEBUG ss$initEnum##(ctor, asm, members, namedValues) {
 	ctor.__enum = true;
 	ctor.__assembly = asm;
 	asm.__types[ctor.__typeName] = ctor;
 	ss.shallowCopy(members, ctor.prototype);
-	ctor.getDefaultValue = ctor.createInstance = function() { return 0; };
-	ctor.isInstanceOfType = function(instance) { return typeof(instance) == 'number'; };
+	ctor.getDefaultValue = ctor.createInstance = function() { return namedValues ? null : 0; };
+	ctor.isInstanceOfType = function(instance) { return typeof(instance) == (namedValues ? 'string' : 'number'); };
 };
 
 ss.getBaseType = function#? DEBUG ss$getBaseType##(type) {

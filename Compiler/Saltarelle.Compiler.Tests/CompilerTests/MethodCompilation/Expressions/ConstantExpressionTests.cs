@@ -337,5 +337,33 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 @"	var $b = $Default($T);
 ");
 		}
+
+		[Test]
+		public void DefaultForEnumDelegatesToRuntimeLibrary() {
+			AssertCorrect(
+@"enum E {}
+public void M() {
+	// BEGIN
+	var e = default(E);
+	// END
+}",
+@"	var $e = $Default({def_E});
+");
+		}
+
+		[Test]
+		public void IntConstantsCastToEnum() {
+			AssertCorrect(
+@"enum E {}
+public void M() {
+	// BEGIN
+	var e1 = (E)0;
+	var e2 = (E)1;
+	// END
+}",
+@"	var $e1 = $Default({def_E});
+	var $e2 = 1;
+");
+		}
 	}
 }

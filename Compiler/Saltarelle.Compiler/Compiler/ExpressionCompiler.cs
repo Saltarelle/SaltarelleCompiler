@@ -1367,7 +1367,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
-			if (rr.ConstantValue == null)
+			if (rr.ConstantValue == null || (rr.Type.Kind == TypeKind.Enum) && rr.ConstantValue.Equals(0))
 				return _runtimeLibrary.Default(rr.Type, this);
 			else
 				return JSModel.Utils.MakeConstantExpression(rr.ConstantValue);

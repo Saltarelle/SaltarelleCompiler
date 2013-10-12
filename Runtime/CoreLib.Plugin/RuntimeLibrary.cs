@@ -406,7 +406,7 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}
 			else if (type.Kind == TypeKind.Enum) {
-				return JsExpression.Number(0);
+				return MetadataUtils.IsNamedValues(type.GetDefinition()) ? JsExpression.Null : JsExpression.Number(0);
 			}
 			else if (type is ITypeDefinition) {
 				switch (((ITypeDefinition)type).KnownTypeCode) {
