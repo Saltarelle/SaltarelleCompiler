@@ -1,4 +1,5 @@
-Fixed issue overriding toString and other issues caused by the DontEnum bug in IE<9 (#260)
+Fixed issue causing compiler error with await in if with empty else block (#259).
+Fixed issue overriding toString and other issues caused by the DontEnum bug in IE<9 (#260).
 
 2.4.0
 Fixed issue causing [NamedValues] enums not to work correctly when used as generic arguments (#256)
