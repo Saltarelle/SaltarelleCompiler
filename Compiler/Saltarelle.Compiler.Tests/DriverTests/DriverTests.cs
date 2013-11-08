@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using ICSharpCode.NRefactory;
-using Mono.Cecil;
+using IKVM.Reflection;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
 using System.Xml.XPath;
@@ -13,7 +12,13 @@ using System.Xml.XPath;
 namespace Saltarelle.Compiler.Tests.DriverTests {
 	[TestFixture]
 	public class DriverTests {
-		private void UsingFiles(Action a, params string[] files) {
+		private static void UsingAssembly(string path, Action<Assembly> action) {
+			using (var universe = new Universe()) {
+				action(universe.LoadFile(path));
+			}
+		}
+
+		private static void UsingFiles(Action a, params string[] files) {
 			try {
 				foreach (var f in files) {
 					var fn = Path.GetFullPath(f);
@@ -50,12 +55,32 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
 				var driver = new CompilerDriver(new MockErrorReporter());
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File1.cs", "File2.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void AssemblyNameIsCorrectInTheGeneratedScript() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"using System.Collections; public class C1 { public JsDictionary M() { return null; } }");
+				File.WriteAllText(Path.GetFullPath("File2.cs"), @"using System.Collections; public class C2 { public JsDictionary M() { return null; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs"), Path.GetFullPath("File2.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.Assembly.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True);
+				var text = File.ReadAllText(Path.GetFullPath("Test.js"));
+				Assert.That(text.Contains("ss.initAssembly($asm, 'Test.Assembly')"));    // Verify that the symbol was passed to the script compiler.
+			}, "File1.cs", "File2.cs", "Test.Assembly.dll", "Test.js");
 		}
 
 		[Test]
@@ -70,7 +95,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 103 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 45) && m.Format != null && m.Args.Length == 0));
@@ -91,7 +116,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
@@ -113,7 +138,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
@@ -135,7 +160,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
@@ -158,7 +183,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
@@ -179,7 +204,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages.Select(m => m.Code).ToList(), Is.EquivalentTo(new[] { 219, 78 }));
@@ -196,7 +221,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages.Select(m => m.Code), Is.EqualTo(new[] { 219 }));
@@ -216,7 +241,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages.Select(m => m.Code).ToList(), Is.EquivalentTo(new[] { 219 }));
@@ -244,7 +269,7 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages.Select(m => m.Code).ToList(), Is.EquivalentTo(new[] { 219 }));                              // Verify that the symbol was passed to mcs.
@@ -265,7 +290,7 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.ReadAllText(Path.GetFullPath("Test.js")).Contains("Class1"), Is.True);
@@ -284,13 +309,13 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				var content = File.ReadAllText(Path.GetFullPath("Test.js"));
+				var content = File.ReadAllText(Path.GetFullPath("Test.js")).Replace("\r\n", "\n");
 				Assert.That(content.Contains("Class1"), Is.False);
 				Assert.That(content.Contains("someVariable"), Is.False);
-				Assert.That(new System.Text.RegularExpressions.Regex("(?<!var) ").IsMatch(content), Is.False);
+				Assert.That(new System.Text.RegularExpressions.Regex("(?<!var|use) ").IsMatch(content), Is.False);
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
@@ -306,9 +331,9 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
@@ -324,9 +349,9 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
@@ -342,9 +367,9 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessagesText));
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
@@ -359,7 +384,7 @@ public class C1 {
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
 				var driver = new CompilerDriver(new MockErrorReporter());
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -378,7 +403,7 @@ public class C1 {
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
 				var driver = new CompilerDriver(new MockErrorReporter());
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -409,7 +434,7 @@ public class C1 {
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
 				var driver = new CompilerDriver(new MockErrorReporter());
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -432,7 +457,7 @@ public struct C1 {}
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Where(m => m.Severity == MessageSeverity.Error && m.Code == 7998 && m.Args[0].Equals("user-defined value type (struct)")), Is.Not.Empty);
@@ -458,7 +483,7 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -485,7 +510,7 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -513,7 +538,7 @@ public class C1 {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -545,14 +570,14 @@ class Program {
 }
 ");
 				var options = new CompilerOptions {
-					References         = { new Reference(Common.MscorlibPath), new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.NodeJS.dll")) },
+					References         = { new Reference(Common.MscorlibPath) },
 					SourceFiles        = { Path.GetFullPath("File1.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
@@ -574,15 +599,16 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.xml")), Is.True);
 				string doc = File.ReadAllText(Path.GetFullPath("Test.xml"));
 				Assert.That(XDocument.Parse(doc).XPathSelectElement("/doc/assembly/name").Value, Is.EqualTo("MyOutputAssembly"));
 
-				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("MyOutputAssembly.dll"));
-				Assert.That(asm.Name.Name, Is.EqualTo("MyOutputAssembly"));
+				UsingAssembly(Path.GetFullPath("MyOutputAssembly.dll"), asm => {
+					Assert.That(asm.GetName().Name, Is.EqualTo("MyOutputAssembly"));
+				});
 			}, "File.cs", "MyOutputAssembly.dll", "Test.js", "Test.xml");
 		}
 
@@ -597,14 +623,15 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.dll")), Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.js")), Is.True);
 
-				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("FirstFile.dll"));
-				Assert.That(asm.Name.Name, Is.EqualTo("FirstFile"));
+				UsingAssembly(Path.GetFullPath("FirstFile.dll"), asm => {
+					Assert.That(asm.GetName().Name, Is.EqualTo("FirstFile"));
+				});
 			}, "FirstFile.cs", "SecondFile.cs", "FirstFile.dll", "FirstFile.js");
 		}
 
@@ -619,7 +646,7 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Where(m => m.Severity == MessageSeverity.Error), Is.Not.Empty);
@@ -638,7 +665,7 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Where(m => m.Severity == MessageSeverity.Error && m.Format.Contains("NonExistentFile.cs")), Is.Not.Empty);
@@ -661,7 +688,7 @@ class Program {
 
 				bool result;
 				using (File.Open(Path.GetFullPath("MyOutputFile.dll"), FileMode.Create)) {
-					result = driver.Compile(options, false);
+					result = driver.Compile(options);
 				}
 
 				Assert.That(result, Is.False);
@@ -685,7 +712,7 @@ class Program {
 
 				bool result;
 				using (File.Open(Path.GetFullPath("MyOutputFile.js"), FileMode.Create)) {
-					result = driver.Compile(options, false);
+					result = driver.Compile(options);
 				}
 
 				Assert.That(result, Is.False);
@@ -709,7 +736,7 @@ class Program {
 
 				bool result;
 				using (File.Open(Path.GetFullPath("MyOutputFile.xml"), FileMode.Create)) {
-					result = driver.Compile(options, false);
+					result = driver.Compile(options);
 				}
 
 				Assert.That(result, Is.False);
@@ -731,7 +758,7 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.xml")), Is.True);
@@ -754,7 +781,7 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True);
@@ -775,7 +802,7 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True);
@@ -795,7 +822,7 @@ class Program {
 				};
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options, false);
+				var result = driver.Compile(options);
 
 				Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 				Assert.That(er.AllMessages.Any(m => m.Code == 7997 && (string)m.Args[0] == "MyNonexistentAssembly"));
@@ -818,7 +845,7 @@ class Program {
 					OutputAssemblyPath = Path.GetFullPath("Ref.dll"),
 					OutputScriptPath   = Path.GetFullPath("Ref.js"),
 				};
-				bool result = driver.Compile(options, false);
+				bool result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
@@ -830,7 +857,7 @@ class Program {
 					OutputScriptPath   = Path.GetFullPath("Out.js"),
 				};
 
-				result = driver.Compile(options, false);
+				result = driver.Compile(options);
 				Assert.That(result, Is.False);
 				Assert.That(er.AllMessages.Single().Code, Is.EqualTo(7998));
 				Assert.That(er.AllMessages.Single().Args[0], Is.EqualTo("aliased reference"));
@@ -845,14 +872,14 @@ class Program {
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
 
-				File.WriteAllText(Path.GetFullPath("MyAdditionalReferencePath\\Ref.cs"), @"public class Class1 { public void M() {} }");
+				File.WriteAllText(Path.GetFullPath("MyAdditionalReferencePath/Ref.cs"), @"public class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
 					References         = { new Reference(Common.MscorlibPath) },
-					SourceFiles        = { Path.GetFullPath("MyAdditionalReferencePath\\Ref.cs") },
-					OutputAssemblyPath = Path.GetFullPath("MyAdditionalReferencePath\\Ref.dll"),
-					OutputScriptPath   = Path.GetFullPath("MyAdditionalReferencePath\\Ref.js"),
+					SourceFiles        = { Path.GetFullPath("MyAdditionalReferencePath/Ref.cs") },
+					OutputAssemblyPath = Path.GetFullPath("MyAdditionalReferencePath/Ref.dll"),
+					OutputScriptPath   = Path.GetFullPath("MyAdditionalReferencePath/Ref.js"),
 				};
-				bool result = driver.Compile(options, false);
+				bool result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
@@ -865,7 +892,7 @@ class Program {
 					AdditionalLibPaths = { Path.GetFullPath("MyAdditionalReferencePath") },
 				};
 
-				result = driver.Compile(options, false);
+				result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Out.dll")), Is.True);
 
@@ -887,7 +914,7 @@ class Program {
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
-				bool result = driver.Compile(options, false);
+				bool result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
@@ -912,7 +939,7 @@ class Program {
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js")
 				};
-				bool result = driver.Compile(options, false);
+				bool result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
@@ -940,12 +967,13 @@ class Program {
 					KeyFile            = Path.GetFullPath("Key.snk"),
 				};
 
-				bool result = driver.Compile(options, false);
+				bool result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
-				var asm = AssemblyDefinition.ReadAssembly("File.dll");
-				Assert.That(asm.Name.PublicKeyToken, Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
+				UsingAssembly("File.dll", asm => {
+					Assert.That(asm.GetName().GetPublicKeyToken(), Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
+				});
 			}, "Key.snk", "File.cs", "File.dll", "File.js");
 		}
 
@@ -962,7 +990,7 @@ class Program {
 			foreach (var r in references)
 				options.References.Add(new Reference(Path.GetFullPath(r + ".dll")));
 
-			bool result = driver.Compile(options, false);
+			bool result = driver.Compile(options);
 			return Tuple.Create(result, er.AllMessages);
 		}
 
@@ -982,6 +1010,115 @@ class Program {
 				Assert.That(result.Item2[0].Code, Is.EqualTo(7996));
 				Assert.That(result.Item2[0].Args[0], Is.EqualTo("Asm1"));
 			}, (from name in new[] { "Asm1", "Asm2", "Asm3", "Asm4" } from ext in new[] { ".cs", ".dll", ".js" } select name + ext).ToArray());
+		}
+
+		[Test]
+		public void GeneratedMetadataDoesNotHaveLeadingAtSignsInIdentifiers() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"),
+@"class @char {}
+namespace @string {
+	namespace @float {
+		class @for {}
+	}
+}
+public class C {
+	public void M(int @event) {
+		@event = 10;
+		@int = @event;
+		@short = @event;
+		@double(@event);
+		var t = typeof(@char);
+		var t2 = typeof(@string.@float.@for);
+	}
+	public int @int { get; set; }
+	public int @short;
+	public void @double(int x) {}
+	public event System.EventHandler @if;
+}");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+				UsingAssembly(Path.GetFullPath("Test.dll"), asm => {
+					var types = asm.GetTypes();
+					Assert.That(types.Any(t => t.Name == "char"));
+					Assert.That(types.Any(t => t.FullName == "string.float.for"));
+					var c = types.Single(t => t.Name == "C");
+					Assert.That(c.GetProperties().Any(p => p.Name == "int"));
+					Assert.That(c.GetFields().Any(p => p.Name == "short"));
+					Assert.That(c.GetMethods().Any(p => p.Name == "double"));
+					Assert.That(c.GetEvents().Any(p => p.Name == "if"));
+				});
+			}, "File1.cs", "Test.dll", "Test.js");	
+		}
+
+		[Test]
+		public void ExpressionTreesWork() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() { System.Linq.Expressions.Expression<System.Func<int, int, int>> e = (a, b) => a + b; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void CanEmbedResources() {
+			byte[] publicContent  = new byte[] { 0xB7, 0xF3, 0x36, 0x6F, 0xA3, 0x4B, 0x4B, 0x19, 0x83, 0x27, 0x1C, 0x02, 0x19, 0xCA, 0x2E, 0x2E };
+			byte[] privateContent = new byte[] { 0xCB, 0xDC, 0xDB, 0x54, 0x38, 0x9E, 0x42, 0x1A, 0xAA, 0x35, 0xD8, 0x95, 0x8D, 0x97, 0xF0, 0xCF };
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
+				File.WriteAllBytes(Path.GetFullPath("PublicResource.txt"), publicContent);
+				File.WriteAllBytes(Path.GetFullPath("PrivateResource.txt"), privateContent);
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+					EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("PublicResource.txt"), "The.Resource.Name", true), new EmbeddedResource(Path.GetFullPath("PrivateResource.txt"), "Secret.Name", false) }
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+				UsingAssembly("Test.dll", asm => {
+					using (var res1 = asm.GetManifestResourceStream("The.Resource.Name")) {
+						Assert.That(res1, Is.Not.Null, "Resource 1 not found");
+						using (var ms = new MemoryStream()) {
+							res1.CopyTo(ms);
+							Assert.That(ms.ToArray(), Is.EqualTo(publicContent));
+						}
+					}
+					Assert.That(asm.GetManifestResourceInfo("The.Resource.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Public));
+
+					using (var res2 = asm.GetManifestResourceStream("Secret.Name")) {
+						Assert.That(res2, Is.Not.Null, "Resource 2 not found");
+						using (var ms = new MemoryStream()) {
+							res2.CopyTo(ms);
+							Assert.That(ms.ToArray(), Is.EqualTo(privateContent));
+						}
+					}
+					Assert.That(asm.GetManifestResourceInfo("Secret.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Private));
+				});
+			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
 		}
 	}
 }

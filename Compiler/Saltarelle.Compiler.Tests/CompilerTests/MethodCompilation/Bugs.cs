@@ -13,19 +13,19 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 using foo;
 using foo;
 namespace bar {
-    public class Bar {
-        public void M() {
+	public class Bar {
+		public void M() {
 			// BEGIN
-            var fm = new Foo();
+			var fm = new Foo();
 			// END
-        }
-    }
+		}
+	}
 }
 namespace foo {
-    public class Foo {
-    }
+	public class Foo {
+	}
 }",
-@"	var $fm = new {inst_Foo}();
+@"	var $fm = new {sm_Foo}();
 ", addSkeleton: false);
 		}
 	}

@@ -58,6 +58,7 @@ tokens
 	CASE		= 'case' ;
 	CATCH 		= 'catch' ;
 	CONTINUE 	= 'continue' ;
+	DEBUGGER 	= 'debugger' ;
 	DEFAULT		= 'default' ;
 	DELETE		= 'delete' ;
 	DO 		= 'do' ;
@@ -81,41 +82,37 @@ tokens
 	WITH 		= 'with' ;
 
 // Future reserved words
+/*
 	ABSTRACT	= 'abstract' ;
-	BOOLEAN 	= 'boolean' ;
-	BYTE 		= 'byte' ;
-	CHAR 		= 'char' ;
-	CLASS 		= 'class' ;
-	CONST 		= 'const' ;
-//	DEBUGGER 	= 'debugger' ;
+	BOOLEAN		= 'boolean' ;
+	BYTE		= 'byte' ;
+	CHAR		= 'char' ;
+	CLASS		= 'class' ;
+	CONST		= 'const' ;
 	DOUBLE		= 'double' ;
-	ENUM 		= 'enum' ;
-	EXPORT 		= 'export' ;
+	ENUM		= 'enum' ;
+	EXPORT		= 'export' ;
 	EXTENDS		= 'extends' ;
-	FINAL 		= 'final' ;
-	FLOAT 		= 'float' ;
-	GOTO 		= 'goto' ;
-	IMPLEMENTS 	= 'implements' ;
+	FINAL		= 'final' ;
+	FLOAT		= 'float' ;
+	IMPLEMENTS	= 'implements' ;
 	IMPORT		= 'import' ;
-	INT 		= 'int' ;
-	INTERFACE 	= 'interface' ;
-	LONG 		= 'long' ;
-	NATIVE 		= 'native' ;
-	PACKAGE 	= 'package' ;
-	PRIVATE 	= 'private' ;
+	INT			= 'int' ;
+	INTERFACE	= 'interface' ;
+	LONG		= 'long' ;
+	NATIVE		= 'native' ;
+	PACKAGE		= 'package' ;
+	PRIVATE		= 'private' ;
 	PROTECTED 	= 'protected' ;
 	PUBLIC		= 'public' ;
-	SHORT 		= 'short' ;
-	STATIC 		= 'static' ;
-	SUPER 		= 'super' ;
-	SYNCHRONIZED 	= 'synchronized' ;
-	THROWS 		= 'throws' ;
-	TRANSIENT 	= 'transient' ;
-	VOLATILE 	= 'volatile' ;
-
-// Made-up keywords
-	YIELD		= 'yield';
-	AWAIT       = 'await';
+	SHORT		= 'short' ;
+	STATIC		= 'static' ;
+	SUPER		= 'super' ;
+	SYNCHRONIZED	= 'synchronized' ;
+	THROWS		= 'throws' ;
+	TRANSIENT	= 'transient' ;
+	VOLATILE	= 'volatile' ;
+*/
 
 // Punctuators
 	LBRACE		= '{' ;
@@ -200,6 +197,7 @@ tokens
 
 @lexer::members {
 	public override void ReportError(RecognitionException e) { throw e; }
+	public bool AllowCustomKeywords { get; set; }
 }
 
 @parser::members {
@@ -296,6 +294,11 @@ fragment LineTerminator
 EOL
 	: ( ( CR LF? ) | LF | LS | PS ) { $channel = Hidden; }
 	;
+
+GOTO		:	'goto' { if (!AllowCustomKeywords) { $type = Identifier; } };
+AWAIT		:	'await' { if (!AllowCustomKeywords) { $type = Identifier; } };
+YIELD		:	'yield' { if (!AllowCustomKeywords) { $type = Identifier; } };
+
 // $>
 
 // $<	Comments (7.4)
@@ -324,7 +327,7 @@ token
 
 reservedWord
 	: keyword
-	| futureReservedWord
+//	| futureReservedWord
 	| NULL
 	| booleanLiteral
 	;
@@ -338,6 +341,7 @@ keyword
 	| CASE
 	| CATCH
 	| CONTINUE
+	| DEBUGGER
 	| DEFAULT
 	| DELETE
 	| DO
@@ -364,7 +368,7 @@ keyword
 // $>
 
 // $<	Future reserved words (7.5.3)
-
+/*
 futureReservedWord
 	: ABSTRACT
 	| BOOLEAN
@@ -372,7 +376,6 @@ futureReservedWord
 	| CHAR
 	| CLASS
 	| CONST
-//	| DEBUGGER
 	| DOUBLE
 	| ENUM
 	| EXPORT
@@ -398,6 +401,7 @@ futureReservedWord
 	| TRANSIENT
 	| VOLATILE
 	;
+*/
 
 // $>
 
@@ -639,6 +643,12 @@ RegularExpressionLiteral
 // $<	A.3 Expressions (11)
 //
 
+identifierOrReservedWord
+	:
+	Identifier	-> Identifier
+	| rw=reservedWord	-> Identifier[((Antlr.Runtime.Tree.ITree)$rw.tree).Text]
+	;
+
 // $<Primary expressions (11.1)
 
 primaryExpression
@@ -671,7 +681,7 @@ nameValuePair
 	;
 
 propertyName
-	: Identifier
+	: identifierOrReservedWord
 	| StringLiteral
 	| numericLiteral
 	;
@@ -708,7 +718,7 @@ leftHandSideExpression[bool allowCalls]
 	(
 		{ allowCalls }? arguments			-> ^( CALL $leftHandSideExpression arguments )
 		| (LBRACK) => LBRACK expression RBRACK	-> ^( BYINDEX $leftHandSideExpression expression )
-		| (DOT) => DOT Identifier		-> ^( BYFIELD $leftHandSideExpression Identifier )
+		| (DOT) => DOT identifierOrReservedWord -> ^( BYFIELD $leftHandSideExpression identifierOrReservedWord )
 	)*
 	;
 
@@ -912,7 +922,7 @@ assignmentExpressionNoIn
 	
 // $<Comma operator (11.14)
 
-public expression
+expression
 	: exprs+=assignmentExpression ( COMMA exprs+=assignmentExpression )*
 	-> { $exprs.Count > 1 }? ^( CEXPR $exprs+ )
 	-> $exprs
@@ -988,6 +998,7 @@ statementTail
 	| switchStatement
 	| throwStatement
 	| tryStatement
+	| debuggerStatement
 	| gotoStatement
 	| yieldStatement
 	| awaitStatement
@@ -1334,9 +1345,16 @@ options
 	| statement
 	;
 
+public expressionOnly
+	: expression EOF
+	;
+
 // $>
 
 // $>
+
+debuggerStatement
+	: DEBUGGER;
 
 /* CUSTOM STUFF
 */

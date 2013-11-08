@@ -5,13 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Mono.Cecil;
 using NUnit.Framework;
 using System.Xml.XPath;
 using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler.Tests.EndToEndTests {
-	[TestFixture]
+	//[TestFixture]
 	public class EndToEndCompilation {
 		private CompilerOptions ReadProject(string filename, string solutionDir = null) {
 			var basePath = Path.GetDirectoryName(filename);
@@ -37,73 +36,17 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			return opts;
 		}
 
-		[Test]
-		public void CanCompileMscorlib() {
-			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Libraries\CoreLib\CoreLib.csproj"));
-
-			try {
-				var er = new MockErrorReporter();
-				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, false);
-				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages, Is.Empty);
-			}
-			finally {
-				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
-				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
-			}
-		}
-
-		[Test]
-		public void CanCompileLinqJSTests() {
-			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\LinqJSTests\LinqJSTests.csproj"));
-			opts.References.Clear();
-			opts.References.Add(new Reference(Common.MscorlibPath));
-			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Linq.dll")));
-
-			try {
-				var er = new MockErrorReporter();
-				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, false);
-				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages, Is.Empty);
-			}
-			finally {
-				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
-				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
-			}
-		}
-
-		[Test]
-		public void CanCompileCoreLibTests() {
-			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
-			opts.References.Clear();
-			opts.References.Add(new Reference(Path.GetFullPath(@"..\..\..\Runtime\bin\Script.Web.dll")));
-			opts.References.Add(new Reference(Common.MscorlibPath));
-
-			try {
-				var er = new MockErrorReporter();
-				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, false);
-				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages, Is.Empty);
-			}
-			finally {
-				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
-				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
-			}
-		}
-
 		//[Test, Ignore("Debugging purposes")]
 		public void CanCompileProject() {
-			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\src\Tests\CoreLibTests\CoreLibTests.csproj"));
+			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\CoreLib.TestScript\CoreLib.TestScript.csproj"));
 			opts.References.Clear();
 			opts.References.Add(new Reference(Common.MscorlibPath));
+			opts.References.Add(new Reference(Path.GetFullPath(@"../../../Runtime/QUnit/bin/Saltarelle.QUnit.dll")));
 			opts.AlreadyCompiled = true;
 			try {
 				var er = new MockErrorReporter();
 				var d = new CompilerDriver(er);
-				bool result = d.Compile(opts, false);
+				bool result = d.Compile(opts);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 			}

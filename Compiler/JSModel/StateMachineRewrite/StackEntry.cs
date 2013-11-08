@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		public string DebugToString() {
-			return new JsBlockStatement(Block.Statements.Skip(Index)).DebugToString();
+			return JsStatement.Block(Block.Statements.Skip(Index)).DebugToString();
 		}
 	}
 }

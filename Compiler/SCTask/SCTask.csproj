@@ -35,14 +35,10 @@
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\CommonAssemblyInfo.cs">
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\CompilerVersion.cs">
@@ -50,20 +46,16 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SCTask.cs" />
-    <Compile Include="TaskErrorReporter.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
-      <Project>{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}</Project>
-      <Name>ICSharpCode.NRefactory</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Saltarelle.Compiler\Saltarelle.Compiler.csproj">
-      <Project>{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}</Project>
-      <Name>Saltarelle.Compiler</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Saltarelle.Compiler.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SCTaskWorker\SCTaskWorker.csproj">
+      <Project>{86203334-9497-43c3-9bca-2cd4596fd445}</Project>
+      <Name>SCTaskWorker</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

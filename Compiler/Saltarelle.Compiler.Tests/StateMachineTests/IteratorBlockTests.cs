@@ -1953,7 +1953,8 @@ lbl1:
 		try {
 			switch ($state1) {
 				case 1:
-				case 2: {
+				case 2:
+				case 3: {
 					try {
 						break;
 					}
@@ -1972,13 +1973,17 @@ lbl1:
 		for (;;) {
 			switch ($state1) {
 				case 0: {
+					$state1 = 3;
+					continue $loop1;
+				}
+				case 3: {
 					$state1 = 1;
 					if (!a) {
 						$state1 = 2;
 						continue $loop1;
 					}
 					setCurrent(1);
-					$state1 = 0;
+					$state1 = 3;
 					return true;
 				}
 				case 2: {
@@ -2168,11 +2173,13 @@ lbl1:
 				case 1:
 				case 2:
 				case 3:
-				case 4: {
+				case 4:
+				case 5: {
 					try {
 						switch ($state1) {
 							case 3:
-							case 4: {
+							case 4:
+							case 5: {
 								try {
 									break;
 								}
@@ -2197,13 +2204,17 @@ lbl1:
 		for (;;) {
 			switch ($state1) {
 				case 0: {
+					$state1 = 5;
+					continue $loop1;
+				}
+				case 5: {
 					$state1 = 3;
 					if (!a) {
 						$state1 = 4;
 						continue $loop1;
 					}
 					setCurrent(1);
-					$state1 = 0;
+					$state1 = 5;
 					return true;
 				}
 				case 4: {

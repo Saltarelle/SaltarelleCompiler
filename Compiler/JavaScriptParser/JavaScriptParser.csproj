@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -46,6 +46,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CompilerVersion.cs">
+      <Link>Properties\CompilerVersion.cs</Link>
+    </Compile>
     <Compile Include="Parser.cs" />
     <Compile Include="ParserImpl\ES3Lexer.Action.cs" />
     <Compile Include="ParserImpl\ES3Parser.Action.cs" />
@@ -53,7 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Antlr3 Include="ParserImpl\ES3.g3">
-      <OutputFiles>ParserImpl\ES3.cs;ParserImpl\ES3.cs</OutputFiles>
+      <OutputFiles>ParserImpl\ES3Lexer.cs;ParserImpl\ES3Parser.cs</OutputFiles>
     </Antlr3>
     <Antlr3 Include="ParserImpl\ES3Walker.g3">
       <OutputFiles>ParserImpl\ES3Walker.cs</OutputFiles>

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.JSModel
 {
@@ -52,7 +54,8 @@ namespace Saltarelle.Compiler.JSModel
 				throw new ArgumentException("value");
 		}
 
-		private static readonly HashSet<string> _keywords = new HashSet<string>() { "abstract", "as", "boolean", "break", "byte", "case", "catch", "char", "class", "continue", "const", "debugger", "default", "delete", "do", "double", "else", "enum", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "is", "long", "namespace", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "use", "var", "void", "volatile", "while", "with", };
+		private static readonly HashSet<string> _keywords = new HashSet<string>() { "abstract", "arguments", "as", "boolean", "break", "byte", "case", "catch", "char", "class", "continue", "const", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "is", "let", "long", "namespace", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "use", "var", "void", "volatile", "while", "with", "yield", };
+		public static readonly ReadOnlyCollection<string> AllKeywords = _keywords.AsReadOnly();
 
 		public static bool IsJavaScriptReservedWord(string word) {
 			return _keywords.Contains(word);

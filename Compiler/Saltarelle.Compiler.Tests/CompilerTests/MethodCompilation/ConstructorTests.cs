@@ -10,21 +10,21 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class ConstructorTests : CompilerTestBase {
-        protected IMethod Constructor { get; private set; }
-        protected MethodCompiler MethodCompiler { get; private set; }
-        protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
+		protected IMethod Constructor { get; private set; }
+		protected MethodCompiler MethodCompiler { get; private set; }
+		protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
 
-        protected void Compile(string source, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
-            Compile(new[] { source }, metadataImporter: metadataImporter, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
+		protected void Compile(string source, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
+			Compile(new[] { source }, metadataImporter: metadataImporter, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
 				if (m.IsConstructor && (m.Attributes.Any() || useFirstConstructor)) {
 					Constructor = m;
 					MethodCompiler = mc;
 					CompiledConstructor = res;
 				}
-            });
+			});
 
 			Assert.That(Constructor, Is.Not.Null, "No constructors with attributes were compiled.");
-        }
+		}
 
 		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, bool useFirstConstructor = false) {
 			Compile(csharp, metadataImporter, useFirstConstructor: useFirstConstructor);
@@ -44,6 +44,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	}
 }",
 @"function() {
+	{sm_Object}.call(this);
 	this.M();
 }");
 		}
@@ -60,7 +61,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	}
 }",
 @"function() {
-	var $this = {};
+	var $this = {sm_Object}.ctor();
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
@@ -123,7 +124,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {};
+	var $this = {sm_Object}.ctor();
 	if (false) {
 		var $a = function($i) {
 			return $i + 1;
@@ -150,7 +151,7 @@ class D : B {
 	}
 }",
 @"function($x) {
-	{inst_C}.call(this);
+	{sm_C}.call(this);
 	this.M();
 }");
 		}
@@ -178,7 +179,7 @@ class D : B {
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
-	{inst_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	{sm_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
 		}
@@ -198,45 +199,56 @@ class D : B {
 	}
 }",
 @"function() {
-	{inst_C}.ctor$Int32.call(this, 0);
+	{sm_C}.ctor$Int32.call(this, 0);
 	this.M();
 }");
 		}
 
 		[Test]
-		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorWprks() {
+			AssertCorrect(
 @"class C {
+	static int P { get; set; }
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public C() : this(0, ""X"") {
+	public C() : this(P = 42, ""X"") {
 		M();
 	}
 
 	public C(int x, string s) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("__Literal_{x}_{s}__") });
-			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+}",
+@"function() {
+	{sm_C}.set_P(42);
+	$ShallowCopy(_(42)._('X'), this);
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("_({x})._({s})") });
 		}
 
 		[Test]
-		public void ChainingToConstructorImplementedAsJsonFromUnnamedConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void ChainingToConstructorImplementedAsJsonFromUnnamedConstructorWorks() {
+			AssertCorrect(
 @"class C {
+	public int X;
+	public string S;
+
+	static int P { get; set; }
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public C() : this(0, ""X"") {
+	public C() : this(P = 42, ""X"") {
 		M();
 	}
 
 	public C(int x, string s) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(new IMember[0]) });
-			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("not supported", StringComparison.InvariantCultureIgnoreCase) >= 0));
+}",
+@"function() {
+	{sm_C}.set_P(42);
+	$ShallowCopy({ $X: 42, $S: 'X' }, this);
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
 		[Test]
@@ -318,29 +330,37 @@ class D : B {
 		}
 
 		[Test]
-		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void ChainingToStaticMethodConstructorFromAnotherTypeOfConstructorWorks() {
+			AssertCorrect(
 @"class C {
-	public C() : this(0) {
+	public static int P { get; set; }
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(P = 0) {
 	}
 	public C(int x) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
-			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
+}",
+@"function() {
+	{sm_C}.set_P(0);
+	$ShallowCopy({sm_C}.ctor(0), this);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
-		public void InvokingBaseStaticMethodConstructorFromAnotherTypeOfConstructorIsAnError() {
-			var rpt = new MockErrorReporter(false);
-			Compile(new[] {
+		public void InvokingBaseStaticMethodConstructorFromAnotherTypeOfConstructorWorks() {
+			AssertCorrect(
 @"class B {
-	public B() {}
+	public B(int x) {}
 }
 class D : B {
-	public D() {}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
-			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("static method", StringComparison.InvariantCultureIgnoreCase) >= 0));
+	public static int P { get; set; }
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base(P = 1) {}
+}",
+@"function() {
+	{sm_D}.set_P(1);
+	$ShallowCopy({sm_B}.ctor(1), this);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -367,7 +387,7 @@ class C {
 		}
 
 		[Test]
-		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotDerivingFromObject() {
+		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotMarkedAsSkipInInitializer() {
 			AssertCorrect(
 @"class B {
 	public B() {}
@@ -382,9 +402,29 @@ class D : B {
 	}
 }",
 @"function() {
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
+		}
+
+		[Test]
+		public void ConstructorWithoutExplicitBaseInvokerDoesNotInvokeBaseClassDefaultConstructorIfMarkedAsSkipInInitializer() {
+			AssertCorrect(
+@"class B {
+	public B() {}
+}
+
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() {
+		M();
+	}
+}",
+@"function() {
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.Name == "B") });
 		}
 
 		[Test]
@@ -397,7 +437,7 @@ class D : B {
 	public C(int x) {
 	}
 }" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
-			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
+			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
 		[Test]
@@ -410,7 +450,7 @@ class D : B {
 class D : B {
 	public D() {}
 }" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
-			Assert.That(rpt.AllMessagesText.Any(msg => msg.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase) && msg.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
+			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
 		[Test]
@@ -436,10 +476,10 @@ class D : B {
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
-	var $this = new {inst_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	var $this = new {sm_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "C" && c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -456,9 +496,47 @@ class D : B {
 	}
 }",
 @"function() {
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
+		}
+
+		[Test]
+		public void InvokingBaseConstructorMarkedAsSkipInInitializerDoesNothing() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base() {
+		this.M();
+	}
+}",
+@"function() {
+	this.M();
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.Name == "B") });
+		}
+
+		[Test]
+		public void InvokingStaticMethodBaseConstructorMarkedAsSkipInInitializerCreatesAnEmptyObjectLiteral() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base() {
+		this.M();
+	}
+}",
+@"function() {
+	var $this = {};
+	$this.M();
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.DeclaringType.Name, skipInInitializer: c.DeclaringType.Name == "B") });
 		}
 
 		[Test]
@@ -508,7 +586,7 @@ class D : B {
 	var $tmp1 = {sm_D}.F1();
 	var $tmp2 = {sm_D}.F2();
 	var $tmp3 = {sm_D}.F3();
-	{inst_B}.call(this, 1, {sm_D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	{sm_B}.call(this, 1, {sm_D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed() });
 		}
@@ -526,6 +604,7 @@ class D : B {
 @"function() {
 	this.$f1 = 1;
 	this.$f2 = 'X';
+	{sm_Object}.call(this);
 }");
 		}
 
@@ -539,6 +618,7 @@ class D : B {
 @"function() {
 	this.$f1 = 1;
 	this.$f2 = 'X';
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -558,7 +638,7 @@ class D : B {
 	}
 }",
 @"function($x) {
-	{inst_C}.call(this);
+	{sm_C}.call(this);
 	this.M();
 }");
 		}
@@ -576,7 +656,7 @@ class D : B {
 	}
 }",
 @"function() {
-	var $this = {};
+	var $this = {sm_Object}.ctor();
 	$this.$x = 1;
 	$this.M();
 	return $this;
@@ -621,7 +701,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
 		}
@@ -642,7 +722,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 	this.M();
 }");
 		}
@@ -655,16 +735,7 @@ class D : B {
 class D : B {
 }",
 @"function() {
-	{inst_B}.call(this);
-}", useFirstConstructor: true);
-		}
-
-		[Test]
-		public void ImplicitlyDeclaredConstructorDoesNotInvokeBaseWhenDerivedFromObject() {
-			AssertCorrect(
-@"class C {
-}",
-@"function() {
+	{sm_B}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -678,7 +749,7 @@ class D : B {
 }",
 @"function() {
 	this.$i = 1;
-	{inst_B}.call(this);
+	{sm_B}.call(this);
 }", useFirstConstructor: true);
 		}
 
@@ -692,14 +763,15 @@ class C {
 	X x = new X { P = 10 };
 }",
 @"function() {
-	var $tmp1 = new {inst_X}();
+	var $tmp1 = new {sm_X}();
 	$tmp1.set_P(10);
 	this.$x = $tmp1;
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
 
-        [Test]
-        public void InstanceFieldWithoutInitializerIsInitializedToDefault() {
+		[Test]
+		public void InstanceFieldWithoutInitializerIsInitializedToDefault() {
 			AssertCorrect(
 @"class C {
 	int i;
@@ -708,39 +780,42 @@ class C {
 	object o;
 }",
 @"function() {
-	this.$i = 0;
+	this.$i = $Default({def_Int32});
 	this.$i2 = 1;
-	this.$s = null;
-	this.$o = null;
+	this.$s = $Default({def_String});
+	this.$o = $Default({def_Object});
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
-        }
+		}
 
-        [Test]
-        public void InstanceFieldInitializedToDefaultValueForTypeParamWorks() {
+		[Test]
+		public void InstanceFieldInitializedToDefaultValueForTypeParamWorks() {
 			AssertCorrect(
 @"class C<T> {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = $Default(def_$T);
-	this.$t2 = $Default(def_$T);
+	this.$t1 = $Default($T);
+	this.$t2 = $Default($T);
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
-        }
+		}
 
-        [Test]
-        public void InstanceFieldInitializedToDefaultValueForReferenceTypeParamWorks() {
+		[Test]
+		public void InstanceFieldInitializedToDefaultValueForReferenceTypeParamWorks() {
 			AssertCorrect(
 @"class C<T> where T : class {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = null;
-	this.$t2 = null;
+	this.$t1 = $Default($T);
+	this.$t2 = $Default($T);
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
-        }
+		}
 
-        [Test]
-        public void InitializingAnInstanceFieldToALambdaWorks() {
+		[Test]
+		public void InitializingAnInstanceFieldToALambdaWorks() {
 			AssertCorrect(
 @"class C {
 	System.Func<int, string> f1 = x => ""A"";
@@ -757,11 +832,12 @@ class C {
 	this.$f3 = function($x) {
 		return 'C';
 	};
+	{sm_Object}.call(this);
 }", useFirstConstructor: true);
-        }
+		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+		public void ChainingToUnnamedParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
@@ -770,12 +846,12 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
-	{inst_C1}.x.call(this, 4, 8, [59, 12, 4]);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+		public void ChainingToUnnamedParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
@@ -784,12 +860,12 @@ class C {
 	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
 }",
 @"function() {
-	{inst_C1}.x.call(this, 4, 8, [59, 12, 4]);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+		public void ChainingToUnnamedParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
@@ -798,24 +874,206 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
-	{inst_C1}.x.call(this, 4, 8, 59, 12, 4);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+	{sm_C1}.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
 		[Test]
-		public void ChainingToParamArrayConstructorThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
+		public void ChainingToUnnamedParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	static int[] args = new[] { 59, 12, 4 };
+	public C1(int x, int y, params int[] args) {}
 
-			Compile(new[] {
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, args) {}
+}",
+@"function() {
+	{sm_C1}.apply(this, [4, 8].concat({sm_C1}.$args));
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+
+			AssertCorrect(
 @"class C1 {
 	public C1(int x, int y, params int[] args) {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
 	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
-}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) }, errorReporter: er);
+}",
+@"function() {
+	{sm_C1}.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+		}
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("constructor") && er.AllMessagesText[0].Contains("expanded form"));
+		[Test]
+		public void ChainingToNamedParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+		}
+
+		[Test]
+		public void ChainingToNamedParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+		}
+
+		[Test]
+		public void ChainingToNamedParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToNamedParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	static int[] args = new[] { 59, 12, 4 };
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, args) {}
+}",
+@"function() {
+	{sm_C1}.x.apply(this, [4, 8].concat({sm_C1}.$args));
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatDoesNotExpandArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatExpandsArgumentsInExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, 59, 12, 4) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToStaticMethodParamArrayConstructorThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C1 {
+	static int[] args = new[] { 59, 12, 4 };
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, args) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3.apply(null, [4, 8].concat({sm_C1}.$args));
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+
+			AssertCorrect(
+@"class C1 {
+	public C1(int x, int y, params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
+}",
+@"function() {
+	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+		}
+
+		[Test]
+		public void ChainingToInlineCodeConstructorThatUsesExpandedParameterPlaceholderInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] {
+@"class C1 {
+	public static int[] a = null;
+
+	public C1(params int[] args) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C1() : this(a) {
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})") : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("constructor") && msg.FormattedMessage.Contains("C1") && msg.FormattedMessage.Contains("params parameter expanded")));
+		}
+
+		[Test]
+		public void ChainingToInlineCodeConstructorInNonExpandedFormUsesNonExpandedPattern() {
+			AssertCorrect(
+@"class C {
+	public static int[] a = null;
+	public C(params int[] args) {}
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(a) {
+	}
+}",
+@"function() {
+	$ShallowCopy(_2({sm_C}.$a), this);
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : ConstructorScriptSemantics.Unnamed() });
 		}
 	}
 }

@@ -1,4 +1,8 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using ICSharpCode.NRefactory.TypeSystem;
+using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
@@ -686,6 +690,32 @@ public void M() {
 		}
 
 		[Test]
+		public void ToNullableAndTruncatingAtTheSameTime() {
+			AssertCorrect(
+@"public void M() {
+	double d = 1;
+	// BEGIN
+	var i = (int?)d;
+	// END
+}",
+@"	var $i = $Truncate($d);
+");
+		}
+
+		[Test]
+		public void FromNullableAndTruncatingAtTheSameTime() {
+			AssertCorrect(
+@"public void M() {
+	double? d = 1;
+	// BEGIN
+	var i = (int)d;
+	// END
+}",
+@"	var $i = $Truncate($FromNullable($d));
+");
+		}
+
+		[Test]
 		public void NullLiteralToNullable() {
 			AssertCorrect(
 @"public void M() {
@@ -1284,8 +1314,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, ct_$U);
-	var $u2 = $Upcast($t, ct_$U);
+@"	var $u1 = $Upcast($t, $U);
+	var $u2 = $Upcast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1296,8 +1326,8 @@ public void M<T>() where T : class, D, I {
 	U u2 = t;
 	// END
 }",
-@"	var $u1 = $Upcast($t, ct_$U);
-	var $u2 = $Upcast($t, ct_$U);
+@"	var $u1 = $Upcast($t, $U);
+	var $u2 = $Upcast($t, $U);
 ");
 		}
 
@@ -1316,9 +1346,9 @@ public void M<T>() where T : D {
 	T t3 = (T)d;
 	// END
 }",
-@"	var $t1 = $Cast($o, ct_$T);
-	var $t2 = $Cast($b, ct_$T);
-	var $t3 = $Cast($d, ct_$T);
+@"	var $t1 = $Cast($o, $T);
+	var $t2 = $Cast($b, $T);
+	var $t3 = $Cast($d, $T);
 ");
 
 			AssertCorrect(
@@ -1334,9 +1364,9 @@ public void M<T>() where T : class, D {
 	T t3 = (T)d;
 	// END
 }",
-@"	var $t1 = $Cast($o, ct_$T);
-	var $t2 = $Cast($b, ct_$T);
-	var $t3 = $Cast($d, ct_$T);
+@"	var $t1 = $Cast($o, $T);
+	var $t2 = $Cast($b, $T);
+	var $t3 = $Cast($d, $T);
 ");
 		}
 
@@ -1350,7 +1380,7 @@ public void M<T>() {
 	T t = (T)i;
 	// END
 }",
-@"	var $t = $Cast($i, ct_$T);
+@"	var $t = $Cast($i, $T);
 ");
 
 			AssertCorrect(
@@ -1361,7 +1391,7 @@ public void M<T>() where T : class {
 	T t = (T)i;
 	// END
 }",
-@"	var $t = $Cast($i, ct_$T);
+@"	var $t = $Cast($i, $T);
 ");
 		}
 
@@ -1399,7 +1429,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, ct_$U);
+@"	var $u = $Cast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1409,7 +1439,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, ct_$U);
+@"	var $u = $Cast($t, $U);
 ");
 
 			AssertCorrect(
@@ -1419,7 +1449,7 @@ public void M<T>() where T : class {
 	U u = (U)t;
 	// END
 }",
-@"	var $u = $Cast($t, ct_$U);
+@"	var $u = $Cast($t, $U);
 ");
 		}
 
@@ -1601,7 +1631,7 @@ void M() {
 	var c = (int)new MyConvertible();
 	// END
 }",
-@"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {inst_MyConvertible}()));
+@"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()));
 ");
 		}
 	}

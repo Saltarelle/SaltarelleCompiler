@@ -109,15 +109,15 @@ public void M() {
 		public void InvokingBaseStaticMemberFromDerivedClassWorks() {
 			AssertCorrect(@"
 public class Class1 {
-    public static void Test1() {}
+	public static void Test1() {}
 }
 
 public class Class2 : Class1 {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Test1();
+		Test1();
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1();
 ", addSkeleton: false);
@@ -127,18 +127,18 @@ public class Class2 : Class1 {
 		public void InvokingBaseStaticMemberThroughDerivedClassWorks() {
 			AssertCorrect(@"
 public class Class1 {
-    public static void Test1() {}
+	public static void Test1() {}
 }
 
 public class Class2 : Class1 {
 }
 
 public class C {
-    static void M() {
+	static void M() {
 		// BEGIN
-        Class2.Test1();
+		Class2.Test1();
 		// END
-    }
+	}
 }",
 @"	{sm_Class1}.$Test1();
 ", addSkeleton: false);
@@ -246,6 +246,91 @@ public void M() {
 		}
 
 		[Test]
+		public void NormalMethodInvocationWithRefAndOutArgumentsWorksForReorderedAndDefaultArguments() {
+			AssertCorrect(
+@"void F(int a, ref int b, out int c) { c = 0; }
+int F1() { return 0; }
+public void M() {
+	int x = 0, y = 0;
+	// BEGIN
+	F(b: ref x, c: out y, a: F1());
+	// END
+}
+",
+@"	this.$F(this.$F1(), $x, $y);
+");
+		}
+
+		[Test]
+		public void NormalMethodInvocationWorksForReorderedAndDefaultArgumentsWithAdditionalStatements() {
+			AssertCorrect(
+@"void F(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+int F5(int x) { return 0; }
+int F6(int x) { return 0; }
+int P1 { get; set; }
+int P2 { get; set; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F5(P1 = F2()), f: F6(P2 = F3()), b: F4());
+	// END
+}
+",
+@"	var $tmp2 = this.$F1();
+	var $tmp1 = this.$F2();
+	this.set_$P1($tmp1);
+	var $tmp4 = this.$F5($tmp1);
+	var $tmp3 = this.$F3();
+	this.set_$P2($tmp3);
+	var $tmp5 = this.$F6($tmp3);
+	this.$F(1, this.$F4(), 3, $tmp2, 5, $tmp5, $tmp4);
+");
+		}
+
+		[Test]
+		public void ParametersAreEvaluatedLeftToRightWhenReorderingParameters1() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), a: F2(), c: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	this.$F($tmp2, this.$F4(), $tmp3, $tmp1);
+");
+		}
+
+		[Test]
+		public void ParametersAreEvaluatedLeftToRightWhenReorderingParameters2() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(c: F1(), a: 1, d: 2, b: F2());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	this.$F(1, this.$F2(), $tmp1, 2);
+");
+		}
+		
+		[Test]
 		public void PassingRefAndOutParametersToNormalMethodWorks() {
 			AssertCorrect(
 @"void F(ref int x, out int y, int z) { y = 0; }
@@ -285,7 +370,7 @@ public void M() {
 				}
 			", errorReporter: er);
 
-			er.AllMessagesText.Where(m => m.StartsWith("Error:")).Should().NotBeEmpty();
+			er.AllMessages.Where(m => m.Severity == MessageSeverity.Error).Should().NotBeEmpty();
 		}
 
 		[Test]
@@ -461,7 +546,25 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingMethodImplementedAsInlineCodeWorks() {
+		public void InvokingMethodImplementedAsInlineCodeExpressionWorks() {
+			AssertCorrect(
+@"class X<T1> { public class Y<T2> { public int F<T3>(T1 x, T2 y, T3 z) { return 0; } } }
+public void M() {
+	X<int>.Y<byte> o = null;
+	int a = 0;
+	byte b = 0;
+	string c = null;
+	// BEGIN
+	int x = o.F(a, b, c);
+	// END
+}",
+@"	var $x = _({sm_Object})._({ga_Int32})._({ga_Byte})._({ga_String})._($o)._($a)._($b)._($c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({$System.Object})._({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+
+		[Test]
+		public void InvokingVoidMethodImplementedAsInlineCodeWithMultipleStatementsWorks() {
 			AssertCorrect(
 @"class X<T1> { public class Y<T2> { public void F<T3>(T1 x, T2 y, T3 z) {} } }
 public void M() {
@@ -473,8 +576,31 @@ public void M() {
 	o.F(a, b, c);
 	// END
 }",
-@"	_({sm_Int32})._({sm_Byte})._({sm_String})._($o)._($a)._($b)._($c);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T1})._({T2})._({T3})._({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+@"	if ({ga_Int32}) {
+		{ga_Byte};
+	}
+	else {
+		{ga_String};
+	}
+	var $$ = _($o)._($a)._($b)._($c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("if ({T1}) {T2}; else {T3}; var $$ = _({this})._({x})._({y})._({z})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeWithCustomNonVirtualCodeWorks() {
+			AssertCorrect(
+@"class B<T1> {
+	public virtual void F<T2>(T1 x, T2 y) {}
+}
+class D : B<int> {
+	public override void M() {
+		// BEGIN
+		base.F(1, ""X"");
+		// END
+	}
+}",
+@"	_({ga_Int32})._({ga_String})._(this)._(1)._('X');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("X", nonVirtualInvocationLiteralCode: "_({T1})._({T2})._({this})._({x})._({y})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSkeleton: false);
 		}
 
 		[Test]
@@ -499,10 +625,235 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForParametersUsedTwice() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d, int e) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+class X { public int x; }
+public void M() {
+	int a = 0;
+	X x;
+	// BEGIN
+	F(F1(), a, F2(), x.x, F3());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	_($tmp1)._($a)._($tmp2)._($x.$x)._($tmp2)._($x.$x)._(this.$F3());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})._({c})._({d})._({e})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForParametersUsedTwiceWhenArgumentsReordered() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d, int e) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+class X { public int x; }
+public void M() {
+	int a = 0;
+	X x;
+	// BEGIN
+	F(F1(), c: F2(), b: a, d: x.x, e: F3());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	_($tmp1)._($a)._($tmp2)._($x.$x)._($tmp2)._($x.$x)._(this.$F3());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})._({c})._({d})._({e})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForThisIfRequired1() {
+			AssertCorrect(
+@"void F(int a) {}
+int F1() { return 0; }
+C X() { return null; }
+public void M() {
+	// BEGIN
+	X().F(F1());
+	// END
+}
+",
+@"	var $tmp1 = this.$X();
+	var $tmp2 = this.$F1();
+	_($tmp1)._($tmp2)._($tmp2);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({a})._({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeCreatesTemporariesForThisIfRequired2() {
+			AssertCorrect(
+@"void F(int a, int b) {}
+int F1() { return 0; }
+int F2() { return 0; }
+C X() { return null; }
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	X().F(F1(), a);
+	// END
+}
+",
+@"	var $tmp1 = this.$X();
+	_($tmp1)._($tmp1)._(this.$F1())._($a);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({this})._({this})._({a})._({b})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesThisIfNotUsedInTheInlineCode() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+class X { public int x; }
+public void M() {
+	int a = 0;
+	// BEGIN
+	F(F1(), F2(), F3(), a);
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	this.$F2();
+	_($tmp1)._(this.$F3())._($a);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({c})._({d})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesArgumentNotUsedInTheInlineCode() {
+			AssertCorrect(
+@"void F(int a) {}
+int F1() { return 0; }
+C X() { return null; }
+public void M() {
+	// BEGIN
+	X().F(F1());
+	// END
+}
+",
+@"	this.$X();
+	_(this.$F1());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesArgumentsLeftTorightWhenTheInlineCodeDoesNotReorderArguments() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d:F1(), a:F2(), c:F3(), b:F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	_($tmp2)._(this.$F4())._($tmp3)._($tmp1);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({a})._({b})._({c})._({d})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesArgumentsLeftTorightWhenTheInlineCodeReordersArguments() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(F1(), F2(), F3(), F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	_($tmp2)._(this.$F4())._($tmp3)._($tmp1);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({b})._({d})._({c})._({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesArgumentsLeftToRightWhenTheInlineCodeReorderingUndoesTheNamedArgumentReordering() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(b: F1(), d: F2(), c: F3(), a: F4());
+	// END
+}
+",
+@"	_(this.$F1())._(this.$F2())._(this.$F3())._(this.$F4());
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({b})._({d})._({c})._({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeEvaluatesArgumentsLeftTorightWhenTheInlineCodeReordersThis() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+C X() { return null; }
+public void M() {
+	// BEGIN
+	X().F(F1(), F2(), F3(), F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$X();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	var $tmp4 = this.$F3();
+	_($tmp3)._(this.$F4())._($tmp1)._($tmp4)._($tmp2);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({b})._({d})._({this})._({c})._({a})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsInlineCodeWorksWithReorderedAndDefaultArgumentsWorksWhenTheInlineCodeMethodAlsoReordersArguments() {
+			AssertCorrect(
+@"void F(int a, int b, int c, int d, int e = 2) {}
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+C X() { return null; }
+public void M() {
+	// BEGIN
+	X().F(d: F1(), c: F2(), a: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$X();
+	var $tmp2 = this.$F1();
+	var $tmp3 = this.$F2();
+	var $tmp4 = this.$F3();
+	_(this.$F4())._($tmp2)._($tmp1)._($tmp3)._($tmp4)._(2);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({b})._({d})._({this})._({c})._({a})._({e})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
 		public void InvokingMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("Class.UnusableMethod")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
 		}
 
 		[Test]
@@ -569,7 +920,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	this.$F($a, $b);
-	$CallBase(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [], [this, $c, $d]);
+	$CallBase(bind_$InstantiateGenericType({B}, $T2), '$F', [], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -613,7 +964,7 @@ class D<T2> : B<T2> {
 }
 ",
 @"	$InstantiateGenericMethod(this.$F, {ga_Int32}).call(this, $a, $b);
-	$CallBase(bind_$InstantiateGenericType({B}, ga_$T2), '$F', [{ga_Int32}], [this, $c, $d]);
+	$CallBase(bind_$InstantiateGenericType({B}, $T2), '$F', [{ga_Int32}], [this, $c, $d]);
 ", addSkeleton: false);
 		}
 
@@ -682,8 +1033,8 @@ class C {
 	}
 }" }, metadataImporter: nc, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("generic argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("F1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("generic argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("F1"));
 
 			er = new MockErrorReporter(false);
 			Compile(new[] {
@@ -695,8 +1046,8 @@ class C {
 		F1<I1<I1<C1>>>();
 	}
 }" }, metadataImporter: nc, errorReporter: er);
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("not usable from script") && er.AllMessagesText[0].Contains("generic argument") && er.AllMessagesText[0].Contains("C1") && er.AllMessagesText[0].Contains("F1"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("generic argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("F1"));
 		}
 
 		[Test]
@@ -739,19 +1090,136 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
-
-			Compile(new[] {
-@"class C1 {
-	public void F(int x, int y, params int[] args) {}
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"class C {
+	public void F1(int x, int y, params int[] args) {}
+	public void F2(int x, params int[] args) {}
+	public void F3(params int[] args) {}
 	public void M() {
-		F(4, 8, new[] { 59, 12, 4 });
+		C c = null;
+		var args = new[] { 59, 12, 4 };
+		// BEGIN
+		F1(4, 8, args);
+		c.F2(42, args);
+		F3(args);
+		F1(4, 8, new[] { 59, 12, 4 });
+		// END
 	}
-}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
+}",
+@"	this.$F1.apply(this, [4, 8].concat($args));
+	$c.$F2.apply($c, [42].concat($args));
+	this.$F3.apply(this, $args);
+	this.$F1(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) });
+		}
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormDoesNotEvaluateTargetTwice() {
+			AssertCorrect(
+@"public C X() { return null; }
+public void F(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	X().F(4, args);
+	X().F(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	var $tmp1 = this.$X();
+	$tmp1.$F.apply($tmp1, [4].concat($args));
+	this.$X().$F(4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForStaticMethod() {
+			AssertCorrect(
+@"public static void F(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F(4, args);
+	F(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	{sm_C}.$F.apply(null, [4].concat($args));
+	{sm_C}.$F(4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForGenericMethod() {
+			AssertCorrect(
+@"public void F1<T>(int x, params int[] args) {}
+public static void F2<T>(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F1<int>(4, args);
+	F2<int>(4, args);
+	F1<int>(4, new[] { 59, 12, 4 });
+	F2<int>(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$InstantiateGenericMethod(this.$F1, {ga_Int32}).apply(this, [4].concat($args));
+	$InstantiateGenericMethod({sm_C}.$F2, {ga_Int32}).apply(null, [4].concat($args));
+	$InstantiateGenericMethod(this.$F1, {ga_Int32}).call(this, 4, 59, 12, 4);
+	$InstantiateGenericMethod({sm_C}.$F2, {ga_Int32}).call(null, 4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForBaseCall() {
+			AssertCorrect(
+@"class B {
+	public virtual void F(int x, params int[] args) {}
+}
+class C : B{
+	public override void F(int x, params int[] args) {}
+	public void M() {
+		var args = new[] { 59, 12, 4 };
+		// BEGIN
+		base.F(4, args);
+		base.F(4, new[] { 59, 12, 4 });
+		// END
+	}
+}",
+@"	$CallBase({bind_B}, '$F', [], [this, 4, $args]);
+	$CallBase({bind_B}, '$F', [], [this, 4, [59, 12, 4]]);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) }, addSkeleton: false);
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForNonGenericStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"public void F(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F(4, args);
+	F(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	{sm_C}.$F.apply(null, [this, 4].concat($args));
+	{sm_C}.$F(this, 4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", expandParams: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksForGenericStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"public void F<T>(int x, params int[] args) {}
+public void M() {
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	F<int>(4, args);
+	F<int>(4, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$InstantiateGenericMethod({sm_C}.$F, {ga_Int32}).apply(null, [this, 4].concat($args));
+	$InstantiateGenericMethod({sm_C}.$F, {ga_Int32}).call(null, this, 4, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", expandParams: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -769,21 +1237,37 @@ public void M() {
 		}
 
 		[Test]
-		public void InvokingParamArrayDelegateThatExpandsArgumentsInNonExpandedFormIsAnError() {
-			var er = new MockErrorReporter(false);
+		public void InvokingParamArrayDelegateThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public delegate void F(int x, int y, params int[] args);
+public void M() {
+	F f = null;
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	f(4, 8, args);
+	f(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$f.apply(null, [4, 8].concat($args));
+	$f(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) });
+		}
 
-			Compile(new[] {
-@"class C1 {
-	public delegate void F(int x, int y, params int[] args);
-	public void M() {
-		F delegateVar = null;
-		delegateVar(4, 8, new[] { 59, 12, 4 });
-	}
-}" }, metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(expandParams: true) }, errorReporter: er);
-
-
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("C1.F") && er.AllMessagesText[0].Contains("expanded form"));
+		[Test]
+		public void InvokingParamArrayDelegateWithBindThisToFirstParameterThatExpandsArgumentsInNonExpandedFormWorks() {
+			AssertCorrect(
+@"public delegate void F(int x, int y, params int[] args);
+public void M() {
+	F f = null;
+	var args = new[] { 59, 12, 4 };
+	// BEGIN
+	f(4, 8, args);
+	f(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	$f.apply(4, [8].concat($args));
+	$f.call(4, 8, 59, 12, 4);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true, expandParams: true) });
 		}
 
 		[Test]
@@ -850,8 +1334,8 @@ public void M() {
 	}
 }" }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test]
@@ -866,8 +1350,8 @@ public void M() {
 	}
 }" }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test]
@@ -901,8 +1385,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
 		[Test]
@@ -917,8 +1401,8 @@ public void M() {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText[0].Contains("named argument") && er.AllMessagesText[0].Contains("Dynamic"));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
 		[Test]
@@ -998,8 +1482,8 @@ class C {
 	}
 }" }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("one argument")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test]
@@ -1021,8 +1505,8 @@ class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name + "$" + string.Join("$", m.Parameters.Select(p => p.Type.Name))) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("same script name")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("same script name")));
 		}
 
 		[Test]
@@ -1044,8 +1528,8 @@ class C {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" && m.Parameters[1].Type.Name == "String" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
-			Assert.That(er.AllMessagesText.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessagesText.Any(m => m.StartsWith("Error:") && m.Contains("not a normal method")));
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("not a normal method")));
 		}
 
 		[Test]
@@ -1088,6 +1572,253 @@ public void M() {
 }",
 @"	$f.call($a, $b);
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true) });
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsANormalMethodWithAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1<T> {
+	public void M(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsANormalMethodWithAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1 {
+	public void M<T>(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsANormalMethodWithIgnoredGenericArgumentsIsNotAnErrorIfTheMethodAlsoIgnoresGenericArguments() {
+			AssertCorrect(
+@"class X {
+	public void F<T1, T2>(T1 t1, T2 t2) {}
+}
+class C<T1> {
+	public void M<T2>(T1 t1, T2 t2) {
+		// BEGIN
+		new X().F(t1, t2);
+		// END
+	}
+}",
+@"	(new {sm_X}()).$F($t1, $t2);
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1<T> {
+	public void M(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public void F<T>(T t) {}
+}
+class C1 {
+	public void M<T>(T t) {
+		new X().F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithATypeThatNeedsAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X<T> {
+	public void F(X<T> t) {}
+}
+class C1<T> {
+	public void M(X<T> x) {
+		x.F(x);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: t.Name == "C1"), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+
+		[Test]
+		public void InvokingAGenericMethodImplementedAsAStaticMethodWithThisAsFirstArgumentMethodWithATypeThatNeedsAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X<T> {
+	public void F(X<T> t) {}
+}
+class C1 {
+	public void M<T>(X<T> x) {
+		x.F(x);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingMethodImplementedAsAStaticMethodWithThisAsFirstArgumentWithIgnoredGenericArgumentsIsNotAnErrorIfTheMethodAlsoIgnoresGenericArguments() {
+			AssertCorrect(
+@"class X {
+	public void F<T1, T2>(T1 t1, T2 t2) {}
+}
+class C<T1> {
+	public void M<T2>(T1 t1, T2 t2) {
+		// BEGIN
+		new X().F(t1, t2);
+		// END
+	}
+}",
+@"	{sm_X}.$F(new {sm_X}(), $t1, $t2);
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F", ignoreGenericArguments: true) : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true) });
+		}
+
+		[Test]
+		public void InvokingAGenericInlineCodeMethodWithAnIgnoredGenericArgumentFromTypeIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public static void F<T>(T t) {}
+}
+class C1<T> {
+	public void M(T t) {
+		X.F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T})._({t})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+		}
+
+		[Test]
+		public void InvokingAGenericInlineCodeMethodWithAnIgnoredGenericArgumentFromMethodIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X {
+	public static void F<T>(T t) {}
+}
+class C1 {
+	public void M<T>(T t) {
+		X.F(t);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingMethodInlineCodeMethodWithIgnoredGenericArgumentsIsNotAnErrorIfTheMethodDoesNotUseTheGenericArgument() {
+			AssertCorrect(
+@"class X {
+	public static void F<T1, T2>(T1 t1, T2 t2) {}
+}
+class C<T1> {
+	public void M<T2>(T1 t1, T2 t2) {
+		// BEGIN
+		X.F(t1, t2);
+		// END
+	}
+}",
+@"	_($t1)._($t2);
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({t1})._({t2})") : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) });
+		}
+
+		[Test]
+		public void InvokingAMethodOfAGenericMethodWithAnUnavailableTypeParameterIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class X<T> {
+	public static void F() {}
+}
+class C1 {
+	public void M<T>() {
+		X<T>.F();
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+		}
+
+		[Test]
+		public void InvokingInlineCodeMethodThatExpandsParamArrayInNonExpandedFormIsAnError() {
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"class C1 {
+	public void F1(params int[] args) {}
+	public void M() {
+		int[] a = new[] { 1, 2, 3 };
+		F1(a);
+	}
+}" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*args})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7525 && m.FormattedMessage.Contains("C1.F1") && m.FormattedMessage.Contains("params parameter expanded")));
+		}
+
+		[Test]
+		public void InvokingInlineCodeMethodInNonExpandedFormUsesTheNonExpandedFormPattern() {
+			AssertCorrect(
+@"class C1 {
+	public void F(params int[] args) {}
+	public void M() {
+		int[] a = new[] { 1, 2, 3 };
+		// BEGIN
+		F(a);
+		// END
+	}
+}",
+@"	_2($a);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 	}
 }

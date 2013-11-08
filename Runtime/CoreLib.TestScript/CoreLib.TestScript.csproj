@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AlreadyCompiled>false</AlreadyCompiled>
+    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B54DD6E7-526D-4BD4-BCCA-8DCB1AB12A23}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CoreLib.TestScript</RootNamespace>
+    <AssemblyName>CoreLib.TestScript</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_NoAsync|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;NO_ASYNC</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_NoAsync|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NO_ASYNC</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="ActivatorTests.cs" />
+    <Compile Include="ArgumentsTests.cs" />
+    <Compile Include="ArrayTests.cs" />
+    <Compile Include="AppDomainTests.cs" />
+    <Compile Include="ConvertTests.cs" />
+    <Compile Include="EnvironmentTests.cs" />
+    <Compile Include="Exceptions\NotImplementedExceptionTests.cs" />
+    <Compile Include="Exceptions\DivideByZeroExceptionTests.cs" />
+    <Compile Include="Reflection\AssemblyTests.cs" />
+    <Compile Include="StopwatchTests.cs" />
+    <Compile Include="CultureInfoTests.cs" />
+    <Compile Include="NumberFormatInfoTests.cs" />
+    <Compile Include="DateTimeFormatInfoTests.cs" />
+    <Compile Include="Collections\TypedArrays\ArrayBufferTests.cs" />
+    <Compile Include="Collections\TypedArrays\DataViewTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint8ClampedArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Float64ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Float32ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint16ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint32ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Uint8ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Int16ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Int8ArrayTests.cs" />
+    <Compile Include="Collections\TypedArrays\Int32ArrayTests.cs" />
+    <Compile Include="GuidTests.cs" />
+    <Compile Include="Exceptions\AggregateExceptionTests.cs" />
+    <Compile Include="Exceptions\ArgumentExceptionTests.cs" />
+    <Compile Include="Exceptions\ArgumentNullExceptionTests.cs" />
+    <Compile Include="Exceptions\AmbiguousMatchExceptionTests.cs" />
+    <Compile Include="Exceptions\ArgumentOutOfRangeExceptionTests.cs" />
+    <Compile Include="Exceptions\ExceptionTests.cs" />
+    <Compile Include="Exceptions\InvalidCastExceptionTests.cs" />
+    <Compile Include="Exceptions\NullReferenceExceptionTests.cs" />
+    <Compile Include="Exceptions\KeyNotFoundExceptionTests.cs" />
+    <Compile Include="Exceptions\PromiseExceptionTests.cs" />
+    <Compile Include="Exceptions\JsErrorExceptionTests.cs" />
+    <Compile Include="Exceptions\InvalidOperationExceptionTests.cs" />
+    <Compile Include="Exceptions\NotSupportedExceptionTests.cs" />
+    <Compile Include="Exceptions\FormatExceptionTests.cs" />
+    <Compile Include="Reflection\AttributeTests.cs" />
+    <Compile Include="SimpleTypes\CharTests.cs" />
+    <Compile Include="Threading\Tasks\AsyncTests.cs" />
+    <Compile Include="Collections\Generic\ComparerTests.cs" />
+    <Compile Include="Web\HttpUtilityTests.cs" />
+    <Compile Include="Collections\ObjectModel\ReadOnlyCollectionTests.cs" />
+    <Compile Include="Linq\Expressions\ExpressionTests.cs" />
+    <Compile Include="Reflection\GetMembersTests.cs" />
+    <Compile Include="Reflection\ReflectionTests.cs" />
+    <Compile Include="IFormattableTests.cs" />
+    <Compile Include="Runtime\CompilerServices\RuntimeHelpersTests.cs" />
+    <Compile Include="Collections\Generic\IListTests.cs" />
+    <Compile Include="Collections\Generic\ICollectionTests.cs" />
+    <Compile Include="Collections\Generic\IEnumerableTests.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="ExceptionTests.cs" />
+    <Compile Include="LazyTests.cs" />
+    <Compile Include="IEquatableTests.cs" />
+    <Compile Include="Collections\Generic\EqualityComparerTests.cs" />
+    <Compile Include="IComparableTests.cs" />
+    <Compile Include="SimpleTypes\ObjectTests.cs" />
+    <Compile Include="Threading\Tasks\PromiseTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Threading\Tasks\TaskTests.cs" />
+    <Compile Include="MultidimArrayTests.cs" />
+    <Compile Include="Collections\Generic\IteratorBlockTests.cs" />
+    <Compile Include="Collections\Generic\QueueTests.cs" />
+    <Compile Include="SimpleTypes\BooleanTests.cs" />
+    <Compile Include="SimpleTypes\TimeSpanTests.cs" />
+    <Compile Include="SimpleTypes\ByteTests.cs" />
+    <Compile Include="Collections\Generic\StackTests.cs" />
+    <Compile Include="Collections\Generic\GenericDictionaryTests.cs" />
+    <Compile Include="Serialization\JsonTests.cs" />
+    <Compile Include="Text\RegularExpressions\RegexTests.cs" />
+    <Compile Include="Text\StringBuilderTests.cs" />
+    <Compile Include="Collections\Generic\ListTests.cs" />
+    <Compile Include="Reflection\TypeSystemLanguageSupportTests.cs" />
+    <Compile Include="Reflection\TypeSystemTests.cs" />
+    <Compile Include="SimpleTypes\UInt16Tests.cs" />
+    <Compile Include="SimpleTypes\UInt32Tests.cs" />
+    <Compile Include="SimpleTypes\UInt64Tests.cs" />
+    <Compile Include="SimpleTypes\TupleTests.cs" />
+    <Compile Include="RandomTests.cs" />
+    <Compile Include="SimpleTypes\SingleTests.cs" />
+    <Compile Include="ScriptTests.cs" />
+    <Compile Include="SimpleTypes\SByteTests.cs" />
+    <Compile Include="NullableTests.cs" />
+    <Compile Include="MathTests.cs" />
+    <Compile Include="SimpleTypes\Int64Tests.cs" />
+    <Compile Include="SimpleTypes\Int32Tests.cs" />
+    <Compile Include="SimpleTypes\Int16Tests.cs" />
+    <Compile Include="SimpleTypes\EnumTests.cs" />
+    <Compile Include="SimpleTypes\DoubleTests.cs" />
+    <Compile Include="DelegateTests.cs" />
+    <Compile Include="SimpleTypes\DecimalTests.cs" />
+    <Compile Include="Collections\Generic\GenericJsDictionaryTests.cs" />
+    <Compile Include="Collections\JsDictionaryTests.cs" />
+    <Compile Include="SimpleTypes\StringTests.cs" />
+    <Compile Include="SimpleTypes\JsDateTests.cs" />
+    <Compile Include="SimpleTypes\DateTimeTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib\CoreLib.csproj">
+      <Project>{36D4B098-A21C-4725-ACD3-400922885F38}</Project>
+      <Name>CoreLib</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\QUnit\QUnit.csproj">
+      <Project>{278d9898-ef61-4ccd-a6ac-5f7f31a024a4}</Project>
+      <Name>QUnit</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Reflection\Resource2.bin" />
+    <EmbeddedResource Include="Reflection\Resource1.bin" />
+  </ItemGroup>
+  <Import Project="..\..\bin\Saltarelle.Compiler.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

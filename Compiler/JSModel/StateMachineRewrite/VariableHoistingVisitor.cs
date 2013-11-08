@@ -24,38 +24,38 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				}
 			}
 			if (list == null)
-				return new JsBlockStatement(new JsStatement[0], mergeWithParent: true);
+				return JsStatement.BlockMerged(new JsStatement[0]);
 			else if (list.Count == 1)
-				return new JsExpressionStatement(list[0]);
+				return list[0];
 			else
-				return new JsExpressionStatement(JsExpression.Comma(list));
+				return JsExpression.Comma(list);
 		}
 
 		public override JsStatement VisitForStatement(JsForStatement statement, object data) {
-            var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)        : null;
-            var condition     = statement.ConditionExpression != null ? VisitExpression(statement.ConditionExpression, data) : null;
-            var iterator      = statement.IteratorExpression  != null ? VisitExpression(statement.IteratorExpression, data)  : null;
-            var body          = VisitStatement(statement.Body, data);
+			var initStatement = statement.InitStatement       != null ? VisitStatement(statement.InitStatement, data)        : null;
+			var condition     = statement.ConditionExpression != null ? VisitExpression(statement.ConditionExpression, data) : null;
+			var iterator      = statement.IteratorExpression  != null ? VisitExpression(statement.IteratorExpression, data)  : null;
+			var body          = VisitStatement(statement.Body, data);
 
 			if (initStatement is JsBlockStatement) {	// Will happen if the init statement is a variable declaration without initializers.
 				Debug.Assert(((JsBlockStatement)initStatement).Statements.Count == 0);
-				initStatement = new JsEmptyStatement();
+				initStatement = JsStatement.Empty;
 			}
 
-            return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
-                 ? statement
-                 : new JsForStatement(initStatement, condition, iterator, body);
+			return ReferenceEquals(initStatement, statement.InitStatement) && ReferenceEquals(condition, statement.ConditionExpression) && ReferenceEquals(iterator, statement.IteratorExpression) && ReferenceEquals(body, statement.Body)
+			     ? statement
+			     : JsStatement.For(initStatement, condition, iterator, body);
 		}
 
 		public override JsStatement VisitForEachInStatement(JsForEachInStatement statement, object data) {
-            var objectToIterateOver = VisitExpression(statement.ObjectToIterateOver, data);
-            var body = VisitStatement(statement.Body, data);
+			var objectToIterateOver = VisitExpression(statement.ObjectToIterateOver, data);
+			var body = VisitStatement(statement.Body, data);
 			if (statement.IsLoopVariableDeclared) {
 				_variables.Add(statement.LoopVariableName);
-				return new JsForEachInStatement(statement.LoopVariableName, objectToIterateOver, body, false);
+				return JsStatement.ForIn(statement.LoopVariableName, objectToIterateOver, body, false);
 			}
 			else {
-				return ReferenceEquals(objectToIterateOver, statement.ObjectToIterateOver) && ReferenceEquals(body, statement.Body) ? statement : new JsForEachInStatement(statement.LoopVariableName, objectToIterateOver, body, false);
+				return ReferenceEquals(objectToIterateOver, statement.ObjectToIterateOver) && ReferenceEquals(body, statement.Body) ? statement : JsStatement.ForIn(statement.LoopVariableName, objectToIterateOver, body, false);
 			}
 		}
 

@@ -1,143 +1,149 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using System.IO;
+using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler.SCTask {
 	public class SCTask : Task {
-		private bool HandleIntegerList(IList<int> targetCollection, string value, string itemName) {
-			if (!string.IsNullOrEmpty(value)) {
-				foreach (var s in value.Split(new[] { ';', ',' }).Select(s => s.Trim()).Where(s => s != "")) {
-					int w;
-					if (!int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out w)) {
-						Log.LogError("Invalid number " + s + " in " + itemName);
-						return false;
-					}
-					if (!targetCollection.Contains(w))
-						targetCollection.Add(w);
-				}
-			}
-			return true;
+		[Serializable]
+		public class Options {
+			public string KeyContainer { get; set; }
+			public string KeyFile { get; set; }
+			public string[] AdditionalLibPaths { get; set; }
+			public string DefineConstants { get; set; }
+			public string DisabledWarnings { get; set; }
+			public string DocumentationFile { get; set; }
+			public bool EmitDebugInformation { get; set; }
+			public string OutputAssembly { get; set; }
+			public string OutputScript { get; set; }
+			public ITaskItem[] References { get; set; }
+			public ITaskItem[] Sources { get; set; }
+			public bool TreatWarningsAsErrors { get; set; }
+			public int WarningLevel { get; set; }
+			public string WarningsAsErrors { get; set; }
+			public string WarningsNotAsErrors { get; set; }
+			public string TargetType { get; set; }
+			public string MainEntryPoint { get; set; }
+			public bool AlreadyCompiled { get; set; }
+			public ITaskItem[] Resources { get; set; }
 		}
 
-		private CompilerOptions GetOptions() {
-			var result = new CompilerOptions();
+		private class Executor : MarshalByRefObject {
+			public bool Execute(Options options, TaskLoggingHelper log) {
+				// The module initializer seems to not work in all cases on mono.
+				var t = typeof(SCTask).Assembly.GetType("EmbedAssemblies.EmbeddedAssemblyLoader");
+				var m = t.GetMethod("Register", BindingFlags.Static | BindingFlags.Public);
+				m.Invoke(null, new object[0]);
 
-			result.KeyContainer          =  this.KeyContainer;
-			result.KeyFile               =  this.KeyFile;
-			result.MinimizeScript        = !this.EmitDebugInformation;
-			result.DocumentationFile     =  this.DocumentationFile;
-			result.OutputAssemblyPath    =  this.OutputAssembly;
-			result.OutputScriptPath      =  this.OutputScript;
-			result.TreatWarningsAsErrors =  this.TreatWarningsAsErrors;
-			result.WarningLevel          =  this.WarningLevel;
-			result.AlreadyCompiled       =  this.AlreadyCompiled;
-
-			result.EntryPointClass = this.MainEntryPoint;
-			if (!string.IsNullOrEmpty(this.TargetType)) {
-				switch (this.TargetType.ToLowerInvariant()) {
-					case "exe":
-					case "winexe":
-						result.HasEntryPoint = true;
-						break;
-					case "library":
-					case "module":
-						result.HasEntryPoint = false;
-						break;
-					default:
-						Log.LogError("Invalid target type (must be exe, winexe, library or module).");
-						return null;
-				}
+				var asm = Assembly.Load("SCTaskWorker");
+				var worker = asm.GetType("Saltarelle.Compiler.SCTask.Worker");
+				return (bool)worker.GetMethod("DoWork").Invoke(null, new object[] { options, log });
 			}
-			else {
-				result.HasEntryPoint = false;
-			}
-
-			if (this.WarningLevel < 0 || this.WarningLevel > 4) {
-				Log.LogError("Warning level must be between 0 and 4.");
-				return null;
-			}
-
-			if (this.AdditionalLibPaths != null)
-				result.AdditionalLibPaths.AddRange(this.AdditionalLibPaths);
-
-			if (this.DefineConstants != null)
-				result.DefineConstants.AddRange(this.DefineConstants.Split(';').Select(s => s.Trim()).Where(s => s != ""));
-
-			if (!HandleIntegerList(result.DisabledWarnings, this.DisabledWarnings, "DisabledWarnings"))
-				return null;
-			if (!HandleIntegerList(result.WarningsAsErrors, this.WarningsAsErrors, "WarningsAsErrors"))
-				return null;
-			if (!HandleIntegerList(result.WarningsNotAsErrors, this.WarningsNotAsErrors, "WarningsNotAsErrors"))
-				return null;
-
-			if (this.References != null) {
-				foreach (var r in this.References) {
-					string alias = r.GetMetadata("Aliases");
-					result.References.Add(new Reference(r.ItemSpec, !string.IsNullOrWhiteSpace(alias) ? alias : null));
-				}
-			}
-
-			if (this.Sources != null) {
-				foreach (var s in this.Sources) {
-					result.SourceFiles.Add(s.ItemSpec);
-				}
-			}
-
-			return result;
 		}
+
+		private readonly Options _options = new Options();
 
 		public override bool Execute() {
-			var options = GetOptions();
-			if (options == null)
-				return false;
-			var driver = new CompilerDriver(new TaskErrorReporter(Log));
-			try {
-				return driver.Compile(options, true);
-			}
-			catch (Exception ex) {
-				Log.LogErrorFromException(ex);
-				return false;
-			}
+			var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(SCTask).Assembly.Location) };
+			var ad = AppDomain.CreateDomain("SCTask", null, setup);
+			var executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
+			return executor.Execute(_options, Log);
 		}
 
-		public string KeyContainer { get; set; }
+		public string KeyContainer {
+			get { return _options.KeyContainer; }
+			set { _options.KeyContainer = value; }
+		}
 
-		public string KeyFile { get; set; }
+		public string KeyFile {
+			get { return _options.KeyFile; }
+			set { _options.KeyFile = value; }
+		}
 
-		public string[] AdditionalLibPaths { get; set; }
+		public string[] AdditionalLibPaths {
+			get { return _options.AdditionalLibPaths; }
+			set { _options.AdditionalLibPaths = value; }
+		}
 
-		public string DefineConstants { get; set; }
+		public string DefineConstants {
+			get { return _options.DefineConstants; }
+			set { _options.DefineConstants = value; }
+		}
 
-		public string DisabledWarnings { get; set; }
+		public string DisabledWarnings {
+			get { return _options.DisabledWarnings; }
+			set { _options.DisabledWarnings = value; }
+		}
 
-		public string DocumentationFile { get; set; }
+		public string DocumentationFile {
+			get { return _options.DocumentationFile; }
+			set { _options.DocumentationFile = value; }
+		}
 
-		public bool EmitDebugInformation { get; set; }
+		public bool EmitDebugInformation {
+			get { return _options.EmitDebugInformation; }
+			set { _options.EmitDebugInformation = value; }
+		}
 
-		public string OutputAssembly { get; set; }
+		public string OutputAssembly {
+			get { return _options.OutputAssembly; }
+			set { _options.OutputAssembly = value; }
+		}
 
-		public string OutputScript { get; set; }
+		public string OutputScript {
+			get { return _options.OutputScript; }
+			set { _options.OutputScript = value; }
+		}
 
-		public ITaskItem[] References { get; set; }
+		public ITaskItem[] References {
+			get { return _options.References; }
+			set { _options.References = value; }
+		}
 
-		public ITaskItem[] Sources { get; set; }
+		public ITaskItem[] Sources {
+			get { return _options.Sources; }
+			set { _options.Sources = value; }
+		}
 
-		public bool TreatWarningsAsErrors { get; set; }
+		public bool TreatWarningsAsErrors {
+			get { return _options.TreatWarningsAsErrors; }
+			set { _options.TreatWarningsAsErrors = value; }
+		}
 
-		public int WarningLevel { get; set; }
+		public int WarningLevel {
+			get { return _options.WarningLevel; }
+			set { _options.WarningLevel = value; }
+		}
 
-		public string WarningsAsErrors { get; set; }
+		public string WarningsAsErrors {
+			get { return _options.WarningsAsErrors; }
+			set { _options.WarningsAsErrors = value; }
+		}
 
-		public string WarningsNotAsErrors { get; set; }
+		public string WarningsNotAsErrors {
+			get { return _options.WarningsNotAsErrors; }
+			set { _options.WarningsNotAsErrors = value; }
+		}
 
-		public string TargetType { get; set; }
+		public string TargetType {
+			get { return _options.TargetType; }
+			set { _options.TargetType = value; }
+		}
 
-		public string MainEntryPoint { get; set; }
+		public string MainEntryPoint {
+			get { return _options.MainEntryPoint; }
+			set { _options.MainEntryPoint = value; }
+		}
 
-		public bool AlreadyCompiled { get; set; }
+		public bool AlreadyCompiled {
+			get { return _options.AlreadyCompiled; }
+			set { _options.AlreadyCompiled = value; }
+		}
+
+		public ITaskItem[] Resources {
+			get { return _options.Resources; }
+			set { _options.Resources = value; }
+		}
 	}
 }

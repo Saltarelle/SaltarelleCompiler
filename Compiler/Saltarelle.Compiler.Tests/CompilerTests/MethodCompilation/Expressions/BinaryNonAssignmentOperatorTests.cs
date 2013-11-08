@@ -136,7 +136,36 @@ public void M() {
 	// END
 }",
 @"	var $c = $Lift($a + $b);
-", includeEqualsAndNotEquals: true);
+", includeEqualsAndNotEquals: false);
+		}
+
+		[Test]
+		public void EqualsAndNotEqualsWithNullables() {
+			AssertCorrect(@"
+public void M<T>(T? x) where T : struct {
+	int? y = 0;
+	int z1 = 0;
+	int? z2 = 0;
+	// BEGIN
+	bool b1 = x == null;
+	bool b2 = x != null;
+	bool b3 = y == null;
+	bool b4 = y != null;
+	bool b5 = y == z1;
+	bool b6 = y != z1;
+	bool b7 = y == z2;
+	bool b8 = y != z2;
+	// END
+}",
+@"	var $b1 = $ReferenceEquals($x, null);
+	var $b2 = $ReferenceNotEquals($x, null);
+	var $b3 = $ReferenceEquals($y, null);
+	var $b4 = $ReferenceNotEquals($y, null);
+	var $b5 = $y === $z1;
+	var $b6 = $y !== $z1;
+	var $b7 = $ReferenceEquals($y, $z2);
+	var $b8 = $ReferenceNotEquals($y, $z2);
+");
 		}
 
 		[Test]

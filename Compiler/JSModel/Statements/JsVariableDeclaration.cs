@@ -11,6 +11,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		/// </summary>
 		public JsExpression Initializer { get; private set; }
 
+		[Obsolete("Use factory method JsStatement.Declaration")]
 		public JsVariableDeclaration(string name, JsExpression initializer) {
 			if (name == null) throw new ArgumentNullException("name");
 			if (!name.IsValidJavaScriptIdentifier()) throw new ArgumentException("name");

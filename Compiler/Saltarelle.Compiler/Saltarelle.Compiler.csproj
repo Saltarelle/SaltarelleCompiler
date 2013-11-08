@@ -35,6 +35,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages-manual\antlr\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.1.0\lib\net40-client\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor, Version=3.1.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Castle.Windsor.3.1.0\lib\net40-client\Castle.Windsor.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,30 +51,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\CommonAssemblyInfo.cs">
+    <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
-    <Compile Include="Compiler\DefaultNamer.cs" />
-    <Compile Include="Compiler\DefinedSymbolsGatherer.cs" />
+    <Compile Include="AttributeReader.cs" />
+    <Compile Include="CompilerOptions.cs" />
+    <Compile Include="Compiler\ExpressionCompileResult.cs" />
+    <Compile Include="Compiler\ExpressionTreeBuilder.cs" />
+    <Compile Include="Compiler\DoesJsExpressionHaveSideEffects.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\INamer.cs" />
+    <Compile Include="Compiler\InlineCodeToken.cs" />
+    <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
+    <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
     <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
-    <Compile Include="Driver\CompilerOptions.cs" />
+    <Compile Include="IJSTypeSystemRewriter.cs" />
+    <Compile Include="IRuntimeContext.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
-    <Compile Include="MetadataImporter\IScriptSharpMetadataImporter.cs" />
-    <Compile Include="OOPEmulator\ScriptSharpOOPEmulator.cs" />
-    <Compile Include="Linker\DefaultLinker.cs" />
     <Compile Include="TopologicalSorter.cs" />
-    <Compile Include="OOPEmulator\TypeReferenceFinder.cs" />
-    <Compile Include="RuntimeLibrary\ScriptSharpRuntimeLibrary.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />
@@ -86,18 +96,22 @@
     <Compile Include="ScriptSemantics\MethodScriptSemantics.cs" />
     <Compile Include="Compiler\NestedFunctionData.cs" />
     <Compile Include="Compiler\NestedFunctionGatherer.cs" />
-    <Compile Include="MetadataImporter\ScriptSharpMetadataImporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\Compiler.cs" />
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
+    <Compile Include="TypeReferenceFinder.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />
     <Compile Include="Compiler\VariableGatherer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ikvm\reflect\IKVM.Reflection.csproj">
+      <Project>{4cb170ef-dfe6-4a56-9e1b-a85449e827a7}</Project>
+      <Name>IKVM.Reflection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JavaScriptParser\JavaScriptParser.csproj">
       <Project>{819223CA-D211-44C2-BC01-A2B955D4CA61}</Project>
       <Name>JavaScriptParser</Name>
@@ -106,18 +120,21 @@
       <Project>{C84DF308-9EBF-4521-9CA2-5C531F4B245A}</Project>
       <Name>JSModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\cecil\Mono.Cecil.csproj">
-      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
-      <Name>Mono.Cecil %28Mono.Cecil\Mono.Cecil%29</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory.CSharp\ICSharpCode.NRefactory.CSharp.csproj">
       <Project>{53DCA265-3C3C-42F9-B647-F72BA678122B}</Project>
       <Name>ICSharpCode.NRefactory.CSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory.IKVM\ICSharpCode.NRefactory.IKVM.csproj">
+      <Project>{a727169f-d94f-443f-b305-b057d7f3b420}</Project>
+      <Name>ICSharpCode.NRefactory.IKVM</Name>
     </ProjectReference>
     <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
       <Project>{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}</Project>
       <Name>ICSharpCode.NRefactory</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class AutoEventAccessorCompilationTests : CompilerTestBase {
 		[Test]
 		public void InstanceAutoEventAccessorsImplementedAsInstanceMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" });
+			Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" });
 
 			var adder   = FindInstanceMethod("C.add_MyEvent");
 			var remover = FindInstanceMethod("C.remove_MyEvent");
@@ -25,13 +25,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyEvent = null;
+	this.$MyEvent = $Default({def_EventHandler});
+	{sm_Object}.call(this);
 }");
 		}
 
 		[Test]
 		public void InstanceAutoEventAccessorsImplementedAsStaticMethodsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("add_" + e.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("remove_" + e.Name)) });
+			Compile(new[] { "using System; class C { public event System.EventHandler MyEvent; }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("add_" + e.Name), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("remove_" + e.Name)) });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
@@ -48,13 +49,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyEvent = null;
+	this.$MyEvent = $Default({def_EventHandler});
+	{sm_Object}.call(this);
 }");
 		}
 
 		[Test]
 		public void StaticAutoEventAccessorsAreCorrectlyCompiled() {
-            Compile(new[] { "using System; class C { public static event System.EventHandler MyEvent; }" });
+			Compile(new[] { "using System; class C { public static event System.EventHandler MyEvent; }" });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
@@ -71,29 +73,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{sm_C}.$MyEvent = null;" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{sm_C}.$MyEvent = $Default({def_EventHandler});" + Environment.NewLine));
 		}
 
 		[Test]
 		public void StaticAutoEventAccessorsAreCorrectlyCompiledForGenericClasses() {
-            Compile(new[] { "using System; class C<T> { public static event System.EventHandler MyEvent; }" });
+			Compile(new[] { "using System; class C<T> { public static event System.EventHandler MyEvent; }" });
 
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
 
 			AssertCorrect(adder.Definition,
 @"function($value) {
-	sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = {sm_Delegate}.Combine(sm_$InstantiateGenericType({C}, ga_$T).$MyEvent, $value);
+	sm_$InstantiateGenericType({C}, $T).$MyEvent = {sm_Delegate}.Combine(sm_$InstantiateGenericType({C}, $T).$MyEvent, $value);
 }");
 
 			AssertCorrect(remover.Definition,
 @"function($value) {
-	sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = {sm_Delegate}.Remove(sm_$InstantiateGenericType({C}, ga_$T).$MyEvent, $value);
+	sm_$InstantiateGenericType({C}, $T).$MyEvent = {sm_Delegate}.Remove(sm_$InstantiateGenericType({C}, $T).$MyEvent, $value);
 }");
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, ga_$T).$MyEvent = null;" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, $T).$MyEvent = $Default({def_EventHandler});" + Environment.NewLine));
 		}
 	}
 }

@@ -16,6 +16,11 @@ namespace Saltarelle.Compiler {
 		/// Import all references in the given statements, thereby ensuring that no <see cref="JsTypeReferenceExpression"/>s are left.
 		/// </summary>
 		/// <param name="statements">Statements to process.</param>
-		IList<JsStatement> Process(IList<JsStatement> statements, IAssembly mainAssembly);
+		IList<JsStatement> Process(IList<JsStatement> statements);
+
+		/// <summary>
+		/// Returns an expression that can be used to instruct the linker to insert a reference to the current assembly.
+		/// </summary>
+		JsExpression CurrentAssemblyExpression { get; }
 	}
 }

@@ -40,25 +40,25 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		private static JsStatement GenerateBody(string stateVariableName, List<Node> nodes) {
 			if (nodes.Count == 0)
-				return new JsBreakStatement();
+				return JsStatement.Break();
 
-			return new JsSwitchStatement(JsExpression.Identifier(stateVariableName),
-			                             nodes.Select(n => new JsSwitchSection(n.StateValues.Select(v => JsExpression.Number(v)),
-			                                                   new JsTryStatement(
-			                                                       GenerateBody(stateVariableName, n.Children),
-			                                                       null,
-			                                                       new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(n.HandlerName), "call"), JsExpression.This))))));
+			return JsStatement.Switch(JsExpression.Identifier(stateVariableName),
+			                          nodes.Select(n => JsStatement.SwitchSection(n.StateValues.Select(v => JsExpression.Number(v)),
+			                                                JsStatement.Try(
+			                                                    GenerateBody(stateVariableName, n.Children),
+			                                                    null,
+			                                                    JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(n.HandlerName), "call"), JsExpression.This)))));
 		}
 
 		public static JsBlockStatement GenerateDisposer(string stateVariableName, List<Tuple<int, List<string>>> stateFinallyHandlers) {
 			if (stateFinallyHandlers.Count == 0)
 				return null;
 
-			return new JsBlockStatement(
-			           new JsTryStatement(
+			return JsStatement.Block(
+			           JsStatement.Try(
 			               GenerateBody(stateVariableName, GenerateHandlerTree(stateFinallyHandlers)),
 			               null,
-			               new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(stateVariableName), JsExpression.Number(-1)))
+			               JsExpression.Assign(JsExpression.Identifier(stateVariableName), JsExpression.Number(-1))
 			           )
 			       );
 		}

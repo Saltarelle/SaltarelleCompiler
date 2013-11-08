@@ -2,7 +2,7 @@ using System.Diagnostics;
 using ICSharpCode.NRefactory.TypeSystem;
 
 namespace Saltarelle.Compiler.Compiler {
-	internal class SimpleVariable : IVariable {
+	public class SimpleVariable : IVariable {
 		readonly DomRegion region;
 		readonly IType type;
 		readonly string name;
@@ -15,7 +15,9 @@ namespace Saltarelle.Compiler.Compiler {
 			this.name = name;
 			this.region = region;
 		}
-			
+
+		public SymbolKind SymbolKind { get { return SymbolKind.Variable; } }
+
 		public string Name {
 			get { return name; }
 		}

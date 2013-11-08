@@ -8,34 +8,73 @@ using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler {
-    public interface IMetadataImporter {
+	public interface IMetadataImporter {
 		/// <summary>
-		/// Prepare to handle the specified types.
+		/// This method will be called for all types in an assembly. The compiler will ensure that the method is called for a type after it has been called for all the type's base types and outer types.
 		/// </summary>
-		/// <param name="allTypes">All types in the compilation.</param>
-		/// <param name="mainAssembly">Main assembly for the compilation.</param>
-		/// <param name="errorReporter">Error reporter to use to report errors.</param>
-		void Prepare(IEnumerable<ITypeDefinition> allTypes, IAssembly mainAssembly, IErrorReporter errorReporter);
+		/// <param name="type">All types in the compilation.</param>
+		void Prepare(ITypeDefinition type);
 
 		/// <summary>
-        /// Returns how a type should be implemented in script. Must not return null.
-        /// </summary>
-        TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition);
+		/// Reserve a name in a type. This means that the name will afterwards be reported as not available by the <see cref="IsMemberNameAvailable"/> method
+		/// </summary>
+		/// <param name="type">Type in which to register the member.</param>
+		/// <param name="name">Name of the member to register.</param>
+		/// <param name="isStatic">Whether to register a static (true) or instance (false) member.</param>
+		void ReserveMemberName(ITypeDefinition type, string name, bool isStatic);
 
-        /// <summary>
-        /// Gets the semantics of a method. Must not return null.
-        /// </summary>
-        MethodScriptSemantics GetMethodSemantics(IMethod method);
+		/// <summary>
+		/// Determines whether a member name is available for a type. For instance members, a member name is not considered available if it is used by any base type.
+		/// </summary>
+		/// <param name="type">Type to check.</param>
+		/// <param name="name">Name to check.</param>
+		/// <param name="isStatic">Whether to check a static (true) or instance (false) member.</param>
+		bool IsMemberNameAvailable(ITypeDefinition type, string name, bool isStatic);
 
-        /// <summary>
-        /// Returns the semantics of a constructor. Must not return null.
-        /// </summary>
-        ConstructorScriptSemantics GetConstructorSemantics(IMethod method);
+		/// <summary>
+		/// Sets the semantics for a method. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetMethodSemantics(IMethod method, MethodScriptSemantics semantics);
 
-        /// <summary>
-        /// Returns the semantics of a property. Must not return null.
-        /// </summary>
-        PropertyScriptSemantics GetPropertySemantics(IProperty property);
+		/// <summary>
+		/// Sets the semantics for a constructor. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for a property. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for a field. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetFieldSemantics(IField field, FieldScriptSemantics semantics);
+
+		/// <summary>
+		/// Sets the semantics for an event. Should be called before Prepare. Note that this will NOT reserve the name.
+		/// </summary>
+		void SetEventSemantics(IEvent evt,EventScriptSemantics semantics);
+
+		/// <summary>
+		/// Returns how a type should be implemented in script. Must not return null.
+		/// </summary>
+		TypeScriptSemantics GetTypeSemantics(ITypeDefinition typeDefinition);
+
+		/// <summary>
+		/// Gets the semantics of a method. Must not return null.
+		/// </summary>
+		MethodScriptSemantics GetMethodSemantics(IMethod method);
+
+		/// <summary>
+		/// Returns the semantics of a constructor. Must not return null.
+		/// </summary>
+		ConstructorScriptSemantics GetConstructorSemantics(IMethod method);
+
+		/// <summary>
+		/// Returns the semantics of a property. Must not return null.
+		/// </summary>
+		PropertyScriptSemantics GetPropertySemantics(IProperty property);
 
 		/// <summary>
 		/// Returns the semantics of a delegate. Must not return null.
@@ -44,24 +83,39 @@ namespace Saltarelle.Compiler {
 		/// <returns></returns>
 		DelegateScriptSemantics GetDelegateSemantics(ITypeDefinition delegateType);
 
-        /// <summary>
-        /// Returns the name of the backing field for the specified property. Must not return null.
-        /// </summary>
-        string GetAutoPropertyBackingFieldName(IProperty property);
+		/// <summary>
+		/// Returns the name of the backing field for the specified property. Must not return null.
+		/// </summary>
+		string GetAutoPropertyBackingFieldName(IProperty property);
 
-        /// <summary>
-        /// Returns the semantics of a field. Must not return null.
-        /// </summary>
-        FieldScriptSemantics GetFieldSemantics(IField property);
+		/// <summary>
+		/// Returns the semantics of a field. Must not return null.
+		/// </summary>
+		FieldScriptSemantics GetFieldSemantics(IField field);
 
-        /// <summary>
-        /// Returns the semantics of an event. Must not return null.
-        /// </summary>
-        EventScriptSemantics GetEventSemantics(IEvent evt);
-        
-        /// <summary>
-        /// Returns the name of the backing field for the specified event. Must not return null.
-        /// </summary>
-        string GetAutoEventBackingFieldName(IEvent evt);
-    }
+		/// <summary>
+		/// Returns the semantics of an event. Must not return null.
+		/// </summary>
+		EventScriptSemantics GetEventSemantics(IEvent evt);
+		
+		/// <summary>
+		/// Returns the name of the backing field for the specified event. Must not return null.
+		/// </summary>
+		string GetAutoEventBackingFieldName(IEvent evt);
+	}
+
+	public static class MetadataImporterExtensions {
+		private static IEnumerable<ITypeDefinition> GetBaseAndOuterTypeDefinitions(ITypeDefinition t) {
+			foreach (var b in t.DirectBaseTypes)
+				yield return b.GetDefinition();
+			if (t.DeclaringTypeDefinition != null)
+				yield return t.DeclaringTypeDefinition;
+		}
+
+		public static void Prepare(this IMetadataImporter md, IEnumerable<ITypeDefinition> types) {
+			var l = types.ToList();
+			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, (t, b) => Tuple.Create(t, b))))
+				md.Prepare(t);
+		}
+	}
 }

@@ -207,8 +207,12 @@ lbl: z;
 	await a:onCompleted1;
 	return;
 	await b:onCompleted2;
-	return y;
-	z;
+	if (c) {
+		return y;
+		z;
+		return;
+	}
+	return u;
 }", 
 @"{
 	var $state1 = 0, $tcs = new TaskCompletionSource();
@@ -235,9 +239,60 @@ lbl: z;
 					}
 					case 2: {
 						$state1 = -1;
-						$tcs.setResult(y);
+						if (c) {
+							$tcs.setResult(y);
+							return;
+							z;
+							$tcs.setResult('<<null>>');
+							return;
+						}
+						$tcs.setResult(u);
 						return;
-						z;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		}
+		catch ($tmp1) {
+			$tcs.setException($tmp1);
+		}
+	};
+	$sm();
+	return $tcs.getTask();
+}
+", methodType: MethodType.AsyncTask);
+		}
+
+		[Test]
+		public void AsyncMethodReturningTaskWithReturnStatementsInsideTryCatch() {
+			AssertCorrect(@"
+{
+	try {
+		return x;
+	}
+	catch (ex) {
+		return y;
+	}
+}", 
+@"{
+	var $state1 = 0, $tcs = new TaskCompletionSource();
+	var $sm = function() {
+		try {
+			$loop1:
+			for (;;) {
+				switch ($state1) {
+					case 0: {
+						$state1 = -1;
+						try {
+							$tcs.setResult(x);
+							return;
+						}
+						catch (ex) {
+							$tcs.setResult(y);
+							return;
+						}
 						$state1 = -1;
 						break $loop1;
 					}
@@ -256,6 +311,61 @@ lbl: z;
 	return $tcs.getTask();
 }
 ", methodType: MethodType.AsyncTask);
+		}
+
+		[Test]
+		public void AsyncMethodReturningVoidWithReturnStatements() {
+			AssertCorrect(@"
+{
+	return;
+	await a:onCompleted1;
+	return;
+	await b:onCompleted2;
+	if (c) {
+		return;
+		z;
+		return;
+	}
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					return;
+					$state1 = 1;
+					a.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					return;
+					$state1 = 2;
+					b.onCompleted2($sm);
+					return;
+				}
+				case 2: {
+					$state1 = -1;
+					if (c) {
+						return;
+						z;
+						return;
+					}
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
 		}
 
 		[Test]
@@ -308,6 +418,45 @@ lbl: z;
 	return $tcs.getTask();
 }
 ", methodType: MethodType.AsyncTask);
+		}
+
+		[Test]
+		public void AwaitInsideIf() {
+			AssertCorrect(@"
+{
+	if (a) {
+		await x:onCompleted1;
+	}
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					if (a) {
+						$state1 = 1;
+						x.onCompleted1($sm);
+						return;
+					}
+					$state1 = -1;
+					break $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
 		}
 
 		[Test]
@@ -982,6 +1131,204 @@ lbl: z;
 			}
 		}
 	}, this);
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void TryBlockAsFirstStatementInsideIf() {
+			AssertCorrect(@"
+{
+	a;
+	await b:onCompleted1;
+	c;
+	if (d) {
+		try {
+			e;
+			await f:onCompleted2;
+			g;
+		}
+		catch (h) {
+		}
+	}
+	i;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					a;
+					$state1 = 1;
+					b.onCompleted1($sm);
+					return;
+				}
+				case 1: {
+					$state1 = -1;
+					c;
+					if (d) {
+						$state1 = 3;
+						continue $loop1;
+					}
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 3:
+				case 4:
+				case 5: {
+					if ($state1 === 3) {
+						$state1 = 4;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 4: {
+									$state1 = -1;
+									e;
+									$state1 = 5;
+									f.onCompleted2($sm);
+									return;
+								}
+								case 5: {
+									$state1 = -1;
+									g;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					catch (h) {
+					}
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					i;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AwaitInIfWithEmptyElse() {
+			AssertCorrect(@"
+{
+	if (a) {
+		await b:c;
+		d
+	}
+	else {
+	}
+	e;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					if (a) {
+						$state1 = 2;
+						b.c($sm);
+						return;
+					}
+					else {
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					d;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					e;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AwaitInElseWithEmptyIf() {
+			AssertCorrect(@"
+{
+	if (a) {
+	}
+	else {
+		await b:c;
+		d
+	}
+	e;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					if (a) {
+					}
+					else {
+						$state1 = 2;
+						b.c($sm);
+						return;
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					d;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					e;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
 	$sm();
 }
 ", methodType: MethodType.AsyncVoid);

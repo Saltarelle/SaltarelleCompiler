@@ -81,6 +81,7 @@ public C() {
 	for (;;) {
 		switch ($state) {
 			case 0: {
+				{sm_Object}.call(this);
 				$a = 0, $b = 0, $c = 0;
 				$state = 1;
 				continue $loop1;
@@ -126,7 +127,7 @@ public System.Collections.IEnumerator M() {
 }",
 @"function() {
 	var $result, $state = 0;
-	$finally = function() {
+	var $finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({ga_Object}, function() {
@@ -187,7 +188,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 }",
 @"function($x) {
 	var $result, $state = 0;
-	$finally = function() {
+	var $finally = function() {
 		var $a = 1;
 	};
 	return $MakeEnumerator({ga_Int32}, function() {
@@ -250,7 +251,7 @@ public System.Collections.IEnumerable M() {
 	return $MakeEnumerable({ga_Object}, function() {
 		return (function() {
 			var $result, $state = 0;
-			$finally = function() {
+			var $finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({ga_Object}, function() {
@@ -315,7 +316,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 	return $MakeEnumerable({ga_Int32}, function() {
 		return (function($x, $y) {
 			var $result, $state = 0;
-			$finally = function() {
+			var $finally = function() {
 				var $a = 1;
 			};
 			return $MakeEnumerator({ga_Int32}, function() {
@@ -511,7 +512,7 @@ public class C {
 			switch ($state) {
 				case 0: {
 					$state = -1;
-					$a = new {inst_MyAwaitable}();
+					$a = new {sm_MyAwaitable}();
 					$tmp1 = $a.$GetAwaiter();
 					$state = 1;
 					$tmp1.$OnCompleted($sm);
@@ -562,7 +563,7 @@ public class C {
 				switch ($state) {
 					case 0: {
 						$state = -1;
-						$a = new {inst_MyAwaitable}();
+						$a = new {sm_MyAwaitable}();
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
@@ -618,7 +619,7 @@ public class C {
 				switch ($state) {
 					case 0: {
 						$state = -1;
-						$a = new {inst_MyAwaitable}();
+						$a = new {sm_MyAwaitable}();
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
@@ -666,7 +667,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tmp1;
 		var $sm = function() {
@@ -719,7 +720,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
 		var $sm = function() {
@@ -779,7 +780,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {
@@ -843,7 +844,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tmp1;
 		var $sm = function() {
@@ -896,7 +897,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
 		var $sm = function() {
@@ -956,7 +957,7 @@ public class C {
 	}
 }",
 @"function() {
-	var $a = new {inst_MyAwaitable}();
+	var $a = new {sm_MyAwaitable}();
 	var $x = function() {
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {

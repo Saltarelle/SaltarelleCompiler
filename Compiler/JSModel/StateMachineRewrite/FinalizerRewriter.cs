@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		public override IList<JsStatement> VisitStatements(IList<JsStatement> statements, object data) {
-            return VisitCollection(statements, (s, i) => {
+			return VisitCollection(statements, (s, i) => {
 				if (s is JsSetNextStateStatement && i < statements.Count - 1) {
 					var next = statements[i + 1];
 					if (next is JsBlockStatement && ((JsBlockStatement)next).Statements.Count > 0)
@@ -69,13 +69,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			for (int i = 0, n = remaining.Count() - targetState.FinallyStack.Count(); i < n; i++) {
 				var current = remaining.Peek();
 				remaining = remaining.Pop();
-				result.Add(new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1))));
-				result.Add(new JsExpressionStatement(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(current.Item2), "call"), JsExpression.This)));
+				result.Add(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1)));
+				result.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(current.Item2), "call"), JsExpression.This));
 			}
 
 			result.Add(MakeSetNextStateStatement(targetState.StateValue));
-			result.Add(targetState.StateValue == -1 ? (JsStatement)new JsBreakStatement(targetState.LoopLabelName) : new JsContinueStatement(targetState.LoopLabelName));
-			return new JsBlockStatement(result, mergeWithParent: true);
+			result.Add(targetState.StateValue == -1 ? (JsStatement)JsStatement.Break(targetState.LoopLabelName) : JsStatement.Continue(targetState.LoopLabelName));
+			return JsStatement.BlockMerged(result);
 		}
 
 		public JsStatement VisitSetNextStateStatement(JsSetNextStateStatement stmt, object data) {
@@ -83,7 +83,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private JsStatement MakeSetNextStateStatement(int targetStateValue) {
-			return new JsExpressionStatement(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(targetStateValue)));
+			return JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(targetStateValue));
 		}
 	}
 }
