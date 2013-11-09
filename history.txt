@@ -1,3 +1,4 @@
+Allow empty [ScriptName] on static methods (#258).
 Fixed issue causing compiler error with await in if with empty else block (#259).
 Fixed issue overriding toString and other issues caused by the DontEnum bug in IE<9 (#260).
 

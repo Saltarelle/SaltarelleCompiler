@@ -966,13 +966,8 @@ namespace CoreLib.Plugin {
 								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 								return;
 							}
-							else if (method.IsStatic) {
-								Message(Messages._7140, method);
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
-								return;
-							}
 							else {
-								_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")", enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.InlineCode((method.IsStatic ? "{$" + method.DeclaringType.FullName + "}" : "{this}") + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")", enumerateAsArray: eaa != null);
 								return;
 							}
 						}

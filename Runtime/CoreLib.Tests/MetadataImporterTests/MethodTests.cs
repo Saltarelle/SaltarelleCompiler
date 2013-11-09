@@ -690,11 +690,16 @@ class C3 {
 		}
 
 		[Test]
-		public void EmptyScriptNameCannotBeSpecifiedOnStaticMethod() {
-			var er = new MockErrorReporter(false);
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public static void M() {} }", expectErrors: true);
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("static") && AllErrorTexts[0].Contains("empty name"));
+		public void EmptyScriptNameOnStaticMethodProducesAnInvocationOfTheType() {
+			Prepare(@"using System.Runtime.CompilerServices; namespace N1 { public class C1 { [ScriptName("""")] public static void M(int p1, string p2) {} } }");
+			var method = FindMethod("N1.C1.M");
+			Assert.That(method.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(method.LiteralCode, Is.EqualTo("{$N1.C1}({p1}, {p2})"));
+
+			Prepare(@"using System.Runtime.CompilerServices; namespace N1 { [ScriptName(""""), ModuleName(""m"")] public class C1 { [ScriptName("""")] public static void M(int p1, string p2) {} } }");
+			method = FindMethod("N1.C1.M");
+			Assert.That(method.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(method.LiteralCode, Is.EqualTo("{$N1.C1}({p1}, {p2})"));
 		}
 
 		[Test]
