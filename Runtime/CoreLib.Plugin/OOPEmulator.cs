@@ -353,10 +353,10 @@ namespace CoreLib.Plugin {
 			return JsStatement.Var(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
 		}
 
-		private IEnumerable<JsType> TopologicalSortTypesByInheritance(IEnumerable<JsType> types) {
-			var backref = types.ToDictionary(c => c.CSharpTypeDefinition);
-			var edges = from s in backref.Keys from t in s.DirectBaseTypes.Select(x => x.GetDefinition()).Intersect(backref.Keys) select Tuple.Create(s, t);
-			return TopologicalSorter.TopologicalSort(backref.Keys, edges).Select(t => backref[t]);
+		private IEnumerable<Tuple<JsType, TypeOOPEmulationPhase>> Order(IList<Tuple<JsType, TypeOOPEmulationPhase>> source) {
+			var backref = source.ToDictionary(x => x.Item1.CSharpTypeDefinition);
+			var edges = from s in source from t in s.Item2.DependentOnTypes.Intersect(backref.Keys) select Tuple.Create(s.Item1.CSharpTypeDefinition, t);
+			return TopologicalSorter.TopologicalSort(OrderByNamespace(backref.Keys, x => _metadataImporter.GetTypeSemantics(x).Name), edges).Select(t => backref[t]);
 		}
 
 		private JsExpression MakeNestedMemberAccess(string full, JsExpression root = null) {
@@ -410,147 +410,210 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), args);
 		}
 
-		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
-			var result = new List<JsStatement> { MakeInitAssemblyCall() };
+		private TypeOOPEmulationPhase CreateTypeDefinitions(JsType type) {
+			string name = _metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name;
+			bool isGlobal = string.IsNullOrEmpty(name);
+			bool isMixin  = MetadataUtils.IsMixin(type.CSharpTypeDefinition);
+			bool export   = type.CSharpTypeDefinition.IsExternallyVisible();
+			var statements = new List<JsStatement>();
 
-			var orderedTypes = OrderByNamespace(types, t => _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name).ToList();
-			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();
-			foreach (var t in orderedTypes) {
-				try {
-					string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
-					bool isGlobal = string.IsNullOrEmpty(name);
-					bool isMixin  = MetadataUtils.IsMixin(t.CSharpTypeDefinition);
-					bool export   = t.CSharpTypeDefinition.IsExternallyVisible();
+			statements.Add(JsStatement.Comment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + type.CSharpTypeDefinition.FullName));
 
-					result.Add(JsStatement.Comment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + t.CSharpTypeDefinition.FullName));
-
-					string typevarName = _namer.GetTypeVariableName(name);
-					if (t is JsClass) {
-						var c = (JsClass)t;
-						if (isGlobal) {
-							result.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(JsExpression.Identifier(GetRoot(t.CSharpTypeDefinition)), m.Name), m.Definition)));
-							export = false;
-						}
-						else if (isMixin) {
-							result.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition)));
-							export = false;
-						}
-						else if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
-							result.Add(GenerateResourcesClass(c));
-						}
-						else {
-							var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
-
-							if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
-								var typeParameterNames = c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
-								var stmts = new List<JsStatement> { JsStatement.Var(InstantiatedGenericTypeVariableName, unnamedCtor) };
-								AddClassMembers(c, InstantiatedGenericTypeVariableName, stmts);
-								stmts.AddRange(c.StaticInitStatements);
-								stmts.Add(JsStatement.Return(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
-								var replacer = new GenericSimplifier(c.CSharpTypeDefinition, typeParameterNames, JsExpression.Identifier(InstantiatedGenericTypeVariableName));
-								for (int i = 0; i < stmts.Count; i++)
-									stmts[i] = replacer.Process(stmts[i]);
-								result.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))));
-								result.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
-								var args = new List<JsExpression> { JsExpression.Identifier(typevarName), _linker.CurrentAssemblyExpression, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
-								result.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? InitGenericInterface : InitGenericClass), args));
-							}
-							else {
-								result.Add(JsStatement.Var(typevarName, unnamedCtor));
-								result.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
-								AddClassMembers(c, typevarName, result);
-							}
-						}
-					}
-					else if (t is JsEnum) {
-						var e = (JsEnum)t;
-						result.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock)));
-						result.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(e.CSharpTypeDefinition).Name)));
-					}
-
-					if (export) {
-						string root = GetRoot(t.CSharpTypeDefinition);
-						var split = SplitIntoNamespaceAndName(name);
-						if (!string.IsNullOrEmpty(split.Item1)) {
-							HashSet<string> hs;
-							if (!exportedNamespacesByRoot.TryGetValue(root, out hs))
-								hs = exportedNamespacesByRoot[root] = new HashSet<string>();
-							hs.Add(split.Item1);
-						}
-
-						result.Add(JsExpression.Assign(MakeNestedMemberAccess(name, JsExpression.Identifier(root)), JsExpression.Identifier(typevarName)));
-					}
+			string typevarName = _namer.GetTypeVariableName(name);
+			if (type is JsClass) {
+				var c = (JsClass)type;
+				if (isGlobal) {
+					statements.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(JsExpression.Identifier(GetRoot(type.CSharpTypeDefinition)), m.Name), m.Definition)));
+					export = false;
 				}
-				catch (Exception ex) {
-					_errorReporter.Region = t.CSharpTypeDefinition.Region;
-					_errorReporter.InternalError(ex, "Error formatting type " + t.CSharpTypeDefinition.FullName);
+				else if (isMixin) {
+					statements.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition)));
+					export = false;
 				}
-			}
-
-			result.InsertRange(0, exportedNamespacesByRoot.OrderBy(x => x.Key).SelectMany(x => CreateNamespaces(JsExpression.Identifier(x.Key), x.Value)).ToList());
-
-			var typesToRegister = TopologicalSortTypesByInheritance(orderedTypes)
-			                      .Where(c =>    !(c is JsClass && MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter))
-			                                  && !string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
-			                                  && !MetadataUtils.IsResources(c.CSharpTypeDefinition)
-			                                  && !MetadataUtils.IsMixin(c.CSharpTypeDefinition))
-			                      .ToList();
-
-			foreach (var t in typesToRegister) {
-				try {
-					string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
-					string typevarName = _namer.GetTypeVariableName(name);
-					if (t.CSharpTypeDefinition.Kind == TypeKind.Enum) {
-						result.Add(CreateInitEnumCall((JsEnum)t, typevarName));
-					}
-					else {
-						var c = (JsClass)t;
-						if (t.CSharpTypeDefinition.Kind == TypeKind.Interface) {
-							result.Add(CreateInitInterfaceCall(c, typevarName, GetImplementedInterfaces(t.CSharpTypeDefinition.GetDefinition()).ToList()));
-						}
-						else {
-							result.Add(CreateInitClassCall(c, typevarName, GetBaseClass(t.CSharpTypeDefinition), GetImplementedInterfaces(t.CSharpTypeDefinition).ToList()));
-							if (c.NamedConstructors.Count > 0) {
-								result.Add(AssignNamedConstructorPrototypes(c, JsExpression.Identifier(_namer.GetTypeVariableName(name))));
-							}
-						}
-					}
-				}
-				catch (Exception ex) {
-					_errorReporter.Region = t.CSharpTypeDefinition.Region;
-					_errorReporter.InternalError(ex, "Error formatting type " + t.CSharpTypeDefinition.FullName);
-				}
-			}
-
-			foreach (var t in orderedTypes) {
-				var metadata = GetMetadataDescriptor(t.CSharpTypeDefinition, false);
-				if (metadata != null)
-					result.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, SetMetadata), JsExpression.Identifier(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name)), metadata));
-			}
-
-			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.MainAssembly.AssemblyAttributes, _metadataImporter).ToList();
-			if (scriptableAttributes.Count > 0)
-				result.Add(JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, null, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
-
-			result.AddRange(GetStaticInitializationOrder(orderedTypes.OfType<JsClass>(), 1)
-			                .Where(c => !MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(c.CSharpTypeDefinition))
-			                .SelectMany(c => c.StaticInitStatements));
-
-			if (entryPoint != null) {
-				if (entryPoint.Parameters.Count > 0) {
-					_errorReporter.Region = entryPoint.Region;
-					_errorReporter.Message(Messages._7800, entryPoint.FullName);
+				else if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
+					statements.Add(GenerateResourcesClass(c));
 				}
 				else {
-					var sem = _metadataImporter.GetMethodSemantics(entryPoint);
-					if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-						_errorReporter.Region = entryPoint.Region;
-						_errorReporter.Message(Messages._7801, entryPoint.FullName);
+					var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
+
+					if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
+						var typeParameterNames = c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
+						var stmts = new List<JsStatement> { JsStatement.Var(InstantiatedGenericTypeVariableName, unnamedCtor) };
+						AddClassMembers(c, InstantiatedGenericTypeVariableName, stmts);
+						stmts.AddRange(c.StaticInitStatements);
+						stmts.Add(JsStatement.Return(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
+						var replacer = new GenericSimplifier(c.CSharpTypeDefinition, typeParameterNames, JsExpression.Identifier(InstantiatedGenericTypeVariableName));
+						for (int i = 0; i < stmts.Count; i++)
+							stmts[i] = replacer.Process(stmts[i]);
+						statements.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))));
+						statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
+						var args = new List<JsExpression> { JsExpression.Identifier(typevarName), _linker.CurrentAssemblyExpression, JsExpression.Number(c.CSharpTypeDefinition.TypeParameterCount) };
+						statements.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? InitGenericInterface : InitGenericClass), args));
 					}
 					else {
-						result.Add(JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.DeclaringTypeDefinition), sem.Name)));
+						statements.Add(JsStatement.Var(typevarName, unnamedCtor));
+						statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
+						AddClassMembers(c, typevarName, statements);
 					}
 				}
+			}
+			else if (type is JsEnum) {
+				var e = (JsEnum)type;
+				statements.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock)));
+				statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(e.CSharpTypeDefinition).Name)));
+			}
+
+			if (export) {
+				string root = GetRoot(type.CSharpTypeDefinition);
+				statements.Add(JsExpression.Assign(MakeNestedMemberAccess(name, JsExpression.Identifier(root)), JsExpression.Identifier(typevarName)));
+			}
+
+			return new TypeOOPEmulationPhase(null, statements);
+		}
+
+		private TypeOOPEmulationPhase CreateInitTypeCalls(JsType type) {
+			bool generateCall = true;
+			if (type is JsClass && MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter))
+				generateCall = false;
+			if (string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name))
+				generateCall = false;
+			if (MetadataUtils.IsResources(type.CSharpTypeDefinition))
+				generateCall = false;
+			if (MetadataUtils.IsMixin(type.CSharpTypeDefinition))
+				generateCall = false;
+
+			var statements = new List<JsStatement>();
+			if (generateCall) {
+				string name = _metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name;
+				string typevarName = _namer.GetTypeVariableName(name);
+				if (type.CSharpTypeDefinition.Kind == TypeKind.Enum) {
+					statements.Add(CreateInitEnumCall((JsEnum)type, typevarName));
+				}
+				else {
+					var c = (JsClass)type;
+					if (type.CSharpTypeDefinition.Kind == TypeKind.Interface) {
+						statements.Add(CreateInitInterfaceCall(c, typevarName, GetImplementedInterfaces(type.CSharpTypeDefinition.GetDefinition()).ToList()));
+					}
+					else {
+						statements.Add(CreateInitClassCall(c, typevarName, GetBaseClass(type.CSharpTypeDefinition), GetImplementedInterfaces(type.CSharpTypeDefinition).ToList()));
+						if (c.NamedConstructors.Count > 0) {
+							statements.Add(AssignNamedConstructorPrototypes(c, JsExpression.Identifier(_namer.GetTypeVariableName(name))));
+						}
+					}
+				}
+			}
+
+			return new TypeOOPEmulationPhase(type.CSharpTypeDefinition.DirectBaseTypes.Select(x => x.GetDefinition()), statements);
+		}
+
+		private TypeOOPEmulationPhase CreateMetadataAssignment(JsType type) {
+			var metadata = GetMetadataDescriptor(type.CSharpTypeDefinition, false);
+			if (metadata != null)
+				return new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Member(_systemScript, SetMetadata), JsExpression.Identifier(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name)), metadata) });
+			else
+				return null;
+		}
+
+		private TypeOOPEmulation EmulateType(JsType type) {
+			return new TypeOOPEmulation(new[] { CreateTypeDefinitions(type), CreateInitTypeCalls(type), CreateMetadataAssignment(type) });
+		}
+
+		private IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types) {
+			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();
+
+			foreach (var t in types) {
+				string root = GetRoot(t.CSharpTypeDefinition);
+				string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
+				bool isGlobal = string.IsNullOrEmpty(name);
+				bool isMixin  = MetadataUtils.IsMixin(t.CSharpTypeDefinition);
+				bool export   = t.CSharpTypeDefinition.IsExternallyVisible();
+
+				if (export && !isMixin && !isGlobal) {
+					var split = SplitIntoNamespaceAndName(name);
+					if (!string.IsNullOrEmpty(split.Item1)) {
+						HashSet<string> hs;
+						if (!exportedNamespacesByRoot.TryGetValue(root, out hs))
+							hs = exportedNamespacesByRoot[root] = new HashSet<string>();
+						hs.Add(split.Item1);
+					}
+				}
+			}
+
+			var result = new List<JsStatement>();
+			result.AddRange(exportedNamespacesByRoot.OrderBy(x => x.Key).SelectMany(x => CreateNamespaces(JsExpression.Identifier(x.Key), x.Value)));
+			result.Add(MakeInitAssemblyCall());
+
+			return result;
+		}
+
+		private IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types) {
+			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.MainAssembly.AssemblyAttributes, _metadataImporter).ToList();
+			if (scriptableAttributes.Count > 0)
+				return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, null, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };
+			else
+				return EmptyList<JsStatement>.Instance;
+		}
+
+		private IEnumerable<JsStatement> GetStaticInitStatements(JsClass type) {
+			return !MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(type.CSharpTypeDefinition)
+			     ? type.StaticInitStatements
+			     : EmptyList<JsStatement>.Instance;
+		}
+
+		private IEnumerable<JsStatement> GetStaticInitCode(IEnumerable<JsType> types) {
+			return GetStaticInitializationOrder(OrderByNamespace(types.OfType<JsClass>(), c => _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), 1)
+			       .SelectMany(GetStaticInitStatements);
+		}
+
+		private JsStatement InvokeEntryPoint(IMethod entryPoint) {
+			if (entryPoint.Parameters.Count > 0) {
+				_errorReporter.Region = entryPoint.Region;
+				_errorReporter.Message(Messages._7800, entryPoint.FullName);
+				return JsExpression.Null;
+			}
+			else {
+				var sem = _metadataImporter.GetMethodSemantics(entryPoint);
+				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
+					_errorReporter.Region = entryPoint.Region;
+					_errorReporter.Message(Messages._7801, entryPoint.FullName);
+					return JsExpression.Null;
+				}
+				else {
+					return JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.DeclaringTypeDefinition), sem.Name));
+				}
+			}
+		}
+
+		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
+			var result = new List<JsStatement>();
+			result.AddRange(GetCodeBeforeFirstType(types));
+
+			var processed = new List<Tuple<JsType, TypeOOPEmulation>>();
+			foreach (var t in types) {
+				try {
+					processed.Add(Tuple.Create(t, EmulateType(t)));
+				}
+				catch (Exception ex) {
+					_errorReporter.Region = t.CSharpTypeDefinition.Region;
+					_errorReporter.InternalError(ex, "Error formatting type " + t.CSharpTypeDefinition.FullName);
+				}
+			}
+
+			if (processed.Count > 0) {
+				int phases = processed.Max(x => x.Item2.Phases.Count);
+				for (int i = 0; i < phases; i++) {
+					var currentPhase = Order(processed.Select(x => Tuple.Create(x.Item1, (x.Item2.Phases.Count > i ? x.Item2.Phases[i] : null) ?? new TypeOOPEmulationPhase(null, null))).ToList());
+					foreach (var c in currentPhase)
+						result.AddRange(c.Item2.Statements);
+				}
+			}
+
+			result.AddRange(GetCodeAfterLastType(types));
+
+			result.AddRange(GetStaticInitCode(types));
+
+			if (entryPoint != null) {
+				result.Add(InvokeEntryPoint(entryPoint));
 			}
 
 			return result;
