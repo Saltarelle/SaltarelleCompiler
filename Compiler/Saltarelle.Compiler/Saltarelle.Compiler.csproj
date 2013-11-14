@@ -67,6 +67,7 @@
     <Compile Include="Compiler\InlineCodeToken.cs" />
     <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="Decorators\OOPEmulatorDecoratorBase.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
     <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
