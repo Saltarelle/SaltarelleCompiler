@@ -9,6 +9,7 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.OOPEmulation;
 using Saltarelle.Compiler.Tests;
 using CompilerOptions = Saltarelle.Compiler.CompilerOptions;
 
@@ -34,7 +35,7 @@ namespace CoreLib.Tests {
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
 			var compiler = new Compiler(md, n, rtl, er);
 
-			var compiledTypes = compiler.Compile(compilation);
+			var compiledTypes = compiler.Compile(compilation).ToList();
 
 			if (expectErrors) {
 				Assert.That(er.AllMessages, Is.Not.Empty, "Compile should have generated errors");
@@ -43,7 +44,7 @@ namespace CoreLib.Tests {
 
 			Assert.That(er.AllMessages, Is.Empty, "Compile should not generate errors");
 
-			var js = new OOPEmulator(compilation.Compilation, md, rtl, n, l, er).Process(compiledTypes, null);
+			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation.Compilation, md, rtl, n, l, er), md, er).Process(compiledTypes, null);
 			js = new Linker(md, n, compilation.Compilation).Process(js);
 
 			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));

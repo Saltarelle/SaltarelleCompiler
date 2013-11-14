@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
@@ -13,6 +12,7 @@ using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
+using Saltarelle.Compiler.OOPEmulation;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
@@ -130,13 +130,6 @@ namespace CoreLib.Plugin {
 				return Tuple.Create(name.Substring(0, pos), name.Substring(pos + 1));
 		}
 
-		internal static IEnumerable<T> OrderByNamespace<T>(IEnumerable<T> source, Func<T, string> nameSelector) {
-			return    from s in source
-			           let t = SplitIntoNamespaceAndName(nameSelector(s))
-			       orderby t.Item1, t.Item2
-			        select s;
-		}
-
 		private readonly ICompilation _compilation;
 		private readonly JsTypeReferenceExpression _systemScript;
 		private readonly JsTypeReferenceExpression _systemObject;
@@ -176,7 +169,6 @@ namespace CoreLib.Plugin {
 					return 0;
 			}
 		}
-
 
 		private JsExpression GetMetadataDescriptor(ITypeDefinition type, bool isGenericSpecialization) {
 			var properties = new List<JsObjectLiteralProperty>();
@@ -353,12 +345,6 @@ namespace CoreLib.Plugin {
 			return JsStatement.Var(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
 		}
 
-		private IEnumerable<Tuple<JsType, TypeOOPEmulationPhase>> Order(IList<Tuple<JsType, TypeOOPEmulationPhase>> source) {
-			var backref = source.ToDictionary(x => x.Item1.CSharpTypeDefinition);
-			var edges = from s in source from t in s.Item2.DependentOnTypes.Intersect(backref.Keys) select Tuple.Create(s.Item1.CSharpTypeDefinition, t);
-			return TopologicalSorter.TopologicalSort(OrderByNamespace(backref.Keys, x => _metadataImporter.GetTypeSemantics(x).Name), edges).Select(t => backref[t]);
-		}
-
 		private JsExpression MakeNestedMemberAccess(string full, JsExpression root = null) {
 			var parts = full.Split('.');
 			JsExpression result = root ?? JsExpression.Identifier(parts[0]);
@@ -514,11 +500,11 @@ namespace CoreLib.Plugin {
 				return null;
 		}
 
-		private TypeOOPEmulation EmulateType(JsType type) {
+		public TypeOOPEmulation EmulateType(JsType type) {
 			return new TypeOOPEmulation(new[] { CreateTypeDefinitions(type), CreateInitTypeCalls(type), CreateMetadataAssignment(type) });
 		}
 
-		private IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types) {
+		public IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types) {
 			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();
 
 			foreach (var t in types) {
@@ -546,7 +532,7 @@ namespace CoreLib.Plugin {
 			return result;
 		}
 
-		private IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types) {
+		public IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types) {
 			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.MainAssembly.AssemblyAttributes, _metadataImporter).ToList();
 			if (scriptableAttributes.Count > 0)
 				return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, null, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };
@@ -554,121 +540,10 @@ namespace CoreLib.Plugin {
 				return EmptyList<JsStatement>.Instance;
 		}
 
-		private IEnumerable<JsStatement> GetStaticInitStatements(JsClass type) {
+		public IEnumerable<JsStatement> GetStaticInitStatements(JsClass type) {
 			return !MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(type.CSharpTypeDefinition)
 			     ? type.StaticInitStatements
 			     : EmptyList<JsStatement>.Instance;
-		}
-
-		private IEnumerable<JsStatement> GetStaticInitCode(IEnumerable<JsType> types) {
-			return GetStaticInitializationOrder(OrderByNamespace(types.OfType<JsClass>(), c => _metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), 1)
-			       .SelectMany(GetStaticInitStatements);
-		}
-
-		private JsStatement InvokeEntryPoint(IMethod entryPoint) {
-			if (entryPoint.Parameters.Count > 0) {
-				_errorReporter.Region = entryPoint.Region;
-				_errorReporter.Message(Messages._7800, entryPoint.FullName);
-				return JsExpression.Null;
-			}
-			else {
-				var sem = _metadataImporter.GetMethodSemantics(entryPoint);
-				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-					_errorReporter.Region = entryPoint.Region;
-					_errorReporter.Message(Messages._7801, entryPoint.FullName);
-					return JsExpression.Null;
-				}
-				else {
-					return JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.DeclaringTypeDefinition), sem.Name));
-				}
-			}
-		}
-
-		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
-			var result = new List<JsStatement>();
-			result.AddRange(GetCodeBeforeFirstType(types));
-
-			var processed = new List<Tuple<JsType, TypeOOPEmulation>>();
-			foreach (var t in types) {
-				try {
-					processed.Add(Tuple.Create(t, EmulateType(t)));
-				}
-				catch (Exception ex) {
-					_errorReporter.Region = t.CSharpTypeDefinition.Region;
-					_errorReporter.InternalError(ex, "Error formatting type " + t.CSharpTypeDefinition.FullName);
-				}
-			}
-
-			if (processed.Count > 0) {
-				int phases = processed.Max(x => x.Item2.Phases.Count);
-				for (int i = 0; i < phases; i++) {
-					var currentPhase = Order(processed.Select(x => Tuple.Create(x.Item1, (x.Item2.Phases.Count > i ? x.Item2.Phases[i] : null) ?? new TypeOOPEmulationPhase(null, null))).ToList());
-					foreach (var c in currentPhase)
-						result.AddRange(c.Item2.Statements);
-				}
-			}
-
-			result.AddRange(GetCodeAfterLastType(types));
-
-			result.AddRange(GetStaticInitCode(types));
-
-			if (entryPoint != null) {
-				result.Add(InvokeEntryPoint(entryPoint));
-			}
-
-			return result;
-		}
-
-		private HashSet<ITypeDefinition> GetDependencies(JsClass c, int pass) {
-			// Consider the following reference locations:
-			// Pass 1: static init statements, static methods, instance methods, constructors
-			// Pass 2: static init statements, static methods
-			// Pass 3: static init statements only
-
-			var result = new HashSet<ITypeDefinition>();
-			switch (pass) {
-				case 1:
-					foreach (var r in c.InstanceMethods.Where(m => m.Definition != null).SelectMany(m => TypeReferenceFinder.Analyze(m.Definition)))
-						result.Add(r);
-					foreach (var r in c.NamedConstructors.Where(m => m.Definition != null).SelectMany(m => TypeReferenceFinder.Analyze(m.Definition)))
-						result.Add(r);
-					if (c.UnnamedConstructor != null) {
-						foreach (var r in TypeReferenceFinder.Analyze(c.UnnamedConstructor))
-							result.Add(r);
-					}
-					goto case 2;
-
-				case 2:
-					foreach (var r in c.StaticMethods.Where(m => m.Definition != null).SelectMany(m => TypeReferenceFinder.Analyze(m.Definition)))
-						result.Add(r);
-					goto case 3;
-
-				case 3:
-					foreach (var r in TypeReferenceFinder.Analyze(c.StaticInitStatements))
-						result.Add(r);
-					break;
-
-				default:
-					throw new ArgumentException("pass");
-			}
-			return result;
-		}
-
-		private IEnumerable<JsClass> GetStaticInitializationOrder(IEnumerable<JsClass> types, int pass) {
-			if (pass > 3)
-				return types;	// If we can't find a non-circular order after 3 passes, just use some random order.
-
-			// We run the algorithm in 3 passes, each considering less types of references than the previous one.
-			var dict = types.ToDictionary(t => t.CSharpTypeDefinition, t => new { deps = GetDependencies(t, pass), backref = t });
-			var edges = from s in dict from t in s.Value.deps where dict.ContainsKey(t) select Tuple.Create(s.Key, t);
-
-			var result = new List<JsClass>();
-			foreach (var group in TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), edges)) {
-				var backrefed = group.Select(t => dict[t].backref);
-				result.AddRange(group.Count > 1 ? GetStaticInitializationOrder(backrefed.ToList(), pass + 1) : backrefed);
-			}
-
-			return result;
 		}
 	}
 }

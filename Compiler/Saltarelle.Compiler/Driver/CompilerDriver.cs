@@ -11,6 +11,7 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.OOPEmulation;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -278,7 +279,9 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())
 					compiledTypes = rewriter.Rewrite(compiledTypes);
 
-				var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
+				var invoker = new OOPEmulatorInvoker(container.Resolve<IOOPEmulator>(), container.Resolve<IMetadataImporter>(), container.Resolve<IErrorReporter>());
+
+				var js = invoker.Process(compiledTypes, entryPoint);
 				js = container.Resolve<ILinker>().Process(js);
 
 				if (er.HasErrors)

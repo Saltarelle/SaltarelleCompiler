@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ICSharpCode.NRefactory.TypeSystem;
-using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 
-namespace CoreLib.Plugin {
+namespace Saltarelle.Compiler.OOPEmulation {
 	public class TypeOOPEmulationPhase {
 		/// <summary>
 		/// This is the type that this phase on OOP emulation depends on. All statements in this phase for all of these types are guaranteed to appear in the script before the statements in this phase for the current type.

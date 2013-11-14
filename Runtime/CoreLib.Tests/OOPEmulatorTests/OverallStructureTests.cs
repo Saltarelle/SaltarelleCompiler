@@ -256,14 +256,15 @@ public sealed class C : GenericBase<object> {}");
 			Assert.That(actual, Is.EqualTo(new[] { "{Script}.initClass($Base, $asm, {});", "{Script}.initClass($EBase, $asm, {}, {Base});", "{Script}.initClass($C, $asm, {}, {Script}.makeGenericType({GenericBase}, [{Object}]));" }));
 		}
 
-		[Test]
-		public void ByNamespaceComparerOrdersTypesCorrectly() {
-			var orig = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
-			var rnd = new Random(42);
-			var shuffled = orig.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToList();
-			var actual = OOPEmulator.OrderByNamespace(shuffled, s => s).ToList();
-			Assert.That(actual, Is.EqualTo(orig));
-		}
+#warning TODO: Move
+//		[Test]
+//		public void ByNamespaceComparerOrdersTypesCorrectly() {
+//			var orig = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
+//			var rnd = new Random(42);
+//			var shuffled = orig.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => x.n).ToList();
+//			var actual = OOPEmulator.OrderByNamespace(shuffled, s => s).ToList();
+//			Assert.That(actual, Is.EqualTo(orig));
+//		}
 
 		[Test]
 		public void ProgramWithEntryPointWorks() {

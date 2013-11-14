@@ -9,6 +9,7 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.OOPEmulation;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.OOPEmulatorTests {
@@ -43,7 +44,9 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			else {
 				ep = null;
 			}
-			var rewritten = obj.Process(compiledTypes.Where(t => typeNames == null || typeNames.Contains(t.CSharpTypeDefinition.FullName)), ep);
+			var invoker = new OOPEmulatorInvoker(obj, md, errorReporter);
+
+			var rewritten = invoker.Process(compiledTypes.Where(t => typeNames == null || typeNames.Contains(t.CSharpTypeDefinition.FullName)).ToList(), ep);
 
 			if (assertNoErrors)
 				Assert.That(((MockErrorReporter)errorReporter).AllMessages, Is.Empty, "Should not have errors");

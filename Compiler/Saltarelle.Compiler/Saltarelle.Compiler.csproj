@@ -77,6 +77,7 @@
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
+    <Compile Include="OOPEmulation\OOPEmulatorInvoker.cs" />
     <Compile Include="TopologicalSorter.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
@@ -102,6 +103,8 @@
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
+    <Compile Include="OOPEmulation\TypeOOPEmulation.cs" />
+    <Compile Include="OOPEmulation\TypeOOPEmulationPhase.cs" />
     <Compile Include="TypeReferenceFinder.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />

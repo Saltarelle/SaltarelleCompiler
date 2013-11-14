@@ -36,7 +36,10 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7533 = Tuple.Create(7533, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the Javascript 'this' is bound to the first parameter.");
 		public static readonly Message _7535 = Tuple.Create(7535, MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.");
 		public static readonly Message _7536 = Tuple.Create(7536, MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.");
-		public static readonly Message _7537 = Tuple.Create(7533, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the param array is expanded.");
+		public static readonly Message _7537 = Tuple.Create(7537, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the param array is expanded.");
+
+		public static readonly Message _7800 = Tuple.Create(7800, MessageSeverity.Error, "The program entry point {0} may not have any parameters.");
+		public static readonly Message _7801 = Tuple.Create(7801, MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.");
 
 		public static readonly Message _7950 = Tuple.Create(7950, MessageSeverity.Error, "Error writing assembly: {0}.");
 		public static readonly Message _7951 = Tuple.Create(7951, MessageSeverity.Error, "Error writing script: {0}.");
