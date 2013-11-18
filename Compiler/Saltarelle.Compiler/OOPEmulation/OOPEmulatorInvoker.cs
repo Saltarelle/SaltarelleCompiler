@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 			_errorReporter = errorReporter;
 		}
 
-		public IList<JsStatement> Process(IEnumerable<JsType> types, IMethod entryPoint) {
+		public IList<JsStatement> Process(IList<JsType> types, IMethod entryPoint) {
 			var result = new List<JsStatement>();
 			result.AddRange(_emulator.GetCodeBeforeFirstType(types));
 
@@ -149,8 +149,12 @@ namespace Saltarelle.Compiler.OOPEmulation {
 		private IEnumerable<Tuple<JsType, TypeOOPEmulationPhase>> Order(IList<Tuple<JsType, TypeOOPEmulationPhase>> source) {
 			var backref = source.ToDictionary(x => x.Item1.CSharpTypeDefinition);
 			var edges = from s in source from t in s.Item2.DependentOnTypes.Intersect(backref.Keys) select Tuple.Create(s.Item1.CSharpTypeDefinition, t);
-			#warning TODO: Handle cycles gracefully
-			return TopologicalSorter.TopologicalSort(OrderByNamespace(backref.Keys, x => _metadataImporter.GetTypeSemantics(x).Name), edges).Select(t => backref[t]);
+			var components = TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(OrderByNamespace(backref.Keys, x => _metadataImporter.GetTypeSemantics(x).Name), edges);
+			foreach (var error in components.Where(c => c.Count > 1)) {
+				_errorReporter.Region = DomRegion.Empty;
+				_errorReporter.Message(Messages._7802, string.Join(", ", error.Select(t => t.FullName)));
+			}
+			return components.SelectMany(c => c).Select(t => backref[t]);
 		}
 	}
 }

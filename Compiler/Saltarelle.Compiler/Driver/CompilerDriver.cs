@@ -281,7 +281,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				var invoker = new OOPEmulatorInvoker(container.Resolve<IOOPEmulator>(), container.Resolve<IMetadataImporter>(), container.Resolve<IErrorReporter>());
 
-				var js = invoker.Process(compiledTypes, entryPoint);
+				var js = invoker.Process(compiledTypes.ToList(), entryPoint);
 				js = container.Resolve<ILinker>().Process(js);
 
 				if (er.HasErrors)

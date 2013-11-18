@@ -40,6 +40,7 @@ namespace Saltarelle.Compiler {
 
 		public static readonly Message _7800 = Tuple.Create(7800, MessageSeverity.Error, "The program entry point {0} may not have any parameters.");
 		public static readonly Message _7801 = Tuple.Create(7801, MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.");
+		public static readonly Message _7802 = Tuple.Create(7802, MessageSeverity.Error, "Cyclic initialization required of the types {0}.");
 
 		public static readonly Message _7950 = Tuple.Create(7950, MessageSeverity.Error, "Error writing assembly: {0}.");
 		public static readonly Message _7951 = Tuple.Create(7951, MessageSeverity.Error, "Error writing script: {0}.");

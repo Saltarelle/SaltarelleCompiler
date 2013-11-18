@@ -489,7 +489,7 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			return new TypeOOPEmulationPhase(type.CSharpTypeDefinition.DirectBaseTypes.Select(x => x.GetDefinition()), statements);
+			return new TypeOOPEmulationPhase(type.CSharpTypeDefinition.GetAllBaseTypeDefinitions(), statements);
 		}
 
 		private TypeOOPEmulationPhase CreateMetadataAssignment(JsType type) {
