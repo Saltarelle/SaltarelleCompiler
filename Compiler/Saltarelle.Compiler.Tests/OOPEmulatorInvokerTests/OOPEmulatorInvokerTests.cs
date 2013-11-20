@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.Tests.OOPEmulatorInvokerTests {
 		private void AssertCorrect(IList<JsType> types, string expected, IOOPEmulator emulator, IMethod entryPoint) {
 			var invoker = new OOPEmulatorInvoker(emulator, new MockMetadataImporter(), new MockErrorReporter());
 			var result = invoker.Process(types, entryPoint);
-			var actual = string.Join("", result.Select(s => OutputFormatter.Format(s, allowIntermediates: true))).Replace("\r\n", "\n");
+			var actual = OutputFormatter.Format(result, allowIntermediates: true).Replace("\r\n", "\n");
 			Assert.That(actual, Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 

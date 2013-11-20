@@ -23,7 +23,7 @@ namespace CoreLib.Tests.LinkerTests {
 			compilation.SetupGet(_ => _.MainAssembly).Returns(mainAssembly);
 			var obj = new Linker(metadata ?? new MockMetadataImporter(), namer ?? new MockNamer(), compilation.Object);
 			var processed = obj.Process(stmts);
-			return string.Join("", processed.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
+			return OutputFormatter.Format(processed, allowIntermediates: false);
 		}
 
 		private void AssertCorrect(string actual, string expected) {

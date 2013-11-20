@@ -315,7 +315,7 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
+				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js) : OutputFormatter.Format(js);
 				try {
 					File.WriteAllText(outputScriptPath, script, settings.Encoding);
 				}

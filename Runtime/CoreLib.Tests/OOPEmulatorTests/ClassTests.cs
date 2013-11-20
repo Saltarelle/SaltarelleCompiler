@@ -1325,7 +1325,7 @@ interface I2<T> : I1 {}
 			var compilation = Compile(@"class C { static C() { int x = 0; int y = 1; } }");
 			var emulator = CreateEmulator(compilation.Item1);
 			var statements = emulator.GetStaticInitStatements((JsClass)compilation.Item2.Single());
-			var actual = string.Join("", statements.Select(s => OutputFormatter.Format(s, allowIntermediates: true)));
+			var actual = OutputFormatter.Format(statements, allowIntermediates: true);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("var x = 0;\nvar y = 1;\n"));
 		}
 

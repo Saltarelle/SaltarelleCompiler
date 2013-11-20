@@ -47,7 +47,7 @@ namespace CoreLib.Tests {
 			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation.Compilation, md, rtl, n, l, er), md, er).Process(compiledTypes, null);
 			js = new Linker(md, n, compilation.Compilation).Process(js);
 
-			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
+			string script = OutputFormatter.Format(js, allowIntermediates: false);
 
 			return Tuple.Create(script, er);
 		}

@@ -32,6 +32,10 @@ namespace Saltarelle.Compiler.JSModel
 			return fmt._cb.ToString();
 		}
 
+		public static string Format(IEnumerable<JsStatement> statements, bool allowIntermediates = false) {
+			return string.Join("", statements.Select(s => Format(s, allowIntermediates)));
+		}
+
 		public static string FormatMinified(JsExpression expression, bool allowIntermediates = false) {
 			var fmt = new OutputFormatter(allowIntermediates, true);
 			fmt.VisitExpression(expression, false);
@@ -42,6 +46,10 @@ namespace Saltarelle.Compiler.JSModel
 			var fmt = new OutputFormatter(allowIntermediates, true);
 			fmt.VisitStatement(statement, false);
 			return fmt._cb.ToString();
+		}
+
+		public static string FormatMinified(IEnumerable<JsStatement> statements, bool allowIntermediates = false) {
+			return string.Join("", statements.Select(s => FormatMinified(s, allowIntermediates)));
 		}
 
 		public object VisitExpression(JsExpression expression, bool parenthesized) {

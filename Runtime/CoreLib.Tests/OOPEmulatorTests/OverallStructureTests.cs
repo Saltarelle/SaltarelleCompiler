@@ -48,7 +48,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var emulator = CreateEmulator(compilation.Item1);
 			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
 
-			Assert.That(string.Join("", actual.Select(x => OutputFormatter.Format(x, allowIntermediates: true))).Replace("\r\n", "\n"), Is.EqualTo(
+			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"global.OuterNamespace = global.OuterNamespace || {};
 global.OuterNamespace.InnerNamespace = global.OuterNamespace.InnerNamespace || {};
 global.OuterNamespace.InnerNamespace2 = global.OuterNamespace.InnerNamespace2 || {};
@@ -75,7 +75,7 @@ namespace OuterNamespace {
 			var emulator = CreateEmulator(compilation.Item1);
 			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
 
-			Assert.That(string.Join("", actual.Select(x => OutputFormatter.Format(x, allowIntermediates: true))).Replace("\r\n", "\n"), Is.EqualTo(
+			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"exports.OuterNamespace = exports.OuterNamespace || {};
 exports.OuterNamespace.InnerNamespace = exports.OuterNamespace.InnerNamespace || {};
 exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 || {};
@@ -95,7 +95,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 			var emulator = CreateEmulator(compilation.Item1);
 			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
 
-			Assert.That(string.Join("", actual.Select(x => OutputFormatter.Format(x, allowIntermediates: true))).Replace("\r\n", "\n"), Is.EqualTo(
+			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"{Script}.initAssembly($asm, 'x');
 ".Replace("\r\n", "\n")));
 		}
@@ -113,7 +113,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 			var emulator = CreateEmulator(compilation.Item1);
 			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
 
-			Assert.That(string.Join("", actual.Select(x => OutputFormatter.Format(x, allowIntermediates: true))).Replace("\r\n", "\n"), Is.EqualTo(
+			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"{Script}.initAssembly($asm, 'x');
 ".Replace("\r\n", "\n")));
 		}
@@ -132,7 +132,7 @@ public class MyAttribute : System.Attribute {
 			var actual = emulator.GetCodeAfterLastType(compilation.Item2).ToList();
 
 			Assert.That(actual.Count, Is.EqualTo(1));
-			Assert.That(OutputFormatter.Format(actual[0], allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo("$asm.attr = [new {MyAttribute}(42)];\n"));
+			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo("$asm.attr = [new {MyAttribute}(42)];\n"));
 		}
 
 		[Test]
