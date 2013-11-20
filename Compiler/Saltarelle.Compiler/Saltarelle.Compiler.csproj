@@ -49,6 +49,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TopologicalSort">
+      <HintPath>..\packages\TopologicalSort.1.0.0\lib\net35\TopologicalSort.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\CommonAssemblyInfo.cs">
@@ -79,7 +82,6 @@
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
     <Compile Include="OOPEmulation\OOPEmulatorInvoker.cs" />
-    <Compile Include="TopologicalSorter.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />

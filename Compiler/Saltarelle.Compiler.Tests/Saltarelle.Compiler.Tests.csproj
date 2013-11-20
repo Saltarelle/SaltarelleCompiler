@@ -141,7 +141,6 @@
     <Compile Include="OOPEmulatorInvokerTests\OOPEmulatorInvokerTests.cs" />
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
-    <Compile Include="TopologicalSorterTests.cs" />
     <Compile Include="StateMachineTests\AsyncTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />

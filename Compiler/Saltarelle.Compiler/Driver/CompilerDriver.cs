@@ -12,6 +12,7 @@ using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulation;
+using TopologicalSort;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -219,7 +220,7 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private static IEnumerable<System.Reflection.Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> references) {
-			return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
+			return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Edge.Create(a.Item1.AssemblyName, r)))
 			                        .Select(r => r.Item3)
 			                        .Where(a => a != null);
 		}

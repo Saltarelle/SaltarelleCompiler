@@ -6,6 +6,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
+using TopologicalSort;
 
 namespace Saltarelle.Compiler {
 	public interface IMetadataImporter {
@@ -114,7 +115,7 @@ namespace Saltarelle.Compiler {
 
 		public static void Prepare(this IMetadataImporter md, IEnumerable<ITypeDefinition> types) {
 			var l = types.ToList();
-			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, (t, b) => Tuple.Create(t, b))))
+			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, Edge.Create)))
 				md.Prepare(t);
 		}
 	}

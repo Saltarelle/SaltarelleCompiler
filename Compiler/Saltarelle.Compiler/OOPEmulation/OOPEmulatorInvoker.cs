@@ -7,6 +7,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
+using TopologicalSort;
 
 namespace Saltarelle.Compiler.OOPEmulation {
 	public class OOPEmulatorInvoker {
@@ -100,7 +101,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 
 			// We run the algorithm in 3 passes, each considering less types of references than the previous one.
 			var dict = types.ToDictionary(t => t.CSharpTypeDefinition, t => new { deps = GetStaticInitializationDependencies(t, pass), backref = t });
-			var edges = from s in dict from t in s.Value.deps where dict.ContainsKey(t) select Tuple.Create(s.Key, t);
+			var edges = from s in dict from t in s.Value.deps where dict.ContainsKey(t) select Edge.Create(s.Key, t);
 
 			var result = new List<JsClass>();
 			foreach (var group in TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(dict.Keys.ToList(), edges)) {
@@ -148,7 +149,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 
 		private IEnumerable<Tuple<JsType, TypeOOPEmulationPhase>> Order(IList<Tuple<JsType, TypeOOPEmulationPhase>> source) {
 			var backref = source.ToDictionary(x => x.Item1.CSharpTypeDefinition);
-			var edges = from s in source from t in s.Item2.DependentOnTypes.Intersect(backref.Keys) select Tuple.Create(s.Item1.CSharpTypeDefinition, t);
+			var edges = from s in source from t in s.Item2.DependentOnTypes.Intersect(backref.Keys) select Edge.Create(s.Item1.CSharpTypeDefinition, t);
 			var components = TopologicalSorter.FindAndTopologicallySortStronglyConnectedComponents(OrderByNamespace(backref.Keys, x => _metadataImporter.GetTypeSemantics(x).Name), edges);
 			foreach (var error in components.Where(c => c.Count > 1)) {
 				_errorReporter.Region = DomRegion.Empty;
