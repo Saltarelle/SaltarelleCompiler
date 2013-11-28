@@ -77,7 +77,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		protected string FindInstanceFieldInitializer(string name) {
 			var lastDot = name.LastIndexOf('.');
 			var cls = FindClass(name.Substring(0, lastDot));
-			return cls.UnnamedConstructor.Body.Statements
+			return ((JsFunctionDefinitionExpression)(cls.UnnamedConstructor)).Body.Statements
 			                                  .OfType<JsExpressionStatement>()
 			                                  .Select(s => s.Expression)
 			                                  .OfType<JsBinaryExpression>()

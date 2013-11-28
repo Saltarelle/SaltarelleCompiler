@@ -4,6 +4,7 @@ using FluentAssertions;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
@@ -15,7 +16,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			var cls = FindClass("C");
 			cls.NamedConstructors.Should().BeEmpty();
 			cls.UnnamedConstructor.Should().NotBeNull();
-			cls.UnnamedConstructor.ParameterNames.Should().HaveCount(0);
+            ((JsFunctionDefinitionExpression)cls.UnnamedConstructor).ParameterNames.Should().HaveCount(0);
 		}
 
 		[Test]
