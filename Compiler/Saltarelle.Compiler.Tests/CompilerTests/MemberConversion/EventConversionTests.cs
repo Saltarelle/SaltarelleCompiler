@@ -1,6 +1,7 @@
 ﻿using System;
 using FluentAssertions;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 using ICSharpCode.NRefactory.TypeSystem;
 
@@ -34,7 +35,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			                                                };
 			Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
+			((JsFunctionDefinitionExpression)FindClass("C").UnnamedConstructor).Body.Statements.Should().BeEmpty();
 		}
 
 		[Test]
@@ -64,7 +65,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)), GetEventSemantics = f => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + f.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + f.Name, generateCode: false)) };
 			Compile(new[] { "class C { public event System.EventHandler SomeProp { add {} remove{} } }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
+			((JsFunctionDefinitionExpression)FindClass("C").UnnamedConstructor).Body.Statements.Should().BeEmpty();
 		}
 
 		[Test]
