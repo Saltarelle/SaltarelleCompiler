@@ -921,7 +921,7 @@ namespace Saltarelle.Compiler.Compiler {
 			expressions[index] = JsExpression.Identifier(_variables[temp].Name);
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IParameterizedMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
 			IList<InlineCodeToken> tokens = null;
 			var expressions = new List<JsExpression>() { target };
 			if (literalCode != null) {
@@ -947,9 +947,16 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			argumentToParameterMap = argumentToParameterMap ?? CreateIdentityArgumentToParameterMap(argumentsForCall.Count);
+			bool hasCreatedParamArray = false;
 
 			// Compile the arguments left to right
 			foreach (var i in argumentToParameterMap) {
+				if (member.Parameters[i].IsParams) {
+					if (hasCreatedParamArray)
+						continue;
+					hasCreatedParamArray = true;
+				}
+
 				var a = argumentsForCall[i];
 				if (a is ByReferenceResolveResult) {
 					var r = (ByReferenceResolveResult)a;
@@ -1304,7 +1311,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.Identifier(_variables[_objectBeingInitialized].Name);
 		}
 
-		private JsExpression HandleInvocation(IMember member, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool isVirtualCall) {
+		private JsExpression HandleInvocation(IParameterizedMember member, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, IList<ResolveResult> initializerStatements, bool isVirtualCall) {
 			if (member is IMethod) {
 				if (member.DeclaringType.Kind == TypeKind.Delegate && member.Equals(member.DeclaringType.GetDelegateInvokeMethod())) {
 					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringTypeDefinition);

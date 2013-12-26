@@ -1820,5 +1820,45 @@ class C1 {
 @"	_2($a);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
+
+		[Test]
+		public void ParamArrayWithSideEffects() {
+			AssertCorrect(@"
+public class C {
+	object Id;
+
+	static int Y(params object[] args) { return 0; }
+
+	void M() {
+		// BEGIN
+		Y(1, Y(new C() { Id = 2 }), 3);
+		// END
+	}
+}",
+@"	var $tmp1 = new {sm_C}();
+	$tmp1.$Id = 2;
+	{sm_C}.$Y([1, {sm_C}.$Y([$tmp1]), 3]);
+", addSkeleton: false, runtimeLibrary: new MockRuntimeLibrary { Upcast = (a, b, c, d) => a });
+		}
+
+		[Test]
+		public void ParamArrayWithSideEffectsExpandParams() {
+			AssertCorrect(@"
+public class C {
+	object Id;
+
+	static int Y(params object[] args) { return 0; }
+
+	void M() {
+		// BEGIN
+		Y(1, Y(new C() { Id = 2 }), 3);
+		// END
+	}
+}",
+@"	var $tmp1 = new {sm_C}();
+	$tmp1.$Id = 2;
+	{sm_C}.$Y(1, {sm_C}.$Y($tmp1), 3);
+", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (a, b, c, d) => a });
+		}
 	}
 }

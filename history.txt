@@ -1,3 +1,4 @@
+Fixed issue causing param arrays to sometimes be created multiple times (#268)
 Better extensibility for the OOP emulator. This can enable lots of cool import libs.
 Allow empty [ScriptName] on static methods (#258).
 Fixed issue causing compiler error with await in if with empty else block (#259).
