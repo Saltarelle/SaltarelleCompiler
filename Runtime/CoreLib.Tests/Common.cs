@@ -9,15 +9,22 @@ namespace CoreLib.Tests {
 	internal class Common {
 		public static Mock<ITypeDefinition> CreateTypeMock(string fullName) {
 			int dot = fullName.LastIndexOf(".", StringComparison.InvariantCulture);
-			string name;
+			string name, nmspace;
 			if (dot >= 0) {
 				name = fullName.Substring(dot + 1);
+				nmspace = fullName.Substring(0, dot);
 			}
 			else {
 				name = fullName;
+				nmspace = "";
 			}
 
 			var result = new Mock<ITypeDefinition>(MockBehavior.Strict);
+			var named = result.As<INamedElement>();
+			named.SetupGet(_ => _.Namespace).Returns(nmspace);
+			named.SetupGet(_ => _.Name).Returns(name);
+
+			result.SetupGet(_ => _.Namespace).Returns(nmspace);
 			result.SetupGet(_ => _.Name).Returns(name);
 			result.SetupGet(_ => _.FullName).Returns(fullName);
 			result.Setup(_ => _.GetDefinition()).Returns(result.Object);
@@ -55,6 +62,8 @@ namespace CoreLib.Tests {
 					var posArgs = new List<ResolveResult>();
 					foreach (var argExpression in body.Arguments) {
 						var argType = new Mock<IType>(MockBehavior.Strict);
+						argType.SetupGet(_ => _.Namespace).Returns(argExpression.Type.Namespace);
+						argType.SetupGet(_ => _.Name).Returns(argExpression.Type.Name);
 						argType.SetupGet(_ => _.FullName).Returns(argExpression.Type.FullName);
 						var arg = new ConstantResolveResult(argType.Object, ((ConstantExpression)argExpression).Value);
 						posArgs.Add(arg);

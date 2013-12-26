@@ -71,14 +71,24 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static TAttribute ReadAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
-			var attr = attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(TAttribute).FullName);
-			return attr != null ? ReadAttribute<TAttribute>(attr) : null;
+			string nmspace = typeof(TAttribute).Namespace, name = typeof(TAttribute).Name;
+
+			foreach (var a in attributes) {
+				if (a.AttributeType.Namespace == nmspace && a.AttributeType.Name == name) {
+					return ReadAttribute<TAttribute>(a);
+				}
+			}
+			return null;
 		}
 
 		public static IEnumerable<TAttribute> ReadAttributes<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
-			return attributes
-				.Where(a => a.AttributeType.FullName == typeof(TAttribute).FullName)
-				.Select(a => ReadAttribute<TAttribute>(a));
+			string nmspace = typeof(TAttribute).Namespace, name = typeof(TAttribute).Name;
+
+			foreach (var a in attributes) {
+				if (a.AttributeType.Namespace == nmspace && a.AttributeType.Name == name) {
+					yield return ReadAttribute<TAttribute>(a);
+				}
+			}
 		}
 
 		public static bool HasAttribute<TAttribute>(IEntity entity) where TAttribute : Attribute {
@@ -86,7 +96,14 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static bool HasAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
-			return attributes.Any(a => a.AttributeType.FullName == typeof(TAttribute).FullName);
+			string nmspace = typeof(TAttribute).Namespace, name = typeof(TAttribute).Name;
+
+			foreach (var a in attributes) {
+				if (a.AttributeType.Namespace == nmspace && a.AttributeType.Name == name) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }
