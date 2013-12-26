@@ -1,3 +1,4 @@
+Fixed reflection for members of interfaces (#267)
 Fixed issue causing param arrays to sometimes be created multiple times (#268)
 Better extensibility for the OOP emulator. This can enable lots of cool import libs.
 Allow empty [ScriptName] on static methods (#258).

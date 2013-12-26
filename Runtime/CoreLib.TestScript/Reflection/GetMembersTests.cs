@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using QUnit;
 
 namespace CoreLib.TestScript.Reflection {
 	[TestFixture]
 	public class GetMembersTests {
 		private void AssertEquivalent(MemberInfo[] actual, int[] expected) {
-			var actualValues = actual.Filter(m => m.DeclaringType != typeof(object)).Map(m => ((A1Attribute)m.GetCustomAttributes(typeof(A1Attribute), true)[0]).I);
+			var actualValues = actual.Filter(m => m.DeclaringType != typeof(object)).Map(m => { var arr = (A1Attribute[])m.GetCustomAttributes(typeof(A1Attribute), true); return arr.Length > 0 ? arr[0].I : 0; }).Filter(x => x != 0);
 			actualValues.Sort();
 			expected.Sort();
 			Assert.AreEqual(actualValues, expected);
@@ -100,7 +101,7 @@ namespace CoreLib.TestScript.Reflection {
 			[A1(284)] public static event Action ECS2 { [A1(285)] add {} [A1(286)] remove {} }
 		}
 
-		class D1 : C1 {
+		class D1 : C1, I1 {
 			[A1(301)] public D1() {}
 			[A1(302)] public D1(int x) {}
 			[A1(303)] public D1(int x, string y) {}
@@ -133,6 +134,15 @@ namespace CoreLib.TestScript.Reflection {
 
 			[A1(381)] public static event Action EDS1 { [A1(382)] add {} [A1(383)] remove {} }
 			[A1(384)] public static event Action EDS2 { [A1(385)] add {} [A1(386)] remove {} }
+
+			void I1.MI1() { throw new NotImplementedException(); }
+			void I1.MI1(int x) { throw new NotImplementedException(); }
+			void I1.MI1(int x, string y) { throw new NotImplementedException(); }
+			void I1.MI12(int x, string y) { throw new NotImplementedException(); }
+			int I1.PI11 { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
+			int I1.PI12 { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
+			event Action I1.EI11 { add { throw new NotImplementedException(); } remove { throw new NotImplementedException(); } }
+			event Action I1.EI12 { add { throw new NotImplementedException(); } remove { throw new NotImplementedException(); } }
 		}
 
 		class B2 {
@@ -252,6 +262,34 @@ namespace CoreLib.TestScript.Reflection {
 		class C3 {
 			[A1(1)] public int this[int x] { get { return 0; } set {} }
 		}
+
+		interface I1 {
+			[A1(411)] void MI1();
+			[A1(412)] void MI1(int x);
+			[A1(413)] void MI1(int x, string y);
+			[A1(414)] void MI12(int x, string y);
+
+			[A1(451)] int PI11 { [A1(452)] get; [A1(453)] set; }
+			[A1(454)] int PI12 { [A1(455)] get; [A1(456)] set; }
+			[A1(457)] int this[int x] { [A1(458), ScriptName("get_i1item")] get; [A1(459), ScriptName("set_i1item")] set; }
+
+			[A1(471)] event Action EI11;
+			[A1(474)] event Action EI12;
+		}
+
+		interface I2 : I1 {
+			[A1(511)] void MI2();
+			[A1(512)] void MI2(int x);
+			[A1(513)] void MI2(int x, string y);
+			[A1(514)] void MI22(int x, string y);
+
+			[A1(551)] int PI21 { [A1(552)] get; [A1(553)] set; }
+			[A1(554)] int PI22 { [A1(555)] get; [A1(556)] set; }
+			[A1(557)] int this[string x] { [A1(558), ScriptName("get_item2")] get; [A1(559), ScriptName("set_item2")] set; }
+
+			[A1(571)] event Action EI21;
+			[A1(574)] event Action EI22;
+		}
 #pragma warning restore 649, 108, 67
 
 		[Test]
@@ -260,6 +298,13 @@ namespace CoreLib.TestScript.Reflection {
 			                                    111, 112, 113, 114,                     131, 132,           151, 152, 153, 154, 155, 156, 157, 158, 159,                               171, 172, 173, 174, 175, 176,
 			                                    211, 212, 213, 214,                     231, 232,           251, 252, 253, 254, 255, 256, 257, 258, 259,                               271, 272, 273, 274, 275, 276,
 			                     301, 302, 303, 311, 312, 313, 314, 321, 322, 323, 324, 331, 332, 341, 342, 351, 352, 353, 354, 355, 356, 357, 358, 359, 361, 362, 363, 364, 365, 366, 371, 372, 373, 374, 375, 376, 381, 382, 383, 384, 385, 386,
+			                 });
+		}
+
+		[Test]
+		public void GetMembersWorksForInterface() {
+			AssertEquivalent(typeof(I2).GetMembers(), new[] {
+			                                    511, 512, 513, 514,                                         551, 552, 553, 554, 555, 556, 557, 558, 559,                               571,           574,
 			                 });
 		}
 
