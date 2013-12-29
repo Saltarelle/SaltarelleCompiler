@@ -670,7 +670,6 @@ class C3 {
 
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnInterfaceMethod() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptName("""")] void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("I1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("interface method") && AllErrorTexts[0].Contains("empty name"));
@@ -678,12 +677,10 @@ class C3 {
 
 		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnVirtualOrAbstractMethod() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public virtual void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("overridable") && AllErrorTexts[0].Contains("empty name"));
 
-			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public abstract void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("overridable") && AllErrorTexts[0].Contains("empty name"));
@@ -704,7 +701,6 @@ class C3 {
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnInterfaceMethod() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptSkip] void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("I1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("interface method"));
@@ -712,12 +708,10 @@ class C3 {
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnVirtualOrAbstractMethod() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public virtual void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overridable"));
 
-			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overridable"));
@@ -725,7 +719,6 @@ class C3 {
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodImplementingInterfaceMember() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public interface I { void M(); } public class C : I { [ScriptSkip] public void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("implements"));
@@ -733,7 +726,6 @@ class C3 {
 
 		[Test]
 		public void ScriptSkipAttributeCannotBeSpecifiedOnMethodThatOverridesABaseMember() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class B { public virtual void M() {} } public class D : B { [ScriptSkip] public sealed override void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("D.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overrides"));
@@ -741,12 +733,10 @@ class C3 {
 
 		[Test]
 		public void StaticMethodWithScriptSkipAttributeMustHaveExactlyOneParameter() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("one parameter"));
 
-			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("one parameter"));
@@ -754,12 +744,10 @@ class C3 {
 
 		[Test]
 		public void InstanceMethodWithScriptSkipAttributeCannotHaveParameters() {
-			var er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("no parameters"));
 
-			er = new MockErrorReporter(false);
 			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("no parameters"));

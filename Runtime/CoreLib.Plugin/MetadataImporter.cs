@@ -755,7 +755,7 @@ namespace CoreLib.Plugin {
 					Message(Messages._7117, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 				}
-				if (method.Name == "op_Implicit" || method.Name == "op_Explicit") {
+				else if (method.Name == "op_Implicit" || method.Name == "op_Explicit") {
 					Message(Messages._7118, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.Name);
 				}
