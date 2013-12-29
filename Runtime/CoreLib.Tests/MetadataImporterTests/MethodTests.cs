@@ -669,6 +669,29 @@ class C3 {
 		}
 
 		[Test]
+		public void EmptyScriptNameOnMethodWorksWithExpandParams() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName("""")]
+	public void M1(int x, params string[] y) {
+	}
+
+	[ScriptName(""""), ExpandParams]
+	public void M2(int x, params string[] y) {
+	}
+}");
+
+			var impl = FindMethod("C.M1");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}({x}, {y})"));
+
+			impl = FindMethod("C.M2");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("{this}({x}, {*y})"));
+		}
+
+		[Test]
 		public void EmptyScriptNameCannotBeSpecifiedOnInterfaceMethod() {
 			Prepare(@"using System.Runtime.CompilerServices; public interface I1 { [ScriptName("""")] void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
