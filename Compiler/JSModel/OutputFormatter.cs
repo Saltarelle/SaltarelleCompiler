@@ -535,8 +535,28 @@ namespace Saltarelle.Compiler.JSModel
 			return null;
 		}
 
+		private bool ParenthesizeExpressionAsStatement(JsExpression expression) {
+			if (expression is JsFunctionDefinitionExpression)
+				return true;
+			for (;;) {
+				if (expression is JsMemberAccessExpression)
+					expression = ((JsMemberAccessExpression)expression).Target;
+				else if (expression is JsBinaryExpression)
+					expression = ((JsBinaryExpression)expression).Left;
+				else if (expression is JsInvocationExpression)
+					expression = ((JsInvocationExpression)expression).Method;
+				else if (expression is JsCommaExpression)
+					expression = ((JsCommaExpression)expression).Expressions[0];
+				else if (expression.NodeType == ExpressionNodeType.PostfixPlusPlus || expression.NodeType == ExpressionNodeType.PostfixMinusMinus)
+					expression = ((JsUnaryExpression)expression).Operand;
+				else
+					break;
+			}
+			return expression is JsObjectLiteralExpression;
+		}
+
 		public object VisitExpressionStatement(JsExpressionStatement statement, bool addNewline) {
-			VisitExpression(statement.Expression, statement.Expression is JsFunctionDefinitionExpression);
+			VisitExpression(statement.Expression, ParenthesizeExpressionAsStatement(statement.Expression));
 			_cb.Append(";");
 			if (addNewline)
 				_cb.AppendLine();

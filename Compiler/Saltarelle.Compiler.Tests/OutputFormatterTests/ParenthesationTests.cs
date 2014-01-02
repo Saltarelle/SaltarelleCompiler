@@ -505,5 +505,19 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			                  "e"
 			              ), "a[b].c[d].e");
 		}
+
+		[Test]
+		public void ExpressionStatementIsParenthesizedWhenItStartsWithAnObjectLiteral() {
+			AssertCorrect((JsStatement)JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "({ a: 0 });\n");
+			AssertCorrect((JsStatement)JsExpression.Invocation(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }());\n");
+			AssertCorrect((JsStatement)JsExpression.Member(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "a"), "({ a: 0 }.a);\n");
+			AssertCorrect((JsStatement)JsExpression.Comma(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), JsExpression.Null), "({ a: 0 }, null);\n");
+			AssertCorrect((JsStatement)JsExpression.Conditional(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), JsExpression.Number(0), JsExpression.Number(1)), "({ a: 0 } ? 0 : 1);\n");
+			AssertCorrect((JsStatement)JsExpression.PrefixPlusPlus(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "++{ a: 0 };\n");
+			AssertCorrect((JsStatement)JsExpression.PostfixPlusPlus(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }++);\n");
+			AssertCorrect((JsStatement)JsExpression.PostfixMinusMinus(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }--);\n");
+			AssertCorrect((JsStatement)JsExpression.Index(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), JsExpression.Number(0)), "({ a: 0 }[0]);\n");
+			AssertCorrect((JsStatement)JsExpression.Member(JsExpression.Invocation(JsExpression.Member(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "a")), "b"), "({ a: 0 }.a().b);\n");
+		}
 	}
 }
