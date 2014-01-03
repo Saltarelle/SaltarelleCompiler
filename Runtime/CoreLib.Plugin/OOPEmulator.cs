@@ -204,12 +204,150 @@ namespace CoreLib.Plugin {
 			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
 		}
 
-		private JsExpression CreateInstanceMembers(JsClass c) {
-			return JsExpression.ObjectLiteral(c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null)));
+		private JsExpression GetFieldHashCode(IField field) {
+			var impl = _metadataImporter.GetFieldSemantics(field);
+			if (impl.Type != FieldScriptSemantics.ImplType.Field)
+				return null;
+
+			IType type = NullableType.GetUnderlyingType(field.Type);
+			bool needNullCheck = field.Type.IsReferenceType != false || field.Type.IsKnownType(KnownTypeCode.NullableOfT) || type.Kind == TypeKind.Enum && MetadataUtils.IsNamedValues(field.Type.GetDefinition());
+			JsExpression member = JsExpression.Member(JsExpression.This, impl.Name);
+
+			JsExpression result = JsExpression.Invocation(JsExpression.Member(_systemScript, "getHashCode"), member);
+			if (needNullCheck) {
+				result = JsExpression.Conditional(member, result, JsExpression.Number(0));
+			}
+
+			if (type.Kind == TypeKind.Enum && !MetadataUtils.IsNamedValues(type.GetDefinition())) {
+				result = needNullCheck ? JsExpression.LogicalOr(member, JsExpression.Number(0)) : member;
+			}
+			else if (type is ITypeDefinition) {
+				switch (((ITypeDefinition) type).KnownTypeCode) {
+					case KnownTypeCode.Boolean:
+						result = JsExpression.Conditional(member, JsExpression.Number(1), JsExpression.Number(0));
+						break;
+					case KnownTypeCode.Byte:
+					case KnownTypeCode.SByte:
+					case KnownTypeCode.Char:
+					case KnownTypeCode.Int16:
+					case KnownTypeCode.UInt16:
+					case KnownTypeCode.Int32:
+					case KnownTypeCode.UInt32:
+					case KnownTypeCode.Int64:
+					case KnownTypeCode.UInt64:
+					case KnownTypeCode.Decimal:
+					case KnownTypeCode.Single:
+					case KnownTypeCode.Double:
+						result = needNullCheck ? JsExpression.LogicalOr(member, JsExpression.Number(0)) : member;
+						break;
+				}
+			}
+
+			return result;
+		}
+
+		private JsExpression GenerateFieldCompare(IField field, JsExpression o) {
+			var impl = _metadataImporter.GetFieldSemantics(field);
+			if (impl.Type != FieldScriptSemantics.ImplType.Field)
+				return null;
+
+			bool simpleCompare = false;
+			if (field.Type.Kind == TypeKind.Enum && !MetadataUtils.IsNamedValues(field.Type.GetDefinition())) {
+				simpleCompare = true;
+			}
+			if (field.Type is ITypeDefinition) {
+				switch (((ITypeDefinition)field.Type).KnownTypeCode) {
+					case KnownTypeCode.Boolean:
+					case KnownTypeCode.Byte:
+					case KnownTypeCode.SByte:
+					case KnownTypeCode.Char:
+					case KnownTypeCode.Int16:
+					case KnownTypeCode.UInt16:
+					case KnownTypeCode.Int32:
+					case KnownTypeCode.UInt32:
+					case KnownTypeCode.Int64:
+					case KnownTypeCode.UInt64:
+					case KnownTypeCode.Decimal:
+					case KnownTypeCode.Single:
+					case KnownTypeCode.Double:
+						simpleCompare = true;
+						break;
+				}
+			}
+
+			var m1 = JsExpression.Member(JsExpression.This, impl.Name);
+			var m2 = JsExpression.Member(o, impl.Name);
+
+			return simpleCompare ? (JsExpression)JsExpression.Same(m1, m2) : JsExpression.Invocation(JsExpression.Member(_systemScript, "equals"), m1, m2);
+		}
+
+		private JsFunctionDefinitionExpression GenerateStructGetHashCodeMethod(ITypeDefinition type) {
+			JsExpression h = JsExpression.Identifier("h");
+			var stmts = new List<JsStatement>();
+			foreach (var f in type.Fields.Where(f => !f.IsStatic)) {
+				var expr = GetFieldHashCode(f);
+				if (expr != null) {
+					if (stmts.Count == 0) {
+						stmts.Add(JsStatement.Var("h", expr));
+					}
+					else {
+						stmts.Add(JsExpression.Assign(h, JsExpression.BitwiseXor(JsExpression.Multiply(h, JsExpression.Number(397)), expr)));
+					}
+				}
+			}
+			switch (stmts.Count) {
+				case 0:
+					stmts.Add(JsStatement.Return(JsExpression.Number(0)));
+					break;
+				case 1:
+					stmts[0] = JsStatement.Return(JsExpression.BitwiseOr(((JsVariableDeclarationStatement)stmts[0]).Declarations[0].Initializer, JsExpression.Number(0)));
+					break;
+				default:
+					stmts.Add(JsStatement.Return(h));
+					break;
+			}
+
+			return JsExpression.FunctionDefinition(EmptyList<string>.Instance, JsStatement.Block(stmts));
+		}
+
+		private JsExpression GenerateStructEqualsMethod(ITypeDefinition type, string typeVariableName) {
+			var o = JsExpression.Identifier("o");
+			var parts = new List<JsExpression>();
+			foreach (var f in type.Fields.Where(f => !f.IsStatic)) {
+				var expr = GenerateFieldCompare(f, o);
+				if (expr != null) {
+					parts.Add(expr);
+				}
+			}
+
+			JsExpression typeCompare = JsExpression.Invocation(JsExpression.Member(_systemScript, "isInstanceOfType"), o, JsExpression.Identifier(typeVariableName));
+			if (parts.Count == 0) {
+				return JsExpression.FunctionDefinition(new[] { "o" }, JsStatement.Return(typeCompare));
+			}
+			else {
+				return JsExpression.FunctionDefinition(new[] { "o" }, JsStatement.Block(
+					JsStatement.If(JsExpression.LogicalNot(typeCompare),
+						JsStatement.Return(JsExpression.False),
+						null
+					),
+					JsStatement.Return(parts.Aggregate((old, p) => old == null ? p : JsExpression.LogicalAnd(old, p)))
+				));
+			}
+		}
+
+		private JsExpression CreateInstanceMembers(JsClass c, string typeVariableName) {
+			var members = c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null));
+			if (c.CSharpTypeDefinition.Kind == TypeKind.Struct) {
+				if (!c.InstanceMethods.Any(m => m.Name == "getHashCode"))
+					members = members.Concat(new[] { new JsObjectLiteralProperty("getHashCode", GenerateStructGetHashCodeMethod(c.CSharpTypeDefinition)) });
+				if (!c.InstanceMethods.Any(m => m.Name == "equals"))
+					members = members.Concat(new[] { new JsObjectLiteralProperty("equals", GenerateStructEqualsMethod(c.CSharpTypeDefinition, typeVariableName)) });
+			}
+			return JsExpression.ObjectLiteral(members);
 		}
 
 		private JsExpression CreateInitClassCall(JsClass type, string ctorName, JsExpression baseClass, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type) };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type, ctorName) };
 			if (baseClass != null || interfaces.Count > 0)
 				args.Add(baseClass ?? JsExpression.Null);
 			if (interfaces.Count > 0)
@@ -219,7 +357,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression CreateInitInterfaceCall(JsClass type, string ctorName, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type) };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type, null) };
 			if (interfaces.Count > 0)
 				args.Add(JsExpression.ArrayLiteral(interfaces));
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitInterface), args);
@@ -255,7 +393,7 @@ namespace CoreLib.Plugin {
 
 		private JsExpression GetBaseClass(ITypeDefinition type) {
 			var csBase = type.DirectBaseTypes.SingleOrDefault(b => b.Kind == TypeKind.Class);
-			if (csBase == null || csBase.IsKnownType(KnownTypeCode.Object) || MetadataUtils.IsImported(csBase.GetDefinition()) && MetadataUtils.IsSerializable(csBase.GetDefinition()))
+			if (csBase == null || csBase.IsKnownType(KnownTypeCode.Object) || csBase.IsKnownType(KnownTypeCode.ValueType) || MetadataUtils.IsImported(csBase.GetDefinition()) && MetadataUtils.IsSerializable(csBase.GetDefinition()))
 				return null;
 			return _runtimeLibrary.InstantiateType(csBase, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
 		}
@@ -269,6 +407,7 @@ namespace CoreLib.Plugin {
 				stmts.AddRange(c.NamedConstructors.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), m.Definition)));
 
 			var defaultConstructor = Saltarelle.Compiler.Utils.SelfParameterize(c.CSharpTypeDefinition).GetConstructors().SingleOrDefault(x => x.Parameters.Count == 0 && x.IsPublic);
+			bool hasCreateInstance = false;
 			if (defaultConstructor != null) {
 				var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
 				if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NotUsableFromScript) {
@@ -276,7 +415,12 @@ namespace CoreLib.Plugin {
 					stmts.Add(JsExpression.Assign(
 						          JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance"),
 						              JsExpression.FunctionDefinition(new string[0], JsStatement.Block(createInstance.AdditionalStatements.Concat(new[] { JsStatement.Return(createInstance.Expression) })))));
+					hasCreateInstance = true;
 				}
+			}
+
+			if (c.CSharpTypeDefinition.Kind == TypeKind.Struct) {
+				stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "getDefaultValue"), hasCreateInstance ? JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance") : JsExpression.FunctionDefinition(EmptyList<string>.Instance, JsStatement.Return(JsExpression.New(JsExpression.Identifier(typevarName))))));
 			}
 
 			stmts.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), RewriteMethod(m))));
@@ -319,14 +463,17 @@ namespace CoreLib.Plugin {
 			if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
 				var args = new List<JsExpression> { JsExpression.Identifier(typevarName),
 				                                    new JsTypeReferenceExpression(c.CSharpTypeDefinition), JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))),
-				                                    CreateInstanceMembers(c),
+				                                    CreateInstanceMembers(c, typevarName),
 				                                  };
-				if (c.CSharpTypeDefinition.Kind == TypeKind.Class)
+				if (c.CSharpTypeDefinition.Kind != TypeKind.Interface)
 					args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(GetBaseClass(c.CSharpTypeDefinition) ?? JsExpression.Null)));
 				args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.ArrayLiteral(GetImplementedInterfaces(c.CSharpTypeDefinition)))));
-				stmts.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Class ? RegisterGenericClassInstance : RegisterGenericInterfaceInstance), args));
+				stmts.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, c.CSharpTypeDefinition.Kind == TypeKind.Interface ? RegisterGenericInterfaceInstance : RegisterGenericClassInstance), args));
 				if (c.CSharpTypeDefinition.Kind == TypeKind.Class && c.NamedConstructors.Count > 0) {
 					stmts.Add(AssignNamedConstructorPrototypes(c, JsExpression.Identifier(typevarName)));
+				}
+				if (c.CSharpTypeDefinition.Kind == TypeKind.Struct) {
+					stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "__class"), JsExpression.False));
 				}
 				var metadata = GetMetadataDescriptor(c.CSharpTypeDefinition, true);
 				if (metadata != null)
@@ -484,6 +631,9 @@ namespace CoreLib.Plugin {
 						statements.Add(CreateInitClassCall(c, typevarName, GetBaseClass(type.CSharpTypeDefinition), GetImplementedInterfaces(type.CSharpTypeDefinition).ToList()));
 						if (c.NamedConstructors.Count > 0) {
 							statements.Add(AssignNamedConstructorPrototypes(c, JsExpression.Identifier(_namer.GetTypeVariableName(name))));
+						}
+						if (c.CSharpTypeDefinition.Kind == TypeKind.Struct) {
+							statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.GetTypeVariableName(name)), "__class"), JsExpression.False));
 						}
 					}
 				}
