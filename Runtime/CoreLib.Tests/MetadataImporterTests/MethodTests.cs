@@ -1882,11 +1882,24 @@ class C1 {
 		}
 
 		[Test]
-		public void DoSomething() {
+		public void OverridingAbstractImplementationOfNonScriptableInterfaceMethodShouldNotCrash() {
 			Prepare(@"
 interface I { [System.Runtime.CompilerServices.NonScriptable] void M(); }
 class B : I { public abstract void M() {} }
 class D : B { public override void M() {} }");
+		}
+
+		[Test]
+		public void OverridingMethodImplementingInterfaceMethodWithInlineCodeAndGeneratedMethodName() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+interface I { [InlineCode(""X"", GeneratedMethodName = ""theName"")] void M() {} }
+class B : I { public virtual void M() {} }
+class D : B { public override void M() {} }");
+
+			var m = FindMethod("D.M");
+			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m.Name, Is.EqualTo("theName"));
 		}
 	}
 }
