@@ -519,4 +519,43 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Field)]
 	public sealed class NoInlineAttribute : Attribute {
 	}
+
+    public class CustomPropertyModelAttribute : Attribute
+    {
+        public virtual string GetInitializer(string scriptPropertyName, string propertyName) { return null; }
+        public virtual string GetGetter(string scriptPropertyName, string propertyName) { return null; }
+        public virtual string GetSetter(string scriptPropertyName, string propertyName) { return null; }
+    }
+
+    /// <summary>
+    /// Can be applied to a class to specify custom initializers, getters and setters.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    public class SimpleCustomPropertyModelAttribute : CustomPropertyModelAttribute
+    {
+        public string Initializer { get; set; }
+        public string Getter { get; set; }
+        public string Setter { get; set; }
+
+        public override string GetInitializer(string scriptPropertyName, string propertyName)
+        {
+            if (Initializer != null)
+                return string.Format(Initializer, scriptPropertyName, propertyName);
+            return base.GetInitializer(scriptPropertyName, propertyName);
+        }
+
+        public override string GetGetter(string scriptPropertyName, string propertyName)
+        {
+            if (Getter != null)
+                return string.Format(Getter, scriptPropertyName, propertyName);
+            return base.GetGetter(scriptPropertyName, propertyName);
+        }
+
+        public override string GetSetter(string scriptPropertyName, string propertyName)
+        {
+            if (Setter != null)
+                return string.Format(Setter, scriptPropertyName, propertyName);
+            return base.GetSetter(scriptPropertyName, propertyName);
+        }
+    }
 }

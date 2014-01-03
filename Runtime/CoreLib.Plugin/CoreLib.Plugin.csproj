@@ -60,6 +60,7 @@
     <Compile Include="..\CoreLib\ScriptMetadata.cs">
       <Link>ScriptMetadata.cs</Link>
     </Compile>
+    <Compile Include="CustomPropertyModelProcessor.cs" />
     <Compile Include="Linker.cs" />
     <Compile Include="MemberOrderer.cs" />
     <Compile Include="Messages.cs" />
