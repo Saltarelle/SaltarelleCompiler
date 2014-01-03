@@ -62,6 +62,27 @@ namespace CoreLib.TestScript {
 			public S6(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) : this() {
 			}
 		}
+
+		struct S7 {
+			public readonly int I;
+
+			public S7(int i) {
+				I = i;
+			}
+
+			public static S7 operator+(S7 a, S7 b) {
+				return new S7(a.I + b.I);
+			}
+
+			public static S7 operator-(S7 s) {
+				return new S7(-s.I);
+			}
+
+			public static explicit operator int(S7 s) {
+				return s.I;
+			}
+		}
+
 #pragma warning restore 649
 
 		private T Create<T>() where T : new() {
@@ -161,6 +182,27 @@ namespace CoreLib.TestScript {
 			var s3 = new S5(44);
 			Assert.IsTrue (s1.Equals(s2), "#1");
 			Assert.IsFalse(s1.Equals(s3), "#2");
+		}
+
+		[Test]
+		public void CanLiftUserDefinedBinaryOperator() {
+			S7? a = new S7(42), b = new S7(32), c = null;
+			Assert.AreEqual((a + b).Value.I, 74, "#1");
+			Assert.IsNull((a + c), "#2");
+		}
+
+		[Test]
+		public void CanLiftUserDefinedUnaryOperator() {
+			S7? a = new S7(42), b = null;
+			Assert.AreEqual(-a.Value.I, -42, "#1");
+			Assert.IsNull(-b, "#2");
+		}
+
+		[Test]
+		public void CanLiftUserDefinedConversionOperator() {
+			S7? a = new S7(42), b = null;
+			Assert.AreEqual((double?)a, 42, "#1");
+			Assert.IsNull((double?)b, "#2");
 		}
 	}
 }

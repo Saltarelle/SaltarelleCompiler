@@ -321,6 +321,8 @@ namespace CoreLib.Plugin {
 						}
 					}
 				}
+
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "lift"), new[] { ie.Method }.Concat(ie.Arguments));
 			}
 			if (expression is JsUnaryExpression) {
 				string methodName = null;

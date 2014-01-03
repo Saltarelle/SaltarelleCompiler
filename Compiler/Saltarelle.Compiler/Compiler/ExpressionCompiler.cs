@@ -1636,6 +1636,8 @@ namespace Saltarelle.Compiler.Compiler {
 				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type);
 				var impl = _metadataImporter.GetMethodSemantics(c.Method);
 				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.InstantiateType(c.Method.DeclaringType, this), input }, false);
+				if (c.IsLifted)
+					result = _runtimeLibrary.Lift(result, this);
 				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType);
 				return result;
 			}

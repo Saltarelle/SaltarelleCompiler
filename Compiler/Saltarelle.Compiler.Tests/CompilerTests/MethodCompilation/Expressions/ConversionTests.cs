@@ -1634,5 +1634,20 @@ void M() {
 @"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()));
 ");
 		}
+
+		[Test]
+		public void LiftedUserDefinedConversion() {
+			AssertCorrect(@"
+struct S { public static implicit operator int(S s) { return 0; } }
+void M() {
+	S? s = null;
+	// BEGIN
+	int? i = s;
+	// END
+}
+",
+@"	var $i = $Lift({sm_S}.$op_Implicit($s));
+");
+		}
 	}
 }
