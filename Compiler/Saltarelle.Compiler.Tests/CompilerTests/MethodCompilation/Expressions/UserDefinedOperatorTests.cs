@@ -45,7 +45,7 @@ void M() {
 	$z = {sm_C1}.$op_ExclusiveOr($x, $y);
 	$z = {sm_C1}.$op_LeftShift($x, $i);
 	$z = {sm_C1}.$op_RightShift($x, $i);
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -89,7 +89,7 @@ void M() {
 	$z = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
 	$z = $Lift({sm_C1}.$op_LeftShift($x, $i));
 	$z = $Lift({sm_C1}.$op_RightShift($x, $i));
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -177,7 +177,7 @@ void M() {
 	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
 	$x = $Lift({sm_C1}.$op_LeftShift($x, $i));
 	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -227,7 +227,7 @@ void M() {
 	$y = $Lift({sm_C1}.$op_UnaryNegation($x));
 	$y = $Lift({sm_C1}.$op_LogicalNot($x));
 	$y = $Lift({sm_C1}.$op_OnesComplement($x));
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test, Ignore("Not yet supported")]
@@ -405,7 +405,7 @@ void M() {
 	$c = $Lift({sm_C1}.$op_Increment($c));
 	$c = $Lift({sm_C1}.$op_Decrement($c));
 	$c = $Lift({sm_C1}.$op_Decrement($c));
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -424,7 +424,7 @@ void M() {
 }",
 @"	var $c1 = $c = $Lift({sm_C1}.$op_Increment($c));
 	var $c2 = $c = $Lift({sm_C1}.$op_Decrement($c));
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -447,7 +447,7 @@ void M() {
 	var $tmp2 = $c;
 	$c = $Lift({sm_C1}.$op_Decrement($tmp2));
 	var $c2 = $tmp2;
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -470,7 +470,7 @@ void M() {
 	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
 	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
 	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -493,7 +493,7 @@ void M() {
 	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()));
 	this.set_$P($tmp2);
 	var $c2 = $tmp2;
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
@@ -516,7 +516,7 @@ void M() {
 	var $tmp2 = this.get_$P();
 	this.set_$P($Lift({sm_C1}.$op_Decrement($tmp2)));
 	var $c2 = $tmp2;
-", allowUserDefinedStructs: true);
+");
 		}
 
 		[Test]
