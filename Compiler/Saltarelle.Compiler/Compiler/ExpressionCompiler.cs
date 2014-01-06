@@ -234,7 +234,6 @@ namespace Saltarelle.Compiler.Compiler {
 			    || operatorType == ExpressionType.SubtractAssignChecked;
 		}
 
-
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
@@ -256,12 +255,18 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), target.Type));
+					if (returnValueIsImportant && IsValueType(target.Type)) {
+						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), target.Type)));
+						return access;
+					}
+					else {
+						return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), target.Type));
+					}
 				}
 			}
 		}
 
-		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
+		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, IType elementType, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var expressions = new List<JsExpression>();
 			expressions.Add(InnerCompile(array, compoundFactory == null, expressions));
 			expressions.Add(InnerCompile(index, compoundFactory == null, expressions));
@@ -269,33 +274,41 @@ namespace Saltarelle.Compiler.Compiler {
 			var access = JsExpression.Index(expressions[0], expressions[1]);
 
 			if (compoundFactory != null) {
-				if (returnValueIsImportant && IsValueType(otherOperand.Type)) {
-					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand.Type)));
+				if (returnValueIsImportant && IsValueType(elementType)) {
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), elementType)));
 					return access;
 				}
 				else {
-					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand.Type));
+					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, elementType));
 				}
 			}
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
-					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), otherOperand.Type)));
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), elementType)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand.Type));
+					if (returnValueIsImportant && IsValueType(elementType)) {
+						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), elementType)));
+						return access;
+					}
+					else {
+						return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), elementType));
+					}
 				}
 			}
 		}
 
 		private JsExpression MaybeCloneValueType(JsExpression input, IType type) {
+			if (input is JsInvocationExpression)
+				return input;	// The clone was already performed when the callee returned
+
+			type = NullableType.GetUnderlyingType(type);
 			if (!IsValueType(type))
 				return input;
 
-			if (input is JsInvocationExpression)
-				return input;	// The clone was already performed when the callee returned
 			return _runtimeLibrary.CloneValueType(input, type, this);
 		}
 
@@ -338,7 +351,13 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Identifier(_variables[temp].Name);
 					}
 					else {
-						return JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), target.Type));
+						if (returnValueIsImportant && IsValueType(target.Type)) {
+							_additionalStatements.Add(JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), target.Type)));
+							return jsTarget;
+						}
+						else {
+							return JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), target.Type));
+						}
 					}
 				}
 			}
@@ -356,7 +375,7 @@ namespace Saltarelle.Compiler.Compiler {
 									_errorReporter.Message(Messages._7506);
 									return JsExpression.Null;
 								}
-								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, property.ReturnType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 							}
 							else {
 								List<JsExpression> thisAndArguments;
@@ -440,7 +459,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (target is ArrayAccessResolveResult) {
 				var arr = (ArrayAccessResolveResult)target;
 				if (arr.Indexes.Count == 1) {
-					return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+					return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, target.Type, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 				}
 				else {
 					var expressions = new List<JsExpression>();
@@ -611,16 +630,17 @@ namespace Saltarelle.Compiler.Compiler {
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					switch (rr.Operands.Count) {
 						case 1: {
-							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a }, false);
+							bool returnValueBeforeChange = true;
 							switch (rr.OperatorType) {
 								case ExpressionType.PreIncrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
 								case ExpressionType.PreDecrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
+									returnValueBeforeChange = false;
+									goto case ExpressionType.PostIncrementAssign;
 								case ExpressionType.PostIncrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
-								case ExpressionType.PostDecrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
+								case ExpressionType.PostDecrementAssign: {
+									Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), returnValueIsImportant && returnValueBeforeChange ? MaybeCloneValueType(a, rr.Type) : a }, false);
+									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange);
+								}
 								default:
 									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a }, false), rr.IsLiftedOperator);
 							}
