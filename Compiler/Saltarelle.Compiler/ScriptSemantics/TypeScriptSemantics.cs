@@ -12,6 +12,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			NormalType,
 
 			/// <summary>
+			/// Type for which value-type semantics must be ensured (copy on every assignment)
+			/// </summary>
+			ValueType,
+
+			/// <summary>
 			/// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
 			/// However, its members might still be used (but care must be taken to specify attributes on the members to ensure that they work even when the type does not exist.
 			/// </summary>
@@ -57,6 +62,10 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 
 		public static TypeScriptSemantics NormalType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
 			return new TypeScriptSemantics { Type = ImplType.NormalType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+		}
+
+		public static TypeScriptSemantics ValueType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+			return new TypeScriptSemantics { Type = ImplType.ValueType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
 		}
 
 		public static TypeScriptSemantics NotUsableFromScript() {

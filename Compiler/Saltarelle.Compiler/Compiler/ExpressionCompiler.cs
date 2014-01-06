@@ -240,17 +240,23 @@ namespace Saltarelle.Compiler.Compiler {
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.Member(jsTarget, fieldName);
 			if (compoundFactory != null) {
-				return compoundFactory(access, jsOtherOperand);
+				if (returnValueIsImportant && IsValueType(target.Type)) {
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), target.Type)));
+					return access;
+				}
+				else {
+					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, target.Type));
+				}
 			}
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(target.Type);
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
-					_additionalStatements.Add(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), target.Type)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
+					return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), target.Type));
 				}
 			}
 		}
@@ -263,19 +269,39 @@ namespace Saltarelle.Compiler.Compiler {
 			var access = JsExpression.Index(expressions[0], expressions[1]);
 
 			if (compoundFactory != null) {
-				return compoundFactory(access, jsOtherOperand);
+				if (returnValueIsImportant && IsValueType(otherOperand.Type)) {
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand.Type)));
+					return access;
+				}
+				else {
+					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand.Type));
+				}
 			}
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
-					_additionalStatements.Add(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), otherOperand.Type)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
+					return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand.Type));
 				}
 			}
+		}
+
+		private JsExpression MaybeCloneValueType(JsExpression input, IType type) {
+			if (!IsValueType(type))
+				return input;
+
+			if (input is JsInvocationExpression)
+				return input;	// The clone was already performed when the callee returned
+			return _runtimeLibrary.CloneValueType(input, type, this);
+		}
+
+		private bool IsValueType(IType type) {
+			var typeDef = type.GetDefinition();
+			return typeDef != null && _metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.ValueType;
 		}
 
 		private JsExpression CompileCompoundAssignment(ResolveResult target, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
@@ -296,7 +322,13 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				if (compoundFactory != null) {
-					return compoundFactory(jsTarget, jsOtherOperand);
+					if (returnValueIsImportant && IsValueType(target.Type)) {
+						_additionalStatements.Add(JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), target.Type)));
+						return jsTarget;
+					}
+					else {
+						return compoundFactory(jsTarget, MaybeCloneValueType(jsOtherOperand, target.Type));
+					}
 				}
 				else {
 					if (returnValueIsImportant && returnValueBeforeChange) {
@@ -306,7 +338,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Identifier(_variables[temp].Name);
 					}
 					else {
-						return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
+						return JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), target.Type));
 					}
 				}
 			}
@@ -330,7 +362,7 @@ namespace Saltarelle.Compiler.Compiler {
 								List<JsExpression> thisAndArguments;
 								if (property.Parameters.Count > 0) {
 									var invocation = (CSharpInvocationResolveResult)target;
-									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(property.Setter, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 								}
 								else {
 									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.InstantiateType(mrr.Member.DeclaringType, this) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
@@ -338,7 +370,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 								JsExpression oldValue, jsOtherOperand;
 								if (oldValueIsImportant) {
-									thisAndArguments.Add(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall));
+									thisAndArguments.Add(MaybeCloneValueType(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall), target.Type));
 									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, thisAndArguments) : null);
 									oldValue = thisAndArguments[thisAndArguments.Count - 1];
 									thisAndArguments.RemoveAt(thisAndArguments.Count - 1); // Remove the current value because it should not be an argument to the setter.
@@ -360,12 +392,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
-									thisAndArguments.Add(newValue);
+									thisAndArguments.Add(MaybeCloneValueType(newValue, target.Type));
 									_additionalStatements.Add(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall));
 									return valueToReturn;
 								}
 								else {
-									thisAndArguments.Add(valueFactory(oldValue, jsOtherOperand));
+									thisAndArguments.Add(MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), target.Type));
 									return CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall);
 								}
 							}
@@ -438,13 +470,13 @@ namespace Saltarelle.Compiler.Compiler {
 							valueToReturn = JsExpression.Identifier(_variables[temp].Name);
 						}
 
-						var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
+						var newValue = MaybeCloneValueType(returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn, target.Type);
 
 						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), newValue, this));
 						return valueToReturn;
 					}
 					else {
-						return _runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), valueFactory(oldValue, jsOtherOperand), this);
+						return _runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), target.Type), this);
 					}
 				}
 			}
@@ -1007,6 +1039,11 @@ namespace Saltarelle.Compiler.Compiler {
 					newExpressions.Add(specifiedIndex != -1 ? expressions[specifiedIndex + 1] : VisitResolveResult(argumentsForCall[i], true));	// If the argument was not specified, use the value in argumentsForCall, which has to be constant.
 				}
 				expressions = newExpressions;
+			}
+
+			for (int i = 1; i < expressions.Count; i++) {
+				expressions[i] = MaybeCloneValueType(expressions[i], member.Parameters[Math.Min(i - 1, member.Parameters.Count - 1)].Type);	// Math.Min() because the last parameter might be an expanded param array.
+				// TODO: The param array handling is not correct
 			}
 
 			return expressions;

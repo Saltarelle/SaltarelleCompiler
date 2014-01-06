@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
 		}
 
-		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<IAssemblyReference> references = null, string methodName = "M") {
+		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<IAssemblyReference> references = null, string methodName = "M", bool valueTypes = false) {
 			CompileMethod(csharp, metadataImporter: metadataImporter ?? new MockMetadataImporter {
 				GetPropertySemantics = p => {
 					if (p.DeclaringType.Kind == TypeKind.Anonymous || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length"))
@@ -37,6 +37,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 				},
 				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
 				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
+				GetTypeSemantics = t => {
+					return valueTypes ? TypeScriptSemantics.ValueType(t.FullName) : TypeScriptSemantics.NormalType(t.FullName);
+				}
 			}, runtimeLibrary: runtimeLibrary, methodName: methodName, addSkeleton: addSkeleton, references: references);
 			string actual = OutputFormatter.Format(CompiledMethod, true);
 

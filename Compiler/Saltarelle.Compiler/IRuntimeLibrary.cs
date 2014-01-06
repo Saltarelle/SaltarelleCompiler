@@ -235,5 +235,13 @@ namespace Saltarelle.Compiler {
 		/// <param name="type">Type of the variable.</param>
 		/// <param name="context">Current context</param>
 		JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context);
+
+		/// <summary>
+		/// Returns a Javascript expression that creates a clone of a (mutable) value type, to use when a value needs to be duplicated according to the C# spec.
+		/// </summary>
+		/// <param name="value">Expression representing the value to clone.</param>
+		/// <param name="type">Type of the value</param>
+		/// <param name="context">Current context</param>
+		JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context);
 	}
 }
