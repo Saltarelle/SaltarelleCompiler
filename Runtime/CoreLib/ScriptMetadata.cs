@@ -520,6 +520,16 @@ namespace System.Runtime.CompilerServices {
 	public sealed class NoInlineAttribute : Attribute {
 	}
 
+    /// <summary>
+    /// Can be applied to a base class to ignore 7018 error
+    /// workaround https://github.com/erik-kallen/SaltarelleCompiler/issues/275
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    [NonScriptable]
+    public sealed class IgnoreDuplicateMembersAttribute : Attribute
+    { 
+    }
+
     public class CustomPropertyModelAttribute : Attribute
     {
         public virtual string GetInitializer(string scriptPropertyName, string propertyName) { return null; }

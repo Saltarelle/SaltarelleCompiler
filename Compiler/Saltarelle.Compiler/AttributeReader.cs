@@ -112,7 +112,13 @@ namespace Saltarelle.Compiler {
 			return HasAttribute<TAttribute>(entity.Attributes);
 		}
 
-		public static bool HasAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute {
+        public static bool HasAttribute<TAttribute>(this ITypeDefinition type) where TAttribute : Attribute
+        {
+            return HasAttribute<TAttribute>(type.Attributes);
+        }
+        
+        public static bool HasAttribute<TAttribute>(IEnumerable<IAttribute> attributes) where TAttribute : Attribute
+        {
 			string nmspace = typeof(TAttribute).Namespace, name = typeof(TAttribute).Name;
 
 			foreach (var a in attributes) {
