@@ -15,7 +15,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
-	public struct Single : IComparable<Single>, IEquatable<Single>, IFormattable {
+	public struct Single : IComparable<Single>, IEquatable<Single>, IFormattable, ILocaleFormattable {
 		[InlineCode("0")]
 		private Single(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}

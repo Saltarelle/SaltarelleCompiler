@@ -18,7 +18,7 @@ namespace System {
 	/// </summary>
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-	public sealed class JsDate : IComparable<JsDate>, IEquatable<JsDate>, IFormattable {
+    public sealed class JsDate : IComparable<JsDate>, IEquatable<JsDate>, IFormattable, ILocaleFormattable {
 		/// <summary>
 		/// Creates a new instance of Date initialized from the current time.
 		/// </summary>

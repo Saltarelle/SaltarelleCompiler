@@ -244,7 +244,7 @@ ss.getInterfaces = function#? DEBUG ss$getInterfaces##(type) {
 	if (type.__interfaces)
 		return type.__interfaces;
 	else if (type === Date || type === Number)
-		return [ ss_IEquatable, ss_IComparable, ss_IFormattable ];
+		return [ ss_IEquatable, ss_IComparable, ss_IFormattable, ss_ILocaleFormattable ];
 	else if (type === Boolean || type === String)
 		return [ ss_IEquatable, ss_IComparable ];
 	else if (type === Array || ss.isTypedArrayType(type))

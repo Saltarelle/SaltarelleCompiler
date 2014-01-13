@@ -13,7 +13,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-	public struct Int16 : IComparable<Int16>, IEquatable<Int16>, IFormattable {
+    public struct Int16 : IComparable<Int16>, IEquatable<Int16>, IFormattable, ILocaleFormattable {
 		[InlineCode("0")]
 		private Int16(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}

@@ -72,7 +72,7 @@ ss._formatString = function#? DEBUG ss$_formatString##(format, values, useLocale
 				if (formatIndex > 0) {
 					formatSpec = m.substring(formatIndex + 1, m.length - 1);
 				}
-				return ss.format(value, formatSpec);
+			    return ss.format(value, formatSpec, useLocale && ss.isInstanceOfType(value, ss_ILocaleFormattable));
 			}
 			else {
 				return useLocale ? value.toLocaleString() : value.toString();

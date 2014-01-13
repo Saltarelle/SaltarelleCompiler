@@ -13,7 +13,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-	public struct SByte : IComparable<SByte>, IEquatable<SByte>, IFormattable {
+	public struct SByte : IComparable<SByte>, IEquatable<SByte>, IFormattable, ILocaleFormattable {
 		[InlineCode("0")]
 		private SByte(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
