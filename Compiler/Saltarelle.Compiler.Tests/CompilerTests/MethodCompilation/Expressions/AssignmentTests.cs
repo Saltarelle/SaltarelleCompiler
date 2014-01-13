@@ -820,6 +820,20 @@ public void M() {
 		}
 
 		[Test]
+		public void AssigningFromMultiDimensionalArrayElementWorksStruct() {
+			AssertCorrect(
+@"public void M() {
+	int[,] arr = null;
+	int i = 0, j = 1, k = 2;
+	// BEGIN
+	k = arr[i, j];
+	// END
+}",
+@"	$k = $Clone($MultidimArrayGet($arr, $i, $j), {to_Int32});
+", valueTypes: true);
+		}
+
+		[Test]
 		public void AssigningToMultiDimensionalArrayEvaluatesExpressionsInTheCorrectOrderWhenUsingTheReturnValue() {
 			AssertCorrect(
 @"int[,] A() { return null; }
@@ -1003,6 +1017,92 @@ class C {
 }",
 @"	$c.$Value = 1;
 ", addSkeleton: false);
+		}
+
+		[Test]
+		public void AssignmentToFieldOfMultiDimArrayStruct() {
+			AssertCorrect(@"
+struct S {
+	public int F;
+}
+public void M() {
+	S[,] arr = null;
+	// BEGIN
+	arr[3, 4].F = 42;
+	// END
+}",
+@"	$MultidimArrayGet($arr, 3, 4).$F = $Clone(42, {to_Int32});
+", valueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentToPropertyOfMultiDimArrayStruct() {
+			AssertCorrect(@"
+struct S {
+	public int P { get; set; }
+}
+public void M() {
+	S[,] arr = null;
+	// BEGIN
+	arr[3, 4].P = 42;
+	// END
+}",
+@"	$MultidimArrayGet($arr, 3, 4).set_$P($Clone(42, {to_Int32}));
+", valueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentToIndexerOfMultiDimArrayStruct() {
+			AssertCorrect(@"
+struct S {
+	public int this[int a] { get { return 0; } set {} }
+}
+public void M() {
+	S[,] arr = null;
+	// BEGIN
+	arr[3, 4][2] = 42;
+	// END
+}",
+@"	$MultidimArrayGet($arr, 3, 4).set_$Item($Clone(2, {to_Int32}), $Clone(42, {to_Int32}));
+", valueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentToArrayIndexOfMultiDimArrayStruct() {
+			AssertCorrect(@"
+public void M() {
+	int[,][] arr = null;
+	// BEGIN
+	arr[3, 4][2] = 42;
+	// END
+}",
+@"	$MultidimArrayGet($arr, 3, 4)[2] = $Clone(42, {to_Int32});
+", valueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentToNestedMemberOfMultiDimArrayStruct() {
+			AssertCorrect(@"
+struct S1 {
+	public S2 F;
+}
+struct S2 {
+	public S3[] A1;
+}
+struct S3 {
+	public S4[,] A2;
+}
+struct S4 {
+	public int P { get; set; }
+}
+public void M() {
+	S1[,] arr = null;
+	// BEGIN
+	arr[3, 4].F.A1[2].A2[2, 1].P = 42;
+	// END
+}",
+@"	$MultidimArrayGet($MultidimArrayGet($arr, 3, 4).$F.$A1[2].$A2, 2, 1).set_$P($Clone(42, {to_Int32}));
+", valueTypes: true);
 		}
 	}
 }

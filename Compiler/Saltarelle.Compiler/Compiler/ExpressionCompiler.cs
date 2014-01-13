@@ -42,9 +42,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly NestedFunctionContext _nestedFunctionContext;
 		private readonly IMethod _methodBeingCompiled;
 		private readonly ITypeDefinition _typeBeingCompiled;
+		private readonly bool _returnMultidimArrayValueByReference;
 		private IVariable _objectBeingInitialized;
 
-		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled, ITypeDefinition typeBeingCompiled) {
+		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled, ITypeDefinition typeBeingCompiled, bool returnMultidimArrayValueByReference = false) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -61,6 +62,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_objectBeingInitialized = objectBeingInitialized;
 			_methodBeingCompiled = methodBeingCompiled;
 			_typeBeingCompiled = typeBeingCompiled;
+			_returnMultidimArrayValueByReference = returnMultidimArrayValueByReference;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -122,12 +124,12 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled);
+		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
+			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled, returnMultidimArrayValueByReference);
 		}
 
-		private ExpressionCompileResult CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return Clone(nestedFunctionContext).Compile(expression, returnValueIsImportant);
+		private ExpressionCompileResult CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
+			return Clone(nestedFunctionContext, returnMultidimArrayValueByReference).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, ExpressionCompileResult newExpressions) {
@@ -150,8 +152,8 @@ namespace Saltarelle.Compiler.Compiler {
 			return Utils.ResolveTypeParameter(tp, _typeBeingCompiled, _methodBeingCompiled, _metadataImporter, _errorReporter, _namer);
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
-			var result = CloneAndCompile(rr, true);
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
+			var result = CloneAndCompile(rr, returnValueIsImportant: true, returnMultidimArrayValueByReference: returnMultidimArrayValueByReference);
 
 			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(result.Expression);
 			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
@@ -170,19 +172,19 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression) {
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
 			var l = new List<JsExpression>();
 			if (expressionThatHasToBeEvaluatedInOrderBeforeThisExpression != null)
 				l.Add(expressionThatHasToBeEvaluatedInOrderBeforeThisExpression);
-			var r = InnerCompile(rr, usedMultipleTimes, l);
+			var r = InnerCompile(rr, usedMultipleTimes, l, returnMultidimArrayValueByReference);
 			if (l.Count > 0)
 				expressionThatHasToBeEvaluatedInOrderBeforeThisExpression = l[0];
 			return r;
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes) {
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, bool returnMultidimArrayValueByReference = false) {
 			JsExpression _ = null;
-			return InnerCompile(rr, usedMultipleTimes, ref _);
+			return InnerCompile(rr, usedMultipleTimes, ref _, returnMultidimArrayValueByReference);
 		}
 
 		private bool IsIntegerType(IType type) {
@@ -235,7 +237,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null);
+			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null, returnMultidimArrayValueByReference: true);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.Member(jsTarget, fieldName);
 			if (compoundFactory != null) {
@@ -268,7 +270,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, IType elementType, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var expressions = new List<JsExpression>();
-			expressions.Add(InnerCompile(array, compoundFactory == null, expressions));
+			expressions.Add(InnerCompile(array, compoundFactory == null, returnMultidimArrayValueByReference: true));
 			expressions.Add(InnerCompile(index, compoundFactory == null, expressions));
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
 			var access = JsExpression.Index(expressions[0], expressions[1]);
@@ -326,7 +328,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (target is LocalResolveResult || target is DynamicMemberResolveResult || target is DynamicInvocationResolveResult /* Dynamic indexing is an invocation */) {
 				JsExpression jsTarget, jsOtherOperand;
-				jsTarget = InnerCompile(target, compoundFactory == null);
+				jsTarget = InnerCompile(target, compoundFactory == null, returnMultidimArrayValueByReference: true);
 				if (target is LocalResolveResult) {
 					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
 				}
@@ -381,10 +383,10 @@ namespace Saltarelle.Compiler.Compiler {
 								List<JsExpression> thisAndArguments;
 								if (property.Parameters.Count > 0) {
 									var invocation = (CSharpInvocationResolveResult)target;
-									thisAndArguments = CompileThisAndArgumentListForMethodCall(property.Setter, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(property.Setter, null, InnerCompile(invocation.TargetResult, oldValueIsImportant, returnMultidimArrayValueByReference: true), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 								}
 								else {
-									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.InstantiateType(mrr.Member.DeclaringType, this) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
+									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.InstantiateType(mrr.Member.DeclaringType, this) : InnerCompile(mrr.TargetResult, oldValueIsImportant, returnMultidimArrayValueByReference: true) };
 								}
 
 								JsExpression oldValue, jsOtherOperand;
@@ -463,7 +465,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				else {
 					var expressions = new List<JsExpression>();
-					expressions.Add(InnerCompile(arr.Array, oldValueIsImportant, expressions));
+					expressions.Add(InnerCompile(arr.Array, oldValueIsImportant, returnMultidimArrayValueByReference: true));
 					foreach (var i in arr.Indexes)
 						expressions.Add(InnerCompile(i, oldValueIsImportant, expressions));
 
@@ -909,7 +911,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetFieldSemantics((IField)rr.Member);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : InnerCompile(rr.TargetResult, false), impl.Name);
+						return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : InnerCompile(rr.TargetResult, false, returnMultidimArrayValueByReference: true), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
@@ -925,7 +927,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var fname = _metadataImporter.GetAutoEventBackingFieldName((IEvent)rr.Member);
-				return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : VisitResolveResult(rr.TargetResult, true), fname);
+				return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : InnerCompile(rr.TargetResult, true, returnMultidimArrayValueByReference: true), fname);
 			}
 			else {
 				_errorReporter.InternalError("Invalid member " + rr.Member.ToString());
@@ -1100,7 +1102,7 @@ namespace Saltarelle.Compiler.Compiler {
 			bool isParamArrayExpanded = argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult;
 			bool targetUsedMultipleTimes = sem != null && ((!sem.IgnoreGenericArguments && method.TypeParameters.Count > 0) || (sem.ExpandParams && !isParamArrayExpanded));
 			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocationOfVirtualMethod, isParamArrayExpanded);
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes), false, argumentsForCall, argumentToParameterMap);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes, returnMultidimArrayValueByReference: true), false, argumentsForCall, argumentToParameterMap);
 			return CompileMethodInvocation(sem, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod);
 		}
 
@@ -1373,7 +1375,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (member.DeclaringType.Kind == TypeKind.Delegate && member.Equals(member.DeclaringType.GetDelegateInvokeMethod())) {
 					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringTypeDefinition);
 
-					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap);
+					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, usedMultipleTimes: false, returnMultidimArrayValueByReference: true), false, argumentsForCall, argumentToParameterMap);
 					var method = thisAndArguments[0];
 					thisAndArguments = thisAndArguments.Skip(1).ToList();
 
@@ -1538,7 +1540,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
 			var expressions = new List<JsExpression>();
-			expressions.Add(InnerCompile(rr.Array, false, expressions));
+			expressions.Add(InnerCompile(rr.Array, false, returnMultidimArrayValueByReference: true));
 			foreach (var i in rr.Indexes)
 				expressions.Add(InnerCompile(i, false, expressions));
 
@@ -1546,7 +1548,14 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Index(expressions[0], expressions[1]);
 			}
 			else {
-				return _runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), this);
+				var result = _runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), this);
+				if (!_returnMultidimArrayValueByReference) {
+					var type = NullableType.GetUnderlyingType(rr.Type);
+					if (IsValueType(type)) {
+						result = _runtimeLibrary.CloneValueType(result, rr.Type, this);
+					}
+				}
+				return result;
 			}
 		}
 
