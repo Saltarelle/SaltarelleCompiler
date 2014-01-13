@@ -33,6 +33,34 @@ public void M() {
 		}
 
 		[Test]
+		public void ForeachStatementWithStrucElementType() {
+			AssertCorrect(
+@"
+class MyEnumerable {
+	public MyEnumerator GetEnumerator() { return null; }
+}
+sealed class MyEnumerator {
+	public int Current { get { return 0; } }
+	public bool MoveNext() {}
+}
+
+public void M() {
+	MyEnumerable list = null;
+	// BEGIN
+	foreach (var item in list) {
+		int x = 0;
+	}
+	// END
+}",
+@"	var $tmp1 = $list.GetEnumerator();
+	while ($tmp1.MoveNext()) {
+		var $item = $Clone($tmp1.Current, {to_Int32});
+		var $x = $Clone(0, {to_Int32});
+	}
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
+		}
+
+		[Test]
 		public void ForeachStatementThatDoesRequireExtraStatementsForInitializerWorks() {
 			AssertCorrect(
 @"
@@ -79,6 +107,24 @@ public void M() {
 		var $x = 0;
 	}
 ");
+		}
+
+		[Test]
+		public void ForeachOverArrayIsOptimizedToForLoopStruct() {
+			AssertCorrect(
+@"public void M() {
+	var arr = new[] { 1, 2, 3};
+	// BEGIN
+	foreach (var item in arr) {
+		int x = 0;
+	}
+	// END
+}",
+@"	for (var $tmp1 = 0; $tmp1 < $arr.Length; $tmp1++) {
+		var $item = $Clone($arr[$tmp1], {to_Int32});
+		var $x = $Clone(0, {to_Int32});
+	}
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]

@@ -848,8 +848,9 @@ int F1() { return 0; }
 int F2() { return 0; }
 int F3() { return 0; }
 public void M() {
+	int x;
 	// BEGIN
-	var x = A()[F1(), F2()] = F3();
+	x = A()[F1(), F2()] = F3();
 	// END
 }",
 @"	var $tmp1 = this.$A();
@@ -857,7 +858,7 @@ public void M() {
 	var $tmp3 = this.$F2();
 	var $tmp4 = this.$F3();
 	$MultidimArraySet($tmp1, $tmp2, $tmp3, $Clone($tmp4, {to_Int32}));
-	var $x = $tmp4;
+	$x = $Clone($tmp4, {to_Int32});
 ", valueTypes: true);
 		}
 

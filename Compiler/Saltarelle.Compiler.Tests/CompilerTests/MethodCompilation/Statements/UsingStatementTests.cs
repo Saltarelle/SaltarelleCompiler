@@ -29,6 +29,56 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorksStruct() {
+			AssertCorrect(
+@"struct S : System.IDisposable { public void Dispose() {} }
+public void M() {
+	S a = default(S);
+	// BEGIN
+	using (var d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $Clone($a, {to_S});
+		try {
+			var $x = $Clone(0, {to_Int32});
+		}
+		finally {
+			$Upcast($Clone($d, {to_S}), {ct_IDisposable}).$Dispose();
+		}
+	}
+", valueTypes: true);
+		}
+
+		[Test]
+		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorksNullableStruct() {
+			AssertCorrect(
+@"struct S : System.IDisposable { public void Dispose() {} }
+public void M() {
+	S? a = null;
+	// BEGIN
+	using (var d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $Clone($a, {to_S});
+		try {
+			var $x = $Clone(0, {to_Int32});
+		}
+		finally {
+			if ($ReferenceNotEquals($d, $Default(def_$InstantiateGenericType({Nullable}, {ga_S})))) {
+				$Upcast($Clone($d, {to_S}), {ct_IDisposable}).$Dispose();
+			}
+		}
+	}
+", valueTypes: true);
+		}
+
+		[Test]
 		public void UsingStatementWithSingleVariableDeclarationWorks() {
 			AssertCorrect(
 @"IDisposable MyProperty { get; set; }
@@ -58,9 +108,10 @@ public void M() {
 		[Test]
 		public void UsingStatementWithoutVariableDeclarationWorks() {
 			AssertCorrect(
-@"IDisposable MyProperty { get; set; }
+@"class S : IDisposable { public void Dispose() {} }
+S MyProperty { get; set; }
 public void M() {
-	IDisposable a = null;
+	S a = null;
 	// BEGIN
 	using (MyProperty = a) {
 		int x = 0;
@@ -74,12 +125,64 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($tmp1, $Default({def_IDisposable}))) {
-				$tmp1.$Dispose();
+			if ($ReferenceNotEquals($tmp1, $Default({def_S}))) {
+				$Upcast($tmp1, {ct_IDisposable}).$Dispose();
 			}
 		}
 	}
 ");
+		}
+
+		[Test]
+		public void UsingStatementWithoutVariableDeclarationWorksStruct() {
+			AssertCorrect(
+@"struct S : System.IDisposable { public void Dispose() {} }
+public void M() {
+	S a = default(S), d;
+	// BEGIN
+	using (d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		$d = $Clone($a, {to_S});
+		var $tmp1 = $Clone($d, {to_S});
+		try {
+			var $x = $Clone(0, {to_Int32});
+		}
+		finally {
+			$Upcast($Clone($tmp1, {to_S}), {ct_IDisposable}).$Dispose();
+		}
+	}
+", valueTypes: true);
+		}
+
+		[Test]
+		public void UsingStatementWithoutVariableDeclarationWorksNullableStruct() {
+			AssertCorrect(
+@"struct S : System.IDisposable { public void Dispose() {} }
+public void M() {
+	S? a = null, d;
+	// BEGIN
+	using (d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		$d = $Clone($a, {to_S});
+		var $tmp1 = $Clone($d, {to_S});
+		try {
+			var $x = $Clone(0, {to_Int32});
+		}
+		finally {
+			if ($ReferenceNotEquals($tmp1, $Default(def_$InstantiateGenericType({Nullable}, {ga_S})))) {
+				$Upcast($Clone($tmp1, {to_S}), {ct_IDisposable}).$Dispose();
+			}
+		}
+	}
+", valueTypes: true);
 		}
 
 		[Test]

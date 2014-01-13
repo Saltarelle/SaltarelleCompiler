@@ -1670,10 +1670,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (c.IsBoxingConversion) {
 				if (toType.Kind != TypeKind.Dynamic) {
-					if (fromType.GetAllBaseTypes().Contains(toType))	// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-						return _runtimeLibrary.Upcast(input, fromType, toType, this);
+					// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
+					var box = MaybeCloneValueType(input, fromType);
+					if (NullableType.GetUnderlyingType(fromType).GetAllBaseTypes().Contains(toType))
+						return _runtimeLibrary.Upcast(box, fromType, toType, this);
 					else
-						return _runtimeLibrary.Downcast(input, fromType, toType, this);
+						return _runtimeLibrary.Downcast(box, fromType, toType, this);
 						
 				}
 				return input;

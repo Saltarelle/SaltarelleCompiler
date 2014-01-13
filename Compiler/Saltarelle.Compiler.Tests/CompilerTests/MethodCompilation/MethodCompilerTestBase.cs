@@ -38,7 +38,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
 				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
 				GetTypeSemantics = t => {
-					return valueTypes ? TypeScriptSemantics.ValueType(t.FullName) : TypeScriptSemantics.NormalType(t.FullName);
+					return valueTypes && t.Kind != TypeKind.Interface ? TypeScriptSemantics.ValueType(t.FullName) : TypeScriptSemantics.NormalType(t.FullName);
 				}
 			}, runtimeLibrary: runtimeLibrary, methodName: methodName, addSkeleton: addSkeleton, references: references);
 			string actual = OutputFormatter.Format(CompiledMethod, true);

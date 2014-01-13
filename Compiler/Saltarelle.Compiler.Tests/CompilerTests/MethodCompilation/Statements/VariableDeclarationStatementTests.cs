@@ -32,6 +32,20 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void VariableDeclarationsWithInitializerWorkStruct() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	int i = 0, j = 1;
+	string s = ""X"";
+	// END
+}",
+@"	var $i = $Clone(0, {to_Int32}), $j = $Clone(1, {to_Int32});
+	var $s = $Clone('X', {to_String});
+", valueTypes: true);
+		}
+
+		[Test]
 		public void VariableDeclarationsForVariablesUsedByReferenceWork() {
 			AssertCorrect(
 @"public void OtherMethod(out int x, out int y) { x = 0; y = 0; }
@@ -43,6 +57,20 @@ public void M() {
 }",
 @"	var $i = { $: 0 }, $j = {};
 ");
+		}
+
+		[Test]
+		public void VariableDeclarationsForVariablesUsedByReferenceWorkStruct() {
+			AssertCorrect(
+@"public void OtherMethod(out int x, out int y) { x = 0; y = 0; }
+public void M() {
+	// BEGIN
+	int i = 0, j;
+	// END
+	OtherMethod(out i, out j);
+}",
+@"	var $i = { $: $Clone(0, {to_Int32}) }, $j = {};
+", valueTypes: true);
 		}
 
 		[Test]

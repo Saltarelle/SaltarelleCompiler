@@ -179,6 +179,22 @@ namespace Saltarelle.Compiler.Compiler {
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
+		private bool IsValueType(IType type) {
+			var typeDef = type.GetDefinition();
+			return typeDef != null && _metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.ValueType;
+		}
+
+		private JsExpression MaybeCloneValueType(JsExpression input, IType type) {
+			if (input is JsInvocationExpression)
+				return input;	// The clone was already performed when the callee returned
+
+			type = NullableType.GetUnderlyingType(type);
+			if (!IsValueType(type))
+				return input;
+
+			return _runtimeLibrary.CloneValueType(input, type, this);
+		}
+
 		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetRegion(body.GetRegion());
 			try {
@@ -331,11 +347,23 @@ namespace Saltarelle.Compiler.Compiler {
 			return rr;
 		}
 
-		private ExpressionCompileResult CompileExpression(Expression expr, bool returnValueIsImportant) {
+		[Flags]
+		private enum CompileExpressionFlags {
+			None = 0,
+			ReturnValueIsImportant = 1,
+			IsAssignmentSource = 2,
+		}
+
+		private ExpressionCompileResult CompileExpression(Expression expr, CompileExpressionFlags flags) {
 			var oldRegion = _errorReporter.Region;
 			try {
 				_errorReporter.Region = expr.GetRegion();
-				return _expressionCompiler.Compile(ResolveWithConversion(expr), returnValueIsImportant);
+				var rr = ResolveWithConversion(expr);
+				var result = _expressionCompiler.Compile(rr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0);
+				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsValueType(rr.Type)) {
+					result.Expression = MaybeCloneValueType(result.Expression, rr.Type);
+				}
+				return result;
 			}
 			finally {
 				_errorReporter.Region = oldRegion;
@@ -406,10 +434,8 @@ namespace Saltarelle.Compiler.Compiler {
 				var data = _variables[variable];
 				JsExpression jsInitializer;
 				if (!d.Initializer.IsNull) {
-					var initializer = ResolveWithConversion(d.Initializer);
-
 					SetRegion(d.Initializer.GetRegion());
-					var exprCompileResult = _expressionCompiler.Compile(initializer, true);
+					var exprCompileResult = CompileExpression(d.Initializer, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
 						if (declarations.Count > 0) {
 							_result.Add(JsStatement.Var(declarations));
@@ -466,7 +492,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else {
 				JsExpression initExpr = null;
 				foreach (var init in forStatement.Initializers) {
-					var compiledInit = CompileExpression(((ExpressionStatement)init).Expression, false);
+					var compiledInit = CompileExpression(((ExpressionStatement)init).Expression, CompileExpressionFlags.None);
 					if (compiledInit.AdditionalStatements.Count == 0) {
 						initExpr = (initExpr != null ? JsExpression.Comma(initExpr, compiledInit.Expression) : compiledInit.Expression);
 					}
@@ -484,7 +510,7 @@ namespace Saltarelle.Compiler.Compiler {
 			JsExpression condition;
 			List<JsStatement> preBody = null;
 			if (!forStatement.Condition.IsNull) {
-				var compiledCondition = CompileExpression(forStatement.Condition, true);
+				var compiledCondition = CompileExpression(forStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 				if (compiledCondition.AdditionalStatements.Count == 0) {
 					condition = compiledCondition.Expression;
 				}
@@ -504,7 +530,7 @@ namespace Saltarelle.Compiler.Compiler {
 			JsExpression iterator = null;
 			List<JsStatement> postBody = null;
 			if (forStatement.Iterators.Count > 0) {
-				var compiledIterators = forStatement.Iterators.Select(i => CompileExpression(((ExpressionStatement)i).Expression, false)).ToList();
+				var compiledIterators = forStatement.Iterators.Select(i => CompileExpression(((ExpressionStatement)i).Expression, CompileExpressionFlags.None)).ToList();
 				if (compiledIterators.All(i => i.AdditionalStatements.Count == 0)) {
 					// No additional statements are required, add them as a single comma-separated expression to the JS iterator.
 					iterator = compiledIterators.Aggregate(iterator, (current, i) => (current != null ? JsExpression.Comma(current, i.Expression) : i.Expression));
@@ -542,7 +568,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitIfElseStatement(IfElseStatement ifElseStatement) {
-			var compiledCond = CompileExpression(ifElseStatement.Condition, true);
+			var compiledCond = CompileExpression(ifElseStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			_result.AddRange(compiledCond.AdditionalStatements);
 			_result.Add(JsStatement.If(compiledCond.Expression, CreateInnerCompiler().Compile(ifElseStatement.TrueStatement), !ifElseStatement.FalseStatement.IsNull ? CreateInnerCompiler().Compile(ifElseStatement.FalseStatement) : null));
 		}
@@ -563,7 +589,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
 			var body = CreateInnerCompiler().Compile(doWhileStatement.EmbeddedStatement);
-			var compiledCondition = CompileExpression(doWhileStatement.Condition, true);
+			var compiledCondition = CompileExpression(doWhileStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			if (compiledCondition.AdditionalStatements.Count > 0)
 				body = JsStatement.Block(body.Statements.Concat(compiledCondition.AdditionalStatements));
 			_result.Add(JsStatement.DoWhile(compiledCondition.Expression, body));
@@ -573,7 +599,7 @@ namespace Saltarelle.Compiler.Compiler {
 			// Condition
 			JsExpression condition;
 			List<JsStatement> preBody = null;
-			var compiledCondition = CompileExpression(whileStatement.Condition, true);
+			var compiledCondition = CompileExpression(whileStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			if (compiledCondition.AdditionalStatements.Count == 0) {
 				condition = compiledCondition.Expression;
 			}
@@ -594,9 +620,9 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitReturnStatement(ReturnStatement returnStatement) {
 			if (!returnStatement.Expression.IsNull) {
-				var expr = CompileExpression(returnStatement.Expression, true);
+				var expr = CompileExpression(returnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 				_result.AddRange(expr.AdditionalStatements);
-				_result.Add(JsStatement.Return(expr.Expression));
+				_result.Add(JsStatement.Return(MaybeCloneValueType(expr.Expression, ResolveWithConversion(returnStatement.Expression).Type)));
 			}
 			else {
 				_result.Add(JsStatement.Return());
@@ -604,7 +630,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitLockStatement(LockStatement lockStatement) {
-			var expr = CompileExpression(lockStatement.Expression, false);
+			var expr = CompileExpression(lockStatement.Expression, CompileExpressionFlags.None);
 			_result.AddRange(expr.AdditionalStatements);
 			_result.Add(expr.Expression);
 			lockStatement.EmbeddedStatement.AcceptVisitor(this);
@@ -619,7 +645,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
 			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
 			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray) || (getEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(getEnumeratorMethod).EnumerateAsArray)) {
-				var arrayResult = CompileExpression(foreachStatement.InExpression, true);
+				var arrayResult = CompileExpression(foreachStatement.InExpression, CompileExpressionFlags.ReturnValueIsImportant);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;
 				if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(array)) {
@@ -641,7 +667,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32), foreachStatement.GetRegion());
 				var jsIndex = JsExpression.Identifier(_variables[index].Name);
-				JsExpression iteratorValue = JsExpression.Index(array, jsIndex);
+				JsExpression iteratorValue = MaybeCloneValueType(JsExpression.Index(array, jsIndex), ferr.ElementType);
 				if (_variables[iterator.Variable].UseByRefSemantics)
 					iteratorValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", iteratorValue));
 
@@ -664,7 +690,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.");
 
 				var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
-				JsExpression getCurrentValue = getCurrent.Expression;
+				JsExpression getCurrentValue = MaybeCloneValueType(getCurrent.Expression, ferr.ElementType);
 				if (_variables[iterator.Variable].UseByRefSemantics)
 					getCurrentValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", getCurrentValue));
 
@@ -712,11 +738,11 @@ namespace Saltarelle.Compiler.Compiler {
 			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
 			var conversions = CSharpConversions.Get(_compilation);
 
-			var compiledAquisition = CompileExpression(aquisitionExpression, true);
+			var compiledAquisition = _expressionCompiler.Compile(_resolver.Resolve(aquisitionExpression), true);
 
 			var stmts = new List<JsStatement>();
 			stmts.AddRange(compiledAquisition.AdditionalStatements);
-			stmts.Add(JsStatement.Var(_variables[resource.Variable].Name, compiledAquisition.Expression));
+			stmts.Add(JsStatement.Var(_variables[resource.Variable].Name, MaybeCloneValueType(compiledAquisition.Expression, resource.Type)));
 
 			bool isDynamic = resource.Type.Kind == TypeKind.Dynamic;
 
@@ -746,7 +772,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var compiledTest = _expressionCompiler.Compile(new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
 				if (compiledTest.AdditionalStatements.Count > 0)
 					_errorReporter.InternalError("Null test cannot return additional statements.");
-				releaseStmt = JsStatement.If(compiledTest.Expression, compiledDisposeCall.Expression, null);
+				releaseStmt = resource.Type.IsReferenceType == false && !resource.Type.IsKnownType(KnownTypeCode.NullableOfT) ? (JsStatement)compiledDisposeCall.Expression : JsStatement.If(compiledTest.Expression, compiledDisposeCall.Expression, null);
 			}
 
 			stmts.Add(JsStatement.Try(body, null, releaseStmt));
@@ -764,7 +790,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			else {
-				var resource = CreateTemporaryVariable(ResolveWithConversion((Expression)usingStatement.ResourceAcquisition).Type, usingStatement.GetRegion());
+				var resource = CreateTemporaryVariable(_resolver.Resolve((Expression)usingStatement.ResourceAcquisition).Type, usingStatement.GetRegion());
 				stmt = GenerateUsingBlock(new LocalResolveResult(resource), (Expression)usingStatement.ResourceAcquisition, usingStatement.GetRegion(), stmt);
 			}
 
@@ -842,7 +868,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_result.Add(JsStatement.Throw(JsExpression.Identifier(_variables[_currentVariableForRethrow].Name)));
 			}
 			else {
-				var compiledExpr = CompileExpression(throwStatement.Expression, true);
+				var compiledExpr = CompileExpression(throwStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant);
 				_result.AddRange(compiledExpr.AdditionalStatements);
 				_result.Add(JsStatement.Throw(compiledExpr.Expression));
 			}
@@ -853,7 +879,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
-			var compiledExpr = CompileExpression(yieldReturnStatement.Expression, true);
+			var compiledExpr = CompileExpression(yieldReturnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 			_result.AddRange(compiledExpr.AdditionalStatements);
 			_result.Add(JsStatement.Yield(compiledExpr.Expression));
 		}
@@ -935,7 +961,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
-			var compiledExpr = CompileExpression(switchStatement.Expression, true);
+			var compiledExpr = CompileExpression(switchStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant);
 			_result.AddRange(compiledExpr.AdditionalStatements);
 
 			var oldGotoCaseMap = _currentGotoCaseMap;
