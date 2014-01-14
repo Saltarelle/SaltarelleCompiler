@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.Compiler;
@@ -102,6 +103,34 @@ namespace Saltarelle.Compiler {
 				return JsExpression.Null;
 			}
 			return JsExpression.Identifier(namer.GetTypeParameterName(tp));
+		}
+
+		public static JsExpression MaybeCloneValueType(JsExpression input, ResolveResult csharpInput, IType type, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IRuntimeContext runtimeContext, bool forceClone = false) {
+			if (!forceClone) {
+				if (input is JsInvocationExpression)
+					return input;	// The clone was already performed when the callee returned
+
+				var actualInput = csharpInput;
+				var crr = actualInput as ConversionResolveResult;
+				if (crr != null) {
+					actualInput = crr.Input;
+				}
+
+				if (actualInput is InvocationResolveResult) {
+					return input;
+				}
+			}
+
+			type = NullableType.GetUnderlyingType(type);
+			if (!IsValueType(type, metadataImporter))
+				return input;
+
+			return runtimeLibrary.CloneValueType(input, type, runtimeContext);
+		}
+
+		public static bool IsValueType(IType type, IMetadataImporter metadataImporter) {
+			var typeDef = type.GetDefinition();
+			return typeDef != null && metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.ValueType;
 		}
 	}
 }

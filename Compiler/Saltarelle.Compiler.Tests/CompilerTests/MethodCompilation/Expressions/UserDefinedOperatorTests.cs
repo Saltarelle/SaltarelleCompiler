@@ -1773,10 +1773,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})));
+	this.set_$P($Clone({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})), {to_C1}));
 	$c1 = $Clone($tmp1, {to_C1});
 	var $tmp2 = this.get_$P();
-	this.set_$P({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
+	this.set_$P($Clone({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
 ", valueTypes: true);
 		}
@@ -2319,10 +2319,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P($Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1}))));
+	this.set_$P($Clone($Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1}))), {to_C1}));
 	$c1 = $Clone($tmp1, {to_C1});
 	var $tmp2 = this.get_$P();
-	this.set_$P($Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}))));
+	this.set_$P($Clone($Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}))), {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
 ", valueTypes: true);
 		}

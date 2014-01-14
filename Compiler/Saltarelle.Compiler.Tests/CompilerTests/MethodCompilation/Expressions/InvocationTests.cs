@@ -260,6 +260,51 @@ public void M() {
 		}
 
 		[Test]
+		public void NormalMethodInvocationWorksForReorderedAndDefaultArgumentsStruct() {
+			AssertCorrect(
+@"void F(int a = 1, uint b = 2, long c = 3, ushort d = 4, short e = 5, float f = 6, double g = 7) {}
+ushort F1() { return 0; }
+double F2() { return 0; }
+float F3() { return 0; }
+uint F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: F1(), g: F2(), f: F3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	var $tmp2 = this.$F2();
+	var $tmp3 = this.$F3();
+	this.$F($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int64}), $tmp1, $Clone(5, {to_Int16}), $tmp3, $tmp2);
+", valueTypes: true);
+		}
+
+		[Test]
+		public void NormalMethodInvocationWorksForReorderedAndDefaultArgumentsStruct2() {
+			AssertCorrect(
+@"struct S1 { public int a; }
+struct S2 {}
+struct S3 {}
+void F(int a = 1, int b = 2, long c = 3, S1 d = default(S1), short e = 5, S3 f = default(S3), S2 g = default(S2)) {}
+S2 F2() { return default(S2); }
+int F4() { return 0; }
+public void M() {
+	// BEGIN
+	F(d: new S1 { a = 5 }, g: F2(), f: new S3(), b: F4());
+	// END
+}
+",
+@"	var $tmp1 = new {sm_S1}();
+	$tmp1.$a = $Clone(5, {to_Int32});
+	var $tmp2 = this.$F2();
+	var $tmp3 = new {sm_S3}();
+	this.$F($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int64}), $tmp1, $Clone(5, {to_Int16}), $tmp3, $tmp2);
+", valueTypes: true);
+		}
+
+
+		[Test]
 		public void NormalMethodInvocationWithRefAndOutArgumentsWorksForReorderedAndDefaultArguments() {
 			AssertCorrect(
 @"void F(int a, ref int b, out int c) { c = 0; }

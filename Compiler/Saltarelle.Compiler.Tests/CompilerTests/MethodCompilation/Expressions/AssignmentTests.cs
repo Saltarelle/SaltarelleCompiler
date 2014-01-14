@@ -438,7 +438,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	this.set_$Item($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int32}), $Clone($tmp1, {to_Int32}), $Clone(5, {to_Int32}), $Clone($tmp3, {to_Int32}), $Clone($tmp2, {to_Int32}), $Clone($i, {to_Int32}));
+	this.set_$Item($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int32}), $tmp1, $Clone(5, {to_Int32}), $tmp3, $tmp2, $Clone($i, {to_Int32}));
 ", valueTypes: true);
 		}
 
@@ -861,16 +861,18 @@ public void M() {
 int F1() { return 0; }
 int F2() { return 0; }
 int F3() { return 0; }
+struct S { public int y; }
+S F4() { return default(S); }
 public void M() {
-	int x;
+	int x, y;
 	// BEGIN
-	x = A()[F1(), F2()] = F3();
+	x = A()[F1(), F2()] = F4().y;
 	// END
 }",
 @"	var $tmp1 = this.$A();
 	var $tmp2 = this.$F1();
 	var $tmp3 = this.$F2();
-	var $tmp4 = this.$F3();
+	var $tmp4 = this.$F4().$y;
 	$MultidimArraySet($tmp1, $tmp2, $tmp3, $Clone($tmp4, {to_Int32}));
 	$x = $Clone($tmp4, {to_Int32});
 ", valueTypes: true);

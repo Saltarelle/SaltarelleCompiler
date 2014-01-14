@@ -180,19 +180,11 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private bool IsValueType(IType type) {
-			var typeDef = type.GetDefinition();
-			return typeDef != null && _metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.ValueType;
+			return Utils.IsValueType(type, _metadataImporter);
 		}
 
-		private JsExpression MaybeCloneValueType(JsExpression input, IType type) {
-			if (input is JsInvocationExpression)
-				return input;	// The clone was already performed when the callee returned
-
-			type = NullableType.GetUnderlyingType(type);
-			if (!IsValueType(type))
-				return input;
-
-			return _runtimeLibrary.CloneValueType(input, type, this);
+		private JsExpression MaybeCloneValueType(JsExpression input, ResolveResult csharpInput, IType type) {
+			return Utils.MaybeCloneValueType(input, csharpInput, type, _metadataImporter, _runtimeLibrary, this);
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
@@ -361,7 +353,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var rr = ResolveWithConversion(expr);
 				var result = _expressionCompiler.Compile(rr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0);
 				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsValueType(rr.Type)) {
-					result.Expression = MaybeCloneValueType(result.Expression, rr.Type);
+					result.Expression = MaybeCloneValueType(result.Expression, rr, rr.Type);
 				}
 				return result;
 			}
@@ -622,7 +614,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (!returnStatement.Expression.IsNull) {
 				var expr = CompileExpression(returnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 				_result.AddRange(expr.AdditionalStatements);
-				_result.Add(JsStatement.Return(MaybeCloneValueType(expr.Expression, ResolveWithConversion(returnStatement.Expression).Type)));
+				_result.Add(JsStatement.Return(expr.Expression));
 			}
 			else {
 				_result.Add(JsStatement.Return());
@@ -667,7 +659,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32), foreachStatement.GetRegion());
 				var jsIndex = JsExpression.Identifier(_variables[index].Name);
-				JsExpression iteratorValue = MaybeCloneValueType(JsExpression.Index(array, jsIndex), ferr.ElementType);
+				JsExpression iteratorValue = MaybeCloneValueType(JsExpression.Index(array, jsIndex), null, ferr.ElementType);
 				if (_variables[iterator.Variable].UseByRefSemantics)
 					iteratorValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", iteratorValue));
 
@@ -690,7 +682,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.");
 
 				var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
-				JsExpression getCurrentValue = MaybeCloneValueType(getCurrent.Expression, ferr.ElementType);
+				JsExpression getCurrentValue = MaybeCloneValueType(getCurrent.Expression, null, ferr.ElementType);
 				if (_variables[iterator.Variable].UseByRefSemantics)
 					getCurrentValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", getCurrentValue));
 
@@ -738,11 +730,12 @@ namespace Saltarelle.Compiler.Compiler {
 			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
 			var conversions = CSharpConversions.Get(_compilation);
 
-			var compiledAquisition = _expressionCompiler.Compile(_resolver.Resolve(aquisitionExpression), true);
+			var aquisitionResolveResult = _resolver.Resolve(aquisitionExpression);
+			var compiledAquisition = _expressionCompiler.Compile(aquisitionResolveResult, true);
 
 			var stmts = new List<JsStatement>();
 			stmts.AddRange(compiledAquisition.AdditionalStatements);
-			stmts.Add(JsStatement.Var(_variables[resource.Variable].Name, MaybeCloneValueType(compiledAquisition.Expression, resource.Type)));
+			stmts.Add(JsStatement.Var(_variables[resource.Variable].Name, MaybeCloneValueType(compiledAquisition.Expression, aquisitionResolveResult, resource.Type)));
 
 			bool isDynamic = resource.Type.Kind == TypeKind.Dynamic;
 

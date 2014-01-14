@@ -261,6 +261,23 @@ public void M() {
 		}
 
 		[Test]
+		public void CanUseObjectInitializersStruct() {
+			AssertCorrect(
+@"class X { public int x; public int P { get; set; } }
+public void M() {
+	int i = 0, j = 0;
+	// BEGIN
+	var x = new X { x = i, P = j };
+	// END
+}",
+@"	var $tmp1 = new {sm_X}();
+	$tmp1.$x = $Clone($i, {to_Int32});
+	$tmp1.set_$P($Clone($j, {to_Int32}));
+	var $x = $tmp1;
+", valueTypes: true);
+		}
+
+		[Test]
 		public void CanUseCollectionInitializers1() {
 			AssertCorrect(
 @"class X : System.Collections.IEnumerable {
@@ -299,6 +316,27 @@ public void M() {
 	$tmp1.$Add($j, $t);
 	var $x = $tmp1;
 ");
+		}
+
+		[Test]
+		public void CanUseCollectionInitializers2Struct() {
+			AssertCorrect(
+@"class X : System.Collections.IEnumerable {
+	public void Add(int a, string b) {}
+	public System.Collections.IEnumerator GetEnumerator() { return null; }
+}
+public void M() {
+	int i = 0, j = 0;
+	string s = null, t = null;
+	// BEGIN
+	var x = new X { { i, s }, { j, t } };
+	// END
+}",
+@"	var $tmp1 = new {sm_X}();
+	$tmp1.$Add($Clone($i, {to_Int32}), $Clone($s, {to_String}));
+	$tmp1.$Add($Clone($j, {to_Int32}), $Clone($t, {to_String}));
+	var $x = $tmp1;
+", valueTypes: true);
 		}
 
 		[Test]
