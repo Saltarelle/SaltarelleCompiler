@@ -1065,7 +1065,6 @@ namespace Saltarelle.Compiler.Compiler {
 
 			for (int i = 1; i < expressions.Count; i++) {
 				expressions[i] = MaybeCloneValueType(expressions[i], member.Parameters[Math.Min(i - 1, member.Parameters.Count - 1)].Type);	// Math.Min() because the last parameter might be an expanded param array.
-				// TODO: The param array handling is not correct
 			}
 
 			return expressions;

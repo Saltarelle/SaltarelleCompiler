@@ -34,6 +34,20 @@ public void M() {
 		}
 
 		[Test]
+		public void MethodInvocationWithArgumentsWorksStruct() {
+			AssertCorrect(
+@"void F(int x, int y, int z) {}
+public void M() {
+	int a = 0, b = 0, c = 0;
+	// BEGIN
+	F(a, b, c);
+	// END
+}",
+@"	this.$F($Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $Clone($c, {to_Int32}));
+", valueTypes: true);
+		}
+
+		[Test]
 		public void ExtensionMethodInvocationWorks() {
 			AssertCorrect(
 @"namespace N {
@@ -345,6 +359,20 @@ public void M(ref int a, ref int b, ref int c) {
 		}
 
 		[Test]
+		public void PassingRefAndOutParametersToNormalMethodWorksStruct() {
+			AssertCorrect(
+@"void F(ref int x, out int y, int z) { y = 0; }
+public void M(ref int a, ref int b, ref int c) {
+	// BEGIN
+	F(ref a, out b, c);
+	// END
+}
+",
+@"	this.$F($a, $b, $Clone($c.$, {to_Int32}));
+", valueTypes: true);
+		}
+
+		[Test]
 		public void RefAndOutParametersAreNotSubjectToReordering() {
 			AssertCorrect(
 @"void F(ref int x, out int y, int z) { y = 0; }
@@ -385,6 +413,20 @@ public void M() {
 }",
 @"	var $i = this.get_$Item($a, $b);
 ");
+		}
+
+		[Test]
+		public void ReadingIndexerImplementedAsIndexingMethodWorksStruct() {
+			AssertCorrect(
+@"int this[int x, int y] { get { return 0; } set {} }
+public void M() {
+	int a = 0, b = 0;
+	// BEGIN
+	int i = this[a, b];
+	// END
+}",
+@"	var $i = this.get_$Item($Clone($a, {to_Int32}), $Clone($b, {to_Int32}));
+", valueTypes: true);
 		}
 
 		[Test]
@@ -455,6 +497,21 @@ public void M() {
 		}
 
 		[Test]
+		public void DelegateInvocationWorksStruct() {
+			AssertCorrect(
+@"public void M() {
+	Action<int, string> f = null;
+	int a = 0;
+	string b = null;
+	// BEGIN
+	f(a, b);
+	// END
+}",
+@"	$f($a, $b);
+");
+		}
+
+		[Test]
 		public void DelegateInvocationWorksForReorderedAndDefaultArguments() {
 			AssertCorrect(
 @"delegate void D(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7);
@@ -491,6 +548,21 @@ public void M() {
 }",
 @"	{sm_C}.$F(this, $a, $b, $c);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void StaticMethodWithThisAsFirstArgumentWorksStruct() {
+			AssertCorrect(
+@"void F(int x, int y, string z) {}
+public void M() {
+	int a = 0, b = 0;
+	string c = null;
+	// BEGIN
+	F(a, b, c);
+	// END
+}",
+@"	{sm_C}.$F(this, $Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $Clone($c, {to_String}));
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
 		}
 
 		[Test]
@@ -1064,6 +1136,20 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInExpandedFormWorksStruct() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	// BEGIN
+	F(4, 8, 59, 12, 4);
+	// END
+}",
+@"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), [$Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32})]);
+", valueTypes: true);
+		}
+
+
+		[Test]
 		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInNonExpandedFormWorks() {
 			AssertCorrect(
 @"public void F(int x, int y, params int[] args) {}
@@ -1077,6 +1163,19 @@ public void M() {
 		}
 
 		[Test]
+		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInNonExpandedFormWorksStruct() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	// BEGIN
+	F(4, 8, new[] { 59, 12, 4 });
+	// END
+}",
+@"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), [$Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32})]);
+", valueTypes: true);
+		}
+
+		[Test]
 		public void InvokingParamArrayMethodThatExpandsArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"public void F(int x, int y, params int[] args) {}
@@ -1087,6 +1186,19 @@ public void M() {
 }",
 @"	this.$F(4, 8, 59, 12, 4);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F") });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInExpandedFormWorksStruct() {
+			AssertCorrect(
+@"public void F(int x, int y, params int[] args) {}
+public void M() {
+	// BEGIN
+	F(4, 8, 59, 12, 4);
+	// END
+}",
+@"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), $Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32}));
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F"), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
 		}
 
 		[Test]
@@ -1112,6 +1224,31 @@ public void M() {
 	this.$F3.apply(this, $args);
 	this.$F1(4, 8, 59, 12, 4);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")) });
+		}
+
+		[Test]
+		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksStruct() {
+			AssertCorrect(
+@"class C {
+	public void F1(int x, int y, params int[] args) {}
+	public void F2(int x, params int[] args) {}
+	public void F3(params int[] args) {}
+	public void M() {
+		C c = null;
+		var args = new[] { 59, 12, 4 };
+		// BEGIN
+		F1(4, 8, args);
+		c.F2(42, args);
+		F3(args);
+		F1(4, 8, new[] { 59, 12, 4 });
+		// END
+	}
+}",
+@"	this.$F1.apply(this, [$Clone(4, {to_Int32}), $Clone(8, {to_Int32})].concat($args));
+	$c.$F2.apply($c, [$Clone(42, {to_Int32})].concat($args));
+	this.$F3.apply(this, $args);
+	this.$F1($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), $Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32}));
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
 		}
 
 		[Test]
@@ -1859,6 +1996,21 @@ public class C {
 	$tmp1.$Id = 2;
 	{sm_C}.$Y(1, {sm_C}.$Y($tmp1), 3);
 ", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (a, b, c, d) => a });
+		}
+
+		[Test]
+		public void InvokingInstanceMemberOfMultidimensionalStructArrayWorks() {
+			AssertCorrect(@"
+struct S { public void F(int a) {} }
+void M() {
+	S[,] arr = null;
+	// BEGIN
+	arr[3, 5].F(2);
+	// END
+}
+",
+@"	$MultidimArrayGet($arr, 3, 5).$F($Clone(2, {to_Int32}));
+", valueTypes: true);
 		}
 	}
 }
