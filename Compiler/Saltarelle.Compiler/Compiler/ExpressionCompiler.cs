@@ -1566,7 +1566,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.InitializerElements != null && rr.InitializerElements.Count > 0) {
 					var expressions = new List<JsExpression>();
 					foreach (var init in rr.InitializerElements)
-						expressions.Add(InnerCompile(init, false, expressions));
+						expressions.Add(MaybeCloneValueType(InnerCompile(init, false, expressions), at.ElementType));
 					return JsExpression.ArrayLiteral(expressions);
 				}
 				else if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0) {
@@ -1600,7 +1600,7 @@ namespace Saltarelle.Compiler.Compiler {
 							remainder /= arg;
 						}
 
-						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, expressions[i], this));
+						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, MaybeCloneValueType(expressions[i], at.ElementType), this));
 					}
 				}
 

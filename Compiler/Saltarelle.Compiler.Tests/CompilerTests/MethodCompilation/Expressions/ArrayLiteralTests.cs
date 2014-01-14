@@ -55,6 +55,20 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		}
 
 		[Test]
+		public void SimpleArrayCreationWorksStruct() {
+			AssertCorrect(
+@"public void M() {
+	int a = 0, b = 0, c = 0, d = 0;
+	// BEGIN
+	var arr = new[] { a, b, c, d };
+	// END
+}",
+@"	var $arr = [$Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $Clone($c, {to_Int32}), $Clone($d, {to_Int32})];
+", valueTypes: true);
+		}
+
+
+		[Test]
 		public void ArrayCreationEvaluatesArgumentsInCorrectOrder() {
 			AssertCorrect(
 @"public int P { get; set; }
@@ -168,6 +182,24 @@ public void M() {
 	$MultidimArraySet($tmp1, 1, 1, this.$F4());
 	var $arr = $tmp1;
 ");
+		}
+
+		[Test]
+		public void MultiDimensionalArrayCreationStruct() {
+			AssertCorrect(
+@"void M() {
+	// BEGIN
+	var arr = new int[,] { { 3, 2 }, { 6, 1 } };
+	// END
+}
+",
+@"	var $tmp1 = $CreateArray({def_Int32}, 2, 2);
+	$MultidimArraySet($tmp1, 0, 0, $Clone(3, {to_Int32}));
+	$MultidimArraySet($tmp1, 0, 1, $Clone(2, {to_Int32}));
+	$MultidimArraySet($tmp1, 1, 0, $Clone(6, {to_Int32}));
+	$MultidimArraySet($tmp1, 1, 1, $Clone(1, {to_Int32}));
+	var $arr = $tmp1;
+", valueTypes: true);
 		}
 	}
 }
