@@ -89,7 +89,7 @@ void M() {
 	$z = {sm_C1}.$op_ExclusiveOr($x, $y);
 	$z = {sm_C1}.$op_LeftShift($x, $i);
 	$z = {sm_C1}.$op_RightShift($x, $i);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -177,7 +177,7 @@ void M() {
 	$z = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
 	$z = $Lift({sm_C1}.$op_LeftShift($x, $i));
 	$z = $Lift({sm_C1}.$op_RightShift($x, $i));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -265,7 +265,7 @@ void M() {
 	$x = {sm_C1}.$op_ExclusiveOr($x, $y);
 	$x = {sm_C1}.$op_LeftShift($x, $i);
 	$x = {sm_C1}.$op_RightShift($x, $i);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -315,7 +315,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentToAVariableWithUserDefinedBinaryOperatorsAssigningTheResultWorksStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -328,7 +328,7 @@ class C1 {
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
 }
 void M() {
-	C1 x = null, y = null, z = null;
+	C1 x = default(C1), y = default(C1), z = default(C1);
 	int i = 0;
 	// BEGIN
 	z = x +=  y;
@@ -363,7 +363,7 @@ void M() {
 	$z = $Clone($x, {to_C1});
 	$x = {sm_C1}.$op_RightShift($x, $i);
 	$z = $Clone($x, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -383,7 +383,7 @@ class C1 {
 }
 C1 P { get; set; }
 void M() {
-	C1 y = null, z = null;
+	C1 y = default(C1), z = default(C1);
 	int i = 0;
 	// BEGIN
 	z = P +=  y;
@@ -434,7 +434,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentToAPropertyWithUserDefinedBinaryOperatorsAssigningTheResultWorksStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -448,7 +448,7 @@ class C1 {
 }
 C1 P { get; set; }
 void M() {
-	C1 y = null, z = null;
+	C1 y = default(C1), z = default(C1);
 	int i = 0;
 	// BEGIN
 	z = P +=  y;
@@ -493,7 +493,7 @@ void M() {
 	var $tmp10 = {sm_C1}.$op_RightShift(this.get_$P(), $i);
 	this.set_$P($Clone($tmp10, {to_C1}));
 	$z = $Clone($tmp10, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -544,7 +544,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentToAFieldWithUserDefinedBinaryOperatorsAssigningTheResultWorksStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -558,7 +558,7 @@ class C1 {
 }
 C1 x;
 void M() {
-	C1 y = null, z = null;
+	C1 y = default(C1), z = default(C1);
 	int i = 0;
 	// BEGIN
 	z = x +=  y;
@@ -593,7 +593,7 @@ void M() {
 	$z = $Clone(this.$x, {to_C1});
 	this.$x = {sm_C1}.$op_RightShift(this.$x, $i);
 	$z = $Clone(this.$x, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -644,7 +644,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentToAnArrayElementWithUserDefinedBinaryOperatorsAssigningTheResultWorksStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -658,7 +658,7 @@ class C1 {
 }
 void M() {
 	C1[] x = null;
-	C1 y = null, z = null;
+	C1 y = default(C1), z = default(C1);
 	int i = 0;
 	// BEGIN
 	z = x[0] +=  y;
@@ -693,7 +693,7 @@ void M() {
 	$z = $Clone($x[0], {to_C1});
 	$x[0] = {sm_C1}.$op_RightShift($x[0], $i);
 	$z = $Clone($x[0], {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -764,7 +764,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentToAnIndexerWithUserDefinedBinaryOperatorsAssigningTheResultWorksStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -776,9 +776,9 @@ class C1 {
 	public static C1 operator<<(C1 c1, int i) { return default(C1); }
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
 }
-C1 this[int i] { get { return null; } set {} }
+C1 this[int i] { get { return default(C1); } set {} }
 void M() {
-	C1 y = null, z = null;
+	C1 y = default(C1), z = default(C1);
 	int i = 0;
 	// BEGIN
 	z = this[0] +=  y;
@@ -833,7 +833,7 @@ void M() {
 	var $tmp20 = {sm_C1}.$op_RightShift(this.get_$Item($Clone(0, {to_Int32})), $i);
 	this.set_$Item($tmp19, $Clone($tmp20, {to_C1}));
 	$z = $Clone($tmp20, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -921,7 +921,7 @@ void M() {
 	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
 	$x = $Lift({sm_C1}.$op_LeftShift($x, $i));
 	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1019,7 +1019,7 @@ void M() {
 	$z = $Clone($x, {to_C1});
 	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
 	$z = $Clone($x, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1136,7 +1136,7 @@ void M() {
 	$c = {sm_C1}.$op_Increment($c);
 	$c = {sm_C1}.$op_Decrement($c);
 	$c = {sm_C1}.$op_Decrement($c);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1161,12 +1161,12 @@ void M() {
 		[Test]
 		public void PreIncrementAndDecrementOperatorsWorkOnVariablesWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
-	C1 c = null, c1, c2;
+	C1 c = default(C1), c1, c2;
 	// BEGIN
 	c1 = ++c;
 	c2 = --c;
@@ -1176,7 +1176,7 @@ void M() {
 	$c1 = $Clone($c, {to_C1});
 	$c = {sm_C1}.$op_Decrement($c);
 	$c2 = $Clone($c, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1205,12 +1205,12 @@ void M() {
 		[Test]
 		public void PostIncrementAndDecrementOperatorsWorkOnVariablesWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
-	C1 c = null, c1, c2;
+	C1 c = default(C1), c1, c2;
 	// BEGIN
 	c1 = c++;
 	c2 = c--;
@@ -1222,7 +1222,7 @@ void M() {
 	var $tmp2 = $c;
 	$c = {sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1268,7 +1268,7 @@ void M() {
 	this.$c = {sm_C1}.$op_Increment(this.$c);
 	this.$c = {sm_C1}.$op_Decrement(this.$c);
 	this.$c = {sm_C1}.$op_Decrement(this.$c);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1294,9 +1294,9 @@ void M() {
 		[Test]
 		public void PreIncrementAndDecrementOperatorsWorkOnFieldsWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 C1 c;
 void M() {
@@ -1310,7 +1310,7 @@ void M() {
 	$c1 = $Clone(this.$c, {to_C1});
 	this.$c = {sm_C1}.$op_Decrement(this.$c);
 	$c2 = $Clone(this.$c, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1340,9 +1340,9 @@ void M() {
 		[Test]
 		public void PostIncrementAndDecrementOperatorsWorkOnFieldsWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 C1 c;
 void M() {
@@ -1358,7 +1358,7 @@ void M() {
 	var $tmp2 = this.$c;
 	this.$c = {sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1404,7 +1404,7 @@ void M() {
 	$c[0] = {sm_C1}.$op_Increment($c[0]);
 	$c[0] = {sm_C1}.$op_Decrement($c[0]);
 	$c[0] = {sm_C1}.$op_Decrement($c[0]);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1430,9 +1430,9 @@ void M() {
 		[Test]
 		public void PreIncrementAndDecrementOperatorsWorkOnArraysWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
 	C1[] c = null;
@@ -1446,7 +1446,7 @@ void M() {
 	$c1 = $Clone($c[0], {to_C1});
 	$c[0] = {sm_C1}.$op_Decrement($c[0]);
 	$c2 = $Clone($c[0], {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1476,9 +1476,9 @@ void M() {
 		[Test]
 		public void PostIncrementAndDecrementOperatorsWorkOnArraysWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
 	C1[] c = null;
@@ -1494,15 +1494,15 @@ void M() {
 	var $tmp2 = $c[0];
 	$c[0] = {sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
 		public void IncrementAndDecrementOperatorsWorkOnMultidimArraysWhenNotAssigningTheResult() {
 			AssertCorrect(@"
 class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
 	C1[,] c = null;
@@ -1540,7 +1540,7 @@ void M() {
 	$MultidimArraySet($c, 0, 1, {sm_C1}.$op_Increment($MultidimArrayGet($c, 0, 1)));
 	$MultidimArraySet($c, 0, 1, {sm_C1}.$op_Decrement($MultidimArrayGet($c, 0, 1)));
 	$MultidimArraySet($c, 0, 1, {sm_C1}.$op_Decrement($MultidimArrayGet($c, 0, 1)));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1570,9 +1570,9 @@ void M() {
 		[Test]
 		public void PreIncrementAndDecrementOperatorsWorkOnMultidimArraysWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
 	C1[,] c = null;
@@ -1588,7 +1588,7 @@ void M() {
 	var $tmp2 = {sm_C1}.$op_Decrement($MultidimArrayGet($c, 0, 1));
 	$MultidimArraySet($c, 0, 1, $Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1618,9 +1618,9 @@ void M() {
 		[Test]
 		public void PostIncrementAndDecrementOperatorsWorkOnMultidimArraysWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
 	C1[] c = null;
@@ -1636,7 +1636,7 @@ void M() {
 	var $tmp2 = $MultidimArrayGet($c, 0, 1);
 	$MultidimArraySet($c, 0, 1, {sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1682,7 +1682,7 @@ void M() {
 	this.set_$P({sm_C1}.$op_Increment(this.get_$P()));
 	this.set_$P({sm_C1}.$op_Decrement(this.get_$P()));
 	this.set_$P({sm_C1}.$op_Decrement(this.get_$P()));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1712,9 +1712,9 @@ void M() {
 		[Test]
 		public void PreIncrementAndDecrementOperatorsWorkOnPropertiesWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 C1 P { get; set; }
 void M() {
@@ -1730,7 +1730,7 @@ void M() {
 	var $tmp2 = {sm_C1}.$op_Decrement(this.get_$P());
 	this.set_$P($Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1760,9 +1760,9 @@ void M() {
 		[Test]
 		public void PostIncrementAndDecrementOperatorsWorkOnPropertiesWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 C1 P { get; set; }
 void M() {
@@ -1778,7 +1778,7 @@ void M() {
 	var $tmp2 = this.get_$P();
 	this.set_$P($Clone({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1824,7 +1824,7 @@ void M() {
 	$c = $Lift({sm_C1}.$op_Increment($c));
 	$c = $Lift({sm_C1}.$op_Decrement($c));
 	$c = $Lift({sm_C1}.$op_Decrement($c));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1864,7 +1864,7 @@ void M() {
 	$c1 = $Clone($c, {to_C1});
 	$c = $Lift({sm_C1}.$op_Decrement($c));
 	$c2 = $Clone($c, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1910,7 +1910,7 @@ void M() {
 	var $tmp2 = $c;
 	$c = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1956,7 +1956,7 @@ void M() {
 	this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
 	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
 	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1998,7 +1998,7 @@ void M() {
 	$c1 = $Clone(this.$c, {to_C1});
 	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
 	$c2 = $Clone(this.$c, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2046,7 +2046,7 @@ void M() {
 	var $tmp2 = this.$c;
 	this.$c = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2092,7 +2092,7 @@ void M() {
 	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
 	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
 	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2134,7 +2134,7 @@ void M() {
 	$c1 = $Clone($c[0], {to_C1});
 	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
 	$c2 = $Clone($c[0], {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2182,7 +2182,7 @@ void M() {
 	var $tmp2 = $c[0];
 	$c[0] = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2228,7 +2228,7 @@ void M() {
 	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
 	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
 	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2276,7 +2276,7 @@ void M() {
 	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()));
 	this.set_$P($Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -2324,7 +2324,7 @@ void M() {
 	var $tmp2 = this.get_$P();
 	this.set_$P($Clone($Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}))), {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]

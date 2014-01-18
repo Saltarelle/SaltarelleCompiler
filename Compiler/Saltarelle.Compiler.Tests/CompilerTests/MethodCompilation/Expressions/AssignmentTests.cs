@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 }
 ",
 @"	$i = $Clone($j, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -60,7 +60,7 @@ public void M() {
 ",
 @"	$j = $Clone($k, {to_Int32});
 	$i = $Clone($j, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -88,7 +88,7 @@ public void M() {
 	// END
 }",
 @"	this.set_$P($Clone($i, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -120,7 +120,7 @@ public void M() {
 }",
 @"	this.set_$P2($Clone($i, {to_Int32}));
 	this.set_$P1($Clone($i, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -148,7 +148,7 @@ public void M() {
 	// END
 }",
 @"	this.set_$P1(this.$F());
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -182,7 +182,7 @@ public void M() {
 @"	var $tmp1 = this.$F();
 	this.set_$P2($Clone($tmp1, {to_Int32}));
 	this.set_$P1($Clone($tmp1, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -222,7 +222,7 @@ public void M() {
 	this.set_$P1($Clone($tmp1, {to_Boolean}));
 	if ($tmp1) {
 	}
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -250,7 +250,7 @@ public void M() {
 	// END
 }",
 @"	this.$F = $Clone($i, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -281,7 +281,7 @@ public void M() {
 }",
 @"	this.$F2 = $Clone($i, {to_Int32});
 	this.$F1 = $Clone(this.$F2, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -309,7 +309,7 @@ public void M() {
 	// END
 }",
 @"	{sm_C}.set_$P($Clone($i, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -337,7 +337,7 @@ public void M() {
 	// END
 }",
 @"	{sm_C}.$F = $Clone($i, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -365,7 +365,7 @@ public void M() {
 	// END
 }",
 @"	this.set_$Item($Clone($i, {to_Int32}), $Clone($j, {to_Int32}), $Clone($k, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -395,7 +395,7 @@ public void M() {
 }",
 @"	this.set_$Item($Clone($i, {to_Int32}), $Clone($j, {to_Int32}), $Clone($k, {to_Int32}));
 	$l = $Clone($k, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -439,7 +439,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	this.set_$Item($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int32}), $tmp1, $Clone(5, {to_Int32}), $tmp3, $tmp2, $Clone($i, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -467,7 +467,7 @@ public void M() {
 	// END
 }",
 @"	set_(this)._($Clone($i, {to_Int32}))._($Clone($j, {to_Int32}))._($Clone($k, {to_Int32}));
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})._({x})._({y})"), MethodScriptSemantics.InlineCode("set_({this})._({x})._({y})._({value})")) : PropertyScriptSemantics.Field(p.Name), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})._({x})._({y})"), MethodScriptSemantics.InlineCode("set_({this})._({x})._({y})._({value})")) : PropertyScriptSemantics.Field(p.Name), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
 		[Test]
@@ -496,7 +496,7 @@ public void M() {
 }",
 @"	this[$i] = $Clone($k, {to_Int32});
 	$l = $Clone(this[$i], {to_Int32});
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
 		[Test]
@@ -524,7 +524,7 @@ public void M() {
 	// END
 }",
 @"	set_(this)._($Clone($i, {to_Int32}));
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})"), MethodScriptSemantics.InlineCode("set_({this})._({value})")), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_({this})"), MethodScriptSemantics.InlineCode("set_({this})._({value})")), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
 		[Test]
@@ -553,7 +553,7 @@ public void M() {
 }",
 @"	this.$b = $Clone($i, {to_Int32});
 	this.$a = $Clone(this.$b, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -582,7 +582,7 @@ public void M() {
 }",
 @"	{sm_C}.$b = $Clone($i, {to_Int32});
 	{sm_C}.$a = $Clone({sm_C}.$b, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -631,7 +631,7 @@ public void M() {
 	var $tmp2 = this.$F();
 	$tmp1.set_$P($Clone($tmp2, {to_Int32}));
 	$tmp3.set_$P($Clone($tmp2, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -676,7 +676,7 @@ public void M() {
 	this.set_$P($Clone($tmp1, {to_Int32}));
 	$tmp2.$F = $Clone($tmp1, {to_Int32});
 	$tmp3.$F = $Clone($tmp2.$F, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -722,7 +722,7 @@ public void M() {
 	var $tmp4 = this.$F3();
 	$tmp1.set_$Item($tmp2, $tmp3, $Clone($tmp4, {to_Int32}));
 	$i = $Clone($tmp4, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -750,7 +750,7 @@ public void M() {
 	// END
 }",
 @"	$arr[0] = $Clone($i, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -788,7 +788,7 @@ public void M() {
 	var $tmp1 = this.$F();
 	this.set_$P($Clone($tmp1, {to_Int32}));
 	$tmp2[$tmp3] = $Clone($tmp1, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -816,7 +816,7 @@ public void M() {
 	// END
 }",
 @"	$MultidimArraySet($arr, $i, $j, $Clone($k, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -830,7 +830,7 @@ public void M() {
 	// END
 }",
 @"	$k = $Clone($MultidimArrayGet($arr, $i, $j), {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -875,7 +875,7 @@ public void M() {
 	var $tmp4 = this.$F4().$y;
 	$MultidimArraySet($tmp1, $tmp2, $tmp3, $Clone($tmp4, {to_Int32}));
 	$x = $Clone($tmp4, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -905,7 +905,7 @@ public void M(ref int i) {
 	// END
 }",
 @"	$i.$ = $Clone(1, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -941,7 +941,7 @@ class D : B {
 	}
 }",
 @"	$CallBase({bind_B}, '$set_P', [], [this, $Clone(10, {to_Int32})]);
-", addSkeleton: false, valueTypes: true);
+", addSkeleton: false, mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1034,7 +1034,7 @@ public void M() {
 	// END
 }",
 @"	$MultidimArrayGet($arr, 3, 4).$F = $Clone(42, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1050,7 +1050,7 @@ public void M() {
 	// END
 }",
 @"	$MultidimArrayGet($arr, 3, 4).set_$P($Clone(42, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1066,7 +1066,7 @@ public void M() {
 	// END
 }",
 @"	$MultidimArrayGet($arr, 3, 4).set_$Item($Clone(2, {to_Int32}), $Clone(42, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1079,7 +1079,7 @@ public void M() {
 	// END
 }",
 @"	$MultidimArrayGet($arr, 3, 4)[2] = $Clone(42, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1104,7 +1104,7 @@ public void M() {
 	// END
 }",
 @"	$MultidimArrayGet($MultidimArrayGet($arr, 3, 4).$F.$A1[2].$A2, 2, 1).set_$P($Clone(42, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 	}
 }

@@ -64,7 +64,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	var $arr = [$Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $Clone($c, {to_Int32}), $Clone($d, {to_Int32})];
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 
@@ -199,7 +199,7 @@ public void M() {
 	$MultidimArraySet($tmp1, 1, 0, $Clone(6, {to_Int32}));
 	$MultidimArraySet($tmp1, 1, 1, $Clone(1, {to_Int32}));
 	var $arr = $tmp1;
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 	}
 }

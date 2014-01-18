@@ -37,12 +37,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 @"public void M() {
 	// BEGIN
 	int i = 0, j = 1;
-	string s = ""X"";
 	// END
 }",
 @"	var $i = $Clone(0, {to_Int32}), $j = $Clone(1, {to_Int32});
-	var $s = $Clone('X', {to_String});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -70,7 +68,7 @@ public void M() {
 	OtherMethod(out i, out j);
 }",
 @"	var $i = { $: $Clone(0, {to_Int32}) }, $j = {};
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]

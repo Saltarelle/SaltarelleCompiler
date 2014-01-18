@@ -162,8 +162,8 @@ public void M() {
 	MyEvent += h;
 	// END
 }",
-@"	this.add_$MyEvent($Clone($h, {to_EventHandler}));
-", valueTypes: true);
+@"	this.add_$MyEvent($h);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -177,8 +177,8 @@ public void M() {
 	arr[1, 2].MyEvent += h;
 	// END
 }",
-@"	$MultidimArrayGet($arr, 1, 2).add_$MyEvent($Clone($h, {to_EventHandler}));
-", valueTypes: true);
+@"	$MultidimArrayGet($arr, 1, 2).add_$MyEvent($h);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -219,8 +219,8 @@ public void M() {
 	MyEvent -= h;
 	// END
 }",
-@"	this.remove_$MyEvent($Clone($h, {to_EventHandler}));
-", valueTypes: true);
+@"	this.remove_$MyEvent($h);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -234,8 +234,8 @@ public void M() {
 	arr[1, 2].MyEvent -= h;
 	// END
 }",
-@"	$MultidimArrayGet($arr, 1, 2).remove_$MyEvent($Clone($h, {to_EventHandler}));
-", valueTypes: true);
+@"	$MultidimArrayGet($arr, 1, 2).remove_$MyEvent($h);
+", mutableValueTypes: true);
 		}
 
 		[Test]

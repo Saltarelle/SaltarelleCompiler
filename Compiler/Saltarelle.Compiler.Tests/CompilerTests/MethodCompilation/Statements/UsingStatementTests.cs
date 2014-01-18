@@ -49,7 +49,7 @@ public void M() {
 			$Upcast($Clone($d, {to_S}), {ct_IDisposable}).$Dispose();
 		}
 	}
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -75,7 +75,7 @@ public void M() {
 			}
 		}
 	}
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -155,7 +155,7 @@ public void M() {
 			$Upcast($Clone($tmp1, {to_S}), {ct_IDisposable}).$Dispose();
 		}
 	}
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -182,7 +182,7 @@ public void M() {
 			}
 		}
 	}
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]

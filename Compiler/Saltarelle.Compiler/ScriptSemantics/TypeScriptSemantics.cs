@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			/// <summary>
 			/// Type for which value-type semantics must be ensured (copy on every assignment)
 			/// </summary>
-			ValueType,
+			MutableValueType,
 
 			/// <summary>
 			/// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
@@ -64,8 +64,8 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			return new TypeScriptSemantics { Type = ImplType.NormalType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
 		}
 
-		public static TypeScriptSemantics ValueType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
-			return new TypeScriptSemantics { Type = ImplType.ValueType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+		public static TypeScriptSemantics MutableValueType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+			return new TypeScriptSemantics { Type = ImplType.MutableValueType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
 		}
 
 		public static TypeScriptSemantics NotUsableFromScript() {

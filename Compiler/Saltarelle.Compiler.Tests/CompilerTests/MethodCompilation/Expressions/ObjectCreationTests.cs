@@ -274,7 +274,7 @@ public void M() {
 	$tmp1.$x = $Clone($i, {to_Int32});
 	$tmp1.set_$P($Clone($j, {to_Int32}));
 	var $x = $tmp1;
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -333,10 +333,10 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = new {sm_X}();
-	$tmp1.$Add($Clone($i, {to_Int32}), $Clone($s, {to_String}));
-	$tmp1.$Add($Clone($j, {to_Int32}), $Clone($t, {to_String}));
+	$tmp1.$Add($Clone($i, {to_Int32}), $s);
+	$tmp1.$Add($Clone($j, {to_Int32}), $t);
 	var $x = $tmp1;
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]

@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	// END
 }",
 @"	yield return $Clone($i, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;

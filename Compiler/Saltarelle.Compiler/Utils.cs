@@ -122,15 +122,15 @@ namespace Saltarelle.Compiler {
 			}
 
 			type = NullableType.GetUnderlyingType(type);
-			if (!IsValueType(type, metadataImporter))
+			if (!IsMutableValueType(type, metadataImporter))
 				return input;
 
 			return runtimeLibrary.CloneValueType(input, type, runtimeContext);
 		}
 
-		public static bool IsValueType(IType type, IMetadataImporter metadataImporter) {
+		public static bool IsMutableValueType(IType type, IMetadataImporter metadataImporter) {
 			var typeDef = type.GetDefinition();
-			return typeDef != null && metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.ValueType;
+			return typeDef != null && metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.MutableValueType;
 		}
 	}
 }

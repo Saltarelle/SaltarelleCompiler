@@ -180,7 +180,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private bool IsValueType(IType type) {
-			return Utils.IsValueType(type, _metadataImporter);
+			return Utils.IsMutableValueType(type, _metadataImporter);
 		}
 
 		private JsExpression MaybeCloneValueType(JsExpression input, ResolveResult csharpInput, IType type) {

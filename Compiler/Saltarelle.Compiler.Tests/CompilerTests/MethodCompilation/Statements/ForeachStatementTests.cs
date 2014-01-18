@@ -57,7 +57,7 @@ public void M() {
 		var $item = $Clone($tmp1.Current, {to_Int32});
 		var $x = $Clone(0, {to_Int32});
 	}
-", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -124,7 +124,7 @@ public void M() {
 		var $item = $Clone($arr[$tmp1], {to_Int32});
 		var $x = $Clone(0, {to_Int32});
 	}
-", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
+", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]

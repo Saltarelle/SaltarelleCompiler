@@ -44,7 +44,7 @@ public void M() {
 	// END
 }",
 @"	this.$F($Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $Clone($c, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -277,7 +277,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
 	this.$F($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int64}), $tmp1, $Clone(5, {to_Int16}), $tmp3, $tmp2);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -300,7 +300,7 @@ public void M() {
 	var $tmp2 = this.$F2();
 	var $tmp3 = new {sm_S3}();
 	this.$F($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int64}), $tmp1, $Clone(5, {to_Int16}), $tmp3, $tmp2);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 
@@ -414,7 +414,7 @@ public void M(ref int a, ref int b, ref int c) {
 }
 ",
 @"	this.$F($a, $b, $Clone($c.$, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -471,7 +471,7 @@ public void M() {
 	// END
 }",
 @"	var $i = this.get_$Item($Clone($a, {to_Int32}), $Clone($b, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -606,8 +606,8 @@ public void M() {
 	F(a, b, c);
 	// END
 }",
-@"	{sm_C}.$F(this, $Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $Clone($c, {to_String}));
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
+@"	{sm_C}.$F(this, $Clone($a, {to_Int32}), $Clone($b, {to_Int32}), $c);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
 		[Test]
@@ -1190,7 +1190,7 @@ public void M() {
 	// END
 }",
 @"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), [$Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32})]);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 
@@ -1217,7 +1217,7 @@ public void M() {
 	// END
 }",
 @"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), [$Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32})]);
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1243,7 +1243,7 @@ public void M() {
 	// END
 }",
 @"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), $Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32}));
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F"), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F"), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
 		[Test]
@@ -1293,7 +1293,7 @@ public void M() {
 	$c.$F2.apply($c, [$Clone(42, {to_Int32})].concat($args));
 	this.$F3.apply(this, $args);
 	this.$F1($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), $Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32}));
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")), GetTypeSemantics = t => TypeScriptSemantics.ValueType(t.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
 		[Test]
@@ -2055,7 +2055,7 @@ void M() {
 }
 ",
 @"	$MultidimArrayGet($arr, 3, 5).$F($Clone(2, {to_Int32}));
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 	}
 }

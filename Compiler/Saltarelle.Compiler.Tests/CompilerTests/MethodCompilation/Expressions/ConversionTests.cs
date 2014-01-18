@@ -1665,7 +1665,7 @@ void M() {
 }",
 @"	$o = $Upcast($Clone($s, {to_S}), {ct_Object});
 	$d = $Upcast($Clone($s, {to_S}), {ct_IDisposable});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1683,7 +1683,7 @@ void M() {
 }",
 @"	$s = $Clone($FromNullable($Cast($o, {ct_S})), {to_S});
 	$s = $Clone($FromNullable($Cast($d, {ct_S})), {to_S});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1697,7 +1697,7 @@ void M() {
 	// END;
 }",
 @"	$d = $Clone($i, {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1711,7 +1711,7 @@ void M() {
 	// END;
 }",
 @"	$i = $Clone($FromNullable($Cast($d, {ct_Int32})), {to_Int32});
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 	}
 }

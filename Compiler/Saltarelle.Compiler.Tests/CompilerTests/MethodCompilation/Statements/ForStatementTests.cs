@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 @"	for (var $i = $Clone(0, {to_Int32}), $j = $Clone(1, {to_Int32}); $i < 10; $i += $Clone(1, {to_Int32})) {
 		var $k = $Clone($i, {to_Int32});
 	}
-", valueTypes: true);
+", mutableValueTypes: true);
 		}
 
 		[Test]
