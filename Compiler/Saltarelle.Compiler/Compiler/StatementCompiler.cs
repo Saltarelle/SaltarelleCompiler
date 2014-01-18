@@ -179,7 +179,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return ReferenceEquals(body, function.Body) ? function : JsExpression.FunctionDefinition(function.ParameterNames, body, function.Name);
 		}
 
-		private bool IsValueType(IType type) {
+		private bool IsMutableValueType(IType type) {
 			return Utils.IsMutableValueType(type, _metadataImporter);
 		}
 
@@ -352,7 +352,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.Region = expr.GetRegion();
 				var rr = ResolveWithConversion(expr);
 				var result = _expressionCompiler.Compile(rr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0);
-				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsValueType(rr.Type)) {
+				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsMutableValueType(rr.Type)) {
 					result.Expression = MaybeCloneValueType(result.Expression, rr, rr.Type);
 				}
 				return result;

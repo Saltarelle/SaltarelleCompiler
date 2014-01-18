@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
@@ -1105,6 +1107,77 @@ public void M() {
 }",
 @"	$MultidimArrayGet($MultidimArrayGet($arr, 3, 4).$F.$A1[2].$A2, 2, 1).set_$P($Clone(42, {to_Int32}));
 ", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentToThisWorksInMutableValueType() {
+			AssertCorrect(@"
+struct S {
+	void M() {
+		S other = default(S);
+		// BEGIN
+		this = other;
+		// END
+	}
+}
+",
+@"	$ShallowCopy($Clone($other, {to_S}), this);
+", addSkeleton: false, mutableValueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentChainToThisWorksInMutableValueType() {
+			AssertCorrect(@"
+struct S {
+	void M() {
+		S other = default(S), s;
+		// BEGIN
+		s = this = other;
+		// END
+	}
+}
+",
+@"	$ShallowCopy($Clone($other, {to_S}), this);
+	$s = $Clone(this, {to_S});
+", addSkeleton: false, mutableValueTypes: true);
+		}
+
+		[Test]
+		public void AssignmentToThisInConstructorOfImmutableValueTypesWorks() {
+			JsFunctionDefinitionExpression ctor = null;
+			Compile(new[] { @"
+struct S {
+	S Other { get { return default(S); } }
+	public S(int x) {
+		this = Other;
+	}
+}
+" }, methodCompiled: (m, res, mc) => { if (m.Parameters.Count == 1) ctor = res; });
+
+			Assert.IsNotNull(ctor);
+			Assert.That(OutputFormatter.Format(ctor, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function($x) {
+	{sm_ValueType}.call(this);
+	$ShallowCopy(this.get_Other(), this);
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void AssignmentToThisInImmutableValueTypeIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"struct S {
+	void M() {
+		S other = default(S);
+		// BEGIN
+		this = other;
+		// END
+	}
+}"
+			}, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7538));
 		}
 	}
 }

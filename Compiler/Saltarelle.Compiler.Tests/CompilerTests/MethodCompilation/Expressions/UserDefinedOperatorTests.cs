@@ -51,7 +51,7 @@ void M() {
 		[Test]
 		public void UserDefinedBinaryOperatorsWorkStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -64,7 +64,7 @@ class C1 {
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
 }
 void M() {
-	C1 x = null, y = null, z;
+	C1 x = default(C1), y = default(C1), z;
 	int i = 0;
 	// BEGIN
 	z = x +  y;
@@ -183,7 +183,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentWithUserDefinedBinaryOperatorsWork() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -196,7 +196,7 @@ class C1 {
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
 }
 void M() {
-	C1 x = null, y = null;
+	C1 x = default(C1), y = default(C1);
 	int i = 0;
 	// BEGIN
 	x +=  y;
@@ -227,7 +227,7 @@ void M() {
 		[Test]
 		public void CompoundAssignmentWithUserDefinedBinaryOperatorsWorkStruct() {
 			AssertCorrect(@"
-class C1 {
+struct C1 {
 	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
@@ -240,7 +240,7 @@ class C1 {
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
 }
 void M() {
-	C1 x = null, y = null;
+	C1 x = default(C1), y = default(C1);
 	int i = 0;
 	// BEGIN
 	x +=  y;
@@ -266,6 +266,106 @@ void M() {
 	$x = {sm_C1}.$op_LeftShift($x, $i);
 	$x = {sm_C1}.$op_RightShift($x, $i);
 ", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void CompoundAssignmentToThisWithUserDefinedBinaryOperatorsWorksStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator/(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator%(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator&(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator|(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator^(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator<<(C1 c1, int i) { return default(C1); }
+	public static C1 operator>>(C1 c1, int i) { return default(C1); }
+
+void M() {
+	C1 y = default(C1);
+	int i = 0;
+	// BEGIN
+	this +=  y;
+	this -=  y;
+	this *=  y;
+	this /=  y;
+	this %=  y;
+	this &=  y;
+	this |=  y;
+	this ^=  y;
+	this <<= i;
+	this >>= i;
+	// END
+}
+}",
+@"	$ShallowCopy({sm_C1}.$op_Addition(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Subtraction(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Multiply(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Division(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Modulus(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_BitwiseAnd(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_BitwiseOr(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_ExclusiveOr(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_LeftShift(this, $i), this);
+	$ShallowCopy({sm_C1}.$op_RightShift(this, $i), this);
+", mutableValueTypes: true, addSkeleton: false);
+		}
+
+		[Test]
+		public void CompoundAssignmentToThisWithUserDefinedBinaryOperatorsWorksWhenUsingTheResultStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator+(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator-(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator*(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator/(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator%(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator&(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator|(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator^(C1 c1, C1 c2) { return default(C1); }
+	public static C1 operator<<(C1 c1, int i) { return default(C1); }
+	public static C1 operator>>(C1 c1, int i) { return default(C1); }
+
+void M() {
+	C1 x = default(C1), y = default(C1);
+	int i = 0;
+	// BEGIN
+	x = this +=  y;
+	x = this -=  y;
+	x = this *=  y;
+	x = this /=  y;
+	x = this %=  y;
+	x = this &=  y;
+	x = this |=  y;
+	x = this ^=  y;
+	x = this <<= i;
+	x = this >>= i;
+	// END
+}
+}",
+@"	$ShallowCopy({sm_C1}.$op_Addition(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Subtraction(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Multiply(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Division(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Modulus(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_BitwiseAnd(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_BitwiseOr(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_ExclusiveOr(this, $y), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_LeftShift(this, $i), this);
+	$x = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_RightShift(this, $i), this);
+	$x = $Clone(this, {to_C1});
+", mutableValueTypes: true, addSkeleton: false);
 		}
 
 		[Test]
@@ -1119,12 +1219,12 @@ void M() {
 		[Test]
 		public void IncrementAndDecrementOperatorsWorkOnVariablesWhenNotAssigningTheResultStruct() {
 			AssertCorrect(@"
-class C1 {
-	public static C1 operator++(C1 c) { return null; }
-	public static C1 operator--(C1 c) { return null; }
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
-	C1 c = null;
+	C1 c = default(C1);
 	// BEGIN
 	c++;
 	++c;
@@ -1137,6 +1237,30 @@ void M() {
 	$c = {sm_C1}.$op_Decrement($c);
 	$c = {sm_C1}.$op_Decrement($c);
 ", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void IncrementAndDecrementOperatorsWorkOnThisWhenNotAssigningTheResultStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
+
+void M() {
+	C1 c = default(C1);
+	// BEGIN
+	this++;
+	++this;
+	this--;
+	--this;
+	// END
+}
+}",
+@"	$ShallowCopy({sm_C1}.$op_Increment(this), this);
+	$ShallowCopy({sm_C1}.$op_Increment(this), this);
+	$ShallowCopy({sm_C1}.$op_Decrement(this), this);
+	$ShallowCopy({sm_C1}.$op_Decrement(this), this);
+", addSkeleton: false, mutableValueTypes: true);
 		}
 
 		[Test]
@@ -1226,6 +1350,30 @@ void M() {
 		}
 
 		[Test]
+		public void PostIncrementAndDecrementOperatorsWorkOnThisWhenAssigningTheResultStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
+
+void M() {
+	C1 c = default(C1);
+	// BEGIN
+	c = this++;
+	c = this--;
+	// END
+}
+}",
+@"	var $tmp1 = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})), this);
+	$c = $Clone($tmp1, {to_C1});
+	var $tmp2 = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), this);
+	$c = $Clone($tmp2, {to_C1});
+", addSkeleton: false, mutableValueTypes: true);
+		}
+
+		[Test]
 		public void IncrementAndDecrementOperatorsWorkOnFieldsWhenNotAssigningTheResult() {
 			AssertCorrect(@"
 class C1 {
@@ -1311,6 +1459,28 @@ void M() {
 	this.$c = {sm_C1}.$op_Decrement(this.$c);
 	$c2 = $Clone(this.$c, {to_C1});
 ", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void PreIncrementAndDecrementOperatorsWorkOnThisWhenAssigningTheResultStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator++(C1 c) { return default(C1); }
+	public static C1 operator--(C1 c) { return default(C1); }
+
+void M() {
+	C1 c = default(C1);
+	// BEGIN
+	c = ++this;
+	c = --this;
+	// END
+}
+}",
+@"	$ShallowCopy({sm_C1}.$op_Increment(this), this);
+	$c = $Clone(this, {to_C1});
+	$ShallowCopy({sm_C1}.$op_Decrement(this), this);
+	$c = $Clone(this, {to_C1});
+", addSkeleton: false, mutableValueTypes: true);
 		}
 
 		[Test]

@@ -37,6 +37,7 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7535 = Tuple.Create(7535, MessageSeverity.Error, "The OnCompleted method used by an 'await' statement must be implemented as a normal method in script.");
 		public static readonly Message _7536 = Tuple.Create(7536, MessageSeverity.Error, "The type parameter {0} is not available for use in script. You must specify [IncludeGenericArguments] on the {1} {2} and/or any method it overrides or implements.");
 		public static readonly Message _7537 = Tuple.Create(7537, MessageSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the param array is expanded.");
+		public static readonly Message _7538 = Tuple.Create(7538, MessageSeverity.Error, "Cannot assign to `this' in non-constructor methods of immutable value types.");
 
 		public static readonly Message _7800 = Tuple.Create(7800, MessageSeverity.Error, "The program entry point {0} may not have any parameters.");
 		public static readonly Message _7801 = Tuple.Create(7801, MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.");

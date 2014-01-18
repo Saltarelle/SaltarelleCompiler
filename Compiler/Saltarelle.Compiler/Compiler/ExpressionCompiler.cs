@@ -241,7 +241,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.Member(jsTarget, fieldName);
 			if (compoundFactory != null) {
-				if (returnValueIsImportant && IsValueType(target.Type)) {
+				if (returnValueIsImportant && IsMutableValueType(target.Type)) {
 					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
 					return access;
 				}
@@ -257,7 +257,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					if (returnValueIsImportant && IsValueType(target.Type)) {
+					if (returnValueIsImportant && IsMutableValueType(target.Type)) {
 						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, target.Type)));
 						return access;
 					}
@@ -276,7 +276,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var access = JsExpression.Index(expressions[0], expressions[1]);
 
 			if (compoundFactory != null) {
-				if (returnValueIsImportant && IsValueType(elementType)) {
+				if (returnValueIsImportant && IsMutableValueType(elementType)) {
 					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, elementType)));
 					return access;
 				}
@@ -292,7 +292,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					if (returnValueIsImportant && IsValueType(elementType)) {
+					if (returnValueIsImportant && IsMutableValueType(elementType)) {
 						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, elementType)));
 						return access;
 					}
@@ -303,7 +303,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private bool IsValueType(IType type) {
+		private bool IsMutableValueType(IType type) {
 			return Utils.IsMutableValueType(type, _metadataImporter);
 		}
 
@@ -329,7 +329,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				if (compoundFactory != null) {
-					if (returnValueIsImportant && IsValueType(target.Type)) {
+					if (returnValueIsImportant && IsMutableValueType(target.Type)) {
 						_additionalStatements.Add(JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
 						return jsTarget;
 					}
@@ -345,7 +345,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Identifier(_variables[temp].Name);
 					}
 					else {
-						if (returnValueIsImportant && IsValueType(target.Type)) {
+						if (returnValueIsImportant && IsMutableValueType(target.Type)) {
 							_additionalStatements.Add(JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
 							return jsTarget;
 						}
@@ -490,6 +490,45 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 					else {
 						return _runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), otherOperand, target.Type), this);
+					}
+				}
+			}
+			else if (target is ThisResolveResult) {
+				var jsTarget = CompileThis();
+				var jsOtherOperand = otherOperand != null ? InnerCompile(otherOperand, false) : null;
+
+				if (_methodBeingCompiled == null || !_methodBeingCompiled.IsConstructor) {
+					var typesem = _metadataImporter.GetTypeSemantics(target.Type.GetDefinition());
+					if (typesem.Type != TypeScriptSemantics.ImplType.MutableValueType) {
+						_errorReporter.Message(Messages._7538);
+						return JsExpression.Null;
+					}
+				}
+
+				if (compoundFactory != null) {
+					if (returnValueIsImportant) {
+						_additionalStatements.Add(_runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this));
+						return jsTarget;
+					}
+					else {
+						return _runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this);
+					}
+				}
+				else {
+					if (returnValueIsImportant && returnValueBeforeChange) {
+						var temp = _createTemporaryVariable(target.Type);
+						_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, MaybeCloneValueType(jsTarget, null, target.Type, forceClone: true)));
+						_additionalStatements.Add(_runtimeLibrary.ShallowCopy(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), jsTarget, this));
+						return JsExpression.Identifier(_variables[temp].Name);
+					}
+					else {
+						if (returnValueIsImportant) {
+							_additionalStatements.Add(_runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this));
+							return jsTarget;
+						}
+						else {
+							return _runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this);
+						}
 					}
 				}
 			}
@@ -1109,7 +1148,7 @@ namespace Saltarelle.Compiler.Compiler {
 			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocationOfVirtualMethod, isParamArrayExpanded);
 
 			var jsTarget = method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes, returnMultidimArrayValueByReference: true);
-			if (IsValueType(targetResult.Type) && IsReadonlyField(targetResult)) {
+			if (IsMutableValueType(targetResult.Type) && IsReadonlyField(targetResult)) {
 				jsTarget = MaybeCloneValueType(jsTarget, null, targetResult.Type, forceClone: true);
 			}
 
@@ -1562,7 +1601,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var result = _runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), this);
 				if (!_returnMultidimArrayValueByReference) {
 					var type = NullableType.GetUnderlyingType(rr.Type);
-					if (IsValueType(type)) {
+					if (IsMutableValueType(type)) {
 						result = _runtimeLibrary.CloneValueType(result, rr.Type, this);
 					}
 				}
