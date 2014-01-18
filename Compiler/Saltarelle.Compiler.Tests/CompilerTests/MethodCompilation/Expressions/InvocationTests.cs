@@ -2057,5 +2057,74 @@ void M() {
 @"	$MultidimArrayGet($arr, 3, 5).$F($Clone(2, {to_Int32}));
 ", mutableValueTypes: true);
 		}
+
+		[Test]
+		public void ReadonlyValueTypesAreClonedWhenTheyAreInvocationTargets() {
+			AssertCorrect(@"
+struct S { public void M() {} }
+readonly S s;
+void M() {
+	// BEGIN
+	s.M();
+	// END
+}",
+@"	$Clone(this.$s, {to_S}).$M();
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void ReadonlyValueTypesAreClonedWhenTheyAreInvocationTargetsNested() {
+			AssertCorrect(@"
+struct S1 { public S3 s; }
+struct S2 { public readonly S3 s; }
+struct S3 { public void M() {} }
+class C1 {
+	public S1 s1;
+	public readonly S1 s1r;
+	public S2 s2;
+}
+C1 c1 = null;
+readonly C1 c1r = null;
+public S1 s1;
+readonly S1 s1r;
+S2 s2;
+
+void M() {
+	S1 s1v;
+	S2 s2v;
+	C1 c1v;
+	// BEGIN
+	s1.s.M();
+	s1r.s.M();
+	s2.s.M();
+	s1v.s.M();
+	s2v.s.M();
+	c1.s1.s.M();
+	c1.s1r.s.M();
+	c1.s2.s.M();
+	c1r.s1.s.M();
+	c1r.s1r.s.M();
+	c1r.s2.s.M();
+	c1v.s1.s.M();
+	c1v.s1r.s.M();
+	c1v.s2.s.M();
+	// END
+}",
+@"	this.$s1.$s.$M();
+	$Clone(this.$s1r.$s, {to_S3}).$M();
+	$Clone(this.$s2.$s, {to_S3}).$M();
+	$s1v.$s.$M();
+	$Clone($s2v.$s, {to_S3}).$M();
+	this.$c1.$s1.$s.$M();
+	$Clone(this.$c1.$s1r.$s, {to_S3}).$M();
+	$Clone(this.$c1.$s2.$s, {to_S3}).$M();
+	this.$c1r.$s1.$s.$M();
+	$Clone(this.$c1r.$s1r.$s, {to_S3}).$M();
+	$Clone(this.$c1r.$s2.$s, {to_S3}).$M();
+	$c1v.$s1.$s.$M();
+	$Clone($c1v.$s1r.$s, {to_S3}).$M();
+	$Clone($c1v.$s2.$s, {to_S3}).$M();
+", mutableValueTypes: true);
+		}
 	}
 }

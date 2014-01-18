@@ -129,8 +129,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static bool IsMutableValueType(IType type, IMetadataImporter metadataImporter) {
-			var typeDef = type.GetDefinition();
-			return typeDef != null && metadataImporter.GetTypeSemantics(typeDef).Type == TypeScriptSemantics.ImplType.MutableValueType;
+			return type.Kind == TypeKind.Struct && metadataImporter.GetTypeSemantics(type.GetDefinition()).Type == TypeScriptSemantics.ImplType.MutableValueType;
 		}
 	}
 }

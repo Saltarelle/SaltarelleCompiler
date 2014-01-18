@@ -1088,12 +1088,32 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private bool IsReadonlyField(ResolveResult r) {
+			for (;;) {
+				var mr = r as MemberResolveResult;
+				if (mr == null)
+					return false;
+				var f = mr.Member as IField;
+				if (f == null || f.Type.Kind != TypeKind.Struct)
+					return false;
+				if (f.IsReadOnly)
+					return true;
+				r = mr.TargetResult;
+			}
+		}
+
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics sem, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall) {
 			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
 			bool isParamArrayExpanded = argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult;
 			bool targetUsedMultipleTimes = sem != null && ((!sem.IgnoreGenericArguments && method.TypeParameters.Count > 0) || (sem.ExpandParams && !isParamArrayExpanded));
 			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocationOfVirtualMethod, isParamArrayExpanded);
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes, returnMultidimArrayValueByReference: true), false, argumentsForCall, argumentToParameterMap);
+
+			var jsTarget = method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes, returnMultidimArrayValueByReference: true);
+			if (IsValueType(targetResult.Type) && IsReadonlyField(targetResult)) {
+				jsTarget = MaybeCloneValueType(jsTarget, null, targetResult.Type, forceClone: true);
+			}
+
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, jsTarget, false, argumentsForCall, argumentToParameterMap);
 			return CompileMethodInvocation(sem, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod);
 		}
 
