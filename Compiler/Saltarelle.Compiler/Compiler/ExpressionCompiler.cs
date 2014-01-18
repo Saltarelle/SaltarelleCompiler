@@ -1650,18 +1650,20 @@ namespace Saltarelle.Compiler.Compiler {
 				return result;
 			}
 			else if (c.IsDynamicConversion) {
+				JsExpression result;
 				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
+					result = _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
 				}
 				else if (toType.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType, this), this);
+					result = _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType, this), this);
 				}
 				else {
 					// Converting to a boring reference type.
-					return _runtimeLibrary.Downcast(input, fromType, toType, this);
+					result = _runtimeLibrary.Downcast(input, fromType, toType, this);
 				}
+				return MaybeCloneValueType(result, null, toType, forceClone: true);
 			}
 			else if (c.IsNullableConversion || c.IsEnumerationConversion) {
 				if (fromType.IsKnownType(KnownTypeCode.NullableOfT) && !toType.IsKnownType(KnownTypeCode.NullableOfT))
@@ -1669,27 +1671,30 @@ namespace Saltarelle.Compiler.Compiler {
 				return input;
 			}
 			else if (c.IsBoxingConversion) {
-				if (toType.Kind != TypeKind.Dynamic) {
-					// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-					var box = MaybeCloneValueType(input, null, fromType);
-					if (NullableType.GetUnderlyingType(fromType).GetAllBaseTypes().Contains(toType))
-						return _runtimeLibrary.Upcast(box, fromType, toType, this);
-					else
-						return _runtimeLibrary.Downcast(box, fromType, toType, this);
-						
+				var box = MaybeCloneValueType(input, null, fromType);
+
+				// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
+				if (toType.Kind == TypeKind.Dynamic) {
+					return box;
 				}
-				return input;
-			}
-			else if (c.IsUnboxingConversion) {
-				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
-					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
+				else if (NullableType.GetUnderlyingType(fromType).GetAllBaseTypes().Contains(toType)) {
+					return _runtimeLibrary.Upcast(box, fromType, toType, this);
 				}
 				else {
-					var result = _runtimeLibrary.Downcast(input, fromType, toType, this);
+					return _runtimeLibrary.Downcast(box, fromType, toType, this);
+				}
+			}
+			else if (c.IsUnboxingConversion) {
+				JsExpression result;
+				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
+					result = _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
+				}
+				else {
+					result = _runtimeLibrary.Downcast(input, fromType, toType, this);
 					if (toType.Kind == TypeKind.Struct)
 						result = _runtimeLibrary.FromNullable(result, this);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
-					return result;
 				}
+				return MaybeCloneValueType(result, null, toType, forceClone: true);
 			}
 			else if (c.IsUserDefined) {
 				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type, ((ConversionResolveResult)csharpInput).Input);
