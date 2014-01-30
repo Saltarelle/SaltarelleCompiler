@@ -323,7 +323,7 @@ namespace CoreLib.Plugin {
 			var ra = AttributeReader.ReadAttribute<ReflectableAttribute>(member);
 			if (ra != null)
 				return ra.Reflectable;
-			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
+			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type != TypeScriptSemantics.ImplType.NotUsableFromScript))
 				return true;	// Any scriptable attribute will cause reflectability (unless [Reflectable(false)] was specified.
 
 			if (member.DeclaringType.Kind != TypeKind.Anonymous) {
@@ -395,7 +395,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public static IEnumerable<IAttribute> GetScriptableAttributes(IEnumerable<IAttribute> attributes, IMetadataImporter metadataImporter) {
-			return attributes.Where(a => !a.IsConditionallyRemoved && metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType);
+			return attributes.Where(a => !a.IsConditionallyRemoved && metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type != TypeScriptSemantics.ImplType.NotUsableFromScript);
 		}
 
 		private static List<JsObjectLiteralProperty> GetCommonMemberInfoProperties(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
