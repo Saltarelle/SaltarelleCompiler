@@ -1188,10 +1188,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, bool isNonVirtualInvocationOfVirtualMethod) {
 			var typeArguments = (method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : EmptyList<IType>.Instance);
-			var unusableTypes = Utils.FindUsedUnusableTypes(typeArguments, _metadataImporter).ToList();
-			if (unusableTypes.Count > 0) {
-				foreach (var ut in unusableTypes)
+			var errors = Utils.FindGenericInstantiationErrors(typeArguments, _metadataImporter);
+			if (errors.HasErrors) {
+				foreach (var ut in errors.UsedUnusableTypes)
 					_errorReporter.Message(Messages._7515, ut.FullName, method.DeclaringType.FullName + "." + method.Name);
+				foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+					_errorReporter.Message(Messages._7539, t.FullName);
 				return JsExpression.Null;
 			}
 
@@ -1373,10 +1375,12 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Null;
 			}
 			if (typeToConstruct is ParameterizedType) {
-				var unusableTypes = Utils.FindUsedUnusableTypes(((ParameterizedType)typeToConstruct).TypeArguments, _metadataImporter).ToList();
-				if (unusableTypes.Count > 0) {
-					foreach (var ut in unusableTypes)
+				var errors = Utils.FindGenericInstantiationErrors(((ParameterizedType)typeToConstruct).TypeArguments, _metadataImporter);
+				if (errors.HasErrors) {
+					foreach (var ut in errors.UsedUnusableTypes)
 						_errorReporter.Message(Messages._7520, ut.FullName, typeToConstructDef.FullName);
+					foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+						_errorReporter.Message(Messages._7539, t.FullName);
 					return JsExpression.Null;
 				}
 			}
@@ -1574,10 +1578,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
-			var unusableTypes = Utils.FindUsedUnusableTypes(new[] { rr.ReferencedType }, _metadataImporter).ToList();
-			if (unusableTypes.Count > 0) {
-				foreach (var ut in unusableTypes)
+			var errors = Utils.FindTypeUsageErrors(new[] { rr.ReferencedType }, _metadataImporter);
+			if (errors.HasErrors) {
+				foreach (var ut in errors.UsedUnusableTypes)
 					_errorReporter.Message(Messages._7522, ut.FullName);
+				foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+					_errorReporter.Message(Messages._7539, t.FullName);
+
 				return JsExpression.Null;
 			}
 			else

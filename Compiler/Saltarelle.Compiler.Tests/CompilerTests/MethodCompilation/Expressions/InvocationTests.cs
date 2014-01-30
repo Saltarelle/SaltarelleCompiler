@@ -1168,6 +1168,38 @@ class C {
 		}
 
 		[Test]
+		public void CannotUseMutableValueTypeAsAGenericArgument() {
+			var md = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name) };
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"struct C1 {}
+class C {
+	public void F1<T>() {}
+	public void M() {
+		F1<C1>();
+	}
+}" }, metadataImporter: md, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("C1"));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] {
+@"struct C1 {}
+interface I1<T> {}
+class C {
+	public void F1<T>() {}
+	public void M() {
+		F1<I1<I1<C1>>>();
+	}
+}" }, metadataImporter: md, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("C1"));
+		}
+
+		[Test]
 		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInExpandedFormWorks() {
 			AssertCorrect(
 @"public void F(int x, int y, params int[] args) {}

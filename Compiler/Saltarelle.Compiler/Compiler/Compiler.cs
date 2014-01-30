@@ -58,12 +58,17 @@ namespace Saltarelle.Compiler.Compiler {
 			if (!_types.TryGetValue(typeDefinition, out result)) {
 				var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
 				if (semantics.GenerateCode) {
-					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _metadataImporter).ToList();
-					if (unusableTypes.Count > 0) {
-						foreach (var ut in unusableTypes) {
-							var oldRegion = _errorReporter.Region;
+					var errors = Utils.FindTypeUsageErrors(typeDefinition.GetAllBaseTypes(), _metadataImporter);
+					if (errors.HasErrors) {
+						var oldRegion = _errorReporter.Region;
+						try {
 							_errorReporter.Region = typeDefinition.Region;
-							_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+							foreach (var ut in errors.UsedUnusableTypes)
+								_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+								_errorReporter.Message(Messages._7539, t.FullName);
+						}
+						finally {
 							_errorReporter.Region = oldRegion;
 						}
 					}
