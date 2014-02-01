@@ -326,19 +326,24 @@ namespace CoreLib.Plugin {
 				}
 			}
 
+			bool isMutableValueType = false;
 			if (typeDefinition.Kind == TypeKind.Struct) {
-				foreach (var p in typeDefinition.Properties.Where(p => !p.IsStatic && IsAutoProperty(p) == true)) {
-					Message(Messages._7162, p.Region, typeDefinition.FullName);
-				}
-				foreach (var e in typeDefinition.Events.Where(e => !e.IsStatic && IsAutoEvent(e) == true)) {
-					Message(Messages._7162, e.Region, typeDefinition.FullName);
-				}
-				foreach (var f in typeDefinition.Fields.Where(f => !f.IsStatic && !f.IsReadOnly)) {
-					Message(Messages._7162, f.Region, typeDefinition.FullName);
+				isMutableValueType = AttributeReader.HasAttribute<MutableAttribute>(typeDefinition);
+				if (!isMutableValueType) {
+					foreach (var p in typeDefinition.Properties.Where(p => !p.IsStatic && IsAutoProperty(p) == true)) {
+						Message(Messages._7162, p.Region, typeDefinition.FullName);
+					}
+					foreach (var e in typeDefinition.Events.Where(e => !e.IsStatic && IsAutoEvent(e) == true)) {
+						Message(Messages._7162, e.Region, typeDefinition.FullName);
+					}
+					foreach (var f in typeDefinition.Fields.Where(f => !f.IsStatic && !f.IsReadOnly)) {
+						Message(Messages._7162, f.Region, typeDefinition.FullName);
+					}
 				}
 			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: importedAttr != null);
+			string name = !string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName;
+			_typeSemantics[typeDefinition] = new TypeSemantics(isMutableValueType ? TypeScriptSemantics.MutableValueType(name, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null) : TypeScriptSemantics.NormalType(name, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: importedAttr != null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {

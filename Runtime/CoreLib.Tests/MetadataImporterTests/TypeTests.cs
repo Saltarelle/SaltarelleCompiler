@@ -1609,5 +1609,20 @@ public class MyClass {
 }", expectErrors: true);
 			Assert.That(AllErrors.Any(m => m.Code == 7162 && m.Args[0].Equals("MyStruct")));
 		}
+
+		[Test]
+		public void StructWithMutableAttributeCanHaveMutableMembersAndHaveMutableValueTypeSemantics() {
+			Prepare(
+@"[System.Runtime.CompilerServices.Mutable]
+public struct MyStruct {
+	public int P { get; set; }
+	public event System.Action E;
+	public int F;
+}");
+			var t = FindType("MyStruct");
+			Assert.That(t.Type, Is.EqualTo(TypeScriptSemantics.ImplType.MutableValueType));
+			Assert.That(t.Name, Is.EqualTo("MyStruct"));
+			Assert.That(t.GenerateCode, Is.True);
+		}
 	}
 }

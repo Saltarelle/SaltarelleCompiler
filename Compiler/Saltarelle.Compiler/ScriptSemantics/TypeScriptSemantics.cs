@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public string Name {
 			get {
-				if (Type != ImplType.NormalType)
+				if (Type != ImplType.NormalType && Type != ImplType.MutableValueType)
 					throw new InvalidOperationException();
 				return _name;
 			}
@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool IgnoreGenericArguments {
 			get {
-				if (Type != ImplType.NormalType)
+				if (Type != ImplType.NormalType && Type != ImplType.MutableValueType)
 					throw new InvalidOperationException();
 				return _ignoreGenericArguments;
 			}
@@ -58,7 +58,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// <summary>
 		/// Whether code should be generated for the type
 		/// </summary>
-		public bool GenerateCode { get; set; }
+		public bool GenerateCode { get; private set; }
 
 		public static TypeScriptSemantics NormalType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
 			return new TypeScriptSemantics { Type = ImplType.NormalType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
