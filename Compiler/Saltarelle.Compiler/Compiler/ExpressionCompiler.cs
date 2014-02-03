@@ -1534,7 +1534,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
-				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body.Expression : JsStatement.Return(body.Expression);
+				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body.Expression : JsStatement.Return(MaybeCloneValueType(body.Expression, rr.Body, rr.ReturnType));
 				var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(rr.Parameters, _variables, expandParams: semantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Where((p, i) => i != rr.Parameters.Count - 1 || !semantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
 			}
