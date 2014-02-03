@@ -47,6 +47,52 @@ public void M() {
 		}
 
 		[Test]
+		public void ReadingStaticMethodGroupWorksWithClassName() {
+			AssertCorrect(
+@"static void F(int x) {}
+public void M() {
+	System.Action<int> f;
+	// BEGIN
+	f = C.F;
+	// END
+}",
+@"	$f = {sm_C}.$F;
+");
+		}
+
+		[Test]
+		public void MethodGroupConversionOnInlineCodeStaticMethodWorks() {
+			AssertCorrect(
+@"static void F(int x) {}
+public void M() {
+	System.Action<int> f;
+	// BEGIN
+	f = F;
+	// END
+}",
+@"	$f = function($tmp1) {
+		$tmp1;
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{x}") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
+		public void MethodGroupConversionOnInlineCodeStaticMethodPrefixedWithClassNameWorks() {
+			AssertCorrect(
+@"static void F(int x) {}
+public void M() {
+	System.Action<int> f;
+	// BEGIN
+	f = C.F;
+	// END
+}",
+@"	$f = function($tmp1) {
+		$tmp1;
+	};
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{x}") : MethodScriptSemantics.NormalMethod(m.Name) });
+		}
+
+		[Test]
 		public void ReadingMethodGroupWithOverloadsWorks() {
 			AssertCorrect(
 @"void F(int x) {}

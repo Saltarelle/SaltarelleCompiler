@@ -1724,7 +1724,7 @@ namespace Saltarelle.Compiler.Compiler {
 			for (int i = 0; i < parameters.Length; i++)
 				parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
 
-			var jsTarget = InnerCompile(target, tokens.Count(t => t.Type == InlineCodeToken.TokenType.This) > 1);
+			var jsTarget = method.IsStatic && !isExtensionMethodGroupConversion ? JsExpression.Null : InnerCompile(target, tokens.Count(t => t.Type == InlineCodeToken.TokenType.This) > 1);
 			var arguments = new List<JsExpression>();
 			if (isExtensionMethodGroupConversion)
 				arguments.Add(jsTarget);
