@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ICSharpCode.NRefactory;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using Saltarelle.Compiler.Compiler;
@@ -31,23 +33,58 @@ namespace Saltarelle.Compiler {
 			return IsExternallyVisible(member.DeclaringType.GetDefinition()) && (member.Accessibility == Accessibility.Public || member.Accessibility == Accessibility.Protected || member.Accessibility == Accessibility.ProtectedOrInternal);
 		}
 
-		private static void FindUsedUnusableTypes(IEnumerable<IType> types, IMetadataImporter metadataImporter, HashSet<ITypeDefinition> result) {
+		private static void FindTypeUsageErrors(IEnumerable<IType> types, IMetadataImporter metadataImporter, HashSet<ITypeDefinition> usedUnusableTypes, HashSet<ITypeDefinition> mutableValueTypesBoundToTypeArguments) {
 			foreach (var t in types) {
 				if (t is ITypeDefinition) {
 					if (metadataImporter.GetTypeSemantics((ITypeDefinition)t).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
-						result.Add((ITypeDefinition)t);
+						usedUnusableTypes.Add((ITypeDefinition)t);
 				}
 				else if (t is ParameterizedType) {
 					var pt = (ParameterizedType)t;
-					FindUsedUnusableTypes(new[] { pt.GetDefinition() }.Concat(pt.TypeArguments), metadataImporter, result);
+					foreach (var ta in pt.TypeArguments) {
+						if (ta.Kind == TypeKind.Struct && metadataImporter.GetTypeSemantics(ta.GetDefinition()).Type == TypeScriptSemantics.ImplType.MutableValueType)
+							mutableValueTypesBoundToTypeArguments.Add(ta.GetDefinition());
+					}
+					FindTypeUsageErrors(new[] { pt.GetDefinition() }.Concat(pt.TypeArguments), metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
 				}
 			}
 		}
 
-		public static IEnumerable<ITypeDefinition> FindUsedUnusableTypes(IEnumerable<IType> types, IMetadataImporter metadataImporter) {
-			var s = new HashSet<ITypeDefinition>();
-			FindUsedUnusableTypes(types, metadataImporter, s);
-			return s;
+		public class UnusableTypesResult {
+			public IList<IType> UsedUnusableTypes { get; private set; }
+			public IList<IType> MutableValueTypesBoundToTypeArguments { get; private set; }
+
+			public bool HasErrors {
+				get { return UsedUnusableTypes.Count > 0 || MutableValueTypesBoundToTypeArguments.Count > 0; }
+			}
+
+			public UnusableTypesResult(IList<IType> usedUnusableTypes, IList<IType> mutableValueTypesBoundToTypeArguments) {
+				UsedUnusableTypes = usedUnusableTypes;
+				MutableValueTypesBoundToTypeArguments = mutableValueTypesBoundToTypeArguments;
+			}
+		}
+
+		public static UnusableTypesResult FindGenericInstantiationErrors(IEnumerable<IType> typeArguments, IMetadataImporter metadataImporter) {
+			if (!(typeArguments is ICollection<IType>))
+				typeArguments = typeArguments.ToList();
+
+			var usedUnusableTypes = new HashSet<ITypeDefinition>();
+			var mutableValueTypesBoundToTypeArguments = new HashSet<ITypeDefinition>();
+
+			foreach (var ta in typeArguments) {
+				if (ta.Kind == TypeKind.Struct && metadataImporter.GetTypeSemantics(ta.GetDefinition()).Type == TypeScriptSemantics.ImplType.MutableValueType)
+					mutableValueTypesBoundToTypeArguments.Add(ta.GetDefinition());
+			}
+
+			FindTypeUsageErrors(typeArguments, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
+			return new UnusableTypesResult(usedUnusableTypes.Count > 0 ? usedUnusableTypes.ToList<IType>() : (IList<IType>)EmptyList<IType>.Instance, mutableValueTypesBoundToTypeArguments.Count > 0 ? mutableValueTypesBoundToTypeArguments.ToList<IType>() : (IList<IType>)EmptyList<IType>.Instance);
+		}
+
+		public static UnusableTypesResult FindTypeUsageErrors(IEnumerable<IType> types, IMetadataImporter metadataImporter) {
+			var usedUnusableTypes = new HashSet<ITypeDefinition>();
+			var mutableValueTypesBoundToTypeArguments = new HashSet<ITypeDefinition>();
+			FindTypeUsageErrors(types, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
+			return new UnusableTypesResult(usedUnusableTypes.Count > 0 ? usedUnusableTypes.ToList<IType>() : (IList<IType>)EmptyList<IType>.Instance, mutableValueTypesBoundToTypeArguments.Count > 0 ? mutableValueTypesBoundToTypeArguments.ToList<IType>() : (IList<IType>)EmptyList<IType>.Instance);
 		}
 
 		/// <summary>
@@ -102,6 +139,33 @@ namespace Saltarelle.Compiler {
 				return JsExpression.Null;
 			}
 			return JsExpression.Identifier(namer.GetTypeParameterName(tp));
+		}
+
+		public static JsExpression MaybeCloneValueType(JsExpression input, ResolveResult csharpInput, IType type, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IRuntimeContext runtimeContext, bool forceClone = false) {
+			if (!forceClone) {
+				if (input is JsInvocationExpression)
+					return input;	// The clone was already performed when the callee returned
+
+				var actualInput = csharpInput;
+				var crr = actualInput as ConversionResolveResult;
+				if (crr != null) {
+					actualInput = crr.Input;
+				}
+
+				if (actualInput is InvocationResolveResult) {
+					return input;
+				}
+			}
+
+			type = NullableType.GetUnderlyingType(type);
+			if (!IsMutableValueType(type, metadataImporter))
+				return input;
+
+			return runtimeLibrary.CloneValueType(input, type, runtimeContext);
+		}
+
+		public static bool IsMutableValueType(IType type, IMetadataImporter metadataImporter) {
+			return type.Kind == TypeKind.Struct && metadataImporter.GetTypeSemantics(type.GetDefinition()).Type == TypeScriptSemantics.ImplType.MutableValueType;
 		}
 	}
 }

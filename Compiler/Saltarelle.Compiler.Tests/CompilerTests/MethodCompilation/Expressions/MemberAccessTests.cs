@@ -153,6 +153,35 @@ public void M() {
 		}
 
 		[Test]
+		public void UsingEventAddAccessorWorksStruct() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h = null;
+	// BEGIN
+	MyEvent += h;
+	// END
+}",
+@"	this.add_$MyEvent($h);
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void UsingEventAddAccessorWorksMultidimArrayStruct() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	C[,] arr = null;
+	System.EventHandler h = null;
+	// BEGIN
+	arr[1, 2].MyEvent += h;
+	// END
+}",
+@"	$MultidimArrayGet($arr, 1, 2).add_$MyEvent($h);
+", mutableValueTypes: true);
+		}
+
+		[Test]
 		public void UsingEventAddAccessorImplementedAsInlineCodeWorks() {
 			AssertCorrect(
 @"event System.EventHandler MyEvent;
@@ -178,6 +207,35 @@ public void M() {
 }",
 @"	this.remove_$MyEvent($h);
 ");
+		}
+
+		[Test]
+		public void UsingEventRemoveAccessorWorksStruct() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	System.EventHandler h = null;
+	// BEGIN
+	MyEvent -= h;
+	// END
+}",
+@"	this.remove_$MyEvent($h);
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void UsingEventRemoveAccessorWorksMultidimArrayStruct() {
+			AssertCorrect(
+@"event System.EventHandler MyEvent;
+public void M() {
+	C[,] arr = null;
+	System.EventHandler h = null;
+	// BEGIN
+	arr[1, 2].MyEvent -= h;
+	// END
+}",
+@"	$MultidimArrayGet($arr, 1, 2).remove_$MyEvent($h);
+", mutableValueTypes: true);
 		}
 
 		[Test]

@@ -122,3 +122,11 @@ ss_Nullable$1.pos = function#? DEBUG Nullable$pos##(a) {
 ss_Nullable$1.cpl = function#? DEBUG Nullable$cpl##(a) {
 	return ss.isValue(a) ? ~a : null;
 };
+
+ss_Nullable$1.lift = function#? DEBUG Nullable$lift##() {
+	for (var i = 0; i < arguments.length; i++) {
+		if (!ss.isValue(arguments[i]))
+			return null;
+	}
+	return arguments[0].apply(null, Array.prototype.slice.call(arguments, 1));
+};

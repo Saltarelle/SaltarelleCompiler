@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel;
+using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.Tests;
 
@@ -1343,6 +1346,143 @@ interface I2<T> : I1 {}
 			var emulator = CreateEmulator(compilation.Item1);
 			var statements = emulator.GetStaticInitStatements((JsClass)compilation.Item2.Single());
 			Assert.That(statements, Is.Empty);
+		}
+
+		[Test]
+		public void GeneratedGetHashCodeGeneratesHashCodeBasedOnAllInstanceFields() {
+			var compilation = Compile(@"
+using System;
+using System.Runtime.CompilerServices;
+public enum E1 {}
+[NamedValues] public enum E2 {}
+public struct S {
+	public static int FS;
+	public readonly int F1;
+	public readonly int? F2;
+	public readonly bool F3;
+	public readonly bool? F4;
+	public readonly E1 F5;
+	public readonly E2 F6;
+	public readonly E1? F7;
+	public readonly E2? F8;
+	public readonly object F9;
+	public readonly DateTime F10;
+	public readonly DateTime? F11;
+	public [NonScriptable] readonly int F12;
+}");
+			var emulator = CreateEmulator(compilation.Item1);
+			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
+			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function() {
+	var h = this.f1;
+	h = h * 397 ^ (this.f2 || 0);
+	h = h * 397 ^ (this.f3 ? 1 : 0);
+	h = h * 397 ^ (this.f4 ? 1 : 0);
+	h = h * 397 ^ this.f5;
+	h = h * 397 ^ (this.f6 ? {Script}.getHashCode(this.f6) : 0);
+	h = h * 397 ^ (this.f7 || 0);
+	h = h * 397 ^ (this.f8 ? {Script}.getHashCode(this.f8) : 0);
+	h = h * 397 ^ (this.f9 ? {Script}.getHashCode(this.f9) : 0);
+	h = h * 397 ^ {Script}.getHashCode(this.f10);
+	h = h * 397 ^ (this.f11 ? {Script}.getHashCode(this.f11) : 0);
+	return h;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedGetHashCodeWithOneField() {
+			var compilation = Compile(@"
+public struct S {
+	public readonly double D;
+}");
+			var emulator = CreateEmulator(compilation.Item1);
+			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
+			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function() {
+	return this.d | 0;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedGetHashCodeWithNoFields() {
+			var compilation = Compile(@"
+public struct S {
+}");
+			var emulator = CreateEmulator(compilation.Item1);
+			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
+			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function() {
+	return 0;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedEqualsCalculatesEqualityBasedOnAllInstanceFields() {
+			var compilation = Compile(@"
+using System;
+using System.Runtime.CompilerServices;
+public enum E1 {}
+[NamedValues] public enum E2 {}
+public struct S {
+	public static int FS;
+	public readonly int F1;
+	public readonly int? F2;
+	public readonly bool F3;
+	public readonly bool? F4;
+	public readonly E1 F5;
+	public readonly E2 F6;
+	public readonly E1? F7;
+	public readonly E2? F8;
+	public readonly object F9;
+	public readonly DateTime F10;
+	public readonly DateTime? F11;
+	public [NonScriptable] readonly int F12;
+}");
+			var emulator = CreateEmulator(compilation.Item1);
+			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
+			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function(o) {
+	if (!{Script}.isInstanceOfType(o, $S)) {
+		return false;
+	}
+	return this.f1 === o.f1 && {Script}.equals(this.f2, o.f2) && this.f3 === o.f3 && {Script}.equals(this.f4, o.f4) && this.f5 === o.f5 && {Script}.equals(this.f6, o.f6) && {Script}.equals(this.f7, o.f7) && {Script}.equals(this.f8, o.f8) && {Script}.equals(this.f9, o.f9) && {Script}.equals(this.f10, o.f10) && {Script}.equals(this.f11, o.f11);
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedEqualsWithOneField() {
+			var compilation = Compile(@"
+public struct S {
+	public readonly double D;
+}");
+			var emulator = CreateEmulator(compilation.Item1);
+			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
+			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function(o) {
+	if (!{Script}.isInstanceOfType(o, $S)) {
+		return false;
+	}
+	return this.d === o.d;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedEqualsWithNoFields() {
+			var compilation = Compile(@"
+public struct S {
+}");
+			var emulator = CreateEmulator(compilation.Item1);
+			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
+			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function(o) {
+	return {Script}.isInstanceOfType(o, $S);
+}".Replace("\r\n", "\n")));
 		}
 	}
 }

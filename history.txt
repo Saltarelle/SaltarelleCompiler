@@ -1,3 +1,4 @@
+Support for user-defined value types (#146)
 Fixed problem with method group conversions on static methods implemented as inline code (#281)
 Fixed problem overriding members that implement interface methods implemented as inline code with a generated method (#272)
 Fixed problem with empty ScriptName and ExpandParams (#264)

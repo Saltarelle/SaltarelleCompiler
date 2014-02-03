@@ -32,7 +32,6 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
-		private bool _allowUserDefinedStructs;
 		private ICompilation _compilation;
 		private CSharpAstResolver _resolver;
 		private Dictionary<ITypeDefinition, JsClass> _types;
@@ -54,26 +53,22 @@ namespace Saltarelle.Compiler.Compiler {
 			_runtimeLibrary          = runtimeLibrary;
 		}
 
-		internal bool? AllowUserDefinedStructs { get; set; }
-
 		private JsClass GetJsClass(ITypeDefinition typeDefinition) {
 			JsClass result;
 			if (!_types.TryGetValue(typeDefinition, out result)) {
-				if (typeDefinition.Kind == TypeKind.Struct && !_allowUserDefinedStructs) {
-					var oldRegion = _errorReporter.Region;
-					_errorReporter.Region = typeDefinition.Region;
-					_errorReporter.Message(Messages._7998, "user-defined value type (struct)");
-					_errorReporter.Region = oldRegion;
-				}
-
 				var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
 				if (semantics.GenerateCode) {
-					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _metadataImporter).ToList();
-					if (unusableTypes.Count > 0) {
-						foreach (var ut in unusableTypes) {
-							var oldRegion = _errorReporter.Region;
+					var errors = Utils.FindTypeUsageErrors(typeDefinition.GetAllBaseTypes(), _metadataImporter);
+					if (errors.HasErrors) {
+						var oldRegion = _errorReporter.Region;
+						try {
 							_errorReporter.Region = typeDefinition.Region;
-							_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+							foreach (var ut in errors.UsedUnusableTypes)
+								_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+								_errorReporter.Message(Messages._7539, t.FullName);
+						}
+						finally {
 							_errorReporter.Region = oldRegion;
 						}
 					}
@@ -118,7 +113,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public IEnumerable<JsType> Compile(PreparedCompilation compilation) {
-			_allowUserDefinedStructs = AllowUserDefinedStructs ?? compilation.Compilation.ReferencedAssemblies.Count == 0;	// mscorlib only.
 			_compilation = compilation.Compilation;
 
 			_types = new Dictionary<ITypeDefinition, JsClass>();

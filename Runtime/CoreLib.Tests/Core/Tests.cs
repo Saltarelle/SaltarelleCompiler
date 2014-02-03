@@ -70,4 +70,7 @@ namespace CoreLib.Tests.Core {
 
 	[TestFixture]
 	public class StopwatchTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class UserDefinedStructTests : CoreLibTestBase {}
 }
