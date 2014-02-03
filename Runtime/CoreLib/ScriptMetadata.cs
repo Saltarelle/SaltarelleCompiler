@@ -524,6 +524,7 @@ namespace System.Runtime.CompilerServices {
 	///  Can be applied to a user-defined value type (struct) to instruct the compiler that it can be mutated and therefore needs to be copied whenever .net would create a copy of a value type.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Struct)]
+	[NonScriptable]
 	public sealed class MutableAttribute : Attribute {
 	}
 }

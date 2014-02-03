@@ -100,18 +100,6 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private bool? IsAutoProperty(IProperty property) {
-			if (property.Region == default(DomRegion))
-				return null;
-			return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
-		}
-
-		private bool? IsAutoEvent(IEvent evt) {
-			if (evt.Region == default(DomRegion))
-				return null;
-			return evt.AddAccessor != null && evt.RemoveAccessor != null && evt.AddAccessor.BodyRegion == default(DomRegion) && evt.RemoveAccessor.BodyRegion == default(DomRegion);
-		}
-
 		private string DetermineNamespace(ITypeDefinition typeDefinition) {
 			while (typeDefinition.DeclaringTypeDefinition != null) {
 				typeDefinition = typeDefinition.DeclaringTypeDefinition;
@@ -330,10 +318,10 @@ namespace CoreLib.Plugin {
 			if (typeDefinition.Kind == TypeKind.Struct) {
 				isMutableValueType = AttributeReader.HasAttribute<MutableAttribute>(typeDefinition);
 				if (!isMutableValueType) {
-					foreach (var p in typeDefinition.Properties.Where(p => !p.IsStatic && IsAutoProperty(p) == true)) {
+					foreach (var p in typeDefinition.Properties.Where(p => !p.IsStatic && MetadataUtils.IsAutoProperty(p) == true)) {
 						Message(Messages._7162, p.Region, typeDefinition.FullName);
 					}
-					foreach (var e in typeDefinition.Events.Where(e => !e.IsStatic && IsAutoEvent(e) == true)) {
+					foreach (var e in typeDefinition.Events.Where(e => !e.IsStatic && MetadataUtils.IsAutoEvent(e) == true)) {
 						Message(Messages._7162, e.Region, typeDefinition.FullName);
 					}
 					foreach (var f in typeDefinition.Fields.Where(f => !f.IsStatic && !f.IsReadOnly)) {
@@ -714,7 +702,7 @@ namespace CoreLib.Plugin {
 						Message(Messages._7153, property, firstField.FullName);
 					}
 
-					if (IsAutoProperty(property) == false) {
+					if (MetadataUtils.IsAutoProperty(property) == false) {
 						Message(Messages._7156, property, firstField.FullName);
 					}
 

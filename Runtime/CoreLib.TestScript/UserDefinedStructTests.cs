@@ -83,6 +83,39 @@ namespace CoreLib.TestScript {
 			}
 		}
 
+		[Mutable]
+		struct MS1 {
+			public int i;
+			public string P1 { get; set; }
+			[IntrinsicProperty]
+			public int P2 { get; set; }
+			public event Action E;
+			public MS2 N;
+
+			public void RaiseE() {
+				E();
+			}
+		}
+
+		[Mutable]
+		struct MS2 {
+			public int i;
+		}
+
+		[Mutable]
+		struct MS3<T> {
+			public T t;
+		}
+
+		[Mutable]
+		struct MS4 {
+			public int i;
+
+			[ScriptName("x")]
+			public MS4(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) : this() {
+			}
+		}
+
 #pragma warning restore 649
 
 		private T Create<T>() where T : new() {
@@ -203,6 +236,89 @@ namespace CoreLib.TestScript {
 			S7? a = new S7(42), b = null;
 			Assert.AreEqual((double?)a, 42, "#1");
 			Assert.IsNull((double?)b, "#2");
+		}
+
+		[Test]
+		public void ClonedValueTypeIsCorrectType() {
+			var s1 = new MS1 { i = 42 };
+			var s2 = s1;
+			Assert.IsTrue((object)s2 is MS1);
+		}
+
+		[Test]
+		public void FieldsAreClonedWhenValueTypeIsCopied() {
+			var s1 = new MS1 { i = 42 };
+			var s2 = s1;
+			Assert.AreEqual(s2.i, 42);
+			s2.i = 43;
+			Assert.AreEqual(s1.i, 42);
+			Assert.AreEqual(s2.i, 43);
+		}
+
+		[Test]
+		public void AutoPropertyBackingFieldsAreClonedWhenValueTypeIsCopied() {
+			var s1 = new MS1 { P1 = "hello" };
+			var s2 = s1;
+			Assert.AreEqual(s2.P1, "hello");
+			s2.P1 = "world";
+			Assert.AreEqual(s1.P1, "hello");
+			Assert.AreEqual(s2.P1, "world");
+		}
+
+		[Test]
+		public void PropertiesWithFieldImplementationAreClonedWhenValueTypeIsCopied() {
+			var s1 = new MS1 { P2 = 42 };
+			var s2 = s1;
+			Assert.AreEqual(s2.P2, 42);
+			s2.P2 = 43;
+			Assert.AreEqual(s1.P2, 42);
+			Assert.AreEqual(s2.P2, 43);
+		}
+
+		[Test]
+		public void AutoEventBackingFieldsAreClonedWhenValueTypeIsCopied() {
+			int count = 0;
+			Action a = () => count++;
+			var s1 = new MS1();
+			s1.E += a;
+			var s2 = s1;
+			s2.E += a;
+
+			s1.RaiseE();
+			Assert.AreEqual(count, 1);
+
+			s2.RaiseE();
+			Assert.AreEqual(count, 3);
+		}
+
+		[Test]
+		public void NestedStructsAreClonedWhenValueTypeIsCopied() {
+			var s1 = new MS1 { N = new MS2 { i = 42 } };
+			var s2 = s1;
+			Assert.AreEqual(s2.N.i, 42);
+			s2.N.i = 43;
+
+			Assert.AreEqual(s1.N.i, 42);
+			Assert.AreEqual(s2.N.i, 43);
+		}
+
+		[Test]
+		public void GenericMutableValueTypeWorks() {
+			var s1 = new MS3<int> { t = 42 };
+			var s2 = s1;
+			Assert.AreEqual(s2.t, 42);
+			s2.t = 43;
+			Assert.IsTrue((object)s2 is MS3<int>);
+			Assert.AreEqual(s1.t, 42);
+			Assert.AreEqual(s2.t, 43);
+		}
+
+		[Test]
+		public void CloningValueTypeWithNamedDefaultConstructorWorks() {
+			var s1 = new MS1 { i = 42 };
+			var s2 = s1;
+			Assert.AreEqual(s2.i, 42);
+			Assert.IsTrue((object)s2 is MS1);
 		}
 	}
 }

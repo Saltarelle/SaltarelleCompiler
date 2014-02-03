@@ -28,6 +28,9 @@ namespace System {
 	[IgnoreNamespace]
 	[ScriptName("Object")]
 	public abstract class ValueType {
+		[ScriptSkip]
+		protected ValueType() {
+		}
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]

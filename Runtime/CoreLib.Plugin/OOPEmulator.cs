@@ -335,6 +335,50 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		private JsExpression GenerateStructCloneMethod(ITypeDefinition type, string typevarName, bool hasCreateInstance) {
+			var stmts = new List<JsStatement>() { JsStatement.Var("r", hasCreateInstance ? (JsExpression)JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance")) : JsExpression.New(JsExpression.Identifier(typevarName))) };
+			var o = JsExpression.Identifier("o");
+			var r = JsExpression.Identifier("r");
+			foreach (var f in type.Fields.Where(f => !f.IsStatic)) {
+				var sem = _metadataImporter.GetFieldSemantics(f);
+				if (sem.Type == FieldScriptSemantics.ImplType.Field) {
+					var def = f.ReturnType.GetDefinition();
+					JsExpression value = JsExpression.Member(o, sem.Name);
+					if (def != null && def.Kind == TypeKind.Struct && _metadataImporter.GetTypeSemantics(def).Type == TypeScriptSemantics.ImplType.MutableValueType)
+						value =_runtimeLibrary.CloneValueType(value, f.ReturnType, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
+					stmts.Add(JsExpression.Assign(JsExpression.Member(r, sem.Name), value));
+				}
+			}
+
+			foreach (var p in type.Properties.Where(p => !p.IsStatic)) {
+				var sem = _metadataImporter.GetPropertySemantics(p);
+
+				if ((sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && MetadataUtils.IsAutoProperty(p) == true) || sem.Type == PropertyScriptSemantics.ImplType.Field) {
+					var def = p.ReturnType.GetDefinition();
+					var fieldName = sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods ? _metadataImporter.GetAutoPropertyBackingFieldName(p) : sem.FieldName;
+					JsExpression value = JsExpression.Member(o, fieldName);
+					if (def != null && def.Kind == TypeKind.Struct && _metadataImporter.GetTypeSemantics(def).Type == TypeScriptSemantics.ImplType.MutableValueType)
+						value =_runtimeLibrary.CloneValueType(value, p.ReturnType, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
+					stmts.Add(JsExpression.Assign(JsExpression.Member(r, fieldName), value));
+				}
+			}
+
+			foreach (var e in type.Events.Where(e => !e.IsStatic && MetadataUtils.IsAutoEvent(e) == true)) {
+				var sem = _metadataImporter.GetEventSemantics(e);
+
+				if (sem.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods) {
+					var def = e.ReturnType.GetDefinition();
+					var fieldName = _metadataImporter.GetAutoEventBackingFieldName(e);
+					JsExpression value = JsExpression.Member(o, fieldName);
+					if (def != null && def.Kind == TypeKind.Struct && _metadataImporter.GetTypeSemantics(def).Type == TypeScriptSemantics.ImplType.MutableValueType)
+						value =_runtimeLibrary.CloneValueType(value, e.ReturnType, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
+					stmts.Add(JsExpression.Assign(JsExpression.Member(r, fieldName), value));
+				}
+			}
+			stmts.Add(JsStatement.Return(r));
+			return JsExpression.FunctionDefinition(new[] { "o" }, JsStatement.Block(stmts));
+		}
+
 		private JsExpression CreateInstanceMembers(JsClass c, string typeVariableName) {
 			var members = c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null));
 			if (c.CSharpTypeDefinition.Kind == TypeKind.Struct) {
@@ -421,6 +465,10 @@ namespace CoreLib.Plugin {
 
 			if (c.CSharpTypeDefinition.Kind == TypeKind.Struct) {
 				stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "getDefaultValue"), hasCreateInstance ? JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance") : JsExpression.FunctionDefinition(EmptyList<string>.Instance, JsStatement.Return(JsExpression.New(JsExpression.Identifier(typevarName))))));
+
+				if (_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Type == TypeScriptSemantics.ImplType.MutableValueType) {
+					stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "$clone"), GenerateStructCloneMethod(c.CSharpTypeDefinition, typevarName, hasCreateInstance)));
+				}
 			}
 
 			stmts.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), RewriteMethod(m))));

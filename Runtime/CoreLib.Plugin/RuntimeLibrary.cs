@@ -626,7 +626,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
-			throw new NotImplementedException();
+			return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetScriptType, context), "$clone"), value);
 		}
 	}
 }

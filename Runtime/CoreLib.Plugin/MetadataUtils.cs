@@ -47,6 +47,18 @@ namespace CoreLib.Plugin {
 				return Char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
+		public static bool? IsAutoProperty(IProperty property) {
+			if (property.Region == default(DomRegion))
+				return null;
+			return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
+		}
+
+		public static bool? IsAutoEvent(IEvent evt) {
+			if (evt.Region == default(DomRegion))
+				return null;
+			return evt.AddAccessor != null && evt.RemoveAccessor != null && evt.AddAccessor.BodyRegion == default(DomRegion) && evt.RemoveAccessor.BodyRegion == default(DomRegion);
+		}
+
 		public static bool IsSerializable(ITypeDefinition type) {
 			return AttributeReader.HasAttribute<SerializableAttribute>(type) || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
 		}
