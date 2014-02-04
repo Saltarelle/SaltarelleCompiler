@@ -1,3 +1,4 @@
+Implemented "G" number format (thanks to Marcel F) (#274)
 Fixed comparison of null values using Comparer<T>.Default (#279)
 Support for user-defined value types (#146)
 Fixed problem with method group conversions on static methods implemented as inline code (#281)
