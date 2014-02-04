@@ -43,17 +43,22 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G15')")]
+		public new string ToString() {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatNumber({this}, {format}, 15)")]
 		public string ToString(string format) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider})")]
+		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider}, 15)")]
 		public string ToString(string format, IFormatProvider provider) {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G', {provider})")]
+		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G15', {provider})")]
 		public string ToString(IFormatProvider provider) {
 			return null;
 		}
