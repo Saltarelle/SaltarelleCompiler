@@ -362,16 +362,26 @@ ss.getAttributes = function#? DEBUG ss$getAttributes##(type, attrType, inherit) 
 	var result = [];
 	if (inherit) {
 		var b = ss.getBaseType(type);
-		if (b)
-			result = ss.getAttributes(b, attrType, true).filter(function(a) { var t = ss.getInstanceType(a); return !t.__metadata || !t.__metadata.attrNoInherit; });
+		if (b) {
+			var a = ss.getAttributes(b, attrType, true);
+			for (var i = 0; i < a.length; i++) {
+				var t = ss.getInstanceType(a[i]);
+				if (!t.__metadata || !t.__metadata.attrNoInherit)
+					result.push(a[i]);
+			}
+		}
 	}
 	if (type.__metadata && type.__metadata.attr) {
 		for (var i = 0; i < type.__metadata.attr.length; i++) {
 			var a = type.__metadata.attr[i];
 			if (attrType == null || ss.isInstanceOfType(a, attrType)) {
 				var t = ss.getInstanceType(a);
-				if (!t.__metadata || !t.__metadata.attrAllowMultiple)
-					result = result.filter(function (a) { return !ss.isInstanceOfType(a, t); });
+				if (!t.__metadata || !t.__metadata.attrAllowMultiple) {
+					for (var j = result.length - 1; j >= 0; j--) {
+						if (ss.isInstanceOfType(result[j], t))
+							result.splice(j, 1);
+					}
+				}
 				result.push(a);
 			}
 		}
@@ -405,13 +415,21 @@ ss.getMembers = function#? DEBUG ss$getMembers##(type, memberTypes, bindingAttr,
 		for (var i = 0; i < type.__metadata.members.length; i++) {
 			var m = type.__metadata.members[i];
 			f(m);
-			['getter','setter','adder','remover'].forEach(function(e) { if (m[e]) f(m[e]); });
+			for (var j = 0; j < 4; j++) {
+				var a = ['getter','setter','adder','remover'][j];
+				if (m[a])
+					f(m[a]);
+			}
 		}
 	}
 
 	if (bindingAttr & 256) {
 		while (type) {
-			var r = result.filter(function(m) { return m.typeDef === type; });
+			var r = [];
+			for (var i = 0; i < result.length; i++) {
+				if (result[i].typeDef === type)
+					r.push(result[i]);
+			}
 			if (r.length > 1)
 				throw new ss_AmbiguousMatchException('Ambiguous match');
 			else if (r.length === 1)
