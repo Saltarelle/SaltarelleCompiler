@@ -5,7 +5,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace System.Runtime.CompilerServices {
 	/// <summary>
@@ -526,5 +525,19 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Struct)]
 	[NonScriptable]
 	public sealed class MutableAttribute : Attribute {
+	}
+
+	/// <summary>
+	/// Can be applied to an attribute to indicate that its name when referenced in a plugin is different from its name in script. Only useful for plugin developers, and probably not for plugins either. The only use case I can think of is when you are modifying a framework attribute type (eg. SerializableAttribute).
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class)]
+	[NonScriptable]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public sealed class PluginNameAttribute : Attribute {
+		public PluginNameAttribute(string fullName) {
+			FullName = fullName;
+		}
+
+		public string FullName { get; private set; }
 	}
 }

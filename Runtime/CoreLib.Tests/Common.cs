@@ -37,17 +37,25 @@ namespace CoreLib.Tests {
 			var result = new Mock<IAssembly>(MockBehavior.Strict);
 			result.SetupGet(_ => _.AssemblyAttributes).Returns(CreateMockAttributes(attributes));
 			result.SetupGet(_ => _.AssemblyName).Returns("The.AssemblyName");
+			result.SetupGet(_ => _.TopLevelTypeDefinitions).Returns(new List<ITypeDefinition>());
 			return result.Object;
 		}
 		
 		public static ITypeDefinition CreateMockTypeDefinition(string name, IAssembly assembly, Accessibility accessibility = Accessibility.Public, ITypeDefinition declaringType = null, IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
-			var typeDef = Common.CreateTypeMock(name);
+			var typeDef = CreateTypeMock(name);
 			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
 			typeDef.SetupGet(_ => _.Accessibility).Returns(accessibility);
 			typeDef.SetupGet(_ => _.DeclaringTypeDefinition).Returns(declaringType);
 			typeDef.SetupGet(_ => _.ParentAssembly).Returns(assembly);
 			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
 			typeDef.SetupGet(_ => _.Attributes).Returns(CreateMockAttributes(attributes));
+			typeDef.SetupGet(_ => _.NestedTypes).Returns(new List<ITypeDefinition>());
+			typeDef.SetupGet(_ => _.Methods).Returns(new List<IMethod>());
+			typeDef.SetupGet(_ => _.Fields).Returns(new List<IField>());
+			typeDef.SetupGet(_ => _.Properties).Returns(new List<IProperty>());
+			typeDef.SetupGet(_ => _.Events).Returns(new List<IEvent>());
+			if (assembly != null)
+				((List<ITypeDefinition>)assembly.TopLevelTypeDefinitions).Add(typeDef.Object);
 
 			return typeDef.Object;
 		}

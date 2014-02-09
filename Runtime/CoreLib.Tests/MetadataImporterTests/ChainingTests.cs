@@ -38,7 +38,8 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			AllTypes = compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
 
 			var er = new MockErrorReporter(true);
-			Metadata = new MetadataImporter(er, compilation, new CompilerOptions());
+			var s = new AttributeStore(compilation);
+			Metadata = new MetadataImporter(er, compilation, s, new CompilerOptions());
 			preparer();
 			Metadata.Prepare(compilation.GetAllTypeDefinitions());
 			Assert.That(er.AllMessages, Is.Empty, "Should not generate errrors");

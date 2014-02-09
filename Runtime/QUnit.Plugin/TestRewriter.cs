@@ -13,10 +13,12 @@ namespace QUnit.Plugin {
 	public class TestRewriter : IJSTypeSystemRewriter, IRuntimeContext {
 		private readonly IErrorReporter _errorReporter;
 		private readonly IRuntimeLibrary _runtimeLibrary;
+		private readonly IAttributeStore _attributeStore;
 
-		public TestRewriter(IErrorReporter errorReporter, IRuntimeLibrary runtimeLibrary) {
+		public TestRewriter(IErrorReporter errorReporter, IRuntimeLibrary runtimeLibrary, IAttributeStore attributeStore) {
 			_errorReporter  = errorReporter;
 			_runtimeLibrary = runtimeLibrary;
+			_attributeStore = attributeStore;
 		}
 
 		private JsType ConvertType(JsClass type) {
@@ -30,7 +32,7 @@ namespace QUnit.Plugin {
 			var tests = new List<Tuple<string, string, bool, int?, JsFunctionDefinitionExpression>>();
 
 			foreach (var method in type.InstanceMethods) {
-				var testAttr = AttributeReader.ReadAttribute<TestAttribute>(method.CSharpMember);
+				var testAttr = _attributeStore.AttributesFor(method.CSharpMember).GetAttribute<TestAttribute>();
 				if (testAttr != null) {
 					if (!method.CSharpMember.IsPublic || !method.CSharpMember.ReturnType.IsKnownType(KnownTypeCode.Void) || ((IMethod)method.CSharpMember).Parameters.Count > 0 || ((IMethod)method.CSharpMember).TypeParameters.Count > 0) {
 						_errorReporter.Region = method.CSharpMember.Region;
@@ -64,7 +66,7 @@ namespace QUnit.Plugin {
 			foreach (var type in types) {
 				var cls = type as JsClass;
 				if (cls != null) {
-					var attr = AttributeReader.ReadAttribute<TestFixtureAttribute>(type.CSharpTypeDefinition);
+					var attr = _attributeStore.AttributesFor(type.CSharpTypeDefinition).GetAttribute<TestFixtureAttribute>();
 					yield return attr != null ? ConvertType(cls) : type;
 				}
 				else {

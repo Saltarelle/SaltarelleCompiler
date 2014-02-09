@@ -138,10 +138,11 @@ namespace CoreLib.Plugin {
 		private readonly INamer _namer;
 		private readonly ILinker _linker;
 		private readonly IErrorReporter _errorReporter;
+		private readonly IAttributeStore _attributeStore;
 		private readonly IRuntimeContext _defaultReflectionRuntimeContext;
 		private readonly IRuntimeContext _genericSpecializationReflectionRuntimeContext;
 
-		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, ILinker linker, IErrorReporter errorReporter) {
+		public OOPEmulator(ICompilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, ILinker linker, IAttributeStore attributeStore, IErrorReporter errorReporter) {
 			_compilation = compilation;
 			_systemScript = new JsTypeReferenceExpression(compilation.FindType(new FullTypeName("System.Script")).GetDefinition());
 			_systemObject = new JsTypeReferenceExpression(compilation.FindType(KnownTypeCode.Object).GetDefinition());
@@ -150,6 +151,7 @@ namespace CoreLib.Plugin {
 			_runtimeLibrary = runtimeLibrary;
 			_namer = namer;
 			_linker = linker;
+			_attributeStore = attributeStore;
 			_errorReporter = errorReporter;
 			_defaultReflectionRuntimeContext = new ReflectionRuntimeContext(false, _systemObject, _namer);
 			_genericSpecializationReflectionRuntimeContext = new ReflectionRuntimeContext(true, _systemObject, _namer);
@@ -180,7 +182,7 @@ namespace CoreLib.Plugin {
 				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
 			}
 			if (type.Kind == TypeKind.Class || type.Kind == TypeKind.Interface) {
-				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter))
+				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter, _attributeStore))
 				                          .OrderBy(m => m, MemberOrderer.Instance)
 				                          .Select(m => {
 				                                           _errorReporter.Region = m.Region;
@@ -190,7 +192,7 @@ namespace CoreLib.Plugin {
 				if (members.Count > 0)
 					properties.Add(new JsObjectLiteralProperty("members", JsExpression.ArrayLiteral(members)));
 
-				var aua = AttributeReader.ReadAttribute<AttributeUsageAttribute>(type);
+				var aua = _attributeStore.AttributesFor(type).GetAttribute<AttributeUsageAttribute>();
 				if (aua != null) {
 					if (!aua.Inherited)
 						properties.Add(new JsObjectLiteralProperty("attrNoInherit", JsExpression.True));
@@ -198,7 +200,7 @@ namespace CoreLib.Plugin {
 						properties.Add(new JsObjectLiteralProperty("attrAllowMultiple", JsExpression.True));
 				}
 			}
-			if (type.Kind == TypeKind.Enum && AttributeReader.HasAttribute<FlagsAttribute>(type))
+			if (type.Kind == TypeKind.Enum && _attributeStore.AttributesFor(type).HasAttribute<FlagsAttribute>())
 				properties.Add(new JsObjectLiteralProperty("enumFlags", JsExpression.True));
 
 			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
@@ -210,7 +212,7 @@ namespace CoreLib.Plugin {
 				return null;
 
 			IType type = NullableType.GetUnderlyingType(field.Type);
-			bool needNullCheck = field.Type.IsReferenceType != false || field.Type.IsKnownType(KnownTypeCode.NullableOfT) || type.Kind == TypeKind.Enum && MetadataUtils.IsNamedValues(field.Type.GetDefinition());
+			bool needNullCheck = field.Type.IsReferenceType != false || field.Type.IsKnownType(KnownTypeCode.NullableOfT) || type.Kind == TypeKind.Enum && MetadataUtils.IsNamedValues(field.Type.GetDefinition(), _attributeStore);
 			JsExpression member = JsExpression.Member(JsExpression.This, impl.Name);
 
 			JsExpression result = JsExpression.Invocation(JsExpression.Member(_systemScript, "getHashCode"), member);
@@ -218,7 +220,7 @@ namespace CoreLib.Plugin {
 				result = JsExpression.Conditional(member, result, JsExpression.Number(0));
 			}
 
-			if (type.Kind == TypeKind.Enum && !MetadataUtils.IsNamedValues(type.GetDefinition())) {
+			if (type.Kind == TypeKind.Enum && !MetadataUtils.IsNamedValues(type.GetDefinition(), _attributeStore)) {
 				result = needNullCheck ? JsExpression.LogicalOr(member, JsExpression.Number(0)) : member;
 			}
 			else if (type is ITypeDefinition) {
@@ -252,7 +254,7 @@ namespace CoreLib.Plugin {
 				return null;
 
 			bool simpleCompare = false;
-			if (field.Type.Kind == TypeKind.Enum && !MetadataUtils.IsNamedValues(field.Type.GetDefinition())) {
+			if (field.Type.Kind == TypeKind.Enum && !MetadataUtils.IsNamedValues(field.Type.GetDefinition(), _attributeStore)) {
 				simpleCompare = true;
 			}
 			if (field.Type is ITypeDefinition) {
@@ -426,18 +428,18 @@ namespace CoreLib.Plugin {
 			}
 
 			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, JsExpression.ObjectLiteral(values) };
-			if (MetadataUtils.IsNamedValues(type.CSharpTypeDefinition))
+			if (MetadataUtils.IsNamedValues(type.CSharpTypeDefinition, _attributeStore))
 				args.Add(JsExpression.True);
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitEnum), args);
 		}
 
 		private IEnumerable<JsExpression> GetImplementedInterfaces(ITypeDefinition type) {
-			return type.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem(t.GetDefinition())).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer)));
+			return type.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem(t.GetDefinition(), _attributeStore)).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer)));
 		}
 
 		private JsExpression GetBaseClass(ITypeDefinition type) {
 			var csBase = type.DirectBaseTypes.SingleOrDefault(b => b.Kind == TypeKind.Class);
-			if (csBase == null || csBase.IsKnownType(KnownTypeCode.Object) || csBase.IsKnownType(KnownTypeCode.ValueType) || MetadataUtils.IsImported(csBase.GetDefinition()) && MetadataUtils.IsSerializable(csBase.GetDefinition()))
+			if (csBase == null || csBase.IsKnownType(KnownTypeCode.Object) || csBase.IsKnownType(KnownTypeCode.ValueType) || MetadataUtils.IsImported(csBase.GetDefinition(), _attributeStore) && MetadataUtils.IsSerializable(csBase.GetDefinition(), _attributeStore))
 				return null;
 			return _runtimeLibrary.InstantiateType(csBase, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
 		}
@@ -473,8 +475,8 @@ namespace CoreLib.Plugin {
 
 			stmts.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), RewriteMethod(m))));
 
-			if (MetadataUtils.IsSerializable(c.CSharpTypeDefinition)) {
-				string typeCheckCode = MetadataUtils.GetSerializableTypeCheckCode(c.CSharpTypeDefinition);
+			if (MetadataUtils.IsSerializable(c.CSharpTypeDefinition, _attributeStore)) {
+				string typeCheckCode = MetadataUtils.GetSerializableTypeCheckCode(c.CSharpTypeDefinition, _attributeStore);
 				if (!string.IsNullOrEmpty(typeCheckCode)) {
 					var oldReg = _errorReporter.Region;
 					_errorReporter.Region = c.CSharpTypeDefinition.Attributes.Single(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName).Region;
@@ -550,7 +552,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private string GetRoot(ITypeDefinition type) {
-			return string.IsNullOrEmpty(MetadataUtils.GetModuleName(type)) ? "global" : "exports";
+			return string.IsNullOrEmpty(MetadataUtils.GetModuleName(type, _attributeStore)) ? "global" : "exports";
 		}
 
 		private IEnumerable<string> EntireNamespaceHierarchy(string nmspace) {
@@ -594,7 +596,7 @@ namespace CoreLib.Plugin {
 		private TypeOOPEmulationPhase CreateTypeDefinitions(JsType type) {
 			string name = _metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name;
 			bool isGlobal = string.IsNullOrEmpty(name);
-			bool isMixin  = MetadataUtils.IsMixin(type.CSharpTypeDefinition);
+			bool isMixin  = MetadataUtils.IsMixin(type.CSharpTypeDefinition, _attributeStore);
 			bool export   = type.CSharpTypeDefinition.IsExternallyVisible();
 			var statements = new List<JsStatement>();
 
@@ -611,7 +613,7 @@ namespace CoreLib.Plugin {
 					statements.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition)));
 					export = false;
 				}
-				else if (MetadataUtils.IsResources(c.CSharpTypeDefinition)) {
+				else if (MetadataUtils.IsResources(c.CSharpTypeDefinition, _attributeStore)) {
 					statements.Add(GenerateResourcesClass(c));
 				}
 				else {
@@ -658,9 +660,9 @@ namespace CoreLib.Plugin {
 				generateCall = false;
 			if (string.IsNullOrEmpty(_metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name))
 				generateCall = false;
-			if (MetadataUtils.IsResources(type.CSharpTypeDefinition))
+			if (MetadataUtils.IsResources(type.CSharpTypeDefinition, _attributeStore))
 				generateCall = false;
-			if (MetadataUtils.IsMixin(type.CSharpTypeDefinition))
+			if (MetadataUtils.IsMixin(type.CSharpTypeDefinition, _attributeStore))
 				generateCall = false;
 
 			var statements = new List<JsStatement>();
@@ -709,7 +711,7 @@ namespace CoreLib.Plugin {
 				string root = GetRoot(t.CSharpTypeDefinition);
 				string name = _metadataImporter.GetTypeSemantics(t.CSharpTypeDefinition).Name;
 				bool isGlobal = string.IsNullOrEmpty(name);
-				bool isMixin  = MetadataUtils.IsMixin(t.CSharpTypeDefinition);
+				bool isMixin  = MetadataUtils.IsMixin(t.CSharpTypeDefinition, _attributeStore);
 				bool export   = t.CSharpTypeDefinition.IsExternallyVisible();
 
 				if (export && !isMixin && !isGlobal) {
@@ -739,7 +741,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public IEnumerable<JsStatement> GetStaticInitStatements(JsClass type) {
-			return !MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(type.CSharpTypeDefinition)
+			return !MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(type.CSharpTypeDefinition, _attributeStore)
 			     ? type.StaticInitStatements
 			     : EmptyList<JsStatement>.Instance;
 		}

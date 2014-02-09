@@ -25,11 +25,12 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 
 		protected OOPEmulator CreateEmulator(ICompilation compilation, IErrorReporter errorReporter = null) {
 			var n = new Namer();
+			var s = new AttributeStore(compilation);
 			errorReporter = errorReporter ?? new MockErrorReporter();
-			var md = new MetadataImporter(errorReporter, compilation, new CompilerOptions());
+			var md = new MetadataImporter(errorReporter, compilation, s, new CompilerOptions());
 			md.Prepare(compilation.GetAllTypeDefinitions());
-			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n);
-			return new OOPEmulator(compilation, md, rtl, n, new MockLinker(), errorReporter);
+			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n, s);
+			return new OOPEmulator(compilation, md, rtl, n, new MockLinker(), s, errorReporter);
 		}
 
 		protected Tuple<ICompilation, List<JsType>> Compile(string source, IEnumerable<IAssemblyResource> resources = null) {
@@ -38,8 +39,9 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null, resources);
-			var md = new MetadataImporter(errorReporter, compilation.Compilation, new CompilerOptions());
-			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation, n);
+			var s = new AttributeStore(compilation.Compilation);
+			var md = new MetadataImporter(errorReporter, compilation.Compilation, s, new CompilerOptions());
+			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation, n, s);
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
 			var compiler = new Compiler(md, n, rtl, errorReporter);
 			var compiledTypes = compiler.Compile(compilation).ToList();

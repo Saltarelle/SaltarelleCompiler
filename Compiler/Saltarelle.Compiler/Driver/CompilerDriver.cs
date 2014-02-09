@@ -270,7 +270,8 @@ namespace Saltarelle.Compiler.Driver {
 				container.Register(Component.For<IErrorReporter>().Instance(er),
 				                   Component.For<CompilerOptions>().Instance(options),
 				                   Component.For<ICompilation>().Instance(compilation.Compilation),
-				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
+				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>(),
+				                   Component.For<IAttributeStore>().ImplementedBy<AttributeStore>()
 				                  );
 
 				container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());

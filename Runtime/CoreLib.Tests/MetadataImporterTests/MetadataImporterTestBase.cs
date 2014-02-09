@@ -37,9 +37,10 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			project = project.AddAssemblyReferences(new[] { Files.Mscorlib });
 
 			var compilation = project.CreateCompilation();
+			var s = new AttributeStore(compilation);
 
 			_errorReporter = new MockErrorReporter(!expectErrors);
-			Metadata = new MetadataImporter(_errorReporter, compilation, new CompilerOptions { MinimizeScript = minimizeNames });
+			Metadata = new MetadataImporter(_errorReporter, compilation, s, new CompilerOptions { MinimizeScript = minimizeNames });
 
 			Metadata.Prepare(compilation.GetAllTypeDefinitions());
 
